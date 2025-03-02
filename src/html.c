@@ -1650,9 +1650,6 @@ void infShow(int tagno, const char *search)
 	eb_printf("%s", s);
 	if (t->multiple)
 		eb_printf(" multiple");
-	if(t->itype == INP_SUBMIT && t->controller &&
-	t->controller->href && !strncmp(t->controller->href, "https://", 8))
-		eb_printf(" secure");
 	if (t->itype == INP_SELECT) {
 		for (v = cw->optlist; v; v = v->same) {
 			if (v->controller != t) continue;
@@ -1682,7 +1679,11 @@ void infShow(int tagno, const char *search)
 		eb_printf(" disabled");
 	if (t->name)
 		eb_printf(" %s", t->name);
-	nl();
+	if(t->itype == INP_SUBMIT && t->controller && !inputDisabled(t)) {
+		if(!infPush(tagno, NULL) && debugLevel >= 3)
+			showError();
+	} else
+		nl();
 
 	if(t->ninp && t->itype == INP_TEXT)
 		t = tagList[t->ninp];
@@ -2645,8 +2646,6 @@ success:
 		stringAndString(&pfs, &pfs_l, "--\r\n");
 	}
 
-	if(debugLevel >= 1)
-		i_puts(MSG_FormSubmit);
 	return true;
 
 fail:
@@ -2663,6 +2662,7 @@ This routine must be reentrant.
 You push submit, which calls this routine, which runs the onsubmit code,
 which checks the fields and calls form.submit(),
 which calls this routine.  Happens all the time.
+If post_string is NULL, print the action and do not submit the form or trigger JavaScript events.
 *********************************************************************/
 
 /* jSyncup has been called before we enter this function */
@@ -2679,7 +2679,8 @@ bool infPush(int tagno, char **post_string)
 	const char *prot;
 	bool rc, dopost;
 
-	*post_string = 0;
+	if (post_string)
+		*post_string = 0;
 
 /* If the tag is actually a form, then infPush() was invoked
  * by form.submit().
@@ -2704,26 +2705,31 @@ bool infPush(int tagno, char **post_string)
 			setError(MSG_Disabled);
 			return false;
 		}
-		if (tagHandler(t->seqno, "onclick") && !allowJS)
-			runningError(itype ==
-				     INP_BUTTON ? MSG_NJNoAction :
-				     MSG_NJNoOnclick);
-		bubble_event_t(t, "onclick");
-		if (js_redirects)
-			return true;
+		if (post_string) {
+			if (tagHandler(t->seqno, "onclick") && !allowJS)
+				runningError(itype ==
+					     INP_BUTTON ? MSG_NJNoAction :
+					     MSG_NJNoOnclick);
+			bubble_event_t(t, "onclick");
+			if (js_redirects)
+				return true;
 // At this point onclick has run, be it button or submit or reset
+		}
 	}
 
-	cw->nextrender = 0;
+	if (post_string)
+		cw->nextrender = 0;
 
 	if (itype == INP_BUTTON) {
+		if (post_string) {
 /* I use to error here, but click could be captured by a node higher up in the tree
 	and do what it is suppose to do, so we might not want an error here.
-		if (allowJS && t->jslink && !t->onclick) {
-			setError(MSG_ButtonNoJS);
-			return false;
-		}
+			if (allowJS && t->jslink && !t->onclick) {
+				setError(MSG_ButtonNoJS);
+				return false;
+			}
 */
+		}
 		return true;
 	}
 // Now submit or reset
@@ -2736,20 +2742,22 @@ bool infPush(int tagno, char **post_string)
 // I read somewhere that onreset and onsubmit only run if you
 // pushed the button - rather like onclick.
 // Thus t, the reset button, must be nonzero.
-		if (t && tagHandler(form->seqno, "onreset")) {
-			if (!allowJS)
-				runningError(MSG_NJNoReset);
-			else {
-				rc = true;
-				if (form->jslink)
-					rc = run_event_t(form, "form", "onreset");
-				if (!rc)
-					return true;
-				if (js_redirects)
-					return true;
-			}
-		}		/* onreset */
-		formReset(form);
+		if (post_string) {
+			if (t && tagHandler(form->seqno, "onreset")) {
+				if (!allowJS)
+					runningError(MSG_NJNoReset);
+				else {
+					rc = true;
+					if (form->jslink)
+						rc = run_event_t(form, "form", "onreset");
+					if (!rc)
+						return true;
+					if (js_redirects)
+						return true;
+				}
+			}		/* onreset */
+			formReset(form);
+		}
 		return true;
 	}
 // now it's submit
@@ -2761,17 +2769,19 @@ bool infPush(int tagno, char **post_string)
 	if (!form)
 		return true;
 	// Before we submit, run the onsubmit code
-	if (t && tagHandler(form->seqno, "onsubmit")) {
-		if (!allowJS)
-			runningError(MSG_NJNoSubmit);
-		else {
-			rc = true;
-			if (form->jslink)
-				rc = bubble_event_t(form, "onsubmit");
-			if (!rc)
-				return true;
-			if (js_redirects)
-				return true;
+	if (post_string) {
+		if (t && tagHandler(form->seqno, "onsubmit")) {
+			if (!allowJS)
+				runningError(MSG_NJNoSubmit);
+			else {
+				rc = true;
+				if (form->jslink)
+					rc = bubble_event_t(form, "onsubmit");
+				if (!rc)
+					return true;
+				if (js_redirects)
+					return true;
+			}
 		}
 	}
 
@@ -2835,31 +2845,36 @@ fail:
 		return false;
 	}
 
-	debugPrint(2, "* %s", action);
+	if (debugLevel >= 2 || !post_string)
+		eb_printf("%c %s\n", (post_string ? '*' : ' '), action);
 
 	if (stringEqualCI(prot, "javascript")) {
-		if (!allowJS) {
-			setError(MSG_NJNoForm);
-			goto fail;
+		if (post_string) {
+			if (!allowJS) {
+				setError(MSG_NJNoForm);
+				goto fail;
+			}
+			jsRunScript_t(form, action, 0, 0);
 		}
-		jsRunScript_t(form, action, 0, 0);
 		goto success;
 	}
 
 	form->bymail = false;
-	if (stringEqualCI(prot, "mailto")) {
-		if (!validAccount(localAccount))
-			goto fail;
-		form->bymail = true;
-	} else if (stringEqualCI(prot, "http")) {
-		if (form->secure) {
-			setError(MSG_BecameInsecure);
+	if (post_string) {
+		if (stringEqualCI(prot, "mailto")) {
+			if (!validAccount(localAccount))
+				goto fail;
+			form->bymail = true;
+		} else if (stringEqualCI(prot, "http")) {
+			if (form->secure) {
+				setError(MSG_BecameInsecure);
+				goto fail;
+			}
+		} else if (!stringEqualCI(prot, "https") &&
+			   !stringEqualCI(prot, "gopher")) {
+			setError(MSG_SubmitProtBad, prot);
 			goto fail;
 		}
-	} else if (!stringEqualCI(prot, "https") &&
-		   !stringEqualCI(prot, "gopher")) {
-		setError(MSG_SubmitProtBad, prot);
-		goto fail;
 	}
 
 	pfs = initString(&pfs_l);
@@ -2881,7 +2896,10 @@ fail:
 	stringAndChar(&pfs, &pfs_l, (dopost ? '\1' : '?'));
 	actlen = strlen(pfs);
 
-	if (!formSubmit(form, t, dopost,    prot)) {
+	if (formSubmit(form, t, dopost,    prot)) {
+		if(post_string && debugLevel >= 1)
+			i_puts(MSG_FormSubmit);
+	} else {
 		nzFree(pfs);
 		goto fail;
 	}
@@ -2931,11 +2949,13 @@ fail:
 		nzFree(subj);
 		nzFree(q);
 		nzFree(action2);
-		*post_string = 0;
 		return rc;
 	}
 
-	*post_string = pfs;
+	if (post_string)
+		*post_string = pfs;
+	else
+		nzFree(pfs);
 success:
 	nzFree(action2);
 	return true;
