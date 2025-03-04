@@ -5,6 +5,10 @@ See COPYING for licensing agreements.
 The history directory contains information on the history of edbrowse,
 how it came to be and what it is trying to accomplish.
 You might want to read that first, if you are unfamiliar with the project.
+history/article.wikipedia is our wikipedia article, written in markup.
+It was deleted by the wikipedia maintainers, for lack of sources.
+If edbrowse is described in a book or mainstream magazine in the future,
+perhaps this article can be reintroduced.
 
 ------------------------------------------------------------
 
