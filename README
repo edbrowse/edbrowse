@@ -1,8 +1,10 @@
 edbrowse, a line oriented editor browser.
 Written and maintained by Karl Dahlke and others.
 See our home page edbrowse.org for current releases and contact information.
-
 See COPYING for licensing agreements.
+The history directory contains information on the history of edbrowse,
+how it came to be and what it is trying to accomplish.
+You might want to read that first, if you are unfamiliar with the project.
 
 ------------------------------------------------------------
 

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<HEAD>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<META name=description content="The Command Line Philosophy">
+<meta name=keywords content="
+command line, line oriented, browser, application, terminal, blind,
+philosophy, accessible">
+<TITLE> The Command Line Philosophy </TITLE>
+        <style type="text/css">
+body {
+background: white;
+color: black;
+font-family: Arial,Helvetica,sans-serif;
+font-size: 100%;
+}
+h1 {
+text-align: center;
+font-size: 3.0em;
+color: navy;
+}
+h2 {
+text-align: center;
+font-size: 2.0em;
+color: darkslateblue;
+}
+h4 {
+text-align: center;
+font-size: 1.0em;
+color: darkgray;
+}
+p.cen {
+font-size: 1.5em;
+text-align: center;
+}
+hr {
+border: 3px solid blue;
+}
+a:link { color: red; font-size: 1.25em; }
+a:visited { color: red; font-size: 1.25em; }
+a:hover { color: red; font-size: 1.25em; }
+a:active { color: red; font-size: 1.25em; }
+</style>
+</HEAD>
+<BODY>
+
+<h1> Command Line Programs for the Blind </h1>
+<H4> by Karl Dahlke </H4>
+
+<p>
+This article is available <a href=philosophy_fr.html>in French</a>.
+
+<h2> Introduction </h2>
+
+<p>
+Word processors, Internet browsers, and email clients typically present information in two dimensions,
+spreading text and icons across the screen.
+This interface is remarkably efficient
+thanks to the parallel processing capabilities of the retina and the visual cortex.
+In fact this screen to brain interface is so efficient,
+there is no need to count the bits as they fly by.
+Amateur webmasters and professional software developers
+routinely exploit this high band width channel, which is almost "too cheap to meter".
+Web pages often present reams of irrelevant information
+in the form of extraneous links and rarely used buttons and icons.
+Carefully crafted applications are a little more organized,
+but they still employ toolbars and widgits that clutter the screen.
+This ancillary data is quickly tossed aside as your eyes focus on the item of interest.
+However, a blind user cannot assimilate this data at a glance, and separate the wheat from the chaff.
+He is forced to read every word on the page, using a voice synthesizer or braille display.
+These adapters are imperfect at best,
+as they ratchet the flow of information down to an agonizing crawl.
+By analogy, a high speed cable modem has been replaced with a dial-up connection,
+turning a rich multimedia experience into an exercise in frustration and futility.
+Is there a practical alternative?
+I believe there is, but certain critical applications must be rewritten from the ground up.
+To this end, I have developed a combination editor/browser called edbrowse, (this project), which is 100% text based.
+Output is measured and conserved like a precious commodity
+as it passes through the narrow channel of speech or braille.
+Edbrowse gives the blind user exactly what he asks for, and nothing more.
+Sighted users also find its unique features helpful in certain situations, which will be described below.
+This  open source program
+is in the public domain,
+and is bundled in several Linux distributions.
+An early perl version (with limited functionality) runs on virtually any computer.
+
+<p>
+This has implications for software development in general.
+When a program or utility is "web based",
+i.e. accessible through a browser,
+with some common sense restrictions on the underlying html and javascript,
+it is easily adapted to a wide range of disabilities.
+Each user employs the browser that caters to his particular needs and preferences.
+The interface is automatically tailored to the individual -
+no additional programming required.
+The semantics of the data, and its representation on the screen, or in speech,
+or on a braille display, have been neatly separated.
+Of course this approach doesn't work for all applications,
+(a blind user isn't going to play Flight Simulator),
+but it can be employed in many situations.
+Even a toolkit, such as Microsoft VB, might be enhanced
+to create interactive web pages, instead of using the screen and the mouse.
+If this project proves feasible,
+a wide variety of common VB applications could become accessible over night.
+The key is the accessible client, in this case a command line browser,
+combined with a suite of streaming applications
+that use these adapted clients as front end programs.
+
+<p>
+The benefits of this approach are not limited to the totally blind.
+A color-blind individual might use his browser to change the color of the background,
+text, headings, and hyperlinks to improve the contrast,
+while A user with low vision might increase the font size.
+Disabled users,
+and folks who simply prefer their text in a particular font,
+are hoping for a software revolution
+that sequesters functionality within the application,
+and leaves the details of the interface unspecified,
+to be determined by the wants and needs of the individual.
+
+<h2> The Early Human-Machine Interface </h2>
+
+<p>
+Today's computer professionals with laptops in hand can hardly imagine the awkward interfaces that prior generations had to endure.
+When I was a freshman at Michigan State University,
+I learned how to use a key punch machine and a card reader;
+that was how you "talked" to the computer.
+Each punch card represented one line of text,
+and a stack of several thousand cards might hold the source code for your master's project.
+There was no file server on campus;
+you kept your box of cards with you at all times.
+And if you ever dropped your box of cards in the snow
+while walking from the dorm to the computer center in January,
+you were in a world of hurt.
+Even an accidental spill from table to floor was cause for consternation,
+as you carefully put your cards back in order.
+Apparently this scenario was not uncommon,
+prompting more than a few students to place sequence numbers on their cards
+in the rightmost columns -
+columns that were ignored by the computer.
+Some people left gaps in these numbers, e.g. counting by tens,
+so that additional lines of code could be inserted as necessary.
+My roommate, who did not bother to number his cards, always carried them in a sealed cardboard box.
+This led to more than a few jokes on my part.
+“Quit singing in the shower at 6 A.M., or i'll scatter your box of cards all over the floor.”
+
+<p>
+Once a student arrived safely at the computer center with cards in hand,
+he might make some last minute corrections to his stack,
+then feed the cards, at a rate of ten per second, through the card reader.
+This created a "batch job", which resulted in a printout some 20 minutes later.
+Wait times were highly variable, depending on load,
+which is why many students worked at night.
+Having placed the cards carefully back in his box,
+our weary student anxiously waits for the results of his labors.
+Did the program compile?
+Did it run?
+Was there an error in logic?
+Can he turn his printout in for a grade, or is there more work to do?
+If anything has to be changed, he goes back to the punch machine,
+hammers out new cards, slides them into position,
+and walks back to the card reader for another run.
+The smallest typo represents another hour's work.
+It was not unusual to see bleary-eyed students stumbling back into the dorm at 2 or 3 in the morning,
+card box under one arm and a stack of printouts under the other.
+
+<p>
+Imagine my joy when the University installed interactive teletypes!
+These look like electric typewriters, but the keystrokes are transmitted directly to the central computer.
+When you hit return, the computer responds, then waits for your next command.
+The interface had become a dialog,
+which clipped along at 110 bits per second, or 300 bits per second if you glommed onto one of the newer teletypes.
+The paper retained a written transcript of the entire session;
+your commands and the computer's responses.
+These machines are all but forgotten, except for the vestigial letters tty, which are an abbreviation for teletype.
+The software that facilitates communication between you and your computer, through the keyboard and screen,
+is still called a tty today.
+Type `tty' into any Unix or Linux computer, and it will tell you which tty driver you are using,
+e.g. /dev/tty1 on console 1.
+A large Unix machine can have hundreds of tty drivers, supporting hundreds of simultaneous users.
+
+<p>
+The clatter of the teletype was an annoyance for most, but it was a blessing for me.
+I knew when the computer had responded, and the nature of that response.
+If a volunteer reader was not available, and the homework assignment was modest,
+I could log onto the system,
+type my program into the editor,
+compile the program,
+and run the executable,
+based solely on the clicks of the teletype.
+After my roommate read through the printout and verified the results,
+I tucked it away in my notebook and turned it in the next day for a grade.
+Although I now have a speech synthesizer at hand,
+I still miss the audio feedback that was an unintentional feature of the mechanical teletype.
+To this end, I modified the Linux tty driver to create similar sounds using the PC speaker.
+When the computer sends text to the screen, soft clicks accompany the nonspace characters,
+while a longer swoop indicates a new line,
+as though the print head was swinging back to the left.
+These modules are available from the drivers directory in the
+<a href=https://github.com/edbrowse/acsint>acsint project</a>,
+parallel to this project.
+
+<p>
+The chirps and clicks are subtle, and are easily ignored by those around me;
+yet they form an important part of my audio interface.
+Like the systems of yesteryear,
+my tty tells me when the computer has responded to my commands,
+and the quantity and format of that response,
+even before my synthesizer has spoken a word.
+
+<p>
+The acsint project also contains a linear speech adapter, the only one of its kind.
+Like the paper teletype, this adapter retains a log of all tty output,
+and allows the user to review that log,
+reading the entered commands and the computers responses.
+All other adapters,
+whether on MS-dos, Windows, Mac-OS, or Linux,
+read the words or icons on the screen.
+My adapter can read screen memory as well, but it typically runs in linear mode, which is optimal for the command line interface.
+This adapter, and various applications such as edbrowse, all work together to present a new
+(i.e. old) paradigm,
+a paper teletype inside your computer.
+
+<p>
+Over the next few years, universities around the country
+replaced their paper teletypes with cathode ray tube terminals, also known as CRTs.
+Trees everywhere heaved a sigh of relief;
+yet the interface was still the same.
+A user types a command, and the computer responds on the next line.
+The dialog continues.
+
+<h2> Early Editors and Word Processors </h2>
+
+<p>
+When I began my career at AT&amp;T Bell Labs,
+I learned to use the standard Unix text editor, which is simply called ed.
+This is a command line program, consistent with the interface of its day.
+If you want to see the seventh line in a file, type 7 and hit return.
+To find the line containing the string "xyz", type /xyz/.
+Lines can be changed, deleted, moved, or copied using this program,
+but you only see one line at a time.
+Furthermore, ed is merely a text editor; it is not a word processor.
+Tools like troff and nroff were developed to turn text into a formatted page.
+For instance, .PP indicates a new paragraph,
+.SH indicates a section heading, and so on.
+Online manual pages are still written in this markup language today.
+Type "man ls' into a Linux machine, and nroff is running in the background.
+
+<p>
+Although the combination of ed and nroff was primitive by today's standards,
+it was perfect for me.
+I used ed to create documents,
+inserting formatting tags where appropriate,
+and the resulting pages were comparable to those created by my sighted colleagues
+who were forced to use the same text based tools.
+
+<p>
+Needless to say, this was not tolerated for long.
+Screen editors such as vi and emacs quickly appeared,
+followed by word processors such as Word Perfect and MS Word.
+For the first time, you could see what your document would look like before sending it to the printer.
+Once again, trees around the world were granted a reprieve,
+and everyone who touched a computer became more productive over night - everyone but me.
+Yes, screen readers allowed me to roam about and read the text,
+but I was still processing the data linearly.
+The benefits of a two dimensional search and scan were not available to me,
+and to think otherwise is to live in a state of denial.
+So I continued to use ed and nroff to create programs and documents for Bell Labs.
+I even ported ed to the IBM PC, thus giving me the same linear interface at work and at home.
+
+<h2> Accessing the Internet </h2>
+
+<p>
+Fast forward 15 years,
+and the Internet consists of web pages that are text based, with embedded formatting directives that are similar to nroff.
+For instance, &lt;P&gt; tells your browser to start a new paragraph,
+while &lt;H2&gt; represents a new section heading at level 2.
+These are reminiscent of the .PP and .SH directives that came before.
+Thus, Hyper Text Markup Language (HTML), the language of the Internet,
+is an evolutionary descendent of nroff.
+Having learned most of the html codes,
+I was able to develop some 1,400 web pages
+for <A HREF=http://www.mathreference.com>MathReference.com</A>,
+using nothing but a text editor.
+If I want my web page to display Goodnight Moon in italics,
+then Margaret Wise Brown in a smaller font on the next line,
+I will enter the following commands.
+
+<p>
+&lt;I&gt;Goodnight Moon&lt;/I&gt;
+<br>
+&lt;br&gt;&lt;font size=-1&gt;by Margaret Wise Brown&lt;/font&gt;
+
+<p>
+Once again I am in the minority.
+Most web developers use graphical design tools
+such as MS Front Page or Dreamweaver,
+which hide the technical details of html.
+The interface is similar to a word processor.
+Arrange the text and pictures on the screen as you would like them to appear on your website,
+and the tool generates the appropriate html.
+This works well for others, but for me,
+the benefits of a two dimensional representation are rendered academic,
+as my speech adapter roams around the screen, trying to make sense of the page as a whole.
+It's like looking at the world through a straw.
+
+<p>
+Although I could write web pages using ed and a few basic html commands,
+I was still unable to surf the net quickly and efficiently.
+My text editor allowed me to create a website from scratch,
+but there was no command line browser to help me read websites that were written by others.
+The closest approximation was a program called lynx, which does not employ graphical icons,
+and can even be run without a mouse.
+Indeed, many blind people still use lynx today.
+However, lynx remains a screen oriented application,
+presenting information across 25 rows and 80 columns.
+I was hoping for a command line interface similar to ed.
+
+<p>
+In 2001, I began writing a program called edbrowse, a combination editor browser,
+whose interface was fashioned after ed.
+This has all the features of ed,
+along with some new commands, such as `b' to browse an html file,
+and `g' to go to a hyperlink referenced by that web page.
+One can "edit" www.ibm.com as easily as one might edit a local file.
+Of course you cannot meaningfully change the contents of www.ibm.com, since it resides on another computer,
+but you can format it using the browse command,
+then step through the text line by line, or search for a word or phrase
+using the ed commands you already know.
+To find the next hyperlink, search for the left brace, as this indicates a link to another web page.
+Similarly, one can step through the fields in a fill-out form by searching for the less than sign.
+With practice, it is surprisingly easy to navigate through most web pages
+and find the information you want.
+Compared to other browsers,
+edbrowse demands more input, in the form of entered commands, and generates less output;
+which is precisely the paradigm for a one dimensional channel such as speech or braille.
+
+<h2> System Administration </h2>
+
+<p>
+We recently purchased a Mac, and after I learned how to log in remotely from my Linux machine,
+I was able to perform all sorts of printer administration tasks,
+including adding and configuring a new printer,
+printing test pages,
+setting up print queues with priorities, and monitoring print jobs.
+This is normally accomplished through a graphical printer utility on the screen,
+but I found another way.
+The print utility is web based, so anyone with a browser can access the printers via http://localhost:631.
+(If you have a Mac, type this into your browser and you'll see what I mean.)
+An important subsystem of the computer with a moderate level of complexity
+has been rendered accessible to a wide range of disabled users,
+thanks to the power of the Internet.
+Fire up your favorite browser, be it edbrowse or lynx or firefox,
+and manage your print jobs through an interface that has been optimized for your particular needs.
+
+<p>
+Another example of web based system administration is samba file sharing,
+which is accessible through http://localhost:901 on some computers.
+Turning to network administration,
+most off-the-shelf routers can now be configured through html.
+I hope this is the beginning of a new trend in system administration.
+Accounts and passwords, networking, firewalls, disk utilities, and the task manager are just a few examples
+of real world applications that can and should be web based.
+If the resulting web pages are relatively simple in their content and format,
+computers would become more accessible, almost over night.
+Most people would access these functions through the default graphical browser
+that is shipped with the computer,
+and they wouldn't know the difference.
+At the same time,
+I would take advantage of edbrowse, which was written specifically for my needs.
+
+<p>
+Beyond this, web based administration makes it easy to configure the computer remotely.
+If the firewall permits, I could access the printers on your box by typing http://yourbox:631 into my browser.
+There is no need to log in remotely and run edbrowse on your computer,
+which may not be practical in any case.
+
+<h2> Other Applications </h2>
+
+<p>
+Some applications cannot be operated effectively through a browser,
+and edbrowse does not claim to be the universal solution to accessibility.
+Consider Microsoft Excel, a well known spreadsheet application.
+Imagine a conversion utility that transforms an xls file to an interactive web page, ready for manipulation by your favorite browser.
+Each cell becomes an input field in a fill-out form, and the cells are arranged in rows and columns inside an html table.
+As data is modified,
+javascript formulas compute totals and averages, as Excel normally does.
+This works well for small data sets,
+yet some spreadsheets contain hundreds of columns and thousands of rows.
+Your eyes easily drift down column 79, looking for trends in the data,
+but edbrowse cannot do this.
+Long lines are tolerated, but there is no convenient way to jump to column 79.
+Nor can you easily locate the "payment" column for the row associated with customer "Mary Smith".
+Either edbrowse must be augmented with new spreadsheet features,
+or a linear version of Excel must be developed,
+with novel commands designed to locate and modify individual cells.
+
+<p>
+This holds true for any program where eye movements
+(which lie outside the purview of the screen interface)
+must be converted into commands and responses,
+entirely new pathways for the linear version of the same application.
+Think of the application as a conversation between the program and the user.
+When the user ignores 95% of what the program "says", and selects the
+relevant 5% by moving his eyes,
+that conversation must change in fundamental ways to be blind-friendly.
+Most screen programs implement this type of mega-output conversation;
+that is in fact the screen paradigm.
+For this reason, screen programs with high data rates must be redesigned from the ground up
+to run efficiently in text mode.
+At the same time, simpler programs can often be restructured to
+generate html or xml,
+which gives the user control over his interface
+through specialized clients.
+
+<h2> In the Background </h2>
+
+<p>
+Although edbrowse was designed to make the Internet accessible to the disabled community,
+it has some unique features which have attracted the attention of Unix administrators and developers.
+Most browsers assume the presence of a human operator, to read the screen and click the mouse.
+In contrast, edbrowse can simply read a set of commands from a file.
+In addition, edbrowse includes a scripting language,
+with conditional logic, loops, and functions.
+A background cron job, run every morning by the computer,
+can review the contents of several web pages, and send mail to the operator if certain conditions are met.
+In other words, edbrowse is well suited to batch processing, without human intervention.
+In theory, the same tasks could be accomplished by a shell script, calling upon wget and grep and the like,
+but a self-contained edbrowse script is easier to write and maintain.
+This is why grml,
+a distribution aimed at system administrators,
+was the first to include edbrowse in its standard release.
+Others, such as debian, and even Free BSD, now offer edbrowse in their distributions.
+
+<h2> Summary </h2>
+
+<p>
+Although edbrowse has become a useful tool for batch jobs on the Internet,
+the main focus continues to be accessibility.
+Pasting a screen reader on top of Chrome or Edge is a good beginning,
+but it hardly creates a level playing field.
+The disabled community deserves better.
+The editor, the browser, the mail client, and the spreadsheet can be made more efficient
+for the blind, blind-deaf, and motor impaired,
+if we would just take the time to redesign them
+with the user's needs in mind.
+Once these critical applications are transformed,
+other utilities can be modified to leverage these clients,
+as illustrated by an emerging suite of web based tools and services.
+These efforts should be funded at the federal level,
+but sadly, they have received little support from government or industry to date.
+When everyone has access to computers, laptops, and the internet,
+we all benefit.
+Sir Bert Massie, Chairman of the Disability Rights Commission,
+said it best.
+“The overall vision must be one of a society in which everyone (disabled and
+non-disabled alike) can flourish and participate fully as equal citizens.”
+
+</BODY>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<HEAD>
+<meta charset="UTF-8">
+<META name=description content="Building a Talking Terminal">
+<meta name=keywords content="
+talking, terminal, computer, first, accessibile, accessibility, voice">
+<TITLE> Building a Talking Terminal </TITLE>
+        <style type="text/css">
+body {
+background: white;
+color: black;
+font-family: Arial,Helvetica,sans-serif;
+font-size: 100%;
+}
+h1 {
+text-align: center;
+font-size: 2.5em;
+color: navy;
+}
+h2 {
+text-align: center;
+font-size: 2.0em;
+color: darkslateblue;
+}
+p.cen {
+font-size: 1.5em;
+text-align: center;
+}
+hr {
+border: 3px solid blue;
+}
+a:link { color: red; font-size: 1.25em; }
+a:visited { color: red; font-size: 1.25em; }
+a:hover { color: red; font-size: 1.25em; }
+a:active { color: red; font-size: 1.25em; }
+</style>
+</HEAD>
+<body>
+
+<h1> Building a Talking Terminal </h1>
+
+<p>
+Time for me to toot my own horn, if you don't mind. 🎺
+
+<p>
+Rewind to the dawn of computers, when people programmed on punch cards, and the jump from 110 baud to 300 baud was amazing, and 48K ram was enough to hold some pretty complex programs,
+and nothing was adapted or accessible.
+
+<p>
+In 1978 I went to Michigan State University, hoping for a degree in computer science.
+I didn't know anybody, and had to manage a huge campus, 3 square miles, with just a cane, no dog, no hand-held GPS, and very little support.
+I don't want to talk about what happened when there were drifts of snow!
+
+<P>
+I started off with a light schedule, at the advice of those who were cautious,
+“We don't want him to fail”,
+and then kicked myself, because college is, after all, a means to an end.
+By the third semester I started taking heavy loads, and also took summer classes, so I could be out in less than four years.
+After three years I decided I could push it, and get out in four years with a BS and an MS.
+It's a program called dual enrollment, taking undergrad and graduate courses at the same time.
+
+<p>
+In 1981, my last year at MSU, there were no talking computers or terminals, but I knew I would need one to participate in the work force.
+I would build one, for my own needs, and my masters project. (two birds)
+As you'll see below, I had to build it out of stone knives and bear skins.
+
+<p>
+Dr. Eulenberg was the right professor;
+he specialized in talking devices for the disabled.
+He was nationally recognized,
+and Nova did a special on his lab:
+<i>Finding a Voice</i>,
+aired 02/07/1982.
+<a href=https://www.dailymotion.com/video/x8mtxk8>Watch Now</a>
+I missed the filming by one day.
+I was probably in classes when the show was being filmed.
+Damn! I could have been on tv!
+
+<p>
+Some of his clients were profoundly disabled.
+They were in motorized wheelchairs,and unable to control their hands, or speak.
+He made a board for them with glyphs.
+They could touch a glyph with the heel of their hand, and it would speak a word or phrase,
+thus facilitating a modest level of communication.
+This was the latest technology at the time.
+One of the computers held 4K of ram. Wow!
+The board had a plastic screen protector,
+because some of these folks couldn't control their own drool.
+Part of my education was learning there are people out there worse off than me.
+That isn't indicated on my degree, but it's important.
+
+<p>
+Their need was greater than mine, so I didn't mind when Eulenberg spent most of his time with them.
+He also taught classes, computer classes of course, and Hausa, an African language.
+There were 8 people in his Hausa class, out of 45 thousand students, but that was enough to make it a class.
+In between these activities he helped me as he could.
+
+<p>
+He let me use an Apple2E, the latest personal computer, with an SCO1 voice chip installed.
+That chip didn't turn text into speech, it only accepted codes for phonemes, i.e. consonants and vowels.
+63 codes for the sounds of the english language. 37 might be s, 22 might be voiceless th, 18 might be long o, etc.
+I had to do my own text to speech, but there was a lot more to do first.
+
+<p>
+How do I interact with a computer that is silent?
+I wrote a basic program that did two things - accept a 4 hex digit memory location and beep in binary the contents of that memory location,
+and, accept location = value and assign a byte value to that memory location.
+These are the peek and poke operations in basic.
+
+<p>
+How did it beep? By printing control g to the screen. That made a beep, and the only sound the Apple computer could make.
+I had to time the beeps and pauses just right so I could understand the binary.
+
+<p>
+I wrote the basic program out in braille, then went bravely to Eulenberg's lab.
+I had to type it in perfectly, the first time, with no errors, or I was stuck in enigmatic silence.
+Eventually I got it right, and I saved it to a floppy disk.
+That was my tool for a while, poking bytes into memory locations and reading bytes back out by the beeps of the control g bell.
+I'll call it tool1.
+
+<p>
+Next, instead of beeps, I needed something more efficient.
+I sent phonemes to the chip to sound out the hex digits.
+Let's call this tool2.
+It was a lot faster and more accurate than beeps.
+I used q for b, because b and d sounded alike,
+and I used l for e, because e and d sounded alike,
+and I used x for a, because a and 8 sounded alike.
+I dare not make a mistake as I moved forward in my work.
+
+<p>
+Dr. Eulenberg read me the spec for the chip: what port to poke to send a phoneme code, and what port to peek to see when it was done speaking.
+Thus I was able to build tool2, and work more efficiently.
+Eulenberg didn't have time to sit for hours and help me write and debug my software, but he helped me with these technical details.
+He was one of the kindest men I ever knew, and it was my honor to work with him.
+
+<p>
+A couple years earlier, Dick, my roommate, taught me 6502 machine code, bytes and instructions, so I could write machine language programs for the Apple.
+Using tool2, I wrote a few simple programs by putting hex values into memory.
+I then jumped to that location, to run the program as a subroutine.
+The first few didn't do much.
+They couldn't, because the slightest mistake locked up the computer in silence.
+I had to power it off and on, load my programs off the floppy, start again, and only guess what I might have done wrong.
+So it's important to be incremental here.
+
+<p>
+Using tool2, I wrote a machine language program that did pretty much what tool2 already did, but in machine code, not in basic.
+The translation was mechanical, accept for getting input.
+I had to read bytes directly from the keyboard, since the basic interpreter wasn't doing it for me any more.
+I'll call it tool3.
+
+<p>
+I enhanced tool3, to make it easier to write other machine language programs.
+Return would read the next byte,
+minus would back up one location in memory,
+space would let me assign a new value to memory, and so on.
+It still spoke the values in memory using my hex codes through the SCO1 chip: 0123456789xqcdlf.
+
+<p>
+If I wanted to add an instruction to the middle of a program I was working on, I would set my location, like a cursor, then type &gt;.
+That pushed everything up one byte, and inserted ea, which is the no-op instruction for the 6502 processor.
+But it had to do more.
+If there was a relative branch around this area, I had to add one to that jump.
+One more byte ahead, or one more byte back, because the space between is one byte longer.
+If the jump became more than 127 bytes, then my tool beeped and didn't do anything.
+I couldn't support a relative branch that far.
+I had to go back and make it an absolute two-byte jump, then I could insert the byte.
+I inserted as many bytes as I needed for the new instructions.
+
+<p>
+&lt; would delete one byte, an instruction I didn't need any more.
+Hit &lt; repeatedly to delete a range, but don't do it too many times, or you're in a lot of trouble.
+&lt; also adjusted the relative branching around the area.
+The jumps were one byte closer.
+
+<p>
+r relocated the program to another place in memory, adjusting all the absolute addresses so it would still run. Somewhat like a linker.
+I added all these features to tool3, to make it more powerful.
+I may as well call it tool4.
+
+<p>
+Next I wrote a crude text to speech program, turning written English into sounds.
+It wasn't great but it was only for my ears.
+I learned its quirks and shortcomings, and it was good enough.
+I'll call this tts.
+
+<p>
+Now to complete the puzzle, I had to have this Apple act as a computer for the mainframe on campus, and eventually, the computers for anyone who wanted to hire me.
+The Apple had to talk to other machines.
+This was done over an rs232 port.
+Dr. Eulenberg installed an rs232 card and taught me where the memory locations were that corresponded to the pins, and how to access them, and how to activate them.
+This was all raw at the time.
+To read a byte from another computer I had to monitor the voltage on a pin, watch it go up and down, and time it by counting computer cycles in between.
+This meant I had to know exactly how fast the cpu clock ran, and how many clock cycles were consumed by each instruction.
+I gathered the bits into a byte, and put the byte into my buffer,
+whence it was available to be read by my tts engine.
+On the outgoing side, I had to raise and lower the voltage on the pin by timing loops: spin, high, spin, low, and so on.
+I had to know how long each computer instruction took, how long a loop would take to run, and the rs232 spec of how to change the voltages to send out a byte, including stop bits and parity -
+and I had to adjust it for different baud rates, 300 to 9600.
+Like I said, stone knives and bear skins.
+
+<p>
+Eventually I got all this working.
+I could call the master computer on campus from my office in Eulenberg's lab, and receive bytes in the buffer, and read them using my tts software and the SCO1 chip, and type in commands, and send those back out to the mainframe over rs232.
+After a years worth of hard work,
+the MSU mainframe was accessible to me,
+along with any other computer that I could call up by modem.
+
+<p>
+Meantime, I took a heavy load of undergraduate and graduate courses in math and computer science, in order to complete my degrees, and I got A's in all of them.
+And I managed my own personal world, getting around, finding the things I needed, applying for jobs, etc.
+I guess I was younger back then.
+Just the thought of it exhausts me now. 😩
+
+<p>
+Don't get it twisted; I got a lot of help.
+it's ok to toot your own horn, but nobody succeeds without help.
+I could give a long list of acknowledgements here and probably should, but they would be just names to you.
+At the very least, my thanks to Dr. Eulenberg, Dick, and Jay.
+Even with all this help, I think vanishingly few people could have done what I did.
+I'm just gonna put that out there.
+
+<p>
+After MSU, I took my software on my floppies to Bell labs.
+They got me set up with an Apple2E, and I was talking to their computers,
+just like the other employees on their visual terminals.
+I was learning Unix and C  on an equal footing with everyone else.
+
+<p>
+During the next 40 years I developed other tools, a speech adapter for linux,
+(originally embedded in the kernel),
+and edbrowse, this project.
+There is a theme here.
+I write the tools I like, just the way I like them.
+This might be silly, or obsessive, but there it is.
+Read more about my <a href=philosophy.html>command line philosophy</a> here.
+It started in 1981 when I had no choice, and I guess I can't get out of the habit.
+I take some comfort in knowing that others benefit from these tools as well.
+I have added quite a few features at their request.
+It isn't all about me.
+
+</BODY>
