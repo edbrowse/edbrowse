@@ -1,6 +1,17 @@
 Here are some changes introduced by recent versions of edbrowse.
 
 3.8.11
+Put explanatory files in the history directory.
+
+    i? shows the url of the submit button.
+
+Fix extremely rare race condition in caching.
+
+$EB_SESSION, and set these whenever $(:X) is expanded.
+
+Fix gopher search
+
+commands: sss, test, p stuff.
 
 3.8.10
 toString shows the correct object classes.
