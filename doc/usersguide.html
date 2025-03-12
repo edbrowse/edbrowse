@@ -1238,6 +1238,24 @@ To split a line in the middle of the word doghouse, type:
 s/doghouse/dog-\nhouse/
 
 <LI><p>
+%line on the right side of a substitute command becomes the line number.
+<br>
+s/^/%line. /
+<br>
+This can be a real convenience.
+
+<p>
+There is a corner case here that is quite rare.
+Consider s/z/a\nb%line/
+<br>
+Under this command, %line is replaced with the line number before the substitutions are made, not after.
+If you want the latter behavior, then do this.
+<br>
+,s/z/a\nb@@@/
+<br>
+,s/@@@/%line/
+
+<LI><p>
 Only the first 500 characters of a line are displayed.
 The rest of the line is in the buffer, and can even be modified via a substitute command,
 but if you want to see it, you will need to split it,
