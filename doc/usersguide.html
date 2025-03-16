@@ -251,28 +251,28 @@ through an application that is compatible with the linear nature of speech or br
 Edbrowse presents the following features:
 
 <UL>
-<LI><p> Edbrowse can edit multiple files or browse multiple websites simultaneously, and transfer blocks of text between them in a manner similar to cut &amp; paste.
+<li><p> Edbrowse can edit multiple files or browse multiple websites simultaneously, and transfer blocks of text between them in a manner similar to cut &amp; paste.
 For instance, <code>edbrowse *.c</code> accesses all the C sourcefiles in the current directory.
-<LI><p> The regular expressions of ed have been replaced with Perl Compatible Regular Expressions, which have more power and flexibility. This simplifies the task of finding or modifying text in a large document. You can, for instance, replace each instance of the word foo, not foot or food, but foo by itself, in upper or lower case, with the word bar, as long as foo is not followed by an exclamation point or a question mark. The change in regular expressions means edbrowse is not 100% backward compatible with ed, though it is close.
-<LI><p> Edbrowse can fetch a web page from the Internet as easily as it opens a file on the current computer, using http, https, ftp, or gopher.
+<li><p> The regular expressions of ed have been replaced with Perl Compatible Regular Expressions, which have more power and flexibility. This simplifies the task of finding or modifying text in a large document. You can, for instance, replace each instance of the word foo, not foot or food, but foo by itself, in upper or lower case, with the word bar, as long as foo is not followed by an exclamation point or a question mark. The change in regular expressions means edbrowse is not 100% backward compatible with ed, though it is close.
+<li><p> Edbrowse can fetch a web page from the Internet as easily as it opens a file on the current computer, using http, https, ftp, or gopher.
 Once the page is fetched into the active buffer, it can be browsed or rendered as text, using the b command.
 This supplements the other one-letter commands which were already part of ed.
 Once the page is browsed, the user can go to hyperlinks, or fill out and submit forms.
-<LI><p> The -fm option turns edbrowse into an interactive email client.
+<li><p> The -fm option turns edbrowse into an interactive email client.
 It fetches mail from one or more pop3 accounts and presents these emails to the user one at a time, where they can be read, deleted, or saved to a file for future reference.
 Filters can automatically save certain emails to certain files, based on subject, sender, or destination email address.
 Other options cause edbrowse to send mail using smtp.
 imap is also supported.
-<LI><p> In database mode, edbrowse can access selected rows and columns of an sql table through odbc.
+<li><p> In database mode, edbrowse can access selected rows and columns of an sql table through odbc.
 The insert, substitute, and delete commands of edbrowse now correspond to the insert, update, and delete operations of a database respectively.
 This feature is well tested on some databases, and completely untested on others.
 Since text editing has consequences outside the context of the current buffer, there is no undo command.
 When a row is deleted, it is gone, without any chance of retrieval.
 Fortunately, referential integrity often prevents these unintended deletions.
-<LI><p> When editing a directory, each line of text corresponds to a file.
+<li><p> When editing a directory, each line of text corresponds to a file.
 Again, the substitute command renames a file, while the delete command removes a file, or moves it to your trash can, depending on your edbrowse configuration.
 There is no undo operation, thus moving files to the trash can is safer. However, this does not free up any disk space.
-<LI><p> The edbrowse configuration file can contain functions, similar to the .bashrc file in Linux.
+<li><p> The edbrowse configuration file can contain functions, similar to the .bashrc file in Linux.
 These functions can invoke other edbrowse commands, along with branching and loops based on the success of these commands.
 This simple example changes every x to y.
 If any changes were made, the file is written back to disk.
@@ -1094,11 +1094,11 @@ The ebre setting is restored when the script is complete.
 Below are some additional differences between this program and /bin/ed.
 
 <UL>
-<LI><p>
+<li><p>
 Lines beginning with # are ignored, making it easier to comment your edbrowse scripts.
 The # character has no special significance in the middle of a line.
 
-<LI><p>
+<li><p>
 Lines beginning with ! implement a shell escape.
 The ! character has no special significance in the middle of a line,
 unless it is starting a shell command under a global regexp,
@@ -1118,7 +1118,7 @@ If you get nothing, edbrowse is running sh. Prove it by:
 <p>
 !/bin/bash -c 'echo $RANDOM'
 
-<LI><p>
+<li><p>
 Type `cd dirname' to change directories.
 The new directory is always printed.
 Type cd alone to find out where you are.
@@ -1139,12 +1139,12 @@ You can edit foo, cd .., and write,
 and foo will be copied to the parent directory.
 That's probably not what you want, so be careful when changing directories.
 
-<LI><p>
+<li><p>
 r operates on the current line by default,
 rather than the last line.
 Use $r to read a file at the end of your working text.
 
-<LI><p>
+<li><p>
 The w+ command appends to the file.
 Some versions of ed use W for this operation.
 Some versions of ed use w&gt; for this operation,
@@ -1152,14 +1152,14 @@ but for 40 years &gt; has been the industry standard for write with truncate,
 so using &gt; for append is somewhat confusing.
 And w&gt;&gt; is just too clunky, so I use w+.
 
-<LI><p>
+<li><p>
 w/ writes the data into a file whose name is the last component
 of the current file name.
 This is useful when you've just downloaded this.that.com/foo/bar/package-2.7.7-22.tar.gz,
 and you want to write the file locally, but don't want to retype the stuff at the end.
 Alternatively, f/ changes the filename, keeping only the last component.
 
-<LI><p>
+<li><p>
 Whenever a file is read from or written to disk,
 $var, in the filename, is replaced with the corresponding environment variable.
 Thus you can edit your address book at any time via `e $adbook',
@@ -1184,17 +1184,17 @@ Variable substitution and globbing of filenames can be completely suppressed by 
 If you really want to read a file called *a?, type r `*a?.
 You can escape an individual shell meta character with the backslash, as in fun\*house.
 
-<LI><p>
+<li><p>
 p text will print the text, basically an echo.
 p without anything following prints the line as usual.
 
-<LI><p>
+<li><p>
 Many versions of ed place a $ at the end of a listed line,
 but this is not one of them, at least not by default.
 Use the command `endm' to place end markers around listed lines.
 Listed lines begin with ^ and end with $.
 
-<LI><p>
+<li><p>
 Capital Q does not quit the editor absolutely.
 This is because I often hit caps lock by mistake,
 or even shift q by mistake,
@@ -1205,23 +1205,23 @@ but it does,
 so I disabled capital Q.
 Type qt to quit absolute.
 
-<LI><p>
+<li><p>
 Capital J joins lines together with spaces between them.
 J: joins lines using a colon separator.
 Any string can be used here.
 Whitespace is significant here, as in J : .
 
-<LI><p>
+<li><p>
 0kx unsets the label x.
 This is useful in scripts that want to set labels for temporary work; they can unset those labels when done.
 
-<LI><p>
+<li><p>
 missing line numbers before and after the comma are assumed to be 1 and $.
 This is consistent with ,p -- to print the entire file.
 Edbrowse does not recognize 3;5p, as some versions of ed do.
 The comma is the range separator, and ;p means .,$p.
 
-<LI><p>
+<li><p>
 g continues to sweep until all marked lines are operated on.
 Most versions of ed will not do this.
 Example: a file with 10 lines, 1 through 10, run g/[89]/;m0
@@ -1229,7 +1229,7 @@ Line 8 matches, and lines 8 through 10 are moved to the start.
 At this point ed stops, but I sweep again, and discover the second line, that contains 9, and move that block to the beginning.
 Neither implementation is particularly right or wrong, as far as I can tell.
 
-<LI><p>
+<li><p>
 You cannot enter one command across two physical lines
 by putting a backslash at the end of the first line.
 And there's no need to in any case, because perl supports \n translation.
@@ -1237,7 +1237,7 @@ To split a line in the middle of the word doghouse, type:
 <p>
 s/doghouse/dog-\nhouse/
 
-<LI><p>
+<li><p>
 %line on the right side of a substitute command becomes the line number.
 <br>
 s/^/%line. /
@@ -1255,33 +1255,42 @@ If you want the latter behavior, then do this.
 <br>
 ,s/@@@/%line/
 
-<LI><p>
+<li><p>
 Only the first 500 characters of a line are displayed.
 The rest of the line is in the buffer, and can even be modified via a substitute command,
 but if you want to see it, you will need to split it,
 as in the doghouse example above.
 You can change the number of characters displayed by using the ll command.
 
-<LI><p>
+<li><p>
 a+ adds text, like a, but also adds the line you last typed,
 when you thought you were in append mode, but you weren't.
 
-<LI><p>
+<li><p>
 This program is less tolerant of whitespace than /bin/ed.
 <br>
 57 , 63 p      will not fly.
 
-<LI><p>
+<li><p>
 When searching for a regular expression, both ed and edbrowse will wrap around the buffer, back to the beginning.
 Thus /./ on the last line prints the first line.
 This behavior can be turned on and off via the sw (search with wrap) command.
 Some people prefer to stop searching at the end of the buffer, without going back to the beginning.
 
-<LI><p>
+<li><p>
 A single % on the right hand side of a substitution is replaced with the last right hand side.
 Some versions of ed do this, some don't.
 
-<LI><p>
+<li><p>
+\1 is the first back reference, the first grouping by parentheses.
+This is the same as ed or said.
+Remember the parentheses convention.
+With ebre+, /\([ab]\)\1/ will match aa or bb, not ab or ba;
+with ebre- use /([ab])\1/.
+A leading 0 indicates an octal code.
+/\07/ searches for control g bell.
+
+<li><p>
 s, is shorthand for s/, +/,\n
 This is used to split lines at phrase boundaries.
 You can also use s. to split a line after the first period -- at a sentence boundary.
@@ -1290,10 +1299,10 @@ s,3 splits the line after the third comma.
 You might need to use s.2 if the sentence begins with Mr. Flintstone.
 Use s.$ for the last period.
 
-<LI><p>
+<li><p>
 Type s by itself for s//%.
 
-<LI><p>
+<li><p>
 /xyz/! searches for the next line that does not contain xyz.
 ed does not do this, but sed does, and it's quite handy.
 Note that xyz is in the remembered regexp buffer, and so is !.
@@ -1301,7 +1310,7 @@ type / for the next line that doesn't have xyz.
 type ? for the previous line that doesn't have xyz.
 Note that there is no need for g/xyz/! since that is the same as v/xyz/.
 
-<LI><p>
+<li><p>
 As mentioned earlier, the i suffix on a search or substitute means case insensitive.
 This is perl compatible.
 The f suffix means forget; these strings are not stored for the purposes of search and replace.
@@ -1312,7 +1321,7 @@ The $ suffix makes the last substitution on the line.
 Some versions of sed do this.
 In summary, the possible suffixes for a substitute command are i f g $ number p, in any order, although $ cannot appear with g or with a number.
 
-<LI><p>
+<li><p>
 The sg command makes searches and substitutions global across editing sessions.
 This is a toggle, so type sg again to keep search strings local to their sessions.
 As with any toggle, you can enter sg+ or sg-.
@@ -1326,7 +1335,7 @@ Similarly, you can use % to refer to "bar".
 The sg- command returns this editor to its local behavior,
 where each file has its own search/replace strings.
 
-<LI><p>
+<li><p>
 Errors associated with reading or writing files, or switching sessions,
 are always printed. Other errors elicit the usual question mark,
 whence you must type h to read the explanation.
@@ -1335,7 +1344,7 @@ This is consistent with ed.
 Most of the new commands, introduced by edbrowse, elicit a question mark on error, but some print the error message.
 This is a matter of taste, and largely at the discretion of the software developers.
 
-<LI><p>
+<li><p>
 In most versions of ed, the command z7 means .,+6p,
 making the current line +7.
 This is inconsistent, having one and only one ed command that leaves dot
@@ -4070,15 +4079,15 @@ Proxy servers are used for a variety of reasons.
 Here are just a few of them:
 
 <OL>
-<LI><p>Efficiency.
+<li><p>Efficiency.
 The proxy server may be able to store previously-accessed webpages
 (known as caching).
 If your connection to the proxy is faster than your connection to the rest of the Internet,
 then caching ensures that frequently-accessed web pages load quickly.
-<LI><p>Policies.
+<li><p>Policies.
 Some firewall administrators require their users to use
 a proxy server.
-<LI><p>Anonymity.
+<li><p>Anonymity.
 There are so-called anonymizing
 proxy servers that hide your IP address from the websites that you browse.
 </OL>
@@ -4411,15 +4420,15 @@ Blank lines are also ignored.
 All other lines fall into one of 7 categories.
 
 <OL>
-<LI><p> Define an option using the keyword=value syntax.
-<LI><p> Define an edbrowse script that can be invoked from the command line
+<li><p> Define an option using the keyword=value syntax.
+<li><p> Define an edbrowse script that can be invoked from the command line
 or from another script.
-<LI><p> An edbrowse command, that is part of an edbrowse script.
-<LI><p> Establish an email account.
+<li><p> An edbrowse command, that is part of an edbrowse script.
+<li><p> Establish an email account.
 This will be described later, under email clients.
-<LI><p> A mail filtering rule.
-<LI><p> Describe a plugin.
-<LI><p> Describe a table or a view in an sql database.
+<li><p> A mail filtering rule.
+<li><p> Describe a plugin.
+<li><p> Describe a table or a view in an sql database.
 </OL>
 
 <h2 id="keyval">Keyword = Value</h2>
