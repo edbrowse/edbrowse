@@ -129,6 +129,19 @@ The makefile supports the environment variables EBDEBUG=on,
 for symbolic debugging via gdb, and EBDEMIN=on for javascript deminimization.
 Distributors should not set these flags.
 
+You can test the executable by edbrowse src/jsrt
+jsrt means javascript regression test.
+You will get a number, the size of the file, just as you would from /bin/ed.
+Then type b for browse.
+You should get something like this; if you do then all is well.
+
+relative
+body loading
+complete
+688
+30 seconds have passed!
+lines 31 through 32 have been added
+
 ------------------------------------------------------------
 
 Edbrowse creates a system wide temp directory if it is not already present.
