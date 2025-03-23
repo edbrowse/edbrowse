@@ -947,14 +947,11 @@ bool unfoldBuffer(int cx, bool cr, char **data, int *len)
 	return unfoldBufferW(w, cr, data, len);
 }
 
-/* shift string to upper, lower, or mixed case */
-/* action is u, l, or m. */
+// shift string to upper or lower case
+// action is u or l.
 void caseShift(char *s, char action)
 {
 	char c;
-	int mc = 0;
-	bool ws = true;
-
 	for (; (c = *s); ++s) {
 		if (action == 'u') {
 			if (isalphaByte(c))
@@ -966,27 +963,83 @@ void caseShift(char *s, char action)
 				*s = tolower(c);
 			continue;
 		}
-/* mixed case left */
-		if (isalphaByte(c)) {
+	}
+}
+
+// support routines for i_caseShift below
+// this assumes a utf8 string
+static bool i_isalpha(const char *s)
+{
+	uchar c = *(const uchar*)s, d = *(const uchar*)(s+1);
+	if(!(c&0x80)) return isalpha(c) ? true : false;
+	if((c&0xe0) != 0xc0) return false;
+	uchar u = (c<<6) | (d&0x3f);
+	if(u < 0xc0) return false; // out of range
+	if(u == 0xd7 || u == 0xf7) return false; // times divide
+	return true;
+}
+
+static void i_tolower(char *s)
+{
+	uchar c = *(uchar*)s, d = *(uchar*)(s+1);
+	if(!(c&0x80)) {
+		*s = tolower(c);
+		return;
+	}
+	uchar u = (c<<6) | (d&0x3f);
+	if(u == 0xdf) return;
+	 s[1] |= 0x20;
+}
+
+static void i_toupper(char *s)
+{
+	uchar c = *(uchar*)s, d = *(uchar*)(s+1);
+	if(!(c&0x80)) {
+		*s = toupper(c);
+		return;
+	}
+	 s[1] &= ~0x20;
+}
+
+// shift string to upper, lower, or mixed case.
+// action is u, l, or m.
+// This is international version, up to unicode 0xff.
+void i_caseShift(char *s, char action)
+{
+	char c;
+	int mc = 0;
+	bool ws = true;
+
+	for (; (c = *s); ++s) {
+// trailing parts of utf8
+	if(((uchar)c&0xc0) == 0x80) continue;
+		if (action == 'u') {
+			if (i_isalpha(s))
+				i_toupper(s);
+			continue;
+		}
+		if (action == 'l') {
+			if (i_isalpha(s))
+				i_tolower(s);
+			continue;
+		}
+// mixed case left
+		if (i_isalpha(s)) {
 			if (ws)
-				c = toupper(c);
+				i_toupper(s);
 			else
-				c = tolower(c);
-			if (ws && c == 'M')
-				mc = 1;
-			else if (mc == 1 && c == 'c')
-				mc = 2;
+				i_tolower(s);
+			if (ws && *s == 'M') mc = 1;
+			else if (mc == 1 && *s == 'c') mc = 2;
 			else if (mc == 2) {
-				c = toupper(c);
+				i_toupper(s);
 				mc = 0;
-			} else
-				mc = 0;
-			*s = c;
+			} else mc = 0;
 			ws = false;
 			continue;
 		}
 		ws = true, mc = 0;
-	}			/* loop */
+	}
 }
 
 // foo-bar has to become fooBar

@@ -3847,7 +3847,7 @@ static int replaceText(const char *line, int len, const char *rhs,
 			int savelen = rlen;
 			span = re_vector[1] - re_vector[0];
 			stringAndBytes(&r, &rlen, line + re_vector[0], span);
-			caseShift(r + savelen, rhs[0]);
+			i_caseShift(r + savelen, rhs[0]);
 			if (!global) break;
 			nth = 0;
 			continue;

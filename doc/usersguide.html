@@ -2458,6 +2458,16 @@ All the other substitution suffixes apply.
 To change foo, Foo, FOo, and FOO to FOO, everywhere,
 type ,s/\bfoo\b/uc/ig.
 
+<p>
+Assuming the document is in utf8,
+these directives respect international characters, up to unicode 0xff.
+This doesn't embrace every language, obviously,
+but it handles French, German, spanish, and so on.
+thus
+"el niño is in the café"
+becomes
+"EL NIÑO IS IN THE CAFÉ".
+
 <h2 id="bl">Break Line</h2>
 
 <p>

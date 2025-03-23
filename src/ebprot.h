@@ -331,6 +331,7 @@ long long bufferSize(int cx, bool browsing);
 bool unfoldBufferW(const struct ebWindow *w, bool cr, char **data, int *len);
 bool unfoldBuffer(int cx, bool cr, char **data, int *len);
 void caseShift(char *s, char action) ;
+void i_caseShift(char *s, char action) ;
 void camelCase(char *s);
 char fileTypeByName(const char *name, int showlink) ;
 char fileTypeByHandle(int fd) ;
