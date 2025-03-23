@@ -1009,6 +1009,7 @@ void i_caseShift(char *s, char action)
 	char c;
 	int mc = 0;
 	bool ws = true;
+	char *s0 = s;
 
 	for (; (c = *s); ++s) {
 // trailing parts of utf8
@@ -1039,6 +1040,13 @@ void i_caseShift(char *s, char action)
 			continue;
 		}
 		ws = true, mc = 0;
+// code for don't and we'll etc
+		if((c == '\'' ||
+	(c == 0xe0 && s[1] == 0x80 && s[2] == 0x9d)) &&
+	s > s0 &&
+	!(s[-1]&0x80) &&
+	isalpha(s[-1]))
+		ws = false;
 	}
 }
 
