@@ -1513,17 +1513,25 @@ eret returns to the previous editting session, like the button on your tv remote
 e/foo moves ahead to the session whose file name, or html title, contains the substring foo.
 The search is case insensitive.
 This search will wrap around if the sw (search with wrap) option is enabled.
-If sss (search similar sessions) is enabled, the search restricts to sessions of the same mode: directory, browse, imap, etc.
 e?foo moves back to the session whose file name, or html title, contains the substring foo.
-A script can create temp buffers, and name them, and move among them, without knowing their session numbers.
-Use enew to create a new empty buffer, f to name it, and M to move it to a new session.
-Use etmp if you don't want to check whether the current buffer has been written.
+This is helpful when you have many files open in parallel.
+Imagine editing *.c, to make some systemic changes across several sourcefiles in a large project.
+You want to move to format.c but don't remember which session contains it.
+You can use bflist to find the session number, but it is easier to type e/format.
+
+<p>
+If sss (search similar sessions) is enabled, the search restricts to sessions of the same mode: directory, browse, imap, etc.
 
 <p>
 enum moves to the sesssion indicated by the number on the current line.
 A new session is created if none was there before.
 The first number on the line is chosen.
 For example, enum on the line jj3jj7jj moves to session 3.
+
+<p>
+enew creates a new buffer on the stack.
+etmp is the same as enew, but bw is implied.
+It is a temp buffer and edbrowse doesn't care if it is written anywhere.
 
 <p>
 If you quit a session you are moved to the next valid editing session,
