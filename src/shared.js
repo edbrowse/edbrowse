@@ -619,20 +619,19 @@ if(!this[evarray]) {
 /* attaching the first handler */
 if(db$flags(1))  alert3("establish " + this.nodeName + "." + evfn);
 eval(
-'this["'+evfn+'"] = function(e){ var rc, a = this["' + evarray + '"]; \
-if(this["' + ev + '"] && e.eventPhase < 3) { \
-alert3("fire orig tag " + (this.eb$seqno >= 0 ? this.eb$seqno : -1)); rc = this["' + ev + '"](e); alert3("endfire orig");} \
-if((typeof rc == "boolean" || typeof rc == "number") && !rc) return false; \
-for(var i = 0; i<a.length; ++i) a[i].did$run = false; \
-for(var i = 0; i<a.length; ++i) { var h = a[i];if(h.did$run) continue; \
-if(e.eventPhase== 1 && !h.do$capture || e.eventPhase == 3 && !h.do$bubble) continue; \
-var ehsn = h.ehsn; \
-if(ehsn) ehsn = "" + ehsn; else ehsn = ""; /* from int to string */ \
-h.did$run = true; alert3("fire tag " + (this.eb$seqno >= 0 ? this.eb$seqno : -1) + (ehsn.length ? " handler " + ehsn : "")); rc = h.call(this,e); alert3("endfire handler " + ehsn); \
-if(h.do$once) { alert3("once"); this.removeEventListener(e.type, h, h.do$capture); } \
-if((typeof rc == "boolean" || typeof rc == "number") && !rc) return false; \
-i = -1; \
-} return true; };');
+'this["'+evfn+'"] = function(e){ var rc, a = this["' + evarray + '"]; ' +
+'if(this["' + ev + '"] && e.eventPhase < 3) { ' +
+'alert3("fire orig tag " + (this.eb$seqno >= 0 ? this.eb$seqno : -1)); rc = this["' + ev + '"](e); alert3("endfire orig");} ' +
+'if((typeof rc == "boolean" || typeof rc == "number") && !rc) return false; ' +
+'for(var i = 0; i<a.length; ++i) a[i].did$run = false; ' +
+'for(var i = 0; i<a.length; ++i) { var h = a[i];if(h.did$run) continue; ' +
+'if(e.eventPhase== 1 && !h.do$capture || e.eventPhase == 3 && !h.do$bubble) continue; ' +
+'var ehsn = h.ehsn; ' +
+'if(ehsn) ehsn = "" + ehsn; else ehsn = ""; /* from int to string */ ' +
+'h.did$run = true; alert3("fire tag " + (this.eb$seqno >= 0 ? this.eb$seqno : -1) + (ehsn.length ? " handler " + ehsn : "")); rc = h.call(this,e); alert3("endfire handler " + ehsn); ' +
+'if(h.do$once) { alert3("once"); this.removeEventListener(e.type, h, h.do$capture); } ' +
+'if((typeof rc == "boolean" || typeof rc == "number") && !rc) return false; ' +
+'i = -1; } return true; };');
 
 this[evarray] = [];
 }

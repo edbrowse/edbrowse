@@ -1151,29 +1151,29 @@ var ulist = ["href", "href", "src"];
 for(var i=0; i<cnlist.length; ++i) {
 var cn = cnlist[i]; // class name
 var u = ulist[i]; // url name
-eval('Object.defineProperty(' + cn + '.prototype, "' + u + '", { \
-get: function() { return this.href$2 ? this.href$2 : ""}, \
-set: function(h) { if(h === null || h === undefined) h = ""; \
-if(h instanceof URL || h.dom$class == "URL") h = h.toString(); \
-var w = my$win(); \
-if(typeof h != "string") { alert3("hrefset " + typeof h); \
-w.hrefset$p.push("' + cn + '"); \
-w.hrefset$a.push(h); \
-return; } \
-/* h is a string version of the url. Dont know what to do if h is empty. */ \
-if(!h) return; \
-var last_href = (this.href$2 ? this.href$2.toString() : null); \
-this.setAttribute("' + u +'",h); \
-/* special code for setting frame.src, redirect to a new page. */ \
-h = this.href$2.href$val; \
-if(this.is$frame && this.eb$expf && last_href != h) { \
-/* There is a nasty corner case here, dont know if it ever happens. What if we are replacing the running frame? window.parent.src = new_url; See if we can get around it this way. */ \
-if(w == this.contentWindow) { w.location = h; return; } \
-delete this.eb$expf; \
-eb$unframe(this); /* fix links on the edbrowse side */ \
-/* I can force the opening of this new frame, but should I? */ \
-this.contentDocument; eb$unframe2(this); \
-} }});');
+eval('Object.defineProperty(' + cn + '.prototype, "' + u + '", { ' +
+'get: function() { return this.href$2 ? this.href$2 : ""}, ' +
+'set: function(h) { if(h === null || h === undefined) h = ""; ' +
+'if(h instanceof URL || h.dom$class == "URL") h = h.toString(); ' +
+'var w = my$win(); ' +
+'if(typeof h != "string") { alert3("hrefset " + typeof h); ' +
+'w.hrefset$p.push("' + cn + '"); ' +
+'w.hrefset$a.push(h); ' +
+'return; } ' +
+'/* h is a string version of the url. Dont know what to do if h is empty. */ ' +
+'if(!h) return; ' +
+'var last_href = (this.href$2 ? this.href$2.toString() : null); ' +
+'this.setAttribute("' + u +'",h); ' +
+'/* special code for setting frame.src, redirect to a new page. */ ' +
+'h = this.href$2.href$val; ' +
+'if(this.is$frame && this.eb$expf && last_href != h) { ' +
+'/* There is a nasty corner case here, dont know if it ever happens. What if we are replacing the running frame? window.parent.src = new_url; See if we can get around it this way. */ ' +
+'if(w == this.contentWindow) { w.location = h; return; } ' +
+'delete this.eb$expf; ' +
+'eb$unframe(this); /* fix links on the edbrowse side */ ' +
+'/* I can force the opening of this new frame, but should I? */ ' +
+'this.contentDocument; eb$unframe2(this); ' +
+'} }});');
 var piecelist = ["protocol", "pathname", "host", "search", "hostname", "port", "hash"];
 for(var j=0; j<piecelist.length; ++j) {
 var piece = piecelist[j];
@@ -1196,19 +1196,19 @@ var ulist = ["action", "src", "src", "href", "href", "src"];
 for(var i=0; i<cnlist.length; ++i) {
 var cn = cnlist[i]; // class name
 var u = ulist[i]; // url name
-eval('Object.defineProperty(' + cn + '.prototype, "' + u + '", { \
-get: function() { return this.href$2 ? this.href$2 : ""}, \
-set: function(h) { if(h instanceof URL || h.dom$class == "URL") h = h.toString(); \
-if(h === null || h === undefined) h = ""; \
-var w = my$win(); \
-if(typeof h != "string") { alert3("hrefset " + typeof h); \
-w.hrefset$p.push("' + cn + '"); \
-w.hrefset$a.push(h); \
-return; } \
-if(!h) return; \
-var last_href = (this.href$2 ? this.href$2 : null); \
-this.setAttribute("' + u +'",h) \
- }});');
+eval('Object.defineProperty(' + cn + '.prototype, "' + u + '", { ' +
+'get: function() { return this.href$2 ? this.href$2 : ""}, ' +
+'set: function(h) { if(h instanceof URL || h.dom$class == "URL") h = h.toString(); ' +
+'if(h === null || h === undefined) h = ""; ' +
+'var w = my$win(); ' +
+'if(typeof h != "string") { alert3("hrefset " + typeof h); ' +
+'w.hrefset$p.push("' + cn + '"); ' +
+'w.hrefset$a.push(h); ' +
+'return; } ' +
+'if(!h) return; ' +
+'var last_href = (this.href$2 ? this.href$2 : null); ' +
+'this.setAttribute("' + u +'",h) ' +
+' }});');
 }
 })();
 
