@@ -106,11 +106,12 @@ cd quickjs
 make
 If you get a lot of atomic undefines:
 make EXTRA_LIBS=-latomic
-This builds a static library- libquickjs.a.
+Even with this, some targets do not link properly on some platforms,
+but I get the static library libquickjs.a, and qjs, which is all I need.
 By default, edbrowse links to this library, and thus the
 quickjs code is part of edbrowse, and a quickjs package,
 or a dependency thereto, is not necessary.
-If your distrubution provides quickjs like a prebuilt package,
+If your distribution provides quickjs like a prebuilt package,
 set QUICKJS_INCLUDE to the quickjs directory containing its
 library header files, and QUICKJS_LIB to the directory containing
 the libquickjs.a static library.

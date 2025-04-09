@@ -17,8 +17,17 @@ you will need to include the MIT open source license.
 // So this basic include should work.
 #include "quickjs-libc.h"
 
+/*********************************************************************
+Somewhere between 01/03/2024 and 02/14/2024, JS_VALUE_GET_OBJ
+became opaque. Moved from the visible quickjs.h to quickjs.c.
+I don't know why. So one of those dreaded copy operations here.
+Let's hope this macro doesn't change out from under me; not likely.
+*********************************************************************/
+typedef struct JSObject JSObject;
+#define JS_VALUE_GET_OBJ(v) ((JSObject *)JS_VALUE_GET_PTR(v))
+
 // to track down memory leaks
-// Warning, if you turn this feature on it slows things down.
+// Warning, if you turn this feature on it slows things down, a lot!
 #ifdef LEAK
 // the quick js pointer
 struct qjp { struct qjp *next; void *ptr; short count; short lineno; };
