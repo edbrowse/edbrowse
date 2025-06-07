@@ -13,7 +13,7 @@ blind, script, accessible">
 <meta charset="UTF-8">
 <TITLE> edbrowse documentation </TITLE>
 <LINK REL="SHORTCUT ICON" href="pc.ico">
-        <style>
+<style>
 body { background: white; color: black; font-family: Arial,Helvetica,sans-serif; font-size: 1.0em; }
 a:link { color: red; }
 a:active { color: green; }
@@ -1044,7 +1044,7 @@ rather than the traditional regexp library.
 Hence regular expressions have more features, and more power,
 than the regular expressions employed by /bin/ed.
 The syntax is also somewhat different.
-For instance, perl uses bare parentheses where ed uses escaped braces --
+For instance, perl uses bare parentheses where ed uses escaped parentheses
 to delimit sections of matched text.
 And perl uses $1 ... $9 to reference the matched substrings,
 whereas ed uses \1 ... \9.
@@ -1140,9 +1140,35 @@ and foo will be copied to the parent directory.
 That's probably not what you want, so be careful when changing directories.
 
 <li><p>
+In edbrowse,
 r operates on the current line by default,
-rather than the last line.
-Use $r to read a file at the end of your working text.
+just like most other commands.
+This is my effort to be consistent.
+In /bin/ed,
+r operates on the last line by default.
+Use
+<br>
+$r foo.txt
+<br>
+to read the file foo.txt at the end of the buffer.
+
+<li><p>
+In both edbrowse and /bin/ed:
+<br>
+r foo.txt
+<br>
+reads the file foo.txt into the buffer and
+<br>
+w foo.txt
+<br>
+writes the buffer to the file foo.txt.
+<p>
+If the buffer has no file name,
+edbrowse keeps the buffer without a file name,
+but /bin/ed setts the file name of the buffer to foo.txt.
+
+<li><p>
+In /bin/ed, the r command without a file name uses the current file name, but edbrowse treats this as an error.
 
 <li><p>
 The w+ command appends to the file.
@@ -1776,7 +1802,7 @@ This will be discussed later.
 <!--<font size=3 face=Arial,Helvetica,sans-serif>-->edbrowse  -v    (show version)
 edbrowse -h (this message)
 edbrowse -c (edit config file)
-edbrowse [-d#] -f[#] (fetch mail) 
+edbrowse [-d#] -f[#] (fetch mail)
 edbrowse  [-d#] -[p]m    (read pending mail)
 edbrowse  [-d#] -[p]fm[#]    (fetch mail and read pending mail)
 edbrowse  [-d#] -m[#] address1 address2 ... file [+attachments]
@@ -2266,7 +2292,8 @@ Similarly, .l+2 links this file into the directory two levels up in the edbrowse
 Again, you can switch to session 3 and rename it if you wish.
 For best results, the current directory should have an absolute path.
 If it does not, results can be unexpected.
-If you are located in directory foo, and you edit . in session 1 and ../bar in session 2, .L2 will not do what you want.
+If you are located in directory foo, and you edit . in session 1,
+and the parallel directory ../bar in session 2, .L2 will not do what you want.
 A file j in foo will have a counterpart j in ../bar that is a symbolic link to ./j, because that is how it is seen from foo.
 j is symbolically linked to j.
 Accessing j in bar leads to infinite recursion.
@@ -2925,7 +2952,7 @@ Name: Sally
 <br>
 Birthdate: 01/27/1977
 <br>
-Deathdate: 
+Deathdate:
 <br>
 Gender: F
 
