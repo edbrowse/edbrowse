@@ -1258,6 +1258,10 @@ this format, some or all of this message may not be legible.\r\n\r\n--");
 // If the filename has a quote in it, forget it.
 // Also, suppress filename if this is an alternate presentation.
 			s2 = 0;
+			if (!ismc && (cx = stringIsNum(s)) >= 0) {
+				s = sessionList[cx].lw->f0.fileName;
+				if(!s) s = "\"";
+			}
 			if (!nalt && !strchr(s, '"')
 			    && (ismc || stringIsNum(s) < 0)) {
 // for security reasons, and convenience, don't present the absolute path.
