@@ -1,7 +1,7 @@
 Here are some changes introduced by recent versions of edbrowse.
 
 3.8.12
-Make adjustments as quickjs evlolves. Resolve build issues.
+Make adjustments as quickjs evolves. Resolve build issues.
 
 3.8.11
 uc lc mc are internationalized, up to unicode 0xff.
