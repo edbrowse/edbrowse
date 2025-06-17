@@ -1260,7 +1260,8 @@ this format, some or all of this message may not be legible.\r\n\r\n--");
 			s2 = 0;
 			if (!ismc && (cx = stringIsNum(s)) >= 0) {
 				s = sessionList[cx].lw->f0.fileName;
-				if(!s) s = "\"";
+// If no file name, call it /, that will be disallowed downstream
+				if(!s) s = "/";
 			}
 			if (!nalt && !strchr(s, '"')
 			    && (ismc || stringIsNum(s) < 0)) {
