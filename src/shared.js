@@ -4370,6 +4370,60 @@ alert3("process message complete");
 }
 }
 
+function lastModifiedByHead(url) {
+var d = new Date; // date object
+var lm;
+if(typeof url == "string" && url.match(/^https?:\/\//)) {
+var xhr = new XMLHttpRequest;
+xhr.open("head", url, false);
+xhr.send("", 0);
+if(xhr.status == 200) {
+var r = xhr.responseHeaders;
+lm = r["Last-Modified"];
+if(typeof lm == "string" && lm.length > 10) {
+// the Date object should accept various formats from the web server
+// in case there are variations.
+d = new Date(lm);
+if(!d) // bad format, revert back to current date
+d = new Date;
+}
+}
+}
+// date in a standard format
+lm = d.toString();
+// from: Sat Feb 22 2025 23:54:24 GMT-0500
+// to: Tuesday, December 16, 2017 11:09:42
+lm = lm.replace(/ GMT.*/, ""); // don't need that
+var lma = lm.split(' ');
+// weekday short to long
+var wsl = {
+"Sun":"Sunday",
+"Mon":"Monday",
+"Tue":"Tuesday",
+"Wed":"Wednesday",
+"Thu":"Thursday",
+"Fri":"Friday",
+"Sat":"Saturday",
+}
+// month short to long
+var msl = {
+"Jan":"January",
+"Feb":"February",
+"Mar":"March",
+"Apr":"April",
+"May":"May",
+"Jun":"June",
+"Jul":"July",
+"Aug":"August",
+"Sep":"September",
+"Oct":"October",
+"Nov":"November",
+"Dec":"December",
+}
+lm = wsl[lma[0]] + ", " + msl[lma[1]] + " " + lma[2] + ", " + lma[3] + " " + lma[4];
+return lm;
+}
+
 // NextSection
 /*********************************************************************
 MessagePort and MessageChannel
@@ -6074,7 +6128,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "url_rebuild", "url_hrefset", "sortTime",
 "DOMParser",
 "xml_open", "xml_srh", "xml_grh", "xml_garh", "xml_send", "xml_parse",
-"onmessage$$running",
+"onmessage$$running", "lastModifiedByHead",
 ];
 for(var i=0; i<flist.length; ++i)
 Object.defineProperty(this, flist[i], {writable:false,configurable:false});
