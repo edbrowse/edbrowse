@@ -836,7 +836,7 @@ xhr.addEventListener("load", function(e){ alert(`target ${e.target} phase ${e.ev
 xhr.open("get", "http://edbrowse.org", true);
 xhr.send("", 0);
 // this test doesn't work if xhr is asynchronous
-if(xhr.responseText.indexOf("100% text based") > 0) alert("looks good"); else alert("search text not found");
+if(xhr.responseText.indexOf("100% text based") > 0) alert("looks good"); else alert("search text not found - check jsbg");
 }
 // xhrTest()
 

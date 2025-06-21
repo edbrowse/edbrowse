@@ -2734,24 +2734,24 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 	int s_l;
 	JSValue u;
 	int32_t pd; // process the data
-	bool dopost = false;
+	bool dopost = false, dohead = false;
 
 	debugPrint(5, "xhr in");
 	JS_ToInt32(cx, &pd, argv[4]);
 	async = get_property_bool(cx, this, "async");
-	if (!down_jsbg)
-		async = false;
+	if (!down_jsbg) async = false;
 
 // asynchronous xhr before browse and after browse go down different paths.
 // So far I can't get the before browse path to work,
 // at least on nasa.gov, which has lots of xhrs in its onload code.
 // It pushes things over to timers, which work, but the page is rendered
 // shortly after browse time instead of at browse time, which is annoying.
-	if (!cw->browseMode)
-		async = false;
+	if (!cw->browseMode) async = false;
 
 	if (incoming_method && stringEqualCI(incoming_method, "post"))
 		dopost = true;
+	if (incoming_method && stringEqualCI(incoming_method, "head"))
+		dohead = true, async = false;
 // don't need method any more
 	JS_FreeCString(cx, incoming_method);
 
@@ -2814,6 +2814,7 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 // you should never intercept it with a plugin or a download
 // These are already false because of memset above, I'm just sayin...
 	g.down_ok = g.pg_ok = false;
+	g.headrequest = dohead;
 // Do you want to use your own version of a script, with tracing etc?
 // If the url is reliable, you can put an entry in jslocal, and it will be
 // honored here, but, you won't get the http headers, such as content-type,

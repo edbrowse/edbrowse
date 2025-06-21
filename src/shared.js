@@ -3030,15 +3030,16 @@ var code = parseInt(responsebody_array[1]);
 var url2 = responsebody_array[2];
 var http_headers = responsebody_array[3];
 responsebody_array[0] = responsebody_array[1] = responsebody_array[2] = responsebody_array[3] = "";
-this.responseText = responsebody_array.join("\r\n\r\n").trim();
+this.responseText = responsebody_array[4];
+if(typeof this.responseText != "string") this.responseText = "";
 // some want responseText, some just want response
 this.response = this.responseText;
 var hhc = http_headers.split(/\r?\n/);
 for(var i=0; i<hhc.length; ++i) {
 var value1 = hhc[i];
 if(!value1.match(/:/)) continue;
-var value2 = value1.split(":")[0];
-var value3 = value1.split(":")[1];
+var value2 = value1.replace(/:.*/, "");
+var value3 = value1.replace(/^.*?:/, "");
 this.responseHeaders[value2] = value3.trim();
 }
 
