@@ -4373,7 +4373,8 @@ alert3("process message complete");
 function lastModifiedByHead(url) {
 var d = new Date; // date object
 var lm;
-if(typeof url == "string" && url.match(/^https?:\/\//)) {
+url = url.toString(); // from URL object to string
+if(url.match(/^https?:\/\//)) {
 var xhr = new XMLHttpRequest;
 xhr.open("head", url, false);
 xhr.send("", 0);
@@ -4388,6 +4389,7 @@ if(!d) // bad format, revert back to current date
 d = new Date;
 }
 }
+else alert3(`lastModified head request failed status ${xhr.status}`);
 }
 // date in a standard format
 lm = d.toString();

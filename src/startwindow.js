@@ -2450,6 +2450,27 @@ document.all.tags = function(s) {
 return mw$.gebtn(document.body, s.toLowerCase());
 }
 
+/*********************************************************************
+We may want to capture the mod time from the http headers, when we download,
+and remember it and use it here. It would be more efficient,
+and obviate the case where the head request didn't work for some reason.
+But retain only the base html modification time, not js files, css files,
+frames on the page, etc.
+And update if the page is replaced with another page.
+So we have to be a bit careful.
+There is also the matter of a local html file. It would be good to grab
+the modification time on the file, stat().
+That requires a native method, that we could put in the master window;
+is there any security risk in doing that?
+Meantime, this should serve.
+We may want to put it on Document.prototype, not just the primary document,
+I don't know if that makes sense.
+*********************************************************************/
+Object.defineProperty(document, "lastModified", {
+get: function() {
+return mw$.lastModifiedByHead(this.location);
+}});
+
 swm("eb$demin", mw$.deminimize)
 swm("eb$watch", mw$.addTrace)
 /*
