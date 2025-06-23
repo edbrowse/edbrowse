@@ -2426,6 +2426,21 @@ static JSValue nat_win_close(JSContext * cx, JSValueConst this, int argc, JSValu
 	return JS_UNDEFINED;
 }
 
+static JSValue nat_modtime(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
+{
+	const char *file = 0;
+	int64_t t = 0;
+	struct stat buf;
+	if (argc > 0)
+		file = JS_ToCString(cx, argv[0]);
+	if (file && *file &&
+	!stat(file, &buf))
+		t = buf.st_mtime;
+	if(argc > 0)
+		JS_FreeCString(cx, file);
+	return JS_NewInt64(cx, t);
+}
+
 // find the frame, in the current window, that goes with this.
 // Used by document.write to put the html in the right frame.
 static Frame *doc2frame(JSValueConst this)
@@ -3513,6 +3528,8 @@ JS_NewCFunction(mwc, nat_prompt, "prompt", 2), JS_PROP_ENUMERABLE);
 JS_NewCFunction(mwc, nat_confirm, "confirm", 1), JS_PROP_ENUMERABLE);
     JS_DefinePropertyValueStr(mwc, mwo, "win$close",
 JS_NewCFunction(mwc, nat_win_close, "win_close", 0), JS_PROP_ENUMERABLE);
+    JS_DefinePropertyValueStr(mwc, mwo, "fileModTime",
+JS_NewCFunction(mwc, nat_modtime, "modtime", 1), JS_PROP_ENUMERABLE);
     JS_DefinePropertyValueStr(mwc, mwo, "resolveURL",
 JS_NewCFunction(mwc, nat_resolveURL, "resolveURL", 2), JS_PROP_ENUMERABLE);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$newLocation",

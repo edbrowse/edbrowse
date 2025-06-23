@@ -4390,9 +4390,15 @@ d = new Date;
 }
 }
 else alert3(`lastModified head request failed status ${xhr.status}`);
+} else {
+// not a url, assume it is a local file
+var t = fileModTime(url);
+// Date object expects milliseconds not seconds
+if(t) d = new Date(t*1000);
 }
-// date in a standard format
+// put date in a standard format
 lm = d.toString();
+// but that's not the format we want, I guess
 // from: Sat Feb 22 2025 23:54:24 GMT-0500
 // to: Tuesday, December 16, 2017 11:09:42
 lm = lm.replace(/ GMT.*/, ""); // don't need that
