@@ -2382,7 +2382,7 @@ static bool formSubmit(const Tag *form, const Tag *submit, bool dopost, const ch
 	}
 
 skip_encode:
-	if (stringEqualCI(prot, "gopher")) {
+	if (stringEqualCI(prot, "gopher") || stringEqualCI(prot, "gophers")) {
 		requireName = false;
 		fsep = 'g';
 	}
@@ -2871,7 +2871,8 @@ fail:
 				goto fail;
 			}
 		} else if (!stringEqualCI(prot, "https") &&
-			   !stringEqualCI(prot, "gopher")) {
+			   !stringEqualCI(prot, "gopher") &&
+			   !stringEqualCI(prot, "gophers")) {
 			setError(MSG_SubmitProtBad, prot);
 			goto fail;
 		}

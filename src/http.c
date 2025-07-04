@@ -884,7 +884,7 @@ mimestream:
 
 	if (stringEqualCI(prot, "http") || stringEqualCI(prot, "https")) {
 		;		/* ok for now */
-	} else if (stringEqualCI(prot, "gopher")) {
+	} else if (stringEqualCI(prot, "gopher") || stringEqualCI(prot, "gophers")) {
 		return gopherConnect(g);
 	} else if (stringEqualCI(prot, "ftp") ||
 		   stringEqualCI(prot, "ftps") ||
@@ -2185,7 +2185,7 @@ fail:
 static bool gopherConnect(struct i_get *g)
 {
 	CURL *h;		// the curl handle for gopher
-	int protLength;		/* length of "gopher://" */
+	int protLength;		/* length of "gopher://" or "gophers://" */
 	bool transfer_success = false;
 	bool has_slash;
 	char first = 0;

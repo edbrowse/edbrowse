@@ -62,6 +62,9 @@ struct PROTOCOL {
 	{"git", 0, false, true, false},
 	{"svn", 0, false, true, false},
 	{"gopher", 70, false, true, true},
+
+// gophers and gopher can share a port which is the curl default
+	{"gophers", 70, false, true, true},
 	{"magnet", 0, false, false, false},
 	{"irc", 0, false, true, false},
 	{"", 0, false, false, false},
@@ -2867,7 +2870,7 @@ and don't run plugins at all. We don't have to check for those.
 *********************************************************************/
 
 	if (memEqualCI(url, "http:/", 6) ||
-	    memEqualCI(url, "https:/", 7) || memEqualCI(url, "gopher:/", 8)) {
+	    memEqualCI(url, "https:/", 7) || memEqualCI(url, "gopher:/", 8) || memEqualCI(url, "gophers:/", 9)) {
 		s = strstr(url, "://");
 		if (!s)		// should never happen
 			s = url;

@@ -4153,7 +4153,7 @@ static void prerenderNode(Tag *t, bool opentag)
 					else if (stringEqualCI
 						 (prot, "javascript"))
 						t->javapost = true;
-					else if (stringEqualCI(prot, "https"))
+					else if (stringEqualCI(prot, "https") || stringEqualCI(prot, "gophers"))
 						t->secure = true;
 					else if (!stringEqualCI(prot, "http") &&
 						 !stringEqualCI(prot, "gopher"))
