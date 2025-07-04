@@ -2865,13 +2865,12 @@ fail:
 			if (!validAccount(localAccount))
 				goto fail;
 			form->bymail = true;
-		} else if (stringEqualCI(prot, "http")) {
+		} else if (stringEqualCI(prot, "http") || stringEqualCI(prot, "gopher")) {
 			if (form->secure) {
 				setError(MSG_BecameInsecure);
 				goto fail;
 			}
 		} else if (!stringEqualCI(prot, "https") &&
-			   !stringEqualCI(prot, "gopher") &&
 			   !stringEqualCI(prot, "gophers")) {
 			setError(MSG_SubmitProtBad, prot);
 			goto fail;
