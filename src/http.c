@@ -1718,7 +1718,7 @@ static void ftp_listing(struct i_get *g)
 }
 
 /* Format a line from a gopher directory. */
-static void gopher_ls_line(struct i_get *g, char *line)
+static void gopher_ls_line(struct i_get *g, char *line, const char *url_prot, const char *url_host)
 {
 	int port = 0;
 	char first, *text, *pathname, *host, *s, *plus;
@@ -1793,7 +1793,14 @@ static void gopher_ls_line(struct i_get *g, char *line)
 		} else {
 // Just a path
 			pathname = encodePostData(pathname, "./-_$");
-			stringAndString(&g->buffer, &g->length, "gopher://");
+                        if (stringEqualCI(url_host, host)) {
+/* If we've a listing then whether or
+ * not we're using TLS for this host it's working so stick with it. */
+                                stringAndString(&g->buffer, &g->length, url_prot);
+                                stringAndString(&g->buffer, &g->length, "://");
+                        }
+                        else
+                                stringAndString(&g->buffer, &g->length, "gopher://"); // default to plain gopher for compatibility
 			stringAndString(&g->buffer, &g->length, host);
 			if (port && port != 70) {
 				stringAndChar(&g->buffer, &g->length, ':');
@@ -1837,6 +1844,8 @@ static void gopher_listing(struct i_get *g)
 	char *s, *t;
 	char *incomingData = g->buffer;
 	int incomingLen = g->length;
+        char url_prot[MAXPROTLEN], url_host[MAXHOSTLEN];
+        getProtHostURL(g->url, url_prot, url_host);
 	g->buffer = initString(&g->length);
 	stringAndString(&g->buffer, &g->length, "<html>\n<body>\n");
 
@@ -1850,7 +1859,7 @@ static void gopher_listing(struct i_get *g)
 			if (!t || t >= incomingData + incomingLen)
 				break;	/* should never happen */
 			*t = 0;
-			gopher_ls_line(g, s);
+			gopher_ls_line(g, s, url_prot, url_host);
 			s = t + 1;
 		}
 	}
