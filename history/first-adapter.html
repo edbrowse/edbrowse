@@ -158,7 +158,7 @@ If I wanted to add an instruction to the middle of a program I was working on, I
 That pushed everything up one byte, and inserted ea, which is the no-op instruction for the 6502 processor.
 But it had to do more.
 If there was a relative branch around this area, I had to add one to that jump.
-One more byte ahead, or one more byte back, because the space between is one byte longer.
+One more byte ahead, or one more byte back, because the gap between is one byte longer.
 If the jump became more than 127 bytes, then my tool beeped and didn't do anything.
 I couldn't support a relative branch that far.
 I had to go back and make it an absolute two-byte jump, then I could insert the byte.
