@@ -1184,7 +1184,7 @@ dollar:
 				--mif;
 				if(!mif->gone) goto reaction;
 			}
-			goto eof;
+			return;
 		}
 
 		if (key == '^') {
@@ -1261,7 +1261,7 @@ rebulk:
 
 		if (key == 's') {
 			i_puts(MSG_Stop);
-			goto eof;
+			return;
 		}
 
 		if (key == '=') {
@@ -1383,9 +1383,6 @@ redelete:
 	i_puts(MSG_EndFolder);
 	key = '$';
 	goto dollar;
-
-eof:
-	i_puts(MSG_EndFolder);
 }
 
 // \" is an escaped quote inside the string.
