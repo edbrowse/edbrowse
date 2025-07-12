@@ -1088,8 +1088,7 @@ showmessages:
 
 	mif = f->mlist;
 	for (j = 0; j < f->nfetch; ++j, ++mif) {
-		if (mif->gone)
-			continue;
+		if (mif->gone) continue;
 reaction:
 		printEnvelope(mif, 0);
 action:
@@ -1168,8 +1167,7 @@ dispmail:
 			j2 = j;
 			while(--j >= 0) {
 				--mif;
-				if(!mif->gone)
-					break;
+				if(!mif->gone) break;
 			}
 			if(j >= 0)
 				goto reaction;
@@ -1178,6 +1176,7 @@ dispmail:
 			goto reaction;
 		}
 
+dollar:
 		if (key == '$') {
 			j = f->nfetch;
 			mif = f->mlist + j;
@@ -1185,9 +1184,7 @@ dispmail:
 				--mif;
 				if(!mif->gone) goto reaction;
 			}
-// we can't possibly be here!
-			++j, ++mif;
-			goto reaction;
+			goto eof;
 		}
 
 		if (key == '^') {
@@ -1264,7 +1261,7 @@ rebulk:
 
 		if (key == 's') {
 			i_puts(MSG_Stop);
-			break;
+			goto eof;
 		}
 
 		if (key == '=') {
@@ -1383,6 +1380,11 @@ redelete:
 		if(!expunge(handle)) goto abort;
 	}
 
+	i_puts(MSG_EndFolder);
+	key = '$';
+	goto dollar;
+
+eof:
 	i_puts(MSG_EndFolder);
 }
 
