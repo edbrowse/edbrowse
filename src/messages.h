@@ -862,4 +862,5 @@ MSG_ImaskOn,
 	MSG_RestoringBOM,
 	MSG_SearchSameModeOff,
 	MSG_SearchSameModeOn,
+	MSG_DelDotDot,
 };

@@ -1966,6 +1966,10 @@ bool delFiles(int start, int end, bool withtext, char origcmd, char *cmd_p)
 		if (!t)
 			i_printfExit(MSG_NoNlOnDir, file);
 		*t = 0;
+		if(stringEqual(file, "..")) {
+			setError(MSG_DelDotDot);
+			goto abort;
+		}
 		path = makeAbsPath(file);
 		if (!path) {
 abort:

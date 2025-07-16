@@ -4,6 +4,8 @@ Here are some changes introduced by recent versions of edbrowse.
 in imap n does not run off the end of the folder,
 just as p does not back up off the end of the folder.
 
+Support for gophers://
+
 3.8.12
 Make adjustments as quickjs evolves. Resolve build issues.
 

@@ -748,7 +748,7 @@ zeige Kanäle
 nicht im IRC-Senden-Modus
 Punkt wurde verschoben
 kann %s nicht erstellen
-kann %s nicht Löschen
+kann %s nicht Löschen\n
 kann %s nicht umbenennen
 ungültige Zeichen im Ordnernamen
 gelesen
@@ -762,7 +762,7 @@ entferne Byte-Order-Mark
 stelle Byte-Order-Mark wieder her
 0
 0
-0
+kann .. nicht Löschen
 0
 0
 0
