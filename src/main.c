@@ -1379,6 +1379,7 @@ void unreadConfigFile(void)
 
 	memset(accounts, 0, sizeof(accounts));
 	maxAccount = localAccount = 0;
+	netrc = false;
 	memset(mimetypes, 0, sizeof(mimetypes));
 	maxMime = 0;
 	memset(dbtables, 0, sizeof(dbtables));
@@ -2112,6 +2113,11 @@ nokeyword:
 		}
 		if (stringEqual(s, "down_url") && mimeblock == 1) {
 			mt->down_url = true;
+			continue;
+		}
+
+		if (stringEqual(s, "netrc") && !(mailblock | mimeblock | tabblock | nest)) {
+			netrc = true;
 			continue;
 		}
 

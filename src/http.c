@@ -5,7 +5,7 @@
 #include <signal.h>
 #include <time.h>
 
-bool curlActive;
+bool curlActive, netrc;
 const char *curlCiphers;
 int redirect_count = 0;
 char *serverData;
