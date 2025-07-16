@@ -39,7 +39,7 @@ Also available <a href=usersguide_fr.html>in French</a>.
 <h2>Chapter 1, Preface</h2>
 
 <UL>
-<LI><A HREF=#maint> Maintainer </A>
+<LI><A HREF=#maint> Maintainers </A>
 <LI><A HREF=#auth> Author </A>
 <LI><A HREF=#copy> Copyright Notice </A>
 <LI><A HREF=#disclaim> Disclaimer </A>
@@ -166,13 +166,16 @@ Also available <a href=usersguide_fr.html>in French</a>.
 <HR>
 <h1>Chapter 1, Preface</h1>
 
-<h2 id="maint">Maintainer</h2>
+<h2 id="maint">Maintainers</h2>
 
 <p>
 The edbrowse home page is <A href=http://edbrowse.org>edbrowse.org</A>.
+The project is maintained by a group of people within the
+<a href=https://github.com/edbrowse>
+edbrowse organization</a> under github.com.
+You can
 <A HREF="mailto:maintainers@edbrowse.org">
-Chris Brannon</A>
-is the current project maintainer and webmaster.
+contact the maintainers</a> here.
 
 <h2 id="auth">Author</h2>
 
@@ -186,7 +189,7 @@ See the files in the history directory for a history of the project.
 <h2 id="copy">Copyright Notice</h2>
 
 <p>
-This program is copyright &copy; Karl Dahlke (and other authors and contributors), 2001-2023.
+This program is copyright &copy; Karl Dahlke (and other authors and contributors), 2001-2025.
 It is made available by the authors under the terms of the GNU General Public License (GPL),
 as articulated by the Free Software Foundation.
 It may be used for any purpose, and redistributed, provided this copyright notice is included.
@@ -253,7 +256,10 @@ Edbrowse presents the following features:
 <UL>
 <li><p> Edbrowse can edit multiple files or browse multiple websites simultaneously, and transfer blocks of text between them in a manner similar to cut &amp; paste.
 For instance, <code>edbrowse *.c</code> accesses all the C sourcefiles in the current directory.
-<li><p> The regular expressions of ed have been replaced with Perl Compatible Regular Expressions, which have more power and flexibility. This simplifies the task of finding or modifying text in a large document. You can, for instance, replace each instance of the word foo, not foot or food, but foo by itself, in upper or lower case, with the word bar, as long as foo is not followed by an exclamation point or a question mark. The change in regular expressions means edbrowse is not 100% backward compatible with ed, though it is close.
+<li><p> The regular expressions of ed have been replaced with Perl Compatible Regular Expressions, which have more power and flexibility.
+This simplifies the task of finding or modifying text in a large document.
+You can, for instance, replace each instance of the word foo, not foot or food, but foo by itself, in upper or lower case, with the word bar, as long as foo is not followed by an exclamation point or a question mark, using perl's "lookahead" feature.
+The change in regular expressions means edbrowse is not 100% backward compatible with ed, though it is close.
 <li><p> Edbrowse can fetch a web page from the Internet as easily as it opens a file on the current computer, using http, https, ftp, or gopher.
 Once the page is fetched into the active buffer, it can be browsed or rendered as text, using the b command.
 This supplements the other one-letter commands which were already part of ed.
