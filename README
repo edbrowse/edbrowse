@@ -116,6 +116,11 @@ set QUICKJS_INCLUDE to the quickjs directory containing its
 library header files, and QUICKJS_LIB to the directory containing
 the libquickjs.a static library.
 
+readline:
+Edbrowse supports using GNU readline for handling input. As such you need
+the readline library and headers e.g. libreadline and libreadline-devel
+packages.
+
 ------------------------------------------------------------
 
 Compiling edbrowse:
