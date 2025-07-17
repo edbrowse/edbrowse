@@ -2834,7 +2834,7 @@ static char *apostropheMacros(const char *line)
 	char *newline = 0, *s = 0;
 	const char *t;
 	char key;
-	int linesize = 0, pass, n;
+	int linesize = 0, pass;
 
 	for (pass = 1; pass <= 2; ++pass) {
 		for (t = line; *t; ++t) {
@@ -4660,7 +4660,6 @@ static char *lessFile(const char *line, bool tamode)
 	bool fromfile = false;
 	int j, k, n, plen, dol;
 	int lno1, lno2;
-	const Window *w2; // far window
 	char *line2, *p;
 	int line2len;
 	skipWhite(&line);
@@ -6412,8 +6411,6 @@ no_action:
 // There aren't very many of them.
 static int twoLetterG(const char *line, const char **runThis)
 {
-	bool rc;
-
 	if (stringEqual(line, "bw") || !strncmp(line, "bw/", 3) || !strncmp(line, "bw?", 3) || (!strncmp(line, "bw", 2) && isdigitByte(line[2]))) {
 		Window *lw;
 		if(!line[2]) lw = cw;
