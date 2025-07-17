@@ -34,7 +34,6 @@ static time_t adbooktime;
 bool loadAddressBook(void)
 {
 	char *buf, *bufend, *v, *record_start, *email_start, *at_sign, *dot, *full_name_start, *s, *t;
-	bool cmt = false;
 	enum { alias, local_part, quoted_part, backslash_escaped, domain,
 		full_name, ignore } state = alias;
 	char c;
