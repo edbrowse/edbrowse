@@ -4059,6 +4059,31 @@ Functions beyond this point support integrated imap,
 reading your email from within an edbrowse buffer.
 *********************************************************************/
 
+// bad utf8 disrupts searching through the buffer, but sometimes isoDecode()
+// creates it. Here line could end in null or \n
+static void stripBadUtf8(uchar *line)
+{
+	uchar *s, *t, c, e;
+	int j;
+	for(s = t =  line; (c = *s) && c != '\n'; ++s) {
+		if(!(c & 0x80)) goto copy; // ascii
+		if(!(c & 0x40)) goto skip;
+		e = ((c&0xfe)<<1), j = 0;
+		while(e & 0x80) {
+			if((s[++j]&0xc0) != 0x80) goto skip;
+			e <<= 1;
+		}
+// this is valid utf8
+		memmove(t, s, ++j);
+		t += j, s += j, --s; continue;
+copy: *t++ = c;
+skip: ;
+	}
+
+	*t = c;
+	if(c) t[1] = 0;
+}
+
 bool imapBufferPresent(void)
 {
 int i;
