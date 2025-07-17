@@ -514,6 +514,8 @@ stop:
 }
 
 // for debugging
+// should this be gated on a debug variable rather than not compiled by default?
+#if 0
 static void printTags(void)
 {
 	int i;
@@ -522,6 +524,7 @@ static void printTags(void)
 		printf("%d %s%s%s\n", i, t->info->name, (t->slash ? "/" : ""), (t->dead ? "*" : ""));
 	}
 }
+#endif
 
 static void pushTag(Tag *t)
 {

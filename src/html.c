@@ -1748,7 +1748,7 @@ and other things that edbrowse doesn't process, so I will just remove them.
 It is possible that this website simply generates some bad html. I haven't seen it elsewhere.
 So this is coded, but commented out.
 *********************************************************************/
-
+#if 0
 static void stripTag(char *b)
 {
 	char *s;
@@ -1766,6 +1766,7 @@ static void stripTag(char *b)
 		++b;
 	}
 }
+#endif
 
 static const char *imageAlt(const Tag *t)
 {

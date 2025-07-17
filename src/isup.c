@@ -3457,7 +3457,7 @@ typedef unsigned int IP32bit;
 #define NULL_IP (IP32bit)(-1)
 
 // Some of this tcp code resurrected from c18cf432e2ca8dca97c80aae59c710f3230cc434
-
+#if 0
 static int tcp_isDots(const char *s)
 {
 	const char *t;
@@ -3479,6 +3479,7 @@ static int tcp_isDots(const char *s)
 	}
 	return (nd == 3);
 }
+#endif
 
 static IP32bit tcp_name_ip(const char *name)
 {
@@ -3511,7 +3512,7 @@ static char *tcp_ip_dots(IP32bit ip)
 	if(ip == NULL_IP) return 0;
 	return inet_ntoa(*(struct in_addr *)&ip);
 }
-
+#if 0
 static char *tcp_name_dots(const char *name)
 {
 	IP32bit ip = tcp_name_ip(name);
@@ -3519,6 +3520,7 @@ static char *tcp_name_dots(const char *name)
 		return 0;
 	return tcp_ip_dots(ip);
 }
+#endif
 
 static IP32bit tcp_dots_ip(const char *s)
 {
@@ -3541,10 +3543,12 @@ static char *tcp_ip_name(IP32bit ip)
 	return hp->h_name;
 }
 
+#if 0
 static char *tcp_dots_name(const char *s)
 {
 	return tcp_ip_name(tcp_dots_ip(s));
 }
+#endif
 
 // Open a socket and set close-on-exec.
 // Linux has SOCK_CLOEXEC, but the manpage says "Linux only" so we'll

@@ -4061,6 +4061,7 @@ reading your email from within an edbrowse buffer.
 
 // bad utf8 disrupts searching through the buffer, but sometimes isoDecode()
 // creates it. Here line could end in null or \n
+#if 0
 static void stripBadUtf8(uchar *line)
 {
 	uchar *s, *t, c, e;
@@ -4083,6 +4084,7 @@ skip: ;
 	*t = c;
 	if(c) t[1] = 0;
 }
+#endif
 
 bool imapBufferPresent(void)
 {
