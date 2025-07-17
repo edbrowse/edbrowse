@@ -118,8 +118,7 @@ the libquickjs.a static library.
 
 readline:
 Edbrowse supports using GNU readline for handling input. As such you need
-the readline library and headers e.g. libreadline and libreadline-devel
-packages.
+the readline library and headers installed e.g. readline and readline-devel.
 
 ------------------------------------------------------------
 
