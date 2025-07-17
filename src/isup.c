@@ -3458,28 +3458,6 @@ typedef unsigned int IP32bit;
 
 // Some of this tcp code resurrected from c18cf432e2ca8dca97c80aae59c710f3230cc434
 
-static int tcp_isDots(const char *s)
-{
-	const char *t;
-	char c;
-	int nd = 0;		// number of dots
-	if (!s)
-		return 0;
-	for (t = s; (c = *t); ++t) {
-		if (c == '.') {
-			++nd;
-			if (t == s || !t[1])
-				return 0;
-			if (t[-1] == '.' || t[1] == '.')
-				return 0;
-			continue;
-		}
-		if (!isdigitByte(c))
-			return 0;
-	}
-	return (nd == 3);
-}
-
 static IP32bit tcp_name_ip(const char *name)
 {
 	struct hostent *hp;
@@ -3512,14 +3490,6 @@ static char *tcp_ip_dots(IP32bit ip)
 	return inet_ntoa(*(struct in_addr *)&ip);
 }
 
-static char *tcp_name_dots(const char *name)
-{
-	IP32bit ip = tcp_name_ip(name);
-	if (ip == NULL_IP)
-		return 0;
-	return tcp_ip_dots(ip);
-}
-
 static IP32bit tcp_dots_ip(const char *s)
 {
 	struct in_addr a;
@@ -3541,10 +3511,6 @@ static char *tcp_ip_name(IP32bit ip)
 	return hp->h_name;
 }
 
-static char *tcp_dots_name(const char *s)
-{
-	return tcp_ip_name(tcp_dots_ip(s));
-}
 
 // Open a socket and set close-on-exec.
 // Linux has SOCK_CLOEXEC, but the manpage says "Linux only" so we'll
