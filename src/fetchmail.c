@@ -1053,8 +1053,8 @@ static char postkey;
 static void scanFolder(CURL * handle, struct FOLDER *f)
 {
 	struct FOLDER *g;
-	struct MIF *mif, *mif2;
-	int j, j2, rc;
+	struct MIF *mif;
+	int j, j2;
 	CURLcode res = CURLE_OK;
 	char *t;
 	char key;
@@ -2982,7 +2982,7 @@ static struct MHINFO *headerGlean(char *start, char *end, bool top)
 	char *s, *t, *q;
 	char *vl, *vr;		/* value left and value right */
 	struct MHINFO *w;
-	int j, k, n;
+	int j;
 
 /* defaults */
 	w = allocZeroMem(sizeof(struct MHINFO));
@@ -4283,7 +4283,6 @@ static void makeLinesAndUids(const struct FOLDER *f)
 // rf parameter means this is a refresh of envelopes
 bool folderDescend(const char *path, bool rf)
 {
-	CURLcode res;
 	CURL *h = cw->imap_h;
 	int act = cw->imap_n;
 	struct MACCOUNT *a = accounts + act - 1;
@@ -4632,7 +4631,6 @@ baddest:
 
 bool imapDelete(int l1, int l2, char cmd)
 {
-	CURLcode res;
 	CURL *h = cw->imap_h;
 	int act = cw->imap_n;
 	struct MACCOUNT *a = accounts + act - 1;
@@ -4681,10 +4679,7 @@ D_check:
 
 bool imapMarkRead(int l1, int l2, char sign)
 {
-	CURLcode res;
 	CURL *h = cw->imap_h;
-	int act = cw->imap_n;
-	struct MACCOUNT *a = accounts + act - 1;
 	int l0;
 	bool rc;
 
@@ -4782,7 +4777,6 @@ baddest:
 
 bool imapDeleteWhileReading(void)
 {
-	CURLcode res;
 	const Window *pw = cw->prev;
 	int uid = cw->imap_n;
 	CURL *h = pw->imap_h;
