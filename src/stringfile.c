@@ -993,7 +993,7 @@ static void i_tolower(char *s)
 
 static void i_toupper(char *s)
 {
-	uchar c = *(uchar*)s, d = *(uchar*)(s+1);
+	uchar c = *(uchar*)s;
 	if(!(c&0x80)) {
 		*s = toupper(c);
 		return;
