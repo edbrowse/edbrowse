@@ -3407,9 +3407,9 @@ static struct MHINFO *headerGlean(char *start, char *end, bool top)
 		addToListBack(&w->components, child);
 		w->end = end = vl;
 	}
-#endif
 
 textonly:
+#endif
 /* Any additional processing of the text, from start to end, can go here. */
 /* Remove leading blank lines or lines with useless words */
 	for (s = start; s < end; s = t + 1) {
