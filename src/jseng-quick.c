@@ -3316,7 +3316,7 @@ void delPendings(const Frame *f)
 {
     JSJobEntry *e;
 				struct list_head *l, *l1;
-    int i, ret, delcount = 0;
+    int i, delcount = 0;
 	struct list_head *jl = (struct list_head *)((char*)jsrt + JSRuntimeJobIndex);
 
     if(!f->jslink)
