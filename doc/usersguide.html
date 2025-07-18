@@ -24,6 +24,7 @@ h2 { text-align: center; color: darkslateblue; font-size: 1.0em; }
 h3 { text-align: center; color: royalblue; font-size: 1.0em; }
 hr { border-style: solid; color: black; height: 2px; }
 p.cen { text-align: center; }
+p.item { color: darkgreen; }
 </style>
 </HEAD>
 
@@ -158,7 +159,6 @@ ebre-
 <br>
 ,s/\bfoo\b(?![!?])/bar/ig
 <p>
-Try doing that with ed.
 The change in regular expressions means edbrowse is not 100% backward compatible with ed, though it is close.
 <li><p> Edbrowse can fetch a web page from the Internet as easily as it opens a file on the current computer, using http, https, ftp, or gopher.
 Once the page is fetched into the active buffer, it can be browsed or rendered as text, using the b command.
@@ -4431,9 +4431,10 @@ You can switch to a new session, view, edit, save, and reapply the config file w
 The config file is in $HOME/.ebrc.
 The "eb" is shorthand for edbrowse.
 You cannot rename the config file; it is what it is.
-However, -c otherfile on the command line causes edbrowse to access a different config file.
+However, -c other_file on the command line causes edbrowse to access a different config file.
 This option must precede any arguments.
-The config command, issued from within edbrowse, continues to access otherfile.
+The config command, issued from within edbrowse,
+will access other_file in this case.
 
 <p>
 The config file is line oriented.
@@ -4462,7 +4463,7 @@ Recall the section on <A HREF=#cook>cookies</A>.
 You'll need a file, often called a cookie jar,
 to store your cookies.
 The line that establishes this cookie jar might look like this.
-<p>
+<p class=item>
 jar = /home/mylogin/.ebsys/cookie-jar
 
 <p>
@@ -4485,7 +4486,7 @@ Here are some additional name=value directives.
 Some of these are used to set up an email account.
 This will become clearer when we talk about the mail client.
 
-<p>
+<p class=item>
 certfile = /etc/pki/tls/cert.pem
 
 <p>
@@ -4493,13 +4494,13 @@ Specify the file that holds the certificates for secure connections.
 This was explained in the section on <A HREF=#ssl>secure connections</A>.
 This can usually be omitted, whereupon edbrowse uses the system's certificate file.
 
-<p>
+<p class=item>
 maildir = /home/mylogin/mbox
 <p>
 Go to this directory when fetching mail.
 thus, if you save a mail message, you'll always know where it is.
 
-<p>
+<p class=item>
 cachedir = /home/mylogin/.ebcache
 <br>
 cachesize = 200
@@ -4527,7 +4528,7 @@ It can also be used in a function that fetches a web page that is static, and fe
 Remember that settings are local to a function, so local+ in a function will not disturb your interactive session.
 This setting does not affect ftp, scp, gopher, etc.
 
-<p>
+<p class=item>
 imapfetch = 40
 
 <p>
@@ -4536,7 +4537,7 @@ The fetch count must be between 1 and 1000.
 In the interactive imap client, you can specify -40, for the first 40 emails (in time order), but that can't be done from the config file.
 I assume you are always starting with the most recent emails.
 
-<p>
+<p class=item>
 envelope = fsd
 
 <p>
@@ -4546,7 +4547,48 @@ The default is fs, from subject.
 This can be changed interactively with the e command.
 The "unseen" field presents a star if the email has not been read.
 
+<p class=item>
+netrc
 <p>
+Keep some or all of your logins and passwords in the file $HOME/.netrc, rather then in .ebrc.
+This is slightly more secure, but not by much.
+<br>
+chmod 600 .netrc, and your passwords are safe from prying eyes.
+<br>
+Similarly, chmod 600 .ebrc and your passwords are safe from prying eyes.
+<br>
+It's not that different.
+<br>
+However, .netrc is a standard location for logins and passwords,
+and is honored by a suite of connectivity programs, including ftp, lftp, nftp, and curl.
+So there are some advantages to having your passwords in .netrc.
+<p>
+The environment variable NETRC indicates an alternate location for the netrc file.
+<p>
+netrc syntax is extremely simple. It specifies a machine, a login, and a password, like this.
+<p>
+machine imap.gmail.com login FredFlintstone password xxxxxxxxxxxxxxxx
+<p>
+Mail accounts in .ebrc have logins and passwords, as we shall see below.
+These become optional if netrc is set.
+Include them here in .ebrc if you like;
+if they are not here, then they should be in .netrc.
+<p>
+If there is one account for a given domain, login and password can be inferred from .netrc.
+There is no need to include login or password here.
+However, if there is more than one account,
+(e.g. multiple gmail accounts, some people have several),
+then this becomes ambiguous.
+The mail block must include at least the login.
+Then edbrowse can use the server and the login to find the password.
+In database parlance, login becomes a secondary key.
+<p>
+the netrc feature is completely optional,
+and as mentioned earlier, it doesn't really enhance security,
+but it is an established standard, consistent with other unix programs.
+Use it if you like; or keep your logins and passwords here in .ebrc.
+
+<p class=item>
 webtimer = 30
 <br>
 mailtimer = 180
@@ -4559,7 +4601,7 @@ other than control backslash (quit), which kills the entire program.
 That's why these timers are here - so you don't hang forever.
 The defaults are 20 and 0 respectively.
 
-<p>
+<p class=item>
 downdir = /home/mylogin/downloads
 
 <p>
@@ -4606,7 +4648,7 @@ For instance, 17/235 means 17 megs received out of 235.
 These are decimal megabytes, not binary 0x100000 megabytes -
 there is only a slight difference.
 
-<p>
+<p class=item>
 nojs = space.com
 <p>
 Specify domains that don't need javascript.
@@ -4626,7 +4668,7 @@ thus, you probably shouldn't block certain pages on this site, or other domains 
 such as google-analytics.com or googlesyndication.com.
 Fetching all those other pages slows down edbrowse, and seems like a waste of time, but if you need javascript, you probably need all of it.
 
-<p>
+<p class=item>
 js = nasa.gov
 <p>
  Specify a site that must have javascript to run properly, such as nasa.gov.
@@ -4637,7 +4679,7 @@ Some users prefer to run edbrowse in this fashion.
 It's definitely faster.
 However, if you run into a new site that requires javascript, you have to edit your config file, add the new site, run config, and rebrowse.
 
-<p>
+<p class=item>
 novs = example.com
 <p>
 Indicate hostnames for which SSL certificate verification should not
@@ -4647,7 +4689,7 @@ since these cannot be verified.
 It should probably not be used for anything serious, such as a site that
 is going to receive your credit card number.
 This directive includes subdomains, such as www.example.com.
-<p>
+<p class=item>
 inserver = pop3.some-domain.com
 <br>
 inport = 110
@@ -4681,7 +4723,7 @@ This is sometimes done when you are directly connected to the mail server
 and traffic is not flowing across the Internet,
 but the server still wants to make sure you are you.
 
-<p>
+<p class=item>
 secure
 
 <p>
@@ -4690,19 +4732,20 @@ This effectively puts stars in front of the port numbers, if ports are specified
 If ports are not specified, the defaults change to reflect the secure connections.
 Default pop3s is 995 and default smtps is 465.
 
-<p>
+<p class=item>
 nofetch
 <p>
 Do not fetch mail from this account through the -f option.
 
-<p>
+<p class=item>
 login = eklhad
 <br>
 password = secret
 <p>
 Specify the login and password that edbrowse uses to fetch your mail.
+This may not be necessary if you are using the netrc feature, as described above.
 
-<p>
+<p class=item>
 from = Full Name
 <br>
 reply = john.smith@some-domain.com
@@ -4714,7 +4757,7 @@ It is
 illegal</A> to use these lines for deceptive purposes.
 Make sure they identify you, and that the reply address is indeed one of your email accounts.
 
-<p>
+<p class=item>
 to = address
 <br>
 cc = address
@@ -4730,7 +4773,7 @@ whence every mail you send out goes back to yourself.
 A filter on the mail server can redirect mail from you into a sent folder.
 That is the only practical use I know of for this feature.
 
-<p>
+<p class=item>
 attach = file
 
 <p>
@@ -4738,7 +4781,7 @@ The named file is sent, as an attachment, on every email you send through this a
 If it is a work account, you might want an image or logo to be part of every email.
 That is the only practical use I know of for this feature.
 
-<p>
+<p class=item>
 imask = 3,5
 <p>
 Present folders 3 and 5 when accessing this account.
@@ -4747,21 +4790,21 @@ You can toggle this masking feature on and off interactively with the imask comm
 When searching for a folder by number or by substring, all folders are searched, not just the ones presented on screen.
 Thus you can still access folders that are not presented or preselected.
 
-<p>
+<p class=item>
 imask = ju,inbox
 <p>
 You can use folder names or unique substrings in the imask directive.
 Note that there are sometimes multiple folders with the substring inbox, so if you want inbox, specify inbox, not just box, so you get an exact match.
 Edbrowse searches for an exact match first, then substring.
 
-<p>
+<p class=item>
 isub = substring
 <p>
 Do not display this substring of the imap folder.
 Also, do not use this substring when searching for a folder.
 A typical substring is [Gmail]/  as seen in gmail accounts.
 
-<p>
+<p class=item>
 dx = 8,2,6
 <p>
 Hard delete from these folders in imap.
@@ -4778,7 +4821,7 @@ Still, if you want to be safe, you might choose to move emails to trash.
 <p>
 You can use folder names or unique substrings in the dx directive.
 
-<p>
+<p class=item>
 adbook = /home/mylogin/.ebsys/address-book
 <p>
 When specifying recipients, you can use aliases instead of full email addresses.
@@ -4807,7 +4850,7 @@ If the prefix of the email address contains special characters, like colon or gr
 On a multi-user system, create this file mode 600, or put it in a directory that is mode 700,
 so that others cannot see all your contacts.
 
-<p>
+<p class=item>
 emoji = /home/mylogin/.ebsys/Emojis.txt
 <p>
 Specify a library of emojis for edbrowse.
@@ -4815,17 +4858,17 @@ This was described in the Emojis section.
 
 <p>
 You can use environment variables or the ~ notation in this, and other pathnames, in .ebrc.
-<br>
+<p class=item>
 emoji = ~/.ebsys/Emojis.txt
 
-<p>
+<p class=item>
 irclog = /home/mylogin/.ebsys/irclog
 <p>
 Specify a log for all your irc chats.
 This log is pulled back into the output buffer when irc is resumed.
 See the section on the Irc Client for more details.
 
-<p>
+<p class=item>
 include = ~/.ebsys/plugins
 <p>
 Include another file, like #include in C, or include() in m4.
@@ -4852,7 +4895,7 @@ is one example.
 So what do we do?
 We lie of course.
 
-<p>
+<p class=item>
 agent = Lynx/2.8.4rel.1 libwww-FM/2.14
 <br>
 agent = Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.1; WOW64; Trident/5.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; .NET4.0C; .NET4.0E)
@@ -4865,7 +4908,7 @@ you can type ua1 to pretend to bee lynx,
 or ua2 to pretend to be Mozilla.
 Type ua0 to resurrect the standard edbrowse identification.
 
-<p>
+<p class=item>
 agentsite = google.com 2
 
 <p>
@@ -5287,7 +5330,7 @@ In some cases the stream is not indicated by protocol or suffix.
 A youtube video, for example, looks like just another html page; yet it can be played by a music player.
 use the urlmatch attribute for this.
 
-<p>
+<p class=item>
 urlmatch = .youtube.com/watch?
 
 <p>
