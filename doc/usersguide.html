@@ -153,6 +153,12 @@ For instance, <code>edbrowse *.c</code> accesses all the C sourcefiles in the cu
 <li><p> The regular expressions of ed have been replaced with Perl Compatible Regular Expressions, which have more power and flexibility.
 This simplifies the task of finding or modifying text in a large document.
 You can, for instance, replace each instance of the word foo, not foot or food, but foo by itself, in upper or lower case, with the word bar, as long as foo is not followed by an exclamation point or a question mark, using perl's "lookahead" feature.
+<p>
+ebre-
+<br>
+,s/\bfoo\b(?![!?])/bar/ig
+<p>
+Try doing that with ed.
 The change in regular expressions means edbrowse is not 100% backward compatible with ed, though it is close.
 <li><p> Edbrowse can fetch a web page from the Internet as easily as it opens a file on the current computer, using http, https, ftp, or gopher.
 Once the page is fetched into the active buffer, it can be browsed or rendered as text, using the b command.

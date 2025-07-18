@@ -136,7 +136,15 @@ Les fonctionnalités de Edbrowse:
 <li><p> Edbrowse peut éditer de multiples fichiers ou naviguer dans de multiples sites web simultanément, et 
 transférer des portions de texte entre eux à la manière d'un copier-coller. 
 Par exemple, <code>edbrowse *.c</code> accède à tous les fichiers sources C du répertoire courant. 
-<li><p> Les expressions régulières de ed ont été remplacées par les expressions régulières compatibles Perl, plus puissantes et plus flexibles. Ceci facilite les opérations de recherche/remplacement de texte dans un document long. Vous pouvez, par exemple, remplacer chaque instance du mot foo, mais pas food ou foot, seulement foo, en majuscles ou en minuscules, avec le mot bar, tant que foo n'est pas suivi d'un point d'exclamation ou d'interrogation. Ces modifications dans les expressions régulières indiquent que Edbrowse n'est pas à 100% Ccompatible avec ed, bien que très proche. 
+<li><p> Les expressions régulières de ed ont été remplacées par les expressions régulières compatibles Perl, plus puissantes et plus flexibles.
+Ceci facilite les opérations de recherche/remplacement de texte dans un document long.
+Vous pouvez, par exemple, remplacer chaque instance du mot foo, mais pas food ou foot, seulement foo, en majuscles ou en minuscules, avec le mot bar, tant que foo n'est pas suivi d'un point d'exclamation ou d'interrogation.
+<p>
+ebre-
+<br>
+,s/\bfoo\b(?![!?])/bar/ig
+<p>
+Ces modifications dans les expressions régulières indiquent que Edbrowse n'est pas à 100% Ccompatible avec ed, bien que très proche. 
 <li><p> Edbrowse peut récupérer une page web de l'Internet aussi facilement qu'il ouvre un fichier de 
 l'ordinateur local, en utilisant hht, hhtps, ftp ou gopher. 
 Dès que la page est chargée dans le tampon courant, elle peut être naviguée ou affichée en texte brut, par la commande b. 
