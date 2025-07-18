@@ -3906,7 +3906,9 @@ static void makeButton(void)
 
 void formControl(Tag *t, bool namecheck)
 {
+#if 0
 	int itype = t->itype;
+#endif
 	char *myname = (t->name ? t->name : t->id);
 	Tag *cform = currentForm;
 	if (!cform) {
@@ -4440,7 +4442,6 @@ static const char defsel[] = "defaultSelected";
 
 static void formControlJS(Tag *t)
 {
-	const char *typedesc;
 	int itype = t->itype;
 	int isradio = (itype == INP_RADIO);
 	bool isselect = (itype == INP_SELECT);
