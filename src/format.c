@@ -291,7 +291,6 @@ static void anchorSwap(char *buf)
 	bool premode;		// inside <pre> </pre>
 	bool slash;		// closing tag
 	bool change;		// made a swap somewhere
-	bool strong;		// strong whitespace, newline or paragraph
 	int n = 0, cnt, tagno = 0;
 	char tag[20];
 
@@ -456,7 +455,7 @@ putc:
 // Now compress the implied linebreaks into one.
 static void html_ws(char *buf)
 {
-	char c, d, *s, *w, *w2, *a;
+	char c, *s, *w, *w2, *a;
 	int n;
 	bool premode = false, pretag, strong, slash;
 	char *ss = 0;
