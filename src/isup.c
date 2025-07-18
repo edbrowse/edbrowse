@@ -1238,7 +1238,7 @@ char *decodePostData(const char *data, const char *name, int seqno)
 {
 	const char *s, *n, *t;
 	char *ns = 0, *w = 0;
-	int j = 0, j2;
+	int j = 0;
 	char c = 0;
 
 	if (!seqno && !name)
@@ -3331,7 +3331,6 @@ int playBuffer(const char *line, const char *playfile)
 	const char *suffix = NULL;
 	char *buf;
 	int buflen;
-	bool rc;
 	char c = line[2];
 	if (c && c != '.')
 		return 2;
@@ -4127,9 +4126,7 @@ bool ircSetup(char *line)
 	Window *win, *wout;
 	char *domain, *nick, *password, *join, *p;
 	int port = 6667;
-	FILE *f;
 	int l;
-
 	line += 3;
 	if(!*line) goto usage;
 	spaceCrunch(line, true, false);
