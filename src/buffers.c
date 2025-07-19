@@ -3085,7 +3085,6 @@ regexpCheck(const char *line, bool isleft,
 	    char **rexp, const char **split)
 {
 	static char re[MAXRE + 20];
-	const char *start;
 	char *e = re;
 	char c, d;
 /* Remember whether a char is "on deck", ready to be modified by * etc. */
@@ -3103,7 +3102,6 @@ regexpCheck(const char *line, bool isleft,
 		}
 		++line;
 	} else delim = '/';
-	start = line;
 	c = *line;
 
 // empty expression becomes remembered expression
@@ -4657,7 +4655,6 @@ cw->dol = ln2 - 1;
 
 static char *lessFile(const char *line, bool tamode)
 {
-	bool fromfile = false;
 	int j, k, n, plen, dol;
 	int lno1, lno2;
 	char *line2, *p;
@@ -4725,7 +4722,6 @@ static char *lessFile(const char *line, bool tamode)
 			return 0;
 		if (!fileIntoMemory(line, &line2, &n, 0))
 			return 0;
-		fromfile = true;
 	}
 	for (j = k = 0; j < n; ++j) {
 		if(line2[j] == '\r' && j < n - 1 && line2[j+1] == '\n')
