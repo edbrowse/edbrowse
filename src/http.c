@@ -2455,6 +2455,7 @@ static CURL *http_curl_init(struct i_get *g)
 	curl_init_status = curl_easy_setopt(h, CURLOPT_COOKIEFILE, "");
 	if (curl_init_status != CURLE_OK)
 		goto libcurl_init_fail;
+	curl_netrc(h);
 // Lots of these setopt calls shouldn't fail.  They just diddle a struct.
 	curl_easy_setopt(h, CURLOPT_SOCKOPTFUNCTION, my_curl_safeSocket);
 	curl_easy_setopt(h, CURLOPT_WRITEFUNCTION, eb_curl_callback);
@@ -2522,6 +2523,15 @@ libcurl_init_fail:
 	if (h)
 		curl_easy_cleanup(h);
 	return 0;
+}
+
+void curl_netrc(CURL *h)
+{
+	if(!netrc) return;
+	const char *n = getenv("NETRC");
+	if(n && *n)
+		curl_easy_setopt(h, CURLOPT_NETRC_FILE, n);
+	curl_easy_setopt(h, CURLOPT_NETRC, CURL_NETRC_OPTIONAL);
 }
 
 /*
