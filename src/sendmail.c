@@ -848,8 +848,7 @@ static char *buildSMTPURL(const struct MACCOUNT *account)
 {
 	char *url = NULL;
 	const char *scheme;
-	const char *smlogin = strchr(account->login, '\\');
-
+	const char *smlogin = account->login ? strchr(account->login, '\\') : 0;
 	if (smlogin)
 		++smlogin;
 	else
@@ -926,17 +925,13 @@ static CURL *newSendmailHandle(const struct MACCOUNT *account,
 		curl_easy_setopt(handle, CURLOPT_USE_SSL, CURLUSESSL_ALL);
 
 	if (account->outssl) {
-		res =
-		    curl_easy_setopt(handle, CURLOPT_USERNAME, account->login);
-		if (res != CURLE_OK) {
-			goto new_handle_cleanup;
+		if(account->login) {
+			    res = curl_easy_setopt(handle, CURLOPT_USERNAME, account->login);
+			if (res != CURLE_OK) goto new_handle_cleanup;
 		}
-
-		res =
-		    curl_easy_setopt(handle, CURLOPT_PASSWORD,
-				     account->password);
-		if (res != CURLE_OK) {
-			goto new_handle_cleanup;
+		if(account->password) {
+			    res = curl_easy_setopt(handle, CURLOPT_PASSWORD, account->password);
+			if (res != CURLE_OK) goto new_handle_cleanup;
 		}
 	}
 

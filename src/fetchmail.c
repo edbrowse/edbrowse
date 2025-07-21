@@ -1901,13 +1901,18 @@ static CURL *newFetchmailHandle(const char *username, const char *password)
 	curl_easy_setopt(handle, CURLOPT_DEBUGFUNCTION, ebcurl_debug_handler);
 	curl_easy_setopt(handle, CURLOPT_DEBUGDATA, &callback_data);
 
-	res = curl_easy_setopt(handle, CURLOPT_USERNAME, username);
-	if (res != CURLE_OK)
-		ebcurl_setError(res, mailbox_url, 1, cerror);
+	curl_netrc(handle);
+	if(username) {
+		res = curl_easy_setopt(handle, CURLOPT_USERNAME, username);
+		if (res != CURLE_OK)
+			ebcurl_setError(res, mailbox_url, 1, cerror);
+	}
 
-	res = curl_easy_setopt(handle, CURLOPT_PASSWORD, password);
-	if (res != CURLE_OK)
-		ebcurl_setError(res, mailbox_url, 2, cerror);
+	if(password) {
+		res = curl_easy_setopt(handle, CURLOPT_PASSWORD, password);
+		if (res != CURLE_OK)
+			ebcurl_setError(res, mailbox_url, 2, cerror);
+	}
 
 	return handle;
 }

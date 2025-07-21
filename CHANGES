@@ -6,6 +6,8 @@ just as p does not back up off the end of the folder.
 
 Support for gophers://
 
+Support for .netrc through curl.
+
 3.8.12
 Make adjustments as quickjs evolves. Resolve build issues.
 
