@@ -1985,19 +1985,25 @@ static bool ftpConnect(struct i_get *g, char *creds_buf)
 	bool has_slash, is_scp;
 	CURLcode curlret = CURLE_OK;
 	const char *url = g->url;
+	int l = strlen(creds_buf);
 
 	protLength = strchr(url, ':') - url + 3;
 /* scp is somewhat unique among the protocols handled here */
 	is_scp = memEqualCI(url, "scp", 3);
 
-	if (!netrc && stringEqual(creds_buf, ":") && memEqualCI(url, "ftp", 3))
+	if(l && creds_buf[l-1] == ':') creds_buf[--l] = 0;
+	if (!netrc && l == 0 && memEqualCI(url, "ftp", 3)) {
 		strcpy(creds_buf, "anonymous:ftp@example.com");
+		l = strlen(creds_buf);
+	}
 
 	h = http_curl_init(g);
-	if (!h)
-		goto ftp_transfer_fail;
-	if(!stringEqual(creds_buf, ":")) {
-		curlret = curl_easy_setopt(h, CURLOPT_USERPWD, creds_buf);
+	if (!h) goto ftp_transfer_fail;
+	if(l) {
+		if(strchr(creds_buf, ':'))
+			curlret = curl_easy_setopt(h, CURLOPT_USERPWD, creds_buf);
+		else
+			curlret = curl_easy_setopt(h, CURLOPT_USERNAME, creds_buf);
 		if (curlret != CURLE_OK) goto ftp_transfer_fail;
 	}
 
