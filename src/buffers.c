@@ -6245,17 +6245,17 @@ et_go:
 
 	if (stringEqual(line, "showchan")) {
 		if(!cw->irciMode) { setError(MSG_NotIrcSend); return false; }
-		cw->ircChannels ^= 1;
+		cw->showchan ^= 1;
 		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(cw->ircChannels + MSG_ShowChanOff);
+			i_puts(cw->showchan + MSG_ShowChanOff);
 		return true;
 	}
 
 	if (stringEqual(line, "showchan+") || stringEqual(line, "showchan-")) {
 		if(!cw->irciMode) { setError(MSG_NotIrcSend); return false; }
-		cw->ircChannels = (line[8] == '+');
+		cw->showchan = (line[8] == '+');
 		if (helpMessagesOn)
-			i_puts(cw->ircChannels + MSG_ShowChanOff);
+			i_puts(cw->showchan + MSG_ShowChanOff);
 		return true;
 	}
 

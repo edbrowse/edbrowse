@@ -2535,7 +2535,7 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 		if (newlen == e->textlength) {
 /* record is the same length, just update it */
 			lseek(control_fh, e->offset, 0);
-			ignore = write(control_fh, newrec, newlen);
+			write(control_fh, newrec, newlen);
 			debugPrint(3, "into cache");
 			free(cache_data);
 			free(newrec);
@@ -2593,7 +2593,7 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 		char *newrec = record2string(e);
 		e->textlength = strlen(newrec);
 		lseek(control_fh, 0L, 2);
-		ignore = write(control_fh, newrec, e->textlength);
+		write(control_fh, newrec, e->textlength);
 		debugPrint(3, "into cache");
 		free(cache_data);
 		free(newrec);
@@ -3752,6 +3752,7 @@ static void ircSend(const Window *win, char *fmt, ...)
 	l = strlen(irc_out);
 	strcpy(irc_out + l, "\r\n");
 	l += 2;
+
 // He doesn't check for write failure, -1,
 // If the socket drops we'll see it on our next select or read.
 // We also assume it won't do a  partial write, and then expect us to write
@@ -3759,7 +3760,7 @@ static void ircSend(const Window *win, char *fmt, ...)
 	if(win->ircSecure)
 		SSL_write(win->irc_ssl, irc_out, l);
 	else
-		ignore = write(win->irc_fd, irc_out, l);
+		write(win->irc_fd, irc_out, l);
 }
 
 // skip ahead to c
@@ -3819,7 +3820,23 @@ static void ircAddLine(Window *win, const char *channel, bool show, const char *
 		strcat(irc_out, "\n");
 	}
 
-regular:
+regular: ;
+	char *a1 = strchr(irc_out, '<');
+	char *a2 = strchr(irc_out, '>');
+	char *a3 = strstr(irc_out, "\01ACTION");
+	l2 = strlen(irc_out);
+	if(l2 < 2) l2 = 2;
+	char *a4 = irc_out + l2 - 2;
+	if(a1 && a2 && a3 && a1 < a2 && a2 < a3 && a3 < a4 && *a4 == '\01') {
+		strmove(a4, a4+1);
+		a3 += 7;
+		skipWhite2(a3);
+		*a2++ = ' ';
+		strmove(a2, a3);
+		if(a1 == irc_out)
+			strmove(a1, a1 + 1);
+		else *a1 = ' ';
+	}
 	addTextToBuffer((uchar*)irc_out, strlen(irc_out), cw->dol, false);
 
 // opening the log every time is a bit inefficient, but this doesnn't
@@ -3861,14 +3878,13 @@ static void ircPrepLine(Window *win, Window *wout, char *line)
 	if(!wout) return; // should never happen
 // going to call ircAddLine below
 	save_cw = cw, cw = wout;
-	if(stringEqual("PRIVMSG", line))
-		ircAddLine(win, par, win->ircChannels, "<%s> %s", usr, txt);
-	else if(stringEqual("PING", line)) {
+	if(stringEqual("PRIVMSG", line)) {
+		ircAddLine(win, par, win->showchan, "<%s> %s", usr, txt);
+	} else if(stringEqual("PING", line)) {
 		ircSend(win, "PONG %s", txt);
 		debugPrint(4, "PING PONG %s", txt);
-	}
-	else {
-		ircAddLine(win, usr, win->ircChannels, ">< %s (%s): %s", line, par, txt);
+	} else {
+		ircAddLine(win, usr, win->showchan, ">< %s (%s): %s", line, par, txt);
 		if(stringEqual("NICK", line) && stringEqual(usr, win->ircNick)) {
 			nzFree(win->ircNick);
 			win->ircNick = cloneString(txt);
@@ -3881,15 +3897,30 @@ static void ircPrepLine(Window *win, Window *wout, char *line)
 static void ircMessage(Window *wout, const char *receiver, const char *msg)
 {
 	Window *win = cw;
+	bool actionflag = false;
 	if(!receiver) {
 		debugPrint(1, "No receiver to send to");
 		return;
 	}
+// translate :me
+	if((msg[0] == ':' || msg[0] == '/') &&
+	!strncmp(msg + 1, "me ", 3))
+		actionflag = true;
 	cw = wout;
-	ircAddLine(win, receiver, win->ircChannels, "<%s> %s",
-	(win->ircNick ? win->ircNick : emptyString), msg);
+	if(!actionflag)
+		ircAddLine(win, receiver, win->showchan, "<%s> %s",
+		(win->ircNick ? win->ircNick : emptyString), msg);
+	else if(receiver && win->showchan)
+		ircAddLine(win, receiver, win->showchan, " %s %s",
+		(win->ircNick ? win->ircNick : emptyString), msg + 4);
+	else
+		ircAddLine(win, receiver, win->showchan, "%s %s",
+		(win->ircNick ? win->ircNick : emptyString), msg + 4);
 	cw = win;
-	ircSend(win, "PRIVMSG %s :%s", receiver, msg);
+	if(actionflag)
+		ircSend(win, "PRIVMSG %s :\01ACTION %s\01", receiver, msg + 4);
+	else
+		ircSend(win, "PRIVMSG %s :%s", receiver, msg);
 }
 
 // Set the channel on the input side, but it affects the file name on the output side
@@ -4195,10 +4226,10 @@ bool ircSetup(char *line)
 		}
 	}
 
-	win->ircChannels = false;
+	win->showchan = false;
 	l = strlen(domain);
 	if(domain[l-1] == '+')
-		domain[--l] = 0, win->ircChannels = true;
+		domain[--l] = 0, win->showchan = true;
 
 	fd = tcp_connect(domain, port);
 	if(fd < 0) return false;
@@ -4248,7 +4279,7 @@ usage:
 
 void ircClose(Window *w)
 {
-	w->irciMode = w->ircChannels = w->ircSecure = false;
+	w->irciMode = w->showchan = w->ircSecure = false;
 	w->ircOther = 0;
 	if(w->irc_fd) close(w->irc_fd);
 	w->irc_fd = 0;
