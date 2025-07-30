@@ -338,7 +338,7 @@ progress dots
 cannot access .signature file
 cannot send mail in irc mode
 either none or all of the attachments must be declared \"alternative\"
-too many recipients, limit %d
+too many recipients or attachments, limit %d
 No address book specified, please check your configuration file
 alias %s not found in your address book
 no recipients specified
@@ -763,9 +763,9 @@ restoring byte order mark
 search all sessions
 search similar sessions
 cannot delete ..
-0
-0
-0
+cannot forward more than one email
+cannot combine mail forwarding with an alternate presentation
+fwd directive must precede the attachments
 0
 0
 0

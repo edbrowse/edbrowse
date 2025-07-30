@@ -863,4 +863,7 @@ MSG_ImaskOn,
 	MSG_SearchSameModeOff,
 	MSG_SearchSameModeOn,
 	MSG_DelDotDot,
+	MSG_ManyForward,
+	MSG_AltForward,
+	MSG_ForwardFirst,
 };
