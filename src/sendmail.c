@@ -1320,7 +1320,7 @@ bool sendMailCurrent(int sm_account, bool dosig)
 	char cxbuf[4];
 	int lr, la, ln;
 	char *refline = 0;
-	int nrec, nat, nalt;
+	int nrec, nat, nalt, nfwd;
 	int account = localAccount;
 	int j;
 	bool rc = false;
@@ -1358,7 +1358,7 @@ bool sendMailCurrent(int sm_account, bool dosig)
 	if (!validAccount(account))
 		return false;
 
-	nrec = nat = nalt = 0;
+	nrec = nat = nalt = nfwd = 0;
 
 	recmem = initString(&lr);
 	atmem = initString(&la);
@@ -1406,9 +1406,12 @@ bool sendMailCurrent(int sm_account, bool dosig)
 		}
 
 		if (memEqualCI(line, "attach:", 7)
+		    || memEqualCI(line, "fwd:", 4)
 		    || memEqualCI(line, "alt:", 4)) {
 			if (toupper(line[1]) == 'T')
 				line += 7;
+			else if (toupper(line[1]) == 'W')
+				line += 4, ++nfwd;
 			else
 				line += 4, ++nalt;
 			while (*line == ' ' || *line == '\t')
