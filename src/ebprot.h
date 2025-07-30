@@ -224,6 +224,7 @@ void *httpConnectBack3(void *ptr);
 void ebcurl_setError(CURLcode curlret, const char *url, int action, const char *curl_error);
 int ftpWrite(const char *url);
 void setHTTPLanguage(const char *lang);
+void curl_netrc(CURL *h);
 int prompt_and_read(int prompt, char *buffer, int buffer_length, int error_message, bool hide_echo);
 int ebcurl_debug_handler(CURL * handle, curl_infotype info_desc, char *data, size_t size, struct i_get *g);
 int bg_jobs(bool iponly);

@@ -21,15 +21,30 @@ h2 { text-align: center; color: darkslateblue; font-size: 1.0em; }
 h3 { text-align: center; color: royalblue; font-size: 1.0em; }
 hr { border-style: solid; color: black; height: 2px; }
 p. cen { text-align: center; }
+p.item { color: darkgreen; }
+pre.item { color: darkgreen; }
 </style>
 </head>
 <body>
 
 <h1>Documentation Edbrowse, guide de l'utilisateur</h1>
 
-<h1 id="top"> Chapitre 0, Table des matières </h1>
+<h1 id="top"> Table des matières </h1>
 
-<h2>Chapitre 1, préface </h2>
+<ul>
+<li><a href=#pref> Préface </a></li>
+<li><a href=#qrg> Guide de référence rapide </a></li>
+<li><a href=#edit> l'Editeur </a></li>
+<li><a href=#webb> Navigateur Web </a></li>
+<li><a href=#jsc> Javascript </a></li>
+<li><a href=#config> Scripts d'Edbrowse et le fichier de configuration </a></li>
+<li><a href=#mailc> Client de courrier</a></li>
+<li><a href=#ircc> Client IRC </a></li>
+<li><a href=#dba> Accès aux bases de données </a></li>
+</ul>
+
+<hr>
+<h1 id=pref> Chapitre 1, Préface </h1>
 
 <ul>
 <li><a href=#maint> Mainteneur </a></li>
@@ -41,127 +56,12 @@ p. cen { text-align: center; }
 <li><a href=#lang> Autres langues </a></li>
 </ul>
 
-<h2> Chapitre 2, guide de référence rapide</h2>
-
-<ul>
-<li><a href=#guide> Guide de référence rapide </a></li>
-<li><a href=#tips> Trucs pour éviter les numéros de ligne </a></li>
-<li><a href=#mlist> Liste de diffusion </a></li>
-<li><a href=#wiki> Wiki Edbrowse </a></li>
-</ul>
-
-<h2> Chapitre 3, l'éditeur </h2>
-
-<ul>
-<li><a href=#dev> Différences importantes par rapport à /bin/ed </a></li>
-<li><a href=#edperf> Performances de l'éditeur </a></li>
-<li><a href=#brace> Equilibrage des parenthèses, crochets et accolades </a></li>
-<li><a href=#cx> Commutateur de contexte </a></li>
-<li><a href=#usage> Usage </a></li>
-<li><a href=#bin> Caractères binaires  </a></li>
-<li><a href=#emoji> Emojis </a></li>
-<li><a href=#bfile> Fichiers binaires  </a></li>
-<li><a href=#dir> Parcours de répertoire, gestionnaire de fichiers </a></li>
-<li><a href=#case> Lettres majuscules et minuscules </a></li>
-<li><a href=#bl> Fin de ligne </a></li>
-<li><a href=#race> Comportement </a></li>
-</ul>
-
-<h2> Chapitre 4, navigateur web </h2>
-
-<ul>
-<li><a href=#url> Accès à une URL </a></li>
-<li><a href=#browse> Mode navigation </a></li>
-<li><a href=#htab> Tables HTML</a></li>
-<li><a href=#math> Technique, maths </a></li>
-<li><a href=#title> Titre, description, mots-clés </a></li>
-<li><a href=#rf> La commande de réaffichage </a></li>
-<li><a href=#hlink> Hyperliens </a></li>
-<li><a href=#ilink> Liens internes </a></li>
-<li><a href=#back> La touche retour arrière</a></li>
-<li><a href=#move> La commande M </a></li>
-<li><a href=#hist> Historique de navigation </a></li>
-<li><a href=#music> Musique de fond </a></li>
-<li><a href=#heading> Titres </a></li>
-<li><a href=#input> Zones de saisie </a></li>
-<li><a href=#entry> Saisie de données </a></li>
-<li><a href=#textarea> Zones de texte </a></li>
-<li><a href=#button> Appuyez sur le bouton </a></li>
-<li><a href=#hover> Texte au survol </a></li>
-<li><a href=#colors> Couleurs dans la page </a>
-<li><a href=#addr> Web et adresses mail </a></li>
-<li><a href=#cook> Cookies </a></li>
-<li><a href=#ssl> Connexions sécurisées </a></li>
-<li><a href=#ftp> Téléchargements Ftp </a></li>
-<li><a href=#gopher> Support de Gopher </a></li>
-<li><a href=#proxy> Serveurs proxy </a></li>
-<li><a href=#frame> Cadres </a></li>
-</ul>
-
-<h2> Chapitre 5, Javascript </h2>
-
-<ul>
-<li><a href=#js> Introduction à Javascript </a></li>
-<li><a href=#valid> Validation et modification de formulaires </a></li>
-<li><a href=#popup> fenêtres Popups et Popunders </a></li>
-<li><a href=#onc> Onchange et annuler </a></li>
-<li><a href=#jex> Debugger Javascript </a></li>
-</ul>
-
-<h2> Chapitre 6, scripts d'Edbrowse et le fichier de configuration </h2>
-
-<ul>
-<li><a href=#cfg> Le fichier de configuration </a></li>
-<li><a href=#keyval> Mot-clé = valeur </a></li>
-<li><a href=#agent> Agent utilisateur </a></li>
-<li><a href=#script> Fonctions d'Edbrowse </a></li>
-<li><a href=#init> La fonction init </a></li>
-<li><a href=#ma> Comptes de courrier </a></li>
-<li><a href=#mt> Descripteurs des plugins </a></li>
-<li><a href=#sampcfg> Un exemple de fichier de configuration </a></li>
-</ul>
-
-<h2> Chapitre 7, client de courrier </h2>
-
-<ul>
-<li><a href=#sm> Envoi de courrier </a></li>
-<li><a href=#smc> Client d'envoi de courrier </a></li>
-<li><a href=#retrmail> Récupération de courrier </a></li>
-<li><a href=#imr> Client de récupération de courrier </a></li>
-<li><a href=#mailfmt> Courrier formaté </a></li>
-<li><a href=#filter> Filtrage de courrier </a></li>
-<li><a href=#reply> Réponse au courrier </a></li>
-<li><a href=#imap> Client Imap </a>
-<li><a href=#iai> Interface Imap alternative</a>
-</ul>
-
-<h2> Chapter 8, Client IRC</h2>
-
-<ul>
-<li><a href=#irc>Utiliser IRC</a>
-</ul>
-
-<h2> Chapitre 9, Accéder aux bases de données </h2>
-
-<ul>
-<li><a href=#sqlb> Compiler Edbrowse avec l'accès aux bases de données </a></li>
-<li><a href=#rtb> Lire les tables </a></li>
-<li><a href=#dsource> Source de données</a></li>
-<li><a href=#insupd> Insertion, mise à jour, effacement </a></li>
-<li><a href=#td> Descripteurs de tables </a></li>
-<li><a href=#gosql> Go SQL </a></li>
-<li><a href=#pipes> Pipes dans les données </a></li>
-<li><a href=#dbur> Lignes dépliées </a></li>
-</ul>
-
-<hr>
-<h1> Chapitre 1, Préface </h1>
-
 <h2 id="maint"> Mainteneur </h2>
 
+<p>
 Le site de  Edbrowse est <a href=http://Edbrowse.org>Edbrowse.org</a>. 
 <a href="mailto:maintainers@Edbrowse.org">
-Chris Brannon</a>
+Karl Dahlke</a>
 est l'actuel mainteneur du projet et le webmaster. 
 
 <h2 id="auth"> Auteur </h2>
@@ -197,8 +97,7 @@ institutionnels ou gouvernementaux. En utilisant ce programme, vous l'acceptez e
 
 <h2 id="ack"> Remerciements  </h2>
 
-<a href="mailto:chris@the-brannons.com">
-Chris Brannon</a> a écrit ou modifié au moins 20% du code,
+Chris Brannon a écrit ou modifié au moins 20% du code,
 et a fourni de bonnes idées pour l'architecture générale. 
 <a href="mailto:arthompson1990@gmail.com">
 Adam Thompson</a>
@@ -239,7 +138,15 @@ Les fonctionnalités de Edbrowse:
 <li><p> Edbrowse peut éditer de multiples fichiers ou naviguer dans de multiples sites web simultanément, et 
 transférer des portions de texte entre eux à la manière d'un copier-coller. 
 Par exemple, <code>edbrowse *.c</code> accède à tous les fichiers sources C du répertoire courant. 
-<li><p> Les expressions régulières de ed ont été remplacées par les expressions régulières compatibles Perl, plus puissantes et plus flexibles. Ceci facilite les opérations de recherche/remplacement de texte dans un document long. Vous pouvez, par exemple, remplacer chaque instance du mot foo, mais pas food ou foot, seulement foo, en majuscles ou en minuscules, avec le mot bar, tant que foo n'est pas suivi d'un point d'exclamation ou d'interrogation. Ces modifications dans les expressions régulières indiquent que Edbrowse n'est pas à 100% Ccompatible avec ed, bien que très proche. 
+<li><p> Les expressions régulières de ed ont été remplacées par les expressions régulières compatibles Perl, plus puissantes et plus flexibles.
+Ceci facilite les opérations de recherche/remplacement de texte dans un document long.
+Vous pouvez, par exemple, remplacer chaque instance du mot foo, mais pas food ou foot, seulement foo, en majuscles ou en minuscules, avec le mot bar, tant que foo n'est pas suivi d'un point d'exclamation ou d'interrogation.
+<p>
+ebre-
+<br>
+,s/\bfoo\b(?![!?])/bar/ig
+<p>
+Ces modifications dans les expressions régulières indiquent que Edbrowse n'est pas à 100% Ccompatible avec ed, bien que très proche. 
 <li><p> Edbrowse peut récupérer une page web de l'Internet aussi facilement qu'il ouvre un fichier de 
 l'ordinateur local, en utilisant hht, hhtps, ftp ou gopher. 
 Dès que la page est chargée dans le tampon courant, elle peut être naviguée ou affichée en texte brut, par la commande b. 
@@ -270,13 +177,13 @@ Si un changement a été effectué, le fichier est sauvegardé sur disque.
 Le caractère * dans l'instruction if est vrai si la commande précédente est réussie. 
 </ul>
 
-<!--<font size=3 face=Arial,Helvetica,sans-serif>--><code>function+xy {
+<code>function+xy {
         ,s/x/y/g
         if(*) {
                 w
         }
 }
-</code><!--</font>-->
+</code>
 
 <p>
 Si Edbrowse n'est pas fourni par votre distribution, il existe une version en Perl, avec des fonctionnalités moindres, que vous pouvez utiliser sur n'importe quel ordinateur : Linux, Unix, Mac, Windows, etc. 
@@ -433,9 +340,18 @@ Si vous définissez localizeweb, assurez-vous de définir avec le code de langue
 (ex. fr_Fr, fr_BE, fr_CAN ... )
 
 <hr>
-<h1> Chapitre 2, Guide de référence rapide </h1>
+<h1 id=qrg> Chapitre 2, Guide de référence rapide </h1>
+
+<ul>
+<li><a href=#guide> Guide de référence rapide </a></li>
+<li><a href=#tips> Trucs pour éviter les numéros de ligne </a></li>
+<li><a href=#mlist> Liste de diffusion </a></li>
+<li><a href=#wiki> Wiki Edbrowse </a></li>
+</ul>
 
 <h2 id="guide"> Guide de référence rapide </h2>
+
+<p>
 Liste de toutes les commandes d'ed et d'Edbrowse, toutes regroupées. 
 C'est un guide de référence rapide. 
 La plupart de ces commandes n'auront pas de sens si vous ne lisez pas le reste de la documentation. 
@@ -910,10 +826,26 @@ de configuration.
 Voyez <a href=http://edbrowse.org>edbrowse.org</a> pour plus d'informations. 
 
 <p><hr><p>
-<h1> Chapitre 3, l'Editeur </h1>
+<h1 id=edit> Chapitre 3, l'Editeur </h1>
+
+<ul>
+<li><a href=#dev> Différences importantes par rapport à /bin/ed </a></li>
+<li><a href=#edperf> Performances de l'éditeur </a></li>
+<li><a href=#brace> Equilibrage des parenthèses, crochets et accolades </a></li>
+<li><a href=#cx> Commutateur de contexte </a></li>
+<li><a href=#usage> Usage </a></li>
+<li><a href=#bin> Caractères binaires  </a></li>
+<li><a href=#emoji> Emojis </a></li>
+<li><a href=#bfile> Fichiers binaires  </a></li>
+<li><a href=#dir> Parcours de répertoire, gestionnaire de fichiers </a></li>
+<li><a href=#case> Lettres majuscules et minuscules </a></li>
+<li><a href=#bl> Fin de ligne </a></li>
+<li><a href=#race> Comportement </a></li>
+</ul>
 
 <h2 id="dev"> Différences importantes par rapport à /bin/ed </h2>
 
+<p>
 Certaines recherches/commandes de remplacement se comportent différemment sous cet éditeur. 
 C'est parce que les expressions régulières sont interprétées par la bibliothèque  
 compatible avec Perl (pcre), plutôt que par la bibliothèque traditionnelle de regexp. 
@@ -1318,8 +1250,8 @@ employée par les autres utilisateurs.
 Elle localise la ligne avec une parenthèse, une accolade, ou un crochet. 
 Exemple: 
 
-<pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>--><code>    if(x == 3 &amp;&amp; 
+<pre class=item>
+<code>    if(x == 3 &amp;&amp; 
 if(x == 3 &amp;&amp;
   y == 7) {
     printf("bonjour\n");
@@ -1327,7 +1259,7 @@ if(x == 3 &amp;&amp;
       printf("monde\n");
       exit(1);
   }
-</code><!--</font>--></pre>
+</code></pre>
 
 <p>
 La commande B majuscule, sur la deuxième ou dernière ligne, se déplace à la ligne du 
@@ -1437,7 +1369,7 @@ Le signe «#» représente mes commentaires, qui normalement n'apparaîtront pas
 au milieu d'une ligne. 
 
 <pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->&lt; e2 # bascule sur la session 2
+&lt; e2 # bascule sur la session 2
 &gt; new session # nouvelle session
 # contrairement à ed, la commande «r» ne crée pas un nouveau fichier, 
 # même si le tampon est vide. 
@@ -1459,13 +1391,13 @@ au milieu d'une ligne.
 &lt; q2 #, on fait le ménage, en se débarrassant de la session 2 
 &lt; W # sauvegarde de essai, avec le nouveau paragraphe inclus 
 &gt; 62121 
-<!--</font>--></pre>
+</pre>
 
 <p>
 Ci-dessous, comment transférer une portion de texte d'un fichier à un autre
 
 <pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->&lt; e2
+&lt; e2
 &gt; new session # nouvelle session
 &lt; e toto # cette fois je vais modifier le fichier
 &gt; 28719 
@@ -1488,7 +1420,7 @@ Ci-dessous, comment transférer une portion de texte d'un fichier à un autre
 &lt; q3 on arrête la session 3, bien qu'étant toujours en session 1 
 &lt; w # sauvegarde de essai, avec le nouveau paragraphe inclus 
 &gt; 62121 
-<!--</font>--></pre>
+</pre>
 
 <p>
 Voici une méthode plus rapide et plus simple pour faire la même chose, sans utiliser de tampon de transfert supplémentaire.
@@ -1502,7 +1434,7 @@ Un seul espace peut en changer la signification.
 'a,'bw 1@'c écrit le bloc de texte dans un fichier nommé 1@'c, ce qui n'est pas ce que vous voulez.
 
 <pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->kc # marque l'endroit où vous êtes, là où vous voulez mettre le paragraphe
+kc # marque l'endroit où vous êtes, là où vous voulez mettre le paragraphe
 &lt; e2
 &gt; nouvelle session
 &lt; e bar
@@ -1522,7 +1454,7 @@ Un seul espace peut en changer la signification.
 &gt; foo  # retour en session 1
 &lt; w  # ecrit foo, avec le nouveau paragraphe
 &gt; 62121
-<!--</font>--></pre>
+</pre>
 
 <p>
 Voici une autre méthode, qui lit au lieu d'écrire.
@@ -1536,7 +1468,7 @@ Les expressions complexes telles que @/xyz/-3 ne sont pas autorisées ici.
 Si un second numéro de ligne n'est pas donné, seule la ligne est lue.
 
 <pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->kc # marque l'endroit où vous êtes, là où vous voulez mettre le paragraphe
+kc # marque l'endroit où vous êtes, là où vous voulez mettre le paragraphe
 &lt; e2
 &gt; nouvelle session
 &lt; e bar
@@ -1561,13 +1493,13 @@ Si un second numéro de ligne n'est pas donné, seule la ligne est lue.
 &lt; 'a,'bd
 &lt; w  # écrit bar, sans le paragraphe
 &gt; 25440
-<!--</font>--></pre>
+</pre>
 
 <p>Si vous voulez faire cette opération couper/coller dans un script, et que vous n'êtes pas sûr d'être dans la session 1, et que vous n'êtes pas sûr que la session 2 est disponible,
 vous pouvez le faire sur la pile, comme ceci.
 
 <pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->kc # mark your current location, where you want the cool paragraph to be
+kc # mark your current location, where you want the cool paragraph to be
 &lt; e bar # push the file bar onto the editing stack
 &gt; 28719
 &lt; /start/
@@ -1590,7 +1522,7 @@ vous pouvez le faire sur la pile, comme ceci.
 &lt; 'a,'bd
 &lt; w  # écrit bar, sans le paragraphe
 &gt; 25440
-<!--</font>--></pre>
+</pre>
 
 <p>
 La commande qui rend tout cela possible est r-1@'a,'b.
@@ -1628,7 +1560,7 @@ Ces trois options lancent Edbrowse en tant que client interactif de courrier.
 Nous y reviendrons. 
 
 <pre>
-	<!--<font size=3 face=Arial,Helvetica,sans-serif>-->edbrowse  -v   (affiche la version)
+	edbrowse  -v   (affiche la version)
 edbrowse -h (ce message)
 edbrowse -c (édition du fichier de configuration)
 edbrowse [-d#] -f[#] (récupération mail) 
@@ -1637,7 +1569,7 @@ edbrowse  [-d#] -[p]fm[#]    (récupération et lecture mail restant)
 edbrowse  [-d#] -m[#] addresse1 addresse2 ... fichier [+apièces_jointes]
 edbrowse  [-c configfile] [-b] [-e] [-dn] file1 file2 ...
 Tapez help à partir d'une session edbrowse pour obtenir un résumé des commandes courantes d'edbrowse.
-<!--</font>--></pre>
+</pre>
 
 <p>
 L'option «-dn» place le niveau de déboguage à n, où n est entre 0 et 9. 
@@ -1828,8 +1760,7 @@ emoji = /home/monlogin/.ebsys/Emojis.txt
 <P>
 comme exemple, un extrait de ce fichier
 
-<pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->
+<pre class=item>
 fruit {
     1f347 raisins
     1f34c banane
@@ -1837,7 +1768,7 @@ fruit {
     1f34f pomme verte
     1f351 pêche
 }
-<!--</font>--></pre>
+</pre>
 
 <p>
 La définition du groupe doit être un mot unique composé de lettres et de chiffres ascii, suivi d'une accolade gauche.
@@ -1873,13 +1804,12 @@ Edbrowse présente un menu d'emojis qui commencent par la chaîne de caractères
 Ainsi ~jfruit.xx, ou ~jfruit seul, produit un menu d'emojis dans le groupe des fruits.
 
 <pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->
 1: raisins
 2: banane
 3: pomme rouge
 4: pomme verte
 5: pêche
-<!--</font>--></pre>
+</pre>
 
 <p>
 Sélectionnez une entrée par son numéro, ou par une sous-chaîne unique.
@@ -2132,10 +2062,10 @@ Ce n'est pas toujours le cas.
 Supposez qu'une application produit des fichiers de log comme suit :
 
 <pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->ProgramFooBar.-04-04-1998.06:31:59.log
+ProgramFooBar.-04-04-1998.06:31:59.log
 ProgramFooBar.-04-11-1998.11:37:14.log
 ProgramFooBar.-04-18-1998.16:22:51.log
-<!--</font>--></pre>
+</pre>
 
 <p>
 Comment supprimer les vieux fichiers pour ne garder que le plus récent, 
@@ -2234,7 +2164,7 @@ Tapez ls= pour désactiver ceci. Ci-dessous, voici comment le répertoire racine
 avec ls=lt. 
 
 <pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->bin@/ 36864 Aug 31 2015 16:20
+bin@/ 36864 Aug 31 2015 16:20
 boot/ 4096 Dec  4 2014 07:54
 cd/ 4096 Nov 30 2014 09:38
 dev/ 3560 Sep  3 2015 05:00
@@ -2251,7 +2181,7 @@ sys/ 0 Sep  3 2015 04:59
 tmp/ 260 Sep 24 2015 11:05
 usr/ 4096 Jan 12 2015 04:47
 var/ 4096 Sep  3 2015 04:59
-<!--</font>--></pre>
+</pre>
 
 <p>
 Toutes les entrées dans le répertoire racine sont des répertoires, ainsi se terminent-elles toutes 
@@ -2396,10 +2326,40 @@ jugé bon de l'implémenter.
 Ce dispositif n'est pas très demandé. 
 
 <hr>
-<h1> Chapitre 4, Navigateur Web </h1>
+<h1 id=webb> Chapitre 4, Navigateur Web </h1>
+
+<ul>
+<li><a href=#url> Accès à une URL </a></li>
+<li><a href=#browse> Mode navigation </a></li>
+<li><a href=#htab> Tables HTML</a></li>
+<li><a href=#math> Technique, maths </a></li>
+<li><a href=#title> Titre, description, mots-clés </a></li>
+<li><a href=#rf> La commande de réaffichage </a></li>
+<li><a href=#hlink> Hyperliens </a></li>
+<li><a href=#ilink> Liens internes </a></li>
+<li><a href=#back> La touche retour arrière</a></li>
+<li><a href=#move> La commande M </a></li>
+<li><a href=#hist> Historique de navigation </a></li>
+<li><a href=#music> Musique de fond </a></li>
+<li><a href=#heading> Titres </a></li>
+<li><a href=#input> Zones de saisie </a></li>
+<li><a href=#entry> Saisie de données </a></li>
+<li><a href=#textarea> Zones de texte </a></li>
+<li><a href=#button> Appuyez sur le bouton </a></li>
+<li><a href=#hover> Texte au survol </a></li>
+<li><a href=#colors> Couleurs dans la page </a>
+<li><a href=#addr> Web et adresses mail </a></li>
+<li><a href=#cook> Cookies </a></li>
+<li><a href=#ssl> Connexions sécurisées </a></li>
+<li><a href=#ftp> Téléchargements Ftp </a></li>
+<li><a href=#gopher> Support de Gopher </a></li>
+<li><a href=#proxy> Serveurs proxy </a></li>
+<li><a href=#frame> Cadres </a></li>
+</ul>
 
 <h2 id="url"> Accès à une URL </h2>
 
+<p>
 Au lieu de lancer «e nom de fichier», vous pouvez lancer 
 «e http://this.that.com/file.html», et l'éditeur recherchera le fichier 
 appelé en utilisant le protocole HTTP. 
@@ -2563,11 +2523,11 @@ instructions d'extraction, de tri, de fusion etc.
 Voici un exemple de table. 
 
 <pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->numéro de pièce|quantité|prix
+numéro de pièce|quantité|prix
 2635|2|34.80
 1398|1|67.50
 8118|5|125.00
-<!--</font>--></pre>
+</pre>
 
 <p>
 Les champs vides en fin de ligne sont ignorés. 
@@ -3049,13 +3009,13 @@ Supposons qu'une page Web affiche
 Si les trois rubriques vous intéressent, tapez ces commandes dans l'ordre :
 
 <pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->1g
+1g
 M2
 2g
 M3
 3g
 M4
-<!--</font>--></pre>
+</pre>
 
 <p>
 Maintenant les sessions 2 3 et 4 sont les sous-pages traitant respectivement des avions, 
@@ -3181,12 +3141,12 @@ les signes «&lt;» et «&gt;».
 Par exemple, un moteur de recherche pourrait présenter le formulaire suivant :
 
 <pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->Mots-clés : &lt;&gt;
+Mots-clés : &lt;&gt;
 Recherche avancée : &lt;-&gt;
 Langue : &lt;en&gt;
 Rechercher maintenant : &lt;GO&gt;
 Effacer : &lt;RESET&gt;
-<!--</font>--></pre>
+</pre>
 
 <p>
 La première ligne de cet exemple de formulaire est une zone de texte, initialement vide. 
@@ -3243,13 +3203,13 @@ Rappelez-vous le formulaire exemple dans la section précédente.
 Si vous tapez «i?» au troisième champ, vous pourriez voir ce qui suit 
 
 <pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->choisir[7] la langue
+choisir[7] la langue
 1: anglais
 2: français
 3: allemand
 4: italien
 5: espagnol
-<!--</font>--></pre>
+</pre>
 <p>
 Si une liste contient des centaines d'options, tapez «i?chaîne» pour voir les options 
 qui contiennent la chaîne indiquée. 
@@ -3391,9 +3351,9 @@ La session d'édition est choisie pour vous, et apparaît dans la zone de saisie
 Considérez le formulaire suivant :
 
 <pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->Donnez votre adresse email: &lt;&gt;
+Donnez votre adresse email: &lt;&gt;
 Tapez vos commentaires: &lt;session ?&gt;
-<!--</font>--></pre>
+</pre>
 
 <p>
 Si vous désirez taper un commentaire, vous devez allouer un tampon avec la commande "ib". 
@@ -3572,7 +3532,6 @@ En conclusion, employer la commande ^ pour retourner à la page Web que vous reg
 Voici à quoi elle pourrait ressembler :
 
 <pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->
 &lt; b this.that.com/whatever # navigation dans une page Web
 &gt; 16834 # taille du code HTML brut
 &gt; 7855 # taille du texte navigable
@@ -3590,7 +3549,7 @@ Voici à quoi elle pourrait ressembler :
 &gt; 336
 &lt; ^ # retour à la navigation
 &gt; cliquer ici pour {plus d'informations sur des kangourous}, ou {nous écrire}. 
-<!--</font>--></pre>
+</pre>
 
 <p>
 Je suppose que je pourrais interroger la variable d'environnement $bookmarks moi-même, 
@@ -3649,11 +3608,11 @@ Je sais, nous n'avons pas encore parlé des macros définies par l'utilisateur,
 mais nous le ferons. 
 Et quand nous le ferons, vous écrirez une macro «ajout signet» semblable à ceci :. 
 
-<pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->function+bma {
+<pre class=item>
+function+bma {
   w+ $bookmarks
 }
-<!--</font>--></pre>
+</pre>
 
 <p>
 Maintenant vous pouvez tapez &lt;bma pour ajouter un lien à vos favoris, 
@@ -3931,10 +3890,19 @@ Nous avons les prix les plus bas.
 Frame {bottom}
 
 <hr>
-<h1> Chapitre 5, Javascript </h1>
+<h1 id=jsc> Chapitre 5, Javascript </h1>
+
+<ul>
+<li><a href=#js> Introduction à Javascript </a></li>
+<li><a href=#valid> Validation et modification de formulaires </a></li>
+<li><a href=#popup> fenêtres Popups et Popunders </a></li>
+<li><a href=#onc> Onchange et annuler </a></li>
+<li><a href=#jex> Debugger Javascript </a></li>
+</ul>
 
 <h2 id="js"> Introduction à Javascript </h2>
 
+<p>
 Javascript est un logiciel, inclus dans la page Web, qui fonctionne sur votre ordinateur. 
 Ces fonctions ne sont pas lancées sur le serveur web, elles tournent sur votre ordinateur. 
 Par conséquent on l'appelle parfois Javascript côté client. 
@@ -4146,7 +4114,18 @@ les voici : les commandes db (niveau de debug), e nombre (pour aller dans une au
 et consulter un autre fichier), bflist, bglist, timers, demin, et les commandes shell. 
 
 <hr>
-<h1> Chapitre 6, Scripts d'Edbrowse et le fichier de configuration </h1>
+<h1 id=config> Chapitre 6, Scripts d'Edbrowse et le fichier de configuration </h1>
+
+<ul>
+<li><a href=#cfg> Le fichier de configuration </a></li>
+<li><a href=#keyval> Mot-clé = valeur </a></li>
+<li><a href=#agent> Agent utilisateur </a></li>
+<li><a href=#script> Fonctions d'Edbrowse </a></li>
+<li><a href=#init> La fonction init </a></li>
+<li><a href=#ma> Comptes de courrier </a></li>
+<li><a href=#mt> Descripteurs des plugins </a></li>
+<li><a href=#sampcfg> Un exemple de fichier de configuration </a></li>
+</ul>
 
 <h2 id="cfg"> Fichier de configuration </h2>
 
@@ -4200,7 +4179,7 @@ Vous aurez besoin d'un fichier, souvent appelé un récipient de cookies,
 pour stocker vos cookies. 
 La ligne qui définit ce récipient de cookies pourrait ressembler à ceci :
 
-<p>
+<p class=item>
 jar = /home/monlogin/. ebsys/cookie-jar
 
 <p>
@@ -4221,7 +4200,7 @@ Voici quelques directives additionnelles de type nom=valeur.
 Certaines sont employées pour définir un compte de courrier électronique. 
 Ceci deviendra plus clair quand nous parlerons du client de courrier. 
 
-<p>
+<p class=item>
 certfile = /etc/pki/tls/cert. pem
 
 <p>
@@ -4229,14 +4208,14 @@ Indique le fichier qui sauvegarde les certificats pour les connexions sécurisé
 Ceci a été expliqué dans la section sur les <a href="#ssl">connexions sécurisées. </a>. 
 On peut généralement s'en passer, puique Edbrowse utilise le fichier de certificats du système. 
 
-<p>
+<p class=item>
 maildir = /home/monlogin/mbox
 
 <p>
 Allez dans ce répertoire lorsque vous récupérez votre courrier. 
 Ainsi, si vous sauvegardez un message,, vous saurez toujours où il est. 
 
-<p>
+<p class=item>
 cachedir = /home/monlogin/. ebcache
 <br>
 cachesize = 200
@@ -4262,7 +4241,7 @@ Elle peut également être utilisée dans une fonction qui récupère une page w
 N'oubliez pas que les paramètres sont locaux à une fonction, de sorte que local+ dans une fonction ne perturbera pas votre session interactive.
 Ce paramètre n'affecte pas ftp, scp, gopher, etc.
 
-<p>
+<p class=item>
 imapfetch = 40
 
 <p>
@@ -4271,7 +4250,7 @@ Le nombre d'emails récupérés doit être compris entre 1 et 1000.
 Dans le client imap interactif, vous pouvez spécifier -40, pour les 40 premiers messages (dans l'ordre chronologique), mais cela ne peut pas être fait à partir du fichier de configuration.
 Je suppose que vous commencez toujours par les emails les plus récents.
 
-<p>
+<p class=item>
 envelope = fsd
 
 <P>
@@ -4280,7 +4259,7 @@ t = à, f = de, s = sujet, d = date, z = taille, n=nombre.
 La valeur par défaut est fs, from subject.
 Ceci peut être modifié de manière interactive avec la commande e.
 
-<p>
+<p class=item>
 webtimer = 30
 <br>
 mailtimer = 180
@@ -4293,7 +4272,7 @@ d'interrompre une connexion, autre que contrôle anti-slash, qui tue le programm
 C'est pourquoi ces temporisateurs sont ici - ainsi vous n'attendrez pas indéfiniment. 
 Les valeurs par défaut sont respectivement de 20 et 0. 
 
-<p>
+<p class=item>
 downdir = /home/monlogin/downloads
 
 <p>
@@ -4346,7 +4325,7 @@ Ceci affiche les mégaoctets télécéhargés et le total en mégaoctets. Par ex
 Ceci affiche des MO décimaux, et non des MO binaires (0x100000)- ce n'est qu'une 
 légère différence. 
 
-<p>
+<p class=item>
 nojs = space.com
 
 <p>
@@ -4372,7 +4351,7 @@ La page popup peut définir une variable dont le reste du javascript a besoin po
 Ainsi, vous ne devriez probablement pas bloquer certaines pages de ce site, ou d'autres domaines qui sont récupérés pour le compte de ce site, comme google-analytics.com ou googlesyndication.com.
 La récupération de toutes ces autres pages ralentit edbrowse, et semble être une perte de temps, mais si vous avez besoin de javascript, vous avez probablement besoin de tout.
 
-<p>
+<p class=item>
 js = nasa.gov
 
 <p>
@@ -4384,7 +4363,7 @@ Certains utilisateurs préfèrent utiliser edbrowse de cette manière.
 C'est définitivement plus rapide.
 Cependant, si vous tombez sur un nouveau site qui nécessite javascript, vous devez modifier votre fichier de configuration, ajouter le nouveau site, exécuter la configuration et naviguer à nouveau.
 
-<p>
+<p class=item>
 novs = exemple.com
 
 <p>
@@ -4396,7 +4375,7 @@ Ceci ce devrait pas être utilisé pour quelque chose de sérieux, comme un site
 votre numéro de carte bancaire. 
 Cette directive inclut les sous-domaines, comme www.exemple.com.
 
-<p>
+<p class=item>
 inserver = pop3. un-domaine.com<br>
 inport = 110<br>
 outserver = smtp. un-domaine.com<br>
@@ -4428,7 +4407,7 @@ Utilisez +587 pour vous identifier sans cryptage. C'est parfois le cas lorsque v
 directement connecté au serveur mail, sans passer par l'Internet, mais lorsque le serveur 
 veut s'assurer qu'il s'agit bien de vous. 
 
-<p>secure
+<p class=item>secure
 
 <p>
 Les connexions entrantes et sortantes sont sécurisées. 
@@ -4438,13 +4417,13 @@ Si les ports ne sont pas précisés, les ports par défaut changent pour prendre
 en compte les connections sécurisées. 
 Le port par défaut pop3s est 995 et le port par defaut smtps est 465. 
 
-<p>
+<p class=item>
 nofetch
 
 <p>
 Ne pas récupérer de mail de ce compte avec l'option -f
 
-<p>
+<p class=item>
 login = eklhad
 <br>
 password = secret
@@ -4453,7 +4432,7 @@ password = secret
 Indique le nom d'utilisateur et le mot de passe que Edbrowse 
 utilisera pour récupérer votre courrier. 
 
-<p>
+<p class=item>
 from = nom complet
 <br>
 reply = andre.dupont@un_domaine.com
@@ -4466,7 +4445,7 @@ d'employer ces lignes dans un but trompeur.
 S'assurer qu'elles vous identifient, et que l'adresse de réponse est en effet 
 l'un de vos comptes de courrier électronique. 
 
-<p>
+<p class=item>
 to = addresse
 <br>
 cc = addresse
@@ -4482,7 +4461,7 @@ de sorte que tous les messages que vous envoyez vous reviennent.
 Un filtre sur le serveur de messagerie peut rediriger le courrier que vous envoyez vers un dossier envoyé.
 C'est la seule utilisation pratique que je connaisse de cette fonctionnalité.
 
-<P>
+<P class=item>
 attach = fichier
 
 <p>
@@ -4490,7 +4469,7 @@ Le fichier indiqué est envoyé, en tant que pièce jointe, dans chaque e-mail q
 S'il s'agit d'un compte professionnel, vous pouvez souhaiter qu'une image ou un logo fasse partie de chaque courriel.
 C'est la seule utilisation pratique que je connaisse de cette fonctionnalité.
 
-<p>
+<p class=item>
 imask = 3,5
 <p>
 Affiche les dossiers 3 et 5 lors de l'accès à ce compte.
@@ -4499,14 +4478,14 @@ Vous pouvez activer ou désactiver cette fonction de masquage de manière intera
 Lors de la recherche d'un dossier par numéro ou par sous-chaîne, tous les dossiers sont recherchés, et pas seulement ceux qui sont présentés à l'écran.
 Vous pouvez donc toujours accéder aux dossiers qui ne sont pas présentés.
 
-<p>
+<p class=item>
 isub = sous-chaîne
 <p>
 N'affiche pas cette sous-chaîne du dossier imap.
 N'utilise pas non plus cette sous-chaîne lors de la recherche d'un dossier.
 Une sous-chaîne typique est [Gmail]/, comme on le voit dans les comptes gmail.
 
-<p>
+<p class=item>
 dx = 8,2,6
 <p>
 Suppression définitive de ces dossiers dans imap.
@@ -4521,7 +4500,7 @@ Sans ligne dx, d est toujours une suppression définitive.
 Cela fonctionne généralement sur d'autres serveurs (pas gmail).
 Néanmoins, si vous voulez être sûr, vous pouvez choisir de déplacer les courriels vers la corbeille.
 
-<p>
+<p class=item>
 adbook = /home/mon_login/.ebsys/carnet-adresses
 
 <p>
@@ -4552,7 +4531,7 @@ Edbrowse ignore les espaces et les tabulations entourant les deux points et le s
 Si le préfixe de l'adresse électronique contient des caractères spéciaux, comme les deux points ou le signe plus grand que ou même le signe at, vous pouvez le citer, comme ceci.
 "this:&gt;that"@gmail.com
 
-<p>
+<p class=item>
 emoji = /home/mylogin/.ebsys/Emojis.txt
 
 <p>
@@ -4561,10 +4540,11 @@ Ceci a été décrit dans la section Emojis.
 
 <p>
 Vous pouvez utiliser des variables d'environnement ou la notation ~ dans ce nom, et d'autres noms de chemin, dans .ebrc.
-<br>
+
+<p class=item>
 emoji = ~/.ebsys/Emojis.txt
 
-<p>
+<p class=item>
 include = ~/.ebsys/plugins
 
 <p>
@@ -4589,7 +4569,7 @@ Ils ne vous laissent pas entrer à moins que vous ressembliez
 StartPage.com, un frontal de Google, en est un exemple. 
 Ainsi que faisons-nous ? Nous mentons, bien sûr. 
 
-<p>
+<p class=item>
 agent = Lynx/2.8.4rel.1 libwww-FM/2.14
 <br>
 agent = Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.1; WOW64; Trident/5.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; .NET4.0C; .NET4.0E)
@@ -4601,7 +4581,7 @@ Si les lignes suivantes sont présentes dans votre fichier «. ebrc»,
 vous pouvez taper «ua1» pour feindre être lynx, et «ua2» pour feindre être Mozilla. 
 Tapez «ua0» pour restaurer l'identification standard d'Edbrowse. 
 
-<p>
+<p class=item>
 agentsite = google.com 2
 
 <p>
@@ -4729,8 +4709,8 @@ Utilisez «if(*)» pour le succès, et «if(?)» pour l'échec.
 et s'il en trouve un, il avance à la prochaine ligne, et si cette ligne contient le 
 mot «ami», il la supprime. 
 
-<pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->function+silly {
+<pre class=item>
+function+silly {
  /salut/
  if(*) {
   +s/ami//
@@ -4739,7 +4719,7 @@ mot «ami», il la supprime.
   }
  }
 }
-<!--</font>--></pre>
+</pre>
 
 <p>
 J'ai délibérément employé «function+» au lieu de «function:» dans l'exemple précédent. 
@@ -4755,8 +4735,8 @@ L'exemple qui suit efface les lignes du fichier, à partir du début,
 tant que ces lignes contiennent le mot salut ou ami. 
 Il supprime ensuite toutes les lignes vides du début. 
 
-<pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->function+topclean {
+<pre class=item>
+function+topclean {
  until(?) {
   1g/salut\|ami/d
  }
@@ -4764,7 +4744,7 @@ Il supprime ensuite toutes les lignes vides du début.
   1g/^$/d
  }
 }
-<!--</font>--></pre>
+</pre>
 
 <p>
 Vous pouvez employer la boucle loop(100){ … } pour répéter un ensemble de commandes 100 fois. 
@@ -4809,8 +4789,8 @@ Elle définit quelques comportements par défaut – par ex. la lecture de votre
 fichiers de signets, pour avoir vos «favoris» sous la main. 
 Voici un exemple. 
 
-<pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->function+init {
+<pre class=item>
+function+init {
 # désactive le débogage, pour ne pas afficher les messages de ce script
 db0
 # supposent que des répertoires sont en lecture/écriture
@@ -4825,7 +4805,7 @@ b $bookmarks
 # retour à la session 1, pour travailler
 e1
 }
-<!--</font>--></pre>
+</pre>
 
 <p>
 C'est juste un exemple. 
@@ -4848,8 +4828,8 @@ Ainsi le premier compte de courrier devient #1, le second devient #2, et ainsi d
 Nous avons vu les mots-clés définissant un compte de courrier. 
 Enfermez-les dans {mail…}, comme suit :
 
-<pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->mail {
+<pre class=item>
+mail {
  default
  inserver = pop3. un-domaine.com
  outserver = smtp. un-domaine.com
@@ -4858,7 +4838,7 @@ Enfermez-les dans {mail…}, comme suit :
  from = Karl Dahlke
 reply = karl. dahlke@un-domaine.com
 }
-<!--</font>--></pre>
+</pre>
 
 <p>
 La directive «default» fait de ce compte le compte par défaut. 
@@ -4877,8 +4857,8 @@ Cependant, si un compte a l'envoi encrypté, les questions de sécurité ne se p
 nous pouvons utiliser ses paramètres pour envoyer et recevoir des courriels. 
 Ci-dessous, une configuration typique pour le gmail de Google. 
 
-<pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->mail {
+<pre class=item>
+mail {
   inserver = pop. gmail.com
   outserver = smtp. gmail.com
   secure
@@ -4888,7 +4868,7 @@ Ci-dessous, une configuration typique pour le gmail de Google.
   reply = utilisateur@gmail.com
   from = nom complet
 }
-<!--</font>--></pre>
+</pre>
 
 <p>
 Le filtrage du courrier, par l'expéditeur et/ou le sujet, est contrôlé par 
@@ -4908,8 +4888,8 @@ Les utilisateurs de Linux pourront probablement copier cette section dans leur
 propre fichier de configuration. Elle fait généralement ce qu'il faut. 
 Voici un exemple :
 
-<pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->plugin {
+<pre class=item>
+plugin {
 #  La syntaxe mime précédente { } est toujours supportée, pour la compatibilité. 
 type = audio/mp3
 desc = audio file in mp3 format
@@ -4918,7 +4898,7 @@ content = audio/mpeg
 #  %i est replacé par le nom de fichier temporaire généré par Edbrowse
 program = mpg123 -q -C %i
 }
-<!--</font>--></pre>
+</pre>
 
 <p>
 Cet exemple traite un fichier mp3 ou un flot de données mp3. 
@@ -4949,7 +4929,7 @@ Une video youtube, par exemple, ressemble à n'importe quelle page html, qui peu
 logiciel musical. 
 Utilisez l'attribut urlmatch pour ceci. 
 
-<p>
+<p class=item>
 urlmatch = . youtube.com/watch?
 
 <p>
@@ -4957,8 +4937,8 @@ Certains plugins jouent des fichiers, d'autres effectuent des traitements sur de
 L'attribut outtype détermine le type de plugin. 
 Dans cet exemple, un fichier pdf est converti en html, qui pourra être parcouru de façon traditionnelle. 
 
-<pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->plugin {
+<pre class=item>
+plugin {
 type = pdf
 desc = pdf file
 suffix = pdf
@@ -4968,14 +4948,13 @@ down_url
 program = pdftohtml -i -q -noframes %i %o
 outtype = H
 }
-<!--</font>--></pre>
+</pre>
 
 <p>
 D'autres plugins peuvent convertir du texte formaté, des docs Word, Open Office etc. . 
 Mettez outtype à h pour avoir de l'html, ou t pour du texte. 
 
-<pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->
+<pre class=item>
 plugin {
 type = Word doc
 desc = document Microsoft Word, pas docx
@@ -4985,7 +4964,7 @@ content = application/msword
 program = catdoc %i
 outtype = T
 }
-<!--</font>--></pre>
+</pre>
 
 <p>
 Notez qu'il existe des convertisseurs pdf en texte qui sautent l'étape intermédiaire 
@@ -5002,15 +4981,15 @@ Si le fichier pdf nécessite un mot de passe, tapez b.pdfp, et utilisez ce plugi
 %p signifie paramètre, edbrowse vous demandera le paramètre.
 Dans ce cas, le paramètre est le mot de passe.
 
-<pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->plugin {
+<pre class=item>
+plugin {
 type = pdf
 desc = fichier pdf avec mot de passe
 suffix = pdfp
 program = pdftohtml -opw %p -i -q -noframes %i %o
 outtype = H
 }
-<!--</font>--></PRE>
+</pre>
 
 <h2 id="sampcfg"> Un exemple de fichier de configuration </h2>
 
@@ -5024,10 +5003,23 @@ and
 
 <P><HR><P>
 	
-<h1> Chapitre 7, Client de courrier</h1>
+<h1 id=mailc> Chapitre 7, Client de courrier</h1>
+
+<ul>
+<li><a href=#sm> Envoi de courrier </a></li>
+<li><a href=#smc> Client d'envoi de courrier </a></li>
+<li><a href=#retrmail> Récupération de courrier </a></li>
+<li><a href=#imr> Client de récupération de courrier </a></li>
+<li><a href=#mailfmt> Courrier formaté </a></li>
+<li><a href=#filter> Filtrage de courrier </a></li>
+<li><a href=#reply> Réponse au courrier </a></li>
+<li><a href=#imap> Client Imap </a>
+<li><a href=#iai> Interface Imap alternative</a>
+</ul>
 
 <h2 id="sm"> Envoyer le courrier </h2>
 
+<p>
 Vous pouvez envoyer par mail le contenu de votre session d'édition courante à 
 quelqu'un d'autre par l'intermédiaire de la commande «sm». 
 Vos comptes de courrier sont décrits dans votre <a href="#cfg">fichier de configuration</a>. 
@@ -5049,7 +5041,7 @@ au début de votre fichier.
 La commande «sm» est pointilleuse, aussi regardez bien la syntaxe ci-dessous :
 
 <pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->To: fred. flintstone@bedrock. us
+To: fred. flintstone@bedrock. us
 CC: barney. rubble@bedrock. us
 account: 1
 attach: hollyrock-brochure. pdf
@@ -5058,7 +5050,7 @@ Venez visiter Hollyrock.
 Brochure jointe. 
 Sincèrement,
 Rock studios incorporated. 
-<!--</font>--></pre>
+</pre>
 
 <p>
 La ligne «account» est facultative. 
@@ -5245,7 +5237,7 @@ et ainsi de suite.
 Vous pouvez vous faciliter la vie beaucoup avec quelques alias 
 dans votre fichier «. bashrc». 
 
-<pre><!--<font size=3 face=Arial,Helvetica,sans-serif>--># mon courrier, compte à la maison
+<pre># mon courrier, compte à la maison
 alias moi=" e -fm1 "
 # le compte de mon épouse. 
 alias elle=" e -fm2 "
@@ -5253,7 +5245,7 @@ alias elle=" e -fm2 "
 alias travail=" e -fm3 "
 # le terme «mail» est obsolète
 alias mail="echo utilisez moi, elle, ou travail 
-<!--</font>--></pre>
+</pre>
 
 <h2 id="imr"> Client interactif de lecture de courrier </h2>
 
@@ -5272,7 +5264,7 @@ Un «*» signifie qu'il reste du texte à lire.
 Vous répondez en tapant une touche. 
 Les touches ont la signification suivante :
 
-<pre><!--<font size=3 face=Arial,Helvetica,sans-serif>-->? 	résumé des commandes principales
+<pre>? 	résumé des commandes principales
 q 	quitte le programme
 espace	affiche plus de texte
 g	va au début
@@ -5281,7 +5273,7 @@ n 	lit le prochain message
 d 	efface ce message
 w	sauvegarde ce message dans un fichier, puis le supprime
 u 	sauvegarde ce message non formaté dans un fichier et le supprime
-<!--</font>--></pre>
+</pre>
 
 <p>
 En tapant espace, vous continuez à afficher le courriel, comme /bin/more.
@@ -5355,14 +5347,14 @@ Naturellement vous pouvez définir un chemin absolu si vous le souhaitez.
 Une règle de filtrage de courrier s'active toujours dans le contexte d'un bloc de filtrage. 
 Par exemple, si vous souhaitez réorienter le courrier de certaines personnes, faites ceci :
 
-<pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->fromfilter {
+<pre class=item>
+fromfilter {
 fred flintstone &gt; fredmail
 fred. flintstone@bedrock.us &gt; fredmail
 jerk@hotmail.com &gt; x
 word@m-w.com &gt; -wod
 }
-<!--</font>--></pre>
+</pre>
 
 <p>
 Vous pouvez indiquer le nom de l'expéditeur, ou son adresse mail. 
@@ -5394,14 +5386,14 @@ C'est utile si vous avez plusieurs comptes, ou des alias qui redirigent le courr
 sur votre compte primaire. 
 Voici un bloc témoin :
 
-<pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->tofilter {
+<pre class=item>
+tofilter {
 support@my-side-business.com &gt; appui
 sales@my-side-business.com &gt; ventes
 @my-side-business.com &gt; affaires
 me@my-regular-dayjob.com &gt; travail
 }
-<!--</font>--></pre>
+</pre>
 
 <p>
 La troisième entrée est une adresse de capture, sauvegardant n'importe quel courrier 
@@ -5562,8 +5554,8 @@ Vous pouvez télécharger les emails localement, si vous le souhaitez, mais ce n
 obligatoire. C'est davantage une approche orientée serveur. La configuration initiale de gmail, 
 pour imap, ressemble à ceci :
 
-<pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->mail {
+<pre class=item>
+mail {
   imap
   inserver = imap. gmail.com
   outserver = smtp. gmail.com
@@ -5573,7 +5565,7 @@ pour imap, ressemble à ceci :
   reply = quelqun@gmail.com
   from = nom complet
 }
-<!--</font>--></pre>
+</pre>
 
 <p>
 Si ce qui précède est la troisième entrée Mail dans votre fichier de configutration, alors 
@@ -5583,7 +5575,7 @@ Edbrowse vous permet plutôt d'accéder à tous vos mails sur le serveur imap de
 interactive. Voici une capture d'écran. 
 
 <pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>--> 1 INBOX, 0 messages
+1 INBOX, 0 messages
  2 [Gmail]/Tous les mails, 7 messages
  3 [Gmail]/Brouillons, 0 messages
  4 [Gmail]/Important, 0 messages
@@ -5593,7 +5585,7 @@ interactive. Voici une capture d'écran.
  8 [Gmail]/Corbeille, 16 messages
 Choisissez un dossier par numéro ou par sous-chaîne.  q pour quitter.
 rf pour rafraîchir. l pour changer la limite maximale de récupération. e chaîne pour définir le format d'enveloppe
-<!--</font>--></pre>
+</pre>
 
 <p>
 Tapez 6, ou Corbeille, ou simplement Cor et Edbrowse vous permet de naviquer dans le dossier 
@@ -5616,7 +5608,6 @@ Tapez / pour rechercher dans les mails par sujet, expéditeur ou dans le corps
 Finalement tapez h pour l'aide, qui ressemble à ceci :
 
 <pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->
 h   affiche ce message d'aide
 q   quitte ce programme
 s   arrête la lecture dans ce dossier
@@ -5636,7 +5627,7 @@ u 	écrire ce courriel non formaté dans un fichier
 U 	écrire cet e-mail non formaté dans un fichier et le supprimer
 a 	numériser et enregistrer les pièces jointes
 e 	chaîne de formatage de l'enveloppe
-<!--</font>--></pre>
+</pre>
 
 <p>
 Sur certains serveurs, comme gmail, vous ne pouvez effacer un mail dans le dossier 
@@ -5706,7 +5697,11 @@ Peut-être aurions-nous des commandes différentes pour la recherche dans la mé
 Il faudrait réfléchir à l'interface avant d'écrire le moindre code.
 
 <hr>
-<h1> Chapitre 8, Client IRC </h1>
+<h1 id=ircc> Chapitre 8, Client IRC </h1>
+
+<ul>
+<li><a href=#irc>Utiliser IRC</a>
+</ul>
 
 <h2 id=irc> Utiliser IRC </h2>
 
@@ -5819,10 +5814,22 @@ Vous pouvez ainsi déterminer quand les choses ont été dites sur le canal.
 Les autres commandes ls ne s'appliquent pas ici.
 
 <hr>
-<h1> Chapitre 9, Accès aux bases de données </h1>
+<h1 id=dba> Chapitre 9, Accès aux bases de données </h1>
+
+<ul>
+<li><a href=#sqlb> Compiler Edbrowse avec l'accès aux bases de données </a></li>
+<li><a href=#rtb> Lire les tables </a></li>
+<li><a href=#dsource> Source de données</a></li>
+<li><a href=#insupd> Insertion, mise à jour, effacement </a></li>
+<li><a href=#td> Descripteurs de tables </a></li>
+<li><a href=#gosql> Go SQL </a></li>
+<li><a href=#pipes> Pipes dans les données </a></li>
+<li><a href=#dbur> Lignes dépliées </a></li>
+</ul>
 
 <h2 id="sqlb"> Compiler Edbrowse avec accès aux bases de données </h2>
 
+<p>
 Edbrowse peut se connecter à des bases de données sql via odbc.
 Ceci suppose que vous avez installé les packages unixODBC et unixODBC-devel sur votre machine. 
 Une autre cible, edbrowseinf, donne accès à 
@@ -5854,7 +5861,7 @@ la structure de la table, tapez «shc» (show colums).
 L'affichage pourrait ressembler à ceci:
 
 <pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->Table clients 536281 rows
+Table clients 536281 rows
 1 *numero int
 2 prenom string
 3 nom string
@@ -5862,7 +5869,7 @@ L'affichage pourrait ressembler à ceci:
 5 sexe char
 6 email string
 7 image blob
-<!--</font>--></pre>
+</pre>
 
 <p>
 La première colonne est un numéro unique qui indique ce client particulier. 
@@ -6080,8 +6087,8 @@ Le nom court est un alias, et vous pouvez appeler la table en utilisant cet alia
 Elle contiendra seulement les colonnes que vous indiquez. 
 Voici deux descripteurs pour la table mentionnée ci-dessus de clients. 
 
-<pre>
-<!--<font size=3 face=Arial,Helvetica,sans-serif>-->table {
+<pre class=item>
+table {
 tname = clients
 # cnm est mon nom de code pour la table clients
 # je le code, parce que je vais le taper souvent. 
@@ -6098,7 +6105,7 @@ tshort = cbd
 cols = date_de_naissance, numero
 keycol = 2
 }
-<!--</font>--></pre>
+</pre>
 
 <p>
 En insérant un enregistrement dans un de ces descripteurs, rappelez-vous que ce n'est 

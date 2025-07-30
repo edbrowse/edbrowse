@@ -2129,9 +2129,9 @@ nokeyword:
 					cfgLine0(MSG_EBRC_NoInserver);
 				if (!act->outurl)
 					cfgLine0(MSG_EBRC_NoOutserver);
-				if (!act->login)
+				if (!act->login && !netrc)
 					cfgLine0(MSG_EBRC_NoLogin);
-				if (!act->password)
+				if (!act->password && !netrc)
 					cfgLine0(MSG_EBRC_NPasswd);
 				if (!act->from)
 					cfgLine0(MSG_EBRC_NoFrom);

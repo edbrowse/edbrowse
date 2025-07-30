@@ -1990,15 +1990,13 @@ static bool ftpConnect(struct i_get *g, char *creds_buf)
 /* scp is somewhat unique among the protocols handled here */
 	is_scp = memEqualCI(url, "scp", 3);
 
-	if (stringEqual(creds_buf, ":") && memEqualCI(url, "ftp", 3))
-		strcpy(creds_buf, "anonymous:ftp@example.com");
-
 	h = http_curl_init(g);
-	if (!h)
-		goto ftp_transfer_fail;
-	curlret = curl_easy_setopt(h, CURLOPT_USERPWD, creds_buf);
-	if (curlret != CURLE_OK)
-		goto ftp_transfer_fail;
+	if (!h) goto ftp_transfer_fail;
+	if (!netrc && stringEqual(creds_buf, ":") && memEqualCI(url, "ftp", 3)) {
+		curlret = curl_easy_setopt(h, CURLOPT_USERPWD, 
+		"anonymous:ftp@example.com");
+		if (curlret != CURLE_OK) goto ftp_transfer_fail;
+	}
 
 	urlSanitize(g, 0);
 
@@ -2455,6 +2453,7 @@ static CURL *http_curl_init(struct i_get *g)
 	curl_init_status = curl_easy_setopt(h, CURLOPT_COOKIEFILE, "");
 	if (curl_init_status != CURLE_OK)
 		goto libcurl_init_fail;
+	curl_netrc(h);
 // Lots of these setopt calls shouldn't fail.  They just diddle a struct.
 	curl_easy_setopt(h, CURLOPT_SOCKOPTFUNCTION, my_curl_safeSocket);
 	curl_easy_setopt(h, CURLOPT_WRITEFUNCTION, eb_curl_callback);
@@ -2522,6 +2521,15 @@ libcurl_init_fail:
 	if (h)
 		curl_easy_cleanup(h);
 	return 0;
+}
+
+void curl_netrc(CURL *h)
+{
+	if(!netrc) return;
+	const char *n = getenv("NETRC");
+	if(n && *n)
+		curl_easy_setopt(h, CURLOPT_NETRC_FILE, n);
+	curl_easy_setopt(h, CURLOPT_NETRC, CURL_NETRC_OPTIONAL);
 }
 
 /*

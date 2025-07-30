@@ -507,7 +507,7 @@ int ehsn;
 	bool irciMode:1;		// input irc
 	bool ircoMode:1;		// output irc
 	bool ircoMode1:1;		// was output irc
-	bool ircChannels:1; // show channel when displaying messages
+	bool showchan:1; // show channel when displaying messages
 	bool ircSecure:1; // ssl connection
 	bool ircPingOut:1; // sent ping to server
 	bool imapMode1:1;		// imap folders
