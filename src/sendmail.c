@@ -1007,7 +1007,7 @@ smtp_cleanup:
 bool
 sendMail(int account, const char **recipients, const char *body,
 	 int subjat, const char **attachments, const char *refline,
-	 int nalt, bool dosig)
+	 int nalt, int nfwd, bool dosig)
 {
 	char *from, *fromiso, *reply;
 	const struct MACCOUNT *a, *ao, *localMail;
@@ -1045,11 +1045,6 @@ sendMail(int account, const char **recipients, const char *body,
 
 	if (nat)
 		mustmime = true;
-
-	if (nalt && nalt < nat) {
-		setError(MSG_AttAlternate);
-		return false;
-	}
 
 	if (!loadAddressBook())
 		return false;
@@ -1319,7 +1314,7 @@ bool sendMailCurrent(int sm_account, bool dosig)
 	char cxbuf[4];
 	int lr, la, ln;
 	char *refline = 0;
-	int nrec, nat, nalt;
+	int nrec, nat, nalt, nfwd;
 	int account = localAccount;
 	int j;
 	bool rc = false;
@@ -1357,7 +1352,7 @@ bool sendMailCurrent(int sm_account, bool dosig)
 	if (!validAccount(account))
 		return false;
 
-	nrec = nat = nalt = 0;
+	nrec = nat = nalt = nfwd = 0;
 
 	recmem = initString(&lr);
 	atmem = initString(&la);
@@ -1405,11 +1400,26 @@ bool sendMailCurrent(int sm_account, bool dosig)
 		}
 
 		if (memEqualCI(line, "attach:", 7)
+		    || memEqualCI(line, "fwd:", 4)
 		    || memEqualCI(line, "alt:", 4)) {
 			if (toupper(line[1]) == 'T')
 				line += 7;
-			else
+			else if (toupper(line[1]) == 'W') {
+				line += 4, ++nfwd;
+				if(nat) {
+						setError(MSG_ForwardFirst);
+					goto done;
+				}
+			} else
 				line += 4, ++nalt;
+			if(nfwd > 1) {
+				setError(MSG_ManyForward);
+				goto done;
+			}
+			if(nfwd && nalt) {
+				setError(MSG_AltForward);
+				goto done;
+			}
 			while (*line == ' ' || *line == '\t')
 				++line;
 			if (*line == '\n') {
@@ -1421,6 +1431,10 @@ bool sendMailCurrent(int sm_account, bool dosig)
 				goto done;
 			}
 			++nat;
+			if (nalt && nalt < nat) {
+				setError(MSG_AttAlternate);
+				goto done;
+			}
 			for (t = line; *t != '\n'; ++t) ;
 			stringAndBytes(&atmem, &la, line, t + 1 - line);
 			continue;
@@ -1482,8 +1496,8 @@ bool sendMailCurrent(int sm_account, bool dosig)
 	atlist[j] = 0;
 
 	sprintf(cxbuf, "%d", context);
-	rc = sendMail(account, reclist, cxbuf, ln, atlist, refline, nalt,
-		      dosig);
+	rc = sendMail(account, reclist, cxbuf, ln, atlist, refline,
+	nalt, nfwd, 		      dosig);
 
 done:
 	nzFree(recmem);

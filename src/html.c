@@ -2940,7 +2940,7 @@ fail:
 		key = getLetter("ynYN");
 		puts("");
 		if(key == 'y' || key == 'Y') {
-			rc = sendMail(localAccount, tolist, q, -1, atlist, 0, 0, false);
+			rc = sendMail(localAccount, tolist, q, -1, atlist, 0, 0, 0, false);
 			if (rc)
 				i_puts(MSG_MailSent);
 		} else

@@ -697,7 +697,7 @@ int main(int argc, char **argv)
 // These don't get freed, but we're going to exit anyways.
 
 		if (sendMail(account, (const char **)reclist2, body, 1,
-			     (const char **)atlist2, 0, nalt, true))
+			     (const char **)atlist2, 0, nalt, 0, true))
 			exit(0);
 		showError();
 		exit(1);
