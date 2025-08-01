@@ -3,7 +3,7 @@ CC ?=		cc
 PERL ?= perl
 QUICKJS_INCLUDE ?= ../../quickjs
 QUICKJS_LIB ?= ../../quickjs
-CFLAGS +=	-Wall -Wno-unused -D_FILE_OFFSET_BITS=64
+CFLAGS +=	-Wall -D_FILE_OFFSET_BITS=64
 
 # determine includes and linker flags
 DEPENDENCIES = libcurl:curl odbc libpcre2-8:pcre2-8 readline openssl
