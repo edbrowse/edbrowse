@@ -226,7 +226,7 @@ int ftpWrite(const char *url);
 void setHTTPLanguage(const char *lang);
 void curl_netrc(CURL *h);
 int prompt_and_read(int prompt, char *buffer, int buffer_length, int error_message, bool hide_echo);
-int ebcurl_debug_handler(CURL * handle, curl_infotype info_desc, char *data, size_t size, struct i_get *g);
+int ebcurl_debug_handler(CURL * handle, curl_infotype info_desc, char *data, size_t size, void *client);
 int bg_jobs(bool iponly);
 CURLcode setCurlURL(CURL * h, const char *url);
 bool frameExpand(bool expand, int ln1, int ln2);

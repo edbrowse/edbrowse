@@ -29,7 +29,7 @@ bool allowRedirection = true, allowJS = true, sendReferrer = true;
 bool blockJS;
 bool ftpActive;
 bool errorExit;
-int webTimeout = 20, mailTimeout = 0;
+long webTimeout = 20, mailTimeout = 0;
 int displayLength = 500;
 int verifyCertificates = 1;
 char *sslCerts, *pubKey;
@@ -1922,11 +1922,11 @@ inside:
 			continue;
 
 		case 33:	// webtimer
-			webTimeout = atoi(v);
+			webTimeout = strtol(v, NULL, 10);
 			continue;
 
 		case 34:	// mailtimer
-			mailTimeout = atoi(v);
+			mailTimeout = strtol(v, NULL, 0);
 			continue;
 
 		case 35:	// certfile

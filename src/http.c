@@ -2461,7 +2461,7 @@ static CURL *http_curl_init(struct i_get *g)
 	curl_easy_setopt(h, CURLOPT_HEADERFUNCTION, curl_header_callback);
 	curl_easy_setopt(h, CURLOPT_HEADERDATA, g);
 	if (debugLevel >= 4)
-		curl_easy_setopt(h, CURLOPT_VERBOSE, 1);
+		curl_easy_setopt(h, CURLOPT_VERBOSE, 1l);
 	curl_easy_setopt(h, CURLOPT_DEBUGFUNCTION, ebcurl_debug_handler);
 	curl_easy_setopt(h, CURLOPT_DEBUGDATA, g);
 	curl_easy_setopt(h, CURLOPT_NOPROGRESS, 0);
@@ -2794,9 +2794,11 @@ nonascii:
 
 int
 ebcurl_debug_handler(CURL * handle, curl_infotype info_desc, char *data,
-		     size_t size, struct i_get *g)
+		     size_t size, void *client)
 {
 	FILE *f = debugFile ? debugFile : stdout;
+// We need to explicitly cast as apparently curl wants to pass us a void type pointer these days
+        struct i_get *g = (struct i_get *) client;
 
 
 // There's a special case where this function is used

@@ -583,7 +583,7 @@ static CURLcode getMailData(CURL * h)
 	if (!active_a->mc_set) {
 		active_a->move_capable = callback_data.move_capable;
 		if (debugLevel < 4)
-			curl_easy_setopt(h, CURLOPT_VERBOSE, 0);
+			curl_easy_setopt(h, CURLOPT_VERBOSE, 0l);
 		debugPrint(3, "imap is %smove capable",
 			   (active_a->move_capable ? "" : "not "));
 		active_a->mc_set = true;
@@ -928,7 +928,7 @@ static bool tryTwice(CURL *h, const char *path, const char *cmd)
 	CURLcode res;
 	bool retry = false;
 
-	curl_easy_setopt(h, CURLOPT_VERBOSE, (debugLevel >= 4));
+	curl_easy_setopt(h, CURLOPT_VERBOSE, (long) (debugLevel >= 4));
 
 again:
 	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, cmd);

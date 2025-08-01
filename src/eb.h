@@ -288,7 +288,7 @@ extern int verifyCertificates;	/* is a certificate required for the ssl connecti
 extern int displayLength;	// when printing a line
 extern int formatLineLength;	// when formatting html
 extern bool formatOverflow;
-extern int webTimeout, mailTimeout;
+extern long webTimeout, mailTimeout;
 extern uchar browseLocal;
 extern bool sqlPresent;		/* Was edbrowse compiled with SQL built in? */
 extern bool curlActive; // curl is running?

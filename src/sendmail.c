@@ -822,10 +822,12 @@ struct smtp_upload {
 	int pos;
 };
 
+// Curl warns if we don't pass void pointers as data params so cast in the function
 static size_t smtp_upload_callback(char *buffer_for_curl, size_t size,
-				   size_t nmem, struct smtp_upload *upload)
+				   size_t nmem, void *data)
 {
-	size_t out_buffer_size = size * nmem;
+	struct smtp_upload *upload = (struct smtp_upload *) data;
+        size_t out_buffer_size = size * nmem;
 	size_t remaining = upload->length - upload->pos;
 	size_t to_send, cur_pos;
 
@@ -916,7 +918,7 @@ static CURL *newSendmailHandle(const struct MACCOUNT *account,
 	}
 
 	if (debugLevel >= 4)
-		curl_easy_setopt(handle, CURLOPT_VERBOSE, 1);
+		curl_easy_setopt(handle, CURLOPT_VERBOSE, 1l);
 	curl_easy_setopt(handle, CURLOPT_DEBUGFUNCTION, ebcurl_debug_handler);
 	curl_easy_setopt(handle, CURLOPT_DEBUGDATA, &g);
 
