@@ -318,6 +318,7 @@ void shiftRight(char *s, char first)
 	s[0] = first;
 }
 
+#if 0
 char *Cify(const char *s, int n)
 {
 	char *u;
@@ -330,6 +331,7 @@ char *Cify(const char *s, int n)
 	*u = 0;
 	return t;
 }
+#endif
 
 /* pull a substring out of a larger string,
  * and make it its own allocated string */
