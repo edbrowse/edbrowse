@@ -499,7 +499,7 @@ empty:
 		}		/* .signature */
 	}
 
-	/* Infer content type from the filename */
+	// Infer content type from the filename
 	ct = 0;
 	s = strrchr(file, '.');
 	if (s && s[1]) {
@@ -516,6 +516,8 @@ empty:
 			ct = "video/mpeg";
 		if (stringEqualCI(s, "rtf"))
 			ct = "text/richtext";
+		if (stringEqualCI(s, "eml"))
+			ct = "message/rfc822";
 		if (stringEqualCI(s, "htm") ||
 		    stringEqualCI(s, "html") ||
 		    stringEqualCI(s, "shtm") ||
@@ -523,7 +525,7 @@ empty:
 			ct = "text/html";
 	}
 
-// alternative from a buffer is usually html; this doesn't fly if wev
+// alternative from a buffer is usually html; this doesn't fly if we
 // send it over as plain text. This is a crude test.
 // Just look for a leading <
 	if(!strncmp(file, "<session ", 9)) {
@@ -533,6 +535,10 @@ empty:
 		}
 		if(i < buflen && c == '<')
 			ct = "text/html";
+// Another simple test, for raw email format, again, probably too simple.
+// I wanted to use emailTest in fetchmail.c but that assumes the current buffer.
+		if(!strncmp(buf, "Return-Path:", 12))
+			ct = "message/rfc822";
 	}
 
 /* Count the nonascii characters */
