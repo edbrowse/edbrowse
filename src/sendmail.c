@@ -1005,7 +1005,33 @@ smtp_cleanup:
 	return smtp_success;
 }
 
-/* Send mail to the smtp server. */
+/*********************************************************************
+Send mail to the smtp server.
+recipients is a null terminated array of email addresses.
+attachments is a null terminated array of attachments as filenames
+or as buffer numbers if the attachment is in buffer.
+If nalt is positive it should equal the number of attachments;
+all attachments are alternate presentations.
+If there are automatic attachments in the mail block in .ebrc,
+those might go out as alts as well, this is a bug that no one has run into yet.
+If nfwd is positive it should be 1, forward 1 email,
+which is the first attachment.
+Other attachments are just attachments.
+We should verify the first attachment is a raw email file,
+with headers etc. Use emailTest().
+In this case mime is multipart/related, but if there are then other attachments
+are they related? Should it be mixed, as if they were all just attachments?
+I don't know much about this.
+The whole idea of forwarding the original raw email as a mime component in
+a larger email, they don't seem to do that any more.
+At least my wife's phone doesn't do that.
+It slurps it all up into one html file.
+But then what's the point of forwarding spam to the authorities,
+if they can't see the original headers?
+Well I'm gonna try to do it that way and see what happens.
+This forwarding is rather experimental.
+*********************************************************************/
+
 bool
 sendMail(int account, const char **recipients, const char *body,
 	 int subjat, const char **attachments, const char *refline,
@@ -1035,7 +1061,7 @@ sendMail(int account, const char **recipients, const char *body,
 	ao = a->outssl ? a : localMail;
 	doSignature = dosig;
 
-	nat = 0;		/* number of attachments */
+	nat = 0;		// number of attachments
 	while (attachments[nat])
 		++nat;
 
@@ -1215,7 +1241,7 @@ sendMail(int account, const char **recipients, const char *body,
 	} else {
 		sprintf(serverLine,
 			"Content-Type: multipart/%s; boundary=%s%sContent-Transfer-Encoding: 7bit%s%s",
-			nalt ? "alternative" : "mixed", boundary, eol, eol,
+			nalt ? "alternative" : nfwd ? "related" : "mixed", boundary, eol, eol,
 			eol);
 		stringAndString(&out, &j, serverLine);
 		stringAndString(&out, &j,
