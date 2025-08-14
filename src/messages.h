@@ -866,4 +866,5 @@ MSG_ImaskOn,
 	MSG_ManyForward,
 	MSG_AltForward,
 	MSG_ForwardFirst,
+	MSG_NotEmail,
 };
