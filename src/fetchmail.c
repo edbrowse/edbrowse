@@ -3912,6 +3912,7 @@ nextline:
 		repln = 1;
 	}
 
+// move subject to the end of the mail block, if it isn't already there
 	j = strlen(linetype) - 1;
 	if (j != subln) {
 		struct lineMap *map = cw->map;
@@ -3984,6 +3985,14 @@ nextline:
 		stringAndNum(&out, &j, n);
 		stringAndChar(&out, &j, '\n');
 	}
+
+// forwarding, raw mail is attached, we don't need its text here.
+// Just perhaps your comments on what you are forwarding.
+	if(fwd && cw->dol > subln)
+		delText(subln + 1, cw->dol);
+// this is a crude overwrite, but we're never going to undo after this operation
+	if(fwd)
+		strcpy((char*)cw->map[1].text, "to:x\n");
 
 	rc = true;
 	if (j)

@@ -5197,6 +5197,10 @@ down_again:
 			cw->browseMode = cf->browseMode = false;
 			goto et_go;
 		}
+// in browse mode, none of the changes we made to the file leave a trail.
+// But here we are as a regular file, and I don't want the user to undo.
+		undoCompare();
+		cw->undoable = false;
 		return rc;
 	}
 
@@ -5209,7 +5213,10 @@ down_again:
 		}
 		undoCompare();
 		cw->undoable = false;
-		return true;
+		rc = setupReply(false, true);
+		undoCompare();
+		cw->undoable = false;
+		return rc;
 	}
 
 /* ^^^^ is the same as ^4; same with & */
