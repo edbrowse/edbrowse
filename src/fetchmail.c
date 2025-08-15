@@ -3780,7 +3780,7 @@ grab the message id and reference it.
 Also, if mailing to all, stick in the other recipients.
 *********************************************************************/
 
-bool setupReply(bool all)
+bool setupReply(bool all, bool fwd)
 {
 	int subln, repln;
 	char linetype[12];
@@ -3790,27 +3790,27 @@ bool setupReply(bool all)
 
 // basic sanity
 	if (cw->dirMode) {
-		setError(MSG_ReDir);
+		setError(fwd ? MSG_FwdDir : MSG_ReDir);
 		return false;
 	}
 	if (cw->sqlMode) {
-		setError(MSG_ReDB);
+		setError(fwd ? MSG_FwdDB : MSG_ReDB);
 		return false;
 	}
 	if (cw->irciMode | cw->ircoMode) {
-		setError(MSG_ReIrc);
+		setError(fwd ? MSG_FwdIrc : MSG_ReIrc);
 		return false;
 	}
 	if (cw->imapMode1 | cw->imapMode2) {
-		setError(MSG_ReImap);
+		setError(fwd ? MSG_FwdImap : MSG_ReImap);
 		return false;
 	}
 	if (!cw->dol) {
-		setError(MSG_ReEmpty);
+		setError(fwd ? MSG_FwdEmpty : MSG_ReEmpty);
 		return false;
 	}
 	if (cw->binMode) {
-		setError(MSG_ReBinary);
+		setError(fwd ? MSG_FwdBinary : MSG_ReBinary);
 		return false;
 	}
 
@@ -3979,7 +3979,7 @@ nextline:
 		stringAndChar(&out, &j, '\n');
 	}
 	int n = strtol(s, &s, 10);
-	if(n > 0 && *s == '>') {
+	if(n > 0 && *s == '>' && !fwd) {
 		stringAndString(&out, &j, "Account: ");
 		stringAndNum(&out, &j, n);
 		stringAndChar(&out, &j, '\n');

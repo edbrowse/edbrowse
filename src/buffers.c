@@ -5178,21 +5178,38 @@ down_again:
 	}
 
 	if (stringEqual(line, "re") || stringEqual(line, "rea")) {
+		cmd = 'e';	// so error messages are printed
+		if(cw->browseMode && !cw->mailInfo) {
+// browsing html or some other non-mail file
+			setError(MSG_ReNoInfo);
+				return false;
+		}
 		undoCompare();
 		cw->undoable = false;
-		cmd = 'e';	// so error messages are printed
 		if(cw->imapMode2 && cw->dol) {
 // basically g and re
 			char *p = (char *)cw->r_map[cw->dot].text; // uid and subject for the email
 			if(! mailDescend(p, 'g')) return false;
 		}
-		rc = setupReply(line[2] == 'a');
+		rc = setupReply(line[2] == 'a', false);
 		if (rc && cw->browseMode) {
 			ub = false;
 			cw->browseMode = cf->browseMode = false;
 			goto et_go;
 		}
 		return rc;
+	}
+
+	if (stringEqual(line, "fwd")) {
+		cmd = 'e';	// so error messages are printed
+		if(cw->browseMode && !cw->mailInfo) {
+// browsing html or some other non-mail file
+			setError(MSG_ReNoInfo);
+				return false;
+		}
+		undoCompare();
+		cw->undoable = false;
+		return true;
 	}
 
 /* ^^^^ is the same as ^4; same with & */

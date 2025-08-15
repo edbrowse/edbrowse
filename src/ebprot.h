@@ -76,7 +76,7 @@ void scanUnreadMail(void);
 bool emailTest(void);
 void mail64Error(int err);
 char *emailParse(char *buf, bool plain);
-bool setupReply(bool all);
+bool setupReply(bool all, bool fwd);
 bool imapBufferPresent(void);
 bool imapBuffer(char *line);
 bool imap1rf();
