@@ -873,4 +873,6 @@ MSG_ImaskOn,
 	MSG_FwdImap,
 	MSG_FwdEmpty,
 	MSG_FwdBinary,
+	MSG_NoUnformat,
+	MSG_NoRaw,
 };

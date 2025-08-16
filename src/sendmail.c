@@ -535,12 +535,13 @@ empty:
 		}
 		if(i < buflen && c == '<')
 			ct = "text/html";
+	}
+
 // Another simple test, for raw email format, again, probably too simple.
 // I wanted to use emailTest in fetchmail.c but that assumes the current buffer.
-		if(!strncmp(buf, "Return-Path:", 12) ||
-		!strncmp(buf, "Delivered-To:", 13))
-			ct = "message/rfc822";
-	}
+	if(!ct && (!strncmp(buf, "Return-Path:", 12) ||
+	!strncmp(buf, "Delivered-To:", 13)))
+		ct = "message/rfc822";
 
 /* Count the nonascii characters */
 	nacount = nullcount = linelength = wordlength = 0;
