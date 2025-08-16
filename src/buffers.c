@@ -5213,6 +5213,11 @@ down_again:
 		}
 		undoCompare();
 		cw->undoable = false;
+		if(cw->imapMode2 && cw->dol) {
+// basically g and fwd
+			char *p = (char *)cw->r_map[cw->dot].text; // uid and subject for the email
+			if(! mailDescend(p, 'g')) return false;
+		}
 		rc = setupReply(false, true);
 		if (rc && cw->browseMode) {
 			ub = false;
