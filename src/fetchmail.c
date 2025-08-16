@@ -4029,6 +4029,7 @@ nextline:
 	if (j)
 		rc = addTextToBuffer((unsigned char *)out, j, 1, false);
 	nzFree(out);
+	cw->dot = fwd ? 1 : subln;
 	return rc;
 }
 
