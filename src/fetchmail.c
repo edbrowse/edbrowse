@@ -3993,35 +3993,36 @@ nextline:
 // this is a crude overwrite, but we're never going to undo after this operation
 		strcpy((char*)cw->map[1].text, "to:x\n");
 		if(cw->browseMode) {
-// this pathway is not yet implemented
-			setError(MSG_NYI);
-			nzFree(out);
-			return false;
-		}
-		if(major < 0) {
-			setError(MSG_NoUnformat);
-			nzFree(out);
-			return false;
-		}
-		if(!mailStash) {
-			setError(MSG_NoRaw, major);
-			nzFree(out);
-			return false;
-		}
-		k = strlen(mailStash);
-		rmf = allocMem(k + 12);
-		sprintf(rmf, "%s/%05d", mailStash, major);
-		if(access(rmf, 4)) {
-			setError(MSG_NoRaw, major);
-			nzFree(out);
-			free(rmf);
-			return false;
-		}
+			int dest = copyRaw();
+			stringAndString(&out, &j, "fwd:");
+			stringAndNum(&out, &j, dest);
+			stringAndChar(&out, &j, '\n');
+		} else {
+			if(major < 0) {
+				setError(MSG_NoUnformat);
+				nzFree(out);
+				return false;
+			}
+			if(!mailStash) {
+				setError(MSG_NoRaw, major);
+				nzFree(out);
+				return false;
+			}
+			k = strlen(mailStash);
+			rmf = allocMem(k + 12);
+			sprintf(rmf, "%s/%05d", mailStash, major);
+			if(access(rmf, 4)) {
+				setError(MSG_NoRaw, major);
+				nzFree(out);
+				free(rmf);
+				return false;
+			}
 // put the fwd directive into the file
-		stringAndString(&out, &j, "fwd:");
-		stringAndString(&out, &j, rmf);
-		stringAndChar(&out, &j, '\n');
-		free(rmf);
+			stringAndString(&out, &j, "fwd:");
+			stringAndString(&out, &j, rmf);
+			stringAndChar(&out, &j, '\n');
+			free(rmf);
+		}
 	}
 
 	rc = true;

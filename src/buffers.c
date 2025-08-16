@@ -5214,6 +5214,13 @@ down_again:
 		undoCompare();
 		cw->undoable = false;
 		rc = setupReply(false, true);
+		if (rc && cw->browseMode) {
+			ub = false;
+			cw->browseMode = cf->browseMode = false;
+			goto et_go;
+		}
+// in browse mode, none of the changes we made to the file leave a trail.
+// But here we are as a regular file, and I don't want the user to undo.
 		undoCompare();
 		cw->undoable = false;
 		return rc;
@@ -9101,7 +9108,7 @@ int sideBuffer(int cx, const char *text, int textlen, const char *bufname)
 		if (!rc)
 			i_printf(MSG_BufferPreload, cx);
 	}
-	/* back to original context */
+	// back to original context
 	cxSwitch(svcx, false);
 	return cx;
 }

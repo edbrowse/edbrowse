@@ -330,6 +330,7 @@ void truncate0(const char *filename, int fh);
 long long bufferSizeW(const Window *w, bool browsing);
 long long bufferSize(int cx, bool browsing);
 bool unfoldBufferW(const struct ebWindow *w, bool cr, char **data, int *len);
+int copyRaw(void);
 bool unfoldBuffer(int cx, bool cr, char **data, int *len);
 void caseShift(char *s, char action) ;
 void i_caseShift(char *s, char action) ;

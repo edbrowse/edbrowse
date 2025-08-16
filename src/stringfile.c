@@ -941,6 +941,29 @@ bool unfoldBufferW(const Window *w, bool cr, char **data, int *len)
 	return true;
 }
 
+// Copy the raw (not browsed) text from one window into another.
+// This is only used by the mail forwarding command.
+int copyRaw(void)
+{
+	int dest = sideBuffer(0, NULL, 0, NULL);
+	if(!dest) return 0; // should never happen
+	Window *w = sessionList[dest].lw;
+	struct lineMap *map1 = cw->r_map, *map2;
+	int ln, dol = cw->r_dol;
+	if(!dol) return dest; // should never happen
+	map2 = allocZeroMem(LMSIZE * (dol+2));
+	for(ln = 1; ln <= dol; ++ln) {
+		uchar *p1 = map1[ln].text;
+		int l = pstLength(p1);
+		uchar *p2 = allocMem(l);
+		memcpy(p2, p1, l);
+		map2[ln].text = p2;
+	}
+	w->map = map2;
+	w->dol = w->dot = dol;
+	return dest;
+}
+
 bool unfoldBuffer(int cx, bool cr, char **data, int *len)
 {
 	const Window *w = sessionList[cx].lw;
