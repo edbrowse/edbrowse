@@ -3993,7 +3993,14 @@ nextline:
 // this is a crude overwrite, but we're never going to undo after this operation
 		strcpy((char*)cw->map[1].text, "to:x\n");
 		if(cw->browseMode) {
-			int dest = copyRaw();
+			int dest = sideBuffer(0, NULL, 0, NULL);
+			if(dest) { // should always be nonzero
+				Window *w = sessionList[dest].lw;
+				w->map = cw->r_map;
+				cw->r_map = 0;
+				w->dol = w->dot = cw->r_dol;
+				cw->r_dol = cw->r_dot = 0;
+			}
 			stringAndString(&out, &j, "fwd:");
 			stringAndNum(&out, &j, dest);
 			stringAndChar(&out, &j, '\n');
