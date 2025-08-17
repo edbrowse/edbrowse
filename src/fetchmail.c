@@ -1979,9 +1979,8 @@ static CURLcode count_messages(CURL * handle, int *message_count)
 	int i, num_messages = 0;
 	bool last_nl = true;
 	int fl = (ismc ? fetchLimit : cw->imap_l);
-	bool earliest = false;
 
-	if(fl < 0) earliest = true, fl = -fl;
+	if(fl < 0) fl = -fl;
 	if (res != CURLE_OK)
 		return res;
 
@@ -2019,7 +2018,7 @@ input:
 
 		if (stringEqual(inputline, "rf")) {
 refresh:
-			curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, 0);
+			curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, NULL);
 			res = getMailData(handle);
 			if (res != CURLE_OK)
 				goto imap_done;
@@ -2049,7 +2048,7 @@ refresh:
 		t = inputline;
 		if (t[0] == 'd' && t[1] == 'b' && isdigitByte(t[2]) && !t[3]) {
 			debugLevel = t[2] - '0';
-			curl_easy_setopt(handle, CURLOPT_VERBOSE, (debugLevel >= 4));
+			curl_easy_setopt(handle, CURLOPT_VERBOSE, (long) (debugLevel >= 4));
 			goto input;
 		}
 
@@ -2061,8 +2060,7 @@ refresh:
 		if (*t == 'l' && (isspaceByte(t[1]) || t[1] == '=')) {
 			setFetchLimit(t + 2);
 			fl = fetchLimit;
-			earliest = false;
-			if(fl < 0) earliest = true, fl = -fl;
+			if(fl < 0) fl = -fl;
 			goto input;
 		}
 
@@ -2146,8 +2144,7 @@ refresh:
 		examineFolder(handle, f, false);
 		scanFolder(handle, f);
 		fl = fetchLimit;
-		earliest = false;
-		if(fl < 0) earliest = true, fl = -fl;
+		if(fl < 0) fl = -fl;
 		goto input;
 	}
 
@@ -3553,7 +3550,7 @@ static char *headerShow(struct MHINFO *w, bool top)
 			strcat(buf, "\n");
 		}
 		if (nattach && !ismc) {
-			char atbuf[20];
+			char atbuf[23];
 			if (lines & mailShowsHtml)
 				strcat(buf, "<br>");
 			lines = true;
