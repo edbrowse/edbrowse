@@ -767,8 +767,9 @@ g : go to the link on the current line
 Mail Client
 <p>
 sm : send mail [account number]
-<br>re : reply to a mail message
+<br>re : reply to this mail message
 <br>rea : reply to all
+<br>fwd : forward this email
 <br>flow : send mail with format=flowed (toggle)
 <br>attimg : show attached images (toggle)
 <br>imap n : establish an imap connection
@@ -2158,7 +2159,10 @@ If you accidentally type ,d and remove all your files,
 you can recover them from your trash bin.
 You may want to set up a cron job that removes
 all the files from your trash bin once a week.
-This directory is created mode 700, so nobody else can look at your deleted files.
+Add a shell script "emptytrash" to /etc/cron.weekly.
+
+<p>
+The .trash directory is created mode 700, so nobody else can look at your deleted files.
 If you create this directory yourself, please make it 700.
 After all, some of your deleted files might be private.
 
@@ -5416,6 +5420,7 @@ and
 <li><A HREF=#mailfmt> Formatted Mail </A>
 <li><A HREF=#filter> Mail Filtering </A>
 <li><A HREF=#reply> Mail Reply </A>
+<li><A HREF=#fwd> Mail Forwarding </A>
 <li><A HREF=#imap> Imap Client </A>
 <li><A HREF=#iai> Imap Within Edbrowse </A>
 </ul>
@@ -5465,6 +5470,11 @@ This overrides the account: line if there is one.
 It is often easier to type sm5 than to insert an account:5 line.
 Note, sm-5 is the same as sm5, but the .signature file is not included.
 Sometimes you want a different ending on your email for a particular situation.
+
+<p>
+fwd: is almost identical to attach:,
+but the former expects the attachment to be a raw email.
+This is used in <a href=#fwd>mail forwarding</a>.
 
 <p>
 When the body of your message contains lines longer than 76 characters,
@@ -5896,6 +5906,7 @@ I don't want her mail sent somewhere else because it matches one of my filter ru
 
 <h2 id="reply">Mail Reply</h2>
 
+<p>
 The `re' command prepares a formatted email for reply.
 The "Reply to" line (which must exist) is moved to the top.
 This contains the email address that you will reply to,
@@ -5910,9 +5921,9 @@ to make room for other email headers as follows.
 
 <p>
 If this email has just been browsed,
-and the unformatted data still exists within the current edbrowse session,
+whence the unformatted data still exists within the current edbrowse session,
 or if this same data is available in the database file maildir/.reply,
-then re inserts the message id of the original email.
+then edbrowse re inserts the message id of the original email.
 This should be part of the reply.
 The resulting lines might look like this.
 
@@ -5945,7 +5956,8 @@ Again, this helps list servers organize the emails into threads.
 
 <p>
 The command `rea' means reply to all,
-and this also uses the original email data.
+and this also uses the original email data,
+as stored in .reply.
 All the recipients will appear at the top of your file.
 Some will be indicated by cc, if they were carbon copied.
 You can delete any of these recipients before sending your response.
@@ -5953,15 +5965,63 @@ Of course you probably don't want to delete the first line,
 as that is the reply to address.
 
 <p>
+The .reply file will grow and grow, unless you trim it now and then.
+Put a script like this in one of your weekly cron jobs.
+
+<p>
+m=/home/your_login/mbox
+<br>
+if [ -r $m/.reply ]; then
+<br>
+tail -1000 $m/.reply >/tmp/.reply ; cp /tmp/.reply $m/.reply ; rm /tmp/.reply
+<br>
+fi
+
+<p>
 If the email was unformatted,
 and you have typed b to browse it,
 the re command takes the file out of browse mode and turns it into a plain text file.
 This supports text editing, to write your reply in the body of the message.
 If you want to start over from scratch,
-you can't just unbrowse, because it is not in browse mode.
+you can't just unbrowse, because it is not in browse mode any more.
 You must re-edit the saved mail message,
 browse, and reply.
 Like everything else in edbrowse, you'll get use to it once you play with it.
+
+<h2 id="fwd">Mail Forwarding</h2>
+
+<p>
+The `fwd' command prepares a formatted email for mail forwarding.
+This is not a mixture of the original text and your comments; you can do that yourself.
+Instead, this sends the original email, with all its headers, as an atttachment.
+Sometimes a business requests this, to track down the origin of spam.
+Sometimes your friend wants this, to capture all the attachments and images that were present in the email.
+
+<p>
+The top line becomes to:x.
+You must replace x with the new recipient.
+
+<p>
+The "Subject:" line will be as it was in the original email.
+After the fwd command is issued, the subject may move down the page,
+to make room for other email headers as follows.
+
+<p>
+If this email has just been browsed,
+and the unformatted data still exists within the current edbrowse session,
+or if this same data is available in the database file maildir/.reply,
+then fwd inserts the message id of the original email.
+This was described in the previous section.
+
+<p>
+Next is the all important fwd: directive.
+If the mail is a text file, previously formatted, then this line references the raw email in the ~/.trash/rawmail directory.
+If this is the raw email, browsed by the b command, then the raw email still exists inside.
+It is copied to another session, and the directive might look like fwd:5.
+
+<p>
+Either way, the procedure is the same.
+Add your own comments, why you are forwarding this email, then type sm to send.
 
 <h2 id="imap">Imap Client</h2>
 

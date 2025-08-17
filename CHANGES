@@ -10,6 +10,8 @@ Support for .netrc through curl.
 
 IRC actions.   /me
 
+Mail forwarding.
+
 3.8.12
 Make adjustments as quickjs evolves. Resolve build issues.
 

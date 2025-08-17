@@ -498,7 +498,7 @@ empty:
 		}		/* .signature */
 	}
 
-	/* Infer content type from the filename */
+	// Infer content type from the filename
 	ct = 0;
 	s = strrchr(file, '.');
 	if (s && s[1]) {
@@ -515,6 +515,8 @@ empty:
 			ct = "video/mpeg";
 		if (stringEqualCI(s, "rtf"))
 			ct = "text/richtext";
+		if (stringEqualCI(s, "eml"))
+			ct = "message/rfc822";
 		if (stringEqualCI(s, "htm") ||
 		    stringEqualCI(s, "html") ||
 		    stringEqualCI(s, "shtm") ||
@@ -522,7 +524,7 @@ empty:
 			ct = "text/html";
 	}
 
-// alternative from a buffer is usually html; this doesn't fly if wev
+// alternative from a buffer is usually html; this doesn't fly if we
 // send it over as plain text. This is a crude test.
 // Just look for a leading <
 	if(!strncmp(file, "<session ", 9)) {
@@ -533,6 +535,12 @@ empty:
 		if(i < buflen && c == '<')
 			ct = "text/html";
 	}
+
+// Another simple test, for raw email format, again, probably too simple.
+// I wanted to use emailTest in fetchmail.c but that assumes the current buffer.
+	if(!ct && (!strncmp(buf, "Return-Path:", 12) ||
+	!strncmp(buf, "Delivered-To:", 13)))
+		ct = "message/rfc822";
 
 /* Count the nonascii characters */
 	nacount = nullcount = linelength = wordlength = 0;
@@ -1134,7 +1142,7 @@ sendMail(int account, const char **recipients, const char *body,
 		return false;
 	}
 
-/* verify attachments are readable */
+// verify attachments are readable
 	for (j = 0; (s = attachments[j]); ++j) {
 		if (!ismc && (cx = stringIsNum(s)) >= 0) {
 			if (!cxCompare(cx) || !cxActive(cx, true))
@@ -1231,7 +1239,7 @@ sendMail(int account, const char **recipients, const char *body,
 	stringAndString(&out, &j, serverLine);
 
 	if (!mustmime) {
-/* no mime components required, we can just send the mail. */
+// no mime components required, we can just send the mail.
 		sprintf(serverLine,
 			"Content-Type: %s%s%s%sContent-Transfer-Encoding: %s%s%s",
 			ct, charsetString(ct, ce),
@@ -1264,7 +1272,11 @@ this format, some or all of this message may not be legible.\r\n\r\n--");
 	if (mustmime) {
 		for (i = 0; (s = attachments[i]); ++i) {
 			if (!encodeAttachment(s, 0, false, &ct, &ce, &encoded, 0))
-				return false;
+				goto fail;
+			if(nfwd && !i && !stringEqual(ct, "message/rfc822")) {
+				setError(MSG_NotEmail);
+				goto fail;
+			}
 			sprintf(serverLine, "%s--%s%sContent-Type: %s%s", eol,
 				boundary, eol, ct, charsetString(ct, ce));
 			stringAndString(&out, &j, serverLine);
@@ -1307,16 +1319,19 @@ this format, some or all of this message may not be legible.\r\n\r\n--");
 			encoded = 0;
 		}		/* loop over attachments */
 
-/* The last boundary */
+// The last boundary
 		sprintf(serverLine, "%s--%s--%s", eol, boundary, eol);
 		stringAndString(&out, &j, serverLine);
 	}
 
-	/* mime format */
-
 	sendmail_success = sendMailSMTP(ao, reply, recipients, out);
 	nzFree(out);
 	return sendmail_success;
+
+fail:
+	nzFree(out);
+	nzFree(encoded);
+	return false;
 }
 
 bool validAccount(int n)

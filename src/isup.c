@@ -3830,7 +3830,7 @@ regular: ;
 	if(a1 && a2 && a3 && a1 < a2 && a2 < a3 && a3 < a4 && *a4 == '\01') {
 		strmove(a4, a4+1);
 		a3 += 7;
-		skipWhite2(a3);
+		skipWhite2(&a3);
 		*a2++ = ' ';
 		strmove(a2, a3);
 		if(a1 == irc_out)

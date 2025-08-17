@@ -610,7 +610,7 @@ cannot reply to an empty file
 cannot reply to a binary file
 subject and reply lines are required
 warning, there is no message ID to reference
-Sorry, email headers are not available.\nYou must start with an unformatted email message, browse, then reply all.
+Sorry, email headers are not available.\nYou must start with an unformatted email message, browse, then reply or forward.
 l expands control chars into hex
 l expands control and nonascii chars into hex
 Warning: search/substitution functions will not support utf8 characters,\nbecause your pcre library lacks this functionality.\nexport PCREUTF8=off to disable this feature and suppress this warning message.
@@ -766,15 +766,15 @@ cannot delete ..
 cannot forward more than one email
 cannot combine mail forwarding with an alternate presentation
 fwd directive must precede the attachments
-0
-0
-0
-0
-0
-0
-0
-0
-0
+forwarded text must be an original email with headers
+cannot forward in directory mode
+cannot forward in database mode
+cannot forward in irc mode
+cannot forward in imap mode
+cannot forward an empty file
+cannot forward a binary file
+no \"unformatted\" line
+raw mail file %05d not found
 0
 0
 0

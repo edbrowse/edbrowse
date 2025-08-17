@@ -2259,7 +2259,7 @@ int fetchAllMail(void)
 	return nfetch;
 }
 
-static void readReplyInfo(void);
+static void readReplyInfo(int *major);
 static void writeReplyInfo(const char *addstring);
 
 // Scan through read and manage the emails in mailbox/unread. This is from the -m option,
@@ -3780,9 +3780,9 @@ grab the message id and reference it.
 Also, if mailing to all, stick in the other recipients.
 *********************************************************************/
 
-bool setupReply(bool all)
+bool setupReply(bool all, bool fwd)
 {
-	int subln, repln;
+	int subln, repln, major;
 	char linetype[12];
 	int j;
 	char *out, *s, *t;
@@ -3790,27 +3790,27 @@ bool setupReply(bool all)
 
 // basic sanity
 	if (cw->dirMode) {
-		setError(MSG_ReDir);
+		setError(fwd ? MSG_FwdDir : MSG_ReDir);
 		return false;
 	}
 	if (cw->sqlMode) {
-		setError(MSG_ReDB);
+		setError(fwd ? MSG_FwdDB : MSG_ReDB);
 		return false;
 	}
 	if (cw->irciMode | cw->ircoMode) {
-		setError(MSG_ReIrc);
+		setError(fwd ? MSG_FwdIrc : MSG_ReIrc);
 		return false;
 	}
 	if (cw->imapMode1 | cw->imapMode2) {
-		setError(MSG_ReImap);
+		setError(fwd ? MSG_FwdImap : MSG_ReImap);
 		return false;
 	}
 	if (!cw->dol) {
-		setError(MSG_ReEmpty);
+		setError(fwd ? MSG_FwdEmpty : MSG_ReEmpty);
 		return false;
 	}
 	if (cw->binMode) {
-		setError(MSG_ReBinary);
+		setError(fwd ? MSG_FwdBinary : MSG_ReBinary);
 		return false;
 	}
 
@@ -3912,6 +3912,7 @@ nextline:
 		repln = 1;
 	}
 
+// move subject to the end of the mail block, if it isn't already there
 	j = strlen(linetype) - 1;
 	if (j != subln) {
 		struct lineMap *map = cw->map;
@@ -3923,72 +3924,119 @@ nextline:
 		*q2 = swap;
 	}
 
-	readReplyInfo();
+	readReplyInfo(&major);
 
+	out = initString(&j);
 	if (!cw->mailInfo) {
 		if (all) {
 			setError(MSG_ReNoInfo);
 			return false;
 		}
-		return true;	/* that's all we can do */
-	}
+	} else {
 
 // Build the header lines and put them in the buffer
-	out = initString(&j);
-/* step through the to list */
-	s = strchr(cw->mailInfo, '>') + 1;
-	while (*s != '>') {
-		t = strchr(s, ',');
-		if (all) {
-			stringAndString(&out, &j, "to: ");
-			stringAndBytes(&out, &j, s, t - s);
-			stringAndChar(&out, &j, '\n');
+// to list, cc list, reference, account
+		s = strchr(cw->mailInfo, '>') + 1;
+		while (*s != '>') {
+			t = strchr(s, ',');
+			if (all) {
+				stringAndString(&out, &j, "to:");
+				stringAndBytes(&out, &j, s, t - s);
+				stringAndChar(&out, &j, '\n');
+			}
+			s = t + 1;
 		}
-		s = t + 1;
-	}
-
-// step through the cc list
-	++s;
-	while (*s != '>') {
-		t = strchr(s, ',');
-		if (all) {
-			stringAndString(&out, &j, "cc: ");
-			stringAndBytes(&out, &j, s, t - s);
-			stringAndChar(&out, &j, '\n');
+		++s;
+		while (*s != '>') {
+			t = strchr(s, ',');
+			if (all) {
+				stringAndString(&out, &j, "cc:");
+				stringAndBytes(&out, &j, s, t - s);
+				stringAndChar(&out, &j, '\n');
+			}
+			s = t + 1;
 		}
-		s = t + 1;
-	}
-
-	++s;
-	t = strchr(s, '>');
-	if (t[1] == '>') {
-		i_puts(MSG_ReNoID);
-		s = t + 2;
-	} else {
-		stringAndString(&out, &j, "References: <");
-		if (*s != '>') {
-			stringAndBytes(&out, &j, s, t - s);
-			stringAndString(&out, &j, "> <");
-		}
-		s = t + 1;
+		++s;
 		t = strchr(s, '>');
-		if(t) { // should always happen
-			stringAndBytes(&out, &j, s, ++t - s);
-			s = t;
-		} else s = s + strlen(s);
-		stringAndChar(&out, &j, '\n');
+		if (t[1] == '>') {
+			i_puts(MSG_ReNoID);
+			s = t + 2;
+		} else {
+			stringAndString(&out, &j, "References: <");
+			if (*s != '>') {
+				stringAndBytes(&out, &j, s, t - s);
+				stringAndString(&out, &j, "> <");
+			}
+			s = t + 1;
+			t = strchr(s, '>');
+			if(t) { // should always happen
+				stringAndBytes(&out, &j, s, ++t - s);
+				s = t;
+			} else s = s + strlen(s);
+			stringAndChar(&out, &j, '\n');
+		}
+		int n = strtol(s, &s, 10);
+		if(n > 0 && *s == '>' && !fwd) {
+			stringAndString(&out, &j, "account:");
+			stringAndNum(&out, &j, n);
+			stringAndChar(&out, &j, '\n');
+		}
 	}
-	int n = strtol(s, &s, 10);
-	if(n > 0 && *s == '>') {
-		stringAndString(&out, &j, "Account: ");
-		stringAndNum(&out, &j, n);
-		stringAndChar(&out, &j, '\n');
+
+// forwarding, raw mail is attached, we don't need its text here.
+// Just perhaps your comments on what you are forwarding.
+	if(fwd) {
+		int k;
+		char *rmf;
+		if(cw->dol > subln)
+			delText(subln + 1, cw->dol);
+// this is a crude overwrite, but we're never going to undo after this operation
+		strcpy((char*)cw->map[1].text, "to:x\n");
+		if(cw->browseMode) {
+			int dest = sideBuffer(0, NULL, 0, NULL);
+			if(dest) { // should always be nonzero
+				Window *w = sessionList[dest].lw;
+				w->map = cw->r_map;
+				cw->r_map = 0;
+				w->dol = w->dot = cw->r_dol;
+				cw->r_dol = cw->r_dot = 0;
+			}
+			stringAndString(&out, &j, "fwd:");
+			stringAndNum(&out, &j, dest);
+			stringAndChar(&out, &j, '\n');
+		} else {
+			if(major < 0) {
+				setError(MSG_NoUnformat);
+				nzFree(out);
+				return false;
+			}
+			if(!mailStash) {
+				setError(MSG_NoRaw, major);
+				nzFree(out);
+				return false;
+			}
+			k = strlen(mailStash);
+			rmf = allocMem(k + 12);
+			sprintf(rmf, "%s/%05d", mailStash, major);
+			if(access(rmf, 4)) {
+				setError(MSG_NoRaw, major);
+				nzFree(out);
+				free(rmf);
+				return false;
+			}
+// put the fwd directive into the file
+			stringAndString(&out, &j, "fwd:");
+			stringAndString(&out, &j, rmf);
+			stringAndChar(&out, &j, '\n');
+			free(rmf);
+		}
 	}
 
 	rc = true;
 	if (j)
 		rc = addTextToBuffer((unsigned char *)out, j, 1, false);
 	nzFree(out);
+	cw->dot = fwd ? 1 : subln;
 	return rc;
 }
 
@@ -4005,7 +4053,7 @@ static void writeReplyInfo(const char *addstring)
 	close(rfh);
 }
 
-static void readReplyInfo(void)
+static void readReplyInfo(int *r)
 {
 	int rfh;		/* reply file handle */
 	const char *p;
@@ -4015,11 +4063,13 @@ static void readReplyInfo(void)
 	int buflen;
 	char *s, *t;
 
-	if (cw->mailInfo)
-		return;		/* already there */
+	*r = -1;
+	if (cw->mailInfo) return;		// already there
+// If brousing then it should already be there
+	if(cw->browseMode) return;
 
-/* scan through the buffer looking for the Unformatted line,
- * but stop if you hit an email divider. */
+// scan through the buffer looking for the Unformatted line,
+// but stop if you hit an email divider.
 	for (ln = 1; ln <= cw->dol; ++ln) {
 		p = (char *)fetchLine(ln, -1);
 		if (!memcmp
@@ -4034,7 +4084,8 @@ static void readReplyInfo(void)
 	return;
 
 found:
-/* prestring is the key */
+	*r = major;
+// prestring is the search key
 	sprintf(prestring, "%05d.%05d:", major, minor);
 	rfh = open(mailReply, O_RDONLY | O_CLOEXEC);
 	if (rfh < 0)
