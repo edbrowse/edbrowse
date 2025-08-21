@@ -60,7 +60,7 @@ static void scannerError2(const char *msg, const char *w)
 
 static void findAttributes(const char *start, const char *end);
 static void setAttrFromHTML(const char *a1, const char *a2, const char *v1, const char *v2);
-static char *pullAnd(const char *start, const char *end);
+static char *pullAnd(const char *start, const char *end, bool intag);
 static unsigned andLookup(char *entity, char *v);
 static void pushState(const char *start, bool head_ok);
 static char *readIncludeFragment(const Tag *t);
@@ -882,7 +882,7 @@ between:
 // So this is a patch and not a great solution.
 			if((!ws || (headbody >= 4 && !atWall))) {
 				if(!isXML) pushState(seek, true);
-				w = pullAnd(seek, lt);
+				w = pullAnd(seek, lt, false);
 				if(!premode) compress(w);
 				  scannerInfo2("text{%s}", w);
 				makeTag(texttag, texttag, false, 0);
@@ -1275,7 +1275,7 @@ With this understanding, we can, and should, scan for </textarea
 			while(isspaceByte(*seek)) ++seek; // should we be doing this?
 			if(lt > seek) {
 // pull out the text and andify.
-				w = pullAnd(seek, lt);
+				w = pullAnd(seek, lt, false);
 				   scannerInfo1("textarea length %d", strlen(w));
 				makeTag(texttag, texttag, false, 0);
 				working_t->textval = w;
@@ -1307,7 +1307,7 @@ With this understanding, we can, and should, scan for </title
 			while(isspaceByte(*seek)) ++seek; // should we be doing this?
 			if(lt > seek) {
 // pull out the text and andify.
-				w = pullAnd(seek, lt);
+				w = pullAnd(seek, lt, false);
 				   scannerInfo1("title length %d", strlen(w));
 				makeTag(texttag, texttag, false, 0);
 				working_t->textval = w;
@@ -1329,7 +1329,7 @@ With this understanding, we can, and should, scan for </title
 		}
 		if(headbody < 5 && !ws) {
 			if(!isXML) pushState(seek, true);
-			w = pullAnd(seek, seek + strlen(seek));
+			w = pullAnd(seek, seek + strlen(seek), false);
 			if(!premode) compress(w), trimWhite(w);
 			  scannerInfo2("text{%s}", w);
 			makeTag(texttag, texttag, false, 0);
@@ -1595,7 +1595,7 @@ static void setAttrFromHTML(const char *a1, const char *a2, const char *v1, cons
 {
 	char *w;
 	char save_c;
-	w = pullAnd(v1, v2);
+	w = pullAnd(v1, v2, true);
 // yeah this is tacky, write on top of a const, but I'll put it back.
 	save_c = *a2, *(char*)a2 = 0;
 	if(debugScanner && debugLevel >= 3) printf("%s=%s\n", a1, w);
@@ -1624,7 +1624,7 @@ bool attribPresent(const Tag *t, const char *name)
 
 // make an allocated copy of the designated string,
 // then decode the & fragments.
-static char *pullAnd(const char *start, const char *end)
+static char *pullAnd(const char *start, const char *end, bool intag)
 {
 	char *s, *t;
 	unsigned u; // unicode
@@ -1656,9 +1656,51 @@ putuni:
 // there is an identifier after &
 		entity = ++s;
 		for(++s; isalnumByte(*s); ++s)  ;
-		u = andLookup(entity, s);
+
+/*********************************************************************
+The string from entity to s is the reserved word after & and before ;
+As in &nbsp;
+We're going to convert it into utf8 and paste it in.
+*s should be a semicolon, but isn't always.
+I already mentioned that &thing is bad html, should be &thing;
+but it appears all over the place, so we have to tolerate it,
+and encode it, just as tidy does.
+This line should parse in edbrowse and every other browser,
+even though two of the three semicolons are missing.
+My &lang is English. &pi;r&sup2
+I only encode it if thing is a recognized keyword, again, following tidy's lead.
+Otherwise I leave &thing or &thing; alone.
+Thus &nonsense remains &nonsense
+But here is some more bad html that we are suppose to parse as intended,
+not as written.
+            <a href="https://test.com/?a=1&b=2&lang=en">Test</a>
+should be
+            <a href="https://test.com/?a=1&amp;b=2&amp;lang=en">Test</a>
+This kind of bad html is everywhere too, but usually harmless,
+as long as the tag attributes are not recognized html keywords.
+They usually aren't, and on we go. But in this example,
+the first two are not keywords, but lang is, and is thus turned into utf8.
+So 90% of the time the author wrote &lang and intended &lang; and I'm
+suppose to know that, but in this case he wrote &lang and meant it literally,
+and even here he should have written &amp; lang but didn't, and I'm
+suppose to know that as well.
+My compromise here is to insist upon the ; if we are in tag attribute,
+rather than plain (visible) html text.
+Note that I am still parsing bad html, just in a different way.
+Also, this kind of error correction shouldn't happen at all for xml.
+The syntax of xml is suppose to be correct exactly as written,
+just like javascript, and it's on the author to write it correctly.
+(You can force xml parsing by putting `~*xml}@; at the start of your html file.)
+Thus, this long block comment is here to explain the next line of code.
+*********************************************************************/
+
+		if(*s != ';' && // oops, bad html
+		(intag | isXML))
+			u = 0; // never mind
+		else
+			u = andLookup(entity, s);
 		if(u) goto putuni;
-// word not recognized, leave & in place.
+// word not recognized, leave &string in place.
 		s = entity - 1;
 putc:
 		*t++ = *s;
