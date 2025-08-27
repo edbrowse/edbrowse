@@ -7,6 +7,7 @@
 
 bool curlActive, netrc;
 const char *curlCiphers;
+char curlIPV;
 int redirect_count = 0;
 char *serverData;
 int serverDataLen;
@@ -2504,6 +2505,10 @@ static CURL *http_curl_init(struct i_get *g)
 // set a smaller key size, which most servers don't care about, but some do.
 	if(curlCiphers)
 		curl_easy_setopt(h, CURLOPT_SSL_CIPHER_LIST, curlCiphers);
+	if(curlIPV == 4)
+		curl_easy_setopt(h, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+	if(curlIPV == 6)
+		curl_easy_setopt(h, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V6);
 
 /* The next few setopt calls could allocate or perform file I/O. */
 	g->error[0] = '\0';
