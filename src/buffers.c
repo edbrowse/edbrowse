@@ -1580,7 +1580,7 @@ static bool delTextG(char action, int n, int back)
 
 	 t = cw->map + 1;
 	if(cw->dirMode) t1 = cw->dmap + DTSIZE;
-	if((cw->dirMode | cw->ircoMode1) && cw->r_map) t2 = cw->r_map + 1;
+	if((cw->dirMode | cw->ircoMode | cw->ircoMode1 | cw->imapMode2) && cw->r_map) t2 = cw->r_map + 1;
 	for(i = j = 1; i <= cw->dol; ++i, ++t, t1 ? t1 += DTSIZE : 0, t2 ? ++t2 : 0) {
 		if(gflag[i] && rc && j - back <= 0) {
 			cw->dot = j;
