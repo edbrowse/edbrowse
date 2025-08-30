@@ -4614,7 +4614,7 @@ bool imapMovecopy(int l1, int l2, char cmd, char *dest)
 	CURL *h = cw->imap_h;
 	int act = cw->imap_n;
 	const char *path;
-	const Window *pw = cw->prev; // previous
+	const Window *pw = cw->prev; // previous window
 	struct MACCOUNT *a = accounts + act - 1;
 	int l0;
 	char cust_cmd[80];
@@ -4734,6 +4734,86 @@ bool imapDelete(int l1, int l2, char cmd)
 
 D_check:
 	if(cmd == 'D') printDot();
+	return true;
+}
+
+// Function optimized for g/re/m or g/re/t
+bool imapMovecopyG(char cmd, const char *uids, char *dest)
+{
+	CURLcode res;
+	CURL *h = cw->imap_h;
+	int act = cw->imap_n;
+	const char *path;
+	const Window *pw = cw->prev; // previous window
+	struct MACCOUNT *a = accounts + act - 1;
+	char leading[80];
+	char *custom;
+	bool rc;
+
+	skipWhite2(&dest);
+	if(!*dest) { // nothing there
+baddest:
+		setError(MSG_BadDest);
+		return false;
+	}
+	path = folderByNameW(pw, dest);
+	if(!path) // already printed some helpful messages
+		goto baddest;
+	if(stringEqual(path, cw->baseDirName)) {
+		i_puts(MSG_SameFolder);
+		goto baddest;
+	}
+
+	asprintf(&custom, "UID %s %s \"%s\"",
+	     ((a->move_capable && cmd == 'm') ? "MOVE" : "COPY"),
+	uids, path);
+	rc = tryTwice(h, cw->baseDirName, imapLines);
+	nzFree(custom);
+	if(!rc) return false;
+
+	if(cmd != 'm' || a->move_capable) return true;
+// move is copy + delete, this is the delete part.
+// You'll see it again in the next function.
+	asprintf(&custom, "uid STORE %s +Flags \\Deleted", uids);
+// I don't do the retry here; we just succeeded above so we should be ok.
+	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, custom);
+	nzFree(custom);
+	res = getMailData(h);
+	nzFree(mailstring), mailstring = 0;
+	if (res != CURLE_OK) {
+		ebcurl_setError(res, cf->firstURL, 0, cerror);
+		return false;
+	}
+	expunge(h);
+	return true;
+}
+
+// Function optimized for g/re/d
+bool imapDeleteG(const char *uids)
+{
+	CURLcode res;
+	CURL *h = cw->imap_h;
+	int act = cw->imap_n;
+	struct MACCOUNT *a = accounts + act - 1;
+	char *custom;
+	bool rc;
+
+// does delete really mean move?
+	if(a->dxtrash && !a->dxfolder[cw->r_dot]) {
+		char destn[8];
+		if(!a->move_capable) {
+			setError(MSG_NMC);
+			return false;
+		}
+		sprintf(destn, "%d", a->dxtrash);
+		return imapMovecopyG('m', uids, destn);
+	}
+
+	asprintf(&custom, "uid STORE %s +Flags \\Deleted", uids);
+	rc = tryTwice(h, cw->baseDirName, custom);
+	nzFree(custom);
+	if(!rc) return false;
+	expunge(h);
 	return true;
 }
 

@@ -83,6 +83,8 @@ bool imap1rf();
 bool folderDescend(const char *path, bool rf);
 bool folderSearch(const char *path, char *search, bool rf);
 bool mailDescend(const char *path, char cmd);
+bool imapMovecopyG(char cmd, const char *uids, char *dest);
+bool imapDeleteG(const char *uids);
 bool imapMarkRead(int l1, int l2, char sign);
 bool imapMovecopy(int l1, int l2, char cmd, char *dest);
 bool imapDelete(int l1, int l2, char cmd);
