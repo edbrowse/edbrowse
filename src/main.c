@@ -488,7 +488,7 @@ int main(int argc, char **argv)
 
 	curlCiphers = getenv("EBCIPHERS");
 	if(curlCiphers && !*curlCiphers) curlCiphers = 0;
-// 1 is shorthand for the only seting we know of so far
+// 1 is shorthand for the only setting we know of so far
 	if(curlCiphers && stringEqual(curlCiphers, "1")) curlCiphers = "DEFAULT@SECLEVEL=1";
 
 	const char *ipv = getenv("EBIPV");

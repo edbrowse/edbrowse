@@ -1563,10 +1563,10 @@ void delText(int start, int end)
 	}
 }
 
-// for g/re/d or v/re/d,  only a text file
-// Algorithm is linear not quadratic.
+// for g/re/d or v/re/d,  only a text file please,
+// This algorithm is linear not quadratic.
 // n+1 is number of lines to delete.
-// It is a challenge to make this function behave exactly as edbrowse would,
+// It is a challenge to make this function behave exactly as edbrowse would
 // if we were running d on each marked line.
 static bool delTextG(char action, int n, int back)
 {
@@ -1665,6 +1665,25 @@ static bool delTextG(char action, int n, int back)
 		}
 	}
 	return rc;
+}
+
+// gather email uids for the lines indicated by g//
+// This is for mass delete or mass move in imap mode.
+// String with uids is allocated.
+static char *imapUidsG(void)
+{
+	int ul, i;
+	char *uidlist = initString(&ul);
+	for(i = 1; i <= cw->dol; ++i) {
+		if(!gflag[i]) continue;
+		const char *title = (char*)cw->r_map[i].text;
+		int uid = atoi(title);
+		if(i > 1)
+			stringAndChar(&uidlist, &ul, ',');
+		stringAndNum(&uidlist, &ul, uid);
+	}
+	debugPrint(3, "mass uid gather %s", uidlist);
+	return uidlist;
 }
 
 /* Move or copy a block of text. */
