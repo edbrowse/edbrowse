@@ -1623,7 +1623,7 @@ static bool delTextG(char action, int n, int back)
 				t2 += n;
 			}
 			cw->dot = j;
-			if(action == 'd') continue;
+			if(action != 'D') continue;
 			k = i + 1;
 			if(k <= cw->dol) { displayLine(k); continue; }
 			k = j - 1;
@@ -1678,7 +1678,7 @@ static char *imapUidsG(void)
 		if(!gflag[i]) continue;
 		const char *title = (char*)cw->r_map[i].text;
 		int uid = atoi(title);
-		if(i > 1)
+		if(ul)
 			stringAndChar(&uidlist, &ul, ',');
 		stringAndNum(&uidlist, &ul, uid);
 	}
@@ -3625,12 +3625,34 @@ static bool doGlobal(const char *line)
 
 	setError(-1);
 
-// check for mass delete or mass join
-	if(cw->browseMode | cw->sqlMode | cw->ircoMode | cw->imapMode1 | cw->imapMode2 | cw->imapMode3) goto nomass;
-	int block = -1, back = 0; // range for mass delete
+// check for mass delete or mass join etc
 // atPartCracker() might overwrite comma with null, so p has to be char*
 	char *p = (char*)line;
-	if(*p == '.' && p[1] == 'r') ++p;
+	if(*p == '.' && p[1] &&
+	strchr("rmtdD", p[1])) ++p; // skip the dot
+
+	if(cw->imapMode2) {
+		char w0 = p[0];
+		char w1 = w0 ? p[1] : 0;
+		if(((w0 == 'd' || w0 == 'D') && w1 == 0) ||
+		((w0 == 'm' || w0 == 't') && w1 == ' ')) {
+			char *uids = imapUidsG();
+			bool rc;
+			if(tolower(w0) == 'd') {
+				rc = imapDeleteG(uids);
+			} else {
+				rc = imapMovecopyG(w0, uids, p + 2);
+			}
+			free(uids);
+			if(rc && w0 != 't')
+				delTextG(w0, 0, 0);
+			return rc;
+		}
+	}
+
+	if(cw->browseMode | cw->sqlMode | cw->ircoMode | cw->imapMode1 | cw->imapMode2 | cw->imapMode3) goto nomass;
+
+	int block = -1, back = 0; // range for mass delete
 	if(*p == 'r' && isdigitByte(p[1])) {
 		if(cw->dirMode) goto nomass;
 // mass read must read from a buffer

@@ -4767,7 +4767,7 @@ baddest:
 	asprintf(&custom, "UID %s %s \"%s\"",
 	     ((a->move_capable && cmd == 'm') ? "MOVE" : "COPY"),
 	uids, path);
-	rc = tryTwice(h, cw->baseDirName, imapLines);
+	rc = tryTwice(h, cw->baseDirName, custom);
 	nzFree(custom);
 	if(!rc) return false;
 

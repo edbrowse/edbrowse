@@ -12,6 +12,9 @@ IRC actions.   /me
 
 Mail forwarding.
 
+mass global delete move copy in imap.
+Send one command with the list of uids to the imap server instead of many.
+
 3.8.12
 Make adjustments as quickjs evolves. Resolve build issues.
 
