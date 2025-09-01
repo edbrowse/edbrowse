@@ -1353,6 +1353,8 @@ To implement g/xyz/ 1,3t. efficiently:
 <br>
 g/xyz/r7
 <br>
+bw7
+<br>
 q7
 
 <p>
@@ -1385,6 +1387,18 @@ However, it is not optimized when under the g command.
 If you want to split doghouse on lines that begin with xyz, instead of g/^xyz/ s/doghouse/dog\nhouse/
 try ,s/\(^xyz.*dog\)house/$1\nhouse/
 
+<p>
+Some g commands are optimized in imap mode.
+Suppose you are in a folder with thousands of emails, and you want to delete every email with the string xyz.
+In the simplest implementation, g/xyz/d issues a delete command for every email whose envelope contains xyz.
+This could comprise hundreds of messages to and from the imap server.
+This is both slow and error prone.
+A lost connection could leave you in a confused state, with some emails deleted and some not.
+Instead, edbrowse gathers up all the uids of the emails to delete, and sends them to the imap server in a list, in one command.
+It is one transaction, and it runs quickly.
+It is almost as fast to delete 100 emails as 1.
+The same optimization takes place for move or copy, using once again a list of uids.
+The same optimization takes place for a range, such as 'a,'bd.
 <p>
 Contact the developers if you feel other editor commands should be optimized.
 

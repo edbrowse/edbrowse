@@ -3282,6 +3282,21 @@ delete_and_go:
 	    for(i = 0; i < e->argc; i++)
 		JS_FreeValue(ctx, e->argv[i]);
 	    js_free(ctx, e);
+
+/*********************************************************************
+On June 28 2025, quickjs made a significant change, commit 458c34d.
+The context for a pending job would be duplicated via JS_DupContext(),
+which doesn't really duplicate, it increments the reference count.
+It is then our responsibility to free it, which doesn't really free it,
+it decrements the reference count. Like rm in Unix
+which doesn't really remove the file unless the link count drops to zero.
+If your quickjs is prior to this commit it will probably blow up,
+for then we would actually free the context, and then go on to try to use it.
+There isn't a version number I can key on, so I'll just do what I have to do
+and hope your quickjs is current.
+*********************************************************************/
+	JS_FreeContext(ctx);
+
 	    continue;
 	}
 

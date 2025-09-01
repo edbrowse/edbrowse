@@ -918,6 +918,10 @@ static CURL *newSendmailHandle(const struct MACCOUNT *account,
 
 	if(curlCiphers)
 		curl_easy_setopt(handle, CURLOPT_SSL_CIPHER_LIST, curlCiphers);
+	if(curlIPV == 4)
+		curl_easy_setopt(handle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+	if(curlIPV == 6)
+		curl_easy_setopt(handle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V6);
 	curl_easy_setopt(handle, CURLOPT_ERRORBUFFER, cerror);
 	curl_easy_setopt(handle, CURLOPT_CONNECTTIMEOUT, mailTimeout);
 	res = setCurlURL(handle, outurl);

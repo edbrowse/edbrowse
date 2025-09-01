@@ -1179,19 +1179,19 @@ var d = w.document;
 var n = s.eb$step
 var inbrowse = (d.readyState != "complete");
 // backslashes are needed to suppress my code complression feature
-alert3(`script ${s.eb$seqno}\ attached ${inbrowse?"during":"after"}\ browse type ${s.type}\ src ${s.src}\ length ${s.text.length}\ step ${n}`);
+alert3(`script ${s.eb$seqno} attached ${inbrowse?"during":"after"} browse type ${s.type} src ${s.src} length ${s.text.length} step ${n}`);
 if(n >= 5) return; // already run
 if(inbrowse) return;
 s.eb$step = 5
 if(s.type && !s.type.match(/javascript$/i)) {
-alert3(`script type ${s.type}\ not executed`);
+alert3(`script type ${s.type} not executed`);
 return;
 }
 alert3("exec attached")
 d.currentScript = s;
 if(s.text.match(/(bp|trace)@\(/)) {
 // Oops, have to expand for tracing
-w.eval(s.text.replace(/(,?)\ *(trace|bp)@\((\w+)\)\ *([,;]?)/g, traceBreakReplace))
+w.eval(s.text.replace(/(,?) *(trace|bp)@\((\w+)\) *([,;]?)/g, traceBreakReplace))
 } else {
 w.eval(s.text)
 }
@@ -2725,14 +2725,12 @@ if(w.$jt$c == 'z') w.$jt$c = 'a';
 else w.$jt$c = String.fromCharCode(w.$jt$c.charCodeAt(0) + 1);
 w.$jt$sn = 0;
 alert3("adding trace under " + w.$jt$c);
-// Watch out, tools/uncomment will muck with this regexp if we're not careful!
-// I escape some spaces with \ so they don't get crunched away.
 // First name the anonymous functions; then put in the trace points.
-s.text = s.text.replace(/(\bfunction *)(\([\w ,]*\)\ *{\n)/g, jtfn1);
-s.text = s.text.replace(/(\bdo \{|\bwhile \([^{}\n]*\)\ *{|\bfor \([^{}\n]*\)\ *{|\bif \([^{}\n]*\)\ *{|\bcatch \(\w*\)\ *{|\belse \{|\btry \{|\bfunction *\w*\([\w ,]*\)\ *{|[^\n)]\n *)(var |\n)/g, jtfn0);
-s.text = s.text.replace(/}\ *catch\ *\((\w+)\)\ *{/g, jtfn2);
-s.text = s.text.replace(/}\ *catch\ *\(\)\ *{/g, '} catch() { if(db$flags(3)) alert("catch with no argument"),step$l=2;');
-s.text = s.text.replace(/(\n\ *)return\ +([^ ;\n][^;\n]*);\ *\n/g, jtfn3);
+s.text = s.text.replace(/(\bfunction *)(\([\w ,]*\) *{\n)/g, jtfn1);
+s.text = s.text.replace(/(\bdo \{|\bwhile \([^{}\n]*\) *{|\bfor \([^{}\n]*\) *{|\bif \([^{}\n]*\) *{|\bcatch \(\w*\) *{|\belse \{|\btry \{|\bfunction *\w*\([\w ,]*\) *{|[^\n)]\n *)(var |\n)/g, jtfn0);
+s.text = s.text.replace(/} *catch *\((\w+)\) *{/g, jtfn2);
+s.text = s.text.replace(/} *catch *\(\) *{/g, '} catch() { if(db$flags(3)) alert("catch with no argument"),step$l=2;');
+s.text = s.text.replace(/(\n *)return +([^ ;\n][^;\n]*); *\n/g, jtfn3);
 return;
 }
 

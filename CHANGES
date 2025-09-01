@@ -12,6 +12,12 @@ IRC actions.   /me
 
 Mail forwarding.
 
+mass global delete move copy in imap.
+Send one command with the list of uids to the imap server instead of many.
+
+Fix core dump due to a change in quickjs implementation of Promise jobs,
+that took place on 06/28/2025.
+
 3.8.12
 Make adjustments as quickjs evolves. Resolve build issues.
 
