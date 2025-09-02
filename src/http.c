@@ -3166,7 +3166,7 @@ bool frameExpand(bool expand, int ln1, int ln2)
 int frameExpandLine(int ln, Tag *t)
 {
 	pst line;
-	int tagno, start;
+	int tagno;
 	const char *s, *jssrc = 0;
 	char *a;
 	Frame *save_cf, *last_f;
@@ -3305,7 +3305,6 @@ So check for serverData null here. Once again we pop the frame.
 		createJSContext(cf);
 	nzFree(newlocation), newlocation = 0;
 
-	start = cw->numTags;
 	cdt = newTag(cf, "Document");
 	cdt->parent = t, t->firstchild = cdt;
 	cdt->attributes = allocZeroMem(sizeof(char*));
@@ -3372,7 +3371,7 @@ static int frameContractLine(int ln)
 
 bool reexpandFrame(void)
 {
-	int j, start;
+	int j;
 	Tag *frametag;
 	Tag *cdt;	// contentDocument tag
 	Frame *save_cf = cf;
@@ -3435,7 +3434,6 @@ bool reexpandFrame(void)
 	if (javaOK(cf->fileName))
 		createJSContext(cf);
 
-	start = cw->numTags;
 	debugPrint(3, "parse html from frame replace");
 	htmlScanner(serverData, cdt, false);
 	nzFree(serverData);	/* don't need it any more */

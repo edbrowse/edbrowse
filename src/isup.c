@@ -445,6 +445,7 @@ So we have to treat foobar:baz as a url with the foobar protocol.
 That means you can't edit the file u:v directly.
 Use ./u:v or some other mechanism. I know, it's annoying, what can I do?
 *********************************************************************/
+	has_slashes = has_slashes; // not used
 
 	if (a < 0 || protocols[a].free_syntax) {
 		if (data)
@@ -2155,7 +2156,7 @@ static bool readControl(void)
 static char *record2string(const struct CENTRY *e)
 {
 	char *t;
-	ignore = asprintf(&t, "%s\t%05d\t%s\t%d\t%d\t%d\n",
+	asprintf(&t, "%s\t%05d\t%s\t%d\t%d\t%d\n",
 		 e->url, e->filenumber, e->etag, e->modtime, e->accesstime,
 		 e->pages);
 	return t;

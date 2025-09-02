@@ -858,9 +858,9 @@ bool memoryOutToFile(const char *filename, const char *data, int len)
 void truncate0(const char *filename, int fh)
 {
 	if (fh < 0)
-		ignore = truncate(filename, 0l);
+		truncate(filename, 0l);
 	else
-		ignore = ftruncate(fh, 0l);
+		ftruncate(fh, 0l);
 }
 
 long long bufferSizeW(const Window *w, bool browsing)
@@ -1460,7 +1460,7 @@ int getche(void)
 	if(!isInteractive) return getchar();
 	fflush(stdout);
 	ttyRaw(1, 0, true);
-	ignore = read(0, &c, 1);
+	read(0, &c, 1);
 	ttyRestoreSettings();
 	return c;
 }
@@ -1471,7 +1471,7 @@ int getch(void)
 	if(!isInteractive) return getchar();
 	fflush(stdout);
 	ttyRaw(1, 0, false);
-	ignore = read(0, &c, 1);
+	read(0, &c, 1);
 	ttyRestoreSettings();
 	return c;
 }
@@ -2002,7 +2002,7 @@ abort:
 				setError(MSG_MetaChar);
 				goto abort;
 			}
-			ignore = asprintf(&a, "rm -rf %c%s%c",
+			asprintf(&a, "rm -rf %c%s%c",
 			qc, path, qc);
 			j = system(a);
 			free(a);
@@ -2035,7 +2035,7 @@ unlink:
 							setError(MSG_MetaChar);
 							goto abort;
 						}
-						ignore = asprintf(&a, "mv -n %c%s%c %c%s%c",
+						asprintf(&a, "mv -n %c%s%c %c%s%c",
 						qc, path, qc, qc, bin, qc);
 						j = system(a);
 						free(a);
@@ -2194,7 +2194,7 @@ bool moveFiles(int start, int end, int dest, char origcmd, char relative)
 						free(path1);
 						return false;
 					}
-					ignore = asprintf(&a, "%s %c%s%c %c%s%c",
+					asprintf(&a, "%s %c%s%c %c%s%c",
 					(origcmd == 'm' ? "mv -n" : "cp -an"),
 					qc, path1, qc, qc, cw2->baseDirName, qc);
 					j = system(a);

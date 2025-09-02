@@ -512,7 +512,7 @@ int main(int argc, char **argv)
 	if (fileTypeByName(configFile, 0) == 0) {
 		int fh = creat(configFile, MODE_private);
 		if (fh >= 0) {
-			ignore = write(fh, ebrc_string, strlen(ebrc_string));
+			write(fh, ebrc_string, strlen(ebrc_string));
 			close(fh);
 			i_printfExit(MSG_Personalize, configFile);
 		}

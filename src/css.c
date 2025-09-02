@@ -893,7 +893,7 @@ top:
 					a = emptyString;
 				intoShortCache(newurl, a);
 imported_data:
-				ignore = asprintf(&t,
+				asprintf(&t,
 					"%s\n@ebdelim1%s{}\n%s\n@ebdelim2{}\n%s",
 					s, newurl, a, iu3);
 				nzFree(newurl);

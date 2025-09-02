@@ -489,7 +489,7 @@ empty:
 						setError(MSG_SigAccess);
 						goto freefail;
 					}
-					ignore = read(fd, buf + buflen, n);
+					read(fd, buf + buflen, n);
 					close(fd);
 					buflen += n;
 					buf[buflen] = 0;

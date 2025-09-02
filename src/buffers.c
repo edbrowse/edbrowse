@@ -7872,7 +7872,7 @@ doquit:
 			newline = apostropheMacros(newline);
 // W command must write to a temp file, then read back in
 			if(wrc)
-				ignore = asprintf(&wrapline, "( %s ) > %s", newline, wrc_file);
+				asprintf(&wrapline, "( %s ) > %s", newline, wrc_file);
 			p = popen(wrapline ? wrapline : newline, "w");
 			nzFree(wrapline);
 			nzFree(newline);

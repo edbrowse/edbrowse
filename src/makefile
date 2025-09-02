@@ -22,7 +22,7 @@ endif
 # don't strip executables.
 	STRIP = -s
 ifneq ($(EBDEBUG),)
-	CFLAGS += -g -ggdb -Wextra
+	CFLAGS += -g -ggdb
 	STRIP =
 endif
 

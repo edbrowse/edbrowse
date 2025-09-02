@@ -2892,7 +2892,7 @@ static JSValue nat_playAudio(JSContext * cx, JSValueConst this, int argc, JSValu
 	struct i_get g;
 	char *url = get_property_url(cx, this, false);
 	char *result;
-	bool rc, save_bg = down_bg;
+	bool save_bg = down_bg;
 	memset(&g, 0, sizeof(g));
 	g.thisfile = cf->fileName;
 	g.uriEncoded = true;
@@ -2903,7 +2903,7 @@ static JSValue nat_playAudio(JSContext * cx, JSValueConst this, int argc, JSValu
 	down_bg = false;
 	g.url = url;
 	debugPrint(3, "audio connect to %s", url);
-	rc = httpConnect(&g);
+	httpConnect(&g);
 	down_bg = save_bg;
 	nzFree(g.cfn);
 	nzFree(g.referrer);

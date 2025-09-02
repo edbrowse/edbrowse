@@ -5292,6 +5292,7 @@ static void rowspan3(Tag *tr, int ri)
 		if(isdigitByte(*s)) {
 			irl = strtol(s, &s, 10);
 			irs = strtol(s + 1, &s, 10);
+			irs = irs; // not used
 			seqno = strtol(s + 1, &s, 10);
 			ics = 1;
 			if(*s == '@')
