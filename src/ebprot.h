@@ -293,7 +293,6 @@ char *cloneString(const char *s) ;
 char *cloneMemory(const char *s, int n) ;
 void leftClipString(char *s) ;
 void shiftRight(char *s, char first) ;
-// char *Cify(const char *s, int n) ;
 char *pullString(const char *s, int l) ;
 char *pullString1(const char *s, const char *t) ;
 int stringIsNum(const char *s) ;
