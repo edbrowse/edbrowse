@@ -327,8 +327,9 @@ download states, in down_state:
 *********************************************************************/
 
 size_t
-eb_curl_callback(char *incoming, size_t size, size_t nitems, struct i_get * g)
+eb_curl_callback(char *incoming, size_t size, size_t nitems, void *data)
 {
+        struct i_get *g = data;
 	size_t num_bytes = nitems * size;
 	int dots1, dots2, rc;
 

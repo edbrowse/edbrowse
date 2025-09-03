@@ -215,7 +215,7 @@ void rowspan(void);
 // sourcefile=http.c
 void eb_curl_global_init(void);
 void eb_curl_global_cleanup(void);
-size_t eb_curl_callback(char *incoming, size_t size, size_t nitems, struct i_get *g);
+size_t eb_curl_callback(char *incoming, size_t size, size_t nitems, void *data);
 time_t parseHeaderDate(const char *date);
 bool parseRefresh(char *ref, int *delay_p);
 bool shortRefreshDelay(const char *r, int d);
