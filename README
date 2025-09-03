@@ -74,10 +74,8 @@ You need libcurl and libcurl-devel,
 which are included in almost every Linux distro.
 This is used for ftp, http, and https.
 Check for /usr/include/curl/curl.h
-Edbrowse requires version 7.29.0 or later.  If you compiled with a version
-prior to 7.29.0, the program will inform you that you need to upgrade.
-If you have to compile curl from source, be sure to specify
---ENABLE-VERSION-SYMBOLS at the configure script.
+Edbrowse requires version 7.55.0 or later.
+It will not compile against earlier versions.
 It's rare, but curl, and hence edbrowse, cannot access certain websites,
 giving the message
 Cannot communicate securely with peer: no common encryption algorithm(s).
@@ -85,7 +83,7 @@ You can even see this from the command line.
 	curl https://weloveanimals.me
 You'll either get the communication error or not.
 This happens if openssl is too old,
-or just doesn't support the ciphers that the website expects.
+or doesn't support the ciphers that the website expects.
 This is beyond edbrowse, and beyond curl; you have to upgrade openssl.
 
 unixODBC:

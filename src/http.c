@@ -52,18 +52,9 @@ static void unlock_share(CURL * handle, curl_lock_data data, void *userptr)
 
 void eb_curl_global_init(void)
 {
-	const unsigned int major = 7;
-	const unsigned int minor = 29;
-	const unsigned int patch = 0;
-	const unsigned int least_acceptable_version =
-	    (major << 16) | (minor << 8) | patch;
-	curl_version_info_data *version_data = NULL;
 	curlActive = true;
 	CURLcode curl_init_status = curl_global_init(CURL_GLOBAL_ALL);
 	if (curl_init_status != 0) goto libcurl_init_fail;
-	version_data = curl_version_info(CURLVERSION_NOW);
-	if (version_data->version_num < least_acceptable_version)
-		i_printfExit(MSG_CurlVersion, major, minor, patch);
 
 // Initialize the global handle, to manage the cookie space.
 	global_share_handle = curl_share_init();
@@ -354,7 +345,7 @@ eb_curl_callback(char *incoming, size_t size, size_t nitems, struct i_get * g)
 // And ftp downloading a file always has state = 1 on the first data block.
 			double d_size = 0.0;	// download size, if we can get it
 			curl_easy_getinfo(g->h,
-					  CURLINFO_CONTENT_LENGTH_DOWNLOAD,
+					  CURLINFO_CONTENT_LENGTH_DOWNLOAD_T,
 					  &d_size);
 			g->hcl = d_size;
 			if (g->hcl < 0)
@@ -2466,7 +2457,7 @@ static CURL *http_curl_init(struct i_get *g)
 	curl_easy_setopt(h, CURLOPT_DEBUGFUNCTION, ebcurl_debug_handler);
 	curl_easy_setopt(h, CURLOPT_DEBUGDATA, g);
 	curl_easy_setopt(h, CURLOPT_NOPROGRESS, 0);
-	curl_easy_setopt(h, CURLOPT_PROGRESSFUNCTION, curl_progress);
+	curl_easy_setopt(h, CURLOPT_XFERINFOFUNCTION, curl_progress);
 	curl_easy_setopt(h, CURLOPT_PROGRESSDATA, g);
 	if(pubKey)
 		curl_easy_setopt(h, CURLOPT_SSH_PUBLIC_KEYFILE, pubKey);
