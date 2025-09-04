@@ -344,11 +344,9 @@ eb_curl_callback(char *incoming, size_t size, size_t nitems, void *data)
 		if (g->hcl == 0) {
 // http should always set http content length, this is just for ftp.
 // And ftp downloading a file always has state = 1 on the first data block.
-			double d_size = 0.0;	// download size, if we can get it
 			curl_easy_getinfo(g->h,
 					  CURLINFO_CONTENT_LENGTH_DOWNLOAD_T,
-					  &d_size);
-			g->hcl = d_size;
+					  &g->hcl);
 			if (g->hcl < 0)
 				g->hcl = 0;
 		}
@@ -965,7 +963,7 @@ mimestream:
 		if (curlret != CURLE_OK)
 			goto curl_fail;
 	} else {
-		curlret = curl_easy_setopt(h, CURLOPT_HTTPGET, 1);
+		curlret = curl_easy_setopt(h, CURLOPT_HTTPGET, 1l);
 		if (curlret != CURLE_OK)
 			goto curl_fail;
 	}
@@ -1298,7 +1296,7 @@ they go where they go, so this doesn't come up very often.
 /* Convert POST request to GET request after redirection. */
 /* This should only be done for 301 through 303 */
 				if (g->code < 307) {
-					curl_easy_setopt(h, CURLOPT_HTTPGET, 1);
+					curl_easy_setopt(h, CURLOPT_HTTPGET, 1l);
 					post_request = false;
 				}
 /* I think there is more work to do for 307 308,
@@ -2434,7 +2432,7 @@ my_curl_safeSocket(void *clientp, curl_socket_t socketfd, curlsocktype purpose)
 static CURL *http_curl_init(struct i_get *g)
 {
 	CURLcode curl_init_status = CURLE_OK;
-	int curl_auth;
+	long curl_auth;
 	CURL *h = curl_easy_init();
 	if (h == NULL)
 		goto libcurl_init_fail;
@@ -3012,7 +3010,7 @@ CURLcode setCurlURL(CURL * h, const char *url)
 		curl_easy_setopt(h, CURLOPT_USERAGENT, agent);
 	}
 	curl_easy_setopt(h, CURLOPT_SSL_VERIFYPEER, verify);
-	curl_easy_setopt(h, CURLOPT_SSL_VERIFYHOST, (verify ? 2 : 0));
+	curl_easy_setopt(h, CURLOPT_SSL_VERIFYHOST, (long) (verify ? 2 : 0));
 // certificate file is per handle, not global, so must be set here.
 // cookie file is however on the global handle, go figure.
 	if (sslCerts)

@@ -4558,7 +4558,7 @@ bool mailDescend(const char *title, char cmd)
 	struct FOLDER f0;
 
 	active_a = a, isimap = true;
-	curl_easy_setopt(h, CURLOPT_VERBOSE, (debugLevel >= 4));
+	curl_easy_setopt(h, CURLOPT_VERBOSE, (long) (debugLevel >= 4));
 	path = cw->baseDirName;
 	f0.path = path; // that's all we need in f0
 
