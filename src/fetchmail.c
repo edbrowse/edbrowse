@@ -1578,8 +1578,10 @@ abort:
 	for (j = 0; j < f->nfetch; ++j) {
 		mif = f->mlist + j;
 		nfp = 0;
-		if(j < f->nfetch - 1) sprintf(nf, "* %d FETCH ", mif[1].seqno);
-		nfp = strstr(sfp, nf); // find next fetch
+		if(j < f->nfetch - 1) {
+			sprintf(nf, "* %d FETCH ", mif[1].seqno);
+			nfp = strstr(sfp, nf); // find next fetch
+		}
 		if(nfp) nfp[-1] = 0;
 
 /*********************************************************************
