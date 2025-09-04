@@ -1903,7 +1903,7 @@ static CURL *newFetchmailHandle(const char *username, const char *password)
 	curl_easy_setopt(handle, CURLOPT_CONNECTTIMEOUT, mailTimeout);
 	curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, eb_curl_callback);
 	curl_easy_setopt(handle, CURLOPT_WRITEDATA, &callback_data);
-	curl_easy_setopt(handle, CURLOPT_VERBOSE, 1);
+	curl_easy_setopt(handle, CURLOPT_VERBOSE, 1l);
 	curl_easy_setopt(handle, CURLOPT_DEBUGFUNCTION, ebcurl_debug_handler);
 	curl_easy_setopt(handle, CURLOPT_DEBUGDATA, &callback_data);
 
@@ -4285,9 +4285,9 @@ bool imap1rf(void)
 	freeWindows(context, false);
 	if(cw->dol) delText(1, cw->dol);
 // in case you changed debug levels
-	curl_easy_setopt(h, CURLOPT_VERBOSE, (debugLevel >= 4));
+	curl_easy_setopt(h, CURLOPT_VERBOSE, (long) (debugLevel >= 4));
 again:
-	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, 0);
+	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, NULL);
 	res = getMailData(h);
 	if (res != CURLE_OK) {
 		nzFree(mailstring), mailstring = 0;
@@ -4351,7 +4351,7 @@ bool folderDescend(const char *path, bool rf)
 	struct FOLDER f0;
 	memset(&f0, 0, sizeof(f0));
 	f0.path = rf ? cw->baseDirName : path;
-	curl_easy_setopt(h, CURLOPT_VERBOSE, (debugLevel >= 4));
+	curl_easy_setopt(h, CURLOPT_VERBOSE, (long) (debugLevel >= 4));
 	if(!examineFolder(h, &f0, false)) {
 //Oops, problem.
 		if(rf && cw->dol) delText(1, cw->dol);
@@ -4420,7 +4420,7 @@ bool folderSearch(const char *path, char *search, bool rf)
 		delText(1, cw->dol);
 
 	active_a = a, isimap = true;
-	curl_easy_setopt(h, CURLOPT_VERBOSE, (debugLevel >= 4));
+	curl_easy_setopt(h, CURLOPT_VERBOSE, (long) (debugLevel >= 4));
 // We have to select the folder first, then search
 // Technically we don't have to on refresh, but I will anyways,
 // in case it's been a long time and we logged out and need to reselect.
@@ -4560,7 +4560,7 @@ bool mailDescend(const char *title, char cmd)
 	struct FOLDER f0;
 
 	active_a = a, isimap = true;
-	curl_easy_setopt(h, CURLOPT_VERBOSE, (debugLevel >= 4));
+	curl_easy_setopt(h, CURLOPT_VERBOSE, (long) (debugLevel >= 4));
 	path = cw->baseDirName;
 	f0.path = path; // that's all we need in f0
 
@@ -5044,7 +5044,7 @@ bool addFolders()
 	uchar *line1, *t;
 	char *line2, *v;
 
-	curl_easy_setopt(h, CURLOPT_VERBOSE, (debugLevel >= 4));
+	curl_easy_setopt(h, CURLOPT_VERBOSE, (long) (debugLevel >= 4));
 	if (linePending) line1 = linePending;
 	else line1 = inputLine(true);
 
@@ -5098,7 +5098,7 @@ bool deleteFolder(int ln)
 	char *v, *p;
 	char inbuf[80];
 
-	curl_easy_setopt(h, CURLOPT_VERBOSE, (debugLevel >= 4));
+	curl_easy_setopt(h, CURLOPT_VERBOSE, (long) (debugLevel >= 4));
 	p = (char*)fetchLine(ln, -1);
 	l = strchr(p, ':') - p; // this should always work
 	p[l] = 0; // I'll put it back
@@ -5133,7 +5133,7 @@ bool renameFolder(const char *src, const char *dest)
 	CURL *h = cw->imap_h;
 	char *v;
 
-	curl_easy_setopt(h, CURLOPT_VERBOSE, (debugLevel >= 4));
+	curl_easy_setopt(h, CURLOPT_VERBOSE, (long) (debugLevel >= 4));
 	asprintf(&v, "RENAME \"%s\" \"%s\"", src, dest);
 	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, v);
 	free(v);

@@ -105,7 +105,7 @@ void eb_curl_global_cleanup(void)
 static void setup_download(struct i_get *g);
 static CURL *http_curl_init(struct i_get *g);
 static size_t curl_header_callback(char *header_line, size_t size, size_t nmemb,
-				   struct i_get *g);
+				   void *data);
 static bool ftpConnect(struct i_get *g, char *creds_buf);
 static bool gopherConnect(struct i_get *g);
 static bool dataConnect(struct i_get *g);
@@ -197,7 +197,10 @@ static void scan_http_headers(struct i_get *g, bool fromCallback)
 	}
 
 	if (!g->hcl && (v = find_http_header(g, "content-length"))) {
-		sscanf(v, "%lld", &g->hcl);
+                long long cl = 0;
+		sscanf(v, "%lld", &cl);
+// be explicit in case curl_off_t changes
+                g->hcl = (curl_off_t) cl;
 		nzFree(v);
 		if (g->hcl)
 			debugPrint(4, "content length %lld", g->hcl);
@@ -327,8 +330,9 @@ download states, in down_state:
 *********************************************************************/
 
 size_t
-eb_curl_callback(char *incoming, size_t size, size_t nitems, struct i_get * g)
+eb_curl_callback(char *incoming, size_t size, size_t nitems, void *data)
 {
+        struct i_get *g = data;
 	size_t num_bytes = nitems * size;
 	int dots1, dots2, rc;
 
@@ -343,11 +347,9 @@ eb_curl_callback(char *incoming, size_t size, size_t nitems, struct i_get * g)
 		if (g->hcl == 0) {
 // http should always set http content length, this is just for ftp.
 // And ftp downloading a file always has state = 1 on the first data block.
-			double d_size = 0.0;	// download size, if we can get it
 			curl_easy_getinfo(g->h,
 					  CURLINFO_CONTENT_LENGTH_DOWNLOAD_T,
-					  &d_size);
-			g->hcl = d_size;
+					  &g->hcl);
 			if (g->hcl < 0)
 				g->hcl = 0;
 		}
@@ -424,8 +426,8 @@ showdots:
  * All of the progress arguments to the function are unused. */
 
 static int
-curl_progress(void *data_p, double dl_total, double dl_now,
-	      double ul_total, double ul_now)
+curl_progress(void *data_p, curl_off_t dl_total, curl_off_t dl_now,
+	      curl_off_t ul_total, curl_off_t ul_now)
 {
 	struct i_get *g = data_p;
 	int ret = 0;
@@ -964,7 +966,7 @@ mimestream:
 		if (curlret != CURLE_OK)
 			goto curl_fail;
 	} else {
-		curlret = curl_easy_setopt(h, CURLOPT_HTTPGET, 1);
+		curlret = curl_easy_setopt(h, CURLOPT_HTTPGET, 1l);
 		if (curlret != CURLE_OK)
 			goto curl_fail;
 	}
@@ -1297,7 +1299,7 @@ they go where they go, so this doesn't come up very often.
 /* Convert POST request to GET request after redirection. */
 /* This should only be done for 301 through 303 */
 				if (g->code < 307) {
-					curl_easy_setopt(h, CURLOPT_HTTPGET, 1);
+					curl_easy_setopt(h, CURLOPT_HTTPGET, 1l);
 					post_request = false;
 				}
 /* I think there is more work to do for 307 308,
@@ -2433,7 +2435,7 @@ my_curl_safeSocket(void *clientp, curl_socket_t socketfd, curlsocktype purpose)
 static CURL *http_curl_init(struct i_get *g)
 {
 	CURLcode curl_init_status = CURLE_OK;
-	int curl_auth;
+	long curl_auth;
 	CURL *h = curl_easy_init();
 	if (h == NULL)
 		goto libcurl_init_fail;
@@ -2456,18 +2458,18 @@ static CURL *http_curl_init(struct i_get *g)
 		curl_easy_setopt(h, CURLOPT_VERBOSE, 1l);
 	curl_easy_setopt(h, CURLOPT_DEBUGFUNCTION, ebcurl_debug_handler);
 	curl_easy_setopt(h, CURLOPT_DEBUGDATA, g);
-	curl_easy_setopt(h, CURLOPT_NOPROGRESS, 0);
+	curl_easy_setopt(h, CURLOPT_NOPROGRESS, 0l);
 	curl_easy_setopt(h, CURLOPT_XFERINFOFUNCTION, curl_progress);
 	curl_easy_setopt(h, CURLOPT_PROGRESSDATA, g);
 	if(pubKey)
 		curl_easy_setopt(h, CURLOPT_SSH_PUBLIC_KEYFILE, pubKey);
 	curl_easy_setopt(h, CURLOPT_CONNECTTIMEOUT, webTimeout);
 	curl_easy_setopt(h, CURLOPT_USERAGENT, currentAgent);
-	curl_easy_setopt(h, CURLOPT_SSLVERSION, CURL_SSLVERSION_DEFAULT);
+	curl_easy_setopt(h, CURLOPT_SSLVERSION, (long)CURL_SSLVERSION_DEFAULT);
 /* We're doing this manually for now.
 	curl_easy_setopt(h, CURLOPT_FOLLOWLOCATION, allowRedirection);
 */
-	curl_easy_setopt(h, CURLOPT_AUTOREFERER, sendReferrer);
+	curl_easy_setopt(h, CURLOPT_AUTOREFERER, (long)sendReferrer);
 	if (ftpActive)
 		curl_easy_setopt(h, CURLOPT_FTPPORT, "-");
 	else
@@ -2716,8 +2718,9 @@ static bool read_credentials(char *buffer)
  * Gather all the http headers into one long string. */
 static size_t
 curl_header_callback(char *header_line, size_t size, size_t nmemb,
-		     struct i_get *g)
+		     void *data)
 {
+        struct i_get *g = data;
 	const struct MIMETYPE *mt = 0;
 	size_t bytes_in_line = size * nmemb;
 	stringAndBytes(&g->headers, &g->headers_len,
@@ -3011,7 +3014,7 @@ CURLcode setCurlURL(CURL * h, const char *url)
 		curl_easy_setopt(h, CURLOPT_USERAGENT, agent);
 	}
 	curl_easy_setopt(h, CURLOPT_SSL_VERIFYPEER, verify);
-	curl_easy_setopt(h, CURLOPT_SSL_VERIFYHOST, (verify ? 2 : 0));
+	curl_easy_setopt(h, CURLOPT_SSL_VERIFYHOST, (long) (verify ? 2 : 0));
 // certificate file is per handle, not global, so must be set here.
 // cookie file is however on the global handle, go figure.
 	if (sslCerts)
