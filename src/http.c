@@ -197,7 +197,10 @@ static void scan_http_headers(struct i_get *g, bool fromCallback)
 	}
 
 	if (!g->hcl && (v = find_http_header(g, "content-length"))) {
-		sscanf(v, "%lld", &g->hcl);
+                long long cl = 0;
+		sscanf(v, "%lld", &cl);
+// be explicit in case curl_off_t changes
+                g->hcl = (curl_off_t) cl;
 		nzFree(v);
 		if (g->hcl)
 			debugPrint(4, "content length %lld", g->hcl);
