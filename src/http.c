@@ -105,7 +105,7 @@ void eb_curl_global_cleanup(void)
 static void setup_download(struct i_get *g);
 static CURL *http_curl_init(struct i_get *g);
 static size_t curl_header_callback(char *header_line, size_t size, size_t nmemb,
-				   struct i_get *g);
+				   void *data);
 static bool ftpConnect(struct i_get *g, char *creds_buf);
 static bool gopherConnect(struct i_get *g);
 static bool dataConnect(struct i_get *g);
@@ -426,8 +426,8 @@ showdots:
  * All of the progress arguments to the function are unused. */
 
 static int
-curl_progress(void *data_p, double dl_total, double dl_now,
-	      double ul_total, double ul_now)
+curl_progress(void *data_p, curl_off_t dl_total, curl_off_t dl_now,
+	      curl_off_t ul_total, curl_off_t ul_now)
 {
 	struct i_get *g = data_p;
 	int ret = 0;
@@ -2458,18 +2458,18 @@ static CURL *http_curl_init(struct i_get *g)
 		curl_easy_setopt(h, CURLOPT_VERBOSE, 1l);
 	curl_easy_setopt(h, CURLOPT_DEBUGFUNCTION, ebcurl_debug_handler);
 	curl_easy_setopt(h, CURLOPT_DEBUGDATA, g);
-	curl_easy_setopt(h, CURLOPT_NOPROGRESS, 0);
+	curl_easy_setopt(h, CURLOPT_NOPROGRESS, 0l);
 	curl_easy_setopt(h, CURLOPT_XFERINFOFUNCTION, curl_progress);
 	curl_easy_setopt(h, CURLOPT_PROGRESSDATA, g);
 	if(pubKey)
 		curl_easy_setopt(h, CURLOPT_SSH_PUBLIC_KEYFILE, pubKey);
 	curl_easy_setopt(h, CURLOPT_CONNECTTIMEOUT, webTimeout);
 	curl_easy_setopt(h, CURLOPT_USERAGENT, currentAgent);
-	curl_easy_setopt(h, CURLOPT_SSLVERSION, CURL_SSLVERSION_DEFAULT);
+	curl_easy_setopt(h, CURLOPT_SSLVERSION, (long)CURL_SSLVERSION_DEFAULT);
 /* We're doing this manually for now.
 	curl_easy_setopt(h, CURLOPT_FOLLOWLOCATION, allowRedirection);
 */
-	curl_easy_setopt(h, CURLOPT_AUTOREFERER, sendReferrer);
+	curl_easy_setopt(h, CURLOPT_AUTOREFERER, (long)sendReferrer);
 	if (ftpActive)
 		curl_easy_setopt(h, CURLOPT_FTPPORT, "-");
 	else
@@ -2718,8 +2718,9 @@ static bool read_credentials(char *buffer)
  * Gather all the http headers into one long string. */
 static size_t
 curl_header_callback(char *header_line, size_t size, size_t nmemb,
-		     struct i_get *g)
+		     void *data)
 {
+        struct i_get *g = data;
 	const struct MIMETYPE *mt = 0;
 	size_t bytes_in_line = size * nmemb;
 	stringAndBytes(&g->headers, &g->headers_len,
