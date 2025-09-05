@@ -389,11 +389,11 @@ normalChar:
  * Get rid of these characters, even in premode. */
 static void anchorUnframe(char *buf)
 {
-	char c, d, *s, *w, *a;
+	char c, *s, *w, *a;
 	int n;
 
 	for (s = w = buf; (c = *s); ++s) {
-		char open, close, linkchar;
+		char open, close, linkchar, d = 0;
 		if (!strchr("{[(<", c))
 			goto putc;
 		if (s[1] != InternalCodeChar)
