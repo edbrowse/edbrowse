@@ -835,6 +835,24 @@ static bool expunge(CURL * handle)
 	return res == CURLE_OK;
 }
 
+/*********************************************************************
+This function deletes or moves all the emails you have fetched,
+or all the emails from a particular sender.
+This is the stand-alone email client, it is not used by integrated imap.
+Within an edbrowse session you might do the same thing by
+,d
+g/personalized loan/d
+g/Flintstones/ .m cartoons
+The edbrowse commands are optimized. I gather the uids of the emails
+together in one list and send one message to the imap server.
+Thus deleting or moving 600 emails is lightning fast.
+Not so here. This function is not optimized.
+I operate on each email in turn, and it can be slow for a lot of emails.
+This function could be optimized, but nobody cares.
+I am the only one who uses this interface, other people seem to hate it.
+And I never fetch more than a couple dozen envelopes at a time.
+*********************************************************************/
+
 static bool bulkMoveDelete(CURL * handle, struct FOLDER *f,
 			  struct MIF *this_mif, char key, char subkey,
 			  struct FOLDER *destination)
