@@ -760,21 +760,21 @@ Division durch null
 falsch
 entferne Byte-Order-Mark
 stelle Byte-Order-Mark wieder her
-0
-0
+suche in allen Sitzungen
+suche ähnliche Sitzungen
 kann .. nicht Löschen
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
+kann nicht mehr als eine E-Mail weiterleiten
+kann Weiterleiten von E-Mails nicht mit alternativer Repräsentation kombinieren
+fwd-Anweisung muss vor den Anhängen kommen
+weitergeleiteter Text muss eine originale E-Mail mit Kopfdaten sein
+kann nicht aus dem Verzeichnismodus heraus weiterleiten
+kann nicht aus dem Datenbankmodus heraus weiterleiten
+kann nicht aus dem IRC-modus heraus weiterleiten
+kann nicht im IMAP-MOdus weiterleiten
+kann keine leere Datei weiterleiten
+kann keine Binärdatei weiterleiten
+keine Zeile mit \"unformatted\"
+rohe E-Mail %05d nicht gefunden
 0
 0
 0

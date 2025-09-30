@@ -6006,10 +6006,11 @@ Like everything else in edbrowse, you'll get use to it once you play with it.
 
 <p>
 The `fwd' command prepares a formatted email for mail forwarding.
-This is not a mixture of the original text and your comments; you can do that yourself.
+This is not a text mixture of the original text and your comments; you can do that yourself if you wish.
 Instead, this sends the original email, with all its headers, as an atttachment.
 Sometimes a business requests this, to track down the origin of spam.
-Sometimes your friend wants this, to capture all the attachments and images that were present in the email.
+It needs the email headers to do this.
+Sometimes your friend wants the original email, to capture all the attachments and images that were present.
 
 <p>
 The top line becomes to:x.
@@ -6017,6 +6018,7 @@ You must replace x with the new recipient.
 
 <p>
 The "Subject:" line will be as it was in the original email.
+You can edit it to include Re: if you wish, for clarity.
 After the fwd command is issued, the subject may move down the page,
 to make room for other email headers as follows.
 
@@ -6039,6 +6041,7 @@ Add your own comments, why you are forwarding this email, then type sm to send.
 
 <h2 id="imap">Imap Client</h2>
 
+<p>
 A pop3 client, as described above, fetches mail down to your computer,
 whereupon you are responsible for it.
 You must archive your emails, if you wish, and back them up, etc.
@@ -6567,6 +6570,7 @@ Since odbc connects to everything, it will probably meet your needs.
 
 <h2 id="rtb">Reading Tables</h2>
 
+<p>
 When a file name is of a certain format, with http:// in front,
 it is deemed to be a url.
 Edbrowse does not look on your computer for the file; it goes out to the Internet.
@@ -6723,6 +6727,7 @@ so make sure your select only grabs one such column.
 
 <h2 id="dsource">Data source</h2>
 
+<p>
 To do anything with the database, your config file must specify
 the name of the data source, the login, and the password.
 Data source must match one of the entries in your .odbc.ini file.
@@ -6746,6 +6751,7 @@ edbrowse just passes it through.
 
 <h2 id="insupd">Insert, Update, Delete</h2>
 
+<p>
 Now that we have run a few selects, let's modify some data.
 These operations are known as insert, update, and delete in the database world.
 
@@ -6816,6 +6822,7 @@ Be careful, and run regular backups.
 
 <h2 id="td">Table Descriptors</h2>
 
+<p>
 Suppose a table contains 100 fields.
 Displaying all those fields is awkward, to say the least.
 Sometimes you are interested in a group of 6 fields,

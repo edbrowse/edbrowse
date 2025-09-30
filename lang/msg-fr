@@ -763,18 +763,18 @@ restauration du Byte-Order-Mark
 chercher toutes les sessions
 chercher les sessions similaires
 effacement du .. impossible
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
+impossible de transférer plus d'un email
+impossible de combiner le transfert de mail avec une présentation alternative
+la directive fwd doit précéder les pièces jointes
+le texte transféré doit être un email original avec en-têtes
+impossible de transférer en mode répertoire
+impossible de transférer en mode base de données
+impossible de transférer en mode irc
+impossible de transférer en mode imap
+impossible de transférer un fichier vide
+impossible de transférer un fichier binaire
+pas de ligne \"non formatée\"
+fichier mail brut %05d non trouvé
 0
 0
 0
