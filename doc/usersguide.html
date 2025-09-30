@@ -4932,7 +4932,8 @@ agentsite = google.com 2
 <p>
 Pretend to be user agent 2, that is, Internet Explorer version 7,
 when talking to google.com or any of its subdomains.
-This was necessary for a time, but is, fortunately, no longer needed.
+This was necessary for a time, but isno longer of any consequence,
+since google became completely inaccessible to edbrowse in late 2025. 😞
 Still, some sites are particular about the type of browser, and none of them are looking for edbrowse.
 
 <h2 id="script">Edbrowse Functions</h2>
@@ -5020,21 +5021,212 @@ Reproduce the earlier behavior by typing &lt;hw hello world,
 or search for different lines by invoking &lt;hw foo bar.
 The latter looks for a line containing foo and prints it,
 and if this succeeds it looks for a line containing bar and prints that.
-Now let's build a more useful function, a shortcut to google search.
+Now let's build a more useful function, a shortcut to duckduckgo search.
+(This use to be google, until it became inaccessible.)
 The variable ~0 represents all the arguments together.
-In this case ~0 is the keywords you pass to google for your search.
+In this case ~0 is the keywords you pass for your search.
 <p>
-function+gg {
+        function:ddg {
 <br>
-&nbsp;&nbsp;b http://www.google.com
+# duckduckgo lookup
 <br>
-&nbsp;&nbsp;sw+
+        b https://www.duckduckgo.com/
 <br>
-&nbsp;&nbsp;/&lt;&gt;/f i=~0
+        /<>/ i1=~0
 <br>
-&nbsp;&nbsp;/&lt;/f i1*
+        i2*
 <br>
-&nbsp;&nbsp;/h3/p
+        g/h2 Ad/X
+<br>
+        /h2 {/
+<br>
+        }
+
+function+mw {
+#  mariam-webster dictionary lookup
+b http://www.merriam-webster.com/dictionary/~0
+sw+
+/spelling suggestion/X
+if(*){
+/{.*}?/
+} else {
+/^h1/X
+/^h2/
+}
+}
+
+function+twit {
+#  twitter login
+e https://mobile.twitter.com/
+#  second time's the charm
+rf
+b
+#  If the cookies remember you then there is no login screen
+/email or username/+X
+if(*) {
+i=eklhad64
+/</ i=123zztop
+/</ i*
+}
+/^$/X
+5
+}
+
+# the simple way doesn't work with utf8
+# $-1s;$;\nSubject:;
+
+function+textc {
+#  Send a text from comcast
+$-1s;$;\nalt:/home/eklhad/kprs/ebsys/textalt.html\nSubject:;
+sm-
+bw
+q
+}
+
+function+textg {
+#  Send a text from gmail
+$-1s;$;\nalt:/home/eklhad/kprs/ebsys/textalt.html\nSubject:;
+sm-8
+bw
+q
+}
+
+function+unf {
+/^Unformat/X
+etmp
+r+1@$
+s/.* //
+s/\..*//
+s;^;/home/eklhad/.trash/rawmail/;
+W !cat '.
+b
+}
+
+function:font {
+#   [ digit or letter ] becomes subscript
+,s/\[\(\d\d?\|[a-zA-Z]\)\]/<sub>$1<\/sub>/g
+#  ^ number becomes superscript
+,s/\^\(\d+\)/<sup>$1<\/sup>/g
+,s/\^\([a-z]\)\b/<sup>$1<\/sup>/g
+}
+
+function:fol {
+#  apply the above to one line
+.w9
+e9
+bw
+<font
+e1
+#  Assumes this isn't the last line
+d
+-r9
+q9
+p
+}
+
+function+ovb {
+s;`;<span class=ovb>;g
+s;';</span>;g
+}
+
+# I just want to remember this
+function:unspan {
+,s/<span class=\(su[bp]\)>\([^<>]*\)<\/span>/<$1>$2<\/$1>/g
+,s/<span class=\(su[bp]\)>\([^<>]*<su[bp]>[^<>]*<\/su[bp]>[^<>]*\)<\/span>/<$1>$2<\/$1>/g
+}
+
+function:unbc {
+#  Convert from bc formula to C
+#  Up to x^8
+,s/\([a-z]\)^8/$1*$1*$1*$1*$1*$1*$1*$1/g
+,s/\([a-z]\)^7/$1*$1*$1*$1*$1*$1*$1/g
+,s/\([a-z]\)^6/$1*$1*$1*$1*$1*$1/g
+,s/\([a-z]\)^5/$1*$1*$1*$1*$1/g
+,s/\([a-z]\)^4/$1*$1*$1*$1/g
+,s/\([a-z]\)^3/$1*$1*$1/g
+,s/\([a-z]\)^2/$1*$1/g
+}
+
+function+mr {
+#  math reference
+b www.mathreference.com/cgi-bin/ompsearch?keywords=~0
+1p
+}
+
+function+lowsen {
+#  look for lower case sentence
+g/[.?!]$/ +s/^"*[a-z]/@@&/
+g/@@/ -,.p
+,s/^@@"*[a-z]/uc/
+,s/^@@//
+}
+
+function+lowpara {
+#  look for lower case sentence at start of paragraph
+g/^<P>$/ +s/^"*[a-z][a-z]/@@&/
+g/@@/ -,.p
+,s/^@@"*[a-z]/uc/
+,s/^@@//
+}
+
+function:fbclean {
+#  clean facebook page
+ci+
+w /tmp/fbp
+#  The worst is zuckerberg's crap!
+/h3 Connect With Facebook/X
+if(*) {
+ka
+/h3 Facebook Engineering/X
+if(?) {
+/h3 Instagram/X
+}
+if(*) {
+kb
+'ap
+'bX
+'a,/^h3/-d
+}
+}
+/h3 People You May Know/X
+if(*) {
+p
+.,/^{See More}$/d
+}
+/h3 People You May Know/X
+if(*) {
+p
+.,/^{See More}$/d
+}
+/Suggested Post/X
+while(*) {
+p
+.,/Frame {xti}/d
+if(*) {
+/Suggested Post/X
+} else {
+/x@x@x@/X
+}
+}
+/Suggested [gG]roup\|Get Information From People in Group/X
+while(*) {
+p
+.,/{See More}/d
+if(*) {
+/Suggested Group\|Get Information From People in Group/X
+} else {
+/x@x@x@/X
+}
+}
+/} likes* {[\w '&]+}\.*$/X
+while(*) {
+p
+.,/Frame {xti}/d
+if(*) {
+/} likes* {[\w '&]+}\.*$/X
+} else {
+/x@x@x@/X
+}
 }
 
 <p>
