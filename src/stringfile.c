@@ -182,6 +182,17 @@ char *strmove(char *dest, const char *src)
 	return (char *)memmove(dest, src, strlen(src) + 1);
 }
 
+/* A bit like strncpy but:
+* Don't pad the array after copying the null byte.
+* If we run out of space before the null byte replace the last copied byte with null.
+*/
+char *copyString(char *dest, const char *src, size_t n)
+{
+        if (!memccpy(dest, src, 0, n))
+                dest[n-1] = 0;
+        return dest;
+}
+
 /* OO has a lot of unnecessary overhead, and a few inconveniences,
  * but I really miss it right now.  The following
  * routines make up for the lack of simple string concatenation in C.
@@ -1329,24 +1340,17 @@ p:
 		case 'p':
 			s = buf + strlen(buf);
 			pwbuf = getpwuid(this_stat.st_uid);
-			if (pwbuf) {
-				l = strlen(pwbuf->pw_name);
-				if (l > 20)
-					l = 20;
-				strncpy(s, pwbuf->pw_name, l);
-				s[l] = 0;
-			} else
+			if (pwbuf)
+// 21 bytes because we want 20 characters plus the null
+				copyString(s, pwbuf->pw_name, 21);
+			else
 				sprintf(s, "%d", this_stat.st_uid);
 			s += strlen(s);
 			*s++ = ' ';
 			grpbuf = getgrgid(this_stat.st_gid);
-			if (grpbuf) {
-				l = strlen(grpbuf->gr_name);
-				if (l > 20)
-					l = 20;
-				strncpy(s, grpbuf->gr_name, l);
-				s[l] = 0;
-			} else
+			if (grpbuf)
+                                copyString(s, grpbuf->gr_name, 21);
+			else
 				sprintf(s, "%d", this_stat.st_gid);
 			s += strlen(s);
 			*s++ = ' ';
@@ -1374,8 +1378,9 @@ p:
 				strcat(buf, "...");
 			else {
 				s = buf + strlen(buf);
-				strncpy(s, newpath, l);
-				s[l] = 0;
+// The value written by readlink is not defined to be null-terminated
+				memcpy(s, newpath, l);
+                                s[l] = 0;
 			}
 			break;
 		}
@@ -1510,11 +1515,7 @@ char *getFileName(int msg, const char *defname, bool isnew, bool ws)
 			if (!defname)
 				continue;
 // make a copy just to be safe
-			l = strlen(defname);
-			if (l >= ABSPATH)
-				l = ABSPATH - 1;
-			strncpy(buf, defname, l);
-			buf[l] = 0;
+			copyString(buf, defname,  ABSPATH);
 			p = buf;
 		} else
 			defname = 0;
@@ -2313,8 +2314,7 @@ static bool envExpand(const char *line, const char **expanded)
 	}
 
 	udir = 0;
-	strncpy(var1, line + 1, l);
-	var1[l] = 0;
+	copyString(var1, line + 1, l + 1);
 	if (l) {
 		pw = getpwnam(var1);
 		if (!pw) {

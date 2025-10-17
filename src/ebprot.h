@@ -282,6 +282,7 @@ void trimWhite(char *s) ;
 void stripWhite(char *s) ;
 void spaceCrunch(char *s, bool onespace, bool unprint) ;
 char *strmove(char *dest, const char *src) ;
+char *copyString(char *dest, const char *src, size_t n);
 char *initString(int *l) ;
 void stringAndString(char **s, int *l, const char *t) ;
 void stringAndBytes(char **s, int *l, const char *t, int cnt) ;
