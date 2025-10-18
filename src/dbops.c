@@ -485,8 +485,8 @@ date stringDate(const char *s, bool yearfirst)
 		return nullint;
 	if (l != 8 && l != 10)
 		return -4;
-	strncpy(buf, s, l);
-	buf[l] = 0;
+	memcpy(buf, s, l);
+        buf[l] = 0;
 	delim = yearfirst ? '-' : '/';
 	t = strchr(buf, delim);
 	if (t)
@@ -501,9 +501,9 @@ date stringDate(const char *s, bool yearfirst)
 		return nullint;
 	if (yearfirst) {
 		char swap[4];
-		strncpy(swap, buf, 4);
-		strncpy(buf, buf + 4, 4);
-		strncpy(buf + 4, swap, 4);
+		memcpy(swap, buf, 4);
+		memcpy(buf, buf + 4, 4);
+		memcpy(buf + 4, swap, 4);
 	}
 	for (i = 0; i < 8; ++i)
 		if (!isdigitByte(buf[i]))
