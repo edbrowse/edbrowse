@@ -2009,36 +2009,24 @@ static JSValue nat_unframe2(JSContext * cx, JSValueConst this, int argc, JSValue
 // These names are passed into domSetsLinkage().
 static const char *embedNodeName(JSContext * cx, JSValueConst obj)
 {
-	static char buf1[MAXTAGNAME], buf2[MAXTAGNAME], buf3[MAXTAGNAME];
+	static char buf[3][MAXTAGNAME];
 	char *b;
 	static int cycle = 0;
 	const char *nodeName;
-	int length;
 	JSValue v;
-
-	if (++cycle == 4)
-		cycle = 1;
-	if (cycle == 1)
-		b = buf1;
-	if (cycle == 2)
-		b = buf2;
-	if (cycle == 3)
-		b = buf3;
+        b = buf[cycle];
 	*b = 0;
 
 	v = 	JS_GetPropertyStr(cx, obj, "nodeName");
 	grab(v);
 	nodeName = JS_ToCString(cx, v);
 	if(nodeName) {
-		length = strlen(nodeName);
-		if (length >= MAXTAGNAME)
-			length = MAXTAGNAME - 1;
-		strncpy(b, nodeName, length);
-		b[length] = 0;
+                copyString(b, nodeName, MAXTAGNAME);
 		JS_FreeCString(cx, nodeName);
 	}
 	JS_Release(cx, v);
 	caseShift(b, 'l');
+        cycle = (cycle + 1) % 3;
 	return b;
 }
 
