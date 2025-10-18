@@ -2093,7 +2093,7 @@ static bool upDisabled(const Tag *t)
 
 static bool qsaMatch(Tag *t, const struct asel *a)
 {
-	bool rc;
+	bool rc = false;
 	struct mod *mod;
 
 if(!t) {
@@ -2269,7 +2269,7 @@ if(!t) {
 		    !strncmp(p, ":nth-last-child(", 16) ||
 		    !strncmp(p, ":nth-of-type(", 13) ||
 		    !strncmp(p, ":nth-last-of-type(", 18)) {
-			int coef, constant, d;
+			int coef = 0, constant, d;
 			bool n_present = false, d_present = false, last =
 			    false, oftype = false;
 			char *s;
@@ -3429,7 +3429,7 @@ static struct hashhead *findKey(struct hashhead *list, int n, const char *key)
 static Tag **bestListAtomic(struct asel *a)
 {
 	struct mod *mod;
-	struct hashhead *h, *best_h;
+	struct hashhead *h, *best_h = NULL;
 	int n, best_n = 0;
 
 	if (!bulkmatch)
