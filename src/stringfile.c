@@ -1515,7 +1515,7 @@ char *getFileName(int msg, const char *defname, bool isnew, bool ws)
 			if (!defname)
 				continue;
 // make a copy just to be safe
-			copyString(buf, defname,  ABSPATH);
+			copyString(buf, defname,  sizeof(buf));
 			p = buf;
 		} else
 			defname = 0;
@@ -1600,17 +1600,22 @@ char *dirSuffix2(int n, const char *path)
 // The return is static, with a limit on path length.
 char *makeAbsPath(const char *f)
 {
-	static char path[ABSPATH + 200];
-	const char *b = cw->baseDirName ? cw->baseDirName : emptyString;
-	if (strlen(b) + strlen(f) > ABSPATH - 2) {
-		setError(MSG_PathNameLong, ABSPATH);
-		return 0;
-	}
-	if(cw->baseDirName)
-		sprintf(path, "%s/%s", b, f);
-	else
-		strcpy(path, f);
-	return path;
+	static char path[ABSPATH];
+        char *ret = NULL;
+
+        if (cw->baseDirName) {
+                int total = snprintf(path, sizeof(path), "%s/%s", cw->baseDirName, f);
+/* I'm not sure if we care about old glibc at this point (probably not) but
+handle both the new-style and old-style truncation checks just in case
+*/
+                if (total < sizeof(path) && total > 0) ret = path;
+        } else if (strlen(f) < sizeof(path)) {
+                strcpy(path, f);
+                ret = path;
+        }
+
+        if (!ret) setError(MSG_PathNameLong, ABSPATH);
+        return ret;
 }
 
 /* loop through the files in a directory */
@@ -2473,17 +2478,18 @@ char *envFileAlloc(const char *line)
 bool envFileDown(const char *line, const char **expanded)
 {
 	static char line2[MAXTTYLINE];
+        int total;
 
 	if (!downDir || strchr(line, '/'))
 /* we don't necessarily expect there to be a file here */
 		return envFile(line, expanded);
 
-	if (strlen(downDir) + strlen(line) >= sizeof(line2) - 1) {
+        total = snprintf(line2, sizeof(line2), "%s/%s", downDir, line);
+	if (total == sizeof(line2) || total < 0) {
 		setError(MSG_ShellLineLong);
 		return false;
-	}
+        }
 
-	sprintf(line2, "%s/%s", downDir, line);
 	*expanded = line2;
 	return true;
 }
