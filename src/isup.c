@@ -311,6 +311,7 @@ static bool httpDefault(const char *url)
 			return false;
 /* need at least two embedded dots */
 	n = 0;
+        lastdot = url; // gcc warns about lack of initialisation otherwise
 	for (s = url + 1; s < end - 1; ++s)
 		if (*s == '.' && s[-1] != '.' && s[1] != '.')
 			++n, lastdot = s;
@@ -328,8 +329,8 @@ static bool httpDefault(const char *url)
 	++lastdot;
 	len = end - lastdot;
 	for (n = 0; domainSuffix[n]; ++n)
-		if (memEqualCI(lastdot, domainSuffix[n], len)
-		    && !domainSuffix[n][len])
+		if (len == strlen(domainSuffix[n])
+                    || memEqualCI(lastdot, domainSuffix[n], len))
 			return true;
 /* www.anything.xx is ok */
 	if (len >= 2 && memEqualCI(url, "www.", 4))
@@ -2702,7 +2703,7 @@ addWebAuthorization(const char *url,
 	char host[MAXHOSTLEN];
 	struct httpAuth *a;
 	const char *dir = 0, *dirend;
-	int port, dl;
+	int port, dl = 0;
 	bool urlProx = isProxyURL(url);
 	bool updated = false;
 
