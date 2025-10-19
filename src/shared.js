@@ -1122,8 +1122,12 @@ w.eval('Object.defineProperty(frames,"'+i+'",{get:function(){return frames$2['+i
 // and relink the names
 for(i=0; i<l2; ++i) {
 f = f2[i];
-if(f.name)
+if(f.name) {
+if(f.name.match(/^[\w_ +=,.-]+$/))
 w.eval('Object.defineProperty(frames,"'+f.name+'",{get:function(){return frames$2['+i+'].contentWindow},configurable:true})')
+else
+alert3("invalid frame["+i+"] length " + f.name.length);
+}
 }
 w.frames$2 = f2;
 }
