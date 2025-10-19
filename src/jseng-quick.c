@@ -3317,27 +3317,28 @@ and hope your quickjs is current.
 
 void delPendings(const Frame *f)
 {
-    JSJobEntry *e;
-				struct list_head *l, *l1;
-    int i, delcount = 0;
+	    JSJobEntry *e;
+	struct list_head *l, *l1;
+	    int i, delcount = 0;
 	struct list_head *jl = (struct list_head *)((char*)jsrt + JSRuntimeJobIndex);
 
-    if(!f->jslink)
-	return;
+	    if(!f->jslink)
+		return;
 
-    list_for_each_safe(l, l1, jl) {
-	e = list_entry(l, JSJobEntry, link);
-	if (f->cx != e->ctx)
-	    continue;
-	list_del(&e->link);
-	++delcount;
-	for(i = 0; i < e->argc; i++)
-	    JS_FreeValue(e->ctx, e->argv[i]);
-	js_free(e->ctx, e);
-    }
+	    list_for_each_safe(l, l1, jl) {
+		e = list_entry(l, JSJobEntry, link);
+		if (f->cx != e->ctx)     continue;
+		list_del(&e->link);
+		++delcount;
+		for(i = 0; i < e->argc; i++)
+			    JS_FreeValue(e->ctx, e->argv[i]);
+		js_free(e->ctx, e);
+// See earlier comments for pending jobs and freeing the context.
+		JS_FreeContext(e->ctx);
+	    }
 
-    if(delcount)
-	debugPrint(3, "%d pendings deleted", delcount);
+	    if(delcount)
+		debugPrint(3, "%d pendings deleted", delcount);
 }
 
 // don't need these quick macros any more
