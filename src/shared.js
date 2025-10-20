@@ -6032,26 +6032,12 @@ Response.redirect = function(url, status) {
   return new Response(null, {status: status, headers: {location: url}})
 }
 
-var DOMException = g.DOMException
-try {
-  new DOMException()
-} catch (err) {
-  DOMException = function(message, name) {
-    this.message = message
-    this.name = name
-    var error = Error(message)
-    this.stack = error.stack
-  }
-  DOMException.prototype = Object.create(Error.prototype)
-  DOMException.prototype.constructor = DOMException
-}
-
 function fetch(input, init) {
   return new (my$win().Promise)(function(resolve, reject) {
     var request = new Request(input, init)
 
     if (request.signal && request.signal.aborted) {
-      return reject(new DOMException('Aborted', 'AbortError'))
+      return reject(new (my$win().DOMException)('Aborted', 'AbortError'))
     }
 
     var xhr = new XMLHttpRequest()
@@ -6086,7 +6072,7 @@ function fetch(input, init) {
     }
 
     xhr.onabort = function() {
-        reject(new DOMException('Aborted', 'AbortError'))
+        reject(new (my$win().DOMException)('Aborted', 'AbortError'))
     }
 
     function fixUrl(url) {

@@ -135,6 +135,16 @@ swm1("document", new Document)
 sdm = function(k, v) { Object.defineProperty(document, k, {value:v})}
 sdm1 = function(k, v) { Object.defineProperty(document, k, {value:v,enumerable:true})}
 sdm2 = function(k, v) { Object.defineProperty(document, k, {value:v, writable:true, configurable:true})}
+/* Apparently people want to muck with DOMException so can't be shared as
+otherwise we end up with read-only prototype chain issues */
+DOMException = function(message, name) {
+    this.message = message
+    this.name = name
+    var error = Error(message)
+    this.stack = error.stack
+}
+DOMException.prototype = Object.create(Error.prototype)
+DOMException.prototype.constructor = DOMException
 
 if(mw$.share) { // point to native methods in the master window
 swm("my$win", mw$.my$win)
@@ -147,8 +157,8 @@ swm("eb$truefunction", mw$.eb$truefunction)
 swm("eb$falsefunction", mw$.eb$falsefunction)
 swm1("close", mw$.win$close)
 swm("eb$visible", mw$.eb$visible)
-swm("atob", mw$.atob)
-swm("btoa", mw$.btoa)
+atob = mw$.atob
+btoa = mw$.btoa
 swm1("prompt", mw$.prompt)
 swm1("confirm", mw$.confirm)
 swm("eb$newLocation", mw$.eb$newLocation)
@@ -179,7 +189,7 @@ swm("rowReindex", mw$.rowReindex)
 swm1("getComputedStyle", mw$.getComputedStyle.bind(window))
 swm("mutFixup", mw$.mutFixup)
 swm("makeSheets", mw$.makeSheets)
-swm("structuredClone", mw$.structuredClone)
+swm1("structuredClone", mw$.structuredClone)
 }
 
 swm("dom$class", "Window")
@@ -2698,17 +2708,6 @@ var x = {policyName: pn};
 for (var i in po) { x[i] = po[i]}
 return x;
 }
-
-swm("DOMException", function(m, n) { // constructor
-this.message = typeof m == "string" ? m : "";
-this.code = 0;
-if(typeof n == "string") {
-this.name = n;
-// we need to set code here, based on standard names, not yet implemented.
-alert3("DOMException name " + n);
-}
-})
-
 swm("AbortSignal", function(){})
 AbortSignal.prototype = new EventTarget;
 AbortSignal.prototype.aborted = false;
