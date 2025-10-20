@@ -109,10 +109,15 @@ but I get the static library libquickjs.a, and qjs, which is all I need.
 By default, edbrowse links to this library, and thus the
 quickjs code is part of edbrowse, and a quickjs package,
 or a dependency thereto, is not necessary.
-If your distribution provides quickjs like a prebuilt package,
+If your distribution provides quickjs as a prebuilt package,
 set QUICKJS_INCLUDE to the quickjs directory containing its
 library header files, and QUICKJS_LIB to the directory containing
 the libquickjs.a static library.
+If you use an official quickjs tarball, rather than git clone,
+or if that tarball was used to build a separate quickjs package,
+that code must be dated June 28 2025 or later.
+A version mismatch could cause edbrowse to cor dump on exit in certain cases,
+which is rather jarring. qjs -h for the release date.
 
 readline:
 Edbrowse supports using GNU readline for handling input. As such you need
@@ -142,6 +147,7 @@ relative
 body loading
 complete
 688
+	[after a delay of 30 seconds]
 30 seconds have passed!
 lines 31 through 32 have been added
 
