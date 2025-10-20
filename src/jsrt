@@ -955,6 +955,11 @@ q.then(pmf);
 // If you run it again you'll see the same with values but the counter will step along.
 }
 
+// run Promise just to make sure quickjs is the compatible version.
+// It will core dump on exit if quick is prior to 06/28/2025.
+var pnow = Promise.resolve(63)
+pnow.then(()=>promiseRan=true)
+
 function relative() {
 var el = document.createElement("DIV")
 el.innerHTML = "<img src=/foo snork=77 id=garage>";

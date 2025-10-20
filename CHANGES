@@ -17,6 +17,9 @@ Send one command with the list of uids to the imap server instead of many.
 
 Fix core dump due to a change in quickjs implementation of Promise jobs,
 that took place on 06/28/2025.
+This version of edbrowse now requires quickjs at or beyond this date.
+
+Suppress many gcc warnings.
 
 3.8.12
 Make adjustments as quickjs evolves. Resolve build issues.
