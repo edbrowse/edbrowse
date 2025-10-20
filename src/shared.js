@@ -2020,6 +2020,106 @@ if(debug) alert3("}");
 return node2;
 }
 
+// an attempt at a structured clone implementation, definitely needs some work
+function structuredClone(obj, options)
+{
+    const debug = db$flags(2);
+    if (debug) alert3("structuredClone {");
+    const w = my$win();
+    /* Map objects to their new equivalents to prevent infinite cycles and
+        preserve the reference structure
+    */
+    const obj_map = new Map();
+    let transfer = new Set();
+    if (options && options.transfer) {
+        for (let i = 0; i < options.transfer.length; ++i) {
+            o = options.transfer[i];
+            if(o.eb$ctx) o.eb$ctx = w.eb$ctx;
+            transfer.add(o);
+            // Make sure the transferred objects get referenced not cloned
+            obj_map.set(o, o);
+        }
+    }
+
+
+    if (obj instanceof w.Node || typeof obj === 'function')
+        throw new w.DOMException(typeof obj + " objects cannot be cloned", "DataCloneError")
+
+    function clone_helper(obj)
+    {
+        if (obj === undefined || obj === null) return obj;
+
+        if (typeof obj === 'string') {
+            if(debug)
+                alert3("copy string " + (obj.length > 140)? "long" : obj);
+            return obj;
+        }
+
+        if (typeof obj === 'number') {
+            if(debug) alert3("copy number " + obj);
+            return obj;
+        }
+
+        if (typeof obj === 'boolean') {
+            if(debug) alert3("copy boolean " + obj);
+            return obj;
+        }
+        // Unlike the initial call don't care here to simplify logic
+        if (obj instanceof w.Node) {
+            if(debug) alert3("Ignoring dom node in recursive clone");
+            return;
+        }
+        if (typeof obj === 'function') {
+            if(debug) alert3("Ignoring function in recursive clone");
+            return;
+        }
+        // Otherwise something which could have ref cycles
+        if (obj_map.has(obj)) {
+            // Set up the reference cycles to be the same in the new object
+            if(debug)
+                alert3("Reusing already mapped reference rather than cloning");
+            return obj_map.get(obj);
+        }
+        // We explicitly don't use the custom prototypes the window
+        if(Array.isArray(obj)) {
+            const new_array = [];
+            obj_map.set(obj, new_array);
+            if(debug) alert3("copy array with " + obj.length + " members");
+            for(let i = 0; i < obj.length; ++i)
+                // preserve sparse arrays
+                if (obj[i] !== undefined) new_array[i] = clone_helper(obj[i]);
+            return new_array;
+        }
+
+        // Not sure if these can differ
+        if (obj instanceof w.Map || obj instanceof Map)
+        {
+            if(debug) alert3("copy map with " + obj.size + " members")
+            const new_map = new Map();
+            obj_map.set(obj, new_map);
+            // Map keys can be complex types also
+            for (const [k, v] of obj)
+                new_map.set(clone_helper(k), clone_helper(v));
+            return new_map;
+        }
+        // Technically we should do more checking but just assume object for now
+        if(debug) alert3("Copy object");
+        const new_obj = {};
+        obj_map.set(obj, new_obj);
+        for (const [k, v] of Object.entries(obj)) {
+            if (implicitMember(obj, k))
+                continue;
+            // We only have string keys here
+            new_obj[k] = clone_helper(v);
+            // I'm not sure if this is right, should we actually delete
+            if (transfer.has(v)) obj[k] = undefined;
+        }
+        return new_obj;
+    }
+    if (debug) alert3("}");
+    return clone_helper(obj);
+}
+
 // Find an object in a tree of nodes being cloned.
 // Return a sequence of numbers, for children, from the root.
 function findObject(t) {
@@ -6138,7 +6238,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "url_rebuild", "url_hrefset", "sortTime",
 "DOMParser",
 "xml_open", "xml_srh", "xml_grh", "xml_garh", "xml_send", "xml_parse",
-"onmessage$$running", "lastModifiedByHead",
+"onmessage$$running", "lastModifiedByHead", "structuredClone",
 ];
 for(var i=0; i<flist.length; ++i)
 Object.defineProperty(this, flist[i], {writable:false,configurable:false});
