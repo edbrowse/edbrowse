@@ -49,7 +49,7 @@ eb$listen = eb$unlisten = addEventListener = removeEventListener = eb$voidfuncti
 my$win = function() { return window}
 my$doc = function() { return document}
 eb$hasFocus = eb$write = eb$writeln = eb$apch1 = eb$apch2 = eb$rmch2 = eb$insbf = eb$voidfunction;
-// document.eb$apch2 = function(c) { alert("append " + c.nodeName  + " to " + this.nodeName); this.childNodes.push(c); }
+// document.eb$apch2 = function(c) { alert("append " + c.node<Name  + " to " + this.nodeName); this.childNodes.push(c); }
 // other browsers don't have querySelectorAll under window
 querySelectorAll = function() { return [] }
 querySelector = function() { return {} }
@@ -2790,6 +2790,103 @@ ResizeObserver.prototype.unobserve = eb$voidfunction;
 // reason for its existence.
 swm1("queueMicrotask", function(f) {
 if(typeof f == "function") f()})
+
+// an attempt at a structured clone implementation, definitely needs some work
+swm1("structuredClone", function (obj, options)
+{
+    /* Map objects to their new equivalents to prevent infinite cycles and
+        preserve the reference structure
+    */
+    const obj_map = new Map();
+    let transfer = new Set();
+    if (options && options.transfer) {
+        for (let i = 0; i < options.transfer.length; ++i) {
+            o = options.transfer[i];
+            if(o.eb$ctx) o.eb$ctx = eb$ctx;
+            transfer.add(o);
+            obj_map.set(o, o);
+        }
+    }
+
+    const debug = db$flags(2);
+    if (obj instanceof Node || typeof obj === 'Function')
+        throw new DOMException(typeof obj + " objects cannot be cloned", "DataCloneError")
+
+    function clone_helper(obj)
+    {
+        if (obj === undefined || obj === null) return obj;
+
+        if (typeof obj === 'string') {
+            if(debug)
+                alert3("copy string " + (obj.length > 140)? "long" : obj);
+            return obj;
+        }
+
+        if (typeof obj === 'number') {
+            if(debug) alert3("copy number " + obj);
+            return obj;
+        }
+
+        if (typeof obj === 'boolean') {
+            if(debug) alert3("copy boolean " + obj);
+            return obj;
+        }
+        // Unlike the initial call don't care here to simplify logic
+        if (obj instanceof Node) {
+            if(debug) alert3("Ignoring dom node in recursive clone");
+            return;
+        }
+        if (typeof obj === 'Function') {
+            if(debug) alert3("Ignoring function in recursive clone");
+            return;
+        }
+        // Otherwise something which could have ref cycles
+        if (obj_map.has(obj)) {
+            // Set up the reference cycles to be the same in the new object
+            if(debug) alert3("Already seen this reference");
+            return obj_map.get(obj);
+        }
+
+        if(Array.isArray(obj)) {
+            const new_array = new Array();
+            obj_map.set(obj, new_array);
+            if(debug) alert3("copy array with " + obj.length + " members");
+            for(let i = 0; i < obj.length; ++i)
+                // preserve sparse arrays
+                if (obj[i] !== undefined) new_array[i] = clone_helper(obj[i]);
+            return new_array;
+        }
+
+        if (obj instanceof Map)
+        {
+            if(debug) alert3("copy map with " + obj.size + " members")
+            const new_map = Map();
+            obj_map.set(obj, new_map);
+            for (const [k, v] of obj)
+                // Map keys can be complex types also
+                new_map.set(clone_helper(k), clone_helper(v));
+            return new_map;
+        }
+
+        if(typeof obj === "object") {
+            if(debug) alert3("copy object");
+            const new_obj = {};
+            obj_map.set(obj, new_obj);
+            for (const [k, v] of Object.entries(obj)) {
+                if (implicitMember(obj, k))
+                    continue;
+                // We only have string keys here
+                new_obj[k] = clone_helper(v);
+                // I'm not sure if this is right, should we actually delete
+                if (transfer.has(v)) obj[k] = undefined;
+            }
+            return new_obj;
+        }
+        if (debug) alert3("Attempt to clone an unimplemented type" + typeof obj);
+        return;
+    }
+    return clone_helper(obj);
+});
 
 // don't need these any more
 delete swm;
