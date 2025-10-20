@@ -5498,7 +5498,17 @@ unparen:
 		if (action == TAGACT_AREA)
 			a = imageAlt(t);
 		if (!a) {
-			a = t->name;
+			if((a = t->name)) {
+				skipWhite2(&a);
+				if(*a == '{') {
+					const char *b = a + 1;
+					skipWhite2(&b);
+					if(*b == '"')
+						a = "json";
+				}
+				if(!*a) a = 0;
+			}
+			if(a && strlen(a) > 40) a = "long";
 			if (!a)
 				a = altText(t->href);
 		}

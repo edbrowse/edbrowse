@@ -1126,7 +1126,7 @@ if(f.name) {
 if(f.name.match(/^[\w_ +=,.-]+$/))
 w.eval('Object.defineProperty(frames,"'+f.name+'",{get:function(){return frames$2['+i+'].contentWindow},configurable:true})')
 else
-alert3("invalid frame["+i+"] length " + f.name.length);
+alert3("invalid frame["+i+"].name.length " + f.name.length);
 }
 }
 w.frames$2 = f2;
