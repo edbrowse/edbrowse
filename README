@@ -151,6 +151,9 @@ complete
 30 seconds have passed!
 lines 31 through 32 have been added
 
+Type ,p to see the page, if you wish, as though it were ed.
+Type q to exit.
+
 ------------------------------------------------------------
 
 Edbrowse creates a system wide temp directory if it is not already present.
