@@ -2024,13 +2024,14 @@ return node2;
 function structuredClone(obj, options)
 {
     const debug = db$flags(2);
-    if (debug) alert3("structuredClone {");
+    let dbg = () => undefined;
+    if (debug) dbg = (m) => alert3("structuredClone: " + m);
     const w = my$win();
     /* Map objects to their new equivalents to prevent infinite cycles and
         preserve the reference structure
     */
     const obj_map = new Map();
-    let transfer = new Set();
+    const transfer = new Set();
     if (options && options.transfer) {
         for (let i = 0; i < options.transfer.length; ++i) {
             o = options.transfer[i];
@@ -2041,83 +2042,90 @@ function structuredClone(obj, options)
         }
     }
 
+    if (obj instanceof w.Node || typeof obj === "function")
+        throw new w.DOMException("Unsupported object type", "DataCloneError");
 
-    if (obj instanceof w.Node || typeof obj === 'function')
-        throw new w.DOMException(typeof obj + " objects cannot be cloned", "DataCloneError")
-
-    function clone_helper(obj)
+    function propertyHelper(old_obj, new_obj, key)
     {
-        if (obj === undefined || obj === null) return obj;
+        dbg("handle property " + key);
+        const value = old_obj[key];
+        new_obj[key] = cloneHelper(value);
+        // I'm not sure if this is right, should we actually delete
+        if (transfer.has(value)) {
+            dbg("Detach value for property" + key);
+            old_obj[key] = undefined;
+        }
+    }
 
-        if (typeof obj === 'string') {
-            if(debug)
-                alert3("copy string " + (obj.length > 140)? "long" : obj);
+    // I'm not sure if we need to handle both but play safe
+    function instanceCheck(obj, cls)
+    {
+        return obj instanceof this[cls] || obj instanceof w[cls];
+    }
+
+    function cloneHelper(obj)
+    {
+        const copy_types = new Set(["undefined", "string", "number", "boolean"])
+        if (obj === null) {
+            dbg("got null");
             return obj;
         }
-
-        if (typeof obj === 'number') {
-            if(debug) alert3("copy number " + obj);
-            return obj;
-        }
-
-        if (typeof obj === 'boolean') {
-            if(debug) alert3("copy boolean " + obj);
+        if (copy_types.has(typeof obj)) {
+            dbg("directly returning " + typeof obj+ " with value " + ((
+                typeof obj === "string" && obj.length > 200
+            ) ? "<dbg long string not shown>" : obj)
+            );
             return obj;
         }
         // Unlike the initial call don't care here to simplify logic
         if (obj instanceof w.Node) {
-            if(debug) alert3("Ignoring dom node in recursive clone");
+            dbg("Ignoring dom node in recursive clone");
             return;
         }
         if (typeof obj === 'function') {
-            if(debug) alert3("Ignoring function in recursive clone");
+            dbg("Ignoring function in recursive clone");
             return;
         }
         // Otherwise something which could have ref cycles
         if (obj_map.has(obj)) {
             // Set up the reference cycles to be the same in the new object
-            if(debug)
-                alert3("Reusing already mapped reference rather than cloning");
+            dbg("reusing mapped reference");
             return obj_map.get(obj);
         }
-        // We explicitly don't use the custom prototypes the window
-        if(Array.isArray(obj)) {
+        /*
+            We explicitly don't use the custom prototypes the window but do
+            care about specific array types
+        */
+        if(instanceCheck(obj, "Array")) {
             const new_array = [];
             obj_map.set(obj, new_array);
-            if(debug) alert3("copy array with " + obj.length + " members");
-            for(let i = 0; i < obj.length; ++i)
+            dbg("copy array with " + obj.length + " members");
+            for (let i = 0; i < obj.length; ++i)
                 // preserve sparse arrays
-                if (obj[i] !== undefined) new_array[i] = clone_helper(obj[i]);
+                if (obj[i] !== undefined) new_array[i] = cloneHelper(obj[i]);
             return new_array;
         }
 
-        // Not sure if these can differ
-        if (obj instanceof w.Map || obj instanceof Map)
-        {
-            if(debug) alert3("copy map with " + obj.size + " members")
+        if (instanceCheck(obj, "Map")) {
+            dbg("copy map with " + obj.size + " members");
             const new_map = new Map();
             obj_map.set(obj, new_map);
-            // Map keys can be complex types also
+            // Map keys can be complex types
             for (const [k, v] of obj)
-                new_map.set(clone_helper(k), clone_helper(v));
+                new_map.set(cloneHelper(k), cloneHelper(v));
             return new_map;
         }
         // Technically we should do more checking but just assume object for now
-        if(debug) alert3("Copy object");
+        dbg("Copy object");
         const new_obj = {};
         obj_map.set(obj, new_obj);
-        for (const [k, v] of Object.entries(obj)) {
-            if (implicitMember(obj, k))
-                continue;
+        for (const k of Object.keys(obj)) {
             // We only have string keys here
-            new_obj[k] = clone_helper(v);
-            // I'm not sure if this is right, should we actually delete
-            if (transfer.has(v)) obj[k] = undefined;
+            propertyHelper(obj, new_obj, k);
         }
         return new_obj;
     }
-    if (debug) alert3("}");
-    return clone_helper(obj);
+    return cloneHelper(obj);
 }
 
 // Find an object in a tree of nodes being cloned.
