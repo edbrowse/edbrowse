@@ -189,7 +189,7 @@ swm("rowReindex", mw$.rowReindex)
 swm1("getComputedStyle", mw$.getComputedStyle.bind(window))
 swm("mutFixup", mw$.mutFixup)
 swm("makeSheets", mw$.makeSheets)
-swm1("structuredClone", mw$.structuredClone)
+structuredClone = mw$.structuredClone
 }
 
 swm("dom$class", "Window")
@@ -2434,13 +2434,13 @@ return doc;
 swm("XMLHttpRequest", mw$.XMLHttpRequest)
 // Request, Response, Headers, fetch; link to third party code in master window.
 // fetch calls XMLHttpRequest, but puts the Response in a Promise
-swm("Headers", mw$.Headers)
-swm("Request", mw$.Request)
-swm("Response", mw$.Response)
-swm("fetch", mw$.fetch)
+swm2("Headers", mw$.Headers)
+swm2("Request", mw$.Request)
+swm2("Response", mw$.Response)
+swm2("fetch", mw$.fetch)
 // Next function is needed to support await fetch asynchronous
 // See the comments in shared.js - look for fetch$onload.
-swm("fetch$onload", function(resolve, x){resolve(x)})
+swm2("fetch$onload", function(resolve, x){resolve(x)})
 
 // pages seem to want document.style to exist
 sdm("style", new CSSStyleDeclaration)
@@ -2700,7 +2700,7 @@ swm("TextDecoder", mw$.TextDecoder)
 swm("MessagePort", mw$.MessagePort)
 swm("MessageChannel", mw$.MessageChannel)
 swm("mp$registry", []) // MessagePort registry
-swm("URLSearchParams", mw$.URLSearchParams)
+URLSearchParams = mw$.URLSearchParams
 
 swm("trustedTypes", function(){})
 trustedTypes.createPolicy = function(pn,po){
