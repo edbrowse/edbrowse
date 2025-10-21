@@ -2031,7 +2031,7 @@ function structuredClone(obj, options)
         preserve the reference structure
     */
     const obj_map = new Map();
-    const transfer = new Set();
+    const transfer = new Set;
     if (options && options.transfer) {
         for (let i = 0; i < options.transfer.length; ++i) {
             const o = options.transfer[i];
@@ -2057,12 +2057,6 @@ function structuredClone(obj, options)
         }
     }
 
-    // I'm not sure if we need to handle both but play safe
-    function instanceCheck(obj, cls)
-    {
-        return obj instanceof this[cls] || obj instanceof w[cls];
-    }
-
     function cloneHelper(obj)
     {
         const copy_types = new Set(["undefined", "string", "number", "boolean"])
@@ -2086,18 +2080,17 @@ function structuredClone(obj, options)
             dbg("Ignoring function in recursive clone");
             return;
         }
+
         // Otherwise something which could have ref cycles
         if (obj_map.has(obj)) {
             // Set up the reference cycles to be the same in the new object
             dbg("reusing mapped reference");
             return obj_map.get(obj);
         }
-        /*
-            We explicitly don't use the custom prototypes the window but do
-            care about specific array types
-        */
-        if(instanceCheck(obj, "Array")) {
-            const new_array = [];
+
+        // We care about specific array types
+        if(obj instanceof w.Array) {
+            const new_array = new w.Array;
             obj_map.set(obj, new_array);
             dbg("copy array with " + obj.length + " members");
             for (let i = 0; i < obj.length; ++i)
@@ -2106,18 +2099,18 @@ function structuredClone(obj, options)
             return new_array;
         }
 
-        if (instanceCheck(obj, "Map")) {
+        if (obj instanceof w.Map) {
             dbg("copy map with " + obj.size + " members");
-            const new_map = new Map();
+            const new_map = new w.Map;
             obj_map.set(obj, new_map);
             // Map keys can be complex types
             for (const [k, v] of obj)
                 new_map.set(cloneHelper(k), cloneHelper(v));
             return new_map;
         }
-        if (instanceCheck(obj, "Set")) {
+        if (obj instanceof w.Set) {
             dbg("copy set with " + obj.size + " members");
-            const new_set = new Set();
+            const new_set = new w.Set;
             obj_map.set(obj, new_set);
             // Sets can contain complex types
             for (const i of obj)
@@ -2127,7 +2120,7 @@ function structuredClone(obj, options)
 
         // Technically we should do more checking but just assume object for now
         dbg("Copy object");
-        const new_obj = {};
+        const new_obj = new w.Object;
         obj_map.set(obj, new_obj);
         for (const k of Object.keys(obj)) {
             // We only have string keys here
