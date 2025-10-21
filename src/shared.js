@@ -2115,6 +2115,16 @@ function structuredClone(obj, options)
                 new_map.set(cloneHelper(k), cloneHelper(v));
             return new_map;
         }
+        if (instanceCheck(obj, "Sap")) {
+            dbg("copy set with " + obj.size + " members");
+            const new_set = new Set();
+            obj_map.set(obj, new_set);
+            // Sets can contain complex types
+            for (const i of obj)
+                new_set.add(cloneHelper(i));
+            return new_set;
+        }
+
         // Technically we should do more checking but just assume object for now
         dbg("Copy object");
         const new_obj = {};
