@@ -2115,7 +2115,7 @@ function structuredClone(obj, options)
                 new_map.set(cloneHelper(k), cloneHelper(v));
             return new_map;
         }
-        if (instanceCheck(obj, "Sap")) {
+        if (instanceCheck(obj, "Set")) {
             dbg("copy set with " + obj.size + " members");
             const new_set = new Set();
             obj_map.set(obj, new_set);
