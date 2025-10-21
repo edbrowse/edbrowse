@@ -2034,7 +2034,7 @@ function structuredClone(obj, options)
     const transfer = new Set();
     if (options && options.transfer) {
         for (let i = 0; i < options.transfer.length; ++i) {
-            o = options.transfer[i];
+            const o = options.transfer[i];
             if(o.eb$ctx) o.eb$ctx = w.eb$ctx;
             transfer.add(o);
             // Make sure the transferred objects get referenced not cloned
