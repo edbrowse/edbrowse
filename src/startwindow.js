@@ -157,8 +157,8 @@ swm("eb$truefunction", mw$.eb$truefunction)
 swm("eb$falsefunction", mw$.eb$falsefunction)
 swm1("close", mw$.win$close)
 swm("eb$visible", mw$.eb$visible)
-atob = mw$.atob
-btoa = mw$.btoa
+swm2("atob", mw$.atob)
+swm2("btoa", mw$.btoa)
 swm1("prompt", mw$.prompt)
 swm1("confirm", mw$.confirm)
 swm("eb$newLocation", mw$.eb$newLocation)
@@ -189,7 +189,7 @@ swm("rowReindex", mw$.rowReindex)
 swm1("getComputedStyle", mw$.getComputedStyle.bind(window))
 swm("mutFixup", mw$.mutFixup)
 swm("makeSheets", mw$.makeSheets)
-structuredClone = mw$.structuredClone
+swm2("structuredClone", mw$.structuredClone)
 }
 
 swm("dom$class", "Window")
@@ -2700,7 +2700,7 @@ swm("TextDecoder", mw$.TextDecoder)
 swm("MessagePort", mw$.MessagePort)
 swm("MessageChannel", mw$.MessageChannel)
 swm("mp$registry", []) // MessagePort registry
-URLSearchParams = mw$.URLSearchParams
+swm2("URLSearchParams", mw$.URLSearchParams)
 
 swm("trustedTypes", function(){})
 trustedTypes.createPolicy = function(pn,po){
