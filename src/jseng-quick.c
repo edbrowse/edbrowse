@@ -3099,13 +3099,16 @@ static JSValue nat_qs(JSContext * cx, JSValueConst this, int argc, JSValueConst 
 		start = this;
 	if(!rootTag(start, &t)) {
 		JS_FreeCString(cx, selstring);
-		return JS_UNDEFINED;
+/* I'm not sure if this ever happens in the wild but I'm assuming the same as
+for a non-match here and returning null as code seems to explicitly check for
+that. */
+		return JS_NULL;
 	}
 	t = querySelector(selstring, t);
 	JS_FreeCString(cx, selstring);
 	if(t && t->jslink)
 		return JS_DupValue(cx, *((JSValue*)t->jv));
-	return JS_UNDEFINED;
+	return JS_NULL;
 }
 
 // querySelector0
