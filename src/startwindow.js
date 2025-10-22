@@ -570,7 +570,8 @@ Object.defineProperty(URL.prototype, "charCodeAt", {enumerable:false});
 URL.prototype.trim = function() { return this.toString().trim(); }
 Object.defineProperty(URL.prototype, "trim", {enumerable:false});
 
-// Is Element a synonym for HTMLElement? nasa.gov acts like it is.
+/* According to MDN Element isn't a synonym for HTMLElement as SVGElement
+should also inherit from it but leave as is until we get there */
 swm2("HTMLElement", function(){})
 swm2("Element", HTMLElement)
 spdc("HTMLElement", Node)
@@ -642,6 +643,10 @@ var r = this.firstChild;
 if(r && r.nodeName == "SHADOWROOT" && r.mode == "open") return r;
 return null;
 }});
+
+swm2("SVGElement", function(){})
+// Use the correct name for the prototype even if it's an incorrect synonym
+spdc("SVGElement", Element)
 
 swm("z$HTML", function(){})
 spdc("z$HTML", HTMLElement)
@@ -2219,8 +2224,8 @@ if(typeof f == "function") { this.' + evname + '$2 = f}}})')
 
 // onhashchange from certain places
 ; (function() {
-// also HTMLFrameSetElement and SVGEElement, which we have not yet implemented
-var cnlist = ["HTMLBodyElement.prototype", "window"];
+// also HTMLFrameSetElement which we have not yet implemented
+var cnlist = ["HTMLBodyElement.prototype", "SVGElement", "window"];
 for(var i=0; i<cnlist.length; ++i) {
 var cn = cnlist[i];
 eval('Object.defineProperty(' + cn + ', "onhashchange$$watch", {value:true})');
@@ -2364,6 +2369,7 @@ case "input": c = new HTMLInputElement; break;
 case "textarea": c = new HTMLTextAreaElement; break;
 case "element": c = new HTMLElement; break;
 case "button": c = new HTMLButtonElement; break;
+case "svg": c = new SVGElement; break;
 default:
 unknown = true;
 // alert("createElement default " + s);
