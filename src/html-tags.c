@@ -167,6 +167,12 @@ But these only live in <head> if browseMail is true.
 {"div",0,1, 0, 0},
 {"center",0,1, 0, 0},
 {"font",0,1, 0, 0},
+// relatives of font
+{"b",0,1, 0, 0},
+{"i",0,1, 0, 0},
+{"u",0,1, 0, 0},
+{"strong",0,1, 0, 0},
+{"em",0,1, 0, 0},
 {"span",0,1, 0, 0},
 {"sub",0,1, 0, 0},
 {"sup",0,1, 0, 0},
