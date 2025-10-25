@@ -6553,6 +6553,14 @@ static int twoLetterG(const char *line, const char **runThis)
 			puts(timestring == emptyString ? "-" : timestring);
 			return true;
 		}
+		if(cw->imapMode2) {
+			if (cw->dot == 0) {
+				setError(MSG_AtLine0);
+				return false;
+			}
+			lsEnvelope(lsmode);
+			return true;
+		}
 		if (cw->dirMode) {
 			if (cw->dot == 0) {
 				setError(MSG_AtLine0);

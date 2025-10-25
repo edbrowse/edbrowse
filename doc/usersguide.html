@@ -790,6 +790,12 @@ rf : refresh the envelopes in this buffer
 <br>t abc : copy email to folder abc
 <br>r : mark email as read
 <br>r- : mark email as not read
+<br> lsf : list the from field for this envelope
+<br> lst : list the to field
+<br> lsd : list the date field
+<br> lsl : list the length
+<br> lsz or lss : list the size in round numbers
+<br> lsy : list the subject, although I would expect that is already on the printed line
 <br> u filename : write this email unformatted to a file
 <br> U filename : same as above but delete the email
 <br> w filename : write this email formatted to a file, and an unformatted copy in ~/.trash/rawmail
@@ -6425,8 +6431,11 @@ Back up to folders and the message count is still what it was before.
 Type rf to get a new, accurate message count on all the folders.
 
 <p>
-When viewing the folders or the envelopes, "l=number" will change the fetch limit, how many envelopes fetched at a time,
-and "e=format" changes the format of the envelope.
+When viewing the folders or the envelopes, "l=number" will change the fetch limit, how many envelopes fetched at a time.
+A limit of -n fetches the first n emails, rather than the most recent.
+
+<p>
+"e=format" changes the format of the envelope.
 These are the same as the imap client.
 For instance, "e=fstd" shows from,
 subject, to, and date.
@@ -6434,8 +6443,24 @@ The n attribute is not meaningful here, since edbrowse already maintains line nu
 If you are on the envelopes page, you might want to refresh, so you can see them in the new format.
 
 <p>
-A limit of -n fetches the first n emails, rather than the most recent.
-This makes it easy to clear out the old emails.
+Various ls comands print the envelope fields on demand, even if they are not part of the lines in the buffer.
+In most situations, from and subject are sufficient, but if you are curious about when this particular email was sent, type lsd to get the date.
+The ls letters are:
+<p>
+y subject - but subject is probably already part of the line
+<br>f from
+<br>t to
+<br>d date
+<br>l length
+<br>z consise size
+<br>s consise size, like lss in other contexts
+
+<p>
+This is jarringly inconsistent from ls in other contexts, such as directory mode.
+lst usually gives the time stamp; in envelope mode it gives the to field, whereas lsd gives the date and time.
+Unfortunately I had to do this to be consistent with the envelope format and its letters.
+I had to make a compromise.
+This is what happens, as George Pal notes, When Worlds Collide.
 
 <p>
 edbrowse can perform a remote search on the imap server.

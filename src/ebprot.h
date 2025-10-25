@@ -80,6 +80,7 @@ bool setupReply(bool all, bool fwd);
 bool imapBufferPresent(void);
 bool imapBuffer(char *line);
 bool imap1rf();
+void lsEnvelope(const char *lsmode);
 bool folderDescend(const char *path, bool rf);
 bool folderSearch(const char *path, char *search, bool rf);
 bool mailDescend(const char *path, char cmd);

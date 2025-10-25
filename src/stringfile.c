@@ -1265,13 +1265,14 @@ bool lsattrChars(const char *buf, char *dest)
 	bool rc = true;
 	const char *s;
 	char c, *t;
-	static const char ok_chars[] = "lstikpmy";
+	const char * ok_chars = cw->imapMode2 ? "yftdlz" : "lstikpmy";
 	char used[26];
 	memset(used, 0, sizeof(used));
 	t = dest;
 	for (s = buf; (c = *s); ++s) {
 		if (isspaceByte(c))
 			continue;
+		if(cw->imapMode2 && c == 's') c = 'z';
 		if (!strchr(ok_chars, c)) {
 			rc = false;
 			continue;

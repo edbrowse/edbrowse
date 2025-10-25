@@ -755,7 +755,11 @@ none:
 	return 1;
 }
 
-// the grab parameter grabs the string for the caller, instead of printing it
+// The grab parameter grabs the string for the caller, instead of printing it,
+// this is for integrated imap where the envelopes become lines in the buffer.
+// Symbols for envelope field separator, visible and invisible
+#define EFS_V " | "
+#define EFS_I '\05'
 static void printEnvelope(const struct MIF *mif, char **grab)
 {
 	char *envp;		// print the envelope concisely
@@ -800,7 +804,7 @@ static void printEnvelope(const struct MIF *mif, char **grab)
 		}
 // put in the delimiter
 		if(c != 'u' && fs[i + 1] && !stringEqual(fs + i + 1, "n"))
-			stringAndString(&envp, &envp_l, " | ");
+			stringAndString(&envp, &envp_l, EFS_V);
 	}
 
 	envp_end = envp + envp_l;
@@ -826,11 +830,11 @@ static void viewAll(struct FOLDER *f)
 	}
 }
 
-static bool expunge(CURL * handle)
+static bool expunge(CURL * h)
 {
 	CURLcode res;
-	curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, "EXPUNGE");
-	res = getMailData(handle);
+	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, "EXPUNGE");
+	res = getMailData(h);
 	nzFree(mailstring), mailstring = 0;
 	return res == CURLE_OK;
 }
@@ -1954,24 +1958,17 @@ static void get_mailbox_url(const struct MACCOUNT *a)
 }
 
 /* reads message into mailstring, it's up to you to free it */
-static CURLcode fetchOneMessage(CURL * handle, int message_number)
+static CURLcode fetchOneMessage(CURL * h, int message_number)
 {
 	CURLcode res = CURLE_OK;
 
-	res = setCurlURL(handle, message_url);
-	if (res != CURLE_OK)
-		return res;
-	res = curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, NULL);
-	if (res != CURLE_OK)
-		return res;
-	res = curl_easy_setopt(handle, CURLOPT_NOBODY, 0L);
-	if (res != CURLE_OK)
-		return res;
-
-	res = getMailData(handle);
+	res = setCurlURL(h, message_url);
+	if (res != CURLE_OK) return res;
+	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, NULL);
+	curl_easy_setopt(h, CURLOPT_NOBODY, 0L);
+	res = getMailData(h);
 	undosOneMessage();
-	if (res != CURLE_OK)
-		return res;
+	if (res != CURLE_OK) return res;
 
 /* got the file, save it in unread */
 	sprintf(umf_end, "%d", unreadMax + message_number);
@@ -2190,7 +2187,7 @@ refresh:
 // it doesn't return at all.
 int fetchMail(int account)
 {
-	CURL *mail_handle;
+	CURL *h;
 	struct MACCOUNT *a = accounts + account - 1;
 	const char *login = a->login;
 	const char *pass = a->password;
@@ -2216,8 +2213,8 @@ int fetchMail(int account)
 	unreadBase = 0;
 	unreadStats();
 
-	mail_handle = newFetchmailHandle(login, pass);
-	res = count_messages(mail_handle, &message_count);
+	h = newFetchmailHandle(login, pass);
+	res = count_messages(h, &message_count);
 	if (res != CURLE_OK)
 		goto fetchmail_cleanup;
 // count_messages does not return on imap
@@ -2225,11 +2222,11 @@ int fetchMail(int account)
 	for (message_number = 1; message_number <= message_count;
 	     message_number++) {
 		asprintf(&message_url, "%s%u", mailbox_url, message_number);
-		res = fetchOneMessage(mail_handle, message_number);
+		res = fetchOneMessage(h, message_number);
 		if (res != CURLE_OK)
 			goto fetchmail_cleanup;
 		nfetch++;
-		res = deleteOneMessage(mail_handle);
+		res = deleteOneMessage(h);
 		if (res != CURLE_OK)
 			goto fetchmail_cleanup;
 		nzFree(message_url);
@@ -2241,7 +2238,7 @@ fetchmail_cleanup:
 		url_for_error = message_url;
 	if (res != CURLE_OK)
 		ebcurl_setError(res, url_for_error, 1, cerror);
-	curl_easy_cleanup(mail_handle);
+	curl_easy_cleanup(h);
 	nzFree(message_url);
 	nzFree(mailbox_url);
 	message_url = mailbox_url = 0;
@@ -4350,11 +4347,59 @@ static void makeLinesAndUids(const struct FOLDER *f)
 		stringAndString(&imapLines, &iml_l, p);
 		stringAndChar(&imapLines, &iml_l, '\n');
 		nzFree(p);
+
 		sprintf(uidbuf, "%d|", mif->uid);
 		stringAndString(&imapPaths, &imp_l, uidbuf);
-		stringAndString(&imapPaths, &imp_l, mif->subject);
+		p = mif->subject;
+		if(!p[0]) p = "?";
+		stringAndString(&imapPaths, &imp_l, p);
+		stringAndChar(&imapPaths, &imp_l, EFS_I);
+		p = mif->from;
+		if(!p[0]) p = mif->reply;
+		if(!p[0]) p = "?";
+		stringAndString(&imapPaths, &imp_l, p);
+		stringAndChar(&imapPaths, &imp_l, EFS_I);
+		p = mif->to;
+		if(!p[0]) p = mif->prec;
+		if(!p[0]) p = "?";
+		stringAndString(&imapPaths, &imp_l, p);
+		stringAndChar(&imapPaths, &imp_l, EFS_I);
+		p = mif->sent ? conciseTime(mif->sent) : "?";
+		stringAndString(&imapPaths, &imp_l, p);
+		stringAndChar(&imapPaths, &imp_l, EFS_I);
+		stringAndNum(&imapPaths, &imp_l, mif->size);
+		stringAndChar(&imapPaths, &imp_l, EFS_I);
+		stringAndString(&imapPaths, &imp_l, conciseSize(mif->size));
+		stringAndChar(&imapPaths, &imp_l, EFS_I);
 		stringAndChar(&imapPaths, &imp_l, '\n');
 	}
+}
+
+// the ls... commands in imap mode
+void lsEnvelope(const char *lsmode)
+{
+	int i, j, l;
+	static const char order[] = "yftdlz";
+	char *p, *q;
+const char *mark[7];
+	const char *title = (const char *)cw->r_map[cw->dot].text;
+	mark[0] = strchr(title, '|') + 1;
+	for(i = 1; i < 7; ++i)
+		mark[i] = strchr(mark[i-1], EFS_I) + 1;
+
+	p = initString(&l);
+	while(*lsmode) {
+		j = strchr(order, *lsmode) - order;
+		if(l) stringAndChar(&p, &l, ' ');
+		stringAndBytes(&p, &l, mark[j], mark[j+1] - mark[j] - 1);
+		++lsmode;
+	}
+
+	q = p + l;
+	isoDecode(p, &q);
+	*q = 0;
+	eb_puts(p);
+	nzFree(p);
 }
 
 // rf parameter means this is a refresh of envelopes
@@ -4568,6 +4613,7 @@ bool mailDescend(const char *title, char cmd)
 	int act = cw->imap_n;
 	int uid = atoi(title);
 	const char *subj = strchr(title, '|') + 1;
+	char *s2 = (char*)strchr(title, EFS_I);
 	const char *path;
 	char *vr;
 	struct MACCOUNT *a = accounts + act - 1;
@@ -4604,7 +4650,9 @@ bool mailDescend(const char *title, char cmd)
 	w->imap_n = uid;
 	w->prev = cw, cw = w, sessionList[context].lw = cw, cf = &cw->f0;
 	cw->imapMode3 = true;
+	*s2 = 0; // I'll put it back
 	asprintf(&cf->fileName, "mail %s", subj);
+	*s2 = EFS_I;
 	vr = cf->fileName + strlen(cf->fileName);
 	isoDecode(cf->fileName, &vr);
 	*vr = 0;
