@@ -166,6 +166,7 @@ This function is used to sanitize user-supplied URLs.
  * Google has commas in encoded URLs, and wikipedia has parentheses,
  * so those are (sort of) ok. */
 static const char percentable[] = "'\"<>";
+static const char percentable2[] = "~,+()[]{}%@:/'#\"<>";
 static const char hexdigits[] = "0123456789ABCDEF";
 #define ESCAPED_CHAR_LENGTH 3
 
@@ -218,6 +219,38 @@ bool looksPercented(const char *start, const char *end)
 		if (*(signed char *)s <= ' ' || strchr(percentable, *s))
 			return false;
 	return true;
+}
+
+char *percentString(const char *start, const char *end)
+{
+	int bytes_to_alloc;
+	char *new_copy;
+	const char *in_pointer;
+	char *out_pointer;
+	if (!end)
+		end = start + strlen(start);
+	bytes_to_alloc = end - start + 2;
+	new_copy = NULL;
+	in_pointer = NULL;
+	out_pointer = NULL;
+
+	for (in_pointer = start; in_pointer < end; in_pointer++)
+		if (*(signed char *)in_pointer <= ' ' || strchr(percentable2, *in_pointer))
+			bytes_to_alloc += (ESCAPED_CHAR_LENGTH - 1);
+
+	new_copy = allocMem(bytes_to_alloc);
+	out_pointer = new_copy;
+	for (in_pointer = start; in_pointer < end; in_pointer++) {
+		if (*(signed char *)in_pointer <= ' ' || strchr(percentable2, *in_pointer)) {
+			*out_pointer++ = '%';
+			*out_pointer++ =
+			    hexdigits[(uchar) (*in_pointer & 0xf0) >> 4];
+			*out_pointer++ = hexdigits[(*in_pointer & 0x0f)];
+		} else
+			*out_pointer++ = *in_pointer;
+	}
+	*out_pointer = '\0';
+	return new_copy;
 }
 
 /* escape & < > for display on a web page */

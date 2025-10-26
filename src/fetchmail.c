@@ -597,6 +597,7 @@ No kidding! I don't understand it either.
 This callback function doesn't use a data block, mailstring is assumed.
 *********************************************************************/
 
+#if 0
 static size_t imap_header_callback(char *i, size_t size,
 				   size_t nitems, void *data)
 {
@@ -612,6 +613,7 @@ static size_t imap_header_callback(char *i, size_t size,
 	}
 	return b;
 }
+#endif
 
 static size_t imap_null_callback(char *i, size_t size,
 				   size_t nitems, void *data)
@@ -620,7 +622,7 @@ static size_t imap_null_callback(char *i, size_t size,
 	return b;
 }
 
-/* after the email has been fetched via pop3 or imap */
+// after the email has been fetched via pop3 or imap
 static void undosOneMessage(void)
 {
 	int j, k;
@@ -973,11 +975,23 @@ abort:
 static bool partread;
 static CURLcode downloadBody(CURL *h, struct FOLDER *f, int uid)
 {
-	char *t;
-	bool retry;
 	CURLcode res;
-	char cust_cmd[80];
+	char *p = percentString(f->path, 0);
+	asprintf(&message_url, "%s%s;UID=%u", mailbox_url, p, uid);
+	nzFree(p);
+//	puts(message_url);
+	setCurlURL(h, message_url);
+	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, NULL);
+	curl_easy_setopt(h, CURLOPT_NOBODY, 0L);
+	res = getMailData(h);
+	undosOneMessage();
+	  nzFree(message_url), message_url = 0;
+// put the url back
+	setCurlURL(h, mailbox_url);
+	return res;
 
+#if 0
+// Here's the old ugly way; I'm keeping it around until I know the new way works.
 	retry = partread = false;
 redown:
 	sprintf(cust_cmd, "UID FETCH %d BODY[]", uid);
@@ -1068,6 +1082,7 @@ afterfetch:
 
 done:
 	return CURLE_OK;
+#endif
 }
 
 // scan through the messages in a folder
