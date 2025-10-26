@@ -6553,7 +6553,7 @@ static int twoLetterG(const char *line, const char **runThis)
 			puts(timestring == emptyString ? "-" : timestring);
 			return true;
 		}
-		if(cw->imapMode2) {
+		if(cw->imapMode2 | cw->imapMode3) {
 			if (cw->dot == 0) {
 				setError(MSG_AtLine0);
 				return false;

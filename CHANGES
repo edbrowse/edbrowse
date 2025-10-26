@@ -1,7 +1,7 @@
 Here are some changes introduced by recent versions of edbrowse.
 
 3.8.14
-ls commands in envelopes mode.
+ls commands in envelopes mode or when reading an email.
 
 3.8.13
 in imap, n does not run off the end of the folder,

@@ -4382,7 +4382,9 @@ void lsEnvelope(const char *lsmode)
 	static const char order[] = "uyftdlz";
 	char *p, *q;
 const char *mark[8];
-	const char *title = (const char *)cw->r_map[cw->dot].text;
+	const Window *pw = cw->prev; // previous window
+	const char *title = (const char *)(cw->imapMode2 ? cw->r_map[cw->dot].text :
+	pw->r_map[pw->dot].text);
 	mark[0] = title;
 	for(i = 1; i < 8; ++i)
 		mark[i] = strchr(mark[i-1], EFS_I) + 1;
