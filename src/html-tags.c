@@ -245,11 +245,21 @@ static int isNonest(const char *name, const struct opentag *k)
 	const char *s, *t;
 	char watch[MAXTAGNAME];
 	const struct opentag *l;
+
 	for(y = specialtags; y->name; ++y)
-		if(stringEqual(name, y->name))
-			break;
-	if(!y->name) return true;
+		if(stringEqual(name, y->name)) break;
+	if(!y->name) {
+// Not on our special list, do we know this tag at all?
+// Unknown tags will be nestable. Consistent with xml.
+		const struct tagInfo *ti;
+		for (ti = availableTags; ti->name[0]; ++ti)
+			if (stringEqual(ti->name, name))
+				return true;
+		return false;
+	}
+
 	if(y->nestable) return false;
+
 // td can be inside td, if there is table in between,
 // second indicates this in-between tag
 	if(!(s = y->second)) return true;
