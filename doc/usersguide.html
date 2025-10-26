@@ -796,6 +796,7 @@ rf : refresh the envelopes in this buffer
 <br> lsl : list the length
 <br> lsz or lss : list the size in round numbers
 <br> lsy : list the subject, although I would expect that is already on the printed line
+<br> lsu : list the uid
 <br> u filename : write this email unformatted to a file
 <br> U filename : same as above but delete the email
 <br> w filename : write this email formatted to a file, and an unformatted copy in ~/.trash/rawmail
@@ -6443,7 +6444,7 @@ The n attribute is not meaningful here, since edbrowse already maintains line nu
 If you are on the envelopes page, you might want to refresh, so you can see them in the new format.
 
 <p>
-Various ls comands print the envelope fields on demand, even if they are not part of the lines in the buffer.
+Various ls commands print the envelope fields on demand, even if they are not part of the lines in the buffer.
 In most situations, from and subject are sufficient, but if you are curious about when this particular email was sent, type lsd to get the date.
 The ls letters are:
 <p>
@@ -6454,6 +6455,7 @@ y subject - but subject is probably already part of the line
 <br>l length
 <br>z consise size
 <br>s consise size, like lss in other contexts
+<br>u uid
 
 <p>
 This is jarringly inconsistent from ls in other contexts, such as directory mode.

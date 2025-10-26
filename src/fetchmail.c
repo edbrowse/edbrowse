@@ -4348,7 +4348,7 @@ static void makeLinesAndUids(const struct FOLDER *f)
 		stringAndChar(&imapLines, &iml_l, '\n');
 		nzFree(p);
 
-		sprintf(uidbuf, "%d|", mif->uid);
+		sprintf(uidbuf, "%d%c", mif->uid, EFS_I);
 		stringAndString(&imapPaths, &imp_l, uidbuf);
 		p = mif->subject;
 		if(!p[0]) p = "?";
@@ -4379,12 +4379,12 @@ static void makeLinesAndUids(const struct FOLDER *f)
 void lsEnvelope(const char *lsmode)
 {
 	int i, j, l;
-	static const char order[] = "yftdlz";
+	static const char order[] = "uyftdlz";
 	char *p, *q;
-const char *mark[7];
+const char *mark[8];
 	const char *title = (const char *)cw->r_map[cw->dot].text;
-	mark[0] = strchr(title, '|') + 1;
-	for(i = 1; i < 7; ++i)
+	mark[0] = title;
+	for(i = 1; i < 8; ++i)
 		mark[i] = strchr(mark[i-1], EFS_I) + 1;
 
 	p = initString(&l);
@@ -4612,8 +4612,8 @@ bool mailDescend(const char *title, char cmd)
 	CURL *h = cw->imap_h;
 	int act = cw->imap_n;
 	int uid = atoi(title);
-	const char *subj = strchr(title, '|') + 1;
-	char *s2 = (char*)strchr(title, EFS_I);
+	const char *subj = strchr(title, EFS_I) + 1;
+	char *s2 = (char*)strchr(subj, EFS_I);
 	const char *path;
 	char *vr;
 	struct MACCOUNT *a = accounts + act - 1;

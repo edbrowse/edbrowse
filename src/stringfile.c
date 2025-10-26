@@ -1265,7 +1265,7 @@ bool lsattrChars(const char *buf, char *dest)
 	bool rc = true;
 	const char *s;
 	char c, *t;
-	const char * ok_chars = cw->imapMode2 ? "yftdlz" : "lstikpmy";
+	const char * ok_chars = cw->imapMode2 ? "uyftdlz" : "lstikpmy";
 	char used[26];
 	memset(used, 0, sizeof(used));
 	t = dest;
