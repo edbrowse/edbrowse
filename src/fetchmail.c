@@ -337,11 +337,11 @@ static int n_folders;
 static char *tf_cbase;		/* base of strings for folder names and paths */
 
 static void folderlistByName(const char *line, uchar *list, uchar *first);
-static bool examineFolder(CURL * handle, struct FOLDER *f, bool dostats);
+static bool examineFolder(CURL * h, struct FOLDER *f, bool dostats);
 
 // This routine mucks with the passed in string, which was allocated
 // to receive data from the imap server. So leave it allocated.
-static void setFolders(CURL * handle)
+static void setFolders(CURL * h)
 {
 	struct FOLDER *f;
 	char *s, *t;
@@ -451,7 +451,7 @@ static void setFolders(CURL * handle)
 		if(active_a->maskactive && !active_a->maskfolder[i + 1])
 			f->skip = true;
 		if(!f->skip) {
-			examineFolder(handle, f, true);
+			examineFolder(h, f, true);
 			continue;
 		}
 		if(ismc) continue;
@@ -596,24 +596,6 @@ imap emails come in through the headers, not the data.
 No kidding! I don't understand it either.
 This callback function doesn't use a data block, mailstring is assumed.
 *********************************************************************/
-
-#if 0
-static size_t imap_header_callback(char *i, size_t size,
-				   size_t nitems, void *data)
-{
-	size_t b = nitems * size;
-	int dots1, dots2;
-	dots1 = mailstring_l / CHUNKSIZE;
-	stringAndBytes(&mailstring, &mailstring_l, i, b);
-	dots2 = mailstring_l / CHUNKSIZE;
-	if (dots1 < dots2) {
-		for (; dots1 < dots2; ++dots1)
-			putchar('.');
-		fflush(stdout);
-	}
-	return b;
-}
-#endif
 
 static size_t imap_null_callback(char *i, size_t size,
 				   size_t nitems, void *data)
@@ -989,100 +971,6 @@ static CURLcode downloadBody(CURL *h, struct FOLDER *f, int uid)
 // put the url back
 	setCurlURL(h, mailbox_url);
 	return res;
-
-#if 0
-// Here's the old ugly way; I'm keeping it around until I know the new way works.
-	retry = partread = false;
-redown:
-	sprintf(cust_cmd, "UID FETCH %d BODY[]", uid);
-	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, cust_cmd);
-	mailstring = initString(&mailstring_l);
-
-/*********************************************************************
-I wanted to turn the write function off here, because we don't need it.
-	curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, NULL);
-	curl_easy_setopt(handle, CURLOPT_WRITEDATA, NULL);
-But turning it off and leaving HEADERFUNCTION on causes a seg fault,
-I have no idea why.
-	curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, imap_null_callback);
-doesn't seg fault but doesn't change anything either.
-I have to leave them both on.
-Unless I write more specialized code, this brings in both data and header info,
-so I have to strip some things off after the fact.
-You'll see this after the perform function runs.
-*********************************************************************/
-
-//	curl_easy_setopt(h, CURLOPT_WRITEFUNCTION, imap_null_callback);
-	curl_easy_setopt(h, CURLOPT_HEADERFUNCTION, imap_header_callback);
-	callback_data.buffer = initString(&callback_data.length);
-	cerror[0] = 0;
-	res = curl_easy_perform(h);
-// and put things back
-//	curl_easy_setopt(h, CURLOPT_WRITEFUNCTION, eb_curl_callback);
-	curl_easy_setopt(h, CURLOPT_HEADERFUNCTION, NULL);
-// If you print callback_data.buffer, it is the fetch command, or commands.
-// Things that must be lopped off.
-//	printf("%s", callback_data.buffer);
-	nzFree(callback_data.buffer);
-	undosOneMessage();
-	if (res != CURLE_OK) {
-		if(retry) { // this is the second attempt
-// I'm just gonna take what we got, it's better than nothing.
-// Well, unless we got nothing!
-			if(mailstring_l < 4000) {
-				nzFree(mailstring), mailstring = 0;
-				return res;
-			}
-			partread = true;
-			i_printf(MSG_PartRead);
-			goto afterfetch;
-		}
-		nzFree(mailstring), mailstring = 0;
-		if(!refolder(h, f, res))
-			return res;
-		retry = true;
-		goto redown;
-	}
-afterfetch:
-#if 0
-	t = 0; FILE *z; z = fopen("msb", "we"); fprintf(z, "%s", mailstring); fclose(z);
-#endif
-
-// have to strip fetch BODY line off the front,
-// and take ) A018 OK stuff off the end.
-// If this lopping off code doesn't work, #if1 the above to see the original mailstring
-	t = strchr(mailstring, '\n');
-	if (t) {
-// should always happen
-		++t;
-		mailstring_l -= (t - mailstring);
-		strmove(mailstring, t);
-	}
-	t = mailstring + mailstring_l;
-	if (t > mailstring && t[-1] == '\n')
-		t[-1] = 0, --mailstring_l;
-	t = strrchr(mailstring, '\n');
-	if(!t || !strstr(t, " OK ")) goto done;
-// we should always be here; lop off last OK line
-// but first, check for reconnect, for debugging purposes
-	if(t[1] != active_a->lastletter) {
-		active_a->lastletter = t[1];
-		debugPrint(2, "connect %c", t[1]);
-	}
-	*t = 0, mailstring_l = t - mailstring;
-	while((t = strrchr(mailstring, '\n')) &&
-	(strstr(t, " FETCH (") ||
-	strstr(t, " EXISTS"))) {
-// lop off last FETCH line
-		*t = 0, mailstring_l = t - mailstring;
-	}
-	t = strrchr(mailstring, '\n');
-	if(t && t[1] == ')' && t[2] == 0) // this should always happen
-		t[1] = 0, --mailstring_l;
-
-done:
-	return CURLE_OK;
-#endif
 }
 
 // scan through the messages in a folder
@@ -1413,7 +1301,6 @@ redelete:
 			goto redelete;
 		}
 		mif->gone = true;
-		debugPrint(3, "` %d EXPUNGE", mif->uid);
 		if(!expunge(handle)) goto abort;
 	}
 
@@ -1535,9 +1422,7 @@ range:
 	if(*imapLines) free(t);
 	res = getMailData(handle);
 	if (res != CURLE_OK) goto abort;
-#if 0
-	FILE *z; z = fopen("ms1", "we"); fprintf(z, "%s", mailstring); fclose(z);
-#endif
+//	FILE *z; z = fopen("ms1", "we"); fprintf(z, "%s", mailstring); fclose(z);
 
 	t = mailstring;
 	for (j = 0; j < f->nfetch; ++j) {
@@ -1603,9 +1488,7 @@ abort:
 		nzFree(mailstring), mailstring = 0;
 		return false;
 	}
-#if 0
-	FILE *z; z = fopen("ms2", "we"); fprintf(z, "%s", mailstring); fclose(z);
-#endif
+//	FILE *z; z = fopen("ms2", "we"); fprintf(z, "%s", mailstring); fclose(z);
 
 // Don't free mailstring, we're using pieces of it
 	f->cbase = mailstring;
@@ -1728,9 +1611,7 @@ doreply:
 			goto doref;
 #endif
 
-#if 0
-		printf("%d,%d:%s|%s|%s|%s|%s\n", j, mif->seqno, mif->from, mif->reply, mif->to, mif->prec, mif->subject);
-#endif
+//		printf("%d,%d:%s|%s|%s|%s|%s\n", j, mif->seqno, mif->from, mif->reply, mif->to, mif->prec, mif->subject);
 
 doref:
 /* find the reference string, for replies */
@@ -1926,38 +1807,39 @@ static int mailu8_l;
 static CURL *newFetchmailHandle(const char *username, const char *password)
 {
 	CURLcode res;
-	CURL *handle = curl_easy_init();
-	if (!handle)
+	CURL *h = curl_easy_init();
+	if (!h)
 		i_printfExit(MSG_LibcurlNoInit);
 
 	if(curlCiphers)
-		curl_easy_setopt(handle, CURLOPT_SSL_CIPHER_LIST, curlCiphers);
+		curl_easy_setopt(h, CURLOPT_SSL_CIPHER_LIST, curlCiphers);
 	if(curlIPV == 4)
-		curl_easy_setopt(handle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+		curl_easy_setopt(h, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 	if(curlIPV == 6)
-		curl_easy_setopt(handle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V6);
-	curl_easy_setopt(handle, CURLOPT_ERRORBUFFER, cerror);
-	curl_easy_setopt(handle, CURLOPT_CONNECTTIMEOUT, mailTimeout);
-	curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, eb_curl_callback);
-	curl_easy_setopt(handle, CURLOPT_WRITEDATA, &callback_data);
-	curl_easy_setopt(handle, CURLOPT_VERBOSE, 1l);
-	curl_easy_setopt(handle, CURLOPT_DEBUGFUNCTION, ebcurl_debug_handler);
-	curl_easy_setopt(handle, CURLOPT_DEBUGDATA, &callback_data);
+		curl_easy_setopt(h, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V6);
+	curl_easy_setopt(h, CURLOPT_ERRORBUFFER, cerror);
+	curl_easy_setopt(h, CURLOPT_BUFFERSIZE, 0x00000l);
+	curl_easy_setopt(h, CURLOPT_CONNECTTIMEOUT, mailTimeout);
+	curl_easy_setopt(h, CURLOPT_WRITEFUNCTION, eb_curl_callback);
+	curl_easy_setopt(h, CURLOPT_WRITEDATA, &callback_data);
+	curl_easy_setopt(h, CURLOPT_VERBOSE, 1l);
+	curl_easy_setopt(h, CURLOPT_DEBUGFUNCTION, ebcurl_debug_handler);
+	curl_easy_setopt(h, CURLOPT_DEBUGDATA, &callback_data);
 
-	curl_netrc(handle);
+	curl_netrc(h);
 	if(username) {
-		res = curl_easy_setopt(handle, CURLOPT_USERNAME, username);
+		res = curl_easy_setopt(h, CURLOPT_USERNAME, username);
 		if (res != CURLE_OK)
 			ebcurl_setError(res, mailbox_url, 1, cerror);
 	}
 
 	if(password) {
-		res = curl_easy_setopt(handle, CURLOPT_PASSWORD, password);
+		res = curl_easy_setopt(h, CURLOPT_PASSWORD, password);
 		if (res != CURLE_OK)
 			ebcurl_setError(res, mailbox_url, 2, cerror);
 	}
 
-	return handle;
+	return h;
 }
 
 static void get_mailbox_url(const struct MACCOUNT *a)
@@ -2869,9 +2751,7 @@ static void ctExtras(struct MHINFO *w, const char *s, const char *t)
 static void isoDecode(char *vl, char **vrp)
 {
 	char *vr = *vrp;
-#if 0
-	char *z = pullString1(vl,vr); printf("iso<%s>\n", z); nzFree(z);
-#endif
+//	char *z = pullString1(vl,vr); printf("iso<%s>\n", z); nzFree(z);
 	char *start, *end;	/* section being decoded */
 	char *s, *t, c, d, code;
 	int len;
@@ -3684,9 +3564,7 @@ static void formatMail(struct MHINFO *w, bool top)
 /* If mail is not in html, reformat it */
 		if (start < end) {
 			if (ct == CT_TEXT) {
-#if 0
-				char *z = pullString1(start, end); printf("%s", z); nzFree(z);
-#endif
+//				char *z = pullString1(start, end); printf("%s", z); nzFree(z);
 				breakLineSetup();
 				if (breakLine(start, end - start, &newlen)) {
 					start = breakLineResult;
