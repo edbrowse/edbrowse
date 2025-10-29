@@ -1599,7 +1599,7 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 	}
 
 	if (!rc) {
-/* should never happen */
+// should never happen
 		fileSize = -1;
 		cw->browseMode = cf->browseMode = true;
 		return false;
@@ -1612,6 +1612,7 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 	cw->mustrender = false;
 	time(&cw->nextrender);
 	cw->nextrender += 2;
+	if(cw->prev && cw->prev->imapMode2) cw->imapMode3 = true;
 	return true;
 }
 
