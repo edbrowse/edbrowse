@@ -3273,7 +3273,7 @@ So check for serverData null here. Once again we pop the frame.
 			return 0;
 		}
 	} else {
-		serverData = cloneString("<body></body>");
+		serverData = cloneString("<head></head><body></body>");
 		serverDataLen = strlen(serverData);
 	}
 
