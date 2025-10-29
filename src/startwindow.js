@@ -255,6 +255,7 @@ return s;
 
 if(top == window) {
 swm2("step$l", 0)
+swm2("step$val", "")
 swm2("step$go", "")
 // First line of js in the base file of your snapshot might be
 // step$l = 0, step$go = "c275";
@@ -268,6 +269,13 @@ Object.defineProperty(window, "step$go", {get:function(){return top.step$go}, se
 }
 
 swm("$zct", {}) // counters for trace points
+function trace$ch(k) {
+var c=($zct[k]>=0?++$zct[k]:($zct[k]=1));
+step$val = k+":"+c;
+var trip=false;
+if(k === step$go||typeof step$exp==='string'&&eval(step$exp)) trip = true;
+return trip ? 2 : step$l;
+}
 
 sdm("open", function() { return this })
 
