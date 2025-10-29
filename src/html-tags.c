@@ -123,6 +123,7 @@ static const struct specialtag {
 {innerhtmltag,0,1, 0, 0},
 {innerbodytag,0,1, 0, 0},
 {"script", 0, 0, 1, 0},
+{"noscript", 0, 0, 1, 0},
 {"comment", 0, 0, 1, 0},
 {"style", 0, 0, 1, 0},
 {"source", 1, 0, 0, 0},
@@ -1094,11 +1095,13 @@ past_html_close_semantics:
 					scannerInfo1("skip head section\nin head\npost head", 0);
 				} else {
 					scannerInfo1("initiate and terminate head", 0);
+					debugPrint(3, "head section missing");
 					makeTag(headtag, headtag, false, lt);
 					makeTag(headtag, headtag, true, lt);
 				}
 			} else if(headbody == 2) {
 				scannerInfo1("terminate head", 0);
+				debugPrint(3, "premature end to head section");
 				makeTag(headtag, headtag, true, lt);
 			}
 		} else pushState(lt, true);
@@ -1436,6 +1439,7 @@ static void pushState(const char *start, bool head_ok)
 	}
 	if(headbody == 2 && !head_ok) {
 		scannerInfo1("terminate head", 0);
+		debugPrint(3, "premature end to head section");
 		makeTag(headtag,headtag, true, start);
 	}
 	if(headbody == 3) {
