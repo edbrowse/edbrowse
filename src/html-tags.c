@@ -1106,10 +1106,16 @@ past_html_close_semantics:
 			}
 		} else pushState(lt, true);
 		if(stringEqual(lowname, bodytag)) {
-			if(headbody > 4) { scannerError1("sequence reset", 0); headbody = 3; goto tag_ok; }
+			if(headbody > 4) {
+				scannerError1("sequence reset", 0);
+				headbody = 3;
+				debugPrint(3, "body after body");
+				goto tag_ok;
+			}
 			if(headbody == 4) {
 				strcpy(tagname, innerbodytag), ++bodycount;
 				strcpy(lowname, innerbodytag);
+				debugPrint(3, "body within body");
 			}
 			goto tag_ok;
 		}
