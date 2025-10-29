@@ -1446,6 +1446,10 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 		}
 	}
 
+// If subject just happens to end in mp3 or such,
+// we don't want to run an email through a player.
+	if(cw->imapMode3) mt = 0;
+
 	if (mt && !mt->outtype) {
 		setError(MSG_NotConverter);
 		return false;
