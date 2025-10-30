@@ -2800,7 +2800,6 @@ ebcurl_debug_handler(CURL * handle, curl_infotype info_desc, char *data,
 // We need to explicitly cast as apparently curl wants to pass us a void type pointer these days
         struct i_get *g = (struct i_get *) client;
 
-
 // There's a special case where this function is used
 // by the imap client to see if the server is move capable.
 // Unfortunately this check runns all the while we are at db4, even for http etc,
@@ -2815,6 +2814,17 @@ ebcurl_debug_handler(CURL * handle, curl_infotype info_desc, char *data,
 				break;
 			}
 	}
+
+	if (info_desc == CURLINFO_HEADER_IN &&
+	    size > 12 && !strncmp(data + 1, "002 NO ", 7)) {
+		const char *s = data + 8;
+		const char *t = data + size;
+		while(isspaceByte(t[-1])) --t;
+		char *v = pullString(s, t - s);
+		puts(v);
+		nzFree(v);
+	}
+
 	if (debugLevel < 4)
 		return 0;
 
