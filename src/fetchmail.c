@@ -4523,7 +4523,6 @@ bool mailDescend(const char *title, char cmd)
 	path = cw->baseDirName;
 	f0.path = path; // that's all we need in f0
 
-// downloadBody has a retry feature in it
 	res = downloadBody(h, &f0, uid);
 	if(res != CURLE_OK) {
 // A partial read of a big email doesn't return the error, though it does print an error.
@@ -4564,7 +4563,8 @@ bool mailDescend(const char *title, char cmd)
 
 	if(!emode) {
 		browseCurrentBuffer(NULL, (cmd == 't'));
-	}
+	} else
+		cw->imapMode3 = false;
 	if(!showcount) fileSize = -1; // don't print byte count
 	return true;
 }
