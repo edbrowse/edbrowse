@@ -5,6 +5,8 @@ ls commands in envelopes mode or when reading an email.
 
 Fix bug in imap download of large emails.
 
+Support for icloud imap, which is a slightly different format.
+
 3.8.13
 in imap, n does not run off the end of the folder,
 just as p does not back up off the end of the folder.

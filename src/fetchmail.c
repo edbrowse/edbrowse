@@ -346,7 +346,7 @@ static void setFolders(CURL * h)
 	struct FOLDER *f;
 	char *s, *t;
 	char *child, *lbrk;
-	char qc;		/* quote character */
+	char qc;		// quote character
 	int i;
 
 	imapLines = initString(&iml_l);
@@ -358,36 +358,40 @@ static void setFolders(CURL * h)
 	n_folders = 0;
 
 	s = mailstring;
-	while ((t = strstr(s, "LIST (\\"))) {
-		s = t + 7;
+	while ((t = strcasestr(s, "LIST ("))) {
+		s = t + 6;
 		++n_folders;
 	}
 
 	topfolders = allocZeroMem(n_folders * sizeof(struct FOLDER));
-
 	f = topfolders;
 	s = mailstring;
-	while ((t = strstr(s, "LIST (\\"))) {
+	while ((t = strcasestr(s, "LIST ("))) {
 		s = t + 6;
 		lbrk = strpbrk(s, "\r\n");	// line break
-		if (!lbrk)
-			continue;
-		child = strstr(s, "Children");
+		if (!lbrk) continue;
+		f->name = emptyString;
+		child = s;
+		if(*s == ')') // close this section, no children no name
+			goto getpath;
+		if(*s != '\\') continue;
+// s now points to backslash
+		child = strcasestr(s, "Children");
 		if (child && child < lbrk) {
-/* HasChildren or HasNoChildren */
+// HasChildren or HasNoChildren
 			f->children = (child[-1] == 's');
 			t = child + 8;
 		} else {
 // Try another one.
-			child = strstr(s, "Inferiors");
-			if (!child || child > lbrk)
-				continue;
-			t = child + 10;
+			child = strcasestr(s, "Inferiors");
+			if (child && child < lbrk) {
+				f->children = (child[-1] != 'o');
+				t = child + 9;
+			}else child = t = s;
 		}
 		while (*t == ' ') ++t;
-		while (*child != '\\')
-			--child;
-		if (child < s)	/* should never happen */
+		while (*child != '\\') --child;
+		if (child < s)	// should never happen
 			child = s;
 		strmove(child, t);
 		lbrk = strpbrk(s, "\r\n");	// recalculate
@@ -408,24 +412,22 @@ static void setFolders(CURL * h)
 				while(t > f->name && t[-1] == ' ') --t;
 				*t = 0;
 			}
-/* the null folder at the top, like /, isn't really a folder. */
+// the null folder at the top, like /, isn't really a folder.
 			if (stringEqual(f->name, "Noselect"))
 				continue;
-		} else
-			f->name = emptyString;
-/* now get the path */
+		}
+// now get the path
+getpath:
 		t = lbrk;
 		qc = ' ';
 		s = t - 1;
 		if (*s == '"')
 			qc = '"', --s, --t;
 		for (; s > child && *s != qc; --s) ;
-		if (s == child)
-			continue;
+		if (s == child) continue;
 		f->path = ++s;
 		*t = 0;
-		if (s == t)
-			continue;
+		if (s == t) continue;
 		s = t + 1;
 // successfully built this folder, move on to the next one
 		++f;

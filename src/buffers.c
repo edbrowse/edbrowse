@@ -7300,6 +7300,11 @@ after_ib:
 		goto failg;
 	}
 
+	if(cw->irciMode | cw->ircoMode && cmd == 'g' && !*line) {
+		setError(MSG_IrcCommand, cmd);
+		goto failg;
+	}
+
 	if (cw->imapMode1 && !strchr(imap1_cmd, cmd)) {
 		setError(MSG_ImapCommand, cmd);
 		goto failg;
