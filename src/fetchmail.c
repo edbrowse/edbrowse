@@ -883,7 +883,7 @@ static bool bulkMoveDelete(CURL * handle, struct FOLDER *f,
 		}
 
 		if (subkey == 'd' || delflag) {
-			sprintf(cust_cmd, "uid STORE %d +Flags \\Deleted", mif->uid);
+			sprintf(cust_cmd, "UID STORE %d +FLAGS (\\DELETED)", mif->uid);
 			curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, cust_cmd);
 			res = getMailData(handle);
 			nzFree(mailstring);
@@ -1261,7 +1261,7 @@ re_move:
 	if(key == 'r' || key == 'R') {
 		i_puts(MSG_MailRead + (key == 'R'));
 reunread:
-		sprintf(cust_cmd, "UID STORE %d %cFlags \\Seen", mif->uid, (key == 'r' ? '+' : '-'));
+		sprintf(cust_cmd, "UID STORE %d %cFLAGS (\\SEEN)", mif->uid, (key == 'r' ? '+' : '-'));
 		curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, cust_cmd);
 		res = getMailData(handle);
 		nzFree(mailstring);
@@ -1292,7 +1292,7 @@ redelete:
 			g = topfolders + active_a->dxtrash - 1;
 			goto re_move;
 		}
-		sprintf(cust_cmd, "UID STORE %d +Flags \\Deleted", mif->uid);
+		sprintf(cust_cmd, "UID STORE %d +FLAGS (\\DELETED)", mif->uid);
 		curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, cust_cmd);
 		res = getMailData(handle);
 		nzFree(mailstring);
@@ -4633,7 +4633,7 @@ baddest:
 			stringAndNum(&imapLines, &iml_l, uid);
 			stringAndChar(&imapLines, &iml_l, (l1 < l2 ? ',' : ' '));
 		}
-		stringAndString(&imapLines, &iml_l, "+Flags \\Deleted");
+		stringAndString(&imapLines, &iml_l, "+FLAGS (\\DELETED)");
 // I don't do the retry here; we just succeeded above so we should be ok.
 		curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, imapLines);
 		nzFree(imapLines), imapLines = 0;
@@ -4677,7 +4677,7 @@ bool imapDelete(int l1, int l2, char cmd)
 	}
 
 	imapLines = initString(&iml_l);
-	stringAndString(&imapLines, &iml_l, "uid STORE ");
+	stringAndString(&imapLines, &iml_l, "UID STORE ");
 // loop over lines in range, is there a limit to the length of the resulting
 // imap line, with its comma separated list of uids?
 	for(l0 = l1; l1 <= l2; ++l1) {
@@ -4686,7 +4686,7 @@ bool imapDelete(int l1, int l2, char cmd)
 		stringAndNum(&imapLines, &iml_l, uid);
 		stringAndChar(&imapLines, &iml_l, (l1 < l2 ? ',' : ' '));
 	}
-	stringAndString(&imapLines, &iml_l, "+Flags \\Deleted");
+	stringAndString(&imapLines, &iml_l, "+FLAGS (\\DELETED)");
 
 	rc = tryTwice(h, cw->baseDirName, imapLines);
 	nzFree(imapLines), imapLines = 0;
@@ -4735,7 +4735,7 @@ baddest:
 	if(cmd != 'm' || a->move_capable) return true;
 // move is copy + delete, this is the delete part.
 // You'll see it again in the next function.
-	asprintf(&custom, "uid STORE %s +Flags \\Deleted", uids);
+	asprintf(&custom, "UID STORE %s +FLAGS (\\DELETED)", uids);
 // I don't do the retry here; we just succeeded above so we should be ok.
 	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, custom);
 	nzFree(custom);
@@ -4769,7 +4769,7 @@ bool imapDeleteG(const char *uids)
 		return imapMovecopyG('m', uids, destn);
 	}
 
-	asprintf(&custom, "uid STORE %s +Flags \\Deleted", uids);
+	asprintf(&custom, "UID STORE %s +FLAGS (\\DELETED)", uids);
 	rc = tryTwice(h, cw->baseDirName, custom);
 	nzFree(custom);
 	if(!rc) return false;
@@ -4790,7 +4790,7 @@ bool imapMarkRead(int l1, int l2, char sign)
 
 	if(sign == 0) sign = '+';
 	imapLines = initString(&iml_l);
-	stringAndString(&imapLines, &iml_l, "uid STORE ");
+	stringAndString(&imapLines, &iml_l, "UID STORE ");
 // loop over lines in range, is there a limit to the length of the resulting
 // imap line, with its comma separated list of uids?
 	for(l0 = l1; l1 <= l2; ++l1) {
@@ -4800,7 +4800,7 @@ bool imapMarkRead(int l1, int l2, char sign)
 		stringAndChar(&imapLines, &iml_l, (l1 < l2 ? ',' : ' '));
 	}
 	stringAndChar(&imapLines, &iml_l, sign);
-	stringAndString(&imapLines, &iml_l, "Flags \\Seen");
+	stringAndString(&imapLines, &iml_l, "FLAGS (\\SEEN)");
 
 	rc = tryTwice(h, cw->baseDirName, imapLines);
 	nzFree(imapLines), imapLines = 0;
@@ -4845,7 +4845,7 @@ baddest:
 	if(!rc) return false;
 
 	if(cmd == 'm' && !a->move_capable) {
-		sprintf(cust_cmd, "uid STORE %d +Flags \\Deleted", uid);
+		sprintf(cust_cmd, "UID STORE %d +FLAGS (\\DELETED)", uid);
 		curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, cust_cmd);
 		res = getMailData(h);
 		nzFree(mailstring), mailstring = 0;
@@ -4896,7 +4896,7 @@ bool imapDeleteWhileReading(void)
 		return imapMovecopyWhileReading('m', destn);
 	}
 
-	sprintf(cust_cmd, "uid STORE %d +Flags \\Deleted", uid);
+	sprintf(cust_cmd, "UID STORE %d +FLAGS (\\DELETED)", uid);
 	rc = tryTwice(h, pw->baseDirName, cust_cmd);
 	if(!rc) return false;
 	 expunge(h);
