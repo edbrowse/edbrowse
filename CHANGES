@@ -1,14 +1,17 @@
 Here are some changes introduced by recent versions of edbrowse.
 
 3.8.14
-ls commands in envelopes mode or when reading an email.
+ls commands in envelope mode, or when reading an email.
 
 Fix bug in imap download of large emails.
 
-Support for icloud imap, which is a slightly different format.
+Support for the icloud imap server,
+which implements a stricter adherence to the standard syntax.
+
+Indicate an incoming private irc message with *, so you can respond in kind.
 
 3.8.13
-in imap, n does not run off the end of the folder,
+in imap standalone, n does not run off the end of the folder,
 just as p does not back up off the end of the folder.
 
 Support for gophers://

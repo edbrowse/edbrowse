@@ -3785,6 +3785,7 @@ static void ircSend(const Window *win, char *fmt, ...)
 	vsnprintf(irc_out, sizeof(irc_out) - 2, fmt, ap);
 	va_end(ap);
 	l = strlen(irc_out);
+	debugPrint(4, "irco: %s", irc_out);
 	strcpy(irc_out + l, "\r\n");
 	l += 2;
 
@@ -3798,8 +3799,8 @@ static void ircSend(const Window *win, char *fmt, ...)
 		write(win->irc_fd, irc_out, l);
 }
 
-// skip ahead to c
-static char*ircSkip(char *s, char c)
+// chomp c and return pointer after c
+static char*ircChomp(char *s, char c)
 {
 	while(*s != c && *s != '\0')
 		s++;
@@ -3818,7 +3819,7 @@ static char * ircEat(char *s, int (*p)(int), int r)
 
 // This uses addTextToBuffer to place the line, and so,
 // cw has to be set to the receiving window.
-static void ircAddLine(Window *win, const char *channel, bool show, const char *fmt, ...)
+static void ircAddLine(Window *win, const char *channel, bool show, bool priv, const char *fmt, ...)
 {
 	unsigned l1, l2;
 	va_list ap;
@@ -3827,14 +3828,13 @@ static void ircAddLine(Window *win, const char *channel, bool show, const char *
 	va_end(ap);
 	strcat(irc_out, "\n");
 // If leading > I will assume it's a system message,
-// and damn annoying to see the system name before each one of these.
+// and it's annoying to see the system name before each one of these.
 // If you happen to send out a message that starts with >, well then, false positive.
 	if(channel && show && irc_out[0] != '>') {
 // only if there's room, which there should be!
 		l1 = strlen(channel), l2 = strlen(irc_out);
-		if(l1 + l2 < sizeof irc_out) {
+		if(l1 + l2 + 1 < sizeof irc_out) {
 // This is quick and dirty, just paste them together.
-// We may do something more nuanced later.
 			strmove(irc_out + l1, irc_out);
 			memcpy(irc_out, channel, l1);
 		}
@@ -3863,6 +3863,7 @@ regular: ;
 	if(l2 < 2) l2 = 2;
 	char *a4 = irc_out + l2 - 2;
 	if(a1 && a2 && a3 && a1 < a2 && a2 < a3 && a3 < a4 && *a4 == '\01') {
+// indicate an action.
 		strmove(a4, a4+1);
 		a3 += 7;
 		skipWhite2(&a3);
@@ -3872,7 +3873,10 @@ regular: ;
 			strmove(a1, a1 + 1);
 		else *a1 = ' ';
 	}
-	addTextToBuffer((uchar*)irc_out, strlen(irc_out), cw->dol, false);
+	l2 = strlen(irc_out);
+	if(priv && l2 < sizeof(irc_out) - 1)
+		strmove(irc_out + 1, irc_out), irc_out[0] = '*', ++l2;
+	addTextToBuffer((uchar*)irc_out, l2, cw->dol, false);
 
 // opening the log every time is a bit inefficient, but this doesnn't
 // happen very often.
@@ -3881,7 +3885,7 @@ regular: ;
 		time_t now;
 		time(&now);
 // chop off \n so we can add in the time stamp
-		irc_out[strlen(irc_out) - 1] = 0;
+		irc_out[l2 - 1] = 0;
 		fprintf(f, "%s|%lld\n", irc_out, (long long)now);
 		fclose(f);
 	}
@@ -3892,19 +3896,20 @@ static void ircPrepLine(Window *win, Window *wout, char *line)
 	Window *save_cw;
 	char *usr, *par, *txt;
 	usr = win->f0.hbase;
-	if(!line || !*line)
-		return;
+	if(!line) return;
+// lines come in from irc ending in crlf
+	ircChomp(line, '\r');
+	if(!line[0]) return;
+	debugPrint(4, "irci: %s", line);
 	if(line[0] == ':') {
 		usr = line + 1;
-		line = ircSkip(usr, ' ');
+		line = ircChomp(usr, ' ');
 		if(line[0] == '\0')
 			return;
-		ircSkip(usr, '!');
+		ircChomp(usr, '!');
 	}
-// lines come in from irc ending in crlf
-	ircSkip(line, '\r');
-	par = ircSkip(line, ' ');
-	txt = ircSkip(par, ':');
+	par = ircChomp(line, ' ');
+	txt = ircChomp(par, ':');
 	trimWhite(par);
 	if(stringEqual("PONG", line)) {
 		debugPrint(4, "pong back");
@@ -3914,12 +3919,15 @@ static void ircPrepLine(Window *win, Window *wout, char *line)
 // going to call ircAddLine below
 	save_cw = cw, cw = wout;
 	if(stringEqual("PRIVMSG", line)) {
-		ircAddLine(win, par, win->showchan, "<%s> %s", usr, txt);
+		ircAddLine(win, par, win->showchan,
+// I hope this is a valid test for you as recipient, hence a private message
+		stringEqual(par, win->ircNick),
+		"<%s> %s", usr, txt);
 	} else if(stringEqual("PING", line)) {
 		ircSend(win, "PONG %s", txt);
 		debugPrint(4, "PING PONG %s", txt);
 	} else {
-		ircAddLine(win, usr, win->showchan, ">< %s (%s): %s", line, par, txt);
+		ircAddLine(win, usr, win->showchan, false, ">< %s (%s): %s", line, par, txt);
 		if(stringEqual("NICK", line) && stringEqual(usr, win->ircNick)) {
 			nzFree(win->ircNick);
 			win->ircNick = cloneString(txt);
@@ -3943,13 +3951,13 @@ static void ircMessage(Window *wout, const char *receiver, const char *msg)
 		actionflag = true;
 	cw = wout;
 	if(!actionflag)
-		ircAddLine(win, receiver, win->showchan, "<%s> %s",
+		ircAddLine(win, receiver, win->showchan, false, "<%s> %s",
 		(win->ircNick ? win->ircNick : emptyString), msg);
 	else if(receiver && win->showchan)
-		ircAddLine(win, receiver, win->showchan, " %s %s",
+		ircAddLine(win, receiver, win->showchan, false, " %s %s",
 		(win->ircNick ? win->ircNick : emptyString), msg + 4);
 	else
-		ircAddLine(win, receiver, win->showchan, "%s %s",
+		ircAddLine(win, receiver, win->showchan, false, "%s %s",
 		(win->ircNick ? win->ircNick : emptyString), msg + 4);
 	cw = win;
 	if(actionflag)
@@ -4007,7 +4015,7 @@ static void ircPrepSend(Window *win, Window *wout, char *s)
 	char c, *p;
 	if(s[0] == '\0')
 		return;
-	ircSkip(s, '\n');
+	ircChomp(s, '\n');
 	if(s[0] != ':') {
 		ircMessage(wout, win->ircChannel, s);
 		return;
@@ -4161,7 +4169,7 @@ teardown:
 	if(w2) {
 		Window *save_cw = cw;
 		cw = w2;
-		ircAddLine(w, w->ircChannel, true, emsg);
+		ircAddLine(w, w->ircChannel, true, false, emsg);
 		cw = save_cw;
 		if(--w2->ircCount == 0) {
 			w2->ircoMode = false;
@@ -4238,13 +4246,13 @@ bool ircSetup(char *line)
 	}
 	if(!isalphaByte(*line)) goto usage;
 	domain = line;
-	nick = ircSkip(line, ' ');
+	nick = ircChomp(line, ' ');
 	if(!*nick) goto usage;
-	join = ircSkip(nick, ' ');
+	join = ircChomp(nick, ' ');
 	if(!*join) join = 0;
-	password = ircSkip(nick, ':');
+	password = ircChomp(nick, ':');
 	if(!*password) password = 0;
-	p = ircSkip(domain, ':');
+	p = ircChomp(domain, ':');
 	win->ircSecure = false;
 	if(*p) {
 		if(*p == '*' && p[1] == 0) {

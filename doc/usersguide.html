@@ -6614,9 +6614,9 @@ Note, these groups are also called channels in the irc world. I may use these te
 Sessions 8 and 9 are created or commandeered for this irc chat,
 and you will be left in session 9.
 Session 9 is readonly; although you can delete lines if you wish.
-IRC comments are appended to this buffer as they arrive,
+IRC chat is appended to this buffer as it rolls in,
 and to the log if irc logging is enabled.
-If you are at the end of the buffer, just hit return to see if anything new has come in.
+If you are at the end of the buffer, hit return to see if anything new has come in.
 Switch to other sessions, do some work, then go back to session 9 and hit return.
 You may want an instance of edbrowse running in its own console, to manage all your irc sessions.
 
@@ -6627,7 +6627,7 @@ The text will go away as it is sent to the server.
 Switch to session 9 and you will see your comments, and then any replies from your friends.
 Switch to session 8 to send more text, and so on.
 You will probably want a function to switch to session 8 on your behalf, and send one line as entered.
-You can switch to session 8 manually when you want to compose a paragraph, or read in some lines that you want to send, or otherwise use the power of the editor.
+You can still switch to session 8 manually when you want to compose a paragraph, or read in some lines that you want to send, or otherwise use the power of the editor.
 
 <p>
 If you quit either session, the socket is closed, and the other session is no longer in irc mode. It is simply text.
@@ -6656,10 +6656,74 @@ When you write text back into session 8, the at syntax adds to the buffer, and d
 You can then get rid of your nickname at the start of every line, and send it again.
 
 <p>
+Lines in the output buffer have the format recipient&lt;sender&gt; message.
+The flow is right to left: message through the sender to the recipient.
+The recipient is optional.
+Recipient is usually the channel, which you might not want to see over and over again.
+The showchan command, in the send buffer, toggles the display of recipient.
+
+<p>
+Typical lines, written by you, with or without channels, look like this.
+<p>
+channel&lt;you&gt; message
+<br>
+&lt;you&gt; message
+
+<p>
+typical lines, from your friend, with or without channels, look like this.
+
+<p>
+channel&lt;friend&gt; message
+<br>
+&lt;friend&gt; message
+
+<p>
+Note that both you and your friend are sending to the group, where everybody can read it.
+The group is the recipient.
+If you send a private message to your friend, using the :m option, your lines to him look like this.
+
+<p>
+friend&lt;you</gt; message
+<br>
+&lt;you</gt; message
+
+<p>
+If he sends a private message back to you, the lines look like this.
+
+<p>
+*you&lt;friend&gt; message
+<br>
+*&lt;friend&gt; message
+
+<p>
+The star in the first line is redundant.
+If the channel is you, and not the group, then the message is a private message for you.
+Still, the star is a reminder, and consistent.
+When the channel, or more accurately, the recipient, is suppressed,
+because it is almost always the group,
+then the star tells you this is a private message to you.
+Otherwise you would not know.
+
+<p>
+System messages are sent to you alone, but there is no recipient inside, so that is not shown.
+The sender is a number that indicates the type of system message, then the message content.
+Here is how it might look if you ask for the people who are on your channel.
+
+<p>
+&gt;&lt; 353 (you = channel): name1 name2 name3 …
+<br>
+&gt;&lt; 366 (you channel): End of /NAMES list.
+
+<p>
+There are a lot of these system messages every time you log in.
+You get use to them, and sometimes just skip past them, although they may contain an interesting or important "message of the day".
+
+<p>
 At debug level 0 or 1 you will see the conversations: your comments and those of the other participants.
 Debug level 2 brings in the JOIN, QUIT, and PART notifications as other people join and leave the channel.
 This can be useful, knowing whether Fred is still online - especially if you are having a conversation with Fred at the moment.
-Debug level 4 prints the ping pong messages to and from the server.
+Debug level 4 prints all traffic to and from the server,
+and the pings and pongs.
 These are not placed in the buffer or logged, just printed.
 This is like the http headers that appear at level 4,
 i.e. the metadata that supports the transport of the actual data.
@@ -6689,10 +6753,8 @@ Type f to see which group you are sending to.
 Others will not see this message.
 
 <p>
-/me agrees, sends the action of agreeing to the group.
-Most clients, including edbrowse, will turn this into "username agrees", like a statement of action, rather than the user speaking.
-:me is equivalent to /me.
-:me goes off to read the manual.
+:me or /me agrees, sends the action of agreeing to the group.
+Most clients, including edbrowse, will turn this into "username agrees", like a statement of fact, rather than the user speaking.
 
 <p>
 It is possible to multiplex some or all of the output from different irc servers into one window.
@@ -6717,13 +6779,12 @@ The bflist command will include:
 9: group1 group2 receive
 
 <p>
-The + on the second domain causes "group2" to be displayed with each message from that channel.
+The + on the second domain causes the channel to be displayed.
 This disambiguates which message comes from which channel.
 Each connection can display its channels or not,
 as indicated by the presence or absence of + on the irc domains.
-When channels are shown, the format is channel&lt;sender&gt; message.
-In the event of a private message, channel is replaced with the receiver.
-In other words, you are having a conversation with a person, not a channel.
+When channels are shown, the format is channel&lt;sender&gt; message, as described above.
+In the event of a private message, channel is replaced with your nickname, and a star in front.
 
 <p>
 The lst command lists the mod time of the file on the current line, when you are in directory mode.
