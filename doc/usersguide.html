@@ -6658,19 +6658,24 @@ You can then get rid of your nickname at the start of every line, and send it ag
 <p>
 Lines in the output buffer have the format recipient&lt;sender&gt; message.
 The flow is right to left: message through the sender to the recipient.
+
+<p>
+recipient ← sender ← message
+
+<p>
 The recipient is optional.
 Recipient is usually the channel, which you might not want to see over and over again.
 The showchan command, in the send buffer, toggles the display of recipient.
 
 <p>
-Typical lines, written by you, with or without channels, look like this.
+Typical lines, written by you, with or without channel display, look like this.
 <p>
 channel&lt;you&gt; message
 <br>
 &lt;you&gt; message
 
 <p>
-typical lines, from your friend, with or without channels, look like this.
+typical lines, from your friend, with or without channel display, look like this.
 
 <p>
 channel&lt;friend&gt; message
@@ -6678,7 +6683,7 @@ channel&lt;friend&gt; message
 &lt;friend&gt; message
 
 <p>
-Note that both you and your friend are sending to the group, where everybody can read it.
+In these examples, both you and your friend are sending to the group, where everybody can read it.
 The group is the recipient.
 If you send a private message to your friend, using the :m option, your lines to him look like this.
 
@@ -6707,15 +6712,21 @@ Otherwise you would not know.
 <p>
 System messages are sent to you alone, but there is no recipient inside, so that is not shown.
 The sender is a number that indicates the type of system message, then the message content.
-Here is how it might look if you ask for the people who are on your channel.
+Ask the system who is with you on the edbrowse channel, by sending :names #edbrowse.
+The response might look like this.
 
 <p>
-&gt;&lt; 353 (you = channel): name1 name2 name3 …
+&gt;&lt; 353 (you = #edbrowse): name1 name2 name3 …
 <br>
-&gt;&lt; 366 (you channel): End of /NAMES list.
+&gt;&lt; 366 (you #edbrowse): End of /NAMES list.
 
 <p>
-There are a lot of these system messages every time you log in.
+You can send other requests directly to the irc server, like :list to list all the groups.
+You will receive messages 321 (start of list), 322 for each channel, and 323 (end of list).
+Be careful, a server can host thousands of channels, most with cryptic names and no descriptions.
+
+<p>
+There are a lot of these system messages, starting with 001, every time you log in.
 You get use to them, and sometimes just skip past them, although they may contain an interesting or important "message of the day".
 
 <p>
