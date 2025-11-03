@@ -3912,7 +3912,7 @@ static void ircPrepLine(Window *win, Window *wout, char *line)
 	txt = ircChomp(par, ':');
 	trimWhite(par);
 	if(stringEqual("PONG", line)) {
-		debugPrint(4, "pong back");
+		debugPrint(3, "pong back");
 		return;
 	}
 	if(!wout) return; // should never happen
@@ -3924,8 +3924,8 @@ static void ircPrepLine(Window *win, Window *wout, char *line)
 		stringEqual(par, win->ircNick),
 		"<%s> %s", usr, txt);
 	} else if(stringEqual("PING", line)) {
+		debugPrint(3, "ping pong %s", txt);
 		ircSend(win, "PONG %s", txt);
-		debugPrint(4, "PING PONG %s", txt);
 	} else {
 		ircAddLine(win, usr, win->showchan, false, ">< %s (%s): %s", line, par, txt);
 		if(stringEqual("NICK", line) && stringEqual(usr, win->ircNick)) {
@@ -4117,7 +4117,7 @@ top:
 	if(rc == 0) {
 // ping the host if nothing has come in for 10 minutes
 		if(ircNow - w->ircRespond >= 500 && !w->ircPingOut) {
-			debugPrint(4, "pingout %s", w->f0.hbase);
+			debugPrint(3, "pingout %s", w->f0.hbase);
 			ircSend(w, "PING %s", w->f0.hbase);
 			w->ircPingOut = true;
 		} else if(ircNow - w->ircRespond >= 550 && w->ircPingOut) {
@@ -4293,16 +4293,16 @@ bool ircSetup(char *line)
 
 	// login
 	if(password) {
+		debugPrint(3, "PASS %s", password);
 		ircSend(win, "PASS %s", password);
-		debugPrint(4, "PASS %s", password);
 	}
+	debugPrint(3, "NICK %s", nick);
 	ircSend(win, "NICK %s", nick);
-	debugPrint(4, "NICK %s", nick);
+	debugPrint(3, "USER %s localhost %s :%s", nick, domain, nick);
 	ircSend(win, "USER %s localhost %s :%s", nick, domain, nick);
-	debugPrint(4, "USER %s localhost %s :%s", nick, domain, nick);
 	if(join) {
+		debugPrint(3, "JOIN %s", join);
 		ircSend(win, "JOIN %s", join);
-		debugPrint(4, "JOIN %s", join);
 		ircSetChannel(win, join);
 	}
 // And hopefully that worked.
