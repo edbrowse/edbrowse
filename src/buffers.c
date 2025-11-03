@@ -4997,7 +4997,7 @@ test_false:
 	if((cw->imapMode1 | cw->imapMode2) && line[0] == 'e' && (line[1] == ' ' || line[1] == '=')) {
 	const char *p = line + 2;
 	while(*p) {
-		if(!strchr("fstzdu", *p)) break;
+		if(!strchr("fstzdr", *p)) break;
 		++p;
 	}
 	if(*p) goto no_action; // doesn't look like envelope format

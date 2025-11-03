@@ -224,7 +224,7 @@ static int mailstring_l;
 static char *mailbox_url, *message_url;
 
 static int fetchLimit = 100;
-static const char envelopeFormatChars[8] = "tfsdznu";
+static const char envelopeFormatChars[8] = "tfsdznr";
 // to from subject date size number
 // default is from subject
 static const char envelopeFormatDef[8] = "fs";
@@ -765,7 +765,7 @@ static void printEnvelope(const struct MIF *mif, char **grab)
 		case 'f':
 			stringAndString(&envp, &envp_l, mif->from[0] ? mif->from : mif->reply);
 			break;
-		case 'u':
+		case 'r':
 			if(!mif->seen)
 				stringAndChar(&envp, &envp_l, '*');
 			break;
@@ -789,7 +789,7 @@ static void printEnvelope(const struct MIF *mif, char **grab)
 			break;
 		}
 // put in the delimiter
-		if(c != 'u' && fs[i + 1] && !stringEqual(fs + i + 1, "n"))
+		if(c != 'r' && fs[i + 1] && !stringEqual(fs + i + 1, "n"))
 			stringAndString(&envp, &envp_l, EFS_V);
 	}
 
@@ -4471,10 +4471,10 @@ static void restar(int n)
 	const char *fs = cw->imap_env;
 
 	for(i = j = 0; fs[i]; ++i) {
-		if(fs[i] == 'u') break;
+		if(fs[i] == 'r') break;
 		if(fs[i] != 'n') ++j;
 	}
-if(!fs[i]) return; // no u
+if(!fs[i]) return; // no read indicator
 // j is the number of delimiters before the *
 
 	s = t = (char*)cw->map[n].text;

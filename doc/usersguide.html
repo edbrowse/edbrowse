@@ -776,7 +776,7 @@ sm : send mail [account number]
 <br>imap 0 : tear down the imap connection
 <br>rf : refresh the folders and their message counts
 <br>l=40 : fetch 40 envelopes at a time
-<br>e=ufs : envelope format is unseen, from, subject
+<br>e=rfs : read indicator, from, subject
 <br>a : add folders, like append mode, . when finished
 <br>s/x/y/ : rename a folder - but not a system folder!
 <br>d : delete a folder - but not a system folder! All email in that folder is lost.
@@ -4567,10 +4567,11 @@ envelope = fsd
 
 <p>
 Prescribe the format of an imap envelope, one letter per field.
-t = to, f = from, s = subject, d = date, z = size, n = number, and u = unseen.
+t = to, f = from, s = subject, d = date, z = size, n = number, and r = read indicator.
 The default is fs, from subject.
 This can be changed interactively with the e command.
-The "unseen" field presents a star if the email has not been read.
+The read indicator presents a star if the email has not been read.
+It flags the email as something you might want to read.
 
 <p class=item>
 netrc
@@ -6478,9 +6479,7 @@ For the folder on the current line, the following searches apply.
 <br>
 /b baseball : emails that mention baseball anywhere in the body
 <br>
-/u unread emails
-<br>
-/uf fred unread emails from fred ... etc
+/uf fred the unread emails from fred ... etc
 
 <p>
 Any other /expression is just a text search through the buffer as usual.
@@ -6566,11 +6565,11 @@ The imap client works exactly the same way.
 <p>
 On the envelopes page, the r command, without suffix, marks a mail as read, without having to read it.
 Thus ,r marks all emails as read.
-If you have u in your envelope format, the stars go away.
+If you have r in your envelope format, the stars go away.
 
 <p>
 Use r- to mark an email as unread, as though you had not seen it.
-If you have u in your envelope format, the stars reappear.
+If you have r in your envelope format, the stars reappear.
 
 <p>
 The reply commands re and rea can be used on an envelope.
@@ -6832,6 +6831,11 @@ However, most users find it simpler to monitor all their irc channels in one pla
 <p>
 On a multi-user system, create this log file mode 600, or put it in a directory that is mode 700,
 so that others cannot read your irc chats.
+
+<p>
+If you have one or more irc sessions rolling,
+it is possible to start logging without restarting those sessions.
+Add irclog = filename to your config file, then type config.
 
 <hr>
 <h1 id=dba>Chapter 9, Database Access</h1>
