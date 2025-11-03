@@ -4266,6 +4266,9 @@ static void makeLinesAndUids(const struct FOLDER *f)
 		stringAndChar(&imapPaths, &imp_l, EFS_I);
 		stringAndString(&imapPaths, &imp_l, conciseSize(mif->size));
 		stringAndChar(&imapPaths, &imp_l, EFS_I);
+// The unstar() and restar() functions will have to fiddle with this field.
+		stringAndString(&imapPaths, &imp_l, mif->seen ? "read" : "unread");
+		stringAndChar(&imapPaths, &imp_l, EFS_I);
 		stringAndChar(&imapPaths, &imp_l, '\n');
 	}
 }
