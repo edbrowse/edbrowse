@@ -1268,12 +1268,12 @@ bool lsattrChars(const char *buf, char *dest)
 	const char * ok_chars = "lstikpmy";
 	if(cw->imapMode2) ok_chars = "uyftdlzr";
 	if(cw->imapMode3) ok_chars = "uyftdlz";
+	if(cw->ircoMode1) ok_chars = "ct";
 	char used[26];
 	memset(used, 0, sizeof(used));
 	t = dest;
 	for (s = buf; (c = *s); ++s) {
-		if (isspaceByte(c))
-			continue;
+		if (isspaceByte(c)) continue;
 		if((cw->imapMode2|cw->imapMode3) && c == 's') c = 'z';
 		if (!strchr(ok_chars, c)) {
 			rc = false;

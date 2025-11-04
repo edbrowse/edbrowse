@@ -3726,55 +3726,35 @@ char *irclog;
 static void ircLoad(void)
 {
 	FILE *f;
-	char *lines;
-	int lines_l, j, j2, l;
 	const char *timestring;
+	int n = cw->dol;
+	char * s1, *s2, *d1, *d2;
 
 	if(!irclog) return; // no log file
 	if(!(f = fopen(irclog, "re"))) return; // cannot open
 
-#define CHUNK 200
-	time_t stamps[CHUNK];
-	j = 0;
-	lines = initString(&lines_l);
 	while(fgets(irc_in, sizeof(irc_in), f)) {
-		char *delim = strrchr(irc_in, '|');
-		if(!delim) continue; // should never happen
-		*delim++ = '\n';
-// As I write this, on my pi, I'm casting a long long into a long.
-// This will cause trouble eventually; hopefully they will change time_t before then.
-		stamps[j] = strtoll(delim, 0, 10);
-		stringAndBytes(&lines, &lines_l, irc_in, delim - irc_in);
-		if(++j < CHUNK) continue;
-		addTextToBuffer((uchar*)lines, lines_l, cw->dol, false);
-		for(j = 0; j < CHUNK; ++j) {
-			timestring = conciseTime(stamps[j]);
-			l = cw->dol - CHUNK + 1 + j;
-// Sometimes we don't have to do all this free malloc stuff.
-// Current time is set, and often the log string fits right in, strcpy,
-// but not always, can't guarantee it, so just free and malloc.
-			nzFree(cw->r_map[l].text);
-			cw->r_map[l].text = (uchar*)cloneString(timestring);
+		d1 = strrchr(irc_in, '|');
+		if(!d1) continue; // should never happen
+		*d1++ = '\n';
+		time_t stamp = strtoll(d1, &d2, 10);
+		addTextToBuffer((uchar*)irc_in, d1 - irc_in, n, false);
+		++n;
+			nzFree(cw->r_map[n].text);
+		timestring = conciseTime(stamp);
+		if(*d2 != '^') { // prior to the lsc feature
+			cw->r_map[n].text = (uchar*)cloneString(timestring);
+		} else {
+			++ d2;
+			asprintf(&s1, "%s^%s", timestring, d2);
+			s2 = strchr(s1, '\n');
+			if(s2) *s2 = 0;
+			cw->r_map[n].text = (uchar*) s1;
 		}
-		nzFree(lines);
-		lines = initString(&lines_l);
-		j = 0;
 	}
+
 	fclose(f);
-#undef CHUNK
-
-	if((j2 = j)) {
-		addTextToBuffer((uchar*)lines, lines_l, cw->dol, false);
-		for(j = 0; j < j2; ++j) {
-			timestring = conciseTime(stamps[j]);
-			l = cw->dol - j2 + 1 + j;
-			nzFree(cw->r_map[l].text);
-			cw->r_map[l].text = (uchar*)cloneString(timestring);
-		}
-		nzFree(lines);
-	}
-
-	cw->dot = cw->dol;
+	cw->dot = n;
 }
 
 static void ircSend(const Window *win, char *fmt, ...)
@@ -3822,6 +3802,7 @@ static char * ircEat(char *s, int (*p)(int), int r)
 static void ircAddLine(Window *win, const char *channel, bool show, bool priv, const char *fmt, ...)
 {
 	unsigned l1, l2;
+	int n = cw->dol;
 	va_list ap;
 	va_start(ap, fmt);
 	vsnprintf(irc_out, sizeof irc_out - 1, fmt, ap);
@@ -3834,7 +3815,6 @@ static void ircAddLine(Window *win, const char *channel, bool show, bool priv, c
 // only if there's room, which there should be!
 		l1 = strlen(channel), l2 = strlen(irc_out);
 		if(l1 + l2 + 1 < sizeof irc_out) {
-// This is quick and dirty, just paste them together.
 			strmove(irc_out + l1, irc_out);
 			memcpy(irc_out, channel, l1);
 		}
@@ -3876,9 +3856,22 @@ regular: ;
 	l2 = strlen(irc_out);
 	if(priv && l2 < sizeof(irc_out) - 1)
 		strmove(irc_out + 1, irc_out), irc_out[0] = '*', ++l2;
-	addTextToBuffer((uchar*)irc_out, l2, cw->dol, false);
+	addTextToBuffer((uchar*)irc_out, l2, n, false);
 
-// opening the log every time is a bit inefficient, but this doesnn't
+// This put the current time on the back side, via the function addToMap(),
+// find it and add the channel.
+	++n;
+	char *t = (char*)cw->r_map[n].text;
+	if(irc_out[0] == '>') channel = "system";
+	if(channel && t && *t) {
+		unsigned k1 = strlen(t), k2 = strlen(channel);
+		t = realloc(t, k1 + k2 + 2);
+		strcat(t, "^");
+		strcat(t, channel);
+		cw->r_map[n].text = (uchar*)t;
+	}
+
+// opening the log every time is a bit inefficient, but this doesn't
 // happen very often.
 	FILE *f;
 	if(irclog && (f = fopen(irclog, "ae"))) {
@@ -3886,7 +3879,9 @@ regular: ;
 		time(&now);
 // chop off \n so we can add in the time stamp
 		irc_out[l2 - 1] = 0;
-		fprintf(f, "%s|%lld\n", irc_out, (long long)now);
+		fprintf(f, "%s|%lld", irc_out, (long long)now);
+		if(channel) fprintf(f, "^%s", channel);
+		fprintf(f, "\n");
 		fclose(f);
 	}
 }

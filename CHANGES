@@ -1,6 +1,11 @@
 Here are some changes introduced by recent versions of edbrowse.
 
+3.8.15
+
+The lsr and lsc commands.
+
 3.8.14
+
 ls commands in envelope mode, or when reading an email.
 
 Fix bug in imap download of large emails.
@@ -11,6 +16,7 @@ which implements a stricter adherence to the standard syntax.
 Indicate an incoming private irc message with *, so you can respond in kind.
 
 3.8.13
+
 in imap standalone, n does not run off the end of the folder,
 just as p does not back up off the end of the folder.
 
@@ -32,9 +38,11 @@ This version of edbrowse now requires quickjs at or beyond this date.
 Suppress many gcc warnings.
 
 3.8.12
+
 Make adjustments as quickjs evolves. Resolve build issues.
 
 3.8.11
+
 uc lc mc are internationalized, up to unicode 0xff.
 
 Put explanatory files in the history directory.
@@ -50,6 +58,7 @@ Fix gopher search
 commands: sss, test, p stuff.
 
 3.8.10
+
 toString shows the correct object classes.
 
 Simplistic simulation of IntersectionObserver and ResizeObserver.
@@ -71,6 +80,7 @@ Print strerror values when certain system calls fail.
 l and L link commands in directory mode.
 
 3.8.9
+
 dx to specify hard delete in imap folders.
 
 Integrate imap into edbrowse. Emails and envelopes are held in the buffers.
@@ -84,6 +94,7 @@ Complete the Polish and Russian messages.
 irc autolog.
 
 3.8.8
+
 Read and write blocks of text amongst the buffers on the current stack.
 .w+1@'c     r-1@'a,'b
 
@@ -107,6 +118,7 @@ b.pdf renders the current buffer by the pdf converter.
 %p in a plugin is an interactive parameter.
 
 3.8.7
+
 W !shell_command   reads the data back into the buffer
 
 local command reads pages from cache.
@@ -121,6 +133,7 @@ The read write and < commands support the at syntax.
 Resurrect the apostrophe macros, but in a safe way.
 
 3.8.6
+
 Support tls sockets, and the lst command for irc.
 
 html template element.
@@ -137,6 +150,7 @@ clean up download threads before we free the tags that own them.
 move delete and expunge in a manner that should work with all imap servers.
 
 3.8.5
+
 s/x/y/$ command, and s$ shorthand.
 s/x/y/3g, from 3 on, like sed.
 
@@ -163,6 +177,7 @@ img command to download images.
 Other editors do this.
 
 3.8.4
+
 dno (names only) command.
 
 Manage merged cells via colspan and rowspan in data tables.
@@ -172,6 +187,7 @@ so we don't have to patch the quickjs source.
 We could link to a distributed quickjs shared library if one was available.
 
 3.8.3
+
 Offer the plain text version of an email via the t command.
 It is often unhelpful, and sometimes not there at all.
 
@@ -199,9 +215,11 @@ js = website (in config file)
 This is the inverse of nojs = website
 
 3.8.2.1
+
 Make the makefile process more portable and more flexible for packagers and individuals.
 
 3.8.2
+
 Support for emojis.
 
 Changes to edbrowse settings are restored when a function returns.
@@ -218,12 +236,14 @@ EB_DOT instead of '. etc.
 f suffix to forget the entered search and replacement strings.
 
 3.8.1
+
 Make several changes so that edbrowse is more like ed,
 allowing more commands under g/re/,
 and 'a,'bw !shellcommand, etc.
 
 'a,'bw7@21  to inject text from one buffer into another.
 r7@'a,'b to  pull text from one buffer into another.
+Known as the at syntax.
 
 /xyz/! search for line that doesn't contain xyz, like sed.
 
@@ -262,15 +282,14 @@ speed= and tmlist commands, for debugging timers.
 upgrade from pcre1 to pcre2
 
 3.8.0
+
 Experiment with Spider Monkey js, make edbrowsesm
 I have no idea how to do cross compartment access, as in frames,
 so this didn't get very far.
-I'll leave jseng-moz.cpp around, if someone else wants to continue this work,
-or use this as a C++ framework for v8.
 
 Switch from duktape js to quick js.
 
-Create subordinate objects, like the style object, on-demand,
+Create subordinate objects like the style object on-demand,
 instead of making them part of every node automatically.
 This should cut down on object proliferation.
 
@@ -285,6 +304,7 @@ Previous (p) command in imap.
 Go (g) command in imap, go to an email, same as space.
 
 3.7.7
+
 Fix a potential security hole, where one website can bleed into another. Worth making a release just for this.
 
 Move or copy files from one directory to another.
@@ -292,6 +312,7 @@ Move or copy files from one directory to another.
 imap can fetch the earliest emails, rather than the most recent.
 
 3.7.6
+
 colors command to show the colors of the web page.
 
 ^C for 45 seconds causes a hard interrupt,
@@ -317,6 +338,7 @@ fu command prints the file's url.
 Internationalized help command.
 
 3.7.5.1
+
 Search function on gopher.
 
 Use threads to download files in the background and in parallel, instead of processes.
@@ -326,6 +348,7 @@ It didn't work because of fork; now that we are threaded it can comne back to li
 That by itself seems worth releasing a mini-version.
 
 3.7.5:
+
 ib command to allocate input buffers for textareas.
 
 fll command to set the format line length. fll 80+ to allow a little overflow past 80 columns.
@@ -345,6 +368,7 @@ snapshot() function to build a local copy of a website for debugging.
 Don't include the (substantial) deminimization code unless EBDEMIN is set.
 
 3.7.4:
+
 Install man page and other documentation.
 
 Search for regular expressions with or without wrap.
@@ -366,6 +390,7 @@ Create, delete, and rename imap folders.
 Start using the acid tests to exercise edbrowse.
 
 3.7.3:
+
 Show heading information h1 through h6.
 
 Specify a different config file on the command line.
@@ -385,6 +410,7 @@ Edbrowse messages in Italian.
 A better diff algorithm to report which lines have changed.
 
 3.7.2:
+
 Keep third party open source javascript routines in a separate file third.js.
 Licenses are included in that file.
 
@@ -410,6 +436,7 @@ since the jotform routines don't seem to meet our needs.
 Convert javascript or css files from utf16 or utf32 into utf8 before processing.
 
 3.7.1:
+
 Automatically expand a frame when javascript tries to access its objects.
 Otherwise it won't expand until you expand it explicitly.
 This saves resources; don't fetch and expand a frame unless it is needed.
@@ -428,6 +455,7 @@ Gather keyword value pairs from <style> tags and css files and apply them to the
 Implement getComputedStyle().
 
 3.7.0:
+
 Switch from Mozilla js to Duktape js.
 
 Mask password fields on input forms with stars, as other browsers do.
@@ -447,6 +475,7 @@ These are for development and testing, and could go away.
 Clean up compiler warnings so we can use the -Wall flag.
 
 3.6.3:
+
 Maintain a cache of http files.
 Provides faster access to websites that are visited often.
 Cache directory and size can be set in the config file, but the defaults are reasonable.
@@ -469,6 +498,7 @@ At this point the worlds do not interact.
 You can expand and contract frames by the exp and ctr commands.
 
 3.6.2:
+
 Read and convert utf16 and utf32 as per the byte order mark.
 convert such files to utf8 or iso8859-1 as per the console setting,
 though the latter is deprecated.
@@ -489,6 +519,7 @@ and each URL therein is intended for a music player.
 Other browsers seem to work this way.
 
 3.6.1:
+
 Merge edbrowse and edbrowse-js back into one executable image.
 More convenient for distribution.
 The --mode argument determines the action of the process.
@@ -513,10 +544,12 @@ Reload the config file on command. No need to exit and restart.
 db>filename to redirect debugging output to a file.
 
 3.6.0.1:
+
 Bug fixes.
 Most importantly, fixed a buffer overflow in sprintf.
 
 3.6.0:
+
 Edbrowse is an imap client. Scan and search through folders,
 delete move or download emails, pull down attachments.
 
@@ -560,6 +593,7 @@ perl programs map these into strings in the C source.
 Support http only cookies.
 
 3.5.4.2:
+
 Limited and preliminary imap access. Envelopes only.
 Messages can be moved or deleted, but not read or downloaded.
 
@@ -569,9 +603,11 @@ Edbrowse now warns if you try to quit with a modified buffer that has
 no associated filename.  This is consistent with ed and most other editors.
 
 3.5.4.1:
+
 Fix a couple of bugs related to downloading files from the internet.
 
 3.5.4:
+
 Messages in German, thanks to Sebastian Humenda.
 Autoplay of audio files found on websites, using content-type,
 and autoplay of audio files from directory mode.
@@ -582,6 +618,7 @@ Automatically include references when replying to an email, re or rea commands,
 so it threads properly.
 
 3.5.3:
+
 Write a separate process, edbrowse-js, to handle all the javascript objects.
 This process and only this process interacts with the js library,
 be it mozilla or v8 or whatever.
@@ -592,6 +629,7 @@ Allow users to download large binary files in the background, and straight to di
 Useful for computers with limited memory but plenty of disk.
 
 3.5.2:
+
 The blacklist feature is now gone.
 It wasn't really used,
 as there are more effective ways to fight spam these days.
@@ -602,6 +640,7 @@ This release contains a few additional minor bugfixes, the most significant
 of which involved the rendering preformatted sections when browsing html.
 
 3.5.1:
+
 Mozilla javascript version 2.4 and above supports only a C++ interface,
 so if we want to keep using moz js, then we must follow along.
 Edbrowse 3.5.1 converts the javascript layer from C to C++.
@@ -611,12 +650,15 @@ Use the curl library to send and receive mail.
 This replaces home-grown pop3 and smtp software.
 
 3.4.10:
+
 Polish translations, courtesy of Wojciech Gac.
 
 3.4.9:
+
 Various bug fixes.
 
 3.4.8:
+
 * Edbrowse now requires version 1.8.5 (or higher) of Spidermonkey.
 * When completing filenames with readline, a trailing space is no longer added.
 * Updated French translation of the User's Guide, thanks to Erwin Bliesenick.
@@ -625,43 +667,52 @@ Various bug fixes.
   case-insensitive.
 
 3.4.7:
+
 memcpy and strcpy are no longer called on overlapping regions.
 Files with unknown length, such as those under /proc, are now readable.
 Miscellaneous fixes.
 
 3.4.6:
+
 Fix file corruption bug for large files with more than a million lines.
 
 3.4.5:
+
 Dot stuffing in emails.
 Support for readline() on input.
 Support for proxies through .ebrc or the environment.
 
 3.4.4:
+
 Fixed a cookie bug; tail matching never took place.
 Thus a cookie would never propagate to a subdomain.  Bad news.
 
 3.4.3:
+
 Hotmail smtp protocol.    outport = ^587
 Minor tweaks for compilation under OS X.
 
 3.4.1:
+
 Access to databases through odbc.
 Modify rows in a table by using the edit commands you already know.
 Be careful; delete means delete!
 
 3.3.4:
+
 Convert between iso8859-1 and utf8 on the fly, according to the contents
 of the file and the value of $LANG.
 This takes place automatically as files are read and written;
 the user shouldn't notice a thing.
 
 3.3.3:
+
 New reply feature, maintains the thread for discussion lists.
 Move docs to a doc directory, and source to an src directory.
 Fix some utf8 bugs.
 
 3.3.2:
+
 Supports reading of pdf files by calling the utility pdftohtml.
 http://rpmfind.net/linux/RPM/suse/updates/10.0/i386/rpm/i586/pdftohtml-0.36-130.9.i586.html
 Also brings in email over ssl.
@@ -669,11 +720,13 @@ Secure smtp implies auth login;
 no other authentication method is implemented at this time.
 
 3.3.1:
+
 The error and output messages of edbrowse have been internationalized.
 Set LANG= to specify the language.
 At present, LANG=en and LANG=fr are supported.  (English and French)
 
 3.2.1:
+
 This version introduces sql database access,
 through Informix esql (tested) and odbc (not tested).
 Access a table in the database just as you would access a file.
@@ -684,6 +737,7 @@ And it's dangerous.
 If you delete a row, there is no undo, so be careful.
 
 3.1.3:
+
 Edbrowse can now fetch and execute a local javascript file,
 as in  <script src=LocalFileName.js>
 from within a local html file that you are browsing.
@@ -692,6 +746,7 @@ It is also handy if you have downloaded your own private copy
 of a website, and it uses javascript.
 
 3.1.2:
+
 Files (other than text or html) are processed according
 to their mime type, which is fancy internet jargon for their file extension.
 It's not rocket science - file.mp3 is sent to an mp3 player,
@@ -699,6 +754,7 @@ file.wav is sent to a wave player, and so on.
 See the docs for more details.
 
 3.1.1:
+
 Version 2 used my own, home-grown javascript engine.
 This version, version 3 and beyond, uses an open source js engine,
 known as Spider Monkey Javascript, or smjs.
@@ -710,11 +766,13 @@ This is a substantial change to the program,
 hence the jump in major version number.
 
 2.2.10:
+
 This is the latest version with my home-grown javascript engine.
 If you don't have access to smjs, or you just want to get it up and running
 quickly, to see if you like it, you can use 2.2.10.
 
 1.5.17:
+
 This is the latest perl version.
 It has no javascript support, nor does it handle edbrowse scripts,
 but it is completely portable, and runs on Windows, Mac, etc.

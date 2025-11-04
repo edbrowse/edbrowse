@@ -506,6 +506,7 @@ s/x/y/ : replace x with y on the current line
 forget dog and cat as search and replacement strings,
 and print the result
 <br>s/a\(.\)c/a$1$1c/ : duplicate the letter between a and c
+<br>/\([ab]\)\1/ : search for aa or bb, will not match on ab or ba
 <br>s, : replace comma space with newline, break line in two
 <br>s. : replace period space with newline, break line in two
 <br>s?2 : break line at the second question mark
@@ -825,6 +826,7 @@ irc m n domain nickname : set up irc chat using sessions m and n with the specif
 <br>irc m n domain+:port* nickname:password group : show this channel in the output buffer, and use secure sockets
 <br>showchan : show channels as messages are displayed (toggle)
 <br>lst : show the date and time when this line was received in the output buffer
+<br>lsc : show the channel of this message
 <p>
 Plugins
 <p>
@@ -6795,10 +6797,16 @@ When channels are shown, the format is channel&lt;sender&gt; message, as describ
 In the event of a private message, channel is replaced with your nickname, and a star in front.
 
 <p>
-The lst command lists the mod time of the file on the current line, when you are in directory mode.
+Recall that the lst command lists the mod time of the file on the current line, when you are in directory mode.
 Similarly, lst gives the time of the current message in irc mode.
 Thus you can determine when things were said on the channel.
-The other ls commands do not apply here.
+
+<p>
+lsc shows the channel of the current message.
+You won't need this if you are printing the channels as a matter of course.
+However, if channels are not displayed, and if your friend is on two different channels, with the same nickname,
+this command tells you which channel he was on when he wrote that message.
+Then you can respond in kind.
 
 <h2 id=irclog> IRC Log </h2>
 

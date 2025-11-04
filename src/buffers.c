@@ -6544,13 +6544,24 @@ static int twoLetterG(const char *line, const char **runThis)
 // default ls mode is size time
 		if (!lsmode[0])
 			strcpy(lsmode, "st");
-		if(cw->ircoMode1 && stringEqual(lsmode, "t")) {
+		if(cw->ircoMode1 && lsmode[1] == 0 &&
+		(*lsmode == 't' || *lsmode == 'c')) {
 			if (cw->dot == 0) {
 				setError(MSG_AtLine0);
 				return false;
 			}
-			const char *timestring = cw->r_map ? (char*)cw->r_map[cw->dot].text : emptyString;
-			puts(timestring == emptyString ? "-" : timestring);
+			const char *timestring = cw->r_map ? (char*)cw->r_map[cw->dot].text : 0;
+			if(!timestring) {
+				puts("-");
+			} else if(*lsmode == 't') {
+				char *t2 = strchr(timestring, '^');
+				if(t2) *t2 = 0;
+				puts(timestring);
+				if(t2) *t2 = '^';
+			} else {
+				char *t2 = strchr(timestring, '^');
+				puts(t2 ? t2+1 : "-");
+			}
 			return true;
 		}
 		if(cw->imapMode2 | cw->imapMode3) {
