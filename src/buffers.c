@@ -7977,7 +7977,7 @@ doquit:
 
 		if (!first)
 			line = cf->fileName;
-		if (!line) {
+		if (!line || (cw->ircoMode && !first)) {
 			setError(MSG_NoFileSpecified);
 			goto fail;
 		}
