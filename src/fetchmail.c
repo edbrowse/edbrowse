@@ -4266,7 +4266,8 @@ static void makeLinesAndUids(const struct FOLDER *f)
 		stringAndChar(&imapPaths, &imp_l, EFS_I);
 		stringAndString(&imapPaths, &imp_l, conciseSize(mif->size));
 		stringAndChar(&imapPaths, &imp_l, EFS_I);
-// The unstar() and restar() functions will have to fiddle with this field.
+// The unstar() and restar() functions have to fiddle with this field.
+// This read/unread field has to be the last one in the sequence.
 		stringAndString(&imapPaths, &imp_l, mif->seen ? "read" : "unread");
 		stringAndChar(&imapPaths, &imp_l, EFS_I);
 		stringAndChar(&imapPaths, &imp_l, '\n');
@@ -4277,14 +4278,14 @@ static void makeLinesAndUids(const struct FOLDER *f)
 void lsEnvelope(const char *lsmode)
 {
 	int i, j, l;
-	static const char order[] = "uyftdlz";
+	static const char order[] = "uyftdlzr";
 	char *p, *q;
-const char *mark[8];
+const char *mark[9];
 	const Window *pw = cw->prev; // previous window
 	const char *title = (const char *)(cw->imapMode2 ? cw->r_map[cw->dot].text :
 	pw->r_map[pw->dot].text);
 	mark[0] = title;
-	for(i = 1; i < 8; ++i)
+	for(i = 1; i < 9; ++i)
 		mark[i] = strchr(mark[i-1], EFS_I) + 1;
 
 	p = initString(&l);
@@ -4447,6 +4448,15 @@ static void unstar(int n)
 	char *s;
 	int i, l;
 
+	s = (char*)cw->r_map[n].text;
+	l = strlen(s);
+// should end in unread mark, might end in read mark if something is wrong
+	if(s[l - 6] == 'n') {
+		strcpy(s + l - 7, "read");
+		s[l - 3] = EFS_I;
+		s[l - 2] = 0;
+	}
+
 	s = (char*)cw->map[n].text;
 	l = pstLength((uchar*)s);
 	if(*s == '*') {
@@ -4468,10 +4478,20 @@ static void unstar(int n)
 // Remember that the * might already be there.
 static void restar(int n)
 {
-	const char *s, *t;
-	char *newline;
+	char *s, *t, *newline;
 	int i, j, l;
 	const char *fs = cw->imap_env;
+
+	s = (char*)cw->r_map[n].text;
+	l = strlen(s);
+// should end in read mark, might end in unread mark if something is wrong
+	if(s[l - 6] == EFS_I) {
+		s = realloc(s, l + 3);
+		cw->r_map[n].text = (uchar*)s;
+		strcpy(s + l - 5, "unread");
+		s[l + 1] = EFS_I;
+		s[l + 2] = 0;
+	}
 
 	for(i = j = 0; fs[i]; ++i) {
 		if(fs[i] == 'r') break;

@@ -797,6 +797,7 @@ rf : refresh the envelopes in this buffer
 <br> lsz or lss : list the size in round numbers
 <br> lsy : list the subject, although I would expect that is already on the printed line
 <br> lsu : list the uid
+<br> lsr : list whether this email is read or unread
 <br> u filename : write this email unformatted to a file
 <br> U filename : same as above but delete the email
 <br> w filename : write this email formatted to a file, and an unformatted copy in ~/.trash/rawmail
@@ -6458,6 +6459,7 @@ y subject - but subject is probably already part of the line
 <br>z consise size
 <br>s consise size, like lss in other contexts
 <br>u uid
+<br>r read or unread
 
 <p>
 This is jarringly inconsistent from ls in other contexts, such as directory mode.
@@ -6472,14 +6474,10 @@ This isn't just a search through the emails in your buffer; the search takes pla
 For the folder on the current line, the following searches apply.
 <p>
 /f fred : emails that come from Fred
-<br>
-/t wilma : emails that were sent to Wilma
-<br>
-/s paypal transfer : emails with paypal and transfer in the subject line
-<br>
-/b baseball : emails that mention baseball anywhere in the body
-<br>
-/uf fred the unread emails from fred ... etc
+<br>/t wilma : emails that were sent to Wilma
+<br>/s paypal transfer : emails with paypal and transfer in the subject line
+<br>/b baseball : emails that mention baseball anywhere in the body
+<br>/uf fred the unread emails from fred ... etc
 
 <p>
 Any other /expression is just a text search through the buffer as usual.
