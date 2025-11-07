@@ -15,7 +15,7 @@ you will need to include the MIT open source license.
 // the makefile should set -I properly, based on  your environment variable
 // QUICKJS_DIR, or using a reasonable default.
 // So this basic include should work.
-#include "quickjs-libc.h"
+#include "quickjs.h"
 
 /*********************************************************************
 Somewhere between 01/03/2024 and 02/14/2024, JS_VALUE_GET_OBJ
@@ -202,7 +202,7 @@ static enum ej_proptype top_proptype(JSContext *cx, JSValueConst v)
 	int n;
 	if(JS_IsNull(v))
 		return EJ_PROP_NULL;
-	if(JS_IsArray(cx, v))
+	if(JS_IsArray(v))
 		return EJ_PROP_ARRAY;
 	if(JS_IsFunction(cx, v))
 		return EJ_PROP_FUNCTION;
@@ -323,7 +323,7 @@ static JSValue get_property_object(JSContext *cx, JSValueConst parent, const cha
 // return -1 for error
 static int get_arraylength(JSContext *cx, JSValueConst a)
 {
-	if(!JS_IsArray(cx, a))
+	if(!JS_IsArray(a))
 		return -1;
 	return get_property_number(cx, a, "length");
 }
@@ -423,7 +423,7 @@ static JSValue setter_innerHTML(JSContext * cx, JSValueConst this, int argc, JSV
 // remove the preexisting children.
 	c1 = JS_GetPropertyStr(cx, this, "childNodes");
 	grab(c1);
-	if(!JS_IsArray(cx, c1)) {
+	if(!JS_IsArray(c1)) {
 // no child nodes array, don't do anything.
 // This should never happen.
 		debugPrint(5, "setter h fail");
@@ -2535,7 +2535,7 @@ static bool append0(JSContext * cx, JSValueConst this, int argc, JSValueConst *a
 	child = argv[0];
 	cn = JS_GetPropertyStr(cx, this, "childNodes");
 	grab(cn);
-	if(!JS_IsArray(cx, cn))
+	if(!JS_IsArray(cn))
 		goto done;
 
 	rc = true;
@@ -2604,7 +2604,7 @@ static JSValue nat_insbf(JSContext * cx, JSValueConst this, int argc, JSValueCon
 	item = argv[1];
 	cn = JS_GetPropertyStr(cx, this, "childNodes");
 	grab(cn);
-	if(!JS_IsArray(cx, cn))
+	if(!JS_IsArray(cn))
 		goto done;
 	rc = true;
 	length = get_arraylength(cx, cn);
@@ -2662,7 +2662,7 @@ static JSValue nat_rmch2(JSContext * cx, JSValueConst this, int argc, JSValueCon
 	child = argv[0];
 	cn = JS_GetPropertyStr(cx, this, "childNodes");
 	grab(cn);
-	if(!JS_IsArray(cx, cn))
+	if(!JS_IsArray(cn))
 		goto fail;
 	length = get_arraylength(cx, cn);
 	mark = -1;
@@ -3409,7 +3409,7 @@ void my_ExecutePendingMessagePorts(void)
 			g = *(JSValue*)f0->winobj;
 			ra = JS_GetPropertyStr(cx0, g, "mp$registry");
 			grab(ra);
-			if(!JS_IsArray(cx0, ra)) {
+			if(!JS_IsArray(ra)) {
 // no registry, don't do anything.
 // This should never happen.
 				JS_Release(cx0, ra);
