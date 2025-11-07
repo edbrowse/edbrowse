@@ -365,12 +365,12 @@ static void cssAtomic(struct asel *a);
 static void cssParseLeft(struct desc *d);
 static void cssModify(struct asel *a, const char *m1, const char *m2);
 static void chainFree(struct asel *asel);
-static bool onematch, topmatch, skiproot, gcsmatch, bulkmatch, bulktotal;
+static bool onematch, topmatch, skiproot, gcsmatch, bulkmatch;
 static char matchtype;		// 0 plain 1 before 2 after
 static bool matchhover;		// match on :hover selectors.
 static Tag *rootnode;
 static Tag **doclist;
-static int doclist_a, doclist_n;
+static int doclist_a, doclist_n,  bulktotal;
 static void build_doclist(Tag *top);
 static void hashBuild(void);
 static void hashFree(void);
