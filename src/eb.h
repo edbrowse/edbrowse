@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include <curl/curl.h>
 #include <pthread.h>
 
@@ -46,12 +47,6 @@ typedef unsigned short ushort;
  * me of the uncola, a char that isn't really a char. */
 typedef unsigned char uchar;
 
-/* We use unsigned char for boolean fields. */
-#if !defined(__cplusplus) && __STDC_VERSION__ < 202311L
-typedef uchar bool;
-#define false 0
-#define true 1
-#endif
 
 // Opaque indicator of an object that can be shared
 // between edbrowse and the js engine.
