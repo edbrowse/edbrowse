@@ -1,8 +1,9 @@
 #  compiler and flags
 CC ?=		cc
 PERL ?= perl
-QUICKJS_INCLUDE ?= ../../quickjs
-QUICKJS_LIB ?= ../../quickjs
+PREFIX ?=	/usr/local
+QUICKJS_INCLUDE ?= $(PREFIX)/include
+QUICKJS_LIB ?= $(PREFIX)/lib
 CFLAGS +=	-Wall -D_FILE_OFFSET_BITS=64
 
 # determine includes and linker flags
@@ -73,7 +74,7 @@ msg-strings.c: ../lang/msg-*
 edbrowse: $(EBOBJS)
 	$(CC) $(EBOBJS) $(LDFLAGS)  -o $@
 
-PREFIX ?=	/usr/local
+
 #  You probably need to be root to do this.
 install:
 	mkdir -p -m 755 $(DESTDIR)$(PREFIX)/bin
