@@ -4,12 +4,11 @@ Javascript that loads and runs in the master window.
 Functions and classses defined here can be shared by all the edbrowse windows,
 if we're very careful!
 We have to make sure nothing can be hijacked, starting with the Object.
-p = document.createElement("p"); p.toString();
-A website might innocently do that.
-Nail down prototype and some methods that might innocently be called.
+Nail down all functions and prototypes in this window.
+First, some code that lets you run this stand alone, as a syntax check.
+qjs -C shared.js
 *********************************************************************/
 
-// so we can run this stand alone
 if(typeof puts === "undefined") {
 function puts(s){}
 }
