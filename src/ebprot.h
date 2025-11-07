@@ -326,7 +326,7 @@ unsigned pstLength(const uchar *s) ;
 pst clonePstring(const uchar *s) ;
 void copyPstring(pst s, const pst t) ;
 int comparePstring(const uchar * s, const uchar * t);
-int fdIntoMemory(int fd, char **data, int *len, bool inparts);
+int fdIntoMemory(int fd, char **data, int *len, int inparts);
 int fileIntoMemory(const char *filename, char **data, int *len, bool inparts);
 bool memoryOutToFile(const char *filename, const char *data, int len);
 void truncate0(const char *filename, int fh);

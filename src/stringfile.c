@@ -739,7 +739,7 @@ It is more efficient if PARTSIZE is a multiple of the page size.
 *********************************************************************/
 #define FILEPARTSIZE 0x4000000
 
-int fdIntoMemory(int fd, char **data, int *len, bool inparts)
+int fdIntoMemory(int fd, char **data, int *len, int inparts)
 {
 	int length, n, j;
 	const int blocksize = 8192;
