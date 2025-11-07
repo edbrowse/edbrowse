@@ -33,7 +33,7 @@ ifneq ($(EBPROF),)
 endif
 
 # LDFLAGS for quickjs loading.
-QUICKJS_LDFLAGS = -L$(QUICKJS_LIB) -lquickjs -ldl
+QUICKJS_LDFLAGS = -L$(QUICKJS_LIB) -lqjs -ldl
 ifeq ($(shell uname),Linux)
 	QUICKJS_LDFLAGS += -latomic
 endif
