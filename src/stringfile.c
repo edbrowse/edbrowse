@@ -806,7 +806,7 @@ int fdIntoMemory(int fd, char **data, int *len, int inparts)
 	return 1;
 }
 
-int fileIntoMemory(const char *filename, char **data, int *len, bool inparts)
+int fileIntoMemory(const char *filename, char **data, int *len, int inparts)
 {
 	static int fh;
 	char ftype;
