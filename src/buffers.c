@@ -1928,12 +1928,12 @@ uchar prebrowse, const Tag *gotag)
 	int readSize;		// should agree with fileSize
 	bool rc;		// return code
 	bool fileprot = false;
+	bool firstPart;
 	const char *hash;
 	char *h;
 	char filetype;
-	int inparts = 0;
+	int inparts = 0, n;
 	int partSize = 0;
-	bool firstPart;
 
 	serverData = 0;
 	serverDataLen = 0;
@@ -2195,9 +2195,10 @@ nextpart:
 		if(prebrowse && icmd == 'g')
 			h = strchr(filename, '#');
 		if(h) *h = 0;
-		rc = fileIntoMemory(filename, &rbuf, &partSize, inparts);
+		n = fileIntoMemory(filename, &rbuf, &partSize, inparts);
+		rc = (n > 0);
 		if(h) *h = '#'; // put it back
-		inparts = (rc == 2 ? 2 : 0);
+		inparts = (n == 2 ? 2 : 0);
 		if(rc) fileSize += partSize;
 	}
 
@@ -5362,8 +5363,9 @@ pwd:
 	}
 
 	if (line[0] == 'p' && line[1] == 'b') {
-		rc = playBuffer(line, NULL);
-		if (rc == 2)
+		n = playBuffer(line, NULL);
+		rc = (n > 0);
+		if (n == 2)
 			goto no_action;
 		cmd = 'e';	// to see the error right away
 		return rc;
