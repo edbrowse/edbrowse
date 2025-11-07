@@ -92,32 +92,17 @@ Thus you need unixODBC and unixODBC-devel.
 ODBC has been stable for quite some time.
 unixODBC version 2.2.14 seems to satisfy edbrowse with odbc.
 
-quickjs:
-This is the javascript engine for edbrowse. It is not packaged,
-in most distributions, so you will need to build it from source.
-git clone https://github.com/bellard/quickjs
-It is best to clone this tree in a directory adjacent to edbrowse.
-That is, edbrowse and quickjs are in the same directory.
-If you are unable to do this, set QUICKJS_INCLUDE and QUICKJS_LIB
-to the quickjs directory tree before you build edbrowse.
-cd quickjs
+quickjs-ng:
+This is the javascript engine for edbrowse.
+If it is already packaged then you can move on to the next step.
+If it is not packaged you will need to build it from source.
+git clone https://github.com/quickjs-ng/quickjs
+the make process assumes cmake on your system, so be sure that is installed.
 make
-If you get a lot of atomic undefines:
-make EXTRA_LIBS=-latomic
-Even with this, some targets do not link properly on some platforms,
-but I get the static library libquickjs.a, and qjs, which is all I need.
-By default, edbrowse links to this library, and thus the
-quickjs code is part of edbrowse, and a quickjs package,
-or a dependency thereto, is not necessary.
-If your distribution provides quickjs as a prebuilt package,
-set QUICKJS_INCLUDE to the quickjs directory containing its
-library header files, and QUICKJS_LIB to the directory containing
-the libquickjs.a static library.
-If you use an official quickjs tarball, rather than git clone,
-or if that tarball was used to build a separate quickjs package,
-that code must be dated June 28 2025 or later.
-A version mismatch could cause edbrowse to cor dump on exit in certain cases,
-which is rather jarring. qjs -h for the release date.
+make install
+If header and library are not installed in the usual places,
+you may need to set PREFIX,
+or QUICKJS_INCLUDE and QUICKJS_LIB appropriately, when you make edbrowse.
 
 readline:
 Edbrowse supports using GNU readline for handling input. As such you need

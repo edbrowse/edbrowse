@@ -4,6 +4,9 @@ Here are some changes introduced by recent versions of edbrowse.
 
 The lsr and lsc commands.
 
+Migrate from quickjs to quickjs-ng.
+The latter is preferred by most distributions.
+
 3.8.14
 
 ls commands in envelope mode, or when reading an email.
