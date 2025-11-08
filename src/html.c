@@ -3549,9 +3549,11 @@ void rerender(int rr_command)
 	time(&cw->nextrender);
 	if(cw->rr_throttle == 0) cw->rr_throttle = 1;
 	if(cw->rr_throttle < rr_interval) {
-		cw->rr_throttle *= 2;
-		if(cw->rr_throttle > rr_interval) cw->rr_throttle = rr_interval;
+		cw->rr_throttle *= 3;
+		cw->rr_throttle += 1;
+		cw->rr_throttle /= 2;
 	}
+	if(cw->rr_throttle > rr_interval) cw->rr_throttle = rr_interval;
 	cw->nextrender += cw->rr_throttle;
 	hovcount = invcount = injcount = rrcount = 0;
 
