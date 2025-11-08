@@ -10,16 +10,28 @@ The ng fork determined, correctly, that the context is not used,
 and dropped it as a parameter.
 Also, JS_VALUE_GET_OBJ became visible again in quickjs-ng, 👍
 so I don't have to replicate that macro here.
-Other than that, there is no difference between the two projects,
-relative to the api and this file.
+These changes are reflected in the symbol Q_NG, which should be 1 or 0.
+Thus it can be set by gcc -D to overwrite the default of 1.
 *********************************************************************/
+
+#ifndef Q_NG
+#define Q_NG 1
+#endif
 
 #include "eb.h"
 
 #include <stddef.h>
 #include <sys/utsname.h>
 
+#if Q_NG
 #include "quickjs.h"
+#define wrap_IsArray(c,a) JS_IsArray(a)
+#else
+#include "quickjs-libc.h"
+#define wrap_IsArray(c,a) JS_IsArray(c,a)
+typedef struct JSObject JSObject;
+#define JS_VALUE_GET_OBJ(v) ((JSObject *)JS_VALUE_GET_PTR(v))
+#endif
 
 // to track down memory leaks
 // Warning, if you turn this feature on it slows things down, a lot!
@@ -197,7 +209,7 @@ static enum ej_proptype top_proptype(JSContext *cx, JSValueConst v)
 	int n;
 	if(JS_IsNull(v))
 		return EJ_PROP_NULL;
-	if(JS_IsArray(v))
+	if(wrap_IsArray(cx, v))
 		return EJ_PROP_ARRAY;
 	if(JS_IsFunction(cx, v))
 		return EJ_PROP_FUNCTION;
@@ -318,7 +330,7 @@ static JSValue get_property_object(JSContext *cx, JSValueConst parent, const cha
 // return -1 for error
 static int get_arraylength(JSContext *cx, JSValueConst a)
 {
-	if(!JS_IsArray(a))
+	if(!wrap_IsArray(cx, a))
 		return -1;
 	return get_property_number(cx, a, "length");
 }
@@ -418,7 +430,7 @@ static JSValue setter_innerHTML(JSContext * cx, JSValueConst this, int argc, JSV
 // remove the preexisting children.
 	c1 = JS_GetPropertyStr(cx, this, "childNodes");
 	grab(c1);
-	if(!JS_IsArray(c1)) {
+	if(!wrap_IsArray(cx, c1)) {
 // no child nodes array, don't do anything.
 // This should never happen.
 		debugPrint(5, "setter h fail");
@@ -2530,7 +2542,7 @@ static bool append0(JSContext * cx, JSValueConst this, int argc, JSValueConst *a
 	child = argv[0];
 	cn = JS_GetPropertyStr(cx, this, "childNodes");
 	grab(cn);
-	if(!JS_IsArray(cn))
+	if(!wrap_IsArray(cx, cn))
 		goto done;
 
 	rc = true;
@@ -2599,7 +2611,7 @@ static JSValue nat_insbf(JSContext * cx, JSValueConst this, int argc, JSValueCon
 	item = argv[1];
 	cn = JS_GetPropertyStr(cx, this, "childNodes");
 	grab(cn);
-	if(!JS_IsArray(cn))
+	if(!wrap_IsArray(cx, cn))
 		goto done;
 	rc = true;
 	length = get_arraylength(cx, cn);
@@ -2657,7 +2669,7 @@ static JSValue nat_rmch2(JSContext * cx, JSValueConst this, int argc, JSValueCon
 	child = argv[0];
 	cn = JS_GetPropertyStr(cx, this, "childNodes");
 	grab(cn);
-	if(!JS_IsArray(cn))
+	if(!wrap_IsArray(cx, cn))
 		goto fail;
 	length = get_arraylength(cx, cn);
 	mark = -1;
@@ -3286,8 +3298,10 @@ Then, in November of 2025, we switched to the quickjs-ng engine,
 and it does not do this odd behavior, so I don't want to free the context.
 But some day quickjs-ng might absorb that change from quickjs,
 and if that hapens, then once again we need to free the context.
-	JS_FreeContext(ctx);
 *********************************************************************/
+#if ! Q_NG
+	JS_FreeContext(ctx);
+#endif
 
 	    continue;
 	}
@@ -3338,7 +3352,9 @@ void delPendings(const Frame *f)
 			    JS_FreeValue(e->ctx, e->argv[i]);
 		js_free(e->ctx, e);
 // See the earlier comment for pending jobs and freeing the context.
-//		JS_FreeContext(e->ctx);
+#if ! Q_NG
+		JS_FreeContext(e->ctx);
+#endif
 	    }
 
 	    if(delcount)
@@ -3410,7 +3426,7 @@ void my_ExecutePendingMessagePorts(void)
 			g = *(JSValue*)f0->winobj;
 			ra = JS_GetPropertyStr(cx0, g, "mp$registry");
 			grab(ra);
-			if(!JS_IsArray(ra)) {
+			if(!wrap_IsArray(cx0, ra)) {
 // no registry, don't do anything.
 // This should never happen.
 				JS_Release(cx0, ra);
