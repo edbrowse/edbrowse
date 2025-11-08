@@ -8,8 +8,6 @@ you will need to change the #include from quickjs.h to quickjs-libc.h,
 and include the context with every JS_IsArray() call.
 The ng fork determined, correctly, that the context is not used,
 and dropped it as a parameter.
-Also, JS_VALUE_GET_OBJ became visible again in quickjs-ng, 👍
-so I don't have to replicate that macro here.
 These changes are reflected in the symbol Q_NG, which should be 1 or 0.
 Thus it can be set by gcc -D to overwrite the default of 1.
 *********************************************************************/
@@ -29,7 +27,6 @@ Thus it can be set by gcc -D to overwrite the default of 1.
 #else
 #include "quickjs-libc.h"
 #define wrap_IsArray(c,a) JS_IsArray(c,a)
-#define JS_VALUE_GET_OBJ(v) JS_VALUE_GET_PTR(v)
 #endif
 
 // to track down memory leaks
@@ -46,7 +43,7 @@ static void grab2(JSValueConst v, int lineno)
 	void *p;
 	if(!JS_IsObject(v))
 		return;
-	p = JS_VALUE_GET_OBJ(v);
+	p = JS_VALUE_GET_PTR(v);
 	debugPrint(7, "%p<%d", p, lineno);
 // this isn't efficient at all, but probably won't be in the production system
 	for(s=qbase; s; s=s->next) {
@@ -89,7 +86,7 @@ static void release2(JSValueConst v, int lineno)
 	void *p;
 	if(!JS_IsObject(v))
 		return;
-	p = JS_VALUE_GET_OBJ(v);
+	p = JS_VALUE_GET_PTR(v);
 	debugPrint(7, "%p>%d", p, lineno);
 	for(s=qbase; s; s=s->next) {
 		if(s->ptr == p && s->lineno == lineno) {
@@ -1505,7 +1502,7 @@ static Tag *tagFromObject(JSValueConst v)
 	}
 	for (i = 0; i < cw->numTags; ++i) {
 		Tag *t = tagList[i];
-		if (t->jslink && JS_VALUE_GET_OBJ(*((JSValue*)t->jv)) == JS_VALUE_GET_OBJ(v) && !t->dead)
+		if (t->jslink && JS_VALUE_GET_PTR(*((JSValue*)t->jv)) == JS_VALUE_GET_PTR(v) && !t->dead)
 			return t;
 	}
 	debugPrint(3, "tagFromObject() returns null");
@@ -2441,7 +2438,7 @@ static Frame *doc2frame(JSValueConst this)
 {
 	Frame *f;
 	for (f = &(cw->f0); f; f = f->next)
-		if (f->jslink && JS_VALUE_GET_OBJ(*((JSValue*)f->docobj)) == JS_VALUE_GET_OBJ(this))
+		if (f->jslink && JS_VALUE_GET_PTR(*((JSValue*)f->docobj)) == JS_VALUE_GET_PTR(this))
 			return f;
 	debugPrint(3, "doc2frame can't find frame");
 	return 0;
@@ -2493,7 +2490,7 @@ static Frame *win2frame(JSValueConst this)
 {
 	Frame *f;
 	for (f = &(cw->f0); f; f = f->next)
-		if (f->jslink && JS_VALUE_GET_OBJ(*((JSValue*)f->winobj)) == JS_VALUE_GET_OBJ(this))
+		if (f->jslink && JS_VALUE_GET_PTR(*((JSValue*)f->winobj)) == JS_VALUE_GET_PTR(this))
 			return f;
 	debugPrint(3, "win2frame can't find frame");
 	return 0;
@@ -2549,7 +2546,7 @@ static bool append0(JSContext * cx, JSValueConst this, int argc, JSValueConst *a
 // see if it's already there.
 	for (i = 0; i < length; ++i) {
 		JSValue v = get_array_element_object(cx, cn, i);
-		bool same = (JS_VALUE_GET_OBJ(v) == JS_VALUE_GET_OBJ(child));
+		bool same = (JS_VALUE_GET_PTR(v) == JS_VALUE_GET_PTR(child));
 		JS_Release(cx, v);
 		if(same)
 // child was already there, just return.
@@ -2618,8 +2615,8 @@ static JSValue nat_insbf(JSContext * cx, JSValueConst this, int argc, JSValueCon
 	for (i = 0; i < length; ++i) {
 		bool same1, same2;
 		JSValue v = get_array_element_object(cx, cn, i);
-		same1 = (JS_VALUE_GET_OBJ(v) == JS_VALUE_GET_OBJ(child));
-		same2 = (JS_VALUE_GET_OBJ(v) == JS_VALUE_GET_OBJ(item));
+		same1 = (JS_VALUE_GET_PTR(v) == JS_VALUE_GET_PTR(child));
+		same2 = (JS_VALUE_GET_PTR(v) == JS_VALUE_GET_PTR(item));
 		JS_Release(cx, v);
 		if (same1)
 // should we move it to before item?
@@ -2674,7 +2671,7 @@ static JSValue nat_rmch2(JSContext * cx, JSValueConst this, int argc, JSValueCon
 	mark = -1;
 	for (i = 0; i < length; ++i) {
 		JSValue v = get_array_element_object(cx, cn, i);
-		bool same = (JS_VALUE_GET_OBJ(v) == JS_VALUE_GET_OBJ(child));
+		bool same = (JS_VALUE_GET_PTR(v) == JS_VALUE_GET_PTR(child));
 		JS_Release(cx, v);
 		if(same) {
 			mark = i;
@@ -3052,8 +3049,8 @@ static bool rootTag(JSValue start, Tag **tp)
 	Tag *t;
 	*tp = 0;
 	if(JS_IsUndefined(start) ||
-	JS_VALUE_GET_OBJ(start) == JS_VALUE_GET_OBJ(*((JSValue*)cf->winobj)) ||
-	JS_VALUE_GET_OBJ(start) == JS_VALUE_GET_OBJ(*((JSValue*)cf->docobj)))
+	JS_VALUE_GET_PTR(start) == JS_VALUE_GET_PTR(*((JSValue*)cf->winobj)) ||
+	JS_VALUE_GET_PTR(start) == JS_VALUE_GET_PTR(*((JSValue*)cf->docobj)))
 		return true;
 	t = tagFromObject(start);
 	if(!t)
@@ -4246,7 +4243,7 @@ static void rebuildSelector(Tag *sel, JSValue oa, int len2)
 			break;
 		}
 
-		if (JS_VALUE_GET_OBJ(*((JSValue*)t->jv)) != JS_VALUE_GET_OBJ(oo)) {
+		if (JS_VALUE_GET_PTR(*((JSValue*)t->jv)) != JS_VALUE_GET_PTR(oo)) {
 			debugPrint(5, "oo switch");
 /*********************************************************************
 Ok, we freed up the old options, and garbage collection
