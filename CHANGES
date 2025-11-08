@@ -5,7 +5,10 @@ Here are some changes introduced by recent versions of edbrowse.
 The lsr and lsc commands.
 
 Migrate from quickjs to quickjs-ng.
-The latter is preferred by most distributions.
+The latter is preferred by most distributions, but we support both.
+Use flags to switch between the two.
+
+Rerender quickly after browse then throttle back to the rr_interval.
 
 3.8.14
 

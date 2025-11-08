@@ -522,6 +522,7 @@ int ehsn;
 	char *mail_raw; // the email you're looking at
 	struct DBTABLE *table;	// if in sqlMode
 	time_t nextrender;
+	int rr_throttle;
 };
 typedef struct ebWindow Window;
 extern Window *cw;	/* current window */

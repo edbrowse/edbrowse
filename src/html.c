@@ -1611,7 +1611,8 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 	fileSize = bufferSize(context, true);
 	cw->mustrender = false;
 	time(&cw->nextrender);
-	cw->nextrender += 2;
+	cw->rr_throttle = 2;
+	cw->nextrender += cw->rr_throttle;
 	if(cw->prev && cw->prev->imapMode2) cw->imapMode3 = true;
 	return true;
 }
@@ -3546,7 +3547,12 @@ void rerender(int rr_command)
 
 	cw->mustrender = false;
 	time(&cw->nextrender);
-	cw->nextrender += rr_interval;
+	if(cw->rr_throttle == 0) cw->rr_throttle = 1;
+	if(cw->rr_throttle < rr_interval) {
+		cw->rr_throttle *= 2;
+		if(cw->rr_throttle > rr_interval) cw->rr_throttle = rr_interval;
+	}
+	cw->nextrender += cw->rr_throttle;
 	hovcount = invcount = injcount = rrcount = 0;
 
 // not sure if we have to do this here
