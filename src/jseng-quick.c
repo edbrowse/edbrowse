@@ -29,8 +29,7 @@ Thus it can be set by gcc -D to overwrite the default of 1.
 #else
 #include "quickjs-libc.h"
 #define wrap_IsArray(c,a) JS_IsArray(c,a)
-typedef struct JSObject JSObject;
-#define JS_VALUE_GET_OBJ(v) ((JSObject *)JS_VALUE_GET_PTR(v))
+#define JS_VALUE_GET_OBJ(v) JS_VALUE_GET_PTR(v)
 #endif
 
 // to track down memory leaks
