@@ -4,6 +4,7 @@ PERL ?= perl
 PREFIX ?=	/usr/local
 QUICKJS_INCLUDE ?= $(PREFIX)/include
 QUICKJS_LIB ?= $(PREFIX)/lib
+QUICKJS_LIB_NAME ?= qjs
 CFLAGS +=	-Wall -D_FILE_OFFSET_BITS=64
 
 # determine includes and linker flags
@@ -34,7 +35,7 @@ ifneq ($(EBPROF),)
 endif
 
 # LDFLAGS for quickjs loading.
-QUICKJS_LDFLAGS = -L$(QUICKJS_LIB) -lqjs -ldl
+QUICKJS_LDFLAGS = -L$(QUICKJS_LIB) -l$(QUICKJS_LIB_NAME) -ldl
 ifeq ($(shell uname),Linux)
 	QUICKJS_LDFLAGS += -latomic
 endif
