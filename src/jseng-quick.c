@@ -2,9 +2,16 @@
 This is the back-end process for javascript.
 We receive calls from edbrowse,
 getting and setting properties for various DOM objects.
-This is the quick js version.
-If you package this with the quick js libraries,
-you will need to include the MIT open source license.
+This is the quick js-ng version.
+If you revert back to quickjs, which was the original project,
+you will need to change the #include from quickjs.h to quickjs-libc.h,
+and include the context with every JS_IsArray() call.
+The ng fork determined, correctly, that the context is not used,
+and dropped it as a parameter.
+Also, JS_VALUE_GET_OBJ became visible again in quickjs-ng, 👍
+so I don't have to replicate that macro here.
+Other than that, there is no difference between the two projects,
+relative to the api and this file.
 *********************************************************************/
 
 #include "eb.h"
@@ -12,19 +19,7 @@ you will need to include the MIT open source license.
 #include <stddef.h>
 #include <sys/utsname.h>
 
-// the makefile should set -I properly, based on  your environment variable
-// QUICKJS_DIR, or using a reasonable default.
-// So this basic include should work.
 #include "quickjs.h"
-
-/*********************************************************************
-Somewhere between 01/03/2024 and 02/14/2024, JS_VALUE_GET_OBJ
-became opaque. Moved from the visible quickjs.h to quickjs.c.
-I don't know why. So one of those dreaded copy operations here.
-Let's hope this macro doesn't change out from under me; not likely.
-*********************************************************************/
-typedef struct JSObject JSObject;
-#define JS_VALUE_GET_OBJ(v) ((JSObject *)JS_VALUE_GET_PTR(v))
 
 // to track down memory leaks
 // Warning, if you turn this feature on it slows things down, a lot!
@@ -3194,23 +3189,25 @@ I copied some primitives for managing linked lists, from list.h,
 and they are remarkably similar to the ones I invented for edbrowse.
 Their list_empty is my listEmpty, exactly the same code.
 Great minds think alike.
-But the real problem is the JSRuntime. The API leaves it opaque,
+There is a lot of code from the js project that I copy, I can only hope,
+in the parlance of evolution, that such code is highly conserved.
+Cause if it mutates, boy we're in trouble!
+Now, the real problem is the JSRuntime. The API leaves it opaque,
 struct JSRuntime, with no mention of the members.
 I have to know where, in this structure, to find the list of jobs.
 And that could change version to version.
 So, gross as it is, I enqueue a job, and look for a change in this structure.
 I assume the change occurs somewhere between struct+64 and struct+512.
 If nothing changes, I can't run any promise code, and many websites won't work.
-You will be alerted, at debug level 1 or higher.
-If I find the member that has changed, you will be alerted, at debug level 3.
-As I write this, the list is at 152.
-It shouldn't stray too far from this position, the runtime structure
-is well established by now.
+In that event you will be alerted at debug level 1 or higher.
+If I find the member that has changed, you will be alerted at debug level 3.
+the list has moved from 152 to 328 as the structure evolved over the years.
+I hope it doesn't stray too much farther.
 The real risk here is, I could glom onto a change that isn't the jobs queue.
 Wild pointers that go off to other structures.
 At that point the program will blow up bigtime.
 This is all a lot more involved than it should be.
-Ok, here is some stuffe from quickjs/list.h.
+Ok, here is some necessary stuffe from quickjs/list.h.
 *********************************************************************/
 
 struct list_head {
@@ -3285,8 +3282,12 @@ If your quickjs is prior to this commit it will probably blow up,
 for then we would actually free the context, and then go on to try to use it.
 There isn't a version number I can key on, so I'll just do what I have to do
 and hope your quickjs is current.
-*********************************************************************/
+Then, in November of 2025, we switched to the quickjs-ng engine,
+and it does not do this odd behavior, so I don't want to free the context.
+But some day quickjs-ng might absorb that change from quickjs,
+and if that hapens, then once again we need to free the context.
 	JS_FreeContext(ctx);
+*********************************************************************/
 
 	    continue;
 	}
@@ -3336,8 +3337,8 @@ void delPendings(const Frame *f)
 		for(i = 0; i < e->argc; i++)
 			    JS_FreeValue(e->ctx, e->argv[i]);
 		js_free(e->ctx, e);
-// See earlier comments for pending jobs and freeing the context.
-		JS_FreeContext(e->ctx);
+// See the earlier comment for pending jobs and freeing the context.
+//		JS_FreeContext(e->ctx);
 	    }
 
 	    if(delcount)
