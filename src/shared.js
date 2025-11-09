@@ -441,45 +441,49 @@ return a;
 }
 
 function getElementById(s) {
-if(!s) { // missing or null argument
-alert3("getElementById(type " + typeof s + ")");
-return null;
-}
-gebi_hash = this.id$hash;
-if(gebi_hash) { // should always be there
-// efficiency, see if we have hashed this id
-var t = gebi_hash[s];
-if(t) {
-// is it still rooted?
-for(var u = t.parentNode; u; u = u.parentNode)
-if(u == this) return t;
-delete gebi_hash[s];
-}}
-if(!gebi_hash) {
-// look the traditional way
-return gebi(this, s);
-}
-// look for nonsense to build up the hash
-gebi(this, "*@%impossible`[]")
-return gebi_hash[s] ? gebi_hash[s] : null;
+    if(!s) { // missing or null argument
+        alert3("getElementById(type " + typeof s + ")");
+        return null;
+    }
+    const w = my$win();
+    const d = my$doc();
+    const gebi_hash = w.id$hash;
+    if(gebi_hash) { // should always be there
+        // efficiency, see if we have hashed this id
+        const t = gebi_hash[s];
+        if(t) {
+            // is it still rooted?
+            for(let u = t.parentNode; u; u = u.parentNode)
+                if(u == d) return t;
+            delete gebi_hash[s];
+        }
+    }
+    if(!gebi_hash) {
+        // look the traditional way
+        return gebi(d, s);
+    }
+    // look for nonsense to build up the hash
+    gebi(d, "*@%impossible`[]")
+    return gebi_hash[s] ? gebi_hash[s] : null;
 }
 
 function gebi(top, s) {
-if(top.id) {
-if(gebi_hash) gebi_hash[top.id] = top;
-if(top.id == s) return top;
-}
-if(top.childNodes) {
-// don't descend into another frame.
-// The frame has no children through childNodes, so we don't really need this line.
-if(top.is$frame) return null;
-for(var i=0; i<top.childNodes.length; ++i) {
-var c = top.childNodes[i];
-var res = gebi(c, s);
-if(res) return res;
-}
-}
-return null;
+    if(top.id) {
+        const gebi_hash = my$win().id$hash;
+        if(gebi_hash) gebi_hash[top.id] = top;
+        if(top.id == s) return top;
+    }
+    if(top.childNodes) {
+        // don't descend into another frame.
+        // The frame has no children through childNodes, so we don't really need this line.
+        if(top.is$frame) return null;
+        for(let i=0; i<top.childNodes.length; ++i) {
+            let c = top.childNodes[i];
+            let res = gebi(c, s);
+            if(res) return res;
+        }
+    }
+    return null;
 }
 
 function getElementsByClassName(s) {
