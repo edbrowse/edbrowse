@@ -148,9 +148,11 @@ see the earlier comments on environment variables
 and the edbrowse makefile.
 
 In addition to quick-related variables,
-the makefile supports the environment variables EBDEBUG=on,
-(or yes or y or 1 or any nonempty string),
-for symbolic debugging via gdb, and EBDEMIN=on for javascript deminimization.
+the makefile supports the environment variables EBDEBUG=on
+(or yes or y or 1 or any nonempty string)
+for symbolic debugging via gdb,
+and EBPROF=on for profiling,
+and EBDEMIN=on for javascript deminimization.
 Distributors should not set these flags.
 
 You can test the executable by edbrowse src/jsrt
