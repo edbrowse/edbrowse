@@ -113,7 +113,7 @@ You can, as an alternative, build edbrowse against the original project
 quickjs. Unfortunately versioning in quickjs is less clear and thus it is
 difficult to give exact version requirements other than that the version must
 be released after June 2025.
-the preprocessing symbol Q-NG is set to 1 for quickjs-ng, or 0 for quickjs.
+the preprocessing symbol Q_NG is set to 1 for quickjs-ng, or 0 for quickjs.
 This is only used by the sourcefile jseng-quick.c,
 which is the gateway between edbrowse and quickjs.
 If quickjs-ng is installed, just type make, or:
