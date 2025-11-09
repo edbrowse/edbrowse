@@ -453,7 +453,7 @@ function getElementById(s) {
         if(t) {
             // is it still rooted?
             for(let u = t.parentNode; u; u = u.parentNode)
-                if(u == d) return t;
+                if(u == this) return t;
             delete gebi_hash[s];
         }
     }
