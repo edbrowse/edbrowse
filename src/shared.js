@@ -8,9 +8,9 @@ Nail down all functions and prototypes in this window.
 First, some code that lets you run this stand alone, as a syntax check.
 qjs -C shared.js
 *********************************************************************/
-
-if(typeof puts === "undefined") {
-function puts(s){}
+"use strict";
+if(!this.hasOwnProperty("puts")) {
+    this.puts = (s) => undefined;
 }
 
 Object.defineProperty(this, "self",{writable:false,configurable:false,value:this});
@@ -38,7 +38,7 @@ Object.defineProperty(Function.prototype, "bind",{enumerable:false,writable:fals
 // Object.defineProperty(Function.prototype, "toString",{enumerable:false,writable:false,configurable:false});
 Object.defineProperty(Function.prototype, "constructor",{enumerable:false,writable:false,configurable:false});
 
-alert = puts;
+this.alert = puts;
 // print an error inline, at debug level 3 or higher.
 function alert3(s) { logputs(3, s); }
 function alert4(s) { logputs(4, s); }
@@ -711,7 +711,7 @@ return;
 
 // Here comes the Iterator and Walker.
 // I wouldn't bother, except for some tests in acid3.
-NodeFilter = {
+this.NodeFilter = {
 SHOW_ALL:-1,
 SHOW_ELEMENT:1,
 SHOW_ATTRIBUTE:2,
@@ -868,7 +868,7 @@ return null;
 return o;
 }
 
-logtime = function(debug, level, obj) {
+function logtime (debug, level, obj) {
 var today=new Date;
 var h=today.getHours();
 var m=today.getMinutes();
@@ -880,7 +880,7 @@ if(s < 10) s = "0" + s;
 logputs(debug, "console " + level + " [" + h + ":" + m + ":" + s + "] " + obj);
 }
 
-defport = {
+this.defport = {
 http: 80,
 https: 443,
 pop3: 110,
@@ -915,7 +915,7 @@ return t.replace(/-./g, function(f){return f[1].toUpperCase()});
 }
 function dataCamel(t) { return camelCase(t.replace(/^data-/,"")); }
 
-isabove = function(a, b) {
+function isabove(a, b) {
 var j = 0;
 while(b) {
 if(b == a) { var e = new Error; e.HIERARCHY_REQUEST_ERR = e.code = 3; throw e; }
@@ -2183,7 +2183,7 @@ So I don't know why they say these are bits in a bitmask.
 Also not clear if "contains" can descend into a subframe. I don't check for this.
 *********************************************************************/
 
-compareDocumentPosition = function(w) {
+function compareDocumentPosition(w) {
 if(this === w) return DOCUMENT_POSITION_DISCONNECTED;
 if(this.parentNode === w.parentNode) {
 if(this.nextSibling === w) return DOCUMENT_POSITION_FOLLOWING;
@@ -2204,7 +2204,7 @@ return DOCUMENT_POSITION_DISCONNECTED;
 }
 
 // for toolbar menubar etc
-generalbar = {}
+this.generalbar = {}
 Object.defineProperty(generalbar, "visible", {value:true})
 
 function cssGather(pageload, newwin) {
@@ -2721,7 +2721,7 @@ return o ? o.construct : undefined;
 // jtfn2 injects code after catch(e) {, for detection by dberr
 // jtfn3 injects trace at the end of a return statement, in a tricky way.
 
-jtfn0 = function (all, a, b) {
+function jtfn0(all, a, b) {
 // if code is not deminimized, this will inject
 // trace on every blank line, which is not good.
 if(b == "\n" && a.match(/\n/)) return a+b;
@@ -2734,7 +2734,7 @@ w.$jt$sn = ++sn;
 return a + "trace" + "@(" + c + sn + ")" + b;
 }
 
-jtfn1 = function (all, a, b) {
+function jtfn1(all, a, b) {
 var w = my$win();
 var c = w.$jt$c;
 var sn = w.$jt$sn;
@@ -2744,11 +2744,11 @@ return a + " " + fn + b +
 "if(step$l>=1)alert('" + fn + "(' + showarglist(arguments) + ')');\n";
 }
 
-jtfn2 = function (all, a) {
+function jtfn2(all, a) {
 return '}catch(' + a + '){if(db$flags(3)) alert(' + a + '.toString()),alert(' + a + '.stack),step$l=2;';
 }
 
-jtfn3 = function (all, a, b) {
+function jtfn3(all, a, b) {
 var w = my$win();
 var c = w.$jt$c;
 var sn = w.$jt$sn;
@@ -2849,7 +2849,7 @@ return;
 }
 
 // copy of the Event class, because Blob needs it.
-Event = function(etype){
+function Event(etype){
     // event state is kept read-only by forcing
     // a new object for each event.  This may not
     // be appropriate in the long run and we'll
@@ -2866,7 +2866,7 @@ if(typeof etype == "string") this.type = etype;
 // placeholder for URL class, we can't share the actual class here,
 // but this has to be here for the Blob code.
 // See startwindow for an explanation of why this class can't be shared.
-URL = {};
+this.URL = {};
 
 /*********************************************************************
 Some URL methods we can define here however, and reuse elsewhere,
@@ -3015,7 +3015,7 @@ swap = list[i], list[i] = list[i+1], list[i+1] = swap, change = true;
 }
 }
 
-DOMParser = function() {
+function DOMParser() {
 return {
 parseFromString: function(t,y) {
 var d = my$doc();
@@ -3250,7 +3250,7 @@ XMLHttpRequest.prototype.responseXML = null;
 XMLHttpRequest.prototype.status = 0;
 XMLHttpRequest.prototype.statusText = "";
 
-CSS = {
+this.CSS = {
 supports:function(w){ alert3("CSS.supports("+w+")"); return false},
 escape:function(s) {
 if(typeof s == "number") s = s.toString();
@@ -4552,7 +4552,7 @@ MIT license.
 These are considerably modified for our purposes.
 *********************************************************************/
 
-MessagePort = /** @class */ (function () {
+this.MessagePort = /** @class */ (function () {
 function MessagePort() {
 var w = my$win();
 this.onmessage = null;
@@ -4595,7 +4595,7 @@ alert3("MessagePort start for context " + this.eb$ctx);
 };
 return MessagePort;
 }());
-MessageChannel = /** @class */ (function () {
+this.MessageChannel = /** @class */ (function () {
 function MessageChannel() {
 this.port1 = new MessagePort();
 this.port2 = new MessagePort();
