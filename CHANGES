@@ -6,7 +6,7 @@ The lsr and lsc commands.
 
 Migrate from quickjs to quickjs-ng.
 The latter is preferred by most distributions, but we support both.
-Use flags to switch between the two.
+Use flags at build time to switch between the two. See README.
 
 Rerender quickly after browse then throttle back to the rr_interval.
 
