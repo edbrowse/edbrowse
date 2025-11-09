@@ -1,5 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
+<head>  <!-- the original has no head tag -->
  <title>The Acid3 Test</title>
 <base href=http://acid3.acidtests.org>
  <script type="text/javascript">
@@ -2089,6 +2090,7 @@ frames[1].contentDocument;
   }
 
 </script>
+</head>
 
  <body onload="update()  /* this attribute's value is tested in one of the tests */ ">
   <h1 onclick="report(event)">Acid3</h1>
