@@ -103,6 +103,25 @@ make install
 If header and library are not installed in the usual places,
 you may need to set PREFIX,
 or QUICKJS_INCLUDE and QUICKJS_LIB appropriately, when you make edbrowse.
+Under normal circumstances, make will just work.
+
+quickjs-ng is a fork of the original project quickjs.
+You can, as an alternative, build edbrowse against the original project quickjs.
+the preprocessing symbol Q-NG is set to 1 for quickjs-ng, or 0 for quickjs.
+This is only used by the sourcefile jseng-quick.c,
+which is the gateway between edbrowse and quickjs.
+If quickjs-ng is installed, just type make, or:
+CPPFLAGS=-DQ_NG=1 QUICKJS_LIB_NAME=qjs make
+If quickjs is installed:
+CPPFLAGS=-DQ_NG=0 QUICKJS_LIB_NAME=quickjs make
+
+It is not possible to install both simultaneously.
+There is a conflict with the executable qjs.
+To build edbrowse against a quick project that is built locally, but not installed,
+set QUICKJS_INCLUDE and QUICKJS_LIB appropriately.
+Your make command might look like this.
+
+CPPFLAGS=-DQ_NG=0 QUICKJS_LIB_NAME=quickjs  QUICKJS_INCLUDE=/home/your_login/programs/qorig QUICKJS_LIB=/home/your_login/programs/qorig make
 
 readline:
 Edbrowse supports using GNU readline for handling input. As such you need
@@ -116,8 +135,14 @@ For a time, edbrowse could be built on windows, but this is no longer supported.
 On all other systems, you should be able to use make.
 cd src
 make
+It should just work.
+If you are building against the original project quickjs,
+or a quick package that is built locally but not installed,
+see the earlier comments on environment variables
+and the edbrowse makefile.
 
-The makefile supports the environment variables EBDEBUG=on,
+In addition to quick-related variables,
+the makefile supports the environment variables EBDEBUG=on,
 (or yes or y or 1 or any nonempty string),
 for symbolic debugging via gdb, and EBDEMIN=on for javascript deminimization.
 Distributors should not set these flags.
