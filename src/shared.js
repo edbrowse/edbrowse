@@ -445,9 +445,8 @@ function getElementById(s) {
         alert3("getElementById(type " + typeof s + ")");
         return null;
     }
-    const w = my$win();
-    const d = my$doc();
-    const gebi_hash = w.id$hash;
+    // this is the document object here
+    const gebi_hash = this.id$hash;
     if(gebi_hash) { // should always be there
         // efficiency, see if we have hashed this id
         const t = gebi_hash[s];
@@ -460,16 +459,17 @@ function getElementById(s) {
     }
     if(!gebi_hash) {
         // look the traditional way
-        return gebi(d, s);
+        return gebi(this, s);
     }
     // look for nonsense to build up the hash
-    gebi(d, "*@%impossible`[]")
+    gebi(this, "*@%impossible`[]")
     return gebi_hash[s] ? gebi_hash[s] : null;
 }
 
 function gebi(top, s) {
     if(top.id) {
-        const gebi_hash = my$win().id$hash;
+        // the function isn't bound to the document object so we need to get it
+        const gebi_hash = my$doc().id$hash;
         if(gebi_hash) gebi_hash[top.id] = top;
         if(top.id == s) return top;
     }
