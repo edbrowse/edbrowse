@@ -18,64 +18,69 @@ even if the functionality is limited.
 To this end, I create the window object if it isn't already there,
 using the obvious window = this.
 *********************************************************************/
-
-if(typeof window === "undefined") {
-window = this;
-document = {};
-eb$ctx = 77;
+"use strict";
+if(!Object.hasOwnProperty(this, "window")) {
+this.window = this;
+this.document = {};
+this.eb$ctx = 77;
 // Stubs for native methods that are normally provided by edbrowse.
 // Example: alert, which we can replace with print,
 // or console.log, or anything present in the command line js interpreter.
-if(!window.print) print = console.log;
-alert = print;
-eb$nullfunction = function() { return null}
-eb$voidfunction = function() { }
-eb$truefunction = function() { return true}
-eb$falsefunction = function() { return false}
-db$flags = eb$falsefunction;
-eb$newLocation = function (s) { print("new location " + s)}
-eb$logElement = function(o, tag) { print("pass tag " + tag + " to edbrowse")}
-eb$playAudio = eb$voidfunction;
-eb$getcook = function() { return "cookies"}
-eb$setcook = function(value) { print(" new cookie " + value)}
-eb$parent = function() { return this}
-eb$top = function() { return this}
-eb$frameElement = function() { return this}
-eb$getter_cd = function() { return null}
-eb$getter_cw = function() { return null}
-eb$formSubmit = function() { print("submit")}
-eb$formReset = function() { print("reset")}
-eb$listen = eb$unlisten = addEventListener = removeEventListener = eb$voidfunction;
-my$win = function() { return window}
-my$doc = function() { return document}
-eb$hasFocus = eb$write = eb$writeln = eb$apch1 = eb$apch2 = eb$rmch2 = eb$insbf = eb$voidfunction;
+if(!window.print) this.print = console.log;
+this.alert = print;
+this.eb$nullfunction = function() { return null}
+this.eb$voidfunction = function() { }
+this.eb$truefunction = function() { return true}
+this.eb$falsefunction = function() { return false}
+this.db$flags = eb$falsefunction;
+this.eb$newLocation = function (s) { print("new location " + s)}
+this.eb$logElement = function(o, tag) { print("pass tag " + tag + " to edbrowse")}
+this.eb$getcook = function() { return "cookies"}
+this.eb$setcook = function(value) { print(" new cookie " + value)}
+this.eb$parent = function() { return this}
+this.eb$top = function() { return this}
+this.eb$frameElement = function() { return this}
+this.eb$getter_cd = function() { return null}
+this.eb$getter_cw = function() { return null}
+this.eb$formSubmit = function() { print("submit")}
+this.eb$formReset = function() { print("reset")}
+;(function() { let void_functions = ["eb$listen", "eb$unlisten", "addEventListener",
+    "removeEventListener", "eb$apch1", "eb$apch2", "eb$rmch2", "eb$insbf",
+    "eb$hasFocus", "eb$write", "eb$writeln", "eb$playAudio"];
+for (let i in void_functions) window[void_functions[i]] = eb$voidfunction; })();
+this.my$win = function() { return window}
+this.my$doc = function() { return document}
+
 // document.eb$apch2 = function(c) { alert("append " + c.node<Name  + " to " + this.nodeName); this.childNodes.push(c); }
 // other browsers don't have querySelectorAll under window
-querySelectorAll = function() { return [] }
-querySelector = function() { return {} }
-querySelector0 = function() { return false}
-eb$cssText = function(){}
+this.querySelectorAll = function() { return [] }
+this.querySelector = function() { return {} }
+this.querySelector0 = function() { return false}
+this.eb$cssText = function(){}
 }
 
 // the third party deminimization stuff is in mw$, the master window.
 // Other stuff too, that can be shared.
 // The window should just be there from C, but in case it isn't.
 if(!window.mw$)
-mw$ = {share:false, URL:{}};
+this.mw$ = {share:false, URL:{}};
 
 // set window member, unseen, unchanging
-swm = function(k, v) { Object.defineProperty(window, k, {value:v})}
+this.swm = function(k, v) { Object.defineProperty(window, k, {value:v})}
 // visible, but still protected
-swm1 = function(k, v) { Object.defineProperty(window, k, {value:v,enumerable:true})}
+this.swm1 = function(k, v) { Object.defineProperty(window, k, {value:v,enumerable:true})}
 // unseen, but changeable
-swm2 = function(k, v) { Object.defineProperty(window, k, {value:v, writable:true, configurable:true})}
+this.swm2 = function(k, v) { Object.defineProperty(window, k, {value:v, writable:true, configurable:true})}
 
 // this is called as each html element is built
 // establish the prototype for inheritance, then set dom$class
 // If our made-up class is z$Foo, dom$class becomes Foo
-spdc = function(c, inherit) { var v = c.replace(/^z\$/, "");
-if(inherit) Object.defineProperty(window[c], "prototype", {value:new inherit})
-Object.defineProperty(window[c].prototype, "dom$class", {value:v})}
+this.spdc = function(c, inherit) {
+    const v = c.replace(/^z\$/, "");
+    if(inherit)
+        Object.defineProperty(window[c], "prototype", {value:new inherit})
+    Object.defineProperty(window[c].prototype, "dom$class", {value:v})
+}
 
 // The first DOM class is Node, at the head of all else.
 swm("Node", function(){})
@@ -132,12 +137,12 @@ Document.prototype.nodeType = 9
 swm1("document", new Document)
 
 // set document member, analogs of the set window member functions
-sdm = function(k, v) { Object.defineProperty(document, k, {value:v})}
-sdm1 = function(k, v) { Object.defineProperty(document, k, {value:v,enumerable:true})}
-sdm2 = function(k, v) { Object.defineProperty(document, k, {value:v, writable:true, configurable:true})}
+this.sdm = function(k, v) { Object.defineProperty(document, k, {value:v})}
+this.sdm1 = function(k, v) { Object.defineProperty(document, k, {value:v,enumerable:true})}
+this.sdm2 = function(k, v) { Object.defineProperty(document, k, {value:v, writable:true, configurable:true})}
 /* Apparently people want to muck with DOMException so can't be shared as
 otherwise we end up with read-only prototype chain issues */
-DOMException = function(message, name) {
+this.DOMException = function(message, name) {
     this.message = message
     this.name = name
     var error = Error(message)
@@ -166,8 +171,8 @@ swm("eb$logElement", mw$.eb$logElement)
 swm1("alert", mw$.alert)
 swm("alert3", mw$.alert3)
 swm("alert4", mw$.alert4)
-print = function() { alert("javascript is trying to print this document")}
-stop = function() { alert("javascript is trying to stop the browse process")}
+this.print = function() { alert("javascript is trying to print this document")}
+this.stop = function() { alert("javascript is trying to stop the browse process")}
 swm("dumptree", mw$.dumptree)
 swm("uptrace", mw$.uptrace)
 swm("by_esn", mw$.by_esn)
@@ -202,7 +207,7 @@ sdm2("dom$class", "HTMLDocument")
 swm("toString$nat", toString);
 // toString has to be replaceable by other websites,
 // this happens more often than you think.
-toString = Object.prototype.toString = function() { return this.dom$class ? "[object "+this.dom$class+"]" : toString$nat.call(this);}
+this.toString = Object.prototype.toString = function() { return this.dom$class ? "[object "+this.dom$class+"]" : toString$nat.call(this);}
 Object.defineProperty(window, "toString", {enumerable:false})
 
 swm1("scroll", eb$voidfunction)
@@ -2808,10 +2813,7 @@ if(typeof f == "function") f()})
 
 
 // don't need these any more
-delete swm;
-delete sdm;
-delete swm1;
-delete sdm1;
-delete swm2;
-delete sdm2;
-delete spdc;
+;(function() {
+    let names_to_delete = ["swm", "sdm", "swm1", "sdm1", "swm2", "sdm2", "spdc"];
+    for (i in names_to_delete) delete window[names_to_delete[i]];
+})();
