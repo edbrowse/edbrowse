@@ -467,20 +467,26 @@ function getElementById(s) {
 }
 
 function gebi(top, s) {
-    if(top.id) {
-        // the function isn't bound to the document object so we need to get it
-        const gebi_hash = my$doc().id$hash;
-        if(gebi_hash) gebi_hash[top.id] = top;
-        if(top.id == s) return top;
+    if (top.id) {
+/*
+the function isn't bound to the document object so we need to get
+it. I'm not sure if a child document should be able to have an id
+but handle it if so by assuming that either we have an ownerDocument
+property or that we're being called with a document object. If
+neither are true then there's not much else we can do here.
+*/
+        const gebi_hash = (top.ownerDocument ? top.ownerDocument : top).id$hash;
+        if (gebi_hash) gebi_hash[top.id] = top;
+        if (top.id == s) return top;
     }
-    if(top.childNodes) {
+    if (top.childNodes) {
         // don't descend into another frame.
         // The frame has no children through childNodes, so we don't really need this line.
-        if(top.is$frame) return null;
-        for(let i=0; i<top.childNodes.length; ++i) {
+        if (top.is$frame) return null;
+        for (let i in top.childNodes) {
             let c = top.childNodes[i];
             let res = gebi(c, s);
-            if(res) return res;
+            if (res) return res;
         }
     }
     return null;
