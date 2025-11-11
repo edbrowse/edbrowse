@@ -44,7 +44,7 @@ this.eb$getter_cd = function() { return null}
 this.eb$getter_cw = function() { return null}
 this.eb$formSubmit = function() { print("submit")}
 this.eb$formReset = function() { print("reset")}
-;(function() { let void_functions = ["eb$listen", "eb$unlisten", "addEventListener",
+;(function() { let void_functions = ["addEventListener",
     "removeEventListener", "eb$apch1", "eb$apch2", "eb$rmch2", "eb$insbf",
     "eb$hasFocus", "eb$write", "eb$writeln", "eb$playAudio"];
 for (let i in void_functions) window[void_functions[i]] = eb$voidfunction; })();
@@ -64,7 +64,10 @@ this.eb$cssText = function(){}
 // The window should just be there from C, but in case it isn't.
 if(!window.mw$) {
     this.mw$ = {share:false, URL:{}};
-    this.mw$.url_hrefset = function (v) { this.href$val = v; };
+    this.mw$.url_hrefset = () => undefined;
+    this.mw$.dispatchEvent = () => undefined;
+    this.mw$.addEventListener = () => undefined;
+    this.mw$.removeEventListener = () => undefined;
 }
 // set window member, unseen, unchanging
 this.swm = function(k, v) { Object.defineProperty(window, k, {value:v})}
@@ -92,20 +95,16 @@ spdc("Node", null)
 swm("NodeList", function(){})
 spdc("NodeList", Array)
 
-swm("eb$listen", mw$.eb$listen)
-swm("eb$unlisten", mw$.eb$unlisten)
 // make sure to wrap global dispatchEvent, so this becomes this window,
 // and not the shared window.
-swm("dispatchEvent", function(e) { return mw$.dispatchEvent.call(window, e)})
-swm("addEventListener", function(ev, handler, iscapture) { this.eb$listen(ev,handler, iscapture, true)})
-swm("removeEventListener", function(ev, handler, iscapture) { this.eb$unlisten(ev,handler, iscapture, true)})
+swm("dispatchEvent", mw$.dispatchEvent.bind(window))
+swm("addEventListener", mw$.addEventListener.bind(window))
+swm("removeEventListener", mw$.removeEventListener.bind(window))
 
 swm("EventTarget", function() {})
 spdc("EventTarget", Node)
-EventTarget.prototype.eb$listen = eb$listen;
-EventTarget.prototype.eb$unlisten = eb$unlisten;
-EventTarget.prototype.addEventListener = addEventListener;
-EventTarget.prototype.removeEventListener = removeEventListener;
+EventTarget.prototype.addEventListener = mw$.addEventListener;
+EventTarget.prototype.removeEventListener = mw$.removeEventListener;
 EventTarget.prototype.dispatchEvent = mw$.dispatchEvent;
 
 swm("Document", function() {
@@ -1877,18 +1876,15 @@ this.name = o.name, this.detail = o.detail;
 CustomEvent.prototype = new Event;
 
 swm("MediaQueryList", function() {
-this.nodeName = "MediaQueryList";
-this.matches = false;
-this.media = "";
-this.addEventListener = addEventListener;
-this.removeEventListener = removeEventListener;
-// supporting the above:
-this.eb$listen = eb$listen;
-this.eb$unlisten = eb$unlisten;
-this.addListener = function(f) { this.addEventListener("mediaChange", f, false); }
-this.removeListener = function(f) { this.removeEventListener("mediaChange", f, false); }
-})
+    this.matches = false;
+    this.media = "";
+});
 spdc("MediaQueryList", null)
+MediaQueryList.prototype.addEventListener = mw$.addEventListener;
+MediaQueryList.prototype.removeEventListener = mw$.removeEventListener;
+MediaQueryList.prototype.nodeName = "MediaQueryList";
+MediaQueryList.prototype.addListener = function(f) { this.addEventListener("mediaChange", f, false); };
+MediaQueryList.prototype.removeListener = function(f) { this.removeEventListener("mediaChange", f, false); };
 
 swm1("matchMedia", function(s) {
 var q = new MediaQueryList;
@@ -1987,11 +1983,8 @@ p.compareDocumentPosition = mw$.compareDocumentPosition;
 p.focus = function(){document.activeElement=this}
 p.blur = blur;
 p.getBoundingClientRect = document.getBoundingClientRect;
-// events
-p.eb$listen = eb$listen;
-p.eb$unlisten = eb$unlisten;
-p.addEventListener = addEventListener;
-p.removeEventListener = removeEventListener;
+p.addEventListener = mw$.addEventListener;
+p.removeEventListener = mw$.removeEventListener;
 p.dispatchEvent = mw$.dispatchEvent;
 p.insertAdjacentHTML = mw$.insertAdjacentHTML;
 // outerHTML is dynamic; should innerHTML be?
