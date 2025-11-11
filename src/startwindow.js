@@ -65,6 +65,7 @@ this.eb$cssText = function(){}
 if(!window.mw$) {
     this.mw$ = {share:false, URL:{}};
     this.mw$.url_hrefset = function (v) { this.href$val = v; };
+    this.mw$.gebiCleanup = (s) => { alert(`gebiCleanup called with value ${s}`); };
 }
 // set window member, unseen, unchanging
 this.swm = function(k, v) { Object.defineProperty(window, k, {value:v})}
@@ -108,8 +109,11 @@ EventTarget.prototype.addEventListener = addEventListener;
 EventTarget.prototype.removeEventListener = removeEventListener;
 EventTarget.prototype.dispatchEvent = mw$.dispatchEvent;
 
-swm("Document", function(){Object.defineProperty(this, "childNodes", {value:[],writable:true,configurable:true})
-Object.defineProperty(this, "id$hash", {value:{}})})
+swm("Document", function() {
+    Object.defineProperty(this, "childNodes", {value:[],writable:true,configurable:true});
+    Object.defineProperty(this, "id$hash", {value: new Map});
+    Object.defineProperty(this, "id$registry", {value: new FinalizationRegistry(mw$.gebiCleanup)});
+})
 spdc("Document", EventTarget)
 Document.prototype.activeElement = null;
 Object.defineProperty(Document.prototype, "children", {get:function(){return this.childNodes}})

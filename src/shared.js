@@ -447,23 +447,24 @@ function getElementById(s) {
     }
     // this is the document object here
     const gebi_hash = this.id$hash;
-    if(gebi_hash) { // should always be there
-        // efficiency, see if we have hashed this id
-        const t = gebi_hash[s];
-        if(t) {
+    // efficiency, see if we have hashed this id
+    const r = gebi_hash.get(s);
+    if(r) {
+        // Does it still exist?
+        let t = r.deref();
+        if (t) {
             // is it still rooted?
             for(let u = t.parentNode; u; u = u.parentNode)
                 if(u == this) return t;
-            delete gebi_hash[s];
         }
-    }
-    if(!gebi_hash) {
-        // look the traditional way
-        return gebi(this, s);
+        gebi_hash.delete(s);
     }
     // look for nonsense to build up the hash
+    alert3("getElementById triggering id hash build");
     gebi(this, "*@%impossible`[]")
-    return gebi_hash[s] ? gebi_hash[s] : null;
+    let e_ref = gebi_hash.get(s);
+    let e = e_ref.deref();
+    return e ? e : null;
 }
 
 function gebi(top, s) {
@@ -475,8 +476,11 @@ but handle it if so by assuming that either we have an ownerDocument
 property or that we're being called with a document object. If
 neither are true then there's not much else we can do here.
 */
-        const gebi_hash = (top.ownerDocument ? top.ownerDocument : top).id$hash;
-        if (gebi_hash) gebi_hash[top.id] = top;
+        const d = (top.ownerDocument ? top.ownerDocument : top);
+        const gebi_hash = d.id$hash;
+        const gebi_registry = d.id$registry;
+        gebi_hash.set(top.id, new my$win().WeakRef(top));
+        gebi_registry.register(top, top.id);
         if (top.id == s) return top;
     }
     if (top.childNodes) {
@@ -492,6 +496,10 @@ neither are true then there's not much else we can do here.
     return null;
 }
 
+function gebiCleanup(s) {
+    alert3(`finalization triggers delete for element with id ${s}`);
+    my$doc().id$hash.delete(s);
+}
 function getElementsByClassName(s) {
 if(!s) { // missing or null argument
 alert3("getElementsByTagName(type " + typeof s + ")");
@@ -6208,7 +6216,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "getElement", "getHead", "setHead", "getBody", "setBody",
 "getRootNode","wrapString",
 "getElementsByTagName", "getElementsByClassName", "getElementsByName", "getElementById","nodeContains",
-"gebi", "gebtn","gebn","gebcn","cont",
+"gebi", "gebiCleanup", "gebtn","gebn","gebcn","cont",
 "dispatchEvent","eb$listen","eb$unlisten",
 "NodeFilter","createNodeIterator","createTreeWalker",
 "logtime","defport","setDefaultPort","camelCase","dataCamel","isabove",
