@@ -1426,7 +1426,7 @@ list.splice(idx, 0, r);
 
 swm("CSSStyleDeclaration", function(){
         this.element = null;
-        this.style = this;
+        this.style$2 = this;
 })
 spdc("CSSStyleDeclaration", HTMLElement)
 // sheet on demand
