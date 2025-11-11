@@ -62,9 +62,10 @@ this.eb$cssText = function(){}
 // the third party deminimization stuff is in mw$, the master window.
 // Other stuff too, that can be shared.
 // The window should just be there from C, but in case it isn't.
-if(!window.mw$)
-this.mw$ = {share:false, URL:{}};
-
+if(!window.mw$) {
+    this.mw$ = {share:false, URL:{}};
+    this.mw$.url_hrefset = function (v) { this.href$val = v; };
+}
 // set window member, unseen, unchanging
 this.swm = function(k, v) { Object.defineProperty(window, k, {value:v})}
 // visible, but still protected
@@ -477,7 +478,7 @@ I don't know if that's a good idea or not.
 *********************************************************************/
 
 swm2("URL", function() {
-var h = "";
+let h = "";
 if(arguments.length == 1) h= arguments[0];
 if(arguments.length == 2) h= mw$.resolveURL(arguments[1], arguments[0]);
 this.href = h;
@@ -2815,5 +2816,5 @@ if(typeof f == "function") f()})
 // don't need these any more
 ;(function() {
     let names_to_delete = ["swm", "sdm", "swm1", "sdm1", "swm2", "sdm2", "spdc"];
-    for (i in names_to_delete) delete window[names_to_delete[i]];
+    for (let i in names_to_delete) delete window[names_to_delete[i]];
 })();
