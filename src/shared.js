@@ -9,7 +9,7 @@ First, some code that lets you run this stand alone, as a syntax check.
 qjs -C shared.js
 *********************************************************************/
 "use strict";
-if(!this.hasOwnProperty("puts")) {
+if(!this.puts) {
     this.puts = (s) => undefined;
 }
 
@@ -462,8 +462,9 @@ function getElementById(s) {
     // look for nonsense to build up the hash
     alert3("getElementById triggering id hash build");
     gebi(this, "*@%impossible`[]")
-    let e_ref = gebi_hash.get(s);
-    let e = e_ref.deref();
+    let ref = gebi_hash.get(s);
+    let e;
+    if(ref) e = ref.deref();
     return e ? e : null;
 }
 
@@ -479,7 +480,7 @@ neither are true then there's not much else we can do here.
         const d = (top.ownerDocument ? top.ownerDocument : top);
         const gebi_hash = d.id$hash;
         const gebi_registry = d.id$registry;
-        gebi_hash.set(top.id, new my$win().WeakRef(top));
+        gebi_hash.set(top.id, new (my$win()).WeakRef(top));
         gebi_registry.register(top, top.id);
         if (top.id == s) return top;
     }
@@ -496,10 +497,6 @@ neither are true then there's not much else we can do here.
     return null;
 }
 
-function gebiCleanup(s) {
-    alert3(`finalization triggers delete for element with id ${s}`);
-    my$doc().id$hash.delete(s);
-}
 function getElementsByClassName(s) {
 if(!s) { // missing or null argument
 alert3("getElementsByTagName(type " + typeof s + ")");
@@ -6216,7 +6213,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "getElement", "getHead", "setHead", "getBody", "setBody",
 "getRootNode","wrapString",
 "getElementsByTagName", "getElementsByClassName", "getElementsByName", "getElementById","nodeContains",
-"gebi", "gebiCleanup", "gebtn","gebn","gebcn","cont",
+"gebi", "gebtn","gebn","gebcn","cont",
 "dispatchEvent","eb$listen","eb$unlisten",
 "NodeFilter","createNodeIterator","createTreeWalker",
 "logtime","defport","setDefaultPort","camelCase","dataCamel","isabove",

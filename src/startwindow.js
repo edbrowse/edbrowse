@@ -19,7 +19,7 @@ To this end, I create the window object if it isn't already there,
 using the obvious window = this.
 *********************************************************************/
 "use strict";
-if(!Object.hasOwnProperty(this, "window")) {
+if(!this.window) {
 this.window = this;
 this.document = {};
 this.eb$ctx = 77;
@@ -65,7 +65,6 @@ this.eb$cssText = function(){}
 if(!window.mw$) {
     this.mw$ = {share:false, URL:{}};
     this.mw$.url_hrefset = function (v) { this.href$val = v; };
-    this.mw$.gebiCleanup = (s) => { alert(`gebiCleanup called with value ${s}`); };
 }
 // set window member, unseen, unchanging
 this.swm = function(k, v) { Object.defineProperty(window, k, {value:v})}
@@ -112,8 +111,13 @@ EventTarget.prototype.dispatchEvent = mw$.dispatchEvent;
 swm("Document", function() {
     Object.defineProperty(this, "childNodes", {value:[],writable:true,configurable:true});
     Object.defineProperty(this, "id$hash", {value: new Map});
-    Object.defineProperty(this, "id$registry", {value: new FinalizationRegistry(mw$.gebiCleanup)});
-})
+    Object.defineProperty(this, "id$registry", {value: new FinalizationRegistry(
+        (i) => {
+            alert3(`GC triggers delete of element with id ${i} from id hash`);
+            this.id$hash.delete(i);
+        }
+    )});
+});
 spdc("Document", EventTarget)
 Document.prototype.activeElement = null;
 Object.defineProperty(Document.prototype, "children", {get:function(){return this.childNodes}})
@@ -1760,8 +1764,8 @@ sdm("removeAttributeNS", mw$.removeAttributeNS)
 sdm("getAttributeNode", mw$.getAttributeNode)
 
 sdm("cloneNode", function(deep) {
-cloneRoot1 = this;
-return mw$.clone1 (this,deep);
+    window.cloneRoot1 = this;
+    return mw$.clone1 (this,deep);
 })
 
 /*********************************************************************
