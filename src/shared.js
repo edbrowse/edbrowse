@@ -591,9 +591,7 @@ return !e.defaultPrevented;
 
 /*********************************************************************
 This is our addEventListener function.
-It is bound to window, which is ok because window has such a function
-to listen to load and unload.
-Later on we will bind it to document and to other nodes via
+It needs to be bound to window, document and to other nodes via
 class.prototype.addEventListener = addEventListener,
 to cover all the instantiated objects in one go.
 first arg is a string like click, second arg is a js handler,
@@ -604,6 +602,13 @@ A similar design applies for removeEventListener and detachEvent.
 However, attachEvent is deprecated, and not implemented here.
 This is frickin complicated, so set eventDebug to debug it.
 *********************************************************************/
+
+function addEventListener(ev, handler, iscapture) {
+    return eb$listen.call(this, ev, handler, iscapture, true);
+}
+function removeEventListener(ev, handler, iscapture) {
+    return eb$unlisten.call(this, ev, handler, iscapture, true);
+}
 
 function eb$listen(ev, handler, iscapture, addon) {
 if(addon) ev = "on" + ev;
@@ -3210,10 +3215,8 @@ this.statusText = "network error";
 // inherit all the stuff from Node, like it should.
 // It is here so XMLHttpRequest can inherit its listeners.
 function EventTarget(){}
-EventTarget.prototype.eb$listen = eb$listen;
-EventTarget.prototype.eb$unlisten = eb$unlisten;
-EventTarget.prototype.addEventListener = function(ev, handler, iscapture) { this.eb$listen(ev,handler, iscapture, true); }
-EventTarget.prototype.removeEventListener = function(ev, handler, iscapture) { this.eb$unlisten(ev,handler, iscapture, true); }
+EventTarget.prototype.addEventListener = addEventListener;
+EventTarget.prototype.removeEventListener = removeEventListener;
 EventTarget.prototype.dispatchEvent = dispatchEvent;
 
 function XMLHttpRequestEventTarget(){}
@@ -4596,10 +4599,8 @@ return true;
 p.postMessage = function (message) {
 if (this.otherPort) this.otherPort.dispatchEvent({ data: message });
 };
-p.eb$listen = eb$listen;
-p.eb$unlisten = eb$unlisten;
-p.addEventListener = function(ev, handler, iscapture) { this.eb$listen(ev,handler, iscapture, true); }
-p.removeEventListener = function(ev, handler, iscapture) { this.eb$unlisten(ev,handler, iscapture, true); }
+p.addEventListener = addEventListener;
+p.removeEventListener = removeEventListener;
 p.start = function () {
 this.eb$pause = false;
 alert3("MessagePort start for context " + this.eb$ctx);
@@ -6214,7 +6215,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "getRootNode","wrapString",
 "getElementsByTagName", "getElementsByClassName", "getElementsByName", "getElementById","nodeContains",
 "gebi", "gebtn","gebn","gebcn","cont",
-"dispatchEvent","eb$listen","eb$unlisten",
+"dispatchEvent","addEventListener","removeEventListener","eb$listen","eb$unlisten",
 "NodeFilter","createNodeIterator","createTreeWalker",
 "logtime","defport","setDefaultPort","camelCase","dataCamel","isabove",
 "classList","classListAdd","classListRemove","classListReplace","classListToggle","classListContains",
@@ -6262,7 +6263,7 @@ Blob, FormData, Request, Response, Headers];
 for(var i=0; i<flist.length; ++i)
 Object.defineProperty(flist[i], "prototype", {writable:false,configurable:false});
 
-flist = ["eb$listen", "eb$unlisten", "addEventListener", "removeEventListener", "dispatchEvent"];
+flist = ["addEventListener", "removeEventListener", "dispatchEvent"];
 for(var i=0; i<flist.length; ++i)
 Object.defineProperty(EventTarget.prototype, flist[i], {writable:false,configurable:false});
 flist = ["toString", "open", "setRequestHeader", "getResponseHeader", "getAllResponseHeaders", "send", "parseResponse", "overrideMimeType"]
