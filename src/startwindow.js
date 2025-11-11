@@ -761,7 +761,7 @@ Validity.prototype.tooLong =
 Validity.prototype.tooShort =
 Validity.prototype.typeMismatch = false;
 Object.defineProperty(Validity.prototype, "valueMissing", {
-get: function() {var o = this.owner;  return o.required && o.value == ""; }});
+get: function() {let o = this.owner;  return o.required && o.value == ""; }});
 Object.defineProperty(Validity.prototype, "valid", {
 get: function() { // only need to check items with getters
 return !(this.valueMissing)}});
@@ -801,51 +801,69 @@ return;
 alert3("textarea.innerHTML is too complicated for me to render");
 })
 
-swm("HTMLSelectElement", function() { this.selectedIndex = -1; this.value = ""; this.selectedOptions=[]; this.options=[];this.validity = new Validity, this.validity.owner = this})
+swm("HTMLSelectElement", function() {
+    this.selectedIndex = -1;
+    this.options = [];
+    this.selectedOptions = [];
+    this.validity = new Validity;
+    this.validity.owner = this;
+})
 spdc("HTMLSelectElement", HTMLElement)
 Object.defineProperty(HTMLSelectElement.prototype, "value", {
-get: function() {
-var a = this.options;
-var n = this.selectedIndex;
-return (this.multiple || n < 0 || n >= a.length) ? "" : a[n].value;
-}});
+    get: function() {
+        const a = this.options;
+        const n = this.selectedIndex;
+        return (this.multiple || n < 0 || n >= a.length) ? "" : a[n].value;
+    }
+});
 Object.defineProperty(HTMLSelectElement.prototype, "type", {
-get:function(){ return this.multiple ? "select-multiple" : "select-one"}});
+    get:function(){ return this.multiple ? "select-multiple" : "select-one"}
+});
 Object.defineProperty(HTMLSelectElement.prototype, "multiple", {
-get:function(){ var t = this.getAttribute("multiple");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("multiple", v);}});
+    get: function() {
+        const t = this.getAttribute("multiple");
+        return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true
+    },
+    set:function(v) { this.setAttribute("multiple", v);}
+});
 Object.defineProperty(HTMLSelectElement.prototype, "size", {
-get:function(){ var t = this.getAttribute("size");
-if(typeof t == "number") return t;
-if(typeof t == "string" && t.match(/^\d+$/)) return parseInt(t);
-return 0;},
-set:function(v) { this.setAttribute("size", v);}});
+    get: function() {
+        const t = this.getAttribute("size");
+        if(typeof t == "number") return t;
+        if(typeof t == "string" && t.match(/^\d+$/)) return parseInt(t);
+        return 0;
+    },
+    set: function(v) { this.setAttribute("size", v);}
+});
 Object.defineProperty(HTMLSelectElement.prototype, "required", {
-get:function(){ var t = this.getAttribute("required");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("required", v);}});
+    get:function() {
+        const t = this.getAttribute("required");
+        return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true
+    },
+    set: function(v) { this.setAttribute("required", v);}
+});
 
 HTMLSelectElement.prototype.eb$bso = function() { // build selected options array
-// do not replace the array with a new one, this is suppose to be a live array
-var a = this.selectedOptions;
-var o = this.options;
-a.length = o.length = 0;
-var cn = this.childNodes;
-for(var i=0; i<cn.length; ++i) {
-if(cn[i].nodeName == "OPTION") {
-o.push(cn[i]);
-if(cn[i].selected) a.push(cn[i]);
-}
-if(cn[i].nodeName != "OPTGROUP") continue;
-var og = cn[i];
-var cn2 = og.childNodes;
-for(var j=0; j<cn2.length; ++j)
-if(cn2[j].nodeName == "OPTION") {
-o.push(cn2[j]);
-if(cn2[j].selected) a.push(cn2[j]);
-}
-}
+    // do not replace the array with a new one, this is suppose to be a live array
+    const a = this.selectedOptions;
+    const o = this.options;
+    a.length = 0;
+    o.length = 0;
+    const cn = this.childNodes;
+    for(let i=0; i<cn.length; ++i) {
+        if (cn[i].nodeName == "OPTION") {
+            o.push(cn[i]);
+            if(cn[i].selected) a.push(cn[i]);
+        }
+        if(cn[i].nodeName != "OPTGROUP") continue;
+        const og = cn[i];
+        const cn2 = og.childNodes;
+        for(let j=0; j<cn2.length; ++j)
+            if(cn2[j].nodeName == "OPTION") {
+                o.push(cn2[j]);
+                if(cn2[j].selected) a.push(cn2[j]);
+            }
+    }
 }
 
 swm("HTMLInputElement", function(){this.validity = new Validity, this.validity.owner = this})
@@ -2029,63 +2047,67 @@ so I don't even know if this makes sense.
 *********************************************************************/
 
 HTMLSelectElement.prototype.appendChild = function(newobj) {
-if(!newobj) return null;
-// should only be options!
-if(!(newobj.dom$class == "HTMLOptionElement")) return newobj;
-mw$.isabove(newobj, this);
-if(newobj.parentNode) newobj.parentNode.removeChild(newobj);
-var l = this.childNodes.length;
-if(newobj.defaultSelected) newobj.selected = true, this.selectedIndex = l;
-this.childNodes.push(newobj); newobj.parentNode = this;
-this.eb$bso();
-mutFixup(this, false, newobj, null);
-return newobj;
+    if(!newobj) return null;
+    // should only be options!
+    if(!(newobj.dom$class == "HTMLOptionElement")) return newobj;
+    mw$.isabove(newobj, this);
+    if(newobj.parentNode) newobj.parentNode.removeChild(newobj);
+    const l = this.childNodes.length;
+    if(newobj.defaultSelected) newobj.selected = true, this.selectedIndex = l;
+    this.childNodes.push(newobj); newobj.parentNode = this;
+    this.eb$bso();
+    mutFixup(this, false, newobj, null);
+    return newobj;
 }
 HTMLSelectElement.prototype.insertBefore = function(newobj, item) {
-var i;
-if(!newobj) return null;
-if(!item) return this.appendChild(newobj);
-if(!(newobj.dom$class == "HTMLOptionElement")) return newobj;
-mw$.isabove(newobj, this);
-if(newobj.parentNode) newobj.parentNode.removeChild(newobj);
-for(i=0; i<this.childNodes.length; ++i)
-if(this.childNodes[i] == item) {
-this.childNodes.splice(i, 0, newobj); newobj.parentNode = this;
-if(newobj.defaultSelected) newobj.selected = true, this.selectedIndex = i;
-break;
-}
-if(i == this.childNodes.length) {
-// side effect, object is freeed from wherever it was.
-return null;
-}
-this.eb$bso();
-mutFixup(this, false, newobj, null);
-return newobj;
+    let i;
+    if(!newobj) return null;
+    if(!item) return this.appendChild(newobj);
+    if(!(newobj.dom$class == "HTMLOptionElement")) return newobj;
+    mw$.isabove(newobj, this);
+    if(newobj.parentNode) newobj.parentNode.removeChild(newobj);
+    for(i=0; i<this.childNodes.length; ++i)
+        if(this.childNodes[i] == item) {
+            this.childNodes.splice(i, 0, newobj);
+            newobj.parentNode = this;
+            if(newobj.defaultSelected) {
+                newobj.selected = true;
+                this.selectedIndex = i;
+            }
+            break;
+        }
+    if(i == this.childNodes.length) {
+        // side effect, object is freeed from wherever it was.
+        return null;
+    }
+    this.eb$bso();
+    mutFixup(this, false, newobj, null);
+    return newobj;
 }
 HTMLSelectElement.prototype.removeChild = function(item) {
-var i;
-if(!item) return null;
-for(i=0; i<this.childNodes.length; ++i)
-if(this.childNodes[i] == item) break;
-if(i == this.childNodes.length) return null;
-this.childNodes.splice(i, 1);
-item.parentNode = null;
-this.eb$bso();
-mutFixup(this, false, i, item);
-return item;
+    let i;
+    if(!item) return null;
+    for(i=0; i<this.childNodes.length; ++i)
+        if(this.childNodes[i] == item) break;
+    if(i == this.childNodes.length) return null;
+    this.childNodes.splice(i, 1);
+    item.parentNode = null;
+    this.eb$bso();
+    mutFixup(this, false, i, item);
+    return item;
 }
 
 // these routines do not account for optgroups
 HTMLSelectElement.prototype.add = function(o, idx) {
-var n = this.options.length;
-if(typeof idx != "number" || idx < 0 || idx > n) idx = n;
-if(idx == n) this.appendChild(o);
-else this.insertBefore(o, this.childNodes[idx]);
+    const n = this.options.length;
+    if(typeof idx != "number" || idx < 0 || idx > n) idx = n;
+    if(idx == n) this.appendChild(o);
+    else this.insertBefore(o, this.childNodes[idx]);
 }
 HTMLSelectElement.prototype.remove = function(idx) {
-var n = this.options.length;
-if(typeof idx == "number" && idx >= 0 && idx < n)
-this.removeChild(this.options[idx]);
+    const n = this.options.length;
+    if(typeof idx == "number" && idx >= 0 && idx < n)
+    this.removeChild(this.options[idx]);
 }
 
 // rows or bodies under a table
