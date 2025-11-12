@@ -1,5 +1,9 @@
 Here are some changes introduced by recent versions of edbrowse.
 
+3.8.16
+
+Use strict js in shared.js and startwindow.js
+
 3.8.15
 
 The lsr and lsc commands.
