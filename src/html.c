@@ -5100,6 +5100,7 @@ nocolor:
 	case TAGACT_P:
 	case TAGACT_H:
 	case TAGACT_BODY:
+	case TAGACT_LABEL:
 	case TAGACT_NOP:
 nop:
 		if (invisible)
