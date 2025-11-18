@@ -2807,7 +2807,7 @@ void eb_variables(void)
 		free(p);
 	}
 
-	for(i=0; i<26; ++i) {
+	for (i = 0; i < 26; ++i) {
 		sprintf(var, "EB_LN%c", 'a' + i);
 	unsetenv(var);
 		n = cw->labels[i];
@@ -7243,12 +7243,12 @@ replaceframe:
 		prompt_and_read(MSG_Password, buffer, MAXUSERPASS,
 				MSG_PasswordLong, true);
 
-		bool old_masked = tagList[tagno]->ipass;
+		const bool old_ipass = tagList[tagno]->ipass;
 		tagList[tagno]->ipass = true;
 
 		rc = infReplace(tagno, buffer, true);
 		if (!rc)
-			tagList[tagno]->ipass = old_masked;
+			tagList[tagno]->ipass = old_ipass;
 		goto done;
 	}
 
@@ -8541,7 +8541,11 @@ past_js:
 				}
 
 				if (scmd == '=') {
+		const bool old_ipass = tagList[tagno]->ipass;
+		tagList[tagno]->ipass = false;
 					rc = infReplace(tagno, (char*)line, true);
+		if (!rc)
+			tagList[tagno]->ipass = old_ipass;
 					if (newlocation)
 						goto redirect;
 					goto done;
