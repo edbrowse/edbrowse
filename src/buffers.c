@@ -101,8 +101,8 @@ So now, certain sequences in the text are for internal use only.
 This routine strips out these sequences for display.
 After all, you don't want to see those code characters.
 You just want to see {Click here for more information}.
-This also checks for special input fields that are masked and
-displays stars instead, whenever we would display formatted text.
+This also checks for special input fields that are set by ipass,
+and displays stars instead, whenever we would display formatted text.
 *********************************************************************/
 
 void removeHiddenNumbers(pst p, uchar terminate, int cx, const Window *w)
@@ -131,7 +131,7 @@ addchar:
 			continue;
 		}
 		if (d == '<') {
-			if (w->tags[field]->masked) {
+			if (w->tags[field]->ipass) {
 				*t++ = d;
 				while (*++u != InternalCodeChar)
 					*t++ = '*';
@@ -7214,7 +7214,6 @@ replaceframe:
 	if (!strncmp(line, "ipass", 5)) {
 		char buffer[MAXUSERPASS];
 		int realtotal;
-		bool old_masked;
 		if (!cw->browseMode) {
 			setError(MSG_NoBrowse);
 			goto fail;
@@ -7229,7 +7228,7 @@ replaceframe:
 			cx = strtol(s, (char **)&s, 10);
 		else if (*s == '$')
 			cx = -1, ++s;
-		/* XXX try to guess cx if only one password input field? */
+		// XXX try to guess cx if only one password input field?
 
 		cw->dot = endRange;
 		p = (char *)fetchLine(cw->dot, -1);
@@ -7244,12 +7243,12 @@ replaceframe:
 		prompt_and_read(MSG_Password, buffer, MAXUSERPASS,
 				MSG_PasswordLong, true);
 
-		old_masked = tagList[tagno]->masked;
-		tagList[tagno]->masked = true;
+		bool old_masked = tagList[tagno]->ipass;
+		tagList[tagno]->ipass = true;
 
 		rc = infReplace(tagno, buffer, true);
 		if (!rc)
-			tagList[tagno]->masked = old_masked;
+			tagList[tagno]->ipass = old_masked;
 		goto done;
 	}
 

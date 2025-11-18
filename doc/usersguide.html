@@ -3596,10 +3596,18 @@ Characters like | or ` or ^ are unlikely to appear in options.
 If you would like your password to not be displayed on screen when you type it,
 you can use ipass (or ipass2 if the password is the second field) to get a no-echo
 prompt for your password.
-When printing anything you entered with ipass, or if the input field type is password,
+When printing anything you entered with ipass,
 you will get stars back, consistent with other browsers.
 However, if you submit a form, and the debug level is 3 or higher, you will see the password in plain text as edbrowse prints the fields it is sending to the server.
 Users rarely run in debug mode, so this is not an issue.
+
+<p>
+If it is your personal computer, and you aren't worried about anybody seeing the screen, just enter the password like any other field.
+<br>
+i2=password
+<br>
+Because it was entered in plain text, it will be visible in plain text
+as you review the lines in the buffer.
 
 <p>
 You can use i&lt;7 to pull the contents of session 7 into the current input field.

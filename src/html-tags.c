@@ -4034,8 +4034,6 @@ void htmlInputHelper(Tag *t)
 				debugPrint(3, "unrecognized input type %s", s);
 			else
 				t->itype = itype = INP_TEXT, t->itype_minor = n;
-			if (n == INP_PW)
-				t->masked = true;
 		} else
 			t->itype = itype = n;
 	}

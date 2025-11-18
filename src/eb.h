@@ -588,13 +588,13 @@ struct htmlTag {
 	char *js_file;
 	int js_ln;			// line number of javascript
 	int lic;		// list item count, highly overloaded
-	int slic; /* start list item count */
+	int slic; // start list item count
 	int action;
 	const struct tagInfo *info;
-	char *textval;	/* for text tags only */
+	char *textval;	// for text tags only
 	const char **attributes;
 	const char **atvals;
-/* the form that owns this input tag */
+// the form that owns this input tag
 	struct htmlTag *controller;
 	pthread_t loadthread;
 	long hcode;
@@ -604,10 +604,10 @@ struct htmlTag {
 // but we don't do that any more, just one tag for <foo> in the tree.
 // Except ... <pre> and </pre> need separate tags.
 	bool slash:1;
-	bool textin:1; /* <a> some text </a> */
-	bool deleted:1; /* deleted from the current buffer */
+	bool textin:1; // <a> some text </a>
+	bool deleted:1; // deleted from the current buffer
 	bool dead:1; // removed by garbage collection
-	bool contracted:1; /* frame is contracted */
+	bool contracted:1; // frame is contracted
 	bool multiple:1;
 	bool required:1;
 	bool async:1; // asynchronous script
@@ -616,12 +616,12 @@ struct htmlTag {
 	bool rdonly:1;
 	bool disabled:1;
 	bool hidden:1;
-	bool clickable:1;	/* but not an input field */
+	bool clickable:1;	// but not an input field
 	bool secure:1;
 	bool scriptgen:1; // script generated, not from source
 	bool checked:1;
-	bool rchecked:1;	/* for reset */
-	bool post:1;		/* post, rather than get */
+	bool rchecked:1;	// for reset
+	bool post:1;		// post, rather than get
 	bool javapost:1;	// post by calling javascript
 	bool jslink:1;	// linked to a js object
 	bool expf:1; // we tried to expand this frame
@@ -637,12 +637,12 @@ struct htmlTag {
 	bool onunload:1;
 	bool doorway:1; /* doorway to javascript */
 	bool visited:1;
-	bool masked:1;
 	bool iscolor:1;
 	bool ur:1;		// row unfolded, only for trf
 	bool inur:1;		// in ur command
 	bool threadcreated:1;
 	bool threadjoined:1;
+	bool ipass:1;
 	char subsup;		/* span turned into sup or sub */
 	uchar itype;		// input type =
 	uchar itype_minor;

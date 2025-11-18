@@ -3293,7 +3293,7 @@ and hope your quickjs is current.
 Then, in November of 2025, we switched to the quickjs-ng engine,
 and it does not do this odd behavior, so I don't want to free the context.
 But some day quickjs-ng might absorb that change from quickjs,
-and if that hapens, then once again we need to free the context.
+and if that happens, then once again we need to free the context.
 *********************************************************************/
 #if ! Q_NG
 	JS_FreeContext(ctx);
