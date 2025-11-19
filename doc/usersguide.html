@@ -3604,13 +3604,18 @@ Users rarely run in debug mode, so this is not an issue.
 <p>
 If it is your personal computer, and you aren't worried about anybody seeing the screen, just enter the password like any other field.
 <br>
-i2=password
+i2=secret
 <br>
-Because it was entered in plain text, it will be visible in plain text
+Or if you discover you have to include a punctuation mark:
+<br>
+s2/$/!/
+<br>
+Because it was entered in plain text, or modified at the keyboard, it will be visible,
 as you review the lines in the buffer.
+Using ipass makes it invisible once again.
 
 <p>
-You can use i&lt;7 to pull the contents of session 7 into the current input field.
+Use i&lt;7 to pull the contents of session 7 into the current input field.
 Session 7 must have one line of text only.
 Use i&lt;7@39 to read in line 39, or i&lt;7@'c to read in the line at label c.
 + - . and $ are also allowed.
@@ -3619,6 +3624,7 @@ Only the first line of text is read.
 The filename is expanded in the usual way.
 This includes wildcard expansion, as long as the expansion leads to one file.
 Put enough characters around the * to designate a single file.
+This does not change the status of a password field,hidden or visible.
 
 <p>
 Text areas are often used to capture a paragraph, i.e. a complex thought, but some websites expect you to compose your thought in a one-line input field.

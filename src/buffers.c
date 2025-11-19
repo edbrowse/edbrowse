@@ -4575,6 +4575,7 @@ static int substituteText(const char *line)
 				goto abort;
 			undoCompare();
 			cw->undoable = false;
+			tagList[tagno]->ipass = false;
 		} else {
 
 // time to update the text in the buffer
@@ -8537,15 +8538,18 @@ past_js:
 					if (!allocatedLine)
 						goto fail;
 					line = allocatedLine;
-					scmd = '=';
+					rc = infReplace(tagno, (char*)line, true);
+					if (newlocation)
+						goto redirect;
+					goto done;
 				}
 
 				if (scmd == '=') {
-		const bool old_ipass = tagList[tagno]->ipass;
-		tagList[tagno]->ipass = false;
+					const bool old_ipass = tagList[tagno]->ipass;
+					tagList[tagno]->ipass = false;
 					rc = infReplace(tagno, (char*)line, true);
-		if (!rc)
-			tagList[tagno]->ipass = old_ipass;
+					if (!rc)
+						tagList[tagno]->ipass = old_ipass;
 					if (newlocation)
 						goto redirect;
 					goto done;
