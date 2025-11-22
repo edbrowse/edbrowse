@@ -1994,7 +1994,8 @@ uchar prebrowse, const Tag *gotag)
 		g.url = filename;
 		g.thisfile = fromthis;
 		g.custom_h = orig_head;
-		g.cf = cf;
+		if (!down_bg)
+			g.cf = cf;
 		rc = httpConnect(&g);
 		serverData = g.buffer;
 		serverDataLen = g.length;
