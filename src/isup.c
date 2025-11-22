@@ -479,7 +479,7 @@ So we have to treat foobar:baz as a url with the foobar protocol.
 That means you can't edit the file u:v directly.
 Use ./u:v or some other mechanism. I know, it's annoying, what can I do?
 *********************************************************************/
-	has_slashes = has_slashes; // not used
+	(void)has_slashes; // not used
 
 	if (a < 0 || protocols[a].free_syntax) {
 		if (data)

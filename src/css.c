@@ -2480,8 +2480,7 @@ all the div sections just below the current node.
 				if (bulkmatch)
 					rc = t->checked;
 				else
-					rc = get_property_bool_t(t, "checked")
-					| get_property_bool_t(t, "selected");
+					rc = get_property_bool_t(t, "checked") || get_property_bool_t(t, "selected");
 			}
 			if (rc)
 				goto next_mod;

@@ -1040,7 +1040,7 @@ void i_caseShift(char *s, char action)
 		ws = true, mc = 0;
 // code for don't and we'll etc
 		if((c == '\'' ||
-	(c == 0xe0 && s[1] == 0x80 && s[2] == 0x9d)) &&
+	((unsigned char)c == 0xe0 && (unsigned char)s[1] == 0x80 && (unsigned char)s[2] == 0x9d)) &&
 	s > s0 &&
 	!(s[-1]&0x80) &&
 	isalpha(s[-1]))
