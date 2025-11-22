@@ -18,6 +18,7 @@ struct MHINFO {
 	char reply[MHLINE];
 	char date[MHLINE];
 	char boundary[MHLINE];
+	char *pretext;
 	int boundlen;
 // recipients and cc recipients
 	char *tolist, *cclist;
@@ -59,6 +60,7 @@ static void freeMailInfo(struct MHINFO *w)
 		delFromList(v);
 		freeMailInfo(v);
 	}
+	nzFree(w->pretext);
 	nzFree(w->tolist);
 	nzFree(w->cclist);
 	if(w->startAllocated) nzFree(w->start);
@@ -2901,6 +2903,7 @@ static struct MHINFO *headerGlean(char *start, char *end, bool top)
 {
 	char *s, *t, *q;
 	char *vl, *vr;		/* value left and value right */
+	char *pretext;
 	struct MHINFO *w;
 	int j;
 
@@ -3235,14 +3238,14 @@ static struct MHINFO *headerGlean(char *start, char *end, bool top)
 		return w;
 	}
 
-/* loop over the mime components */
+// loop over the mime components
 	if (w->ct >= CT_MULTI) {
 		char *lastbound = 0;
 		bool endmode = false;
 		struct MHINFO *child;
-/* We really need the -1 here, because sometimes the boundary will
- * be the very first thing in the message body. */
-		s = w->start - 1;
+// We really need the -1 here, because sometimes the boundary will
+// be the very first thing in the message body.
+		pretext = s = w->start - 1;
 		while (!endmode && (t = strstr(s, "\n--")) && t < end) {
 			if (memcmp(t + 3, w->boundary, w->boundlen)) {
 				s = t + 3;
@@ -3255,7 +3258,14 @@ static struct MHINFO *headerGlean(char *start, char *end, bool top)
 				++q;
 			debugPrint(5, "boundary found at offset %d",
 				   t - w->start);
-			if (lastbound) {
+			if (!lastbound) {
+				while(pretext < t && isspace(*pretext)) ++pretext;
+				if(pretext < t) {
+					w->pretext = pullString1(pretext, t);
+					debugPrint(5, "pretext length %d", t - pretext);
+					debugPrint(6, "%s", w->pretext);
+				}
+			} else {
 				child = headerGlean(lastbound, t, false);
 				addToListBack(&w->components, child);
 			}
