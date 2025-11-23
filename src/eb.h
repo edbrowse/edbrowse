@@ -223,6 +223,7 @@ curl_off_t hcl;			/* http content length */
 	char auth_realm[60];	/* WWW-Authenticate realm header */
 	char *newloc;
 	int newloc_d;
+	char *misprot;
 };
 
 struct MACCOUNT { // email account, pop3 or imap

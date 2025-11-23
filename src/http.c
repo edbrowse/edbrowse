@@ -294,9 +294,10 @@ static void i_get_free(struct i_get *g, bool nodata)
 	nzFree(g->cdfn);
 	nzFree(g->etag);
 	nzFree(g->newloc);
+	nzFree(g->misprot);
 	cnzFree(g->down_file);
 // should not be necessary, but just to be safe:
-	g->headers = g->urlcopy = g->cdfn = g->etag = g->newloc = 0;
+	g->headers = g->urlcopy = g->cdfn = g->etag = g->newloc = g->misprot = 0;
 	g->down_file = 0;
 	if (g->down_fd > 0) {
 		close(g->down_fd);
@@ -1186,6 +1187,22 @@ they go where they go, so this doesn't come up very often.
 			curl_easy_cleanup(h);
 			nzFree(postb);
 			nzFree(referrer);
+
+/*********************************************************************
+Here's a corner case. Download www.foo.bar/bas in the background.
+In buffers.c we notice it has no protocol, but it looks like a url,
+so for your convenience I prepend http://
+g0.url is now an allocated string.
+I pass it to the background thread and return, but as soon as I return,
+the string is freed. The child thread is looking at a garbage url.
+Against this possibility, I have to make a copy.
+I put it in misprot, for missing protocol,
+which is the only reason we might need to do this.
+Don't forget to free it in i_get_free().
+*********************************************************************/
+
+			g0.misprot = cloneString(g0.url);
+			g0.url = g0.misprot;
 			pthread_create(&tid, NULL, httpConnectBack1,
 				       (void *)&g0);
 // I will assume the thread was created.
@@ -1475,6 +1492,7 @@ void *httpConnectBack1(void *ptr)
 	bool rc;
 	g.down_force = 1;
 	g.down_state = 4;
+	g.pg_ok = false;
 // urlcopy will be recomputed on the next http call
 	nzFree(g.urlcopy);
 	g.urlcopy = 0;
