@@ -3264,6 +3264,14 @@ static struct MHINFO *headerGlean(char *start, char *end, bool top)
 					w->pretext = pullString1(pretext, t);
 					debugPrint(5, "pretext length %d", t - pretext);
 					debugPrint(6, "%s", w->pretext);
+// 99% of the time it's just a MIME format message, which means nothing.
+// Including the mail that edbrowse sends out - see sendmail.c.
+					if(strlen(w->pretext) < 150 &&
+					strstr(w->pretext, "MIME")) {
+						debugPrint(5, "pretext deleted");
+						nzFree(w->pretext);
+						w->pretext = 0;
+					}
 				}
 			} else {
 				child = headerGlean(lastbound, t, false);

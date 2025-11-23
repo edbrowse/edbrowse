@@ -1257,8 +1257,7 @@ sendMail(int account, const char **recipients, const char *body,
 			eol);
 		stringAndString(&out, &j, serverLine);
 		stringAndString(&out, &j,
-				"This message is in MIME format. Since your mail reader does not understand\r\n\
-this format, some or all of this message may not be legible.\r\n\r\n--");
+				"This message is in MIME format.\r\n\r\n--");
 		stringAndString(&out, &j, boundary);
 		sprintf(serverLine,
 			"%sContent-Type: %s%s%s%sContent-Transfer-Encoding: %s%s%s",
