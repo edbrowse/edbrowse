@@ -3520,7 +3520,8 @@ static char *headerShow(struct MHINFO *w, bool top)
 	return buf;
 }
 
-/* Depth first block of text determines the type */
+// Depth first search thorugh mime components, looking for type,
+// and preferably type matching what you are looking for, plain or html.
 static int mailTextType(struct MHINFO *w)
 {
 	struct MHINFO *v;
@@ -3555,7 +3556,9 @@ static void formatMail(struct MHINFO *w, bool top)
 {
 	struct MHINFO *v;
 	int ct = w->ct;
-	int j, best;
+	int j, best, newlen;
+	char *start, *end;
+	char endc;
 
 // This use to be a test for attachment, but I got text messages
 // from a friend where the text was in an attachment.
@@ -3577,11 +3580,38 @@ static void formatMail(struct MHINFO *w, bool top)
 		stringAndString(&fm, &fm_l, "<p>");
 	}
 
+// special code when you want plain text, and we believe that text
+// appears outside of any of the mime components.
+// We've only seen this once, so far, in the wild.
+	if(top && mailIsHtml && preferPlain && w->pretext) {
+		start = w->pretext;
+		end = start + strlen(start);
+// this is not html, so reformat it
+		breakLineSetup();
+		if (breakLine(start, end - start, &newlen)) {
+			start = breakLineResult;
+			end = start + newlen;
+		}
+		if (mailShowsHtml) {
+			stringAndString(&fm, &fm_l, "<!-- text section converted to html -->\n<forceBody/><pre>\n ");
+// This null termination is only needed if breakLine fails.
+			endc = *end;
+			*end = 0;
+			char *e = htmlEscape(start);
+			stringAndString(&fm, &fm_l, e);
+			nzFree(e);
+			*end = endc;
+			stringAndString(&fm, &fm_l, "</pre>\n");
+		} else {
+			stringAndBytes(&fm, &fm_l, start, end - start);
+		}
+		return;
+	}
+
 	if (ct < CT_MULTI) {
-		char *start = w->start;
-		char *end = w->end;
-		int newlen;
-/* If mail is not in html, reformat it */
+		start = w->start;
+		end = w->end;
+// If mail is not in html, reformat it
 		if (start < end) {
 			if (ct == CT_TEXT) {
 //				char *z = pullString1(start, end); printf("%s", z); nzFree(z);
@@ -3594,7 +3624,7 @@ static void formatMail(struct MHINFO *w, bool top)
 			if (mailShowsHtml && ct == CT_TEXT) {
 				stringAndString(&fm, &fm_l, "<!-- text section converted to html -->\n<forceBody/><pre>\n ");
 // This null termination is only needed if breakLine fails.
-				char endc = *end;
+				endc = *end;
 				*end = 0;
 				char *e = htmlEscape(start);
 				stringAndString(&fm, &fm_l, e);
@@ -3662,7 +3692,8 @@ char *emailParse(char *buf, bool plain)
 // As an experiment, declare every email as html.
 // That way we can always turn attachments into hyperlinks.
 	mailShowsHtml = true;
-	if(mailIsHtml & plain) i_puts(MSG_NoPlain);
+	if(mailIsHtml & plain && !w->pretext)
+		i_puts(MSG_NoPlain);
 	if (mailShowsHtml)
 		stringAndString(&fm, &fm_l, "<html>\n");
 	formatMail(w, true);
