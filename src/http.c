@@ -811,7 +811,7 @@ bool httpConnect(struct i_get *g)
 	bool proceed_unauthenticated = false;
 	bool post_request = false;
 	bool head_request = false;
-	bool recent, local2 = hlocal;
+	bool local2 = hlocal;
 	uchar sxfirst = 0;
 	int n;
 
@@ -1065,7 +1065,7 @@ mimestream:
 
 	still_fetching = true;
 
-	if (!post_request && (g->headrequest || presentInCache(g->urlcopy, &recent))) {
+	if (!post_request && (g->headrequest || presentInCache(g->urlcopy))) {
 		head_request = true;
 		curl_easy_setopt(h, CURLOPT_NOBODY, 1l);
 	}
@@ -1333,7 +1333,7 @@ Don't forget to free it in i_get_free().
 				if (curlret != CURLE_OK)
 					goto curl_fail;
 
-				if (!post_request && (g->headrequest || presentInCache(g->urlcopy, &recent))) {
+				if (!post_request && (g->headrequest || presentInCache(g->urlcopy))) {
 					head_request = true;
 					curl_easy_setopt(h, CURLOPT_NOBODY, 1l);
 				}

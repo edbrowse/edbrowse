@@ -1136,6 +1136,33 @@ bool sameURL(const char *s, const char *t)
 	return !memcmp(s, t, l);
 }
 
+// Like the above, but specific to the edbrowse cache.
+// This is a simpler routine, thus more efficient for a large cache.
+// Although the search is still linear, so there is room for improvement.
+static inline bool sameURLCache(const char *s, const char *t)
+{
+/*********************************************************************
+post requests are not cached, so don't worrry about that.
+Each url starts with http:// or https://.
+If only the protocols differ, are they the same?
+Could we pull from cache even if one was http and the other https?
+I don't know, so I'll be conservative and insist the protocol be the same.
+Skip ahead by 7 and start the search there.
+*********************************************************************/
+	s += 7, t += 7;
+	while(true) {
+		if(*s != *t) break;
+// different hashes are ok, it's still the same url.
+		if(*s == 0 || *s == '#') return true;
+		++s, ++t;
+	}
+	char c1 = *s, c2 = *t;
+// perhaps one has hash and the other doesn't.
+	if(c1 == '#') c1 = 0;
+	if(c2 == '#') c2 = 0;
+	return (c1 == c2);
+}
+
 /* Find some helpful text to print in place of an image.
  * Not sure why we would need more than 1000 chars for this,
  * so return a static buffer. */
@@ -2420,7 +2447,7 @@ bool fetchCache(const char *url, const char *etag, time_t modtime, bool grab,
 // find the url
 	e = entries;
 	for (i = 0; i < numentries; ++i, ++e) {
-		if (!sameURL(url, e->url))
+		if (!sameURLCache(url, e->url))
 			continue;
 		if(grab) goto match;
 // look for match on etag
@@ -2487,7 +2514,7 @@ static int entry_cmp(const void *s, const void *t)
  * Is a URL present in the cache?  This can save on HEAD requests,
  * since we can just do a straight GET if the item is not there.
  */
-bool presentInCache(const char *url, bool *recent)
+bool presentInCache(const char *url)
 {
 	bool ret = false;
 	struct CENTRY *e;
@@ -2498,7 +2525,7 @@ bool presentInCache(const char *url, bool *recent)
 
 	e = entries;
 	for (i = 0; i < numentries; ++i, ++e) {
-		if (!sameURL(url, e->url))
+		if (!sameURLCache(url, e->url))
 			continue;
 		ret = true;
 		break;
@@ -2506,13 +2533,6 @@ bool presentInCache(const char *url, bool *recent)
 
 	free(cache_data);
 	clearLock();
-	if(ret) {
-		time(&now_t);
-		int j = now_t / 8;
-// accessed within the past 5 minutes? If so then perhaps
-// We don't have to issue the head request across the internet.
-		*recent = (j - e->accesstime <= 40);
-	}
 	return ret;
 }
 
@@ -2531,15 +2551,10 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 	if (!setLock())
 		return;
 
-/* leading http:// is the default, and not needed in the control file.
- * sameURL() takes care of all that. */
-	if (memEqualCI(url, "http://", 7))
-		url += 7;
-
 /* find the url */
 	e = entries;
 	for (i = 0; i < numentries; ++i, ++e) {
-		if (sameURL(url, e->url))
+		if (sameURLCache(url, e->url))
 			break;
 	}
 

@@ -18,7 +18,7 @@ char *configFile, *addressFile, *cookieFile, *emojiFile;
 char *mailDir, *mailUnread, *mailStash, *mailReply;
 char *sigFile, *sigFileEnd;
 char *cacheDir;
-int cacheSize = 1000, cacheCount = 10000;
+int cacheSize = 500, cacheCount = 10000;
 bool hlocal; // http local, from cache only
 char *ebTempDir, *ebUserDir;
 char *userAgents[MAXAGENT + 1];
@@ -1993,8 +1993,8 @@ inside:
 			cacheSize = atoi(v);
 			if (cacheSize <= 0)
 				cacheSize = 0;
-			if (cacheSize >= 10000)
-				cacheSize = 10000;
+			if (cacheSize >= 1000)
+				cacheSize = 1000;
 			continue;
 
 		case 43:	// adbook
