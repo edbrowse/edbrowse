@@ -2703,15 +2703,14 @@ static bool writeContext(int cx, Window *w, int writeLine)
 
 static void debrowseSuffix(char *s)
 {
-	if (!s)
-		return;
-	while (*s) {
-		if (*s == '.' && stringEqual(s, ".browse")) {
-			*s = 0;
-			return;
-		}
-		++s;
+	char *t;
+	if (!s) return;
+	if(cw->browseMode) {
+		t = strrchr(s, '.');
+		if (t && stringEqual(t, ".browse")) *t = 0;
 	}
+	if(!cw->f0.render2) return;
+// check to see if suffix was added by plugin
 }
 
 // Set various environment variables before a shell command
@@ -2725,7 +2724,7 @@ static void p_setenv(const char *var, const char *val) // protected setenv
 		debugPrint(1, " variable %s not set", var);
 }
 
-static void eb_file_name_variables(const char *file_name, const bool browsing, const char *file_var, const char *base_var, const char *dir_var)
+static void eb_file_name_variables(const char *file_name, const char *file_var, const char *base_var, const char *dir_var)
 {
 	char var[8];
 	char *s0 = cloneString(file_name);
@@ -2736,7 +2735,7 @@ static void eb_file_name_variables(const char *file_name, const bool browsing, c
 
 	strcpy(var, file_var);
 	p_setenv(var, s);
-	if(browsing) debrowseSuffix(s);
+	debrowseSuffix(s);
 	strcpy(var, base_var);
 	p_setenv(var, s);
 
@@ -2764,7 +2763,7 @@ void eb_variables(void)
 	int n, rc, i;
 	char var[12], numbuf[12];
 	static const char *hasnull = "line contains nulls";
-	eb_file_name_variables(cf->fileName, cw->browseMode, "EB_FILE", "EB_BASE", "EB_DIR");
+	eb_file_name_variables(cf->fileName, "EB_FILE", "EB_BASE", "EB_DIR");
 
 	strcpy(var, "EB_DOT");
 	unsetenv(var);
@@ -5530,13 +5529,13 @@ pwd:
 		undoCompare();
 		cw->undoable = false;
 		undoSpecialClear();
+		if(ub) debrowseSuffix(cf->fileName);
 		cw->browseMode = cf->browseMode = false;
 		cf->render2 = false;
 		if (cf->render1b)
 			cf->render1 = cf->render1b = false;
 		cf->charset = 0;
 		if (ub) {
-			debrowseSuffix(cf->fileName);
 			cw->nlMode = cw->rnlMode;
 			cw->f_dot = cw->dot;
 			cw->dot = cw->r_dot, cw->dol = cw->r_dol;
@@ -6588,7 +6587,7 @@ static int twoLetterG(const char *line, const char **runThis)
 			*t = '\n';	// put it back
 		} else {
 			path = cloneString(cf->fileName);
-			if(cw->browseMode) debrowseSuffix(path);
+			debrowseSuffix(path);
 			path = skipFileProtocol(path);
 			if(!path || !*path) {
 				setError(MSG_MissingFileName);
@@ -9167,7 +9166,6 @@ int sideBuffer(int cx, const char *text, int textlen, const char *bufname)
 	cxSwitch(cx, false);
 	if (bufname) {
 		cf->fileName = cloneString(bufname);
-		debrowseSuffix(cf->fileName);
 	}
 	if (textlen < 0) {
 		textlen = strlen(text);
