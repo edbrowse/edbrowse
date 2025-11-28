@@ -1590,13 +1590,7 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 	free(newbuf);
 	cw->undoable = false;
 	cw->changeMode = save_ch;
-
-	if (cf->fileName) {
-		j = strlen(cf->fileName);
-		cf->fileName = reallocMem(cf->fileName, j + 8);
-		strcat(cf->fileName, ".browse");
-	}
-
+	addToFilename(".browse");
 	if (!rc) {
 // should never happen
 		fileSize = -1;

@@ -1139,7 +1139,7 @@ bool sameURL(const char *s, const char *t)
 // Like the above, but specific to the edbrowse cache.
 // This is a simpler routine, thus more efficient for a large cache.
 // Although the search is still linear, so there is room for improvement.
-static inline bool sameURLCache(const char *s, const char *t)
+static bool sameURLCache(const char *s, const char *t)
 {
 /*********************************************************************
 post requests are not cached, so don't worrry about that.
