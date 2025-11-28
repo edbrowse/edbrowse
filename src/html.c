@@ -1526,7 +1526,13 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 		}
 // make it look like remote html, so we don't get a lot of errors printed
 		remote = true;
-		bmode = (mt->outtype == 'h' ? 2 : 0);
+		if(mt->outtype == 'h') {
+			bmode = 2;
+			addToFilename(".html");
+		} else {
+			bmode = 0;
+			addToFilename(".txt");
+		}
 		if (!allowRedirection)
 			bmode = 0;
 	}
@@ -1545,7 +1551,7 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 		newbuf = emailParse(rawbuf, plain);
 		j = strlen(newbuf);
 
-/* mail could need utf8 conversion, after qp decode */
+// mail could need utf8 conversion, after qp decode
 		iuReformat(newbuf, j, &tbuf, &tlen);
 		if (tbuf) {
 			nzFree(newbuf);
@@ -1561,7 +1567,8 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 			rawbuf = newbuf;
 			rawsize = j;
 			prepareForBrowse(rawbuf, rawsize);
-		}
+		} else
+			addToFilename(".browse");
 	}
 
 	if (bmode == 2) {
@@ -1570,6 +1577,7 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 		nzFree(newlocation);	/* should already be 0 */
 		newlocation = 0;
 		newbuf = htmlParse(rawbuf, remote);
+		addToFilename(".browse");
 	}
 
 	if (bmode == 0)
@@ -1577,7 +1585,7 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 
 	cw->rnlMode = cw->nlMode;
 	cw->nlMode = false;
-/* I'm gonna assume it ain't binary no more */
+// I'm gonna assume it ain't binary no more
 	cw->binMode = false;
 	cw->r_dot = cw->dot, cw->r_dol = cw->dol;
 	cw->dot = cw->dol = 0;
@@ -1590,7 +1598,6 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 	free(newbuf);
 	cw->undoable = false;
 	cw->changeMode = save_ch;
-	addToFilename(".browse");
 	if (!rc) {
 // should never happen
 		fileSize = -1;

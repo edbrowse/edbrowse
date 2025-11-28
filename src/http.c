@@ -849,6 +849,7 @@ mimestream:
 			cf->render1 = true;
 			if (sxfirst)
 				cf->render2 = true;
+			addToFilename(mt->outtype == 'h' ? ".html" : ".txt");
 			i_get_free(g, false);
 		} else {
 			runPluginCommand(mt, f, 0, 0, 0, 0, 0);

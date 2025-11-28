@@ -2077,8 +2077,12 @@ uchar prebrowse, const Tag *gotag)
 				cf->render2 = true;
 // browse command ran the plugin, but if it generates text,
 // then there's no need to browse the result.
-			if (cf->mt->outtype == 't')
+			if (cf->mt->outtype == 't') {
 				cmd = 'e';
+				addToFilename(".txt");
+			} else {
+				addToFilename(".html");
+			}
 			fileSize = readSize;
 		}
 
@@ -2177,8 +2181,12 @@ badfile:
 		cf->render1 = cf->render2 = true;
 // browse command ran the plugin, but if it generates text,
 // then there's no need to browse the result.
-		if (cf->mt->outtype == 't')
+		if (cf->mt->outtype == 't') {
 			cmd = 'e';
+			addToFilename(".txt");
+		} else {
+			addToFilename(".html");
+		}
 	} else {
 
 		inparts = 1, fileSize = 0;
@@ -2717,8 +2725,11 @@ void debrowseFilename(char *s)
 		t = strrchr(s, '.');
 		if (t && stringEqual(t, ".browse")) *t = 0;
 	}
-	if(!cw->f0.render2) return;
-// check to see if suffix was added by plugin
+	if(cw->f0.render2) {
+		t = strrchr(s, '.');
+		if (t && (stringEqual(t, ".html") || stringEqual(t, ".txt")))
+			*t = 0;
+	}
 }
 
 // Set various environment variables before a shell command
@@ -8181,7 +8192,7 @@ doquit:
 // Go to a file if in directory mode, or text mode and the line
 // exactly matches the name of a local file.
 	if (cmd == 'g' && (!first || stringEqual(line, "-")) &&
-	!(cw->binMode | cw->browseMode | cw->binMode | cw->sqlMode)) {
+	!(cw->binMode | cw->browseMode  | cw->sqlMode)) {
 		char *dirline;
 		const struct MIMETYPE *gmt = 0;	/* the go mime type */
 		emode = (first == '-');
@@ -8263,7 +8274,13 @@ doquit:
 		if (!w->prev)
 			cs->fw = w;
 		cf->render2 = cf->render3 = true;
-		if(gmt->outtype == 'h') browseCurrentBuffer(NULL, false);
+		if(gmt->outtype == 'h') {
+			addToFilename(".html");
+			cf->render1 = cf->render2 = false;
+			if(allowRedirection) browseCurrentBuffer(NULL, false);
+		} else {
+			addToFilename(".txt");
+		}
 		goto success;
 regular_g_file:
 // I don't think we need to make a copy here
