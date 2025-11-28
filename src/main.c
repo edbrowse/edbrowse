@@ -112,11 +112,7 @@ static void finishBrowse(void)
 	free(newbuf);
 	cw->undoable = false;
 	cw->changeMode = false;
-	if (cf->fileName) {
-		j = strlen(cf->fileName);
-		cf->fileName = reallocMem(cf->fileName, j + 8);
-		strcat(cf->fileName, ".browse");
-	}
+	addToFilename(".browse");
 	cw->browseMode = cf->browseMode = true;
 }
 

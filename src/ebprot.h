@@ -38,6 +38,8 @@ void addTextToBackend(const char *inbuf);
 void delText(int start, int end) ;
 bool readFileArgv(const char *filename, int fromframe, const char *orig_head);
 bool writeFile(const char *name, int mode);
+void addToFilename(const char *s);
+void debrowseFilename(char *s);
 void eb_variables(void);
 Tag *line2frame(int ln);
 bool jump2anchor(const Tag *jumptag, const char *newhash);

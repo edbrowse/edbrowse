@@ -2701,7 +2701,15 @@ static bool writeContext(int cx, Window *w, int writeLine)
 	return true;
 }
 
-static void debrowseSuffix(char *s)
+void addToFilename(const char *s)
+{
+	if(!cf->fileName) return;
+	int j = strlen(cf->fileName) + strlen(s);
+	cf->fileName = reallocMem(cf->fileName, j + 1);
+	strcat(cf->fileName, s);
+}
+
+void debrowseFilename(char *s)
 {
 	char *t;
 	if (!s) return;
@@ -2735,7 +2743,7 @@ static void eb_file_name_variables(const char *file_name, const char *file_var, 
 
 	strcpy(var, file_var);
 	p_setenv(var, s);
-	debrowseSuffix(s);
+	debrowseFilename(s);
 	strcpy(var, base_var);
 	p_setenv(var, s);
 
@@ -5397,7 +5405,7 @@ pwd:
 		noStack = 2;
 		allocatedLine = allocMem(strlen(cf->fileName) + 3);
 		sprintf(allocatedLine, "%c %s", cmd, cf->fileName);
-		debrowseSuffix(allocatedLine);
+		debrowseFilename(allocatedLine);
 		*runThis = allocatedLine;
 		uriEncoded = cf->uriEncoded;
 		return 3;
@@ -5529,7 +5537,7 @@ pwd:
 		undoCompare();
 		cw->undoable = false;
 		undoSpecialClear();
-		if(ub) debrowseSuffix(cf->fileName);
+		if(ub) debrowseFilename(cf->fileName);
 		cw->browseMode = cf->browseMode = false;
 		cf->render2 = false;
 		if (cf->render1b)
@@ -6587,7 +6595,7 @@ static int twoLetterG(const char *line, const char **runThis)
 			*t = '\n';	// put it back
 		} else {
 			path = cloneString(cf->fileName);
-			debrowseSuffix(path);
+			debrowseFilename(path);
 			path = skipFileProtocol(path);
 			if(!path || !*path) {
 				setError(MSG_MissingFileName);

@@ -981,17 +981,12 @@ mimestream:
 		p = strchr(referrer, '\1');
 		if (p)
 			*p = 0;
-// lop off .browse
-		p = referrer + strlen(referrer);
-		if (p - referrer > 7 && !memcmp(p - 7, ".browse", 7))
-			p[-7] = 0;
+		debrowseFilename(referrer);
 // excise login:password
 		p = strchr(referrer, ':');
 		++p;
-		if (*p == '/')
-			++p;
-		if (*p == '/')
-			++p;
+		if (*p == '/') ++p;
+		if (*p == '/') ++p;
 		p2 = strchr(p, '@');
 		p3 = strchr(p, '/');
 		if (p2 && (!p3 || p2 < p3))
@@ -3359,13 +3354,8 @@ cdt doesn't have or need an object; it's a place holder.
 	}
 	cnzFree(jssrc);
 	cf->browseMode = true;
+	addToFilename(".browse");
 	debugPrint(3, "end parse html from frame");
-
-	if (cf->fileName) {
-		int j = strlen(cf->fileName);
-		cf->fileName = reallocMem(cf->fileName, j + 8);
-		strcat(cf->fileName, ".browse");
-	}
 
 	t->f1 = cf;
 	if (fromget)
@@ -3394,7 +3384,6 @@ static int frameContractLine(int ln)
 
 bool reexpandFrame(void)
 {
-	int j;
 	Tag *frametag;
 	Tag *cdt;	// contentDocument tag
 	Frame *save_cf = cf;
@@ -3478,11 +3467,8 @@ bool reexpandFrame(void)
 		rebuildSelectors();
 	}
 	cf->browseMode = true;
+	addToFilename(".browse");
 	debugPrint(3, "end parse html from frame replace");
-
-	j = strlen(cf->fileName);
-	cf->fileName = reallocMem(cf->fileName, j + 8);
-	strcat(cf->fileName, ".browse");
 
 	if (cf->jslink)
 		reconnectTagObject(cdt);
