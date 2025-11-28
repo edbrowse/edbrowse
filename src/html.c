@@ -1558,7 +1558,11 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 			newbuf = tbuf;
 			j = tlen;
 		}
+// pretend like the rendering of mail is done by a plugin
+		cf->render1 = cf->render2 = true;
 
+// mail should always be in html, see mailShowsHtml in fetchmail.c
+		addToFilename(".html");
 		if (memEqualCI(newbuf, "<html>\n", 7) && allowRedirection) {
 /* double browse, mail then html */
 			bmode = 2;
@@ -1567,8 +1571,7 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 			rawbuf = newbuf;
 			rawsize = j;
 			prepareForBrowse(rawbuf, rawsize);
-		} else
-			addToFilename(".browse");
+		}
 	}
 
 	if (bmode == 2) {
