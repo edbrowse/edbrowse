@@ -1136,32 +1136,21 @@ bool sameURL(const char *s, const char *t)
 	return !memcmp(s, t, l);
 }
 
-// Like the above, but specific to the edbrowse cache.
-// This is a simpler routine, thus more efficient for a large cache.
-// Although the search is still linear, so there is room for improvement.
-static bool sameURLCache(const char *s, const char *t)
-{
 /*********************************************************************
+This function is like the above, but specific to the edbrowse cache.
+This is a simpler routine, thus more efficient for a large cache.
+Although the search is still linear, so there is room for improvement.
 post requests are not cached, so don't worrry about that.
+The hash is lopped off before we get here, so don't worry about that.
 Each url starts with http:// or https://.
-If only the protocols differ, are they the same?
+If only the protocols differ, are they the same url?
 Could we pull from cache even if one was http and the other https?
-I don't know, so I'll be conservative and insist the protocol be the same.
+I don't know, so I'll be conservative and insist the protocols match.
 Skip ahead by 7 and start the search there.
+That will be the second slash or the first letter of the domain.
 *********************************************************************/
-	s += 7, t += 7;
-	while(true) {
-		if(*s != *t) break;
-// different hashes are ok, it's still the same url.
-		if(*s == 0 || *s == '#') return true;
-		++s, ++t;
-	}
-	char c1 = *s, c2 = *t;
-// perhaps one has hash and the other doesn't.
-	if(c1 == '#') c1 = 0;
-	if(c2 == '#') c2 = 0;
-	return (c1 == c2);
-}
+
+#define sameURLCache(s, t) !strcmp((s) + 7, (t) + 7)
 
 /* Find some helpful text to print in place of an image.
  * Not sure why we would need more than 1000 chars for this,
