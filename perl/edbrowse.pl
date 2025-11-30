@@ -13,7 +13,6 @@ use Time::Local;
 
 =HEAD1 Current Maintainer
 
-Chris Brannon
 	maintainers@edbrowse.org
 	http://edbrowse.org
 
@@ -39,10 +38,6 @@ of the Perl version stopped years ago, and there have been significant changes.
 If you have lynx on hand, you can run:
 
 lynx -dump http://edbrowse.org/usersguide.html > usersguide.txt
-
-If you are using lynx to download the actual program, do this:
-
-lynx -source 'http://edbrowse.org/edbrowse.pl' > edbrowse.pl
 
 =cut
 
@@ -7377,8 +7372,7 @@ $ubackup = 0;
 }   # infinite loop
 
 #*********************************************************************
-#  The following code is written and maintained by Chris Brannon,
-#  cbrannon@wilnet1.com
+#  The following code was written by Chris Brannon.
 #  It manages secure http and ftp connections.
 #*********************************************************************
 
