@@ -2074,15 +2074,29 @@ We don't even query the cache if we don't have at least one of etag or mod time.
 #define USLEEP(a) usleep(a)	// sleep microsecs
 
 static int control_fh = -1;	/* file handle for cacheControl */
+static time_t control_mt; // mod time
+static int control_sub; // subsecond resolution
 static char *cache_data;
 static time_t now_t;
 static char *cacheFile, *cacheLock, *cacheControl;
+
+static void setControlTime(void)
+{
+	struct stat b;
+	if(fstat(control_fh, &b)) {
+// this should never fail; don't know what to do
+		debugPrint(2, "stat on control file failed");
+		return;
+	}
+	control_mt = b.st_mtime;
+	}
 
 /* a cache entry */
 struct CENTRY {
 	off_t offset;
 	size_t textlength;
 	const char *url;
+	int length; // url length
 	int filenumber;
 	const char *etag;
 	int modtime;
@@ -2161,6 +2175,7 @@ static bool readControl(void)
 	struct CENTRY *e;
 	int ln = 1;
 
+	debugPrint(3, "read and scan cache control file");
 	lseek(control_fh, 0L, 0);
 	if (!fdIntoMemory(control_fh, &data, &datalen, 0))
 		return false;
@@ -2185,6 +2200,7 @@ static bool readControl(void)
 			continue;
 		}
 		*s++ = 0;
+		e->length = strlen(e->url);
 		e->filenumber = strtol(s, &s, 10);
 		++s;
 		e->etag = s;
@@ -2252,6 +2268,7 @@ static bool writeControl(void)
 	}
 
 	fclose(f);
+	setControlTime();
 	control_fh = -1;
 	return true;
 }
@@ -2422,7 +2439,7 @@ bool fetchCache(const char *url, const char *etag, time_t modtime, bool grab,
 		char **data, int *data_len)
 {
 	struct CENTRY *e;
-	int i;
+	int i, l;
 	char *newrec;
 	size_t newlen = 0;
 
@@ -2434,10 +2451,11 @@ bool fetchCache(const char *url, const char *etag, time_t modtime, bool grab,
 		return false;
 
 // find the url
+	l = strlen(url);
 	e = entries;
 	for (i = 0; i < numentries; ++i, ++e) {
-		if (!sameURLCache(url, e->url))
-			continue;
+		if(l != e->length) continue;
+		if (!sameURLCache(url, e->url)) continue;
 		if(grab) goto match;
 // look for match on etag
 		if (e->etag[0] && etag && etag[0]) {
@@ -2479,6 +2497,7 @@ match:
 		lseek(control_fh, e->offset, 0);
 		if(write(control_fh, newrec, newlen) < (int)newlen)
 			debugPrint(2, "cache cannot write %d bytes", newlen);
+		setControlTime();
 	} else {
 		if (!writeControl())
 			clearCacheInternal();
@@ -2507,15 +2526,16 @@ bool presentInCache(const char *url)
 {
 	bool ret = false;
 	struct CENTRY *e;
-	int i;
+	int i, l;
 
 	if (!setLock())
 		return false;
 
 	e = entries;
+	l = strlen(url);
 	for (i = 0; i < numentries; ++i, ++e) {
-		if (!sameURLCache(url, e->url))
-			continue;
+		if(l != e->length) continue;
+		if (!sameURLCache(url, e->url)) continue;
 		ret = true;
 		break;
 	}
@@ -2533,7 +2553,7 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 		const char *data, int datalen)
 {
 	struct CENTRY *e;
-	int i;
+	int i, l;
 	int filenum;
 	bool append = false;
 
@@ -2542,8 +2562,9 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 
 /* find the url */
 	e = entries;
+	l = strlen(url);
 	for (i = 0; i < numentries; ++i, ++e) {
-		if (sameURLCache(url, e->url))
+		if (l == e->length && sameURLCache(url, e->url))
 			break;
 	}
 
@@ -2575,6 +2596,7 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 /* record is the same length, just update it */
 			lseek(control_fh, e->offset, 0);
 			write(control_fh, newrec, newlen);
+			setControlTime();
 			debugPrint(3, "into cache");
 			free(cache_data);
 			free(newrec);
@@ -2621,6 +2643,7 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 	e = entries + numentries;
 	++numentries;
 	e->url = url;
+	e->length = l;
 	e->filenumber = filenum;
 	e->etag = (etag ? etag : emptyString);
 	e->accesstime = now_t / 8;
@@ -2633,6 +2656,7 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 		e->textlength = strlen(newrec);
 		lseek(control_fh, 0L, 2);
 		write(control_fh, newrec, e->textlength);
+			setControlTime();
 		debugPrint(3, "into cache");
 		free(cache_data);
 		free(newrec);
