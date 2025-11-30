@@ -4015,7 +4015,8 @@ static void ircPrepSend(Window *win, Window *wout, char *s)
 	if(s[0] == '\0')
 		return;
 	ircChomp(s, '\n');
-	if(s[0] != ':') {
+	if(s[0] != ':' ||
+	!strncmp(s, ":me ", 4)) {
 		ircMessage(wout, win->ircChannel, s);
 		return;
 	}
