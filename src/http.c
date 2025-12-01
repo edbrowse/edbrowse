@@ -982,7 +982,7 @@ mimestream:
 		p = strchr(referrer, '\1');
 		if (p)
 			*p = 0;
-		debrowseFilename(referrer);
+		debrowseFilename(referrer, true);
 // excise login:password
 		p = strchr(referrer, ':');
 		++p;

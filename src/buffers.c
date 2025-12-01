@@ -2716,9 +2716,10 @@ void addToFilename(const char *s)
 	int j = strlen(cf->fileName) + strlen(s);
 	cf->fileName = reallocMem(cf->fileName, j + 1);
 	strcat(cf->fileName, s);
+	if(s[1] != 'b') cf->render5 = true;
 }
 
-void debrowseFilename(char *s)
+void debrowseFilename(char *s, bool strip2)
 {
 	char *t;
 	if (!s) return;
@@ -2726,7 +2727,7 @@ void debrowseFilename(char *s)
 		t = strrchr(s, '.');
 		if (t && stringEqual(t, ".browse")) *t = 0;
 	}
-	if(cw->f0.render4) {
+	if(cw->f0.render4 || (cf->render5 && strip2)) {
 		t = strrchr(s, '.');
 		if (t && (stringEqual(t, ".html") || stringEqual(t, ".txt")))
 			*t = 0;
@@ -2755,7 +2756,7 @@ static void eb_file_name_variables(const char *file_name, const char *file_var, 
 
 	strcpy(var, file_var);
 	p_setenv(var, s);
-	debrowseFilename(s);
+	debrowseFilename(s, true);
 	strcpy(var, base_var);
 	p_setenv(var, s);
 
@@ -5417,7 +5418,7 @@ pwd:
 		noStack = 2;
 		allocatedLine = allocMem(strlen(cf->fileName) + 3);
 		sprintf(allocatedLine, "%c %s", cmd, cf->fileName);
-		debrowseFilename(allocatedLine);
+		debrowseFilename(allocatedLine, true);
 		*runThis = allocatedLine;
 		uriEncoded = cf->uriEncoded;
 		return 3;
@@ -5549,12 +5550,12 @@ pwd:
 		undoCompare();
 		cw->undoable = false;
 		undoSpecialClear();
-		if(ub) debrowseFilename(cf->fileName);
+		if(ub) debrowseFilename(cf->fileName, false);
 		cw->browseMode = cf->browseMode = false;
 		cf->render2 = false;
 		if (cf->render1b)
 			cf->render1 = cf->render1b = false;
-		cf->render4 = false;
+		cf->render4 = cf->render5 = false;
 		cf->charset = 0;
 		if (ub) {
 			cw->nlMode = cw->rnlMode;
@@ -6608,7 +6609,7 @@ static int twoLetterG(const char *line, const char **runThis)
 			*t = '\n';	// put it back
 		} else {
 			path = cloneString(cf->fileName);
-			debrowseFilename(path);
+			debrowseFilename(path, true);
 			path = skipFileProtocol(path);
 			if(!path || !*path) {
 				setError(MSG_MissingFileName);

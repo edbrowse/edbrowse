@@ -6,9 +6,11 @@ Use strict js in shared.js and startwindow.js
 
 Append .html or .txt after running a rendering plugin.
 
+Optimize the performance of the http cache.
+
 3.8.15
 
-The lsr and lsc commands.
+The lsr (imap) and lsc (irc) commands.
 
 Migrate from quickjs to quickjs-ng.
 The latter is preferred by most distributions, but we support both.

@@ -405,16 +405,17 @@ struct ebFrame {
 	char *firstURL;		// before http redirection
 	char *hbase; // base for href references
 	const char *charset;		// charset for this page
-	bool render1; // rendered via protocol or urlmatch
-	bool render1b;
-	bool render2; // rendered via suffix
-	bool render3; // rendered before load, only once
-	bool render4; // .html or .txt appended
-	bool baseset; // <base> tag has been seen
-	bool uriEncoded; // filename is url encoded
-	bool jslink; // linke to javascript
-	bool browseMode;
-	bool xmlMode;
+	bool render1:1; // rendered via protocol or urlmatch
+	bool render1b:1;
+	bool render2:1; // rendered via suffix
+	bool render3:1; // rendered before load, only once
+	bool render4:1; // .html or .txt appended as part of browse
+	bool render5:1; // .html or .txt appended for any reason
+	bool baseset:1; // <base> tag has been seen
+	bool uriEncoded:1; // filename is url encoded
+	bool jslink:1; // linke to javascript
+	bool browseMode:1;
+	bool xmlMode:1;
 	char *dw;		// document.write string
 	int dw_l;		// length of the above
 // document.writes go under the body.
