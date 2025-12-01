@@ -2092,13 +2092,15 @@ static void setControlTime(void)
 	control_ns = b.st_mtim.tv_nsec;
 	}
 
+// was the control file updated when we weren't looking at it?
 static bool controlModified(void)
 {
 	struct stat b;
+	if(!control_mt) return true; // file never read
 	if(fstat(control_fh, &b)) {
 // this should never fail; don't know what to do
 		debugPrint(2, "stat on control file failed");
-		return false;
+		return true;
 	}
 	if(b.st_mtime > control_mt) return true;
 	if(b.st_mtime < control_mt) return false;
@@ -2110,12 +2112,12 @@ struct CENTRY {
 	off_t offset;
 	size_t textlength;
 	const char *url;
-	int length; // url length
+	int urllength;
 	int filenumber;
 	const char *etag;
 	int modtime;
 	int accesstime;
-	int pages;		/* in 4K pages */
+	int pages;		// in 4K pages
 };
 
 static struct CENTRY *entries;
@@ -2125,9 +2127,7 @@ static pthread_mutex_t inside_mex;
 void setupEdbrowseCache(void)
 {
 	int fh;
-
 	pthread_mutex_init(&inside_mex, NULL);
-
 	if (control_fh >= 0) {
 // this should never happen
 		close(control_fh);
@@ -2135,13 +2135,13 @@ void setupEdbrowseCache(void)
 		control_mt = 0;
 	}
 	if (!cacheDir) {
-// this should always happen
+// not set in .ebrc
 		cacheDir = allocMem(strlen(home) + 10);
 		sprintf(cacheDir, "%s/.ebcache", home);
 	}
 	if (fileTypeByName(cacheDir, 0) != 'd') {
 		if (mkdir(cacheDir, 0700)) {
-/* Don't want to abort here; we might be on a readonly filesystem.
+/* Don't want to exit here; we might be on a readonly filesystem.
  * Don't have a cache directory and can't creat one; yet we should move on. */
 			free(cacheDir);
 			cacheDir = 0;
@@ -2153,7 +2153,7 @@ void setupEdbrowseCache(void)
 	nzFree(cacheControl);
 	cacheControl = allocMem(strlen(cacheDir) + 11);
 	sprintf(cacheControl, "%s/control%02d", cacheDir, CACHECONTROLVERSION);
-// make sure the control file exists, just for grins
+// make sure the control file exists
 	fh = open(cacheControl, O_WRONLY | O_APPEND | O_CREAT | O_CLOEXEC, MODE_private);
 	if (fh >= 0)
 		close(fh);
@@ -2171,14 +2171,6 @@ void setupEdbrowseCache(void)
 
 /*********************************************************************
 Read the control file into memory and parse it into entry structures.
-Sadly, I do this every time you access the cache.
-It would be better to hold all this data in memory, with the time stamp of the
-control file, and if the control file has not been updated
-then just use what we have;
-and if it has been updated then read it and parse it.
-Well maybe we'll implement this later.
-For now, the control file isn't too big, it's not prohibitive
-to do this every time.
 Note that control is a nice ascii readable file, helps with debugging.
 *********************************************************************/
 
@@ -2190,7 +2182,9 @@ static bool readControl(void)
 	struct CENTRY *e;
 	int ln = 1;
 
-	debugPrint(3, "read and scan cache control file");
+	if(!controlModified()) return true; // no need to read
+
+	debugPrint(3, "read cache control file");
 	lseek(control_fh, 0L, 0);
 	if (!fdIntoMemory(control_fh, &data, &datalen, 0))
 		return false;
@@ -2215,7 +2209,7 @@ static bool readControl(void)
 			continue;
 		}
 		*s++ = 0;
-		e->length = strlen(e->url);
+		e->urllength = strlen(e->url);
 		e->filenumber = strtol(s, &s, 10);
 		++s;
 		e->etag = s;
@@ -2229,7 +2223,9 @@ static bool readControl(void)
 		++e, ++numentries;
 	}
 
-	cache_data = data;	/* remember to free this later */
+	nzFree(cache_data);
+	cache_data = data;
+	setControlTime();
 	return true;
 }
 
@@ -2243,9 +2239,8 @@ static char *record2string(const struct CENTRY *e)
 	return t;
 }
 
-/* ON a rare occasion we will have to rewrite the entire control file.
- * If this fails, and it shouldn't, then our only recourse is to clear the cache.
- * If successful, then the file is closed. */
+// ON occasion we have to rewrite the entire control file.
+// If this fails, then our only recourse is to clear the cache.
 static bool writeControl(void)
 {
 	struct CENTRY *e;
@@ -2255,7 +2250,7 @@ static bool writeControl(void)
 	if(control_fh < 0) {
 // This should never happen, but I saw it happen once.
 // See the comments just before setLock().
-		control_fh =     open(cacheControl, O_RDWR | O_BINARY | O_CLOEXEC, 0);
+		control_fh = open(cacheControl, O_RDWR | O_BINARY | O_CLOEXEC, 0);
 		if (control_fh < 0) {
 			truncate0(cacheControl, -1);
 			control_mt = 0;
@@ -2265,7 +2260,7 @@ static bool writeControl(void)
 
 	lseek(control_fh, 0L, 0);
 	truncate0(cacheControl, control_fh);
-/* buffered IO is more efficient */
+// buffered IO is more efficient
 	f = fdopen(control_fh, "w");
 
 	e = entries;
@@ -2278,15 +2273,16 @@ static bool writeControl(void)
 		if (rc <= 0) {
 			fclose(f);
 			control_fh = -1;
-			truncate0(cacheControl, -1);
 			control_mt = 0;
+			truncate0(cacheControl, -1);
 			return false;
 		}
 	}
 
 	fclose(f);
-	control_fh = -1;
-	control_mt = 0;
+// reopen without the FILE wrapper
+	control_fh = open(cacheControl, O_RDWR | O_BINARY | O_CLOEXEC, 0);
+	setControlTime();
 	return true;
 }
 
@@ -2362,8 +2358,8 @@ static bool setLock(void)
 top:
 	time(&now_t);
 
-/* try every 10 ms, 100 times, for a total of 1 second */
-	for (i = 0; i < 100; ++i) {
+/* try every 100 ms, 20 times, for a total of 2 seconds */
+	for (i = 0; i < 20; ++i) {
 		lock_fh =
 		    open(cacheLock, O_WRONLY | O_EXCL | O_CREAT | O_CLOEXEC, MODE_private);
 		if (lock_fh >= 0) {	/* got it */
@@ -2389,7 +2385,7 @@ top:
 			pthread_mutex_unlock(&inside_mex);
 			return false;
 		}
-		USLEEP(10000);
+		USLEEP(100000);
 	}
 
 /* if lock file is more than 5 minutes old then something bad has happened,
@@ -2417,7 +2413,7 @@ static void clearCacheInternal(void)
 
 	debugPrint(3, "clear cache");
 
-/* loop through and remove the files */
+// loop through and remove the files
 	e = entries;
 	for (i = 0; i < numentries; ++i, ++e) {
 		sprintf(cacheFile, "%s/%05d", cacheDir, e->filenumber);
@@ -2437,23 +2433,15 @@ void clearCache(void)
 	control_fh = -1;
 	control_mt = 0;
 	clearCacheInternal();
-	free(cache_data);
 	clearLock();
 }
 
 /* Fetch a file from cache. return true if fetched successfully,
 false if the file has not been cached or is stale.
 If true then the last access time is set to now.
-The data is returned by the pointer provided; if there is no pointer
-for the length of the data, then the name of the cache file is returned instead,
-wherein the calling routine can access the file directly.
-You might think there is a race condition here; some other edbrowse
-process fills the cache and removes 100 files, but this file was just accessed,
-so is at the top of the list, and won't be removed.
-In other words, a destructive race condition is almost impossible. Some goofy
-characters are prepended to the filename to help us identify it as such. */
+The data is returned by the pointer provided. */
 
-bool fetchCache(const char *url, const char *etag, time_t modtime, bool grab,
+bool fetchCache(const char *url, const char *etag, time_t modtime, bool grablocal,
 		char **data, int *data_len)
 {
 	struct CENTRY *e;
@@ -2462,7 +2450,8 @@ bool fetchCache(const char *url, const char *etag, time_t modtime, bool grab,
 	size_t newlen = 0;
 
 // you have to give me enough information
-	if (!grab && !modtime && (!etag || !*etag))
+	if(!etag) etag = emptyString;
+	if (!grablocal && !modtime && !*etag)
 		return false;
 
 	if (!setLock())
@@ -2472,12 +2461,12 @@ bool fetchCache(const char *url, const char *etag, time_t modtime, bool grab,
 	l = strlen(url);
 	e = entries;
 	for (i = 0; i < numentries; ++i, ++e) {
-		if(l != e->length) continue;
+		if(l != e->urllength) continue;
 		if (!sameURLCache(url, e->url)) continue;
-		if(grab) goto match;
+		if(grablocal) goto match;
 // look for match on etag
-		if (e->etag[0] && etag && etag[0]) {
-/* both etags are present */
+		if (e->etag[0] && etag[0]) {
+// both etags are present
 			if (stringEqual(etag, e->etag))
 				goto match;
 			goto nomatch;
@@ -2488,26 +2477,19 @@ bool fetchCache(const char *url, const char *etag, time_t modtime, bool grab,
 			goto nomatch;
 		goto match;
 	}
-// url not found
 
+// url not found
 nomatch:
-	free(cache_data);
 	clearLock();
 	return false;
 
 match:
 	sprintf(cacheFile, "%s/%05d", cacheDir, e->filenumber);
-	if (data_len) {
-		if (!fileIntoMemory(cacheFile, data, data_len, 0))
-			goto nomatch;
-	} else {
-		char *a = allocMem(strlen(cacheFile) + 5 + 1);
-		sprintf(a, "`cfn~%s", cacheFile);
-		*data = a;
-	}
+	if (!fileIntoMemory(cacheFile, data, data_len, 0))
+		goto nomatch;
 
-/* file has been pulled from cache */
-/* have to update the access time */
+// file has been pulled from cache
+// have to update the access time
 	e->accesstime = now_t / 8;
 	newrec = record2string(e);
 	newlen = strlen(newrec);
@@ -2515,7 +2497,8 @@ match:
 		lseek(control_fh, e->offset, 0);
 		if(write(control_fh, newrec, newlen) < (int)newlen)
 			debugPrint(2, "cache cannot write %d bytes", newlen);
-		setControlTime();
+		else
+			setControlTime();
 	} else {
 		if (!writeControl())
 			clearCacheInternal();
@@ -2523,7 +2506,6 @@ match:
 
 	debugPrint(3, "from cache");
 	free(newrec);
-	free(cache_data);
 	clearLock();
 	return true;
 }
@@ -2552,13 +2534,12 @@ bool presentInCache(const char *url)
 	e = entries;
 	l = strlen(url);
 	for (i = 0; i < numentries; ++i, ++e) {
-		if(l != e->length) continue;
+		if(l != e->urllength) continue;
 		if (!sameURLCache(url, e->url)) continue;
 		ret = true;
 		break;
 	}
 
-	free(cache_data);
 	clearLock();
 	return ret;
 }
@@ -2573,7 +2554,6 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 	struct CENTRY *e;
 	int i, l;
 	int filenum;
-	bool append = false;
 
 	if (!setLock())
 		return;
@@ -2582,7 +2562,7 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 	e = entries;
 	l = strlen(url);
 	for (i = 0; i < numentries; ++i, ++e) {
-		if (l == e->length && sameURLCache(url, e->url))
+		if (l == e->urllength && sameURLCache(url, e->url))
 			break;
 	}
 
@@ -2595,7 +2575,6 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 // oops, can't write the file
 		unlink(cacheFile);
 		debugPrint(3, "cannot write web page into cache");
-		free(cache_data);
 		clearLock();
 		return;
 	}
@@ -2603,38 +2582,41 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 	if (i < numentries) {
 		char *newrec;
 		size_t newlen;
-/* we're just updating a preexisting record */
+// we're just updating a preexisting record
 		e->accesstime = now_t / 8;
 		e->modtime = modtime / 8;
-		e->etag = (etag ? etag : emptyString);
 		e->pages = (datalen + 4095) / 4096;
+// etag shouldn't change; don't mess with it.
+// If the server added an etag, that wasn't there before, we'll probably
+// continue to match on mod time, and if some day we don't, then we'll store the etag.
 		newrec = record2string(e);
 		newlen = strlen(newrec);
+// it should be the same length, unless the size of the file changed.
 		if (newlen == e->textlength) {
-/* record is the same length, just update it */
+// record is the same length, update it insitu
 			lseek(control_fh, e->offset, 0);
 			write(control_fh, newrec, newlen);
 			setControlTime();
 			debugPrint(3, "into cache");
-			free(cache_data);
 			free(newrec);
 			clearLock();
 			return;
 		}
 
-/* Record has changed length, have to rewrite the whole control file */
+// Record has changed length, have to rewrite the whole control file
 		e->textlength = newlen;
 		if (!writeControl())
 			clearCacheInternal();
 		else
 			debugPrint(3, "into cache");
-		free(cache_data);
+// all the offsets could have changed, must reread
+		control_mt = 0;
+		readControl();
 		clearLock();
 		return;
 	}
 
-/* this file is new. See if the database is full. */
-	append = true;
+// this file is new. See if the database is full.
 	if (numentries >= 140) {
 		int npages = 0;
 		e = entries;
@@ -2642,7 +2624,7 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 			npages += e->pages;
 
 		if (numentries == cacheCount || npages / 256 >= cacheSize) {
-/* sort to find the 100 oldest files */
+// sort to find the 100 oldest files
 			qsort(entries, numentries, sizeof(struct CENTRY),
 			      entry_cmp);
 			debugPrint(3,
@@ -2654,40 +2636,26 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 				unlink(cacheFile);
 			}
 			numentries -= 100;
-			append = false;
 		}
 	}
 
 	e = entries + numentries;
 	++numentries;
 	e->url = url;
-	e->length = l;
+	e->urllength = l;
 	e->filenumber = filenum;
-	e->etag = (etag ? etag : emptyString);
+	e->etag = etag;
 	e->accesstime = now_t / 8;
 	e->modtime = modtime / 8;
 	e->pages = (datalen + 4095) / 4096;
-
-	if (append) {
-/* didn't have to prune; just append this record */
-		char *newrec = record2string(e);
-		e->textlength = strlen(newrec);
-		lseek(control_fh, 0L, 2);
-		write(control_fh, newrec, e->textlength);
-			setControlTime();
-		debugPrint(3, "into cache");
-		free(cache_data);
-		free(newrec);
-		clearLock();
-		return;
-	}
-
-// have to rewrite the whole control file
 	if (!writeControl())
 		clearCacheInternal();
 	else
 		debugPrint(3, "into cache");
-	free(cache_data);
+// because url and etag came from outside, they aren't going to stick around.
+// The simplest way is to reread.
+	control_mt = 0;
+	readControl();
 	clearLock();
 }
 

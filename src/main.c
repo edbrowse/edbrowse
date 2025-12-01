@@ -1989,8 +1989,8 @@ inside:
 			cacheSize = atoi(v);
 			if (cacheSize <= 0)
 				cacheSize = 0;
-			if (cacheSize >= 1000)
-				cacheSize = 1000;
+			if (cacheSize >= 2000)
+				cacheSize = 2000;
 			continue;
 
 		case 43:	// adbook
