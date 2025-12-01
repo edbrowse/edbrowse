@@ -2075,7 +2075,7 @@ We don't even query the cache if we don't have at least one of etag or mod time.
 
 static int control_fh = -1;	/* file handle for cacheControl */
 static time_t control_mt; // mod time
-static int control_sub; // subsecond resolution
+static int control_ns; // nanoseconds
 static char *cache_data;
 static time_t now_t;
 static char *cacheFile, *cacheLock, *cacheControl;
@@ -2089,7 +2089,21 @@ static void setControlTime(void)
 		return;
 	}
 	control_mt = b.st_mtime;
+	control_ns = b.st_mtim.tv_nsec;
 	}
+
+static bool controlModified(void)
+{
+	struct stat b;
+	if(fstat(control_fh, &b)) {
+// this should never fail; don't know what to do
+		debugPrint(2, "stat on control file failed");
+		return false;
+	}
+	if(b.st_mtime > control_mt) return true;
+	if(b.st_mtime < control_mt) return false;
+	return  b.st_mtim.tv_nsec > control_ns;
+}
 
 /* a cache entry */
 struct CENTRY {
@@ -2118,6 +2132,7 @@ void setupEdbrowseCache(void)
 // this should never happen
 		close(control_fh);
 		control_fh = -1;
+		control_mt = 0;
 	}
 	if (!cacheDir) {
 // this should always happen
@@ -2243,6 +2258,7 @@ static bool writeControl(void)
 		control_fh =     open(cacheControl, O_RDWR | O_BINARY | O_CLOEXEC, 0);
 		if (control_fh < 0) {
 			truncate0(cacheControl, -1);
+			control_mt = 0;
 			return false;
 		}
 	}
@@ -2263,13 +2279,14 @@ static bool writeControl(void)
 			fclose(f);
 			control_fh = -1;
 			truncate0(cacheControl, -1);
+			control_mt = 0;
 			return false;
 		}
 	}
 
 	fclose(f);
-	setControlTime();
 	control_fh = -1;
+	control_mt = 0;
 	return true;
 }
 
@@ -2418,6 +2435,7 @@ void clearCache(void)
 		return;
 	close(control_fh);
 	control_fh = -1;
+	control_mt = 0;
 	clearCacheInternal();
 	free(cache_data);
 	clearLock();
