@@ -423,7 +423,6 @@ q : quit the current session
 <br>!command : shell command
 <br>!! : previous shell command
 <br>!! stuff : previous shell command with stuff appended
-<br>ebvar : update environment variables before each shell command (toggle)
 <br>! program "$EB_DOT" : run program on the contents of the current line
 <br>! program '. : same as above
 <br>! program "$EB_PLUS" : run program on the contents of the next line
@@ -2339,9 +2338,6 @@ but you can still paste the contents of a line into your shell command.
 <p>
 These EB_ assignments also occur when expanding environment variables directly in an edbrowse command,
 e.g. p $(:EB_SESSION)
-
-<p>
-These EB_ assignments can be enabled or disabled by the ebvar command.
 
 <p>
 Returning to shell escape,

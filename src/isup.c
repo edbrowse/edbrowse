@@ -2208,8 +2208,8 @@ static bool readControl(void)
 			debugPrint(3, "cache control file line %d is bogus", ln);
 			continue;
 		}
+		e->urllength = s - e->url;
 		*s++ = 0;
-		e->urllength = strlen(e->url);
 		e->filenumber = strtol(s, &s, 10);
 		++s;
 		e->etag = s;

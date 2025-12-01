@@ -2779,7 +2779,6 @@ static void eb_file_name_variables(const char *file_name, const char *file_var, 
 // etc, before running a shell command, or expanding env variables inline.
 void eb_variables(void)
 {
-	if(!ebvar) return;
 	pst p;
 	int n, rc, i;
 	char var[12], numbuf[12];
@@ -6636,20 +6635,6 @@ static int twoLetterG(const char *line, const char **runThis)
 
 	if(stringEqual(line, "db")) {
 		eb_printf("%d\n", debugLevel);
-		return true;
-	}
-
-	if (stringEqual(line, "ebvar")) {
-		ebvar ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(ebvar + MSG_UpdateEBVarOff);
-		return true;
-	}
-
-	if (stringEqual(line, "ebvar+") || stringEqual(line, "ebvar-")) {
-		ebvar = (line[5] == '+');
-		if (helpMessagesOn)
-			i_puts(ebvar + MSG_UpdateEBVarOff);
 		return true;
 	}
 

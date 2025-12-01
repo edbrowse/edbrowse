@@ -714,8 +714,8 @@ il y a plusieurs boutons, utilisez svp %s1 à %s%d
 il y a plusieurs images présentes, veuillez utiliser %s1 à %s%d
 0
 impossible de charger html fragment\n
-ne pas mettre à jour les variables d'environnement
-mettre à jour les variables d'environnement
+0
+0
 échec de la commande shell
 même dossier
 http internet
