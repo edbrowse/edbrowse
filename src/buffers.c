@@ -2083,6 +2083,7 @@ uchar prebrowse, const Tag *gotag)
 			} else {
 				addToFilename(".html");
 			}
+			cf->render4 = true;
 			fileSize = readSize;
 		}
 
@@ -2725,7 +2726,7 @@ void debrowseFilename(char *s)
 		t = strrchr(s, '.');
 		if (t && stringEqual(t, ".browse")) *t = 0;
 	}
-	if(cw->f0.render2) {
+	if(cw->f0.render4) {
 		t = strrchr(s, '.');
 		if (t && (stringEqual(t, ".html") || stringEqual(t, ".txt")))
 			*t = 0;
@@ -5553,6 +5554,7 @@ pwd:
 		cf->render2 = false;
 		if (cf->render1b)
 			cf->render1 = cf->render1b = false;
+		cf->render4 = false;
 		cf->charset = 0;
 		if (ub) {
 			cw->nlMode = cw->rnlMode;

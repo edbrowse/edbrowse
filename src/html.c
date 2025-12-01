@@ -1533,6 +1533,7 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 			bmode = 0;
 			addToFilename(".txt");
 		}
+		cf->render4 = true;
 		if (!allowRedirection)
 			bmode = 0;
 	}
@@ -1563,6 +1564,7 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 
 // mail should always be in html, see mailShowsHtml in fetchmail.c
 		addToFilename(".html");
+		cf->render4 = true;
 		if (memEqualCI(newbuf, "<html>\n", 7) && allowRedirection) {
 /* double browse, mail then html */
 			bmode = 2;
