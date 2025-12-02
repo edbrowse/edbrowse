@@ -4909,9 +4909,6 @@ static int twoLetter(const char *line, const char **runThis)
 	if (stringEqual(line, "qt"))
 		ebClose(0);
 
-	if(!strncmp(line, "var ", 4))
-		return varCommand(line + 4);
-
 	if(line[0] == '[' && line[1] == ' ' &&
 	(n = strlen(line)) >= 5 &&
 	line[n-1] == ']' && line[n - 2] == ' ') {
@@ -6538,6 +6535,9 @@ static int twoLetterG(const char *line, const char **runThis)
 		else down_prefile = 0;
 		return true;
 	}
+
+	if(!strncmp(line, "var ", 4))
+		return varCommand(line + 4);
 
 	if (line[0] == 'l' && line[1] == 's') {
 		char lsmode[12];
