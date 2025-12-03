@@ -866,10 +866,10 @@ static void *inputForever(void *ptr)
 			nzFree(save_p);
 		} else {
 			edbrowseCommand((char *)p, false);
-			nzFree(linePending);
-			linePending = save_p;
+			if(pstLength(save_p) > 10)
+				nzFree(linePending), linePending = save_p;
 		}
-	}			/* infinite loop */
+	}			// infinite loop
 	return NULL;
 }
 

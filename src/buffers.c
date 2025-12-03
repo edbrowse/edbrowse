@@ -1416,8 +1416,7 @@ static bool inputLinesIntoBuffer(void)
 		if(!line) goto fail;
 	}
 
-	nzFree(linePending);
-	linePending = 0;
+	nzFree(linePending), linePending = 0;
 
 	if (!linecount) {	/* no lines entered */
 		free(np);
@@ -1437,8 +1436,7 @@ fail:
 	for(t = np; t < np + linecount; ++t)
 		free(t->text);
 	free(np);
-	nzFree(linePending);
-	linePending = 0;
+	nzFree(linePending), linePending = 0;
 	return false;
 }
 
@@ -7710,8 +7708,6 @@ dest_ok:
 		} else {
 			nzFree(linePending), linePending = 0;
 		}
-	} else {
-		nzFree(linePending), linePending = 0;
 	}
 
 	if (first && strchr(nofollow_cmd, cmd)) {
