@@ -2080,6 +2080,12 @@ static char *cache_data;
 static time_t now_t;
 static char *cacheFile, *cacheLock, *cacheControl;
 
+#if defined(__APPLE__) || defined(__ANDROID__)
+#define ns_member st_mtimespec
+#else
+#define ns_member st_mtim
+#endif
+
 static void setControlTime(void)
 {
 	struct stat b;
@@ -2089,7 +2095,7 @@ static void setControlTime(void)
 		return;
 	}
 	control_mt = b.st_mtime;
-	control_ns = b.st_mtim.tv_nsec;
+	control_ns = b.ns_member.tv_nsec;
 	}
 
 // was the control file updated when we weren't looking at it?
@@ -2104,7 +2110,7 @@ static bool controlModified(void)
 	}
 	if(b.st_mtime > control_mt) return true;
 	if(b.st_mtime < control_mt) return false;
-	return  b.st_mtim.tv_nsec > control_ns;
+	return  b.ns_member.tv_nsec > control_ns;
 }
 
 /* a cache entry */
