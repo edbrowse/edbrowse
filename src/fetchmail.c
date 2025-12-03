@@ -3384,7 +3384,7 @@ textonly:
 
 static char *headerShow(struct MHINFO *w, bool top)
 {
-	static char buf[(MHLINE + 30) * 4];
+	static char buf[(MHLINE + 30) * 5];
 	static char lastsubject[MHLINE];
 	char *s, *e;
 	bool lines = false;
@@ -3444,7 +3444,12 @@ static char *headerShow(struct MHINFO *w, bool top)
 			(mailShowsHtml ? "<pre nowspc>" : ""),
 			e,
 			(mailShowsHtml ? "</pre>" : ""));
-			if(mailShowsHtml) nzFree(e);
+			if(mailShowsHtml) {
+				strcat(buf, "<title>Email: ");
+				strcat(buf, e);
+				strcat(buf, "</title>");
+				nzFree(e);
+			}
 			lines = true;
 		}
 // do we have to escape from or reply lines?
