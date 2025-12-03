@@ -8926,6 +8926,7 @@ redirect:
 			goto fail;
 		}
 		cmd = 'a';
+		nzFree(linePending), linePending = 0;
 		--startRange, --endRange;
 	}
 
@@ -8933,6 +8934,7 @@ redirect:
 		delText(startRange, endRange);
 		endRange = --startRange;
 		cmd = 'a';
+		nzFree(linePending), linePending = 0;
 	}
 
 	if (cmd == 'a') {
