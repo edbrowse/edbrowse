@@ -4550,21 +4550,21 @@ Edbrowse stores some web pages locally, in a cache, so that they can be fetched 
 You can specify the cache directory where these files are stored.
 If omitted, edbrowse selects ~/.ebcache.
 On a multiuser system, your cache should be private, since it literally contains the web pages you are looking at.
-Separate users should not share the same cache space.
+Separate users should not share the same cache.
 The cache directory is created mode 0700, if it does not already exist.
 
 <p>
 The cachesize parameter sets the size of the cache in megabytes.
-Default is 500, and max is 2,000.
-If this is set to 0, edbrowse does not cache any files.
+The default is 500, and the maximum is 2,000.
+If this parameter is 0, edbrowse does not cache any files.
 When the cache is full, edbrowse deletes the 100 oldest files and marches on.
 Edbrowse does not retain more than 10,000 files, even if the cache could hold more.
 
 <p>
-The local command causes edbrowse to read http or https pages from cache. It does not go out to the Internet.
-If a page is not in cache it prints a connection error.
+The local command causes edbrowse to read http or https pages from the cache. It does not go out to the Internet.
+If a page is not in the cache, edbrowse prints a connection error.
 This can be useful when there is no Internet connection and you want to review some pages that are cached.
-It can also be used in a function that fetches a web page that is static, and fetched often, so it will not fall out of cache.
+It can also be used in a function that fetches a web page that is static, and fetched often, so it will not fall out of the cache.
 Remember that settings are local to a function, so local+ in a function will not disturb your interactive session.
 This setting does not affect ftp, scp, gopher, etc.
 
@@ -5055,7 +5055,7 @@ In this case ~0 is the keywords you pass for your search.
 <br>
         b https://www.duckduckgo.com/
 <br>
-        /<>/ i1=~0
+        /&lt;&gt;/ i1=~0
 <br>
         i2*
 <br>
@@ -5064,196 +5064,9 @@ In this case ~0 is the keywords you pass for your search.
         /h2 {/
 <br>
         }
-
-function+mw {
-#  mariam-webster dictionary lookup
-b http://www.merriam-webster.com/dictionary/~0
-sw+
-/spelling suggestion/X
-if(*){
-/{.*}?/
-} else {
-/^h1/X
-/^h2/
-}
-}
-
-function+twit {
-#  twitter login
-e https://mobile.twitter.com/
-#  second time's the charm
-rf
-b
-#  If the cookies remember you then there is no login screen
-/email or username/+X
-if(*) {
-i=eklhad64
-/</ i=123zztop
-/</ i*
-}
-/^$/X
-5
-}
-
-# the simple way doesn't work with utf8
-# $-1s;$;\nSubject:;
-
-function+textc {
-#  Send a text from comcast
-$-1s;$;\nalt:/home/eklhad/kprs/ebsys/textalt.html\nSubject:;
-sm-
-bw
-q
-}
-
-function+textg {
-#  Send a text from gmail
-$-1s;$;\nalt:/home/eklhad/kprs/ebsys/textalt.html\nSubject:;
-sm-8
-bw
-q
-}
-
-function+unf {
-/^Unformat/X
-etmp
-r+1@$
-s/.* //
-s/\..*//
-s;^;/home/eklhad/.trash/rawmail/;
-W !cat '.
-b
-}
-
-function:font {
-#   [ digit or letter ] becomes subscript
-,s/\[\(\d\d?\|[a-zA-Z]\)\]/<sub>$1<\/sub>/g
-#  ^ number becomes superscript
-,s/\^\(\d+\)/<sup>$1<\/sup>/g
-,s/\^\([a-z]\)\b/<sup>$1<\/sup>/g
-}
-
-function:fol {
-#  apply the above to one line
-.w9
-e9
-bw
-<font
-e1
-#  Assumes this isn't the last line
-d
--r9
-q9
-p
-}
-
-function+ovb {
-s;`;<span class=ovb>;g
-s;';</span>;g
-}
-
-# I just want to remember this
-function:unspan {
-,s/<span class=\(su[bp]\)>\([^<>]*\)<\/span>/<$1>$2<\/$1>/g
-,s/<span class=\(su[bp]\)>\([^<>]*<su[bp]>[^<>]*<\/su[bp]>[^<>]*\)<\/span>/<$1>$2<\/$1>/g
-}
-
-function:unbc {
-#  Convert from bc formula to C
-#  Up to x^8
-,s/\([a-z]\)^8/$1*$1*$1*$1*$1*$1*$1*$1/g
-,s/\([a-z]\)^7/$1*$1*$1*$1*$1*$1*$1/g
-,s/\([a-z]\)^6/$1*$1*$1*$1*$1*$1/g
-,s/\([a-z]\)^5/$1*$1*$1*$1*$1/g
-,s/\([a-z]\)^4/$1*$1*$1*$1/g
-,s/\([a-z]\)^3/$1*$1*$1/g
-,s/\([a-z]\)^2/$1*$1/g
-}
-
-function+mr {
-#  math reference
-b www.mathreference.com/cgi-bin/ompsearch?keywords=~0
-1p
-}
-
-function+lowsen {
-#  look for lower case sentence
-g/[.?!]$/ +s/^"*[a-z]/@@&/
-g/@@/ -,.p
-,s/^@@"*[a-z]/uc/
-,s/^@@//
-}
-
-function+lowpara {
-#  look for lower case sentence at start of paragraph
-g/^<P>$/ +s/^"*[a-z][a-z]/@@&/
-g/@@/ -,.p
-,s/^@@"*[a-z]/uc/
-,s/^@@//
-}
-
-function:fbclean {
-#  clean facebook page
-ci+
-w /tmp/fbp
-#  The worst is zuckerberg's crap!
-/h3 Connect With Facebook/X
-if(*) {
-ka
-/h3 Facebook Engineering/X
-if(?) {
-/h3 Instagram/X
-}
-if(*) {
-kb
-'ap
-'bX
-'a,/^h3/-d
-}
-}
-/h3 People You May Know/X
-if(*) {
-p
-.,/^{See More}$/d
-}
-/h3 People You May Know/X
-if(*) {
-p
-.,/^{See More}$/d
-}
-/Suggested Post/X
-while(*) {
-p
-.,/Frame {xti}/d
-if(*) {
-/Suggested Post/X
-} else {
-/x@x@x@/X
-}
-}
-/Suggested [gG]roup\|Get Information From People in Group/X
-while(*) {
-p
-.,/{See More}/d
-if(*) {
-/Suggested Group\|Get Information From People in Group/X
-} else {
-/x@x@x@/X
-}
-}
-/} likes* {[\w '&]+}\.*$/X
-while(*) {
-p
-.,/Frame {xti}/d
-if(*) {
-/} likes* {[\w '&]+}\.*$/X
-} else {
-/x@x@x@/X
-}
-}
-
+</p>
 <p>
-With this in place, you simply type `&lt;gg kangaroo habitat'
+With this in place, you simply type `&lt;ddg kangaroo habitat'
 to find out where kangaroos live.
 
 <p>
