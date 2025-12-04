@@ -2113,6 +2113,8 @@ static bool controlModified(void)
 	return  b.ns_member.tv_nsec > control_ns;
 }
 
+#undef ns_member
+
 /* a cache entry */
 struct CENTRY {
 	off_t offset;
@@ -2591,6 +2593,8 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 // we're just updating a preexisting record
 		e->accesstime = now_t / 8;
 		e->modtime = modtime / 8;
+// If pages increases hugely, we don't test here if the cache is too full.
+// That will have to wait until the next addition.
 		e->pages = (datalen + 4095) / 4096;
 // etag shouldn't change; don't mess with it.
 // If the server added an etag, that wasn't there before, we'll probably
@@ -2623,7 +2627,7 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 	}
 
 // this file is new. See if the database is full.
-	if (numentries >= 140) {
+	if (numentries >= 14) {
 		int npages = 0;
 		e = entries;
 		for (i = 0; i < numentries; ++i, ++e)
@@ -2633,15 +2637,26 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 // sort to find the 100 oldest files
 			qsort(entries, numentries, sizeof(struct CENTRY),
 			      entry_cmp);
-			debugPrint(3,
-				   "cache is full; removing the 100 oldest files");
-			e = entries + numentries - 100;
-			for (i = 0; i < 100; ++i, ++e) {
+			debugPrint(3, "cache is full; removing the oldest files");
+// The following loop could clear out the entire cache,
+// if the newest file happens to be larger than the cache size.
+// It is guaranteed to remove something, since the while is
+// weaker than the if above.
+			e = entries + numentries - 1;
+			i = 0;
+// This while loop checks for: too close too the upper limit of files,
+// too much disk space, and pruing the cache on almost every storage
+// when almost full.
+			while (numentries >= cacheCount - 200 ||
+			npages / 256 >= cacheSize ||
+			(numentries > 300 && i < 100)) {
 				sprintf(cacheFile, "%s/%05d", cacheDir,
 					e->filenumber);
-				unlink(cacheFile);
+				unlink(cacheFile), ++i;
+				npages -= e->pages;
+				--e, --numentries;
 			}
-			numentries -= 100;
+			debugPrint(3, "removed the %d oldest files", i);
 		}
 	}
 
