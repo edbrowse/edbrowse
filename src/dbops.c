@@ -903,7 +903,7 @@ static bool dateBetween(const char *s)
 	if (!e)
 		return false;
 	*e = 0;
-	return stringIsDate(date2buf) | stringIsDate(e + 1);
+	return stringIsDate(date2buf) || stringIsDate(e + 1);
 }
 
 static bool buildWhereClause(void)
