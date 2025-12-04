@@ -2627,7 +2627,7 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 	}
 
 // this file is new. See if the database is full.
-	if (numentries >= 14) {
+	if (numentries >= 100) {
 		int npages = 0;
 		e = entries;
 		for (i = 0; i < numentries; ++i, ++e)
