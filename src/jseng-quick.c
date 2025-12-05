@@ -3248,7 +3248,7 @@ typedef struct JSJobEntry {
     JSContext *ctx;
     JSJobFunc *job_func;
     int argc;
-    JSValue argv[0];
+    JSValue argv[];
 } JSJobEntry;
 
 void my_ExecutePendingJobs(void)
