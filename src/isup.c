@@ -3838,6 +3838,7 @@ static void ircAddLine(Window *win, const char *channel, bool show, bool priv, c
 {
 	unsigned l1, l2;
 	int n = cw->dol;
+	char *ch;
 	va_list ap;
 	va_start(ap, fmt);
 	vsnprintf(irc_out, sizeof irc_out - 1, fmt, ap);
@@ -3862,10 +3863,11 @@ static void ircAddLine(Window *win, const char *channel, bool show, bool priv, c
 	strncmp(irc_out, ">< QUIT (", 9)) goto regular;
 	if(debugLevel < 2) return;
 // get rid of extraneous stuff after (
-	if(irc_out[3] == 'J') {
-		strmove(irc_out + 9, irc_out + 12);
-		l2 = strlen(irc_out);
-		strcpy(irc_out + l2 - 1, ") \n");
+	if(irc_out[3] == 'J' &&
+	(ch = strchr(irc_out, '#'))) {
+		strmove(irc_out + 9, ch);
+		ch = strpbrk(irc_out, ")\n");
+		if(ch) strcpy(ch, ") \n");
 	} else {
 		irc_out[8] = '\n';
 		irc_out[9] = 0;
