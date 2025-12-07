@@ -2562,6 +2562,7 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 	struct CENTRY *e;
 	int i, l;
 	int filenum;
+	const int newpages = (datalen + 4095) / 4096;
 
 	if (!setLock())
 		return;
@@ -2595,7 +2596,7 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 		e->modtime = modtime / 8;
 // If pages increases hugely, we don't test here if the cache is too full.
 // That will have to wait until the next addition.
-		e->pages = (datalen + 4095) / 4096;
+		e->pages = newpages;
 // etag shouldn't change; don't mess with it.
 // If the server added an etag, that wasn't there before, we'll probably
 // continue to match on mod time, and if some day we don't, then we'll store the etag.
@@ -2626,38 +2627,54 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 		return;
 	}
 
-// this file is new. See if the database is full.
-	if (numentries >= 100) {
-		int npages = 0;
-		e = entries;
-		for (i = 0; i < numentries; ++i, ++e)
-			npages += e->pages;
-
-		if (numentries == cacheCount || npages / 256 >= cacheSize) {
-// sort to find the 100 oldest files
-			qsort(entries, numentries, sizeof(struct CENTRY),
-			      entry_cmp);
-			debugPrint(3, "cache is full; removing the oldest files");
-// The following loop could clear out the entire cache,
-// if the newest file happens to be larger than the cache size.
-// It is guaranteed to remove something, since the while is
-// weaker than the if above.
-			e = entries + numentries - 1;
-			i = 0;
-// This while loop checks for: too close too the upper limit of files,
-// too much disk space, and pruing the cache on almost every storage
-// when almost full.
-			while (numentries >= cacheCount - 200 ||
-			npages / 256 >= cacheSize ||
-			(numentries > 300 && i < 100)) {
-				sprintf(cacheFile, "%s/%05d", cacheDir,
-					e->filenumber);
-				unlink(cacheFile), ++i;
-				npages -= e->pages;
-				--e, --numentries;
-			}
-			debugPrint(3, "removed the %d oldest files", i);
+// this file is new.
+// check whether the file is (by itself) too large for the cache.
+	if (newpages / 256 >= cacheSize) {
+		debugPrint(3, "web page is too large to cache");
+		unlink(cacheFile);
+		clearLock();
+		return;
+	}
+// check whether the database has space for the file.
+	 const int maxpages = cacheSize * 256 - newpages;
+	int npages = 0;
+	bool oversized_entries = false;
+	e = entries;
+	for (i = 0; i < numentries; ++i, ++e) {
+		npages += e->pages;
+// Make all entries that are too large for the cache old,
+// because they must go, even if older pages exist.
+// Could happen if the user reduces cachesize.
+		if (e->pages > maxpages) {
+			e->accesstime = 0;
+			oversized_entries = true;
 		}
+	}
+		if (oversized_entries)
+			debugPrint(3, "removing oversized entries from cache");
+
+	if (numentries == cacheCount || npages > maxpages) {
+// sort to find the oldest files
+		qsort(entries, numentries, sizeof(struct CENTRY),
+		      entry_cmp);
+		debugPrint(3, "cache is full; removing the oldest files");
+// the loop is guaranteed to remove something, since the while is
+// weaker than the if above.
+		e = entries + numentries - 1;
+		i = 0;
+		const int n = sprintf(cacheFile, "%s/", cacheDir);
+// This while loop checks for: too close to the upper limit of files,
+// too much disk space, and pruning the cache on almost every storage
+// when almost full.
+		while (numentries >= cacheCount - 200 ||
+		npages > maxpages ||
+		(numentries > 300 && i < 100)) {
+			sprintf(cacheFile + n, "%05d", e->filenumber);
+			unlink(cacheFile), ++i;
+			npages -= e->pages;
+			--e, --numentries;
+		}
+		debugPrint(3, "removed the %d oldest files", i);
 	}
 
 	e = entries + numentries;
@@ -2668,17 +2685,21 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 	e->etag = etag;
 	e->accesstime = now_t / 8;
 	e->modtime = modtime / 8;
-	e->pages = (datalen + 4095) / 4096;
+	e->pages = newpages;
+	npages += newpages;
 	if (!writeControl())
 		clearCacheInternal();
-	else
+	else {
 		debugPrint(3, "into cache");
+		debugPrint(3, "cache has %d entries and size %d", numentries, npages / 256);
+	}
 // because url and etag came from outside, they aren't going to stick around.
 // The simplest way is to reread.
 	control_mt = 0;
 	readControl();
 	clearLock();
 }
+
 
 /* user password authorization for web access
  * (c) 2002 Mikulas Patocka
