@@ -1400,7 +1400,7 @@ static bool inputLinesIntoBuffer(void)
 		if(!line) goto fail;
 	}
 
-	while (line[0] != '.' || line[1] != '\n') {
+	while (line[0] != '.' || line[1] != '\n' || a_end) {
 		if (linecount == cap) {
 			cap *= 2;
 			np = reallocMem(np, cap * LMSIZE);
@@ -7546,8 +7546,8 @@ after_ib:
 		}
 	}
 
-// eat spaces after the command, but not after J
-	if(cmd != 'J' && cmd != 'a') {
+// eat spaces after the command, but not after J, those spaces could be significant
+	if(cmd != 'J') {
 		while (isspaceByte(first))
 			postSpace = true, first = *++line;
 	}
@@ -7710,7 +7710,7 @@ dest_ok:
 			++line, first = 0;
 			if(!a_plus && debugLevel > 0)
 				i_puts(MSG_NoPending);
-		} else if(*line == ' ') {
+		} else if(*line == ':') {
 			nzFree(a_plus);
 			i = strlen(line);
 			a_plus = allocMem(i + 1);
