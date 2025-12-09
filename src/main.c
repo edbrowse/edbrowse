@@ -867,7 +867,8 @@ static void *inputForever(void *ptr)
 			nzFree(save_p);
 		} else {
 			edbrowseCommand((char *)p, false);
-			if(pstLength(save_p) > 10)
+			if(pstLength(save_p) > 10 &&
+			(save_p[0] != 'a' || save_p[1] != ' '))
 				nzFree(a_plus), a_plus = save_p;
 			else
 				nzFree(save_p);
