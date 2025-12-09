@@ -5085,7 +5085,7 @@ bool addFolders()
 	char *line2, *v;
 
 	curl_easy_setopt(h, CURLOPT_VERBOSE, (long) (debugLevel >= 4));
-	if (linePending) line1 = linePending;
+	if (a_plus) line1 = a_plus;
 	else line1 = inputLine(true);
 
 	while (line1[0] != '.' || line1[1] != '\n') {
@@ -5110,11 +5110,12 @@ bool addFolders()
 		}
 		++nlines;
 		nzFree(line2);
+		if(a_end) break;
 		line1 = inputLine(true);
 	}
 
 done:
-	nzFree(linePending), linePending = 0;
+	nzFree(a_plus), a_plus = 0, a_end = false;
 /*********************************************************************
 Why do we need to refresh?
 If you create snork under gmail, does it become [Gmail]/snork?

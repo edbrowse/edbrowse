@@ -350,7 +350,8 @@ extern bool showall; // show messages that are normally hidden, for various reas
 extern bool doColors;
 extern int context;		// which session (buffer) are we in?
 extern int cx_previous;		// the number of the previous session
-extern pst linePending;
+extern pst a_plus; // the pending line to inject with the a+ command
+extern bool a_end; // end append mode after the pending line
 extern char *changeFileName;
 extern char *addressFile;	// your address book
 extern char *emojiFile;	// your library of emojis

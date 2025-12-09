@@ -875,4 +875,5 @@ MSG_ImaskOn,
 	MSG_FwdBinary,
 	MSG_NoUnformat,
 	MSG_NoRaw,
+	MSG_NoPending,
 };

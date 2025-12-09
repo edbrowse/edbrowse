@@ -53,7 +53,8 @@ bool inputReadLine;
 bool curlAuthNegotiate = false;
 int context = 1;
 int cx_previous;
-pst linePending;
+pst a_plus;
+bool a_end;
 struct ebSession sessionList[MAXSESSION], *cs;
 int maxSession;
 
@@ -867,7 +868,7 @@ static void *inputForever(void *ptr)
 		} else {
 			edbrowseCommand((char *)p, false);
 			if(pstLength(save_p) > 10)
-				nzFree(linePending), linePending = save_p;
+				nzFree(a_plus), a_plus = save_p;
 			else
 				nzFree(save_p);
 		}

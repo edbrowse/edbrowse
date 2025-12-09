@@ -1392,7 +1392,7 @@ static bool inputLinesIntoBuffer(void)
 	np = t = allocZeroMem(cap * LMSIZE);
 
 	if(!inscript) {
-		if (linePending) line = linePending;
+		if (a_plus) line = a_plus;
 		else line = inputLine(true);
 	} else {
 		line = (uchar *)getInputLineFromScript();
@@ -1411,12 +1411,13 @@ static bool inputLinesIntoBuffer(void)
 		} else line = clonePstring(line);
 		t->text = line;
 		++t, ++linecount;
+		if(a_end) break;
 		if(!inscript)  line = inputLine(true);
 		else line = (uchar *)getInputLineFromScript();
 		if(!line) goto fail;
 	}
 
-	nzFree(linePending), linePending = 0;
+	nzFree(a_plus), a_plus = 0, a_end = false;
 
 	if (!linecount) {	/* no lines entered */
 		free(np);
@@ -1436,7 +1437,7 @@ fail:
 	for(t = np; t < np + linecount; ++t)
 		free(t->text);
 	free(np);
-	nzFree(linePending), linePending = 0;
+	nzFree(a_plus), a_plus = 0, a_end = false;
 	return false;
 }
 
@@ -7705,8 +7706,10 @@ dest_ok:
 	if (cmd == 'a') {
 		if (stringEqual(line, "+")) {
 			++line, first = 0;
+			if(!a_plus && debugLevel > 0)
+				i_puts(MSG_NoPending);
 		} else {
-			nzFree(linePending), linePending = 0;
+			nzFree(a_plus), a_plus = 0;
 		}
 	}
 
@@ -8926,7 +8929,7 @@ redirect:
 			goto fail;
 		}
 		cmd = 'a';
-		nzFree(linePending), linePending = 0;
+		nzFree(a_plus), a_plus = 0;
 		--startRange, --endRange;
 	}
 
@@ -8934,7 +8937,7 @@ redirect:
 		delText(startRange, endRange);
 		endRange = --startRange;
 		cmd = 'a';
-		nzFree(linePending), linePending = 0;
+		nzFree(a_plus), a_plus = 0;
 	}
 
 	if (cmd == 'a') {
