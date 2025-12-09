@@ -8,6 +8,8 @@ Append .html or .txt after running a rendering plugin.
 
 Optimize the performance of the http cache.
 
+the a:text c:text and i:text commands.
+
 3.8.15
 
 The lsr (imap) and lsc (irc) commands.

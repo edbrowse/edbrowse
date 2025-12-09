@@ -42,7 +42,7 @@ static const char spaceplus_cmd[] = "befPrwW";
 // Commands that should have no text after them
 static const char nofollow_cmd[] = "aAcdDhHjlmnptuX=";
 // Commands that can be done after a g// global directive
-static const char global_cmd[] = "<!adDijJlLmnprstwWX=";
+static const char global_cmd[] = "<!acdDijJlLmnprstwWX=";
 static bool *gflag;
 static Window *gflag_w;
 
@@ -7568,7 +7568,7 @@ after_ib:
 	}
 
 // a:text can be global, but not a
-	if(globalMode && cmd == 'a' && first != ':') {
+	if(globalMode && (cmd == 'a' || cmd == 'c') && first != ':') {
 		setError(MSG_GlobalCommand, icmd);
 		goto failg;
 	}
@@ -7576,7 +7576,7 @@ after_ib:
 // i as text insert cannot be global, but i for a fill-out form can.
 // g/re/ i=+ to set a bunch of checkboxes.
 // However, g/re/ i* probably should be disallowed. We need to refine this a bit.
-	if (globalMode && icmd == 'i' && (!cw->browseMode || line[0] == '*')) {
+	if (globalMode && icmd == 'i' && ((!cw->browseMode && first != ':') || line[0] == '*')) {
 		setError(MSG_GlobalCommand, icmd);
 		goto failg;
 	}
@@ -7727,6 +7727,20 @@ strcpy((char*)a_plus, line + 1);
 			line += i, first = 0;
 		} else {
 			nzFree(a_plus), a_plus = 0;
+		}
+	}
+
+	if (cmd == 'c' ||
+	(cmd == 'i' && !cw->browseMode)) {
+		nzFree(a_plus), a_plus = 0;
+		if(*line == ':') {
+			i = strlen(line);
+			a_plus = allocMem(i + 1);
+strcpy((char*)a_plus, line + 1);
+			a_plus[i - 1] = '\n';
+			a_plus[i] = 0;
+			a_end = true;
+			line += i, first = 0;
 		}
 	}
 
@@ -8946,7 +8960,6 @@ redirect:
 			goto fail;
 		}
 		cmd = 'a';
-		nzFree(a_plus), a_plus = 0;
 		--startRange, --endRange;
 	}
 
@@ -8954,7 +8967,6 @@ redirect:
 		delText(startRange, endRange);
 		endRange = --startRange;
 		cmd = 'a';
-		nzFree(a_plus), a_plus = 0;
 	}
 
 	if (cmd == 'a') {
