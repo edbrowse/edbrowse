@@ -7546,7 +7546,7 @@ after_ib:
 	}
 
 // eat spaces after the command, but not after J
-	if(cmd != 'J') {
+	if(cmd != 'J' && cmd != 'a') {
 		while (isspaceByte(first))
 			postSpace = true, first = *++line;
 	}
@@ -7703,11 +7703,21 @@ dest_ok:
 	}
 
 	// the a+ feature, when you thought you were in append mode
+// or the a add this one line of text feature
 	if (cmd == 'a') {
 		if (stringEqual(line, "+")) {
 			++line, first = 0;
 			if(!a_plus && debugLevel > 0)
 				i_puts(MSG_NoPending);
+		} else if(*line == ' ') {
+			nzFree(a_plus);
+			i = strlen(line);
+			a_plus = allocMem(i + 1);
+strcpy((char*)a_plus, line + 1);
+			a_plus[i - 1] = '\n';
+			a_plus[i] = 0;
+			a_end = true;
+			line += i, first = 0;
 		} else {
 			nzFree(a_plus), a_plus = 0;
 		}
