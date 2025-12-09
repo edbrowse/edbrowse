@@ -1395,7 +1395,8 @@ static bool inputLinesIntoBuffer(void)
 		if (a_plus) line = a_plus;
 		else line = inputLine(true);
 	} else {
-		line = (uchar *)getInputLineFromScript();
+		if(a_plus && a_end) line = clonePstring(a_plus);
+		else line = (uchar *)getInputLineFromScript();
 		if(!line) goto fail;
 	}
 
