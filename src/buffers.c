@@ -42,7 +42,7 @@ static const char spaceplus_cmd[] = "befPrwW";
 // Commands that should have no text after them
 static const char nofollow_cmd[] = "aAcdDhHjlmnptuX=";
 // Commands that can be done after a g// global directive
-static const char global_cmd[] = "<!dDijJlLmnprstwWX=";
+static const char global_cmd[] = "<!adDijJlLmnprstwWX=";
 static bool *gflag;
 static Window *gflag_w;
 
@@ -56,7 +56,7 @@ int undo1line;
 static int undoField;
 void undoSpecialClear(void) { nzFree(undoSpecial), undoSpecial = 0, undo1line = 0; }
 static uchar noStack;		// don't stack up edit sessions
-static bool globSub;		/* in the midst of a g// command */
+static bool globalMode;		/* in the midst of a g// command */
 static bool inscript;		/* run from inside an edbrowse function */
 static int lastq, lastqq;
 static char icmd;		/* input command, usually the same as cmd */
@@ -2987,7 +2987,7 @@ static bool shellEscape(const char *line)
 	line2 = apostropheMacros(line1);
 	eb_variables();
 
-	rc = !eb_system(line2, !globSub);
+	rc = !eb_system(line2, !globalMode);
 	free(line2);
 	return rc;
 }
@@ -3004,7 +3004,7 @@ static bool atPartCracker(char relative, int cx, bool writeMode, char *p, int *l
 	char *q = strchr(p, ',');
 	if(q && writeMode) {
 		setError(MSG_AtSyntax);
-		return globSub = false;
+		return globalMode = false;
 	}
 	if(q) *q = 0;
 // check syntax first, then validate session number
@@ -3020,26 +3020,26 @@ static bool atPartCracker(char relative, int cx, bool writeMode, char *p, int *l
 // syntax is good
 		if(!relative) {
 			if(!cxCompare(cx) || !cxActive(cx, true))
-				return globSub = false;
+				return globalMode = false;
 			w2 = sessionList[cx].lw;
 		} else {
 			int k;
 			if(!cx) {
 				setError(MSG_SessionCurrent, context);
-				return globSub = false;
+				return globalMode = false;
 			}
 			if(relative == '+') {
 				for(k = 0, w2 = cw; w2; w2 = w2->prev, ++k) ;
 				if(cx >= k) {
 					setError(MSG_NoUp);
-					return globSub = false;
+					return globalMode = false;
 				}
 				for(w2 = cw; cx; w2 = w2->prev, --cx)  ;
 			} else {
 				for(k = 0, w2 = cs->lw2; w2; w2 = w2->prev, ++k) ;
 				if(cx > k) {
 					setError(MSG_NoDown);
-					return globSub = false;
+					return globalMode = false;
 				}
 				k -= cx;
 				for(w2 = cs->lw2; k; w2 = w2->prev, --k)  ;
@@ -3047,7 +3047,7 @@ static bool atPartCracker(char relative, int cx, bool writeMode, char *p, int *l
 		}
 		if(!w2->dol && !writeMode) {
 			setError(MSG_EmptyBuffer);
-			return globSub = false;
+			return globalMode = false;
 		}
 // session is ok, how about the line numbers?
 		if(p[1] == 0)
@@ -3055,7 +3055,7 @@ static bool atPartCracker(char relative, int cx, bool writeMode, char *p, int *l
 		if(p[1] == '\'' &&
 		 !(lno1 = w2->labels[p[2] - 'a'])) {
 			setError(MSG_NoLabel, p[2]);
-			return globSub = false;
+			return globalMode = false;
 		}
 		if(p[1] == '$')
 			lno1 = w2->dol;
@@ -3071,7 +3071,7 @@ static bool atPartCracker(char relative, int cx, bool writeMode, char *p, int *l
 			if(q[1] == '\'' &&
 			 !(lno2 = w2->labels[q[2] - 'a'])) {
 				setError(MSG_NoLabel, q[2]);
-				return globSub = false;
+				return globalMode = false;
 			}
 			if(q[1] == 0 || q[1] == '$')
 				lno2 = w2->dol;
@@ -3086,22 +3086,22 @@ static bool atPartCracker(char relative, int cx, bool writeMode, char *p, int *l
 			lno2 = lno1;
 		if((lno1 == 0 || lno2 == 0) && !writeMode) {
 			setError(MSG_AtLine0);
-			return globSub = false;
+			return globalMode = false;
 		}
 		if(lno1 > w2->dol || lno2 > w2->dol) {
 			setError(MSG_LineHigh);
-			return globSub = false;
+			return globalMode = false;
 		}
 		if(lno1 > lno2) {
 			setError(MSG_BadRange);
-			return globSub = false;
+			return globalMode = false;
 		}
 		*lp1 = lno1, *lp2 = lno2;
 		atWindow = w2;
 		return true;
 	}
 	setError(MSG_AtSyntax);
-	return globSub = false;
+	return globalMode = false;
 }
 
 /* Valid delimiters for search/substitute.
@@ -3766,7 +3766,7 @@ masscommand:
 nomass:
 
 // apply the subcommand to every marked line 
-	globSub = true;
+	globalMode = true;
 	if (!*line)
 		line = "p";
 	origdot = cw->dot;
@@ -3788,7 +3788,7 @@ nomass:
 				--i;
 			}
 // error in subcommand might turn global flag off
-			if (!globSub) {
+			if (!globalMode) {
 				nodot = i2, yesdot = 0;
 				goto done;
 			}
@@ -3796,7 +3796,7 @@ nomass:
 	}			// loop making changes
 
 done:
-	globSub = false;
+	globalMode = false;
 /* yesdot could be 0, even on success, if all lines are deleted via g/re/d */
 	if (yesdot || !cw->dol) {
 		cw->dot = yesdot;
@@ -4408,7 +4408,7 @@ static int substituteText(const char *line)
 			return -1;
 	}
 
-	if (!globSub)
+	if (!globalMode)
 		setError(-1);
 
 	ln2 = 0;
@@ -4547,7 +4547,7 @@ static int substituteText(const char *line)
 					goto abort;
 				}
 // if substituting one line, remember it for undo
-				if(startRange == endRange && !globSub) {
+				if(startRange == endRange && !globalMode) {
 					p[len - 1] = 0;
 					undoSpecial = cloneString(p), undo1line = ln, undoField = 0;
 					p[len - 1] = '\n';
@@ -4587,7 +4587,7 @@ static int substituteText(const char *line)
 			}
 			*replaceStringEnd = 0;
 // if substituting one line, remember it for undo
-			if(startRange == endRange && !globSub)
+			if(startRange == endRange && !globalMode)
 				undoSpecial = getFieldFromBuffer(tagno, 0), undo1line = ln, undoField = whichField;
 // We're managing our own printing, so leave notify = 0
 			if (!infReplace(tagno, replaceString, false))
@@ -4703,14 +4703,14 @@ cw->dol = ln2 - 1;
 	}
 
 	if (!lastSubst) {
-		if (!globSub) {
+		if (!globalMode) {
 			if (!errorMsg[0])
 				setError(bl_mode ? MSG_NoChange : MSG_NoMatch);
 		}
 		return false;
 	}
 	cw->dot = lastSubst;
-	if (subPrint == 1 && !globSub)
+	if (subPrint == 1 && !globalMode)
 		printDot();
 	return true;
 }
@@ -6552,13 +6552,13 @@ static int twoLetterG(const char *line, const char **runThis)
 		} else if (stringEqual(s, "X")) {
 			if (!cw->dirMode) {
 				setError(MSG_NoDir);
-				return globSub = false;
+				return globalMode = false;
 			} else
 				return true;
 		}
 		if (!lsattrChars(s, lsmode)) {
 			setError(MSG_LSBadChar);
-			return globSub = false;
+			return globalMode = false;
 		}
 		if (setmode) {
 			strcpy(lsformat, lsmode);
@@ -6908,7 +6908,7 @@ bool runCommand(const char *line)
 	js_redirects = false;
 	cmd = icmd = 'p';
 	uriEncoded = false;
-	if(!globSub) bad_utf8_alert = false;
+	if(!globalMode) bad_utf8_alert = false;
 
 // Here is where we initialize allocatedLine, by possibly expanding variables.
 	if(!varExpand(line, &allocatedLine))
@@ -6934,7 +6934,7 @@ bool runCommand(const char *line)
 		if (first == '#')
 			goto success;
 
-	if (!globSub) {
+	if (!globalMode) {
 		madeChanges = false;
 
 /* Watch for successive q commands. */
@@ -7178,7 +7178,7 @@ range2:
 expctr:
 /* special commands to expand and contract frames */
 	if (stringEqual(line, "exp") || stringEqual(line, "ctr")) {
-		if (globSub) {
+		if (globalMode) {
 			cmd = 'g';
 			setError(MSG_GlobalCommand2, line);
 			goto fail;
@@ -7273,7 +7273,7 @@ replaceframe:
 			setError(MSG_NoBrowse);
 			goto fail;
 		}
-		if (globSub) {
+		if (globalMode) {
 			setError(MSG_GlobalCommand2, "ib");
 			goto fail;
 		}
@@ -7562,7 +7562,13 @@ after_ib:
 		}
 	}
 
-	if (globSub && !strchr(global_cmd, cmd)) {
+	if (globalMode && !strchr(global_cmd, cmd)) {
+		setError(MSG_GlobalCommand, icmd);
+		goto failg;
+	}
+
+// a:text can be global, but not a
+	if(globalMode && cmd == 'a' && first != ':') {
 		setError(MSG_GlobalCommand, icmd);
 		goto failg;
 	}
@@ -7570,7 +7576,7 @@ after_ib:
 // i as text insert cannot be global, but i for a fill-out form can.
 // g/re/ i=+ to set a bunch of checkboxes.
 // However, g/re/ i* probably should be disallowed. We need to refine this a bit.
-	if (globSub && icmd == 'i' && (!cw->browseMode || line[0] == '*')) {
+	if (globalMode && icmd == 'i' && (!cw->browseMode || line[0] == '*')) {
 		setError(MSG_GlobalCommand, icmd);
 		goto failg;
 	}
@@ -7581,14 +7587,14 @@ after_ib:
 // move or copy email to another folder
 		if(cw->imapMode2 && postSpace) {
 			rc = imapMovecopy(startRange, endRange, cmd, (char*)line);
-			if(!rc) globSub = false;
+			if(!rc) globalMode = false;
 			goto done;
 		}
 
 // move or copy the current mail to another folder
 		if(cw->imapMode3 && postSpace) {
 			rc = imapMovecopyWhileReading(cmd, (char*)line);
-			if(!rc) globSub = false;
+			if(!rc) globalMode = false;
 			goto done;
 		}
 
@@ -7935,7 +7941,7 @@ doquit:
 				if (cw->browseMode)
 					free(s);
 			}
-			if(!globSub && debugLevel >= 1)
+			if(!globalMode && debugLevel >= 1)
 				eb_printf("%d\n", l);
 			for (i = startRange; i <= endRange; ++i) {
 				if(i == 0) // empty buffer
@@ -7956,7 +7962,7 @@ doquit:
 					free(s);
 			}
 			pexit = pclose(p);
-			if(!globSub && debugLevel > 0 && !pexit && !wrc)
+			if(!globalMode && debugLevel > 0 && !pexit && !wrc)
 				i_puts(MSG_OK);
 			if(pexit) {
 				if(wrc) unlink(wrc_file);
@@ -7983,7 +7989,7 @@ doquit:
 				setError(MSG_AtLine0);
 				goto fail;
 			}
-			if(startRange != 1 || endRange != cw->dol || globSub) {
+			if(startRange != 1 || endRange != cw->dol || globalMode) {
 				setError(MSG_IrcEntire);
 				goto fail;
 			}
@@ -8156,7 +8162,7 @@ doquit:
 			j =  runEbFunction(line);
 		}
 		if(j < 0)
-			globSub = false, j = 0;
+			globalMode = false, j = 0;
 		goto donej;
 	}
 
@@ -8551,7 +8557,7 @@ past_js:
 
 				if (c == '<') {
 					Tag *t = tagList[tagno];
-					if (globSub) {
+					if (globalMode) {
 						setError(MSG_IG);
 						goto failg;
 					}
@@ -8973,7 +8979,7 @@ redirect:
 
 	if (cmd == 'd' || cmd == 'D') {
 		if (cw->imapMode1) {
-			if (globSub) {
+			if (globalMode) {
 				setError(MSG_GlobalCommand, icmd);
 				goto failg;
 			}
@@ -8987,12 +8993,12 @@ redirect:
 
 		if (cw->imapMode2) {
 			rc = imapDelete(startRange, endRange, cmd);
-			if(!rc) globSub = false;
+			if(!rc) globalMode = false;
 			goto done;
 		}
 
 		if (cw->imapMode3) {
-			globSub = false;
+			globalMode = false;
 			if(endRange > startRange) {
 				setError(MSG_RangeCmd, "d");
 				goto fail;
@@ -9025,7 +9031,7 @@ redirect:
 		j = 1;
 afterdelete:
 		if (!j)
-			globSub = false;
+			globalMode = false;
 		else if (cmd == 'D')
 			printDot();
 		if(cw->ircoMode) cw->undoable = true;
@@ -9094,7 +9100,7 @@ afterdelete:
 
 	if (cmd == 's') {
 		if (cw->imapMode1) {
-			if (globSub) {
+			if (globalMode) {
 				setError(MSG_GlobalCommand, icmd);
 				goto failg;
 			}
@@ -9117,7 +9123,7 @@ afterdelete:
 		    (p = fetchLine(cw->dol, -1)) && p[0] == '\n')
 			delText(cw->dol, cw->dol);
 		if (j < 0) {
-			globSub = false;
+			globalMode = false;
 			j = false;
 		}
 		if (newlocation)
@@ -9141,7 +9147,7 @@ fail:
 
 failg:
 	nzFree(allocatedLine);
-	return globSub = false;
+	return globalMode = false;
 
 donej:
 	rc = j;
