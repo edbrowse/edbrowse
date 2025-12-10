@@ -267,8 +267,11 @@ void printDot(void)
 void printPrompt(void)
 {
 	if (promptOn && promptString && isInteractive) {
-		printf("%s", promptString);
+		char *vps; // variable prompt string
+		varExpand(promptString, &vps);
+		printf("%s", vps ? vps : promptString);
 		fflush(stdout);
+		nzFree(vps);
 	}
 }
 
@@ -570,8 +573,11 @@ thus the call to ircReadlineControl().
 	if (inputReadLine && isInteractive) {
 		ircReadlineControl();
 		if(promptOn && promptString && !textEntry) {
+			char *vps; // variable prompt string
+			varExpand(promptString, &vps);
 			printf("\r");
-			last_rl = readline(promptString);
+			last_rl = readline(vps ? vps : promptString);
+			nzFree(vps);
 		} else {
 			last_rl = readline("");
 		}

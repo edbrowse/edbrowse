@@ -10,6 +10,8 @@ Optimize the performance of the http cache.
 
 the a:text c:text and i:text commands.
 
+Expand variables in the prompt string.
+
 3.8.15
 
 The lsr (imap) and lsc (irc) commands.

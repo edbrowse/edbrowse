@@ -3474,9 +3474,14 @@ reference:
 	}
 
 	if(cut == ')') { // simple variable reference
-		*t = cut;
-		stringAndString(&ns, &ns_l, value);
-		l1 = l3 + 1;
+		*t = cut, ++l3;
+		if(l1 > line && l1[-1] == '\\') { // escape
+			ns[--ns_l] = 0;
+			stringAndBytes(&ns, &ns_l, l1, l3 - l1);
+		} else {
+			stringAndString(&ns, &ns_l, value);
+		}
+		l1 = l3;
 		goto top;
 	}
 
@@ -3556,8 +3561,14 @@ nextarg:
 	*t = cut;
 	if(cut == ')') { // end of expression
 		if(op1 == '+') total += side; else total -= side;
-		stringAndNum(&ns, &ns_l, total);
-		l1 = l3 + 1;
+		++l3;
+		if(l1 > line && l1[-1] == '\\') { // escape
+			ns[--ns_l] = 0;
+			stringAndBytes(&ns, &ns_l, l1, l3 - l1);
+		} else {
+			stringAndNum(&ns, &ns_l, total);
+		}
+		l1 = l3;
 		goto top;
 	}
 	op2 = cut;
