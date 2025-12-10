@@ -3308,9 +3308,6 @@ bool helpUtility(void)
 {
 	int cx;
 
-	if (!cxQuit(context, 0))
-		return false;
-
 	undoSpecialClear();
 
 // maybe we already have a buffer with the help guide in it
