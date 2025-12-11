@@ -876,8 +876,7 @@ top:
 							debugPrint(3,
 								   "css suppressed because content type is %s",
 								   g.content);
-							cnzFree(a);
-							a = NULL;
+							cnzFree0(a);
 						}
 					} else {
 						nzFree(g.buffer);
@@ -1409,7 +1408,7 @@ static void cssAtomic(struct asel *a)
 	else
 		s = emptyString;
 	if (!*tag || stringEqual(tag, "*"))
-		nzFree(tag), tag = 0;
+		nzFree0(tag);
 	if (tag) {
 		for (t = tag; *t; ++t) {
 			if (islowerByte(*t))
@@ -1681,8 +1680,7 @@ void cssDocLoad(int frameNumber, char *start, bool pageload)
 	cm->descriptors = cssPieces(start);
 	if(pageload) {
 		run_function_onestring_win(cf, "makeSheets", loadstring);
-		nzFree(loadstring);
-		loadstring = 0;
+		nzFree0(loadstring);
 	}
 	if (recompile)
 		debugPrint(3, "css complete");
@@ -2848,8 +2846,7 @@ static Tag **qsaInternal(const char *selstring, Tag *top)
 	skiproot = ! !top;
 	if (topmatch) skiproot = false;
 	a = qsa2(d0, selstring);
-	nzFree(doclist);
-	doclist = 0;
+	nzFree0(doclist);
 	cssPiecesFree(d0);
 	return a;
 }

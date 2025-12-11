@@ -1863,10 +1863,8 @@ static void cursor_comm(const char *stmt1, const char *stmt2,	/* the two select 
 	while (true) {
 		if (get1) {	/* fetch first row */
 			eof1 = !sql_fetchNext(cid1, 0);
-			nzFree(line1);
-			line1 = 0;
-			nzFree(blob1);
-			blob1 = 0;
+			nzFree0(line1);
+			nzFree0(blob1);
 			if (!eof1) {
 				if (sorttype == 'S') {
 					s = rv_data[sortcol].ptr;
@@ -1894,10 +1892,8 @@ static void cursor_comm(const char *stmt1, const char *stmt2,	/* the two select 
 		/* looking for first line */
 		if (get2) {	/* fetch second row */
 			eof2 = !sql_fetchNext(cid2, 0);
-			nzFree(line2);
-			line2 = 0;
-			nzFree(blob2);
-			blob2 = 0;
+			nzFree0(line2);
+			nzFree0(blob2);
 			if (!eof2) {
 				if (sorttype == 'S') {
 					s = rv_data[sortcol].ptr;

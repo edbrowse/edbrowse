@@ -4050,10 +4050,8 @@ void htmlInputHelper(Tag *t)
 // No preset value on file, for security reasons.
 // <input type=file value=/etc/passwd> then submit via onload().
 	if (itype == INP_FILE) {
-		nzFree(t->value);
-		t->value = 0;
-		cnzFree(t->rvalue);
-		t->rvalue = 0;
+		nzFree0(t->value);
+		cnzFree0(t->rvalue);
 	}
 
 /* In this case an empty value should be "", not null */
@@ -4468,13 +4466,11 @@ void prerender(void)
 currentAudio = NULL;
 	currentStyle = NULL;
 	optg = NULL;
-	nzFree(radioCheck);
-	radioCheck = 0;
+	nzFree0(radioCheck);
 	traverse_callback = prerenderNode;
 	traverseAll();
 	currentForm = NULL;
-	nzFree(radioCheck);
-	radioCheck = 0;
+	nzFree0(radioCheck);
 }
 
 static char fakePropLast[24];
@@ -4878,8 +4874,7 @@ Needless to say that's not good!
 	case TAGACT_FRAME:
 // about:blank means a blank frame with no sourcefile.
 		if (stringEqual(t->href, "about:blank")) {
-			nzFree(t->href);
-			t->href = 0;
+			nzFree0(t->href);
 		}
 		domLink(t, "HTMLFrameElement", 0, 0, 2);
 		break;
@@ -5137,8 +5132,7 @@ void rowspan(void)
 				tr->same = last_tr;
 				last_tr = tr;
 // js_file holds the descriptive string of the cells in the row
-				nzFree(tr->js_file);
-				tr->js_file = 0;
+				nzFree0(tr->js_file);
 				rowspan2(tr, ++ri);
 			}
 		}

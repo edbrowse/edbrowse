@@ -229,8 +229,7 @@ static void add_ebhost(char *host, char type)
 
 static void delete_ebhosts(void)
 {
-	nzFree(ebhosts);
-	ebhosts = NULL;
+	nzFree0(ebhosts);
 	ebhosts_avail = ebhosts_max = 0;
 }
 
@@ -1386,18 +1385,18 @@ void unreadConfigFile(void)
 	numTables = 0;
 	memset(userAgents + 1, 0, sizeof(userAgents) - sizeof(userAgents[0]));
 
-	nzFree(addressFile), addressFile = 0;
-	nzFree(emojiFile), emojiFile = 0, clearEmojis();
-	nzFree(irclog), irclog = 0;
-	nzFree(cookieFile), cookieFile = 0;
-	nzFree(sslCerts), sslCerts = 0;
-	nzFree(pubKey), pubKey = 0;
-	nzFree(downDir), downDir = 0;
-	nzFree(mailDir), mailDir = 0;
-	nzFree(cacheDir);
-	cacheDir = 0;
-	nzFree(mailUnread), mailUnread = 0;
-	nzFree(mailReply), mailReply = 0;
+	nzFree0(addressFile);
+	nzFree0(emojiFile);
+	clearEmojis();
+	nzFree0(irclog);
+	nzFree0(cookieFile);
+	nzFree0(sslCerts);
+	nzFree0(pubKey);
+	nzFree0(downDir);
+	nzFree0(mailDir);
+	nzFree0(cacheDir);
+	nzFree0(mailUnread);
+	nzFree0(mailReply);
 
 	webTimeout = mailTimeout = 0;
 	delete_ebhosts();
@@ -1851,7 +1850,7 @@ inside:
 			continue;
 
 		case 27:	// downdir
-			nzFree(downDir), downDir = 0; // in case called more than once
+			nzFree0(downDir); // in case called more than once
 			v = envFileAlloc(v);
 			if(!v) continue;
 			if (fileTypeByName(v, 0) != 'd')
@@ -1861,9 +1860,9 @@ inside:
 			continue;
 
 		case 28:	// maildir
-			nzFree(mailDir), mailDir = 0;
-			nzFree(mailUnread), mailUnread = 0;
-			nzFree(mailReply), mailReply = 0;
+			nzFree0(mailDir);
+			nzFree0(mailUnread);
+			nzFree0(mailReply);
 			v = envFileAlloc(v);
 			if(!v) continue;
 			if (fileTypeByName(v, 0) != 'd')
@@ -1891,7 +1890,7 @@ inside:
 			continue;
 
 		case 30:	// jar
-			nzFree(cookieFile), cookieFile = 0;
+			nzFree0(cookieFile);
 			v = envFileAlloc(v);
 			if(!v) continue;
 			ftype = fileTypeByName(v, 0);
@@ -1930,7 +1929,7 @@ inside:
 			continue;
 
 		case 35:	// certfile
-			nzFree(sslCerts), sslCerts = 0;
+			nzFree0(sslCerts);
 			v = envFileAlloc(v);
 			if(!v) continue;
 			ftype = fileTypeByName(v, 0);
@@ -1994,7 +1993,7 @@ inside:
 			continue;
 
 		case 43:	// adbook
-			nzFree(addressFile), addressFile = 0;
+			nzFree0(addressFile);
 			v = envFileAlloc(v);
 			if(!v) continue;
 			ftype = fileTypeByName(v, 0);
@@ -2008,7 +2007,7 @@ inside:
 			continue;
 
 		case 45: case 46:	// emojis
-			nzFree(emojiFile), emojiFile = 0;
+			nzFree0(emojiFile);
 			v = envFileAlloc(v);
 			if(!v) continue;
 			ftype = fileTypeByName(v, 0);
@@ -2058,7 +2057,7 @@ inside:
 
 		case 49:	// pubkey
 // this feature is undocumented
-			nzFree(pubKey), pubKey = 0;
+			nzFree0(pubKey);
 			v = envFileAlloc(v);
 			if(!v) continue;
 // error legs do not free v, who cares.
@@ -2073,7 +2072,7 @@ inside:
 			continue;
 
 		case 50:	// irclog
-			nzFree(irclog), irclog = 0;
+			nzFree0(irclog);
 			irclog = envFileAlloc(v);
 			continue;
 

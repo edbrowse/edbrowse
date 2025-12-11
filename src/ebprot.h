@@ -276,7 +276,9 @@ char *allocString(size_t n) ;
 char *allocZeroString(size_t n) ;
 char *reallocString(void *p, size_t n) ;
 void nzFree(void *s) ;
+#define nzFree0(s) nzFree(s), s = NULL
 void cnzFree(const void *s) ;
+#define cnzFree0(s) cnzFree(s), s = NULL
 char *appendString(char *s, const char *p) ;
 char *prependString(char *s, const char *p) ;
 void skipWhite(const char **s) ;

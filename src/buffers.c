@@ -54,7 +54,7 @@ static uchar subPrint;		/* print lines after substitutions */
 static char *undoSpecial;
 int undo1line;
 static int undoField;
-void undoSpecialClear(void) { nzFree(undoSpecial), undoSpecial = 0, undo1line = 0; }
+void undoSpecialClear(void) { nzFree0(undoSpecial), undo1line = 0; }
 static uchar noStack;		// don't stack up edit sessions
 static bool globalMode;		/* in the midst of a g// command */
 static bool inscript;		/* run from inside an edbrowse function */
@@ -350,9 +350,7 @@ void passToJdb(char *s)
 		fclose(f);
 	if (newlocation) {
 		puts("sorry, page redirection is not honored under jdb.");
-		nzFree(newlocation);
-		newlocation = 0;
-		newlocation = 0;
+		nzFree0(newlocation);
 	}
 }
 
@@ -437,7 +435,7 @@ top:
 	intFlag = false;
 	inInput = true;
 	intStart = 0;
-	nzFree(last_rl), last_rl = 0;
+	nzFree0(last_rl);
 	s = 0;
 
 	if (timerWait(&delay_sec, &delay_ms)) {
@@ -547,15 +545,13 @@ thus the call to ircReadlineControl().
 						:
 						"background window opening %s is not implemented\n"),
 					       newlocation);
-					nzFree(newlocation);
-					newlocation = 0;
+					nzFree0(newlocation);
 				} else {
 					s = allocMem(strlen(newlocation) + 8);
 					sprintf(s, "%sb %s\n",
 						(newloc_r ? "ReF@" : ""),
 						newlocation);
-					nzFree(newlocation);
-					newlocation = 0;
+					nzFree0(newlocation);
 /* to free next time */
 					last_rl = s;
 					return (uchar *) s;
@@ -992,10 +988,10 @@ static void freeWindow(Window *w)
 		fnext = f->next;
 		delTimers(f);
 		freeJSContext(f);
-		nzFree(f->dw), f->dw = 0;
-		nzFree(f->hbase), f->hbase = 0;
-		nzFree(f->fileName), f->fileName = 0;
-		nzFree(f->firstURL), f->firstURL = 0;
+		nzFree0(f->dw);
+		nzFree0(f->hbase);
+		nzFree0(f->fileName);
+		nzFree0(f->firstURL);
 		if (f != &w->f0)
 			free(f);
 	}
@@ -1025,10 +1021,10 @@ static void freeWindow(Window *w)
 		if(w2 && w2->ircoMode) {
 			if(--w2->ircCount == 0) {
 				w2->ircoMode = false;
-				nzFree(w2->f0.fileName), w2->f0.fileName = 0;
+				nzFree0(w2->f0.fileName);
 			} else {
 // I have to clear the channel here so the file name comes out right.
-				nzFree(w->ircChannel), w->ircChannel = 0;
+				nzFree0(w->ircChannel);
 				ircSetFileName(w2);
 			}
 		}
@@ -1377,8 +1373,7 @@ void addTextToBackend(const char *inbuf)
 	}
 	if(cw->r_map) puts("r_map overwrite!");
 	cw->r_map = newmap;
-	nzFree(newpiece);
-	newpiece = 0;
+	nzFree0(newpiece);
 }
 
 // Pass input lines straight into the buffer until the user enters .
@@ -1424,7 +1419,7 @@ static bool inputLinesIntoBuffer(void)
 		if(!line) goto fail;
 	}
 
-	nzFree(a_plus), a_plus = 0, a_end = false;
+	nzFree0(a_plus), a_end = false;
 
 	if (!linecount) {	/* no lines entered */
 		free(np);
@@ -1444,7 +1439,7 @@ fail:
 	for(t = np; t < np + linecount; ++t)
 		free(t->text);
 	free(np);
-	nzFree(a_plus), a_plus = 0, a_end = false;
+	nzFree0(a_plus), a_end = false;
 	return false;
 }
 
@@ -2059,8 +2054,7 @@ uchar prebrowse, const Tag *gotag)
 				   "frame suppressed because content type is %s",
 				   g.content);
 			strcpy(frameContent, g.content);
-			nzFree(serverData);
-			serverData = 0;
+			nzFree0(serverData);
 			serverDataLen = 0;
 			return false;
 		}
@@ -2145,8 +2139,7 @@ Again the data is in buffer and we need to play it here.
 			nzFree(rbuf);
 			if (!cw->dol && newwin) {
 				cw->sqlMode = false;
-				nzFree(cf->fileName);
-				cf->fileName = 0;
+				nzFree0(cf->fileName);
 			}
 			return false;
 		}
@@ -2163,8 +2156,7 @@ fromdisk:
 // for security reasons, this cannot be a frame in a web page.
 	if (!frameSecurityFile(filename)) {
 badfile:
-		nzFree(changeFileName);
-		changeFileName = 0;
+		nzFree0(changeFileName);
 		return false;
 	}
 
@@ -4444,7 +4436,7 @@ static int substituteText(const char *line)
 			if (!breakLine(p, len, &newlen)) {
 // you just should never be here
 				setError(MSG_BreakLong, 0);
-				nzFree(breakLineResult), breakLineResult = 0;
+				nzFree0(breakLineResult);
 				goto abort;
 			}
 // empty line is not allowed
@@ -4452,7 +4444,7 @@ static int substituteText(const char *line)
 				breakLineResult[newlen++] = '\n';
 // perhaps no changes were made
 			if (newlen == len && !memcmp(p, breakLineResult, len)) {
-				nzFree(breakLineResult), breakLineResult = 0;
+				nzFree0(breakLineResult);
 				++ln2;
 				continue;
 			}
@@ -5602,17 +5594,12 @@ et_go:
 			free(label);
 		}
 		cw->histLabel = 0;
-		nzFree(cw->htmltitle);
-		cw->htmltitle = 0;
-		nzFree(cw->htmlauthor);
-		cw->htmlauthor = 0;
-		nzFree(cw->htmldesc);
-		cw->htmldesc = 0;
-		nzFree(cw->htmlgen);
-		cw->htmlgen = 0;
-		nzFree(cw->htmlkey);
-		cw->htmlkey = 0;
-		nzFree(cw->mailInfo), cw->mailInfo = 0;
+		nzFree0(cw->htmltitle);
+		nzFree0(cw->htmlauthor);
+		nzFree0(cw->htmldesc);
+		nzFree0(cw->htmlgen);
+		nzFree0(cw->htmlkey);
+		nzFree0(cw->mailInfo);
 		if (ub)
 			fileSize = bufferSize(context, false);
 		return true;
@@ -7207,8 +7194,7 @@ expctr:
 		if (newlocation) {
 replaceframe:
 			if (!shortRefreshDelay(newlocation, newloc_d)) {
-				nzFree(newlocation);
-				newlocation = 0;
+				nzFree0(newlocation);
 			} else {
 				jSyncup(false, 0);
 				if (!reexpandFrame())
@@ -7732,13 +7718,13 @@ strcpy((char*)a_plus, line + 1);
 			a_end = true;
 			line += i, first = 0;
 		} else {
-			nzFree(a_plus), a_plus = 0;
+			nzFree0(a_plus);
 		}
 	}
 
 	if (cmd == 'c' ||
 	(cmd == 'i' && !cw->browseMode)) {
-		nzFree(a_plus), a_plus = 0;
+		nzFree0(a_plus);
 		if(*line == ':') {
 			i = strlen(line);
 			a_plus = allocMem(i + 1);
@@ -8606,7 +8592,7 @@ past_js:
 				if (c == '*') {
 					Frame *save_cf = cf;
 					jSyncup(false, tagList[tagno]);
-					nzFree(allocatedLine), allocatedLine = 0;
+					nzFree0(allocatedLine);
 					c = infPush(tagno, &allocatedLine);
 					jSideEffects();
 					cf = save_cf;
@@ -8890,14 +8876,13 @@ browse:
 
 		if (newlocation) {
 			if (!shortRefreshDelay(newlocation, newloc_d)) {
-				nzFree(newlocation);
-				newlocation = 0;
+				nzFree0(newlocation);
 			} else {
 redirect:
 // sanity check for infinite loop
 				if(++newloc_count == 3) {
 				debugPrint(1, "more than 2 redirects, stop at %s", newlocation);
-				nzFree(newlocation), newlocation = 0;
+				nzFree0(newlocation);
 				goto success;
 			}
 				selfFrame();
@@ -8951,7 +8936,7 @@ redirect:
 	if (cmd == 'g' || cmd == 'v') {
 		undoSpecialClear();
 		rc = doGlobal(line);
-		nzFree(gflag), gflag = 0;
+		nzFree0(gflag);
 		goto done;
 	}
 

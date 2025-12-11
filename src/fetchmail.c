@@ -355,8 +355,8 @@ static void setFolders(CURL * h)
 	imapPaths = initString(&imp_l);
 
 // Reset things, in case called on refresh
-	nzFree(topfolders), topfolders = 0;
-	nzFree(tf_cbase), tf_cbase = 0;
+	nzFree0(topfolders);
+	nzFree0(tf_cbase);
 	n_folders = 0;
 
 	s = mailstring;
@@ -633,8 +633,8 @@ static void isoDecode(char *vl, char **vrp);
 
 static void cleanFolder(struct FOLDER *f)
 {
-	nzFree(f->cbase), f->cbase = NULL;
-	nzFree(f->mlist), f->mlist = NULL;
+	nzFree0(f->cbase);
+	nzFree0(f->mlist);
 	f->nmsgs = f->nfetch = f->unread = 0;
 }
 
@@ -696,14 +696,14 @@ static int imapSearch(CURL * handle, struct FOLDER *f, char *line,
 	res = getMailData(handle);
 	if (res != CURLE_OK) {
 		*res_p = res;
-		nzFree(mailstring), mailstring = 0;
+		nzFree0(mailstring);
 		return -1;
 	}
 
 	t = strstr(mailstring, "SEARCH ");
 	if (!t) {
 none:
-		nzFree(mailstring), mailstring = 0;
+		nzFree0(mailstring);
 		if(ismc) i_puts(MSG_NoMatch); else setError(MSG_NoMatch);
 		return 0;
 	}
@@ -823,7 +823,7 @@ static bool expunge(CURL * h)
 	CURLcode res;
 	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, "EXPUNGE");
 	res = getMailData(h);
-	nzFree(mailstring), mailstring = 0;
+	nzFree0(mailstring);
 	return res == CURLE_OK;
 }
 
@@ -877,7 +877,7 @@ static bool bulkMoveDelete(CURL * handle, struct FOLDER *f,
 			curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, t);
 			free(t);
 			res = getMailData(handle);
-			nzFree(mailstring), mailstring = 0;
+			nzFree0(mailstring);
 			if (res != CURLE_OK)
 				goto abort;
 			if (active_a->move_capable) mif->gone = true;
@@ -916,7 +916,7 @@ static bool refolder(CURL *h, struct FOLDER *f, CURLcode res1)
 	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, t);
 	free(t);
 	res2 = getMailData(h);
-	nzFree(mailstring), mailstring = 0;
+	nzFree0(mailstring);
 	if(res2 == CURLE_OK) {
 		debugPrint(2, "reconnect to %s", withoutSubstring(f));
 		return true;
@@ -943,7 +943,7 @@ static bool tryTwice(CURL *h, const char *path, const char *cmd)
 again:
 	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, cmd);
 	res = getMailData(h);
-	nzFree(mailstring), mailstring = 0;
+	nzFree0(mailstring);
 	if (res != CURLE_OK) {
 		if(retry || !refolder(h, &f0, res))
 			goto abort;
@@ -971,7 +971,7 @@ static CURLcode downloadBody(CURL *h, struct FOLDER *f, int uid)
 	curl_easy_setopt(h, CURLOPT_NOBODY, 0L);
 	res = getMailData(h);
 	undosOneMessage();
-	  nzFree(message_url), message_url = 0;
+	  nzFree0(message_url);
 // put the url back
 	setCurlURL(h, mailbox_url);
 	return res;
@@ -1451,7 +1451,7 @@ range:
 		else
 			printf("mail %d has no uid, operations will not work!", mif->seqno);
 	}
-		nzFree(mailstring), mailstring = 0;
+		nzFree0(mailstring);
 
 // get envelopes
 	if(*imapLines) {
@@ -1489,7 +1489,7 @@ I have to use a stub function. You'll see below.
 abort:
 		nzFree(imapLines);
 		ebcurl_setError(res, mailbox_url, (ismc ? 2 : 0), cerror);
-		nzFree(mailstring), mailstring = 0;
+		nzFree0(mailstring);
 		return false;
 	}
 //	FILE *z; z = fopen("ms2", "we"); fprintf(z, "%s", mailstring); fclose(z);
@@ -1695,7 +1695,7 @@ again:
 	free(t);
 	res = getMailData(handle);
 	if (res != CURLE_OK) {
-		nzFree(mailstring), mailstring = 0;
+		nzFree0(mailstring);
 		if(!retry) { retry = true; goto again; }
 		ebcurl_setError(res, mailbox_url, (ismc ? 2 : 0), cerror);
 		return false;
@@ -2006,7 +2006,7 @@ refresh:
 			curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, w);
 			res = getMailData(handle);
 			free(w);
-			nzFree(mailstring), mailstring = 0;
+			nzFree0(mailstring);
 			if (res != CURLE_OK) {
 				i_printf(MSG_NoCreate2, t, "imap");
 				nl();
@@ -2130,8 +2130,7 @@ int fetchMail(int account)
 		res = deleteOneMessage(h);
 		if (res != CURLE_OK)
 			goto fetchmail_cleanup;
-		nzFree(message_url);
-		message_url = 0;
+		nzFree0(message_url);
 	}
 
 fetchmail_cleanup:
@@ -2140,9 +2139,8 @@ fetchmail_cleanup:
 	if (res != CURLE_OK)
 		ebcurl_setError(res, url_for_error, 1, cerror);
 	curl_easy_cleanup(h);
-	nzFree(message_url);
-	nzFree(mailbox_url);
-	message_url = mailbox_url = 0;
+	nzFree0(message_url);
+	nzFree0(mailbox_url);
 	nzFree(mailstring);
 	mailstring = initString(&mailstring_l);
 	return nfetch;
@@ -2529,10 +2527,8 @@ attachOnly:
 	nl();
 
 afterinput:
-	nzFree(mailstring);
-	mailstring = 0;
-	nzFree(mailu8);
-	mailu8 = 0;
+	nzFree0(mailstring);
+	nzFree0(mailu8);
 
 	if (delflag)
 		return 'd';
@@ -3269,8 +3265,7 @@ static struct MHINFO *headerGlean(char *start, char *end, bool top)
 					if(strlen(w->pretext) < 150 &&
 					strstr(w->pretext, "MIME")) {
 						debugPrint(5, "pretext deleted");
-						nzFree(w->pretext);
-						w->pretext = 0;
+						nzFree0(w->pretext);
 					}
 				}
 			} else {
@@ -3581,7 +3576,7 @@ static void formatMail(struct MHINFO *w, bool top)
 		imapLines = initString(&iml_l);
 		linkAttachments(w);
 		stringAndString(&fm, &fm_l, imapLines);
-		nzFree(imapLines), imapLines = 0;
+		nzFree0(imapLines);
 		stringAndString(&fm, &fm_l, "<p>");
 	}
 
@@ -3722,8 +3717,7 @@ char *emailParse(char *buf, bool plain)
 	if (lastMailInfo) {
 		freeMailInfo(lastMailInfo);
 		lastMailInfo = 0;
-		nzFree(lastMailText);
-		lastMailText = 0;
+		nzFree0(lastMailText);
 	}
 // it's clear, assign the new stuff
 	lastMailInfo = w;
@@ -4148,8 +4142,8 @@ bool imapBuffer(char *line)
 		imapCleanupInBackground(cw->imap_h);
 		cw->imap_h = 0;
 		cw->imapMode1 = false;
-		nzFree(cf->firstURL), cf->firstURL = 0;
-		nzFree(cf->fileName), cf->fileName = 0;
+		nzFree0(cf->firstURL);
+		nzFree0(cf->fileName);
 		return true;
 	}
 	if(!validAccount(act)) return false;
@@ -4172,8 +4166,8 @@ bool imapBuffer(char *line)
 	cw->imapMode1 = true; // temporary
 // erase anything in the buffer.
 		if(cw->dol) delText(1, cw->dol);
-		nzFree(cf->fileName), cf->fileName = 0;
-		nzFree(cf->firstURL), cf->firstURL = 0;
+		nzFree0(cf->fileName);
+		nzFree0(cf->firstURL);
 	cw->imapMode1 = false;
 
 // In case we haven't started curl yet.
@@ -4204,8 +4198,8 @@ bool imapBuffer(char *line)
 // setFolders() prints out the stats in mail client mode.
 // Here in the buffer, it builds strings, which we add to the current buffer.
 // Clean up the structures that we don't use here.
-	nzFree(topfolders), topfolders = 0;
-	nzFree(tf_cbase), tf_cbase = 0;
+	nzFree0(topfolders);
+	nzFree0(tf_cbase);
 	if(!n_folders) {
 		setError(MSG_NoFolders);
 		imapCleanupInBackground(h);
@@ -4254,7 +4248,7 @@ again:
 	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, NULL);
 	res = getMailData(h);
 	if (res != CURLE_OK) {
-		nzFree(mailstring), mailstring = 0;
+		nzFree0(mailstring);
 		if(!retry) { retry = true; goto again; }
 // error getting the folders, revert back to an empty buffer
 		ebcurl_setError(res, cf->firstURL, 0, cerror);
@@ -4262,13 +4256,13 @@ teardown:
 		imapCleanupInBackground(h);
 		cw->imap_h = 0;
 		cw->imapMode1 = false;
-		nzFree(cf->firstURL), cf->firstURL = 0;
-		nzFree(cf->fileName), cf->fileName = 0;
+		nzFree0(cf->firstURL);
+		nzFree0(cf->fileName);
 		return false;
 	}
 	setFolders(cw->imap_h);
-	nzFree(topfolders), topfolders = 0;
-	nzFree(tf_cbase), tf_cbase = 0;
+	nzFree0(topfolders);
+	nzFree0(tf_cbase);
 	if(!n_folders) {
 // there were folders before but none now? Should never happen!
 		setError(MSG_NoFolders);
@@ -4397,8 +4391,8 @@ bool folderDescend(const char *path, bool rf)
 	if(f0.nfetch) {
 		addTextToBuffer((uchar *)imapLines, iml_l, 0, false);
 		addTextToBackend(imapPaths);
-		nzFree(imapLines), imapLines = 0;
-		nzFree(imapPaths), imapPaths = 0;
+		nzFree0(imapLines);
+		nzFree0(imapPaths);
 	}
 // a byte count, as though you had read a file.
 	debugPrint(1, "%d", iml_l);
@@ -4448,7 +4442,7 @@ again:
 	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, u);
 	free(u);
 	res = getMailData(h);
-	nzFree(mailstring), mailstring = 0;
+	nzFree0(mailstring);
 	if(res != CURLE_OK) {
 		if(!retry) { retry = true; goto again; }
 		ebcurl_setError(res, cf->firstURL, 0, cerror);
@@ -4484,8 +4478,8 @@ again:
 	makeLinesAndUids(&f0);
 	addTextToBuffer((uchar *)imapLines, iml_l, 0, false);
 	addTextToBackend(imapPaths);
-	nzFree(imapLines), imapLines = 0;
-	nzFree(imapPaths), imapPaths = 0;
+	nzFree0(imapLines);
+	nzFree0(imapPaths);
 
 // a byte count, as though you had read a file.
 	debugPrint(1, "%d", iml_l);
@@ -4696,7 +4690,7 @@ baddest:
 	stringAndChar(&imapLines, &iml_l, '"');
 
 	rc = tryTwice(h, cw->baseDirName, imapLines);
-	nzFree(imapLines), imapLines = 0;
+	nzFree0(imapLines);
 	if(!rc) return false;
 
 	if(cmd == 'm' && !a->move_capable) {
@@ -4713,9 +4707,9 @@ baddest:
 		stringAndString(&imapLines, &iml_l, "+FLAGS (\\DELETED)");
 // I don't do the retry here; we just succeeded above so we should be ok.
 		curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, imapLines);
-		nzFree(imapLines), imapLines = 0;
+		nzFree0(imapLines);
 		res = getMailData(h);
-		nzFree(mailstring), mailstring = 0;
+		nzFree0(mailstring);
 		if (res != CURLE_OK) {
 			ebcurl_setError(res, cf->firstURL, 0, cerror);
 			return false;
@@ -4766,7 +4760,7 @@ bool imapDelete(int l1, int l2, char cmd)
 	stringAndString(&imapLines, &iml_l, "+FLAGS (\\DELETED)");
 
 	rc = tryTwice(h, cw->baseDirName, imapLines);
-	nzFree(imapLines), imapLines = 0;
+	nzFree0(imapLines);
 	if(!rc) return false;
 	expunge(h);
 	delText(l0, l2);
@@ -4817,7 +4811,7 @@ baddest:
 	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, custom);
 	nzFree(custom);
 	res = getMailData(h);
-	nzFree(mailstring), mailstring = 0;
+	nzFree0(mailstring);
 	if (res != CURLE_OK) {
 		ebcurl_setError(res, cf->firstURL, 0, cerror);
 		return false;
@@ -4880,7 +4874,7 @@ bool imapMarkRead(int l1, int l2, char sign)
 	stringAndString(&imapLines, &iml_l, "FLAGS (\\SEEN)");
 
 	rc = tryTwice(h, cw->baseDirName, imapLines);
-	nzFree(imapLines), imapLines = 0;
+	nzFree0(imapLines);
 	if(!rc) return false;
 
 	for(l1 = l0; l1 <= l2; ++l1)
@@ -4918,14 +4912,14 @@ baddest:
 
 	asprintf(&t, "UID %s %d \"%s\"", 	     ((a->move_capable && cmd == 'm') ? "MOVE" : "COPY"), uid, path);
 	rc = tryTwice(h, pw->baseDirName, t);
-	nzFree(t), t = 0;
+	nzFree0(t);
 	if(!rc) return false;
 
 	if(cmd == 'm' && !a->move_capable) {
 		sprintf(cust_cmd, "UID STORE %d +FLAGS (\\DELETED)", uid);
 		curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, cust_cmd);
 		res = getMailData(h);
-		nzFree(mailstring), mailstring = 0;
+		nzFree0(mailstring);
 		if (res != CURLE_OK) {
 			ebcurl_setError(res, cf->firstURL, 0, cerror);
 			return false;
@@ -5101,7 +5095,7 @@ bool addFolders()
 		curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, v);
 		free(v);
 		res = getMailData(h);
-		nzFree(mailstring), mailstring = 0;
+		nzFree0(mailstring);
 		if (res != CURLE_OK) {
 			i_printf(MSG_NoCreate3, line2);
 			ebcurl_setError(res, cf->firstURL, 0, cerror);
@@ -5115,7 +5109,7 @@ bool addFolders()
 	}
 
 done:
-	nzFree(a_plus), a_plus = 0, a_end = false;
+	nzFree0(a_plus), a_end = false;
 /*********************************************************************
 Why do we need to refresh?
 If you create snork under gmail, does it become [Gmail]/snork?
@@ -5157,7 +5151,7 @@ bool deleteFolder(int ln)
 	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, v);
 	free(v);
 	res = getMailData(h);
-	nzFree(mailstring), mailstring = 0;
+	nzFree0(mailstring);
 	if (res != CURLE_OK) {
 		i_printf(MSG_NoDelete3, p);
 		p[l] = ':';
@@ -5179,7 +5173,7 @@ bool renameFolder(const char *src, const char *dest)
 	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, v);
 	free(v);
 	res = getMailData(h);
-	nzFree(mailstring), mailstring = 0;
+	nzFree0(mailstring);
 	if (res != CURLE_OK) {
 		i_printf(MSG_NoRename3, src);
 		ebcurl_setError(res, cf->firstURL, 0, cerror);

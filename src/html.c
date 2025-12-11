@@ -1042,8 +1042,7 @@ void runScriptsPending(bool startbrowse)
 			stringAndString(&cf->dw, &cf->dw_l, "</body>");
 			runGeneratedHtml(cf->bodytag, cf->dw);
 		}
-		nzFree(cf->dw);
-		cf->dw = 0;
+		nzFree0(cf->dw);
 		cf->dw_l = 0;
 	}
 
@@ -1107,8 +1106,7 @@ passes:
 			set_property_string_t(t,
 					    (t->inxhr ? "$entire" : "text"),
 					    t->value);
-			nzFree(t->value);
-			t->value = 0;
+			nzFree0(t->value);
 			t->step = 4;	// loaded
 		}
 
@@ -1198,8 +1196,7 @@ afterscript:
 	prepareScript(u);
 				}
 			}
-			nzFree(cf->dw);
-			cf->dw = 0;
+			nzFree0(cf->dw);
 			cf->dw_l = 0;
 		}
 
@@ -1579,8 +1576,7 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 	if (bmode == 2) {
 		if (javaOK(cf->fileName))
 			createJSContext(cf);
-		nzFree(newlocation);	/* should already be 0 */
-		newlocation = 0;
+		nzFree0(newlocation);	/* should already be 0 */
 		newbuf = htmlParse(rawbuf, remote);
 		addToFilename(".browse");
 	}
@@ -2461,8 +2457,7 @@ skip_encode:
 			postNameVal(name, dynamicvalue, fsep, false);
 			if(t->required && !dynamicvalue && !*dynamicvalue)
 				goto required;
-			nzFree(dynamicvalue);
-			dynamicvalue = NULL;
+			nzFree0(dynamicvalue);
 			continue;
 		}
 
@@ -2481,7 +2476,7 @@ skip_encode:
 					char cxstring[12];
 					if(cx < 0) {
 						cx = sideBuffer(0, dynamicvalue, -1, NULL);
-						nzFree(dynamicvalue), dynamicvalue = 0;
+						nzFree0(dynamicvalue);
 					}
 					sprintf(cxstring, "%d", cx);
 					rc = postNameVal
@@ -2587,8 +2582,7 @@ options_ok:
 				if (more)
 					++e;
 			}
-			nzFree(dynamicvalue);
-			dynamicvalue = NULL;
+			nzFree0(dynamicvalue);
 			continue;
 		}
 
@@ -2615,8 +2609,7 @@ options_ok:
 
 			if(!t->multiple) {
 				rc = postNameVal(name, dynamicvalue, fsep, isfile);
-				nzFree(dynamicvalue);
-				dynamicvalue = NULL;
+				nzFree0(dynamicvalue);
 				if (!rc)
 					goto fail;
 			} else {
@@ -4137,8 +4130,7 @@ We need to fix this someday, though it is a very rare corner case.
 				} else {
 					if (t->action == TAGACT_SCRIPT) {
 						set_property_string_t(t, "text", t->value);
-						nzFree(t->value);
-						t->value = 0;
+						nzFree0(t->value);
 					}
 					t->step = 4;	// loaded
 				}
@@ -4166,8 +4158,7 @@ We need to fix this someday, though it is a very rare corner case.
 		if (t->step == 4 && t->action != TAGACT_SCRIPT) {
 			t->step = 5;
 			set_property_string_t(t, "$entire", t->value);
-			nzFree(t->value);
-			t->value = 0;
+			nzFree0(t->value);
 			debugPrint(3, "run xhr %d", jt->tsn);
 			run_function_bool_t(t, "parseResponse");
 		}
@@ -5012,7 +5003,7 @@ nocolor:
 		if (!(t->onclick & allowJS) || ahref_under(t) > 0) {
 // regular span, don't need title unless it is inside a link
 			if(opentag && !findOpenTag(t, TAGACT_A))
-				tit1 = 0, nzFree(tit2), tit2 = 0;
+				tit1 = 0, nzFree0(tit2);
 			if((al || tit1 || tit2) && action == TAGACT_DIV)
 				stringAndChar(&ns, &ns_l, '\n');
 			j = ns_l;

@@ -650,8 +650,7 @@ void setDebugFile(const char *name)
 	if (debugFile)
 		fclose(debugFile);
 	debugFile = 0;
-	nzFree(debugFileName);
-	debugFileName = 0;
+	nzFree0(debugFileName);
 	if (!name || !*name)
 		return;
 	debugFileName = cloneString(name);

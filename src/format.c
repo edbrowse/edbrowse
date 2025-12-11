@@ -2641,8 +2641,7 @@ static char *ejbase;
 void clearEmojis(void)
 {
 	struct EJGROUP *g, *g1;
-	nzFree(ejbase);
-	ejbase = 0;
+	nzFree0(ejbase);
 	g = ejgroup0;
 	while(g) {
 		g1 = g->next;

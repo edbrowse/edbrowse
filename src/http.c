@@ -285,8 +285,7 @@ static void scan_http_headers(struct i_get *g, bool fromCallback)
 static void i_get_free(struct i_get *g, bool nodata)
 {
 	if (nodata) {
-		nzFree(g->buffer);
-		g->buffer = 0;
+		nzFree0(g->buffer);
 		g->length = 0;
 	}
 	nzFree(g->headers);
@@ -839,8 +838,7 @@ bool httpConnect(struct i_get *g)
 mimestream:
 		redirect_count = 0;
 // don't have to fetch the data, the program can handle it.
-		nzFree(g->buffer);
-		g->buffer = 0;
+		nzFree0(g->buffer);
 		g->code = 200;
 		f = g->urlcopy;
 		if (mt->outtype) {
@@ -995,10 +993,8 @@ mimestream:
 // The current protocol should be http or https, we cleared out everything else.
 // But https to http is not allowed.   RFC 2616, section 15.1.3
 		p = strchr(referrer, ':');
-		if (strlen(prot) == 4 && p - referrer == 5) {
-			nzFree(referrer);
-			referrer = NULL;
-		}
+		if (strlen(prot) == 4 && p - referrer == 5)
+			nzFree0(referrer);
 	}
 // We keep the same referrer even after redirections, which I think is right.
 // That's why it's here instead of inside the loop.
@@ -1174,8 +1170,7 @@ they go where they go, so this doesn't come up very often.
 // before the child thread has a chance to read its contents.
 			static struct i_get g0;
 			pthread_t tid;
-			nzFree(g->buffer);
-			g->buffer = NULL;
+			nzFree0(g->buffer);
 			g->length = 0;
 			g0 = *g;	// structure copy
 			if (custom_headers)
@@ -1277,8 +1272,7 @@ Don't forget to free it in i_get_free().
 			if (shortRefreshDelay(g->newloc, g->newloc_d)) {
 				g->code = 302;
 			} else {
-				nzFree(g->newloc);
-				g->newloc = 0;
+				nzFree0(g->newloc);
 			}
 		}
 
@@ -1335,25 +1329,21 @@ Don't forget to free it in i_get_free().
 				}
 // This is unusual in that we're using the i_get structure again,
 // so we need to reset some parts of it and not others.
-				nzFree(g->buffer);
-				g->buffer = 0;
+				nzFree0(g->buffer);
 // This 302 redirection could set content type = application/binary,
 // which in turn sets state = 1, which is ignored since 302 takes precedence.
 // So state might still be 1, set it back to 0.
 				g->down_state = 0;
 				g->code = 0;
 				g->csp = false;
-				nzFree(g->headers);
-				g->headers = 0;
+				nzFree0(g->headers);
 				g->headers_len = 0;
 				g->content[0] = 0;
 				g->charset = 0;
 				g->hcl = 0;
-				nzFree(g->cdfn);
-				g->cdfn = 0;
+				nzFree0(g->cdfn);
 				g->modtime = 0;
-				nzFree(g->etag);
-				g->etag = 0;
+				nzFree0(g->etag);
 				++redirect_count;
 				still_fetching = true;
 				debugPrint(2, "redirect %s", g->urlcopy);
@@ -1379,8 +1369,7 @@ Don't forget to free it in i_get_free().
 						    false, g->auth_realm);
 			if (got_creds) {
 				curl_easy_setopt(h, CURLOPT_USERPWD, creds_buf);
-				nzFree(g->buffer);
-				g->buffer = 0;
+				nzFree0(g->buffer);
 				g->length = 0;
 			} else {
 /* User aborted the login process, try and at least get something. */
@@ -1389,10 +1378,9 @@ Don't forget to free it in i_get_free().
 		} else {	/* not redirect, not 401 */
 			if (head_request) {
 				if(g->headrequest) {
-					nzFree(g->buffer);
-					g->buffer = 0;
+					nzFree0(g->buffer);
 					g->length = 0;
-					nzFree(referrer), referrer = 0;
+					nzFree0(referrer);
 					curlret = CURLE_OK;
 					transfer_status = true;
 					break;
@@ -1490,8 +1478,7 @@ void *httpConnectBack1(void *ptr)
 	g.down_state = 4;
 	g.pg_ok = false;
 // urlcopy will be recomputed on the next http call
-	nzFree(g.urlcopy);
-	g.urlcopy = 0;
+	nzFree0(g.urlcopy);
 // Other things we should clean up?
 	g.tsn = ++tsn;
 	debugPrint(3, "bg thread %d", tsn);
@@ -1588,8 +1575,7 @@ void *httpConnectBack3(void *ptr)
 	nzFree(g.cfn);
 	nzFree(outgoing_headers);
 	nzFree(outgoing_body);
-	nzFree(t->custom_h);
-	t->custom_h = 0;
+	nzFree0(t->custom_h);
 	return NULL;
 }
 
@@ -2035,8 +2021,7 @@ static bool ftpConnect(struct i_get *g, char *creds_buf)
 // before the child thread has a chance to read its contents.
 		static struct i_get g0;
 		pthread_t tid;
-		nzFree(g->buffer);
-		g->buffer = NULL;
+		nzFree0(g->buffer);
 		g->length = 0;
 		g0 = *g;	// structure copy
 		curl_easy_cleanup(h);
@@ -2086,8 +2071,7 @@ static bool ftpConnect(struct i_get *g, char *creds_buf)
 		else {		/* try appending a slash. */
 			strcpy(g->urlcopy + g->urlcopy_l++, "/");
 			g->down_state = 0;
-			cnzFree(g->down_file);
-			g->down_file = 0;
+			cnzFree0(g->down_file);
 			curlret = setCurlURL(h, g->urlcopy);
 			if (curlret != CURLE_OK)
 				goto ftp_transfer_fail;
@@ -2118,8 +2102,7 @@ ftp_transfer_fail:
 	if (transfer_success == true && !stringEqual(url, g->urlcopy))
 		g->cfn = g->urlcopy;
 	else
-		nzFree(g->urlcopy);
-	g->urlcopy = 0;
+		nzFree0(g->urlcopy);
 
 	i_get_free(g, !transfer_success);
 
@@ -2255,8 +2238,7 @@ static bool gopherConnect(struct i_get *g)
 // before the child thread has a chance to read its contents.
 		static struct i_get g0;
 		pthread_t tid;
-		nzFree(g->buffer);
-		g->buffer = NULL;
+		nzFree0(g->buffer);
 		g->length = 0;
 		g0 = *g;	// structure copy
 		curl_easy_cleanup(h);
@@ -2413,8 +2395,7 @@ void setHTTPLanguage(const char *lang)
 	int httpLanguage_l;
 	char *s;
 
-	nzFree(httpLanguage);
-	httpLanguage = NULL;
+	nzFree0(httpLanguage);
 	if (!lang)
 		return;
 
@@ -2904,14 +2885,14 @@ got_answer:
 /* space for a filename means read into memory */
 	if (stringEqual(answer, " ")) {
 		g->down_state = 0;	// in memory download
-		nzFree(fp2), nzFree(down_prefile), down_prefile = 0;
+		nzFree(fp2), nzFree0(down_prefile);
 		return;
 	}
 
 	if (stringEqual(answer, "x") || stringEqual(answer, "X")) {
 		g->down_state = -1;
 		setError(MSG_DownAbort);
-		nzFree(fp2), nzFree(down_prefile), down_prefile = 0;
+		nzFree(fp2), nzFree0(down_prefile);
 		return;
 	}
 
@@ -2920,7 +2901,7 @@ got_answer:
 			showError();
 			goto top;
 		}
-		nzFree(fp2), nzFree(down_prefile), down_prefile = 0;
+		nzFree(fp2), nzFree0(down_prefile);
 		g->down_state = -1;
 		return;
 	}
@@ -2933,7 +2914,7 @@ got_answer:
 			goto top;
 		}
 		setError(MSG_NoCreate2, answer, strerror(errno));
-		nzFree(fp2), nzFree(down_prefile), down_prefile = 0;
+		nzFree(fp2), nzFree0(down_prefile);
 		g->down_state = -1;
 		return;
 	}
@@ -2952,7 +2933,7 @@ got_answer:
 	}
 
 	g->down_state = (down_bg ? 5 : 2);
-	nzFree(down_prefile), down_prefile = 0;
+	nzFree0(down_prefile);
 }
 
 /* show background jobs and return the number of jobs pending */
@@ -3322,7 +3303,7 @@ So check for serverData null here. Once again we pop the frame.
 	prepareForBrowse(serverData, serverDataLen);
 	if (javaOK(cf->fileName))
 		createJSContext(cf);
-	nzFree(newlocation), newlocation = 0;
+	nzFree0(newlocation);
 
 	cdt = newTag(cf, "Document");
 	cdt->parent = t, t->firstchild = cdt;
@@ -3330,8 +3311,7 @@ So check for serverData null here. Once again we pop the frame.
 	cdt->atvals = allocZeroMem(sizeof(char*));
 	debugPrint(3, "parse html from frame");
 	htmlScanner(serverData, cdt, false);
-	nzFree(serverData);	/* don't need it any more */
-	serverData = 0;
+	nzFree0(serverData);	// don't need it any more
 	prerender();
 
 /*********************************************************************
@@ -3407,16 +3387,13 @@ bool reexpandFrame(void)
 
 	delTimers(cf);
 	freeJSContext(cf);
-	nzFree(cf->dw);
-	cf->dw = 0;
-	nzFree(cf->hbase);
-	cf->hbase = 0;
+	nzFree0(cf->dw);
+	nzFree0(cf->hbase);
 	nzFree(cf->fileName);
 	cf->fileName = newlocation;
 	newlocation = 0;
 	cf->uriEncoded = false;
-	nzFree(cf->firstURL);
-	cf->firstURL = 0;
+	nzFree0(cf->firstURL);
 	rc = readFileArgv(cf->fileName, 2, 0);
 	if (!rc) {
 // serverData was never set, or was freed do to some other error
@@ -3449,8 +3426,7 @@ bool reexpandFrame(void)
 
 	debugPrint(3, "parse html from frame replace");
 	htmlScanner(serverData, cdt, false);
-	nzFree(serverData);	/* don't need it any more */
-	serverData = 0;
+	nzFree0(serverData);	// don't need it any more
 	cf->browseMode = false;
 	cdt->step = 0;
 	prerender();

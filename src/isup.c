@@ -4233,10 +4233,10 @@ teardown:
 		cw = save_cw;
 		if(--w2->ircCount == 0) {
 			w2->ircoMode = false;
-			nzFree(w2->f0.fileName), w2->f0.fileName = 0;
+			nzFree0(w2->f0.fileName);
 		} else {
 // I have to clear the channel here so the file name comes out right.
-			nzFree(w->ircChannel), w->ircChannel = 0;
+			nzFree0(w->ircChannel);
 			ircSetFileName(w2);
 		}
 	}
@@ -4386,10 +4386,10 @@ void ircClose(Window *w)
 	w->irc_fd = 0;
 	if(w->irc_ssl) SSL_free(w->irc_ssl);
 	w->irc_ssl = 0;
-	nzFree(w->ircNick), w->ircNick = 0;
-	nzFree(w->ircChannel), w->ircChannel = 0;
-	nzFree(w->f0.fileName), w->f0.fileName = 0;
-	nzFree(w->f0.hbase), w->f0.hbase = 0;
+	nzFree0(w->ircNick);
+	nzFree0(w->ircChannel);
+	nzFree0(w->f0.fileName);
+	nzFree0(w->f0.hbase);
 }
 
 /*********************************************************************

@@ -1029,8 +1029,7 @@ static void retsFromOdbc(void)
 							output_length - l,
 							&waste);
 					if (rc) {
-						nzFree(rv_blobLoc);
-						rv_blobLoc = 0;
+						nzFree0(rv_blobLoc);
 						*(long *)q = nullint;
 						errorTrap(0);
 						goto breakloop;

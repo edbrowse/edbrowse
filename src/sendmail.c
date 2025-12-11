@@ -45,8 +45,7 @@ bool loadAddressBook(void)
 		return true;
 
 	debugPrint(3, "loading address book");
-	nzFree(addressList);
-	addressList = 0;
+	nzFree0(addressList);
 	nads = 0;
 	if (!fileIntoMemory(addressFile, &buf, &buflen, 0))
 		return false;
@@ -1269,8 +1268,7 @@ sendMail(int account, const char **recipients, const char *body,
 
 /* Now send the body, line by line. */
 	appendAttachment(encoded, &out, &j, flowed, NULL);
-	nzFree(encoded);
-	encoded = 0;
+	nzFree0(encoded);
 
 	if (mustmime) {
 		for (i = 0; (s = attachments[i]); ++i) {
@@ -1318,8 +1316,7 @@ sendMail(int account, const char **recipients, const char *body,
 				eol, eol);
 			stringAndString(&out, &j, serverLine);
 			appendAttachment(encoded, &out, &j, false, ct);
-			nzFree(encoded);
-			encoded = 0;
+			nzFree0(encoded);
 		}		/* loop over attachments */
 
 // The last boundary
