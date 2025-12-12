@@ -4705,7 +4705,7 @@ static void renderNode(Tag *t, bool opentag)
 	char *u;
 	Tag *ltag;
 
-	debugPrint(6, "rend %c%s", (opentag ? ' ' : '/'), t->info->name);
+	debugPrint(6, "rend %c%s", (opentag ? ' ' : '/'), ti->name);
 	if(opentag) ++rrcount;
 
 	if (deltag) {
@@ -5107,6 +5107,10 @@ nop:
 		else
 			j >>= 2;
 
+// special code for div inside a header, which shouldn't happen but does
+		if(action == TAGACT_DIV && findOpenTag(t, TAGACT_H))
+			j = 0;
+
 // defense against <td><p>stuff</p></td>
 // or even <td><i><font size=-1><p>stuff</p></font></i></td>
 // Suppress linebreak if this is first or last child of a cell.
@@ -5177,7 +5181,7 @@ past_cell_paragraph:
 			break;
 /* one of those rare moments when I really need </tag> in the text stream */
 		j = (opentag ? tagno : tagno + 1);
-// I need to manage the paragraph breaks here, rather than t->info->para,
+// I need to manage the paragraph breaks here, rather than ti->para,
 // which would rule if I simply redirected to nop.
 // But the order is wrong if I do that.
 // This can be suppressed by <pre nowspc>
@@ -5199,7 +5203,7 @@ past_cell_paragraph:
 		if (!opentag) {
 // button tag opens and closes, like anchor.
 // Check and make sure it's not </select>
-			if (!stringEqual(t->info->name, "button"))
+			if (!stringEqual(ti->name, "button"))
 				break;
 // <button></button> with no text yields "push".
 			j = 0;
@@ -5244,7 +5248,7 @@ past_cell_paragraph:
 		sprintf(hnum, "%c%d<", InternalCodeChar, tagno);
 		ns_hnum();
 // button stops here, until </button>
-		if (stringEqual(t->info->name, "button"))
+		if (stringEqual(ti->name, "button"))
 			break;
 		if (itype < INP_RADIO) {
 			if (t->value[0])

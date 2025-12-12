@@ -2077,6 +2077,7 @@ static int control_fh = -1;	/* file handle for cacheControl */
 static time_t control_mt; // mod time
 static int control_ns; // nanoseconds
 static char *cache_data;
+static int cache_data_len;
 static time_t now_t;
 static char *cacheFile, *cacheLock, *cacheControl;
 
@@ -2233,6 +2234,7 @@ static bool readControl(void)
 
 	nzFree(cache_data);
 	cache_data = data;
+	cache_data_len = datalen;
 	setControlTime();
 	return true;
 }

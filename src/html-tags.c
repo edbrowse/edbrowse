@@ -1142,6 +1142,9 @@ tag_ok:
 // separating options must not close the containing paragraph
 				if(stringEqual(lowname, "hr") &&
 				stringEqual(k->lowname, "select")) break;
+// Special exception for <h2> <div>, which is improper html but happens.
+				if(stringEqual(lowname, "div") &&
+				k->lowname[0] == 'h') continue;
 				if(isCrossclose(k->lowname)) {
 					scannerInfo2("cross close %s", k->name);
 					makeTag(k->name, k->lowname, true, lt);
