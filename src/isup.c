@@ -2564,6 +2564,8 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 	struct CENTRY *e;
 	int i, l;
 	int filenum;
+	char *newrec;
+	size_t newlen;
 	const int newpages = (datalen + 4095) / 4096;
 
 	if (!setLock())
@@ -2591,8 +2593,6 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 	}
 
 	if (i < numentries) {
-		char *newrec;
-		size_t newlen;
 // we're just updating a preexisting record
 		e->accesstime = now_t / 8;
 		e->modtime = modtime / 8;
@@ -2637,10 +2637,12 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 		clearLock();
 		return;
 	}
+
 // check whether the database has space for the file.
 	 const int maxpages = cacheSize * 256 - newpages;
 	int npages = 0;
 	bool oversized_entries = false;
+	bool deleted_entries = false;
 	e = entries;
 	for (i = 0; i < numentries; ++i, ++e) {
 		npages += e->pages;
@@ -2677,6 +2679,7 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 			--e, --numentries;
 		}
 		debugPrint(3, "removed the %d oldest files", i);
+		deleted_entries = true;
 	}
 
 	e = entries + numentries;
@@ -2689,16 +2692,36 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 	e->modtime = modtime / 8;
 	e->pages = newpages;
 	npages += newpages;
-	if (!writeControl())
-		clearCacheInternal();
-	else {
-		debugPrint(3, "into cache");
-		debugPrint(3, "cache has %d entries and size %d", numentries, npages / 256);
+	debugPrint(3, "into cache");
+	debugPrint(3, "cache has %d entries and size %d", numentries, npages / 256);
+		newrec = record2string(e);
+		newlen = strlen(newrec);
+
+// go down different paths based on whether we had to delete old files,
+// or are simply adding a new one.
+
+	if(deleted_entries) {
+// some files removed, have to rewrite the control file.
+		if (!writeControl())
+			clearCacheInternal();
+// We don't need to read the control file again; we just wrote it;
+// just realloc and tack on the new record, and adjust pointers.
+// Not yet implemented.
+		control_mt = 0;
+		readControl();
+		free(newrec);
+		clearLock();
+		return;
 	}
-// because url and etag came from outside, they aren't going to stick around.
-// The simplest way is to reread.
+
+	lseek(control_fh, 0, 2);
+			write(control_fh, newrec, newlen);
+// We don't need to read the control file again; we just added a new record.
+// just realloc and tack on the new record, and adjust pointers.
+// Not yet implemented.
 	control_mt = 0;
 	readControl();
+		free(newrec);
 	clearLock();
 }
 
