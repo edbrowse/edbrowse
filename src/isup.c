@@ -2579,7 +2579,7 @@ static void reallocCache(char *newrec, size_t newlen)
 	e->url = s;
 	s = strchr(s, '\t');
 	*s++ = 0;
-	strtol(s, &s, 10);
+	s = strchr(s, '\t');
 	e->etag = ++s;
 	s = strchr(s, '\t');
 	*s = 0;
@@ -2725,7 +2725,7 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 	e->pages = newpages;
 	npages += newpages;
 	debugPrint(3, "into cache");
-	debugPrint(3, "cache has %d entries and size %d", numentries, npages / 256);
+	debugPrint(3, "cache has %d entries and size %dM", numentries, npages / 256);
 		newrec = record2string(e);
 		newlen = strlen(newrec);
 
@@ -2747,12 +2747,11 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 	}
 
 	lseek(control_fh, 0, 2);
-			write(control_fh, newrec, newlen);
+	write(control_fh, newrec, newlen);
+	setControlTime();
 // We don't need to read the control file again; we just added a new record.
 // just realloc and tack on the new record, and adjust pointers.
-// Not yet implemented.
-	control_mt = 0;
-	readControl();
+	reallocCache(newrec, newlen);
 		free(newrec);
 	clearLock();
 }
