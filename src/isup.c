@@ -2563,6 +2563,7 @@ static void reallocCache(char *newrec, size_t newlen)
 	struct CENTRY *e;
 	int new_cache_data_len = cache_data_len + newlen;
 	char *new_cache_data = realloc(cache_data, new_cache_data_len);
+// is size_t the correct type? Can diff be negative? Should it be long long?
 	size_t diff = new_cache_data - cache_data;
 // it could realloc insitu, whence we don't have to fix the pointers
 	if(diff) {

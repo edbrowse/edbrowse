@@ -8682,7 +8682,9 @@ rebrowse:
 // If we got here from typing g in directory mode, and directory had /
 // at the end, and if the file starts with #, then the sameURL test passes,
 // and we go down a completely unintended path.
-		if (noStack < 2 && sameURL(line, cf->fileName) && !cw->dirMode && icmd != 'i') {
+		if (noStack < 2 && icmd != 'i' && !cw->dirMode &&
+			(isURL(cf->fileName) || !isURL(line)) &&
+			sameURL(line, cf->fileName)) {
 			if (stringEqual(line, cf->fileName)) {
 				setError(MSG_AlreadyInBuffer);
 				goto fail;
