@@ -2243,7 +2243,7 @@ static bool readControl(void)
 static char *record2string(const struct CENTRY *e)
 {
 	char *t;
-	asprintf(&t, "%s\t%05d\t%s\t%d\t%d\t%d\n",
+	asprintf(&t, "%s\t%05d\t%s\t%d\t%d\t%04d\n",
 		 e->url, e->filenumber, e->etag, e->modtime, e->accesstime,
 		 e->pages);
 	return t;
@@ -2498,6 +2498,7 @@ match:
 	if (!fileIntoMemory(cacheFile, data, data_len, 0))
 		goto nomatch;
 
+	debugPrint(3, "from cache");
 // file has been pulled from cache
 // have to update the access time
 	e->accesstime = now_t / 8;
@@ -2510,11 +2511,14 @@ match:
 		else
 			setControlTime();
 	} else {
-		if (!writeControl())
+		if (!writeControl()) {
 			clearCacheInternal();
+		} else {
+// all the offsets could have changed, must reread
+			control_mt = 0;
+			readControl();
+		}
 	}
-
-	debugPrint(3, "from cache");
 	free(newrec);
 	clearLock();
 	return true;
