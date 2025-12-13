@@ -2554,6 +2554,38 @@ bool presentInCache(const char *url)
 	return ret;
 }
 
+// Realloc the cache data in memory, so we have room for a new record.
+// This might move the data, so we have to
+// adjust the url and etag pointers in the entries.
+static void reallocCache(char *newrec, size_t newlen)
+{
+	int i;
+	struct CENTRY *e;
+	int new_cache_data_len = cache_data_len + newlen;
+	char *new_cache_data = realloc(cache_data, new_cache_data_len);
+	size_t diff = new_cache_data - cache_data;
+// it could realloc insitu, whence we don't have to fix the pointers
+	if(diff) {
+		e = entries;
+		for(i = 0; i < numentries - 1; ++i, ++e)
+			e->url += diff, e->etag += diff;
+	} else e = entries + numentries - 1;
+// tack on the last record
+	char *s = new_cache_data + cache_data_len;
+	memcpy(s, newrec, newlen);
+// e points to the last, newest, entry, which we have to fix up.
+	e->offset = cache_data_len;
+	e->textlength = newlen;
+	e->url = s;
+	s = strchr(s, '\t');
+	*s++ = 0;
+	strtol(s, &s, 10);
+	e->etag = ++s;
+	s = strchr(s, '\t');
+	*s = 0;
+	cache_data = new_cache_data, cache_data_len = new_cache_data_len;
+}
+
 /* Put a file into the cache.
  * Sets the modified time and last access time to now.
  * Time is in 8 second chunks, so even a 32 bit int will hold us for centuries. */
