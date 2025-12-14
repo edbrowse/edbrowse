@@ -2569,12 +2569,14 @@ static void reallocCache(char *newrec, size_t newlen)
 	int new_cache_data_len = cache_data_len + newlen;
 	char *new_cache_data = realloc(cache_data, new_cache_data_len);
 // is size_t the correct type? diff could be negative? Should we use long long?
-	size_t diff = new_cache_data - cache_data;
 // it could realloc insitu, whence we don't have to fix the pointers at all
-	if(diff) {
+	if(new_cache_data != cache_data) {
 		e = entries;
-		for(i = 0; i < numentries - 1; ++i, ++e)
-			e->url += diff, e->etag += diff;
+		for(i = 0; i < numentries - 1; ++i, ++e) {
+			e->url = new_cache_data + e->offset;
+// This assume the file number is 5 digits
+			e->etag = e->url + e->urllength + 5 + 2;
+		}
 	} else e = entries + numentries - 1;
 // tack on the last record
 	char *s = new_cache_data + cache_data_len;
