@@ -2568,9 +2568,9 @@ static void reallocCache(char *newrec, size_t newlen)
 	struct CENTRY *e;
 	int new_cache_data_len = cache_data_len + newlen;
 	char *new_cache_data = realloc(cache_data, new_cache_data_len);
-// is size_t the correct type? Can diff be negative? Should it be long long?
+// is size_t the correct type? diff could be negative? Should we use long long?
 	size_t diff = new_cache_data - cache_data;
-// it could realloc insitu, whence we don't have to fix the pointers
+// it could realloc insitu, whence we don't have to fix the pointers at all
 	if(diff) {
 		e = entries;
 		for(i = 0; i < numentries - 1; ++i, ++e)
@@ -2740,13 +2740,19 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 
 	if(deleted_entries) {
 // some files removed, have to rewrite the control file.
-		if (!writeControl())
+		if (!writeControl()) {
 			clearCacheInternal();
+		} else {
 // We don't need to read the control file again; we just wrote it;
 // just realloc and tack on the new record, and adjust pointers.
-// Not yet implemented.
-		control_mt = 0;
-		readControl();
+// But watch out - we have to update the offsets.
+			off_t o = 0;
+			e = entries;
+			for(i = 0; i < numentries - 1; ++i, ++e)
+				e->offset = o, o += e->textlength;
+			cache_data_len = o;
+			reallocCache(newrec, newlen);
+		}
 		free(newrec);
 		clearLock();
 		return;
