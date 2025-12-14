@@ -8685,7 +8685,7 @@ rebrowse:
 		if (noStack < 2 && icmd != 'i' && !cw->dirMode &&
 			(isURL(cf->fileName) || !isURL(line)) &&
 			sameURL(line, cf->fileName)) {
-			if (stringEqual(line, cf->fileName)) {
+			if (icmd == 'e' || stringEqual(line, cf->fileName)) {
 				setError(MSG_AlreadyInBuffer);
 				goto fail;
 			}
