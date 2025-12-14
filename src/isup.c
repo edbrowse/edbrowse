@@ -2268,6 +2268,7 @@ static bool writeControl(void)
 		}
 	}
 
+	debugPrint(3, "write cache control file");
 	lseek(control_fh, 0L, 0);
 	truncate0(cacheControl, control_fh);
 // buffered IO is more efficient
