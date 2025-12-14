@@ -2743,15 +2743,8 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 		if (!writeControl()) {
 			clearCacheInternal();
 		} else {
-// We don't need to read the control file again; we just wrote it;
-// just realloc and tack on the new record, and adjust pointers.
-// But watch out - we have to update the offsets.
-			off_t o = 0;
-			e = entries;
-			for(i = 0; i < numentries - 1; ++i, ++e)
-				e->offset = o, o += e->textlength;
-			cache_data_len = o;
-			reallocCache(newrec, newlen);
+			control_mt = 0;
+			readControl();
 		}
 		free(newrec);
 		clearLock();
