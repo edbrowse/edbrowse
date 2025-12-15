@@ -6912,7 +6912,7 @@ bool runCommand(const char *line)
 
         if ((++nesting) >= CMD_NESTING_LIMIT) {
                 setError(MSG_CommandNest);
-                goto fail;
+                goto failg;
         }
 
 	skipWhite(&line);
