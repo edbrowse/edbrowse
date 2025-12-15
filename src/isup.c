@@ -2568,13 +2568,12 @@ static void reallocCache(char *newrec, size_t newlen)
 	struct CENTRY *e;
 	int new_cache_data_len = cache_data_len + newlen;
 	char *new_cache_data = realloc(cache_data, new_cache_data_len);
-// is size_t the correct type? diff could be negative? Should we use long long?
 // it could realloc insitu, whence we don't have to fix the pointers at all
 	if(new_cache_data != cache_data) {
 		e = entries;
 		for(i = 0; i < numentries - 1; ++i, ++e) {
 			e->url = new_cache_data + e->offset;
-// This assume the file number is 5 digits
+// This assumes the file number is 5 digits, so skip past those and 2 tabs
 			e->etag = e->url + e->urllength + 5 + 2;
 		}
 	} else e = entries + numentries - 1;
