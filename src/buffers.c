@@ -6859,6 +6859,7 @@ hashnotfound:
 	return false;
 }
 
+#define CMD_NESTING_LIMIT 100
 /*********************************************************************
 Run the entered edbrowse command.
 This is recursive, as in g/x/d or <func
@@ -6895,6 +6896,7 @@ bool runCommand(const char *line)
 	bool plainMail = false;
 		char *allocatedLine;
 	static char newline[MAXTTYLINE];
+        static int nesting = 0;
 
 	selfFrame();
 	redirect_count = 0;
@@ -6907,6 +6909,11 @@ bool runCommand(const char *line)
 	if(!varExpand(line, &allocatedLine))
 		return false;
 	if(allocatedLine) line = allocatedLine;
+
+        if ((++nesting) >= CMD_NESTING_LIMIT) {
+                setError(MSG_CommandNest);
+                goto fail;
+        }
 
 	skipWhite(&line);
 	first = *line;
@@ -9144,20 +9151,24 @@ afterdelete:
 
 success:
 	nzFree(allocatedLine);
+        --nesting;
 	return true;
 
 fail:
 	nzFree(allocatedLine);
+        --nesting;
 	return false;
 
 failg:
 	nzFree(allocatedLine);
+        --nesting;
 	return globalMode = false;
 
 donej:
 	rc = j;
 done:
 	nzFree(allocatedLine);
+        --nesting;
 	return rc;
 }
 
