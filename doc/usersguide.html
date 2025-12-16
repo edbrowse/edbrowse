@@ -161,7 +161,7 @@ ebre-
 ,s/\bfoo\b(?![!?])/bar/ig
 <p>
 The change in regular expressions means edbrowse is not 100% backward compatible with ed, though it is close.
-<li><p> Edbrowse can fetch a web page from the Internet as easily as it opens a file on the current computer, using http, https, ftp or gopher.
+<li><p> Edbrowse can fetch a web page from the Internet as easily as it opens a file on the current computer, using http, https, ftp, gopher or gophers.
 Once the page is fetched into the active buffer, it can be browsed or rendered as text, using the b command.
 This supplements the other one-letter commands which were already part of ed.
 Once the page is browsed, the user can go to hyperlinks, or fill out and submit forms.
@@ -4134,7 +4134,14 @@ or ftp mode passive by `ftpa-'.
 <p>
 Gopher is similar to ftp, providing an easy way to download files from a public site.
 Edbrowse supports this via the gopher:// protocol.
-Once again, directory listings are converted into html, so you can activate a hyperlink and proceed to a submenu or download a file.
+Once again, directory listings are converted into html, so you can activate a
+hyperlink and proceed to a submenu or download a file.
+Edbrowse also supports gopher over SSL/TLS via the gophers:// protocol.
+Note that the gophers implementation does not support falling back to plain
+(unencrypted) gopher in the event that the secure connection fails.
+In addition gophers:// URLs assume port 70 (the same as gopher:// URLs) by
+default so you may need to specify a different port as (at the time of
+writing) there is no standard for a different port for gophers URLs.
 
 <h2 id="proxy">Proxy Servers</h2>
 
