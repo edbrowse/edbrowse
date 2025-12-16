@@ -4957,6 +4957,10 @@ This can be used to modularize your edbrowse settings:
 mail accounts and filters in one file, plugins in another, functions in another etc.
 However, edbrowse -c only brings up the base config file, and would not provide direct access to these other files.
 So it is a matter of taste; some people use this feature and some don't.
+<p>
+Unlike cpp, a relative path is applied to the current directory.
+Since edbrowse can be launched from anywhere, this is not recommended.
+Each include should reference an absolute path.
 
 <h2 id="agent">User Agent</h2>
 
