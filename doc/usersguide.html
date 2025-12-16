@@ -161,7 +161,7 @@ ebre-
 ,s/\bfoo\b(?![!?])/bar/ig
 <p>
 The change in regular expressions means edbrowse is not 100% backward compatible with ed, though it is close.
-<li><p> Edbrowse can fetch a web page from the Internet as easily as it opens a file on the current computer, using http, https, ftp, or gopher.
+<li><p> Edbrowse can fetch a web page from the Internet as easily as it opens a file on the current computer, using http, https, ftp or gopher.
 Once the page is fetched into the active buffer, it can be browsed or rendered as text, using the b command.
 This supplements the other one-letter commands which were already part of ed.
 Once the page is browsed, the user can go to hyperlinks, or fill out and submit forms.
@@ -4493,13 +4493,21 @@ You can switch to a new session, view, edit, save, and reapply the config file w
 
 
 <p>
-The config file is in $HOME/.ebrc.
+The config file is checked for in the following locations in order:
+
+<ol>
+<li><p>A path passed using the -c command line argument.</li>
+<li><p>$XDG_HOME/edbrowse/ebrc (with $XDG_CONFIG_HOME defaulting to $HOME/.config).</li>
+<li><p>$HOME/.ebrc</li>
+</ol>
+
+<p>
+The first config file found is used with the exception that if the file
+specified with -c doesn't exist no other locations are checked and so no
+config is loaded. In addition, if -c is not provided and no config is found then a sample file will be created in $HOME/.ebrc for you to edit.
 The "eb" is shorthand for edbrowse.
-You cannot rename the config file; it is what it is.
-However, -c other_file on the command line causes edbrowse to access a different config file.
-This option must precede any arguments.
 The config command, issued from within edbrowse,
-will access other_file in this case.
+will access whichever file was read.
 
 <p>
 The config file is line oriented.

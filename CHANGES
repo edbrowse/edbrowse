@@ -12,6 +12,10 @@ the a:text c:text and i:text commands.
 
 Expand variables in the prompt string.
 
+Support placing the edbrowse config file at $XDG_CONFIG_HOME/edbrowse/ebrc.
+We still fall back to $HOME/.ebrc if it's not there and use $HOME/.ebrc to
+create the initial file.
+
 3.8.15
 
 The lsr (imap) and lsc (irc) commands.
