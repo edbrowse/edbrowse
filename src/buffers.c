@@ -2841,8 +2841,7 @@ void eb_variables(void)
 static char *get_interactive_shell(const char *sh)
 {
 	char *ishell = NULL;
-	if (asprintf(&ishell, "exec %s -i", sh) == -1)
-		i_printfExit(MSG_NoMem);
+	createFormattedString(&ishell, "exec %s -i", sh);
 	return ishell;
 }
 
@@ -7933,7 +7932,7 @@ doquit:
 			newline = apostropheMacros(newline);
 // W command must write to a temp file, then read back in
 			if(wrc)
-				asprintf(&wrapline, "( %s ) > %s", newline, wrc_file);
+				createFormattedString(&wrapline, "( %s ) > %s", newline, wrc_file);
 			p = popen(wrapline ? wrapline : newline, "w");
 			nzFree(wrapline);
 			nzFree(newline);

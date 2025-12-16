@@ -2130,9 +2130,8 @@ int ftpWrite(const char *url)
 		return false;
 	}
 	++idx;
-	if (asprintf(&tempfile, "%s/ftp%d-%d",
-		     ebUserDir, getpid(), idx) < 0)
-		i_printfExit(MSG_MemAllocError, strlen(ebUserDir) + 24);
+	createFormattedString(&tempfile, "%s/ftp%d-%d",
+		     ebUserDir, getpid(), idx);
 	if(!writeFile(tempfile, 0)) {
 		unlink(tempfile), free(tempfile);
 // keep fileSize as is, in case we wrote part of it

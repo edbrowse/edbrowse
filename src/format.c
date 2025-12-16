@@ -3242,7 +3242,7 @@ static const char showerror_cmd[] = "AbefMqrw^&";
 void setError(int msg, ...)
 {
 	va_list p;
-	char *a;		// result of vasprintf
+	char *a;		// result of createFormattedStringV
 	int l;
 
 	if (msg < 0) {
@@ -3251,8 +3251,7 @@ void setError(int msg, ...)
 	}
 
 	va_start(p, msg);
-	if (vasprintf(&a, i_message(msg), p) < 0)
-		i_printfExit(MSG_MemAllocError, 4096);
+	createFormattedStringV(&a, i_message(msg), p);
 	va_end(p);
 // If the error message is crazy long, truncate it.
 	l = sizeof(errorMsg) - 1;

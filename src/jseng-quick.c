@@ -2762,7 +2762,7 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 	JS_FreeCString(cx, incoming_method);
 
 	if(incoming_payload && *incoming_payload && dopost) {
-		if (asprintf(&a, "%s\1%s",
+		if (createFormattedString(&a, "%s\1%s",
 			     incoming_url, incoming_payload) < 0)
 			i_printfExit(MSG_MemAllocError, 50);
 		if(pd == 1) {
@@ -3875,7 +3875,7 @@ static void setup_window_2(void)
 
 	set_property_string(cx, d, "referrer", cw->referrer);
 	char *wpc; // webpage with secret code
-	asprintf(&wpc, "Wp`Set@%s", cf->fileName);
+	createFormattedString(&wpc, "Wp`Set@%s", cf->fileName);
 	set_property_string(cx, w, "location", wpc);
 	set_property_string(cx, d, "location", wpc);
 	free(wpc);
@@ -4536,7 +4536,7 @@ void set_basehref(const char *h)
 // as though you were running that page.
 	if (!access("jslocal", 4) && h[0] && cf == &cw->f0) {
 		char *wpc; // webpage with secret code
-		asprintf(&wpc, "Wp`Set@%s", h);
+		createFormattedString(&wpc, "Wp`Set@%s", h);
 		set_property_string(cx, w, "location", wpc);
 		set_property_string(cx, d, "location", wpc);
 		free(wpc);

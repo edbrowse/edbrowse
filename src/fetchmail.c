@@ -871,7 +871,7 @@ static bool bulkMoveDelete(CURL * handle, struct FOLDER *f,
 		if (fromline && !stringEqual(fromline, mif->from))
 			continue;
 		if (subkey == 'm') {
-			asprintf(&t, "UID %s %d \"%s\"",
+			createFormattedString(&t, "UID %s %d \"%s\"",
 				     (active_a->move_capable ? "MOVE" : "COPY"),
 				     mif->uid, destination->path);
 			curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, t);
@@ -912,7 +912,7 @@ static bool refolder(CURL *h, struct FOLDER *f, CURLcode res1)
 // If some other error code then return false;
 // Let's at least print it out.
 	if(res1 != CURLE_OK && debugLevel >= 3) ebcurl_setError(res1, "mail://url-unspecified", 1, cerror);
-	asprintf(&t, "SELECT \"%s\"", f->path);
+	createFormattedString(&t, "SELECT \"%s\"", f->path);
 	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, t);
 	free(t);
 	res2 = getMailData(h);
@@ -963,7 +963,7 @@ static CURLcode downloadBody(CURL *h, struct FOLDER *f, int uid)
 {
 	CURLcode res;
 	char *p = percentString(f->path, 0);
-	asprintf(&message_url, "%s%s;UID=%u", mailbox_url, p, uid);
+	createFormattedString(&message_url, "%s%s;UID=%u", mailbox_url, p, uid);
 	nzFree(p);
 //	puts(message_url);
 	setCurlURL(h, message_url);
@@ -1001,7 +1001,7 @@ static void scanFolder(CURL * handle, struct FOLDER *f)
 	}
 
 // tell the server to descend into this folder
-	asprintf(&t, "SELECT \"%s\"", f->path);
+	createFormattedString(&t, "SELECT \"%s\"", f->path);
 	curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, t);
 	free(t);
 	res = getMailData(handle);
@@ -1239,7 +1239,7 @@ rebulk:
 			g = folderByName(inputline);
 			if (g && g != f) {
 re_move:
-				asprintf(&t, "UID %s %d \"%s\"",
+				createFormattedString(&t, "UID %s %d \"%s\"",
 					     (active_a->move_capable ? "MOVE" : "COPY"),
 					     mif->uid, g->path);
 				curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, t);
@@ -1417,7 +1417,7 @@ static bool envelopes(CURL * handle, struct FOLDER *f)
 range:
 // capture the uids
 	if(*imapLines) {
-		asprintf(&t, "FETCH %s UID", imapLines);
+		createFormattedString(&t, "FETCH %s UID", imapLines);
 	} else {
 		sprintf(cust_cmd, "FETCH %d:%d UID", f->start, f->start + f->nfetch - 1);
 		t = cust_cmd;
@@ -1455,7 +1455,7 @@ range:
 
 // get envelopes
 	if(*imapLines) {
-		asprintf(&t, "FETCH %s ALL", imapLines);
+		createFormattedString(&t, "FETCH %s ALL", imapLines);
 	} else {
 		sprintf(cust_cmd, "FETCH %d:%d ALL", f->start, f->start + f->nfetch - 1);
 		t = cust_cmd;
@@ -1690,7 +1690,7 @@ static bool examineFolder(CURL * handle, struct FOLDER *f, bool dostats)
 
 /* interrogate folder */
 again:
-	asprintf(&t, "SELECT \"%s\"", f->path);
+	createFormattedString(&t, "SELECT \"%s\"", f->path);
 	curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, t);
 	free(t);
 	res = getMailData(handle);
@@ -1854,7 +1854,7 @@ static void get_mailbox_url(const struct MACCOUNT *a)
 		scheme = "pop3s";
 	if (a->imap)
 		scheme = (a->inssl ? "imaps" : "imap");
-	asprintf(&url,      "%s://%s:%d/", scheme, a->inurl,      a->inport);
+	createFormattedString(&url,      "%s://%s:%d/", scheme, a->inurl,      a->inport);
 	mailbox_url = url;
 }
 
@@ -2002,7 +2002,7 @@ refresh:
 			stripWhite(t);
 			if (!*t)
 				goto input;
-			asprintf(&w, "CREATE \"%s\"", t);
+			createFormattedString(&w, "CREATE \"%s\"", t);
 			curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, w);
 			res = getMailData(handle);
 			free(w);
@@ -2021,7 +2021,7 @@ refresh:
 			stripWhite(t);
 			if (!*t)
 				goto input;
-			asprintf(&w, "DELETE \"%s\"", t);
+			createFormattedString(&w, "DELETE \"%s\"", t);
 			curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, w);
 			res = getMailData(handle);
 			free(w);
@@ -2047,7 +2047,7 @@ refresh:
 			stripWhite(u);
 			if (!*u)
 				goto input;
-			asprintf(&w, "RENAME \"%s\" \"%s\"", t, u);
+			createFormattedString(&w, "RENAME \"%s\" \"%s\"", t, u);
 			curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, w);
 			res = getMailData(handle);
 			free(w);
@@ -2122,7 +2122,7 @@ int fetchMail(int account)
 
 	for (message_number = 1; message_number <= message_count;
 	     message_number++) {
-		asprintf(&message_url, "%s%u", mailbox_url, message_number);
+		createFormattedString(&message_url, "%s%u", mailbox_url, message_number);
 		res = fetchOneMessage(h, message_number);
 		if (res != CURLE_OK)
 			goto fetchmail_cleanup;
@@ -3707,7 +3707,7 @@ char *emailParse(char *buf, bool plain)
 // If you save them or such I store the account for all those emails as gmail, which is wrong.
 // So screw it and only invoke this feature for imap.
 	if(ismc && isimap && active_a) n = active_a - accounts + 1;
-	asprintf(&cw->mailInfo, "%s>%s>%s>%s>%s>%d>", w->reply, w->tolist,
+	createFormattedString(&cw->mailInfo, "%s>%s>%s>%s>%s>%d>", w->reply, w->tolist,
 		w->cclist, w->ref, w->mid, n);
 // We could also add in w->to but so far there isn't a need for it.
 
@@ -4211,7 +4211,7 @@ bool imapBuffer(char *line)
 // so it doesn't think we can undo things later.
 	cw->imapMode1 = true;
 	cf->firstURL = cloneString(mailbox_url);
-	asprintf(&cf->fileName, "imap %d", act);
+	createFormattedString(&cf->fileName, "imap %d", act);
 	strcpy(cw->imap_env, envelopeFormat);
 	cw->imap_l = fetchLimit;
 	addTextToBuffer((uchar *)imapLines, iml_l, 0, false);
@@ -4383,7 +4383,7 @@ bool folderDescend(const char *path, bool rf)
 		w->r_dot = cw->dot;
 		w->prev = cw, cw = w, sessionList[context].lw = cw, cf = &cw->f0;
 		cw->imapMode2 = true;
-		asprintf(&cf->fileName, "envelopes %s", path);
+		createFormattedString(&cf->fileName, "envelopes %s", path);
 	} else {
 		if(cw->dol) delText(1, cw->dol);
 	}
@@ -4438,7 +4438,7 @@ bool folderSearch(const char *path, char *search, bool rf)
 // in case it's been a long time and we logged out and need to reselect.
 	if(rf) path = cw->baseDirName;
 again:
-	asprintf(&u, "SELECT \"%s\"", path);
+	createFormattedString(&u, "SELECT \"%s\"", path);
 	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, u);
 	free(u);
 	res = getMailData(h);
@@ -4473,7 +4473,7 @@ again:
 		w->mail_raw = cloneString(search);
 		w->prev = cw, cw = w, sessionList[context].lw = cw, cf = &cw->f0;
 		cw->imapMode2 = true;
-		asprintf(&cf->fileName, "envelopes %s /%s", path, search);
+		createFormattedString(&cf->fileName, "envelopes %s /%s", path, search);
 	}
 	makeLinesAndUids(&f0);
 	addTextToBuffer((uchar *)imapLines, iml_l, 0, false);
@@ -4618,7 +4618,7 @@ bool mailDescend(const char *title, char cmd)
 	w->prev = cw, cw = w, sessionList[context].lw = cw, cf = &cw->f0;
 	cw->imapMode3 = true;
 	*s2 = 0; // I'll put it back
-	asprintf(&cf->fileName, "mail %s", subj);
+	createFormattedString(&cf->fileName, "mail %s", subj);
 	*s2 = EFS_I;
 	vr = cf->fileName + strlen(cf->fileName);
 	isoDecode(cf->fileName, &vr);
@@ -4796,7 +4796,7 @@ baddest:
 		goto baddest;
 	}
 
-	asprintf(&custom, "UID %s %s \"%s\"",
+	createFormattedString(&custom, "UID %s %s \"%s\"",
 	     ((a->move_capable && cmd == 'm') ? "MOVE" : "COPY"),
 	uids, path);
 	rc = tryTwice(h, cw->baseDirName, custom);
@@ -4806,7 +4806,7 @@ baddest:
 	if(cmd != 'm' || a->move_capable) return true;
 // move is copy + delete, this is the delete part.
 // You'll see it again in the next function.
-	asprintf(&custom, "UID STORE %s +FLAGS (\\DELETED)", uids);
+	createFormattedString(&custom, "UID STORE %s +FLAGS (\\DELETED)", uids);
 // I don't do the retry here; we just succeeded above so we should be ok.
 	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, custom);
 	nzFree(custom);
@@ -4840,7 +4840,7 @@ bool imapDeleteG(const char *uids)
 		return imapMovecopyG('m', uids, destn);
 	}
 
-	asprintf(&custom, "UID STORE %s +FLAGS (\\DELETED)", uids);
+	createFormattedString(&custom, "UID STORE %s +FLAGS (\\DELETED)", uids);
 	rc = tryTwice(h, cw->baseDirName, custom);
 	nzFree(custom);
 	if(!rc) return false;
@@ -4910,7 +4910,7 @@ baddest:
 		goto baddest;
 	}
 
-	asprintf(&t, "UID %s %d \"%s\"", 	     ((a->move_capable && cmd == 'm') ? "MOVE" : "COPY"), uid, path);
+	createFormattedString(&t, "UID %s %d \"%s\"", 	     ((a->move_capable && cmd == 'm') ? "MOVE" : "COPY"), uid, path);
 	rc = tryTwice(h, pw->baseDirName, t);
 	nzFree0(t);
 	if(!rc) return false;
@@ -5091,7 +5091,7 @@ bool addFolders()
 		line2 = allocMem(++l);
 		memcpy(line2, line1, l);
 		line2[l - 1] = 0;
-		asprintf(&v, "CREATE \"%s\"", line2);
+		createFormattedString(&v, "CREATE \"%s\"", line2);
 		curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, v);
 		free(v);
 		res = getMailData(h);
@@ -5147,7 +5147,7 @@ bool deleteFolder(int ln)
 		i_puts(MSG_Abort);
 		return true;
 	}
-	asprintf(&v, "DELETE \"%s\"", p);
+	createFormattedString(&v, "DELETE \"%s\"", p);
 	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, v);
 	free(v);
 	res = getMailData(h);
@@ -5169,7 +5169,7 @@ bool renameFolder(const char *src, const char *dest)
 	char *v;
 
 	curl_easy_setopt(h, CURLOPT_VERBOSE, (long) (debugLevel >= 4));
-	asprintf(&v, "RENAME \"%s\" \"%s\"", src, dest);
+	createFormattedString(&v, "RENAME \"%s\" \"%s\"", src, dest);
 	curl_easy_setopt(h, CURLOPT_CUSTOMREQUEST, v);
 	free(v);
 	res = getMailData(h);

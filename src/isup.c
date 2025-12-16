@@ -2243,7 +2243,7 @@ static bool readControl(void)
 static char *record2string(const struct CENTRY *e)
 {
 	char *t;
-	asprintf(&t, "%s\t%05d\t%s\t%d\t%d\t%04d\n",
+	createFormattedString(&t, "%s\t%05d\t%s\t%d\t%d\t%04d\n",
 		 e->url, e->filenumber, e->etag, e->modtime, e->accesstime,
 		 e->pages);
 	return t;
@@ -2932,7 +2932,7 @@ static bool makeTempFilename(const char *suffix, int idx, bool output)
 
 	if (!suffix)
 		suffix = "eb";
-	if (asprintf(&filename, "%s/pf%d-%d.%s",
+	if (createFormattedString(&filename, "%s/pf%d-%d.%s",
 		     ebUserDir, getpid(), idx, suffix) < 0)
 		i_printfExit(MSG_MemAllocError, strlen(ebUserDir) + 24);
 
@@ -3864,7 +3864,7 @@ static void ircLoad(void)
 			cw->r_map[n].text = (uchar*)cloneString(timestring);
 		} else {
 			++ d2;
-			asprintf(&s1, "%s^%s", timestring, d2);
+			createFormattedString(&s1, "%s^%s", timestring, d2);
 			s2 = strchr(s1, '\n');
 			if(s2) *s2 = 0;
 			cw->r_map[n].text = (uchar*) s1;

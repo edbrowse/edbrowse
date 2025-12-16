@@ -2416,7 +2416,7 @@ skip_encode:
 			if (t->itype != INP_IMAGE)
 				goto success;
 			namelen = strlen(name);
-			asprintf(&nx, "%s.x", name);
+			createFormattedString(&nx, "%s.x", name);
 			postNameVal(nx, "0", fsep, false);
 			nx[namelen + 1] = 'y';
 			postNameVal(nx, "0", fsep, false);

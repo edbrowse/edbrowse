@@ -502,13 +502,13 @@ int main(int argc, char **argv)
 		i_printfExit(MSG_NotDir, home);
 
         configHome = getenv("XDG_CONFIG_HOME");
-        if (configHome && *configHome) asprintf(&configFile, "%s/edbrowse/ebrc", configHome);
-        else asprintf(&configFile, "%s/.config/edbrowse/ebrc", home);
+        if (configHome && *configHome) createFormattedString(&configFile, "%s/edbrowse/ebrc", configHome);
+        else createFormattedString(&configFile, "%s/.config/edbrowse/ebrc", home);
 /* For now just check for the presence of the config in the xdg location but
 create in the old location to avoid surprises */
 	if (fileTypeByName(configFile, 0) == 0) {
                 free(configFile);
-                asprintf(&configFile, "%s/.ebrc", home);
+                createFormattedString(&configFile, "%s/.ebrc", home);
 // if not present then create it
                 if (fileTypeByName(configFile, 0) == 0) {
                         int fh = creat(configFile, MODE_private);

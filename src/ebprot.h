@@ -288,6 +288,8 @@ void stripWhite(char *s) ;
 void spaceCrunch(char *s, bool onespace, bool unprint) ;
 char *strmove(char *dest, const char *src) ;
 char *copyString(char *dest, const char *src, size_t n);
+int createFormattedStringV(char **strp, const char *fmt, va_list ap);
+int createFormattedString(char **strp, const char *fmt, ...);
 char *initString(int *l) ;
 void stringAndString(char **s, int *l, const char *t) ;
 void stringAndBytes(char **s, int *l, const char *t, int cnt) ;

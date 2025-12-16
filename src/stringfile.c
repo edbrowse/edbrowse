@@ -193,6 +193,25 @@ char *copyString(char *dest, const char *src, size_t n)
         return dest;
 }
 
+// Similar to allocMem and friends for asprintf and vasprintf
+int createFormattedStringV(char **strp, const char *fmt, va_list ap)
+{
+        int ret = vasprintf(strp, fmt, ap);
+        if (ret < 0)
+            i_printfExit(MSG_CreateFormatStr, strerror(errno));
+    return ret;
+}
+
+int createFormattedString(char **strp, const char *fmt, ...)
+{
+        int ret;
+        va_list ap;
+        va_start(ap, fmt);
+        ret = createFormattedStringV(strp, fmt, ap);
+        va_end(ap);
+        return ret;
+}
+
 /* OO has a lot of unnecessary overhead, and a few inconveniences,
  * but I really miss it right now.  The following
  * routines make up for the lack of simple string concatenation in C.
@@ -1995,7 +2014,7 @@ abort:
 				setError(MSG_MetaChar);
 				goto abort;
 			}
-			asprintf(&a, "rm -rf %c%s%c",
+			createFormattedString(&a, "rm -rf %c%s%c",
 			qc, path, qc);
 			j = system(a);
 			free(a);
@@ -2028,7 +2047,7 @@ unlink:
 							setError(MSG_MetaChar);
 							goto abort;
 						}
-						asprintf(&a, "mv -n %c%s%c %c%s%c",
+						createFormattedString(&a, "mv -n %c%s%c %c%s%c",
 						qc, path, qc, qc, bin, qc);
 						j = system(a);
 						free(a);
@@ -2187,7 +2206,7 @@ bool moveFiles(int start, int end, int dest, char origcmd, char relative)
 						free(path1);
 						return false;
 					}
-					asprintf(&a, "%s %c%s%c %c%s%c",
+					createFormattedString(&a, "%s %c%s%c %c%s%c",
 					(origcmd == 'm' ? "mv -n" : "cp -an"),
 					qc, path1, qc, qc, cw2->baseDirName, qc);
 					j = system(a);

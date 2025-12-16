@@ -867,10 +867,8 @@ static char *buildSMTPURL(const struct MACCOUNT *account)
 	else
 		scheme = "smtp";
 
-	if (asprintf
-	    (&url, "%s://%s:%d/%s", scheme, account->outurl, account->outport,
-	     smlogin) == -1)
-		i_printfExit(MSG_NoMem);
+	createFormattedString(&url, "%s://%s:%d/%s", scheme, account->outurl, account->outport,
+	     smlogin);
 
 	return url;
 }

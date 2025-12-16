@@ -877,4 +877,5 @@ MSG_ImaskOn,
 	MSG_NoRaw,
 	MSG_NoPending,
         MSG_CommandNest,
+        MSG_CreateFormatStr,
 };
