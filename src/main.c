@@ -14,7 +14,7 @@ const char *progname;
 const char eol[] = "\r\n";
 const char *version = "3.8.15+";
 char *changeFileName;
-char *configFile, *addressFile, *cookieFile, *emojiFile;
+char *configFile, *addressFile, *cookieFile, *emojiFile, *configHome;
 char *mailDir, *mailUnread, *mailStash, *mailReply;
 char *sigFile, *sigFileEnd;
 char *cacheDir;
@@ -501,17 +501,24 @@ int main(int argc, char **argv)
 	if (fileTypeByName(home, 0) != 'd')
 		i_printfExit(MSG_NotDir, home);
 
-	configFile = allocMem(strlen(home) + 7);
-	sprintf(configFile, "%s/.ebrc", home);
-/* if not present then create it, as was done above */
+        configHome = getenv("XDG_CONFIG_HOME");
+        if (configHome && *configHome) asprintf(&configFile, "%s/edbrowse/ebrc", configHome);
+        else asprintf(&configFile, "%s/.config/edbrowse/ebrc", home);
+/* For now just check for the presence of the config in the xdg location but
+create in the old location to avoid surprises */
 	if (fileTypeByName(configFile, 0) == 0) {
-		int fh = creat(configFile, MODE_private);
-		if (fh >= 0) {
-			write(fh, ebrc_string, strlen(ebrc_string));
-			close(fh);
-			i_printfExit(MSG_Personalize, configFile);
-		}
-	}
+                free(configFile);
+                asprintf(&configFile, "%s/.ebrc", home);
+// if not present then create it
+                if (fileTypeByName(configFile, 0) == 0) {
+                        int fh = creat(configFile, MODE_private);
+                        if (fh >= 0) {
+                                write(fh, ebrc_string, strlen(ebrc_string));
+                                close(fh);
+                                i_printfExit(MSG_Personalize, configFile);
+                        }
+                }
+        }
 
 /* recycle bin and .signature files are unix-like, and not adjusted for windows. */
 	recycleBin = allocMem(strlen(home) + 8);
