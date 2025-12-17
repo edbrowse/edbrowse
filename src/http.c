@@ -334,7 +334,7 @@ eb_curl_callback(char *incoming, size_t size, size_t nitems, void *data)
 {
         struct i_get *g = data;
 	size_t num_bytes = nitems * size;
-	int dots1, dots2, rc;
+	int dots1, dots2, rc = 0;
 
 	if (g->down_state == 1 && g->is_http) {
 /* don't do a download unless the code is 200. */
