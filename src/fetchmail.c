@@ -1822,7 +1822,7 @@ static CURL *newFetchmailHandle(const char *username, const char *password)
 	if(curlIPV == 6)
 		curl_easy_setopt(h, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V6);
 	curl_easy_setopt(h, CURLOPT_ERRORBUFFER, cerror);
-	curl_easy_setopt(h, CURLOPT_BUFFERSIZE, 0x00000l);
+	curl_easy_setopt(h, CURLOPT_BUFFERSIZE, CHUNKSIZE);
 	curl_easy_setopt(h, CURLOPT_CONNECTTIMEOUT, mailTimeout);
 	curl_easy_setopt(h, CURLOPT_WRITEFUNCTION, eb_curl_callback);
 	curl_easy_setopt(h, CURLOPT_WRITEDATA, &callback_data);

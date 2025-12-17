@@ -2450,7 +2450,7 @@ static CURL *http_curl_init(struct i_get *g)
 	curl_easy_setopt(h, CURLOPT_PROGRESSDATA, g);
 	if(pubKey)
 		curl_easy_setopt(h, CURLOPT_SSH_PUBLIC_KEYFILE, pubKey);
-	curl_easy_setopt(h, CURLOPT_BUFFERSIZE, 0x00000l);
+	curl_easy_setopt(h, CURLOPT_BUFFERSIZE, CHUNKSIZE);
 	curl_easy_setopt(h, CURLOPT_CONNECTTIMEOUT, webTimeout);
 	curl_easy_setopt(h, CURLOPT_USERAGENT, currentAgent);
 	curl_easy_setopt(h, CURLOPT_SSLVERSION, (long)CURL_SSLVERSION_DEFAULT);

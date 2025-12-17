@@ -133,8 +133,8 @@ typedef uchar *pst;		/* perl string */
 /* Allocation increment for a growing string, that we don't expect
  * to get too large.  This must be a power of 2. */
 #define ALLOC_GR        0x100
-/* print a dot on download for each chunk of this size */
-#define CHUNKSIZE 1000000
+// receive data in chunks of this size, also used for printing progress dots
+#define CHUNKSIZE 1000000L
 
 /* alignments */
 #define AL_LEFT		0
