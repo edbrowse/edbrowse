@@ -507,6 +507,7 @@ int main(int argc, char **argv)
 /* For now just check for the presence of the config in the xdg location but
 create in the old location to avoid surprises */
 	if (fileTypeByName(configFile, 0) == 0) {
+		setError(-1); // this is an ok error
                 free(configFile);
                 createFormattedString(&configFile, "%s/.ebrc", home);
 // if not present then create it
