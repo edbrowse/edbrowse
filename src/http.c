@@ -362,9 +362,24 @@ eb_curl_callback(char *incoming, size_t size, size_t nitems, void *data)
 			return -1;
 	}
 
-	if (g->down_state == 2 || g->down_state == 4) {	/* to disk */
-		rc = write(g->down_fd, incoming, num_bytes);
-		if ((unsigned)rc == num_bytes) {
+	if (g->down_state == 2 || g->down_state == 4) {
+/*********************************************************************
+Write should always finish completely, if it's to disk.
+Unless we run out of space, then it will be a partial write,
+with errno 0, since we did successfully write data, and ernno = 0 isn't helpful.
+Write again to get the actual errno.
+Also, nfs or samba or other situations may indeed have a partial write,
+which is successful, and then expect to write again.
+So the safest is to put it in a loop.
+*********************************************************************/
+		size_t remaining = num_bytes;
+		const char *p = incoming;
+		while(remaining) {
+			rc = write(g->down_fd, p, remaining);
+			if(rc <= 0) break;
+			remaining -= rc, p += rc;
+		}
+		if (rc > 0) { // last write succeeded
 			if (g->down_state == 4) {
 #if 0
 // Deliberately delay background download, to get several running in parallel
@@ -373,18 +388,21 @@ eb_curl_callback(char *incoming, size_t size, size_t nitems, void *data)
 					sleep(12);
 				g->down_length += rc;
 #endif
-				return rc;
+				return num_bytes;
 			}
 			goto showdots;
 		}
+		if (g->length >= CHUNKSIZE && showProgress == 'd'
+		    && !g->down_force)
+			nl();	// We printed dots, so terminate with newline
+		g->length = 0;
+		i_printf(MSG_NoWrite2, g->down_file,
+		errno ? strerror(errno) : "???");
+		nl();
 		if (g->down_state == 2) {
 // has to be the foreground http thread, so ok to call setError,
 // which is not threadsafe.
-			setError(MSG_NoWrite2, g->down_file, strerror(errno));
-		} else {
-			i_printf(MSG_NoWrite2, g->down_file, strerror(errno));
-			printf(", ");
-			i_puts(MSG_DownAbort);
+			setError(MSG_DownAbort);
 		}
 		return -1;
 	}
@@ -1098,31 +1116,6 @@ perform:
 			curlret = fetch_internet(g);
 		}
 
-/*********************************************************************
-This is a one line workaround for an apparent bug in curl.
-The return CURLE_WRITE_ERROR means the data fetched from the internet
-could not be written to disk. And how does curl know?
-Because the callback function returns a lesser number of bytes.
-This is like write(), if it returns a lesser number
-of bytes then it was unable to write the entire block to disk.
-Ok, but I never return fewer bytes than was passed to me.
-I return the expected number of bytes, or -1 in the rare case
-that I want to abort the download.
-So you see, curl should never return this WRITE error.
-Yet it does, in version 7.58.0-2, on debian.
-And only on one page we have found so far:
-https://www.literotica.com/stories/new_submissions.php
-The entire page is downloaded, down to the very last byte,
-then the WRITE error is passed back.
-Well if it happens once it will happen elsewhere.
-Users will not be able to fetch pages from the internet, and not know why.
-The error message, can't write to disk, is not helpful at all.
-So this is a simple workaround.
-*********************************************************************/
-
-		if (curlret == CURLE_WRITE_ERROR)
-			curlret = CURLE_OK;
-
 		if (g->down_state == 6) {
 // Header has indicated a plugin by content type or protocol or suffix.
 			curl_easy_cleanup(h);
@@ -1235,12 +1228,12 @@ Don't forget to free it in i_get_free().
 
 		if (g->length >= CHUNKSIZE && showProgress == 'd'
 		    && !g->down_force)
-			nl();	/* We printed dots, so terminate them with newline */
+			nl();	// We printed dots, so terminate with newline
 
 		if (g->down_state == 2) {
 			close(g->down_fd);
 			i_get_free(g, true);
-			setError(MSG_DownSuccess);
+			setError(curlret ? MSG_DownAbort : MSG_DownSuccess);
 			curl_easy_cleanup(h);
 			nzFree(referrer);
 			return false;
