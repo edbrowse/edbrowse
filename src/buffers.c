@@ -8698,13 +8698,14 @@ rebrowse:
 /* Same url, but a different #section */
 			s = findHash(line);
 			if (!s) {	// no section specified
-// jump to line 1, if there is a line 1
+// If there are lines, jump to line 1 for the g command and to $ for other commands
 				if(!cw->dot) {
 					if(debugLevel >= 1)
 						i_puts(MSG_Empty);
 					goto success;
 				}
-				if(cw->dot == 1) {
+				const int targetLine = (icmd == 'g') ? 1 : cw->dol;
+				if(cw->dot == targetLine) {
 					if(debugLevel >= 1)
 						printDot();
 					goto success;
@@ -8714,7 +8715,7 @@ rebrowse:
 				label->label = cw->dot;
 				label->prev = cw->histLabel;
 				cw->histLabel = label;
-				cw->dot = 1;
+				cw->dot = targetLine;
 				if(debugLevel >= 1)
 					printDot();
 				goto success;
