@@ -2834,6 +2834,18 @@ swm("ResizeObserver", function(){})
 ResizeObserver.prototype.disconnect = eb$voidfunction;
 ResizeObserver.prototype.observe = eb$voidfunction;
 ResizeObserver.prototype.unobserve = eb$voidfunction;
+/* quickjs-ng has a native implementation of queueMicrotask but quickjs
+doesn't currently */
+if (!window.queueMicrotask) {
+    alert3("Using fallback for queueMicrotask");
+    swm1("queueMicrotask", function(f) {
+        if (typeof f !== "function") throw new TypeError("not a function");
+/* Per the spec we need to wait until after the caller's executed so, for
+simplicity, use a timer set to 0 rather than promises. I'm not sure this is quite right but it's
+simple and closer than the old implementation without using the one provided by quickjs-ng. */
+        setTimeout(f, 0);
+    });
+}
 
 // don't need these any more
 ;(function() {
