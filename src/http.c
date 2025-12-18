@@ -203,7 +203,7 @@ static void scan_http_headers(struct i_get *g, bool fromCallback)
                 g->hcl = (curl_off_t) cl;
 		nzFree(v);
 		if (g->hcl)
-			debugPrint(4, "content length %lld", g->hcl);
+			debugPrint(3, "content length %lld", g->hcl);
 	}
 
 	if (!g->etag && (v = find_http_header(g, "etag"))) {
@@ -2731,9 +2731,11 @@ curl_header_callback(char *header_line, size_t size, size_t nmemb,
 // whatever+xml can go into the buffer
 	    !memEqualCI(g->content + strlen(g->content) - 4, "+xml", 4)) ||
 // Always offer a download if it's a large amount of data
-             g->hcl > 100000000)) {
+		g->hcl > 100000000)) {
 		g->down_state = 1;
 		g->down_msg = MSG_Down;
+		debugPrint(3, "potential download based on type %s length %lld",
+		   g->content, g->hcl);
 	}
 
 	return bytes_in_line;
