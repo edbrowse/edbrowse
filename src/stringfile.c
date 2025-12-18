@@ -1507,7 +1507,7 @@ char getLetter(const char *s)
 /* Parameters: message, default file name, must this file be new,
  * and can we except an input of white space,
  * that being converted to a single space. */
-char *getFileName(int msg, const char *defname, bool isnew, bool ws)
+char *getFileName(int msg, const char *defname, bool isnew, bool ws, size_t filesize)
 {
 	static char buf[ABSPATH];
 	static char spacename[] = " ";
@@ -1517,6 +1517,8 @@ char *getFileName(int msg, const char *defname, bool isnew, bool ws)
 
 	while (true) {
 		i_printf(msg);
+// give a heads up on how big this is going to be
+		if(filesize) printf("%s ", conciseSize(filesize));
 		if (defname)
 			printf("[%s] ", defname);
 		fflush(stdout);

@@ -361,7 +361,7 @@ int getche(void) ; //@
 int getch(void) ; //@
 #endif // #ifndef _INC_CONIO
 char getLetter(const char *s) ;
-char *getFileName(int msg, const char *defname, bool isnew, bool ws);
+char *getFileName(int msg, const char *defname, bool isnew, bool ws, size_t filesize);
 int shellProtectLength(const char *s);
 void shellProtect(char *t, const char *s);
 char *dirSuffixWindow(int n, const Window *w);

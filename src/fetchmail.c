@@ -85,7 +85,7 @@ static void writeAttachment(struct MHINFO *w)
 	} else {
 		i_printf(MSG_Att);
 		atname = getFileName(MSG_FileName, (w->cfn[0] ? w->cfn : 0),
-				     true, false);
+				     true, false, 0);
 		if(!isInteractive) puts(atname);
 /* X is like x, but deletes all future images */
 		if (stringEqual(atname, "X")) {
@@ -2478,7 +2478,7 @@ writeMail:
 
 saveMail:
 	if (!atname) {
-		atname = getFileName(MSG_FileName, redirect, false, false);
+		atname = getFileName(MSG_FileName, redirect, false, false, 0);
 		if(!isInteractive) puts(atname);
 	}
 	if (stringEqual(atname, "x"))
@@ -5005,7 +5005,7 @@ bool saveEmailWhileReading(char key, const char *name)
 
 saveMail:
 	if (!name)
-		name = getFileName(MSG_FileName, redirect, false, false);
+		name = getFileName(MSG_FileName, redirect, false, false, 0);
 	if (stringEqual(name, "x"))
 		return true;
 	exists = fileTypeByName(name, 0);

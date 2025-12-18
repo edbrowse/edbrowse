@@ -2872,7 +2872,7 @@ default_filename:
 	if(preset) { answer = fp2; goto got_answer; }
 
 top:
-	answer = getFileName(g->down_msg, fp2, false, true);
+	answer = getFileName(g->down_msg, fp2, false, true, g->hcl);
 got_answer:
 /* space for a filename means read into memory */
 	if (stringEqual(answer, " ")) {
