@@ -216,9 +216,12 @@ swm("toString$nat", toString);
 /* toString has to be replaceable by other websites, which happens more often
 than you think. Apparently sometimes people also want to grab the toString
 function directly from an object and expect to be able to call it without the
-lack of a this binding causing problems. I've no idea what to return in such a
-case so I'm going for an empty string. */
-this.toString = Object.prototype.toString = function() { return this ? (this.dom$class ? "[object "+this.dom$class+"]" : toString$nat.call(this)) : "";}
+lack of a this binding causing problems. */
+this.toString = Object.prototype.toString = function() {
+    return this ? (
+        this.dom$class ? "[object "+this.dom$class+"]" : toString$nat.call(this)
+    ) : toString$nat.call(this);
+}
 Object.defineProperty(window, "toString", {enumerable:false})
 
 swm1("scroll", eb$voidfunction)
