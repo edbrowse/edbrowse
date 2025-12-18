@@ -2734,9 +2734,6 @@ curl_header_callback(char *header_line, size_t size, size_t nmemb,
              g->hcl > 100000000)) {
 		g->down_state = 1;
 		g->down_msg = MSG_Down;
-		debugPrint(3,
-                        "potential download based on type %s and size %lld",
-                        g->content, g->hcl);
 	}
 
 	return bytes_in_line;
