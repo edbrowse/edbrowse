@@ -2829,29 +2829,6 @@ ResizeObserver.prototype.disconnect = eb$voidfunction;
 ResizeObserver.prototype.observe = eb$voidfunction;
 ResizeObserver.prototype.unobserve = eb$voidfunction;
 
-/* Implementation of queueMicrotask based on timers. The idea here is that if
-someone adds a bunch of such tasks at once they'll have a very small gap
-between them so not everything is
-blocked. At the end of the day such tasks aren't supposed to be time sensitive
-anyway. */
-;(
-    function() {
-        // keep the task counter out of the window.
-        let task_count = 0;
-        let run_task = (f) => {
-            if(typeof f == "function") {
-                ++task_count;
-                const task_time = 100*task_count;
-                alert3('queueMicrotask with time ' + task_time);
-                setTimeout(function() { f(); --task_count; }, task_time);
-            }
-        }
-        swm1("queueMicrotask", run_task);
-    }
-)();
-
-
-
 // don't need these any more
 ;(function() {
     let names_to_delete = ["swm", "sdm", "swm1", "sdm1", "swm2", "sdm2", "spdc"];
