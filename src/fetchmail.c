@@ -70,13 +70,14 @@ static void freeMailInfo(struct MHINFO *w)
 static void writeAttachment(struct MHINFO *w)
 {
 	const char *atname;
+	int length = w->end - w-> start;
 	if ((ismc | ignoreImages | !attimg) && w->atimage)
 		return;		/* image ignored */
 	if (w->pgp)
 		return;		/* Ignore PGP signatures. */
 	if (w->error64 == BAD_BASE64_DECODE)
 		i_printf(MSG_Abbreviated);
-	if (w->start == w->end) {
+	if (!length) {
 		i_printf(MSG_AttEmpty);
 		if (w->cfn[0])
 			printf(" %s", w->cfn);
@@ -85,7 +86,7 @@ static void writeAttachment(struct MHINFO *w)
 	} else {
 		i_printf(MSG_Att);
 		atname = getFileName(MSG_FileName, (w->cfn[0] ? w->cfn : 0),
-				     true, false, 0);
+				     true, false, length);
 		if(!isInteractive) puts(atname);
 /* X is like x, but deletes all future images */
 		if (stringEqual(atname, "X")) {
@@ -103,7 +104,6 @@ static void writeAttachment(struct MHINFO *w)
 		} else {
 			cxSwitch(cx, false);
 			i_printf(MSG_SessionX, cx);
-			int length = w->end - w-> start;
 			if (!looksBinary((uchar *) w->start, length)) {
 				diagnoseAndConvert(&w->start, &w->startAllocated, &length, true, true);
 				w->end = w->start + length; // in case of realloc
