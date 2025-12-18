@@ -2727,13 +2727,16 @@ curl_header_callback(char *header_line, size_t size, size_t nmemb,
 	if (g->down_ok && g->down_state == 0 &&
 	    !(mt && g->pg_ok && mt->down_url && !mt->from_file) &&
 // text/whatever can go into the buffer
-	    strlen(g->content) > 4 && !memEqualCI(g->content, "text/", 5) &&
+	    ((strlen(g->content) > 4 && !memEqualCI(g->content, "text/", 5) &&
 // whatever+xml can go into the buffer
-	    !memEqualCI(g->content + strlen(g->content) - 4, "+xml", 4)) {
+	    !memEqualCI(g->content + strlen(g->content) - 4, "+xml", 4)) ||
+// Always offer a download if it's a large amount of data
+             g->hcl > 100000000)) {
 		g->down_state = 1;
 		g->down_msg = MSG_Down;
-		debugPrint(3, "potential download based on type %s",
-			   g->content);
+		debugPrint(3,
+                        "potential download based on type %s and size %lld",
+                        g->content, g->hcl);
 	}
 
 	return bytes_in_line;
