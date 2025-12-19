@@ -2055,36 +2055,41 @@ if(debug) alert3("}");
 return node2;
 }
 
-// an attempt at a structured clone implementation, definitely needs some work
+/* an attempt at a structured clone implementation, definitely needs some work
+Note, it should be bound into the window as it can be used within frames and so
+my$win may return the wrong window. */
 function structuredClone(obj, options)
 {
     const debug = db$flags(2);
     let dbg = () => undefined;
     if (debug) dbg = (m) => alert3("structuredClone: " + m);
-    const w = my$win();
+    // We could be copying across frames so we can't do instance checks
+    const get_type = (o) => Object.prototype.toString.call(o);
+    const is_type = (o1, o2) => get_type(o1) == get_type(o2);
+    // our nodes all have dom$class which simplifies things
+    const is_node = (o) => !!o && !!o.dom$class;
     /* Map objects to their new equivalents to prevent infinite cycles and
         preserve the reference structure
     */
-    const obj_map = new Map();
-    const transfer = new Set;
+    const obj_map = new this.Map;
+    const transfer = new this.Set;
     if (options && options.transfer) {
         for (let i = 0; i < options.transfer.length; ++i) {
             const o = options.transfer[i];
-            if(o.eb$ctx) o.eb$ctx = w.eb$ctx;
+            if(o.eb$ctx) o.eb$ctx = this.eb$ctx;
             transfer.add(o);
             // Make sure the transferred objects get referenced not cloned
             obj_map.set(o, o);
         }
     }
 
-    if (obj instanceof w.Node || typeof obj === "function")
-        throw new w.DOMException("Unsupported object type", "DataCloneError");
+    if (is_node(obj) || typeof obj === "function")
+        throw new this.DOMException("Unsupported object type", "DataCloneError");
 
-    function propertyHelper(old_obj, new_obj, key)
-    {
+    const property_helper = (old_obj, new_obj, key) => {
         dbg("handle property " + key);
         const value = old_obj[key];
-        new_obj[key] = cloneHelper(value);
+        new_obj[key] = clone_helper(value);
         // I'm not sure if this is right, should we actually delete
         if (transfer.has(value)) {
             dbg("Detach value for property" + key);
@@ -2092,9 +2097,8 @@ function structuredClone(obj, options)
         }
     }
 
-    function cloneHelper(obj)
-    {
-        const copy_types = new Set(["undefined", "string", "number", "boolean"])
+    const clone_helper = (obj) => {
+        const copy_types = new this.Set(["undefined", "string", "number", "boolean"])
         if (obj === null) {
             dbg("got null");
             return obj;
@@ -2107,7 +2111,7 @@ function structuredClone(obj, options)
             return obj;
         }
         // Unlike the initial call don't care here to simplify logic
-        if (obj instanceof w.Node) {
+        if (is_node(obj)) {
             dbg("Ignoring dom node in recursive clone");
             return;
         }
@@ -2124,46 +2128,46 @@ function structuredClone(obj, options)
         }
 
         // We care about specific array types
-        if(obj instanceof w.Array) {
-            const new_array = new w.Array;
+        if(is_type(obj, new this.Array)) {
+            const new_array = new this.Array;
             obj_map.set(obj, new_array);
             dbg("copy array with " + obj.length + " members");
             for (let i = 0; i < obj.length; ++i)
                 // preserve sparse arrays
-                if (obj[i] !== undefined) new_array[i] = cloneHelper(obj[i]);
+                if (obj[i] !== undefined) new_array[i] = clone_helper(obj[i]);
             return new_array;
         }
 
-        if (obj instanceof w.Map) {
+        if (is_type(obj, new this.Map)) {
             dbg("copy map with " + obj.size + " members");
-            const new_map = new w.Map;
+            const new_map = new this.Map;
             obj_map.set(obj, new_map);
             // Map keys can be complex types
             for (const [k, v] of obj)
-                new_map.set(cloneHelper(k), cloneHelper(v));
+                new_map.set(clone_helper(k), clone_helper(v));
             return new_map;
         }
-        if (obj instanceof w.Set) {
+        if (is_type(obj, new this.Set)) {
             dbg("copy set with " + obj.size + " members");
-            const new_set = new w.Set;
+            const new_set = new this.Set;
             obj_map.set(obj, new_set);
             // Sets can contain complex types
             for (const i of obj)
-                new_set.add(cloneHelper(i));
+                new_set.add(clone_helper(i));
             return new_set;
         }
 
         // Technically we should do more checking but just assume object for now
         dbg("Copy object");
-        const new_obj = new w.Object;
+        const new_obj = new this.Object;
         obj_map.set(obj, new_obj);
         for (const k of Object.keys(obj)) {
             // We only have string keys here
-            propertyHelper(obj, new_obj, k);
+            property_helper(obj, new_obj, k);
         }
         return new_obj;
     }
-    return cloneHelper(obj);
+    return clone_helper(obj);
 }
 
 // Find an object in a tree of nodes being cloned.

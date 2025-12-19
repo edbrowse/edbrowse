@@ -202,7 +202,7 @@ swm("rowReindex", mw$.rowReindex)
 swm1("getComputedStyle", mw$.getComputedStyle.bind(window))
 swm("mutFixup", mw$.mutFixup)
 swm("makeSheets", mw$.makeSheets)
-swm2("structuredClone", mw$.structuredClone)
+swm2("structuredClone", mw$.structuredClone.bind(window))
 }
 
 swm("dom$class", "Window")
@@ -1367,6 +1367,12 @@ swm1("postMessage", function (message,target_origin, transfer) {
     let locstring = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
     if(!window.location.port)
         locstring += window.mw$.setDefaultPort(window.location.protocol);
+    const my_win = my$win();
+    if (!target_origin || target_origin == '/') {
+        let l = my_win.location;
+        target_origin = l.protocol + "//" + l.hostname;
+    }
+
     if(target_origin != '*' && !target_origin.match(/:\d*$/)) {
         // We need a port but don't have one
         let target_protocol = target_origin.replace(/:.*/, ":");
@@ -1379,13 +1385,13 @@ swm1("postMessage", function (message,target_origin, transfer) {
         let w = my$win();
         let l = w.location;
         me.origin = l.protocol + "//" + l.hostname;
-        me.data = message;
+        me.data = window.structuredClone(message);
         me.source = w;
         if(transfer) {
             me.ports = transfer;
             // If these objects had a context, they are now owned by this one.
             for(let i = 0; i < transfer.length; ++i)
-                if(transfer[i].eb$ctx) transfer[i].eb$ctx = eb$ctx;
+                if(transfer[i].eb$ctx) transfer[i].eb$ctx = window.eb$ctx;
         }
         window.onmessage$$queue.push(me);
         alert3("posting message of length " + message.length + " to window context " + window.eb$ctx + " ↑" +
