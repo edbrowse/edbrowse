@@ -1362,42 +1362,40 @@ if(this.height === 0  || this.width === 0) return "data:,";
 return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAADElEQVQImWNgoBMAAABpAAFEI8ARAAAAAElFTkSuQmCC";
 }
 
-swm("onmessage$$queue", [])
+swm("onmessage$$queue", []);
 swm1("postMessage", function (message,target_origin, transfer) {
-var locstring = this.location.protocol + "//" + this.location.hostname + ":" + this.location.port;
-if(!this.location.port) {
-// paste on a default port
-var standard_port = mw$.setDefaultPort(this.location.protocol);
-locstring += standard_port;
-}
-if(target_origin != '*' && !target_origin.match(/:\d*$/)) {
-// paste on a default port
-var target_protocol = target_origin.replace(/:.*/, ":");
-var standard_port = mw$.setDefaultPort(target_protocol);
-target_origin += ":" + standard_port;
-}
-if (target_origin == locstring || target_origin == "*") {
-var me = new Event;
-me.name = me.type = "message";
-var l = my$win().location;
-me.origin = l.protocol + "//" + l.hostname;
-me.data = message;
-me.source = my$win();
-if(transfer) {
-me.ports = transfer;
-// If these objects had a context, they are now owned by this context.
-for(var i = 0; i < transfer.length; ++i)
-if(transfer[i].eb$ctx) transfer[i].eb$ctx = eb$ctx;
-}
-this.onmessage$$queue.push(me);
-alert3("posting message of length " + message.length + " to window context " + this.eb$ctx + " ↑" +
-(message.length >= 200 ? "long" : message)
-+ "↑");
-} else {
-alert3("postMessage mismatch " + locstring + " | " + target_origin + " carrying ↑" +
-(message.length >= 200 ? "long" : message)
-+ "↑");
-}
+    let locstring = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
+    if(!window.location.port)
+        locstring += window.mw$.setDefaultPort(window.location.protocol);
+    if(target_origin != '*' && !target_origin.match(/:\d*$/)) {
+        // We need a port but don't have one
+        let target_protocol = target_origin.replace(/:.*/, ":");
+        let standard_port = window.mw$.setDefaultPort(target_protocol);
+        target_origin += ":" + standard_port;
+    }
+    if (target_origin == locstring || target_origin == "*") {
+        const me = new Event;
+        me.name = me.type = "message";
+        let w = my$win();
+        let l = w.location;
+        me.origin = l.protocol + "//" + l.hostname;
+        me.data = message;
+        me.source = w;
+        if(transfer) {
+            me.ports = transfer;
+            // If these objects had a context, they are now owned by this one.
+            for(let i = 0; i < transfer.length; ++i)
+                if(transfer[i].eb$ctx) transfer[i].eb$ctx = eb$ctx;
+        }
+        window.onmessage$$queue.push(me);
+        alert3("posting message of length " + message.length + " to window context " + window.eb$ctx + " ↑" +
+            (message.length >= 200 ? "long" : message)
+            + "↑");
+    } else {
+        alert3("postMessage mismatch " + locstring + " | " + target_origin + " carrying ↑" +
+            (message.length >= 200 ? "long" : message)
+            + "↑");
+    }
 })
 swm("onmessage$$running", mw$.onmessage$$running)
 
@@ -2694,27 +2692,35 @@ swm2("cssSource", [])
 sdm("xmlVersion", 0)
 
 swm("MutationObserver", function(f) {
-var w = my$win();
-w.mutList.push(this);
-this.callback = (typeof f == "function" ? f : eb$voidfunction);
-this.active = false;
-this.target = null;
+    // I'm not sure why this needs to care about the window but ok
+    this.observed$window = my$win();
+    this.observed$window.mutList.push(this);
+    if (typeof f !== "function") throw new TypeError("not a function");
+    this.callback = f;
+    this.active = false;
+    this.target = null;
+    this.notification$queue = new this.observed$window.Array;
+    this.callback$queued = false;
 })
 spdc("MutationObserver", null)
 MutationObserver.prototype.disconnect = function() { this.active = false; }
 MutationObserver.prototype.observe = function(target, cfg) {
-if(typeof target != "object" || typeof cfg != "object" || !target.nodeType || target.nodeType != 1) {
-this.active = false;
-return;
+    if(typeof target != "object" || typeof cfg != "object" || !target.nodeType || target.nodeType != 1) {
+        this.active = false;
+        return;
+    }
+    this.target = target;
+    this.attr = this.kids = this.subtree = false;
+    if(cfg.attributes$2) this.attr = true;
+    if(cfg.childList) this.kids = true;
+    if(cfg.subtree) this.subtree = true;
+    this.active = true;
 }
-this.target = target;
-this.attr = this.kids = this.subtree = false;
-if(cfg.attributes$2) this.attr = true;
-if(cfg.childList) this.kids = true;
-if(cfg.subtree) this.subtree = true;
-this.active = true;
+MutationObserver.prototype.takeRecords = function() {
+    const ret = this.observed$window.structuredClone(this.notification$queue)
+    this.notification$queue.length = 0;
+    return ret;
 }
-MutationObserver.prototype.takeRecords = function() { return []}
 
 swm("MutationRecord", function(){})
 spdc("MutationRecord", null)

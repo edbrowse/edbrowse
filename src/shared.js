@@ -1009,11 +1009,19 @@ return a;
 /*********************************************************************
 I'm going to call Fixup from appendChild, removeChild, setAttribute,
 anything that changes something we might be observing.
-We map observers to arrays of records, one record per mutation. I'm not sure
-if we should combine further. Then, once we've everything we queue up the
-microtasks as microtasks rather than promises as, per research, they're
-supposed to be microtasks (implementation issues of queueMicrotask asside).
- I don't think the order of queuing is essential.
+
+Gather the list of mutation records (notifications from some perspectives) in
+the observer and queue the callback if needed. Importantly the callback happens
+async to the current script but before timers etc as a microtask. This means
+that multiple calls to this function from various parts of the currently running
+script (task) will gather records. The idea is that this happens and then the
+callback fires once and handles the lot.
+
+Note that this allows (I think per the docs I've seen) us to gather a whole
+list of records and then clear them prior to the callback. Just let the
+callback run in that case because I'm not sure what else we can, or should, do.
+Same goes for disconnecting the observer (see code in startwindow).
+
 Support functions mrKids and mrList are below.
 *********************************************************************/
 
@@ -1031,47 +1039,52 @@ function mutFixup(b, isattr, y, z) {
     }
     // most of the time there are no observers, so loop over that first
     // whence this function does nothing and doesn't slow things down too much.
-    /* Map observers to their records as that makes the below logic simpler
-    and I doubt there's any real performance loss in iterating the map to
-    queue things. */
 
-    observer_records = new w.map;
     for(let j = 0; j < list.length; ++j) {
         let o = list[j]; // the observer
         if(!o.active) continue;
-        let records = new w.array;
-        observer_records.set(o, records);
-        if(isattr) { // the easy case
-            if(o.attr && o.target == b) {
-                let r = new w.MutationRecord;
-                r.type = "attributes";
-                r.attributeName = y;
-                r.target = b;
-                r.oldValue = z;
-                records.push(r);
+        const record = (function() {
+            const r = new o.observed$window.MutationRecord;
+            if(isattr) { // the easy case
+                if(o.attr && o.target == b) {
+                    r.type = "attributes";
+                    r.attributeName = y;
+                    r.target = b;
+                    r.oldValue = z;
+                    return r;
+                }
+                return;
             }
-            continue;
-        }
-        // ok a child of b has changed
-        if(o.kids && o.target == b) {
-            let r = new w.MutationRecord;
-            mrKids(r, b, y, z);
-            records.push(r);
-            continue;
-        }
-        if(!o.subtree) continue;
-        // climb up the tree
-        for(let t = b; t && t.nodeType == 1; t = t.parentNode) {
-            if(o.subtree && o.target == t) {
-                r = new MutationRecord;
+            // ok a child of b has changed
+            if(o.kids && o.target == b) {
                 mrKids(r, b, y, z);
-                records.push(r);
-                break;
+                return r;
+            }
+            if(!o.subtree) return;
+            // climb up the tree
+            for(let t = b; t && t.nodeType == 1; t = t.parentNode) {
+                if(o.subtree && o.target == t) {
+                    mrKids(r, b, y, z);
+                    return r;
+                }
+            }
+        })();
+        if (record) {
+            w.alert3(`mutFixup: notification pushed ${notification}`);
+            o.notification$queue.push(record);
+            if (!o.callback$queued) {
+                o.observed$window.queueMicrotask(
+                    () => {
+                        o.callback$queued = false;
+                        o.callback(o.notification$queue, o);
+                        o.notification$queue.length = 0;
+                    }
+                );
+                o.callback$queued = true;
+                w.alert3("mutFixup: callback queued");
             }
         }
     }
-    for (let [o,r] of observer_records)
-        w.queueMicrotask(() => o.callback(r, o));
 }
 
 // support functions for mutation records
