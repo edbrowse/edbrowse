@@ -2774,6 +2774,23 @@ Object.defineProperty(AbortController.prototype, "signal",
 AbortController.prototype.abort = function(){
 alert3("abort dom request not implemented"); }
 
+/* quickjs-ng has a native implementation of queueMicrotask but quickjs
+doesn't currently */
+if (!window.queueMicrotask) {
+    alert3("Using fallback for queueMicrotask");
+    swm1("queueMicrotask", function(f) {
+        if (typeof f !== "function") throw new TypeError("not a function");
+/* Per the spec we need to wait until after the caller's executed but before
+timers. This means we need to simulate with promises but the error handling
+isn't quite right as I can't find a way to rethrow outside the promise chain.
+This is simple and closer to the spec than we have been but better is to use the
+implementation provided by quickjs-ng. */
+        Promise.resolve().then(f).catch(
+            (e) => alert3("Error in microtask: " + e)
+        );
+    });
+}
+
 swm("IntersectionObserverEntry", function(){})
 swm("IntersectionObserver", function(callback, o){
 this.callback = callback, this.root = null;
@@ -2821,7 +2838,7 @@ e.boundingClientRect = this.root ? this.root.getBoundingClientRect() : document.
 // I don't even know what these are!
 e.rootBounds = e.intersectionRect = e.boundingClientRect;
 // I guess we're ready to roll
-this.callback([e]);
+queueMicrotask(() => this.callback([e]));
 // in edbrowse the target remains visible forever, callback will never be called again.
 // We don't have to remember target or the conditions of intersection etc.
 }
@@ -2834,22 +2851,6 @@ swm("ResizeObserver", function(){})
 ResizeObserver.prototype.disconnect = eb$voidfunction;
 ResizeObserver.prototype.observe = eb$voidfunction;
 ResizeObserver.prototype.unobserve = eb$voidfunction;
-/* quickjs-ng has a native implementation of queueMicrotask but quickjs
-doesn't currently */
-if (!window.queueMicrotask) {
-    alert3("Using fallback for queueMicrotask");
-    swm1("queueMicrotask", function(f) {
-        if (typeof f !== "function") throw new TypeError("not a function");
-/* Per the spec we need to wait until after the caller's executed but before
-timers. This means we need to simulate with promises but the error handling
-isn't quite right as I can't find a way to rethrow outside the promise chain.
-This is simple and closer to the spec than we have been but better is to use the
-implementation provided by quickjs-ng. */
-        Promise.resolve().then(f).catch(
-            (e) => alert3("Error in microtask: " + e)
-        );
-    });
-}
 
 // don't need these any more
 ;(function() {
