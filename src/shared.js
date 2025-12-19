@@ -1009,66 +1009,69 @@ return a;
 /*********************************************************************
 I'm going to call Fixup from appendChild, removeChild, setAttribute,
 anything that changes something we might be observing.
-If we are indeed observing, I call the callback function right away.
-That's not how we're suppose to do it.
-I am suppose to queue up the change records, then call the callback
-function later, after this script is done, asynchronously, maybe on a timer.
-I could combine a dozen "kids have changed" records into one, to say,
-"hey, the kids have changed."
-And an attribute change record etc.
-So they are expecting an array of change records.
-I send an array of length 1, 1 record, right now.
-It's just easier.
+We map observers to arrays of records, one record per mutation. I'm not sure
+if we should combine further. Then, once we've everything we queue up the
+microtasks as microtasks rather than promises as, per research, they're
+supposed to be microtasks (implementation issues of queueMicrotask asside).
+ I don't think the order of queuing is essential.
 Support functions mrKids and mrList are below.
 *********************************************************************/
 
 function mutFixup(b, isattr, y, z) {
-var w = my$win();
-var w2; // might not be the same window as w
-var list = w.mutList;
-// frames is a live array of windows.
-// Test: a change to the tree, and the base node is rooted,
-// and the thing added or removed is a frame or an array or it has frames below.
-if(!isattr && (w2 = isRooted(b))) {
-var j = typeof y == "object" ? y : z;
-if(Array.isArray(j) || j.is$frame || (j.childNodes&&j.getElementsByTagName("iframe").length))
-frames$rebuild(w2);
-}
-// most of the time there are no observers, so loop over that first
-// whence this function does nothing and doesn't slow things down too much.
-for(var j = 0; j < list.length; ++j) {
-var o = list[j]; // the observer
-if(!o.active) continue;
-var r; // mutation record
-if(isattr) { // the easy case
-if(o.attr && o.target == b) {
-r = new w.MutationRecord;
-r.type = "attributes";
-r.attributeName = y;
-r.target = b;
-r.oldValue = z;
-o.callback([r], o);
-}
-continue;
-}
-// ok a child of b has changed
-if(o.kids && o.target == b) {
-r = new w.MutationRecord;
-mrKids(r, b, y, z);
-o.callback([r], o);
-continue;
-}
-if(!o.subtree) continue;
-// climb up the tree
-for(var t = b; t && t.nodeType == 1; t = t.parentNode) {
-if(o.subtree && o.target == t) {
-r = new w.MutationRecord;
-mrKids(r, b, y, z);
-o.callback([r], o);
-break;
-}
-}
-}
+    const w = my$win();
+    let w2; // might not be the same window as w
+    const list = w.mutList;
+    // frames is a live array of windows.
+    // Test: a change to the tree, and the base node is rooted,
+    // and the thing added or removed is a frame or an array or it has frames below.
+    if(!isattr && (w2 = isRooted(b))) {
+        const j = typeof y == "object" ? y : z;
+        if(Array.isArray(j) || j.is$frame || (j.childNodes&&j.getElementsByTagName("iframe").length))
+            frames$rebuild(w2);
+    }
+    // most of the time there are no observers, so loop over that first
+    // whence this function does nothing and doesn't slow things down too much.
+    /* Map observers to their records as that makes the below logic simpler
+    and I doubt there's any real performance loss in iterating the map to
+    queue things. */
+
+    observer_records = new w.map;
+    for(let j = 0; j < list.length; ++j) {
+        let o = list[j]; // the observer
+        if(!o.active) continue;
+        let records = new w.array;
+        observer_records.set(o, records);
+        if(isattr) { // the easy case
+            if(o.attr && o.target == b) {
+                let r = new w.MutationRecord;
+                r.type = "attributes";
+                r.attributeName = y;
+                r.target = b;
+                r.oldValue = z;
+                records.push(r);
+            }
+            continue;
+        }
+        // ok a child of b has changed
+        if(o.kids && o.target == b) {
+            let r = new w.MutationRecord;
+            mrKids(r, b, y, z);
+            records.push(r);
+            continue;
+        }
+        if(!o.subtree) continue;
+        // climb up the tree
+        for(let t = b; t && t.nodeType == 1; t = t.parentNode) {
+            if(o.subtree && o.target == t) {
+                r = new MutationRecord;
+                mrKids(r, b, y, z);
+                records.push(r);
+                break;
+            }
+        }
+    }
+    for (let [o,r] of observer_records)
+        w.queueMicrotask(() => o.callback(r, o));
 }
 
 // support functions for mutation records
