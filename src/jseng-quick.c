@@ -3321,6 +3321,10 @@ and if that happens, then once again we need to free the context.
 	}
 
 	res = e->job_func(ctx, e->argc, (JSValueConst *)e->argv);
+// Promise jobs never seem to return an error. That's why I didn't check for it.
+// But MicroTask jobs do. If the called function fails, we see it.
+// So I check for that.
+	if(JS_IsException(res)) processError(ctx);
 	debugPrint(3, "exec complete");
 	JS_FreeValue(ctx, res);
 	++safety;
