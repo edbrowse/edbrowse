@@ -2840,10 +2840,14 @@ if (!window.queueMicrotask) {
     alert3("Using fallback for queueMicrotask");
     swm1("queueMicrotask", function(f) {
         if (typeof f !== "function") throw new TypeError("not a function");
-/* Per the spec we need to wait until after the caller's executed so, for
-simplicity, use a timer set to 0 rather than promises. I'm not sure this is quite right but it's
-simple and closer than the old implementation without using the one provided by quickjs-ng. */
-        setTimeout(f, 0);
+/* Per the spec we need to wait until after the caller's executed but before
+timers. This means we need to simulate with promises but the error handling
+isn't quite right as I can't find a way to rethrow outside the promise chain.
+This is simple and closer to the spec than we have been but better is to use the
+implementation provided by quickjs-ng. */
+        Promise.resolve().then(f).catch(
+            (e) => alert3("Error in microtask: " + e)
+        );
     });
 }
 
