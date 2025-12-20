@@ -292,13 +292,20 @@ b.innerText = "Why don't you write me I'm out in the jungle I'm hungry to hear y
 
 <H1 onload="onlv+=16"> jsrt </H1>
 
-<!-- this doesn't work any more, maybe a different ftp site that always works.
-ftp test
-<A href=ftp://rpmfind.net/linux/fedora/linux/releases/21/Everything/i386/os/Packages/y>
-y directory</A>
-<A href=ftp://rpmfind.net/linux/fedora/linux/releases/21/Everything/i386/os/Packages/y/yecht-0.0.2-11.fc21.noarch.rpm>
-yecht package</A>
--->
+<a href="ftp://ftp.netbsd.org/">NetBsd FTP site</a>
+<form>
+<script>
+function gopherJump()
+{
+    alert("Jumping to gopherspace in 5 seconds");
+    setTimeout(() => window.location.href = "gopher://gopher.floodgap.com/1/", 5000);
+}
+</script>
+<button onclick="gopherJump()">Jump to gopherspace</button>
+<button onclick="xhrTest">XHR test</button>
+<button onclick="awaitTest()">Await test</button>
+<button onclick="awaitFetchTest">Await fetch test</button>
+</form>
 
 <!-- if I have an onload function, that forces the frame to expand,
 and I don't want it to expand every time, so I call it zonload.
@@ -695,6 +702,7 @@ function formLoad(name) {
 onlv += 4;
 var t = document.createTextNode("Created Text");
 document.body.appendChild(t);
+document.body.appendChild(document.createElement("br"));
 var s = document.createElement("script");
 s.text = "lastScript()";
 document.body.appendChild(s);
@@ -706,6 +714,17 @@ var onlv = 64;
 
 /* last script to run automatically; loaded by the form.onload function */
 function lastScript() {
+/* Queue some text to appear after all current macrotasks have ran. Note the
+order of microtasks is guaranteed but the only timing guarantee here is that
+they run when all current macrotasks have completed and before timers. */
+let microtask_count = 0;
+let microtask_cb = () => {
+    ++microtask_count;
+    const p = document.createElement("p");
+    p.appendChild(document.createTextNode(`microtask ${microtask_count}`));
+    document.body.appendChild(p);
+}
+for (let i=0; i < 3; ++i) queueMicrotask(microtask_cb);
 document.writeln(" Last Script");
 if(onlv != 93) fail(1000);
 }
