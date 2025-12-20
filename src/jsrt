@@ -514,7 +514,9 @@ We'll get back to you if we like what you have to say.</textarea>
 <div id=album>
 </div
 >
-<DIV id=sphere>Surface area is 4&#960;r<span class=sup>2</span>.</DIV>
+<DIV id=sphere>Surface area is 4&#960;r<span class=sup>2</span>.
+<span id=spanc><span id=spanb>b <span id=spana>a</span> b</span> outside</span>
+</DIV>
 <input type=button name=b value=calc onclick=calc(this.form)>
 <input type='text' readonly name='result' size='4'>
 <input type=button name=rw value=rewrite onclick=newwords()>
@@ -526,6 +528,11 @@ onclick="alert('rock and ½ roll')">
 <DIV id=tag_with_data_attribute data-dog-food=abc></DIV>
 
 <script type=text/javascript language=JavaScript>
+// set up for nested spans with onclick handlers
+document.getElementById("spana").addEventListener("click", ()=>alert("a"));
+document.getElementById("spanb").addEventListener("click", ()=>alert("b"));
+document.getElementById("spanc").addEventListener("click", ()=>alert("c"), {capture:true});
+
 // I'll push the button for you
 document.forms[1].b.onclick();
 if(document.forms[1].result.value != 89) fail(85);
@@ -584,7 +591,7 @@ if(document.getElementById("almond") != document.spans[0]) fail(111);
 if(document.getElementById("pecan") != document.tables[0].rows[1]) fail(112);
 if(document.getElementById("pecan").parentNode.parentNode.class != "filbert") fail(115);
 if(document.all.tags("FORM")[1] != document.forms[1]) fail(113);
-if(document.all.tags("span").length != 2) fail(114);
+if(document.all.tags("span").length != 5) fail(114);
 
 n = 0;
 a = [29,31,37];
