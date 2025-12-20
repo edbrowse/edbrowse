@@ -541,53 +541,90 @@ return false;
 }
 
 function dispatchEvent (e) {
-if(db$flags(1)) alert3("dispatch " + this.nodeName + " tag " + (this.eb$seqno >= 0 ? this.eb$seqno:"?") + " " + e.type);
-e.target = this;
-var t = this;
-var pathway = [];
-while(t) {
-pathway.push(t);
-if(t.nodeType == 9) break; // don't go past document up to a higher frame
-t=t.parentNode;
+    let dbg = () => undefined;
+    let l = -1;
+    let t = this;
+    /* This isn't all necessary with modern events (see eb$listen) but it
+    saves duplicating a bunch of code */
+
+    const runEventHandler = (f, e, t) => {
+        e.currentTarget = t;
+        let r = f.call(t, e);
+        /* I think I'm doing the boolean check correctly here per the HTML 5 and
+        web IDL specs */
+        r = (r) => (r !== undefined && typeof r !== "string") ? !!r : undefined;
+        // No I don't know why mouseover events get special handling either
+        // We can always cancel events in the case of a return code... I think
+        const special = e.type === "error" || e.type === "mouseover";
+        e.cancelled = e.cancelled || ((!special && !r) || (special && r));
+    }
+
+    if(db$flags(1))
+        dbg = (m) => {
+            const phase = (l != -1) ? (l ? "capture" : "current") : "dispatch";
+            alert3(`dispatchEvent [${t.nodeName}.${e.type} ${phase}]: ${m}`);
+        };
+
+    dbg(`tag ${(this.eb$seqno >= 0 ? this.eb$seqno : "?")}`);
+    if(e.cancelled) {
+        dbg("event cancelled");
+        return !e.defaultPrevented;
+    }
+
+    e.target = this;
+    const pathway = [];
+    while(t) {
+        pathway.push(t);
+        // don't go past document up to a higher frame
+        if(t.nodeType == 9) break;
+        t=t.parentNode;
+    }
+
+    // Capture phase: outer to inner elements
+    e.eventPhase = 1;
+    for(l = pathway.length - 1; l > 0; --l) {
+        t = pathway[l];
+        // Event handlers may choose to cancel events.
+        // Display debug for the node receiving the event in this case.
+        if(e.cancelled) {
+            dbg("event cancelled");
+            return !e.defaultPrevented;
+        }
+        // Attribute based event handlers don't ever capture
+        const fn = t[`on${e.type}$$fn`];
+        if(typeof fn === "function") {
+            dbg("fire handlers");
+            runEventHandler(fn, e, t);
+        }
+    }
+
+    // Bubble phase, inner to outer. Also includes target phase.
+    for(l = 0; l < pathway.length; ++l) {
+        t = pathway[l];
+        if(e.cancelled) {
+            dbg("event cancelled");
+            return !e.defaultPrevented;
+        }
+        e.eventPhase = l ? 3 : 2;
+        if(l && !e.bubbles) {
+            dbg("not bubbling");
+            return !e.defaultPrevented;
+        }
+        // Most event handlers including inline bubble and all run on target
+        const inline = `on$(e.type}`;
+        const handlers = `${inline}$$fn`;
+        const inline_fn = t[inline];
+        const handlers_fn = t[handlers];
+        if(typeof handlers_fn === "function") {
+            dbg("fires handlers");
+            runEventHandler(handlers_fn,  e, t);
+        } else if (typeof inline_fn === "function") {
+            dbg("fires assigned");
+            runEventHandler(inline_fn, e, t);
+        }
+    }
+    return !e.defaultPrevented;
 }
-var l = pathway.length;
-while(l) {
-t = pathway[--l];
-e.eventPhase = (l?1:2); // capture or current target
-var fn1 = "on" + e.type;
-var fn2 = fn1 + "$$fn";
-if(typeof t[fn2] == "function") {
-if(db$flags(1)) alert3((l?"capture ":"current ") + t.nodeName + "." + e.type);
-e.currentTarget = t;
-var r = t[fn2](e);
-if((typeof r == "boolean" || typeof r == "number") && !r) return false;
-if(e.cancelled) return !e.defaultPrevented;
-} else if(typeof t[fn1] == "function") {
-if(db$flags(1)) alert3((l?"capture ":"current ") + t.nodeName + "." + e.type);
-e.currentTarget = t;
-if(db$flags(1)) alert3("fire assigned");
-var r = t[fn1](e);
-if(db$flags(1)) alert3("endfire assigned");
-if((typeof r == "boolean" || typeof r == "number") && !r) return false;
-if(e.cancelled) return !e.defaultPrevented;
-}
-}
-if(!e.bubbles) return !e.defaultPrevented;
-++l; // step up from the target
-while(l < pathway.length) {
-t = pathway[l++];
-e.eventPhase = 3;
-var fn2 = "on" + e.type + "$$fn";
-if(typeof t[fn2] == "function") {
-if(db$flags(1)) alert3("bubble " + t.nodeName + "." + e.type);
-e.currentTarget = t;
-var r = t[fn2](e);
-if((typeof r == "boolean" || typeof r == "number") && !r) return false;
-if(e.cancelled) return !e.defaultPrevented;
-}
-}
-return !e.defaultPrevented;
-};
 
 /*********************************************************************
 This is our addEventListener function.
