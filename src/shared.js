@@ -542,8 +542,8 @@ return false;
 
 function dispatchEvent (e) {
     let dbg = () => undefined;
-    let l = -1;
     let t = this;
+    e.eventPhase = 0;
     /* This isn't all necessary with modern events (see eb$listen) but it
     saves duplicating a bunch of code */
 
@@ -561,8 +561,8 @@ function dispatchEvent (e) {
 
     if(db$flags(1))
         dbg = (m) => {
-            const phase = (l != -1) ? (l ? "capture" : "current") : "dispatch";
-            alert3(`dispatchEvent [${t.nodeName}.${e.type} ${phase}]: ${m}`);
+            const phases = ["dispatch", "capture", "current", "bubble"];
+            alert3(`dispatchEvent ${t.nodeName}.${e.type} ${phases[e.eventPhase]}: ${m}`);
         };
 
     dbg(`tag ${(this.eb$seqno >= 0 ? this.eb$seqno : "?")}`);
@@ -582,7 +582,7 @@ function dispatchEvent (e) {
 
     // Capture phase: outer to inner elements
     e.eventPhase = 1;
-    for(l = pathway.length - 1; l > 0; --l) {
+    for(let l = pathway.length - 1; l > 0; --l) {
         t = pathway[l];
         // Event handlers may choose to cancel events.
         // Display debug for the node receiving the event in this case.
@@ -592,14 +592,14 @@ function dispatchEvent (e) {
         }
         // Attribute based event handlers don't ever capture
         const fn = t[`on${e.type}$$fn`];
-        if(typeof fn === "function") {
+        if(typeof fn == "function") {
             dbg("fire handlers");
             runEventHandler(fn, e, t);
         }
     }
 
     // Bubble phase, inner to outer. Also includes target phase.
-    for(l = 0; l < pathway.length; ++l) {
+    for(let l = 0; l < pathway.length; ++l) {
         t = pathway[l];
         if(e.cancelled) {
             dbg("event cancelled");
@@ -611,14 +611,14 @@ function dispatchEvent (e) {
             return !e.defaultPrevented;
         }
         // Most event handlers including inline bubble and all run on target
-        const inline = `on$(e.type}`;
+        const inline = `on${e.type}`;
         const handlers = `${inline}$$fn`;
         const inline_fn = t[inline];
         const handlers_fn = t[handlers];
-        if(typeof handlers_fn === "function") {
+        if(typeof handlers_fn == "function") {
             dbg("fires handlers");
             runEventHandler(handlers_fn,  e, t);
-        } else if (typeof inline_fn === "function") {
+        } else if (typeof inline_fn == "function") {
             dbg("fires assigned");
             runEventHandler(inline_fn, e, t);
         }
