@@ -5769,6 +5769,20 @@ et_go:
 		return true;
 	}
 
+	if (stringEqual(line, "displace")) {
+		displaceFiles ^= 1;
+		if (helpMessagesOn || debugLevel >= 1)
+			i_puts(displaceFiles + MSG_DisplaceOff);
+		return true;
+	}
+
+	if (stringEqual(line, "displace+") || stringEqual(line, "displace-")) {
+		displaceFiles = (line[8] == '+');
+		if (helpMessagesOn)
+			i_puts(displaceFiles + MSG_DisplaceOff);
+		return true;
+	}
+
 	if (stringEqual(line, "dno")) {
 		dno ^= 1;
 		if (helpMessagesOn || debugLevel >= 1)

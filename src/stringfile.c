@@ -26,6 +26,7 @@ char *downDir, *down_prefile, *home;
 bool endMarks;		// ^ $ on listed lines
 uchar dirWrite;		// directories read write
 bool dno; // directory names only
+bool displaceFiles; // when moving or copying to another directory
 char *recycleBin;
 uchar ls_sort;		// sort method for directory listing
 bool ls_reverse;		// reverse sort
