@@ -164,10 +164,11 @@ You should get something like this; if you do then all is well.
 relative
 body loading
 complete
-688
+774
+lines 36 through 41 have been added
 	[after a delay of 30 seconds]
 30 seconds have passed!
-lines 31 through 32 have been added
+lines 42 through 43 have been added
 
 Type ,p to see the page, if you wish, as though it were ed.
 Type q to exit.

@@ -278,7 +278,7 @@ alert("You cant go over Limit of 2000 Characters!");
     }
 
 function newwords() {
-var b = document.forms[0].body;
+var b = document.forms[1].body;
 b.innerText = "Why don't you write me I'm out in the jungle I'm hungry to hear you.\nSend me a card I am waiting so hard to be near you.\n";
 }
 
@@ -302,9 +302,9 @@ function gopherJump()
 }
 </script>
 <button onclick="gopherJump()">Jump to gopherspace</button>
-<button onclick="xhrTest">XHR test</button>
+<button onclick="xhrTest()">XHR test</button>
 <button onclick="awaitTest()">Await test</button>
-<button onclick="awaitFetchTest">Await fetch test</button>
+<button onclick="awaitFetchTest()">Await fetch test</button>
 </form>
 
 <!-- if I have an onload function, that forces the frame to expand,
@@ -333,7 +333,7 @@ onload=formLoad(this.name) onunload=formUnload(this.name)>
 </script>
 
 <script language=JavaScript type=text/javascript>
-function catdog(item) { alert('fluffy'); if(item.checked&&document.forms[0].dog.checked) alert('chased by dog'); }
+function catdog(item) { alert('fluffy'); if(item.checked&&document.forms[1].dog.checked) alert('chased by dog'); }
 
 // Let javascript generate another javascript tag
 document.writeln("<script language=JavaScript>document.writeln('Nested Script ');<" + "/script>");
@@ -527,12 +527,12 @@ onclick="alert('rock and ½ roll')">
 
 <script type=text/javascript language=JavaScript>
 // I'll push the button for you
-document.forms[0].b.onclick();
-if(document.forms[0].result.value != 89) fail(85);
-if(document.forms[0].who.value != "eklhad") fail(86);
-if(document.forms[0].elements[1].value != "secret") fail(87);
+document.forms[1].b.onclick();
+if(document.forms[1].result.value != 89) fail(85);
+if(document.forms[1].who.value != "eklhad") fail(86);
+if(document.forms[1].elements[1].value != "secret") fail(87);
 
-document.onchange = function(e) { if(e.target == document.forms[0].cat) alert("dude you clicked on cat");}
+document.onchange = function(e) { if(e.target == document.forms[1].cat) alert("dude you clicked on cat");}
 
 // prototype objects, use the Circle model
 Circle.prototype.q = 97;
@@ -565,7 +565,7 @@ a.firstLast();
 if(a.join('zz') != "25zz21zz17") fail(97);
 
 // check some of the element tags
-with(document.forms[0]) {
+with(document.forms[1]) {
 if(!(dog.checked && dog.defaultChecked)) fail(100);
 if(cat.checked || cat.defaultChecked) fail(101);
 if(dog.type != "checkbox" || money.type != "radio" || money.length != 4) fail(102);
@@ -583,7 +583,7 @@ if(document.getElementById("almond") != document.spans[0]) fail(111);
 // I'm not sure of any of this table row stuff
 if(document.getElementById("pecan") != document.tables[0].rows[1]) fail(112);
 if(document.getElementById("pecan").parentNode.parentNode.class != "filbert") fail(115);
-if(document.all.tags("FORM")[0] != document.forms[0]) fail(113);
+if(document.all.tags("FORM")[1] != document.forms[1]) fail(113);
 if(document.all.tags("span").length != 2) fail(114);
 
 n = 0;
@@ -595,7 +595,7 @@ n += (j*1+2)*a[j];
 if(n != 299) fail(119);
 
 /* inline object */
-var ilo = {a:document.forms[0], b:9+5*3};
+var ilo = {a:document.forms[1], b:9+5*3};
 if(typeof ilo.a != "object") fail(120);
 if(ilo.b != 24) fail(121);
 if(ilo.a.who.value != "eklhad") fail(122);
@@ -638,7 +638,7 @@ if(document.head.id != "boom") fail(142);
 if(document.getElementsByTagName("head")[0].id != "boom") fail(143);
 
 function submitFunction(me) {
-if(document.forms[0] != me) fail(123);
+if(document.forms[1] != me) fail(123);
 if(me.subject.validity.valueMissing) { alert("subject is missing"); return false; }
 var where = prompt("Enter m for mail, w for web, a to autosubmit, x to abort.", "x");
 me.action =
@@ -838,7 +838,7 @@ fail(160);
 test_removeListener();
 
 // This comes after the original onsubmit function
-document.forms[0].addEventListener("submit", function(e) { alert("submit phase "+e.eventPhase);});
+document.forms[1].addEventListener("submit", function(e) { alert("submit phase "+e.eventPhase);});
 
 // xhrTest() succeeds even if allowXHR is off, which is weird.
 // Not that I want it to fail if allowXHR is off either. IDK
