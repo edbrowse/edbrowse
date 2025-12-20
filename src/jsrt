@@ -515,7 +515,7 @@ We'll get back to you if we like what you have to say.</textarea>
 </div
 >
 <DIV id=sphere>Surface area is 4&#960;r<span class=sup>2</span>.
-<span id=spanc><span id=spanb>b <span id=spana>a</span> b</span> outside</span>
+<span id=spanc><span id=spanb>b <span id=spana>a</span> b</span> capture</span>
 </DIV>
 <input type=button name=b value=calc onclick=calc(this.form)>
 <input type='text' readonly name='result' size='4'>
@@ -531,6 +531,7 @@ onclick="alert('rock and ½ roll')">
 // set up for nested spans with onclick handlers
 document.getElementById("spana").addEventListener("click", ()=>alert("a"));
 document.getElementById("spanb").addEventListener("click", ()=>alert("b"));
+document.getElementById("spanc").addEventListener("click", ()=>alert("first click"), {capture:true,once:true});
 document.getElementById("spanc").addEventListener("click", ()=>alert("c"), {capture:true});
 
 // I'll push the button for you
