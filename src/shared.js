@@ -573,11 +573,22 @@ function dispatchEvent (e) {
 
     e.target = this;
     const pathway = [];
-    while(t) {
-        pathway.push(t);
-        // don't go past document up to a higher frame
-        if(t.nodeType == 9) break;
-        t=t.parentNode;
+    if (this.nodeType !== undefined) {
+        while(t) {
+            pathway.push(t);
+            // don't go past document up to a higher frame
+            if(t.nodeType == 9) break;
+            t = t.parentNode;
+        }
+        /* Allow events to bubble up to the window. We need to use defaultView
+        from the document object (which we should be looking at) because we may
+        be in a frame but dispatchEvent is running in the main window and we
+        want to stop bubbling at the frame boundary not the window returned by
+        my$win(). */
+        pathway.push(t.defaultView);
+    } else {
+        // no node type so assume it's a window or similar, just a target
+        pathway.push(this);
     }
 
     // Capture phase: outer to inner elements
