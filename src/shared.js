@@ -699,10 +699,13 @@ eval(
 'if(h.do$once) { alert3("once"); this.removeEventListener(e.type, h, h.do$capture); } ' +
 'if((typeof rc == "boolean" || typeof rc == "number") && !rc) return false; ' +
 'i = -1; } return true; };');
-
+// Preserve the order in which handlers are registered
 this[evarray] = [];
 }
-
+/* Duplicate handlers are allowed and are sometimes deliberately used although
+they're generally not recommended. It's also really hard to reliably deduplicate
+handlers these days with modern coding practices. As such I'm not sure what
+other sanity checks we can or should do which won't break things. */
 this[evarray].push(handler);
 }
 
