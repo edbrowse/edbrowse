@@ -552,7 +552,7 @@ function dispatchEvent (e) {
         let r = f.call(t, e);
         /* I think I'm doing the boolean check correctly here per the HTML 5 and
         web IDL specs */
-        r = (r) => (r !== undefined && typeof r !== "string") ? !!r : undefined;
+        r = (r !== undefined && typeof r !== "string") ? !!r : undefined;
         // No I don't know why mouseover events get special handling either
         // We can always cancel events in the case of a return code... I think
         const special = e.type === "error" || e.type === "mouseover";
