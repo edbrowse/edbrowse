@@ -2106,6 +2106,7 @@ bool moveFiles(int start, int end, int dest, char origcmd, char relative)
 	Window *cw1 = cw, *cw2 = 0, *w;
 	char *path1, *path2;
 	int ln, cnt, dol;
+	bool fileExists = false;
 
 	if (!dirWrite) {
 		setError(MSG_DirNoWrite);
@@ -2185,10 +2186,18 @@ bool moveFiles(int start, int end, int dest, char origcmd, char relative)
 		}
 
 		if (!access(path2, 0)) {
-			setError(MSG_DestFileExists, path2);
-			free(file);
-			free(path1);
-			return false;
+			if(!displaceFiles) {
+				setError(MSG_DestFileExists, path2);
+				free(file);
+				free(path1);
+				return false;
+			}
+			if(!delFile(file, path2)) {
+				free(file);
+				free(path1);
+				return false;
+			}
+			fileExists = true;
 		}
 
 		if(tolower(origcmd) == 'l') {
@@ -2284,11 +2293,12 @@ moved:
 		if(origcmd == 'm')
 			delText(ln, ln);
 		else
-			cw->dot = ln;
-// add it to the other directory
-		*t++ = '\n';
+			cw->dot = ln++;
+// add it to the other directory, if we didn't displace
+		if(fileExists) { free(file); continue; }
 		cw = cw2;
 		dol = cw->dol;
+		*t++ = '\n';
 		addTextToBuffer((pst)file, t-file, dol, false);
 		free(file);
 		cw->dot = ++dol;
@@ -2314,7 +2324,6 @@ moved:
 			cw->r_map[dol].text = (uchar*)emptyString;
 		}
 		cw = cw1; // go back to original window
-		if(origcmd != 'm') cw->dot = ln++;
 	}
 
 	return true;
