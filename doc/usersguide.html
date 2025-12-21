@@ -675,6 +675,7 @@ You don't need the @ sign here as the file is always placed at the end of the li
 <br>.m/foo : move this file to the session whose name contains the substring foo
 <br>.t3 : copy this file to the directory in session 3
 <br>.t/foo : copy this file to the session whose name contains the substring foo
+<br>displace : displace existing files when issuing a move or copy command (toggle)
 <br>.l3 : link this file to the directory in session 3
 <br>.L3 : symlink this file to the directory in session 3, not recommended unless the current directory is an absolute path
 <br>.m+2 : move this file up 2 levels in your editing history. Destination must be a directory. You don't need the @ sign here as the file is always placed at the end of the listing. Go up2 and refresh if you want it in sorted order.
@@ -2224,9 +2225,6 @@ Make sure your cleanup cron job is capable of removing directory trees, not just
 If the trash bin is on another file system,
 the file is copied, rather than moved.
 It's practically the same; though the file will have your permissions and a current time stamp.
-Directories cannot be copied in this way.
-You must copy the directory tree yourself, then delete it,
-using cp -r and rm -r.
 
 <p>
 Note that the dx command, wherein files are truly deleted, is the only way to free up space on the disk.
@@ -2246,13 +2244,19 @@ This does not move lines around like the editor; it moves the file from one sess
 The kernel rename function is used whenever possible, to preserve the underlying directory tree, ownership, permissions, or special attributes.
 This cannot be assured if the file is moved to another file system.
 The file must be copied, then deleted, giving it your ownership and the current time.
-In some cases, edbrowse may call upon /bin/mv to perform this operation.
+edbrowse may call upon /bin/mv to perform this operation.
 You can move a range of files by 'a,'bm5, or files matching a regular expression by g/re/ .m5.
 
 <p>
+If the destination file already exists, edbrowse stops and prints an error.
+However, if the displace flag is set, e.g. displace+,
+then the destination file is removed first, or moved to your recycle bin;
+and then the designated file is moved to the second directory.
+
+<p>
 Use .t5 to copy the file to the directory in session 5.
-Small files are copied by edbrowse; large files or special files or directory trees are copied by /bin/cp.
-As with move, this will not overwrite an existing file.
+As with move, this will not overwrite an existing file,
+unless the displace flag is set.
 These move copy operations cannot be undone.
 
 <p>
