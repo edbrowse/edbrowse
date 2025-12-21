@@ -305,8 +305,32 @@ function gopherJump()
 <button onclick="xhrTest()">XHR test</button>
 <button onclick="awaitTest()">Await test</button>
 <button onclick="awaitFetchTest()">Await fetch test</button>
+<label for="watch-things">Watch for changes</label>
+<input type="checkbox" id="watch-things" name="observe" />
 </form>
+<script>
+// This'll be noisy when the box is checked
+const config = { attributes: true, childList: true, subtree: true };
+const callback = (mutationList, observer) => {
+      for (const mutation of mutationList) {
+        if (mutation.type === "childList") {
+            alert("A child node has been added or removed");
+        } else if (mutation.type === "attributes") {
+            alert(`The ${mutation.attributeName} attribute was modified.`);
+        }
+    }
+};
 
+const observer = new MutationObserver(callback);
+function observerToggle() {
+    if (this.checked)
+        observer.observe(document.body, config);
+    else
+        observer.disconnect();
+}
+
+document.getElementById("watch-things").addEventListener("click", observerToggle);
+</script>
 <!-- if I have an onload function, that forces the frame to expand,
 and I don't want it to expand every time, so I call it zonload.
 Take the z away if you want to test the onload feature. -->

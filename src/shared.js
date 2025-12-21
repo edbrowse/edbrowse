@@ -1050,9 +1050,18 @@ function mutFixup(b, isattr, y, z) {
         let o = list[j]; // the observer
         if(!o.active) continue;
         const record = (function() {
+            /* check our target: either we're the direct target or we're below an
+            observer which cares about subtrees. */
+            let target_found = o.targets.has(b);
+            // climb up the tree
+            for (let t = b; !target_found && o.subtree && t; t = t.parentNode) {
+                target_found = o.targets.has(t);
+                if (t.nodeType == 9) break; // stop at document
+            }
+            if (!target_found) return;
             const r = new o.observed$window.MutationRecord;
             if(isattr) { // the easy case
-                if(o.attr && o.target == b) {
+                if(o.attr) {
                     r.type = "attributes";
                     r.attributeName = y;
                     r.target = b;
@@ -1062,27 +1071,20 @@ function mutFixup(b, isattr, y, z) {
                 return;
             }
             // ok a child of b has changed
-            if(o.kids && o.target == b) {
+            if(o.kids) {
                 mrKids(r, b, y, z);
                 return r;
             }
-            if(!o.subtree) return;
-            // climb up the tree
-            for(let t = b; t && t.nodeType == 1; t = t.parentNode) {
-                if(o.subtree && o.target == t) {
-                    mrKids(r, b, y, z);
-                    return r;
-                }
-            }
         })();
         if (record) {
-            w.alert3(`mutFixup: notification pushed ${notification}`);
             o.notification$queue.push(record);
+            w.alert3(`mutFixup: notification pushed ${record}`);
             if (!o.callback$queued) {
                 o.observed$window.queueMicrotask(
                     () => {
                         o.callback$queued = false;
-                        o.callback(o.notification$queue, o);
+                        // Assume callback wants the observer as this for now
+                        o.callback.call(o, o.notification$queue, o);
                         o.notification$queue.length = 0;
                     }
                 );

@@ -2698,32 +2698,32 @@ swm2("cssSource", [])
 sdm("xmlVersion", 0)
 
 swm("MutationObserver", function(f) {
-    // I'm not sure why this needs to care about the window but ok
+    // We need to know what window we're in to queue the callback microtask
     this.observed$window = my$win();
-    this.observed$window.mutList.push(this);
+    window.mutList.push(this);
     if (typeof f !== "function") throw new TypeError("not a function");
     this.callback = f;
     this.active = false;
-    this.target = null;
-    this.notification$queue = new this.observed$window.Array;
+    this.targets = new Set;
+    this.notification$queue = [];
     this.callback$queued = false;
 })
 spdc("MutationObserver", null)
 MutationObserver.prototype.disconnect = function() { this.active = false; }
 MutationObserver.prototype.observe = function(target, cfg) {
-    if(typeof target != "object" || typeof cfg != "object" || !target.nodeType || target.nodeType != 1) {
+    if(typeof target != "object" || typeof cfg != "object" || !target.nodeType) {
         this.active = false;
-        return;
+        throw new TypeError("invalid argument types");
     }
-    this.target = target;
+    this.targets.add(target);
     this.attr = this.kids = this.subtree = false;
-    if(cfg.attributes$2) this.attr = true;
+    if(cfg.attributes) this.attr = true;
     if(cfg.childList) this.kids = true;
     if(cfg.subtree) this.subtree = true;
     this.active = true;
 }
 MutationObserver.prototype.takeRecords = function() {
-    const ret = this.observed$window.structuredClone(this.notification$queue)
+    const ret = structuredClone(this.notification$queue)
     this.notification$queue.length = 0;
     return ret;
 }
