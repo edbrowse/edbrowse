@@ -1955,13 +1955,101 @@ success:
 	return true;
 }
 
+/*********************************************************************
+Delete a file or entity. This is the action of d in directory mode.
+The only time we can't unlik is when it's a directory tree;
+at that point it's easiest to call rm -rf.
+Otherwise try unlink, because we get better error messages from strerror.
+If dx is not set, we move to trash.
+Try rename first, if that doesn't fly because of different filesystems,
+then system mv, which will copy it over then delete.
+We don't move special files to trash, there isn't much point in that.
+path is resolved, either absolute, or relative to the current directory.
+*********************************************************************/
+
+static bool delFile(const char *file, const char *path)
+{
+	uchar action = dirWrite;
+// We shouldn't even be here if action is 0, readonly; check anyways
+	if(!action) return false;
+	char ftype = fileTypeByName(path, 1);
+	if(ftype != 'd' && ftype != 'f') // special file
+		action = 2; // hard delete
+	char *a;
+	int j;
+	char qc = '\''; // quote character, in case we need a system call
+// check formeta chars in path
+	if(strchr(path, qc)) {
+		qc = '"';
+		if(strpbrk(path, "\"$`"))
+// We can't easily turn this into a shell command.
+			qc = 0;
+	}
+// \\ would get squashed by the shell
+	if(strstr(path, "\\\\"))
+		qc = 0;
+// \ at the end escapes "
+	if(path[0] && path[strlen(path) - 1] == '\\' && qc == '"')
+		qc = 0;
+
+	if (action == 2 && ftype == 'd') {
+// delete a directory tree
+		if(!qc) {
+			setError(MSG_MetaChar);
+			return false;
+		}
+		createFormattedString(&a, "rm -rf %c%s%c",
+		qc, path, qc);
+			j = system(a);
+		free(a);
+		if(j) {
+			setError(MSG_NoDirDelete);
+			return false;
+		}
+		return true;
+	}
+
+	if(action == 2) { // hard delete
+		if (unlink(path)) {
+			setError(MSG_NoRemove, file, strerror(errno));
+			return false;
+		}
+		return true;
+	}
+
+// move to trash
+	char bin[ABSPATH];
+	sprintf(bin, "%s/%s", recycleBin, file);
+	if (!rename(path, bin))
+		return true;
+// Oops, something went wrong
+	if (errno == EXDEV) {
+// Another filesystem, let mv do the work
+		if(!qc || strchr(bin, qc) ||
+		strchr(bin, '\\')) {
+			setError(MSG_MetaChar);
+			return false;
+		}
+		createFormattedString(&a, "mv -n %c%s%c %c%s%c",
+		qc, path, qc, qc, bin, qc);
+		j = system(a);
+		free(a);
+		if(j) {
+			setError(MSG_MoveFileSystem , path);
+			return false;
+		}
+		return true;
+	}
+// some other rename error
+	setError(MSG_NoMoveToTrash, file, strerror(errno));
+	return false;
+}
+
 // Delete files from a directory as you delete lines.
 // Set dw to move them to your recycle bin.
 // Set dx to delete them outright.
 bool delFiles(int start, int end, bool withtext, char origcmd, char *cmd_p)
 {
-	int ln, j;
-
 	if (!dirWrite) {
 		setError(MSG_DirNoWrite);
 		return false;
@@ -1975,9 +2063,9 @@ bool delFiles(int start, int end, bool withtext, char origcmd, char *cmd_p)
 	if(end < start) return true;
 	*cmd_p = 'e';		// show errors
 
+	int ln;
 	for (ln = start; ln <= end; ++ln) {
-		char *file, *t, *path, *ftype, *a;
-		char qc = '\''; // quote character
+		char *file, *t, *path, *ftype;
 		file = (char *)fetchLine(ln, 0);
 		t = strchr(file, '\n');
 		if (!t)
@@ -1996,87 +2084,14 @@ abort:
 			return false;
 		}
 
-// check formeta chars in path
-		if(strchr(path, qc)) {
-			qc = '"';
-			if(strpbrk(path, "\"$"))
-// I can't easily turn this into a shell command, so just hang it.
-				qc = 0;
-		}
-		if(strstr(path, "\\\\"))
-			qc = 0;
-
 		ftype = dirSuffix2(ln, path);
 		if (dirWrite == 2 || (*ftype && strchr("@<*^|", *ftype)))
 			debugPrint(1, "%s%s ↓", file, ftype);
 		else
 			debugPrint(1, "%s%s → 🗑", file, ftype);
-
-		if (dirWrite == 2 && *ftype == '/') {
-			if(!qc) {
-				setError(MSG_MetaChar);
-				goto abort;
-			}
-			createFormattedString(&a, "rm -rf %c%s%c",
-			qc, path, qc);
-			j = system(a);
-			free(a);
-			if(!j) {
-				free(file);
-				continue;
-			} else {
-				setError(MSG_NoDirDelete);
-				goto abort;
-			}
-		}
-
-		if (dirWrite == 2 || (*ftype && strchr("@<*^|", *ftype))) {
-unlink:
-			if (unlink(path)) {
-				setError(MSG_NoRemove, file, strerror(errno));
-				goto abort;
-			}
-		} else {
-			char bin[ABSPATH];
-			sprintf(bin, "%s/%s", recycleBin, file);
-			if (rename(path, bin)) {
-				if (errno == EXDEV) {
-					char *rmbuf;
-					int rmlen;
-					if (*ftype == '/' ||
-					fileSizeByName(path) > 200000000) {
-// let mv do the work
-						if(!qc || strchr(bin, qc)) {
-							setError(MSG_MetaChar);
-							goto abort;
-						}
-						createFormattedString(&a, "mv -n %c%s%c %c%s%c",
-						qc, path, qc, qc, bin, qc);
-						j = system(a);
-						free(a);
-						if(!j) {
-							free(file);
-							continue;
-						} else {
-							setError(MSG_MoveFileSystem , path);
-							goto abort;
-						}
-					}
-					if (!fileIntoMemory    (path, &rmbuf, &rmlen, 0))
-						goto abort;
-					if (!memoryOutToFile(bin, rmbuf, rmlen)) {
-						nzFree(rmbuf);
-						goto abort;
-					}
-					nzFree(rmbuf);
-					goto unlink;
-				}
-
-// some other rename error
-				setError(MSG_NoMoveToTrash, file, strerror(errno));
-				goto abort;
-			}
-		}
+		if(!delFile(file, path))
+			goto abort;
+		free(file);
 	}
 	if(withtext) delText(start, end);
 
@@ -2197,11 +2212,14 @@ bool moveFiles(int start, int end, int dest, char origcmd, char relative)
 					char *a, qc = '\'';
 					if(strchr(path1, qc) || strchr(path2, qc)) {
 						qc = '"';
-						if(strpbrk(path1, "\"$") || strpbrk(path2, "\"$"))
-// I can't easily turn this into a shell command, so just hang it.
+						if(strpbrk(path1, "\"$`") || strpbrk(path2, "\"$`"))
+// We can't easily turn this into a shell command
 							qc = 0;
 					}
 					if(strstr(path1, "\\\\") || strstr(path2, "\\\\"))
+						qc = 0;
+					if((path1[0] && path1[strlen(path1) - 1] == '\\') ||
+					(path2[0] && path2[strlen(path2) - 1] == '\\'))
 						qc = 0;
 					if(!qc) {
 						setError(MSG_MetaChar);
