@@ -1981,16 +1981,13 @@ static bool delFile(const char *file, const char *path)
 // check formeta chars in path
 	if(strchr(path, qc)) {
 		qc = '"';
-		if(strpbrk(path, "\"$`"))
-// We can't easily turn this into a shell command.
+		if(strpbrk(path, "\"$`") ||
+// \\ would get squashed by the shell
+		strstr(path, "\\\\") ||
+// \ at the end escapes "
+		(path[0] && path[strlen(path) - 1] == '\\'))
 			qc = 0;
 	}
-// \\ would get squashed by the shell
-	if(strstr(path, "\\\\"))
-		qc = 0;
-// \ at the end escapes "
-	if(path[0] && path[strlen(path) - 1] == '\\' && qc == '"')
-		qc = 0;
 
 	if (action == 2 && ftype == 'd') {
 // delete a directory tree
@@ -2026,7 +2023,7 @@ static bool delFile(const char *file, const char *path)
 	if (errno == EXDEV) {
 // Another filesystem, let mv do the work
 		if(!qc || strchr(bin, qc) ||
-		strchr(bin, '\\')) {
+		(qc == '"' && strpbrk(bin, "\\$`"))) {
 			setError(MSG_MetaChar);
 			return false;
 		}
@@ -2221,15 +2218,14 @@ bool moveFiles(int start, int end, int dest, char origcmd, char relative)
 					char *a, qc = '\'';
 					if(strchr(path1, qc) || strchr(path2, qc)) {
 						qc = '"';
-						if(strpbrk(path1, "\"$`") || strpbrk(path2, "\"$`"))
-// We can't easily turn this into a shell command
+						if(strpbrk(path1, "\"$`") ||
+						strpbrk(path2, "\"$`") ||
+						strstr(path1, "\\\\") ||
+						strstr(path2, "\\\\") ||
+						(path1[0] && path1[strlen(path1) - 1] == '\\') ||
+						(path2[0] && path2[strlen(path2) - 1] == '\\'))
 							qc = 0;
 					}
-					if(strstr(path1, "\\\\") || strstr(path2, "\\\\"))
-						qc = 0;
-					if((path1[0] && path1[strlen(path1) - 1] == '\\') ||
-					(path2[0] && path2[strlen(path2) - 1] == '\\'))
-						qc = 0;
 					if(!qc) {
 						setError(MSG_MetaChar);
 						free(file);

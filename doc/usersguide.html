@@ -2126,7 +2126,7 @@ If you edit a directory
 you will see a list of all the visible files in that directory
 in alphabetical order,
 according to your locale.
-This is the same order as /bin/ls, and is determined by the environment variable $LC_COLLATE.
+This is the same order as /bin/ls -1F, and is determined by the environment variable $LC_COLLATE.
 Set LC_COLLATE=C for traditional ascii order.
 Note: the Raspberry Pi (raspbian) seems to have a bug, wherein LC_ALL trumps LC_COLLATE. It's not supposed to but it does.
 So unset LC_ALL and set the other LC_ variables individually, according to your taste.
@@ -2160,7 +2160,7 @@ If unsure, type M.
 Note, this command works just as well with files.
 
 <p>
-Like `ls -F', a subdirectory is indicated by a trailing slash.
+Like `ls -1F', a subdirectory is indicated by a trailing slash.
 This slash is not part of the filename.
 Similarly, named pipe is indicated by |,
 symbolic link by @,
