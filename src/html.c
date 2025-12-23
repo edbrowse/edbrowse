@@ -853,8 +853,6 @@ void loadScriptData(Tag *t)
 // don't background fetch for xml, because the scripts never run
 // and we can't guarantee to complete the fetch.
 			if(cf->xmlMode) jsbg = false;
-// css is not fetched in background, yet.
-			if(!is_js) jsbg = false;
 			if(jsbg) {
 // We can't background fetch if this is under <template>
 				const Tag *u;
@@ -1384,6 +1382,7 @@ char *htmlParse(char *buf, int remote)
 		decorate();
 		set_basehref(cf->hbase);
 		if(cf->xmlMode) goto past_html_events;
+		loadFinishCSS();
 		run_function_bool_win(cf, "eb$qs$start");
 		runScriptsPending(true);
 		runOnload();

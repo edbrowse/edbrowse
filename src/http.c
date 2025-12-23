@@ -3322,6 +3322,7 @@ cdt doesn't have or need an object; it's a place holder.
 	if (cf->jslink) {
 		decorate();
 		set_basehref(cf->hbase);
+		loadFinishCSS();
 		run_function_bool_win(cf, "eb$qs$start");
 		if (jssrc)
 			jsRunScriptWin(jssrc, "frame.src", 1);
@@ -3434,6 +3435,7 @@ bool reexpandFrame(void)
 	if (cf->jslink) {
 		decorate();
 		set_basehref(cf->hbase);
+		loadFinishCSS();
 		run_function_bool_win(cf, "eb$qs$start");
 		runScriptsPending(true);
 		runOnload();
