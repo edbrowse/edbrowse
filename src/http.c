@@ -1518,6 +1518,11 @@ void *httpConnectBack2(void *ptr)
 			nzFree(g.buffer);
 // don't know why t->value would be anything
 		nzFree(t->value);
+		if(t->action == TAGACT_LINK &&
+		!cssCompatibleContent(g.content)) {
+			debugPrint(3,    "css suppressed because content type is %s",    g.content);
+			nzFree0(b);
+		}
 		t->value = b;
 	}
 	return NULL;

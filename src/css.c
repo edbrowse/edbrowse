@@ -867,12 +867,7 @@ top:
 							a = g.buffer;
 						else
 							nzFree(g.buffer);
-						if (g.content[0]
-						    && !stringEqual(g.content,
-								    "text/css")
-						    && !stringEqual(g.content,
-								    "text/plain"))
-						{
+						if (!cssCompatibleContent(g.content)) {
 							debugPrint(3,
 								   "css suppressed because content type is %s",
 								   g.content);

@@ -636,6 +636,17 @@ static void runGeneratedHtml(Tag *t, const char *h)
 	debugPrint(3, "end parse html from docwrite");
 }
 
+// acid3 test[0] says we don't process a css file if it's content type is
+// text/html. Should I test for anything outside of text/css?
+bool cssCompatibleContent(const char *s)
+{
+	if (s && *s &&
+	    !stringEqual(s, "text/css") &&
+	    !stringEqual(s, "text/plain"))
+		return false;
+	return true;
+}
+
 /*********************************************************************
 Here is a load function, to load the data for javascript or css,
 from the internet or from a local file, and possibly in a background thread.
@@ -887,13 +898,7 @@ void loadScriptData(Tag *t)
 					sourcetext = g.buffer;
 				else
 					nzFree(g.buffer);
-// acid3 test[0] says we don't process this file if it's content type is
-// text/html. Should I test for anything outside of text/css?
-// For now I insist it be missing or text/css or text/plain.
-// A similar test is performed in css.c after httpConnect.
-				if (!is_js && g.content[0]
-				    && !stringEqual(g.content, "text/css")
-				    && !stringEqual(g.content, "text/plain")) {
+				if (!is_js && !cssCompatibleContent(g.content)) {
 					debugPrint(3,
 						   "css suppressed because content type is %s",
 						   g.content);
