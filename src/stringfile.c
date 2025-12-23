@@ -2027,7 +2027,7 @@ static bool delFile(const char *file, const char *path)
 			setError(MSG_MetaChar);
 			return false;
 		}
-		createFormattedString(&a, "mv -n %c%s%c %c%s%c",
+		createFormattedString(&a, "mv %c%s%c %c%s%c",
 		qc, path, qc, qc, bin, qc);
 		j = system(a);
 		free(a);
