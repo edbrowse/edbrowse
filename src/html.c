@@ -733,14 +733,17 @@ as described earlier.
 
 void prepareScript(Tag *t)
 {
-	const char *js_file = "generated";
-	char *js_text = 0;
+	bool is_js = (t->action == TAGACT_SCRIPT);
+	const char *sourcefile = "generated";
+	char *sourcetext = 0;
 	const char *filepart;
 	char *b;
 	int blen, n;
 	Frame *f = t->f0;
+	const char *altsource, *realsource;
+	bool from_data = false;
 
-// If <script> is under <template>, and we clone it again and again,
+// If this tag is under <template>, and we clone it again and again,
 // we could be asked to prepare it again and again.
 	if((n = get_property_number_t(t, "eb$step")) > 0) {
 		t->step = n;
@@ -749,8 +752,25 @@ void prepareScript(Tag *t)
 
 	if (intFlag) goto fail;
 
+	if(!is_js) {
+// docs do not say type or rel are spilldown, but things are easier if they are.
+// See cssGather in shared.js. So I check for them as html tag attributes,
+// know they will be added by setAttribute(), and do the spilldown here.
+// This is probably not the best way - what if <link> is added dynamically.
+		const char *a1 = attribVal(t, "type");
+		const char *a2 = attribVal(t, "rel");
+		if (a1)
+			set_property_string_t(t, "type", a1);
+		if (a2)
+			set_property_string_t(t, "rel", a2);
+// invalid type - no need to fetch
+		if (!stringEqualCI(a1, "text/css") &&
+		    !stringEqualCI(a2, "stylesheet"))
+			goto fail;
+	}
+
 	if (f->fileName && !t->scriptgen)
-		js_file = f->fileName;
+		sourcefile = f->fileName;
 
 	if (!t->href && t->jslink) {
 // js might have set the source url.
@@ -765,11 +785,12 @@ void prepareScript(Tag *t)
 	}
 
 	if (t->href) {		/* fetch the javascript page */
-		const char *altsource = 0, *realsource = 0;
-		bool from_data;
-		if (!javaOK(t->href))
-			goto fail;
-		from_data = isDataURI(t->href);
+		altsource = realsource = 0;
+		if(is_js) {
+			if (!javaOK(t->href))
+				goto fail;
+			from_data = isDataURI(t->href);
+		}
 		if (!from_data) {
 			altsource = fetchReplace(t->href);
 			realsource = (altsource ? altsource : t->href);
@@ -780,8 +801,8 @@ void prepareScript(Tag *t)
 			char *mediatype;
 			int data_l = 0;
 			if (parseDataURI(t->href, &mediatype,
-					 &js_text, &data_l)) {
-				prepareForBrowse(js_text, data_l);
+					 &sourcetext, &data_l)) {
+				prepareForBrowse(sourcetext, data_l);
 				nzFree(mediatype);
 			} else {
 				debugPrint(3,
@@ -797,9 +818,9 @@ void prepareScript(Tag *t)
 				nzFree(h);
 				goto fail;
 			}
-			js_text = force_utf8(b, blen);
-			if (!js_text)
-				js_text = b;
+			sourcetext = force_utf8(b, blen);
+			if (!sourcetext)
+				sourcetext = b;
 			else
 				nzFree(b);
 			nzFree(h);
@@ -835,8 +856,8 @@ void prepareScript(Tag *t)
 					       httpConnectBack2, (void *)t)) {
 				t->threadcreated = true;
 				t->js_ln = 1;
-				js_file = realsource;
-				filepart = getFileURL(js_file, true);
+				sourcefile = realsource;
+				filepart = getFileURL(sourcefile, true);
 				t->js_file = cloneString(filepart);
 // stop here and wait for the child process to download
 				t->step = 3;
@@ -854,9 +875,9 @@ void prepareScript(Tag *t)
 			nzFree(g.cfn);
 			nzFree(g.referrer);
 			if (g.code == 200) {
-				js_text = force_utf8(g.buffer, g.length);
-				if (!js_text)
-					js_text = g.buffer;
+				sourcetext = force_utf8(g.buffer, g.length);
+				if (!sourcetext)
+					sourcetext = g.buffer;
 				else
 					nzFree(g.buffer);
 			} else {
@@ -867,22 +888,22 @@ void prepareScript(Tag *t)
 			}
 		}
 		t->js_ln = 1;
-		js_file = (!from_data ? realsource : "data_URI");
+		sourcefile = (!from_data ? realsource : "data_URI");
 	} else {
-		js_text = t->textval;
+		sourcetext = t->textval;
 		t->textval = 0;
 	}
 
-	if (!js_text) {
-// we can only run if javascript has supplied the code forr this scrip,
-// because we have none to offer.
-// Such code cannot be deminimized.
+	if (!sourcetext) {
+// No text from the html, nor fetched from the internet.
+// But it may be supplied by javascript, so step ahead, as if loaded.
+// Note that this text cannot be deminimized.
 		goto success;
 	}
-	set_property_string_t(t, "text", js_text);
-	nzFree(js_text);
+	set_property_string_t(t, "text", sourcetext);
+	nzFree(sourcetext);
 
-	filepart = getFileURL(js_file, true);
+	filepart = getFileURL(sourcefile, true);
 	t->js_file = cloneString(filepart);
 
 // deminimize the code if we're debugging.
@@ -1020,7 +1041,7 @@ bool isRooted(const Tag *t)
 void runScriptsPending(bool startbrowse)
 {
 	Tag *t;
-	char *js_file;
+	char *sourcefile;
 	const char *a;
 	int ln, n;
 	bool change, async;
@@ -1153,17 +1174,15 @@ I will disconnect here, and also check for inxhr in runOnload().
 		}
 		cnzFree(a);
 
-		js_file = t->js_file;
-		if (!js_file)
-			js_file = "generated";
+		sourcefile = t->js_file;
+		if (!sourcefile) sourcefile = "generated";
+		ln = t->js_ln;
+		if (!ln) ln = 1;
 		if (cf != save_cf)
 			debugPrint(4, "running script at a lower frame %s",
-				   js_file);
-		ln = t->js_ln;
-		if (!ln)
-			ln = 1;
-		debugPrint(3, "exec %s at %d", js_file, ln);
-		jsRunData(t, js_file, ln);
+				   sourcefile);
+		debugPrint(3, "exec %s at %d", sourcefile, ln);
+		jsRunData(t, sourcefile, ln);
 		debugPrint(3, "exec complete");
 
 afterscript:
@@ -4137,22 +4156,19 @@ We need to fix this someday, though it is a very rare corner case.
 			}
 		}
 		if (t->step == 4 && t->action == TAGACT_SCRIPT) {
-			char *js_file = t->js_file;
+			char *sourcefile = t->js_file;
 			int ln = t->js_ln;
 			t->step = 5;	// running
-			if (!js_file)
-				js_file = "generated";
-			if (!ln)
-				ln = 1;
-			if (ln > 1)
-				++ln;
+			if (!sourcefile) sourcefile = "generated";
+			if (!ln) ln = 1;
+			if (ln > 1) ++ln;
 			if (cf != save_cf)
 				debugPrint(4,
 					   "running script at a lower frame %s",
-					   js_file);
+					   sourcefile);
 			debugPrint(3, "async exec timer %d %s at %d",
-				   jt->tsn, js_file, ln);
-			jsRunData(t, js_file, ln);
+				   jt->tsn, sourcefile, ln);
+			jsRunData(t, sourcefile, ln);
 			debugPrint(3, "async exec complete");
 		}
 		if (t->step == 4 && t->action != TAGACT_SCRIPT) {
