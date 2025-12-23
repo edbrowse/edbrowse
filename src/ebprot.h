@@ -159,6 +159,7 @@ void jSideEffects(void);
 void jClearSync(void);
 void htmlMetaHelper(const Tag *t);
 void loadScriptData(Tag *t);
+void loadFinishCSS(void);
 bool isRooted(const Tag *t);
 void runScriptsPending(bool startbrowse);
 void preFormatCheck(int tagno, bool * pretag, bool * slash);

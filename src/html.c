@@ -945,6 +945,35 @@ fail:
 	t->step = 6;
 }
 
+// Like the above, but for link tags. Make sure they are all loaded.
+void loadFinishCSS(void)
+{
+	Tag *t;
+	for (t = cw->linklist; t; t = t->same) {
+		if (t->dead || !t->jslink || t->step != 3)
+			continue;
+		if(cf != t->f0) continue; // some other frame
+// don't need css until it is linked into the tree.
+		if(!isRooted(t)) continue;
+		if (intFlag) {
+			t->step = 6;
+			continue;
+		}
+		pthread_join(t->loadthread, NULL);
+		t->threadjoined = true;
+		if (!t->loadsuccess || t->hcode != 200) {
+			if (debugLevel >= 3)
+				i_printf(MSG_GetCSS, t->href, t->hcode);
+			t->step = 6;
+			continue;
+		}
+		set_property_string_t(t, "css$data", t->value);
+		nzFree0(t->value);
+		t->step = 4;	// loaded
+		set_property_number_t(t, "eb$step", 4);
+	}
+}
+
 static bool is_subframe(Frame *f1, Frame *f2)
 {
 	Tag *t;

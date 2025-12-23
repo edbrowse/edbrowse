@@ -1498,7 +1498,7 @@ void *httpConnectBack2(void *ptr)
 	bool rc;
 	struct i_get g;
 	memset(&g, 0, sizeof(g));
-	g.thisfile = cf->fileName;
+	g.thisfile = t->f0->fileName;
 	g.uriEncoded = true;
 	g.url = t->href;
 	g.down_force = 2;
@@ -1530,7 +1530,7 @@ void *httpConnectBack3(void *ptr)
 	struct i_get g;
 	char *outgoing_body = 0, *outgoing_headers = 0;
 	memset(&g, 0, sizeof(g));
-	g.thisfile = cf->fileName;
+	g.thisfile = t->f0->fileName;
 	g.uriEncoded = true;
 	g.url = t->href;
 	g.custom_h = t->custom_h;
