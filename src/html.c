@@ -637,8 +637,9 @@ static void runGeneratedHtml(Tag *t, const char *h)
 }
 
 /*********************************************************************
-helper function to prepare an html script.
-Tags steps are as follows.
+Here is a load function, to load the data for javascript or css,
+from the internet or from a local file, and possibly in a background thread.
+Tag steps are as follows.
 1 parsed as html
 2 decorated with a coresponding javascript object
 3 downloading in background
@@ -652,7 +653,7 @@ This assumes curl is threadsafe, and we have configured it
 so that different threads can perform different downloads, or actions,
 and all share certain structures like the cookie jar.
 
-1. main.c, signal handler for ^c. This one is drastic!
+* main.c, signal handler for ^c. This one is drastic!
 If js has us in an infinite loop that has lasted fore 45 seconds,
 spin off a new interactive (foreground) thread and kill the current thread.
 js is turned off, and best not to turn it back on,
@@ -660,7 +661,7 @@ it was left in a strange state, and quickjs is not reentrant.
 In fact you shouldn't do anything except save some critical files
 you were working on, and exit.
 
-2. Download a file in background. Data is going to the file and not
+* Download a file in background. Data is going to the file and not
 associated with the foreground thread.
 The decision to download could happen after we started reading the file.
 Based on content-type in the http header, for example.
@@ -692,13 +693,13 @@ Subsequent downloads are managed by the toggle command jsbg:
 javascript or xhr files downloaded in background.
 These will use httpConnectBack2 and httpConnectBack3.
 
-3. Download javascript by background threads.
-This uses httpConnectBack2(), from prepareScript().
+* Download javascript by background threads.
+This uses httpConnectBack2(), from loadScriptData().
 The tag is passsed to the child thread and the tag must survive
 during the entire download.
 httpConnectBack2 makes its own i_get structure on its stack.
 When parsing html, if js is enabled,
-jsNode calls prepareScript on each script tag.
+jsNode calls loadScriptData on each script tag.
 This reads the file if it is local, or fetches it if jsbg is off,
 or spawns the fetch thread if jsbg is true.
 In the browse process, decorate is followed by run ScriptsPending.
@@ -717,10 +718,12 @@ signal to the child thread, then waits for it to finish,
 which should be almost immediate thanks to the signal.
 With the thread gone, it is safe to free the tag.
 
-Note that we don't spawn threads to download the css files in background,
-though this might be worth doing, some sites have dozens of css files.
+* We don't spawn threads to download the css files in background,
+but I hope to do that soon. Some sites have dozens of css files.
+Thus loadScriptData processes both script tags and link tags.
+For a link tag, we remain in the foreground, for now.
 
-4. Asynchronous xhr.
+* Asynchronous xhr.
 A thread is created to start the fetch of the data,
 and it is put on a timer.
 The timer watches, and when the thread is done, and the data is available,
@@ -730,8 +733,7 @@ freeTag kills the thread, and waits for it to exit,
 as described earlier.
 *********************************************************************/
 
-
-void prepareScript(Tag *t)
+void loadScriptData(Tag *t)
 {
 	bool is_js = (t->action == TAGACT_SCRIPT);
 	const char *sourcefile = "generated";
@@ -742,6 +744,8 @@ void prepareScript(Tag *t)
 	Frame *f = t->f0;
 	const char *altsource, *realsource;
 	bool from_data = false;
+	bool jsbg = down_jsbg;
+	struct i_get g;
 
 // If this tag is under <template>, and we clone it again and again,
 // we could be asked to prepare it again and again.
@@ -795,8 +799,10 @@ void prepareScript(Tag *t)
 			altsource = fetchReplace(t->href);
 			realsource = (altsource ? altsource : t->href);
 		}
-		debugPrint(3, "js source %s",
+		debugPrint(3, "%s source %s",
+			(is_js ? "js" : "css"),
 			   !from_data ? realsource : "data URI");
+
 		if (from_data) {
 			char *mediatype;
 			int data_l = 0;
@@ -814,7 +820,7 @@ void prepareScript(Tag *t)
 			unpercentString(h);
 			if (!fileIntoMemory(h, &b, &blen, 0)) {
 				if (debugLevel >= 1)
-					i_printf(MSG_GetLocalJS);
+					i_printf(is_js ? MSG_GetLocalJS : MSG_GetLocalCSS);
 				nzFree(h);
 				goto fail;
 			}
@@ -825,11 +831,8 @@ void prepareScript(Tag *t)
 				nzFree(b);
 			nzFree(h);
 		} else {
-			struct i_get g;
-			bool jsbg = down_jsbg;
-			const Tag *u;
-
-// this has to happen before threads spin off
+// This has to happen before threads spin off, that is to say, in the
+// foreground thread. We can't let httpConnect do it in a background thread.
 			if (!curlActive) {
 				eb_curl_global_init();
 				cookiesFromJar();
@@ -839,9 +842,11 @@ void prepareScript(Tag *t)
 // don't background fetch for xml, because the scripts never run
 // and we can't guarantee to complete the fetch.
 			if(cf->xmlMode) jsbg = false;
-
+// css is not fetched in background, yet.
+			if(!is_js) jsbg = false;
 			if(jsbg) {
 // We can't background fetch if this is under <template>
+				const Tag *u;
 				for(u = t; u; u = u->parent)
 					if(u->action == TAGACT_TEMPLATE ||
 					u->action == TAGACT_HTML ||
@@ -863,13 +868,15 @@ void prepareScript(Tag *t)
 				t->step = 3;
 				return;
 			}
+
+// foreground fetch
 			memset(&g, 0, sizeof(g));
 			g.thisfile = f->fileName;
 			g.uriEncoded = true;
 			g.url = realsource;
 			if (!httpConnect(&g)) {
 				if (debugLevel >= 3)
-					i_printf(MSG_GetJS2);
+					i_printf(is_js ? MSG_GetJS2 : MSG_GetCSS2);
 				goto fail;
 			}
 			nzFree(g.cfn);
@@ -880,10 +887,22 @@ void prepareScript(Tag *t)
 					sourcetext = g.buffer;
 				else
 					nzFree(g.buffer);
+// acid3 test[0] says we don't process this file if it's content type is
+// text/html. Should I test for anything outside of text/css?
+// For now I insist it be missing or text/css or text/plain.
+// A similar test is performed in css.c after httpConnect.
+				if (!is_js && g.content[0]
+				    && !stringEqual(g.content, "text/css")
+				    && !stringEqual(g.content, "text/plain")) {
+					debugPrint(3,
+						   "css suppressed because content type is %s",
+						   g.content);
+					cnzFree0(sourcetext);
+				}
 			} else {
 				nzFree(g.buffer);
 				if (debugLevel >= 3)
-					i_printf(MSG_GetJS, g.url, g.code);
+					i_printf(is_js ? MSG_GetJS : MSG_GetCSS, g.url, g.code);
 				goto fail;
 			}
 		}
@@ -900,11 +919,16 @@ void prepareScript(Tag *t)
 // Note that this text cannot be deminimized.
 		goto success;
 	}
-	set_property_string_t(t, "text", sourcetext);
-	nzFree(sourcetext);
 
+	set_property_string_t(t, is_js ? "text" : "css$data", sourcetext);
+	nzFree(sourcetext);
 	filepart = getFileURL(sourcefile, true);
 	t->js_file = cloneString(filepart);
+	if(!is_js) {
+// indicate we can run onload, if there is one.
+		t->lic = 1;
+		goto success;
+	}
 
 // deminimize the code if we're debugging.
 	if (demin)
@@ -1077,7 +1101,7 @@ top:
 // don't execute a script until it is linked into the tree.
 		if(!isRooted(t)) continue;
 		cf = t->f0;
-		prepareScript(t);
+		loadScriptData(t);
 // step will now be 3, load in background, 4, loaded, or 6, failure.
 	}
 
@@ -1212,7 +1236,7 @@ afterscript:
 					t1->same = 0;
 					for(u = t->same; u != t3; u = u->same)
 						if(u->jslink)
-	prepareScript(u);
+	loadScriptData(u);
 				}
 			}
 			nzFree0(cf->dw);

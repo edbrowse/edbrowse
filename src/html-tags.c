@@ -25,10 +25,6 @@ static const char innerhtmltag[] = "innerhtml";
 static const char headtag[] = "head";
 static const char bodytag[] = "body";
 static const char innerbodytag[] = "innerbody";
-// The <include-fragment> is managed by javascript; we never should have implemented it.
-// Remove this feature some day.
-static const char iftag[] = "zinclude-fragment";
-static const char inneriftag[] = "innerfragment";
 
 // report debugging information or errors
 static void scannerInfo1(const char *msg, int n)
@@ -63,7 +59,6 @@ static void setAttrFromHTML(const char *a1, const char *a2, const char *v1, cons
 static char *pullAnd(const char *start, const char *end, bool intag);
 static unsigned andLookup(char *entity, char *v);
 static void pushState(const char *start, bool head_ok);
-static char *readIncludeFragment(const Tag *t);
 static void freeTag(Tag *t);
 
 static Tag *working_t, *lasttext;
@@ -277,12 +272,6 @@ static int isNonest(const char *name, const struct opentag *k)
 	return true;
 }
 
-static struct IFRAG {
-	struct IFRAG *next;
-	char *base;
-	const char *seek;
-	int ln;
-} *ifrag;
 // seek point for the html scanner
 static const char *seek;
 
@@ -354,9 +343,6 @@ skiplink:
 			t = newTag(cf, name);
 			t->slash = t->dead = true, ++cw->deadTags;
 		}
-		if(stringEqual(lowname, iftag)) {
-			scannerInfo1("include", 0);
-		}
 past_html_open_semantics: ;
 	} else {
 		if(isXML) goto past_html_close_semantics;
@@ -375,28 +361,6 @@ past_html_open_semantics: ;
 		if(stringEqual(lowname, "pre")) {
 			premode = false;
 			scannerInfo1("close pre", 0);
-		}
-		if(stringEqual(lowname, iftag)) {
-			int j;
-			char *a;
-			t = k->t;
-			scannerInfo2("close include %s", t->href ? t->href : "null");
-// the stuff inside can all go away
-// but I can't free it cause the t->same links might pass through it
-			j = t->seqno;
-			for(++j; j < cw->numTags; ++j)
-				tagList[j]->dead = true, ++cw->deadTags;
-			t->firstchild = 0;
-// if we have source, push the fragment onto the scanning stack
-			if((a = readIncludeFragment(t))) {
-				struct IFRAG *f = allocMem(sizeof(struct IFRAG));
-				f->next = ifrag, ifrag = f;
-				f->seek = seek, f->ln = ln;
-				seek = f->base = a, ln = 1;
-				strcpy(k->name, inneriftag);
-				strcpy(k->lowname, inneriftag);
-				return;
-			}
 		}
 past_html_close_semantics:
 
@@ -773,64 +737,6 @@ void initTagArray(void)
 					sizeof(Tag *));
 }
 
-static char *readIncludeFragment(const Tag *t)
-{
-	char *a = 0, *b;
-	int blen;
-	struct i_get g;
-	if(!t->href || !*t->href) {
-		debugPrint(3, "fragment with no source");
-		return 0;
-	}
-	if (browseLocal && !isURL(t->href)) {
-		debugPrint(3, "fragment source %s", t->href);
-		if (!fileIntoMemory(t->href, &b, &blen, 0)) {
-			if (debugLevel >= 1)
-				i_printf(MSG_GetLocalFrag);
-		} else {
-			a = force_utf8(b, blen);
-			if (!a)
-				a = b;
-			else
-				nzFree(b);
-		}
-	} else {
-		debugPrint(3, "fragment source %s", t->href);
-		memset(&g, 0, sizeof(g));
-		g.thisfile = cf->fileName;
-		g.uriEncoded = true;
-		g.url = t->href;
-		if (httpConnect(&g)) {
-			nzFree(g.referrer);
-			nzFree(g.cfn);
-			if (g.code == 200) {
-				a = force_utf8(g.buffer, g.length);
-				if (!a)
-					a = g.buffer;
-				else
-					nzFree(g.buffer);
-				if (g.content[0]
-				    && !stringEqual(g.content, "text/html")
-				    && !stringEqual(g.content, "text/plain")) {
-					debugPrint(3,
-						   "fragment suppressed because content type is %s",
-						   g.content);
-					cnzFree(a);
-					a = NULL;
-				}
-			} else {
-				nzFree(g.buffer);
-				if (debugLevel >= 3)
-					i_printf(MSG_GetFrag, g.url, g.code);
-			}
-		} else {
-			if (debugLevel >= 3)
-				i_printf(MSG_GetFrag2);
-		}
-	}
-	return a;
-}
-
 // Now for the scanner, create edbrowse tags corresponding to the html tags.
 void htmlScanner(const char *htmltext, Tag *above, bool isgen)
 {
@@ -851,7 +757,6 @@ void htmlScanner(const char *htmltext, Tag *above, bool isgen)
 
 	headbody = 0, bodycount = htmlcount = 0;
 	stack = 0;
-	ifrag = 0;
 	atWall = false;
 	lasttext = 0;
 	start_idx = cw->numTags;
@@ -863,7 +768,6 @@ void htmlScanner(const char *htmltext, Tag *above, bool isgen)
 	if(isXML) scannerInfo1("xml parsing", 0), cf->xmlMode = true;
 	seek = s = htmltext, ln = 1, premode = false;
 
-top:
 // loop looking for tags
 	while(*s) {
 // the next literal < should begin the next tag
@@ -1369,18 +1273,6 @@ With this understanding, we can, and should, scan for </title
 		}
 	}
 
-	if(ifrag) { // pop back from include-fragment
-		struct IFRAG *hold = ifrag->next;
-		nzFree(ifrag->base);
-		s = seek = ifrag->seek;
-		ln = ifrag->ln;
-		scannerInfo1("pop include line %d", ln);
-		free(ifrag);
-		ifrag = hold;
-		makeTag(inneriftag, inneriftag, true, 0);
-		goto top;
-	}
-
 stop:
 	if(isXML) goto past_html_final_semantics;
 
@@ -1409,13 +1301,6 @@ if(headbody < 6)
 				u = u->sibling;
 			}
 		}
-	}
-
-	while(ifrag) {
-		struct IFRAG *hold = ifrag->next;
-		nzFree(ifrag->base);
-		free(ifrag);
-		ifrag = hold;
 	}
 
 past_html_final_semantics:
@@ -4576,89 +4461,6 @@ establish_js_option(t, sel, currentOG);
 		set_property_number_t(sel, "selectedIndex", t->lic);
 }
 
-static void link_css(Tag *t)
-{
-	struct i_get g;
-	char *b;
-	int blen;
-	const char *a;
-	const char *a1 = attribVal(t, "type");
-	const char *a2 = attribVal(t, "rel");
-	const char *altsource, *realsource;
-
-// If we find these are spilldown then we don't need these lines
-	if (a1)
-		set_property_string_t(t, "type", a1);
-	if (a2)
-		set_property_string_t(t, "rel", a2);
-	if (!t->href)
-		return;
-	if (!stringEqualCI(a1, "text/css") &&
-	    !stringEqualCI(a2, "stylesheet"))
-		return;
-
-// Fetch the css file so we can apply its attributes.
-	a = NULL;
-	altsource = fetchReplace(t->href);
-	realsource = (altsource ? altsource : t->href);
-	if ((browseLocal || altsource) && !isURL(realsource)) {
-		debugPrint(3, "css source %s", realsource);
-		if (!fileIntoMemory(realsource, &b, &blen, 0)) {
-			if (debugLevel >= 1)
-				i_printf(MSG_GetLocalCSS);
-		} else {
-			a = force_utf8(b, blen);
-			if (!a)
-				a = b;
-			else
-				nzFree(b);
-		}
-	} else {
-		debugPrint(3, "css source %s", t->href);
-		memset(&g, 0, sizeof(g));
-		g.thisfile = cf->fileName;
-		g.uriEncoded = true;
-		g.url = t->href;
-		if (httpConnect(&g)) {
-			nzFree(g.referrer);
-			nzFree(g.cfn);
-			if (g.code == 200) {
-				a = force_utf8(g.buffer, g.length);
-				if (!a)
-					a = g.buffer;
-				else
-					nzFree(g.buffer);
-// acid3 test[0] says we don't process this file if it's content type is
-// text/html. Should I test for anything outside of text/css?
-// For now I insist it be missing or text/css or text/plain.
-// A similar test is performed in css.c after httpConnect.
-				if (g.content[0]
-				    && !stringEqual(g.content, "text/css")
-				    && !stringEqual(g.content, "text/plain")) {
-					debugPrint(3,
-						   "css suppressed because content type is %s",
-						   g.content);
-					cnzFree(a);
-					a = NULL;
-				}
-			} else {
-				nzFree(g.buffer);
-				if (debugLevel >= 3)
-					i_printf(MSG_GetCSS, g.url, g.code);
-			}
-		} else {
-			if (debugLevel >= 3)
-				i_printf(MSG_GetCSS2);
-		}
-	}
-	if (a) {
-		set_property_string_t(t, "css$data", a);
-// indicate we can run the onload function, if there is one
-		t->lic = 1;
-	}
-	cnzFree(a);
-}
-
 Tag *innerParent;
 
 static void jsNode(Tag *t, bool opentag)
@@ -4748,7 +4550,7 @@ Needless to say that's not good!
 		a = attribVal(t, "text");
 		if (a) set_property_string_t(t, "text", a);
 		else set_property_string_t(t, "text", "");
-		prepareScript(t);
+		loadScriptData(t);
 		break;
 
 	case TAGACT_FORM:
@@ -4910,7 +4712,7 @@ Needless to say that's not good!
 
 	case TAGACT_LINK:
 		domLink(t, "HTMLLinkElement", 0, 0, 4);
-		link_css(t);
+		loadScriptData(t);
 		break;
 
 	case TAGACT_MUSIC:
