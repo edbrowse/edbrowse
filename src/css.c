@@ -867,12 +867,8 @@ top:
 							a = g.buffer;
 						else
 							nzFree(g.buffer);
-						if (!cssCompatibleContent(g.content)) {
-							debugPrint(3,
-								   "css suppressed because content type is %s",
-								   g.content);
+						if (!cssCompatibleContent(g.content))
 							cnzFree0(a);
-						}
 					} else {
 						nzFree(g.buffer);
 						if (debugLevel >= 3)

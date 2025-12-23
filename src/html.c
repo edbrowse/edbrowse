@@ -642,8 +642,10 @@ bool cssCompatibleContent(const char *s)
 {
 	if (s && *s &&
 	    !stringEqual(s, "text/css") &&
-	    !stringEqual(s, "text/plain"))
+	    !stringEqual(s, "text/plain")) {
+		debugPrint(3,   "css suppressed because content type is %s", s);
 		return false;
+	}
 	return true;
 }
 
@@ -896,12 +898,8 @@ void loadScriptData(Tag *t)
 					sourcetext = g.buffer;
 				else
 					nzFree(g.buffer);
-				if (!is_js && !cssCompatibleContent(g.content)) {
-					debugPrint(3,
-						   "css suppressed because content type is %s",
-						   g.content);
+				if (!is_js && !cssCompatibleContent(g.content))
 					cnzFree0(sourcetext);
-				}
 			} else {
 				nzFree(g.buffer);
 				if (debugLevel >= 3)
