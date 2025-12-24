@@ -1052,16 +1052,20 @@ function mutFixup(b, isattr, y, z) {
         const record = (function() {
             /* check our target: either we're the direct target or we're below an
             observer which cares about subtrees. */
-            let target_found = o.targets.has(b);
+            let target_cfg = o.targets.get(b);
             // climb up the tree
-            for (let t = b; !target_found && o.subtree && t; t = t.parentNode) {
-                target_found = o.targets.has(t);
+            for (let t = b; !target_cfg && o.subtree && t; t = t.parentNode) {
+                target_cfg = o.targets.get(t);
+                /* I have no idea if one can have an observer with a mixture
+                of subtree and non-subtree configs but try not to surprise
+                people if so */
+                if (target_cfg && !target_cfg.subtree) target_cfg = undefined;
                 if (t.nodeType == 9) break; // stop at document
             }
-            if (!target_found) return;
+            if (!target_cfg) return;
             const r = new o.observed$window.MutationRecord;
             if(isattr) { // the easy case
-                if(o.attr) {
+                if(target_cfg.attributes) {
                     r.type = "attributes";
                     r.attributeName = y;
                     r.target = b;
@@ -1071,7 +1075,7 @@ function mutFixup(b, isattr, y, z) {
                 return;
             }
             // ok a child of b has changed
-            if(o.kids) {
+            if(target_cfg.childList) {
                 mrKids(r, b, y, z);
                 return r;
             }
