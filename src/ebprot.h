@@ -159,6 +159,7 @@ void jSideEffects(void);
 void jClearSync(void);
 void htmlMetaHelper(const Tag *t);
 bool cssCompatibleContent(const char *content);
+bool frameCompatibleContent(const char *content);
 void loadScriptData(Tag *t);
 void loadFinishCSS(void);
 bool isRooted(const Tag *t);

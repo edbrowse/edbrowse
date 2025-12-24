@@ -649,6 +649,19 @@ bool cssCompatibleContent(const char *s)
 	return true;
 }
 
+// acid says a frame has to be text/html, not even text/plain.
+// I don't know about xml.
+bool frameCompatibleContent(const char *s)
+{
+	if (s && *s &&
+	    !stringEqual(s, "text/html") &&
+	    !stringEqual(s, "text/xml")) {
+		debugPrint(3,   "frame suppressed because content type is %s", s);
+		return false;
+	}
+	return true;
+}
+
 /*********************************************************************
 Here is a load function, to load the data for javascript or css,
 from the internet or from a local file, and possibly in a background thread.

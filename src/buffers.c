@@ -2046,17 +2046,13 @@ uchar prebrowse, const Tag *gotag)
 			cf->mt = 0;
 			cf->render1 = cf->render2 = true;
 		}
-// acid says a frame has to be text/html, not even text/plain.
-		if (fromframe && g.content[0]
-		    && !stringEqual(g.content, "text/html")
-		    && !stringEqual(g.content, "text/xml")) {
-			debugPrint(3,
-				   "frame suppressed because content type is %s",
-				   g.content);
+		if (fromframe) {
 			strcpy(frameContent, g.content);
-			nzFree0(serverData);
-			serverDataLen = 0;
-			return false;
+			if(!frameCompatibleContent(g.content)) {
+				nzFree0(serverData);
+				serverDataLen = 0;
+				return false;
+			}
 		}
 
 		newfile = (changeFileName ? changeFileName : filename);
