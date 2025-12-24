@@ -731,10 +731,9 @@ signal to the child thread, then waits for it to finish,
 which should be almost immediate thanks to the signal.
 With the thread gone, it is safe to free the tag.
 
-* We don't spawn threads to download the css files in background,
-but I hope to do that soon. Some sites have dozens of css files.
-Thus loadScriptData processes both script tags and link tags.
-For a link tag, we remain in the foreground, for now.
+* Spawn threads to download the css files in background, just like the
+javascript files, and using httpConnectBack2.
+Thus loadScriptData processes script tags and link tags.
 
 * Asynchronous xhr.
 A thread is created to start the fetch of the data,
