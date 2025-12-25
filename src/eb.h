@@ -588,7 +588,6 @@ struct htmlTag {
 	struct ebFrame *f1; // subordinate frame if this is a <frame> tag
 	jsobjtype jv;		// javascript value
 	int seqno; // tag sequence number in this window
-	int gsn; // global sequence number, for rooting
 	char *js_file;
 	int js_ln;			// line number of javascript
 	int lic;		// list item count, highly overloaded

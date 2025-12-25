@@ -1464,7 +1464,6 @@ static void connectTagObject(Tag *t, JSValue p)
 // We don't want to set eb$seqno in this case.
 	if(t->action != TAGACT_DOC) {
 		JS_DefinePropertyValueStr(cx, p, "eb$seqno", JS_NewInt32(cx, t->seqno), 0);
-		JS_DefinePropertyValueStr(cx, p, "eb$gsn", JS_NewInt32(cx, t->gsn), 0);
 	}
 }
 

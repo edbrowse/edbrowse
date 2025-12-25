@@ -2006,7 +2006,7 @@ continue;
 }
 
 if (typeof node1[item] === 'number') {
-if(item == "eb$seqno" || item == "eb$gsn") continue;
+if(item == "eb$seqno") continue;
 if(debug) alert3("copy number " + item + " = " + node1[item]);
 node2[item] = node1[item];
 continue;

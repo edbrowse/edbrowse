@@ -377,7 +377,6 @@ Tag *newTag(const Frame *f, const char *name)
 {
 	Tag *t, *t1, *t2 = 0;
 	const struct tagInfo *ti;
-	static int gsn = 0;
 
 	for (ti = availableTags; ti->name[0]; ++ti)
 		if (stringEqualCI(ti->name, name))
@@ -393,7 +392,6 @@ Tag *newTag(const Frame *f, const char *name)
 	t->f0 = (Frame *) f;		/* set owning frame */
 	t->info = ti;
 	t->seqno = cw->numTags;
-	t->gsn = ++gsn;
 	t->nodeName = cloneString(name);
 	t->nodeNameU = cloneString(name);
 	caseShift(t->nodeNameU, 'u');
