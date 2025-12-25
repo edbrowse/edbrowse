@@ -1842,8 +1842,7 @@ swm("HashChangeEvent", function(){
     this.timeStamp = new Date().getTime();
 this.type = "hashchange";
 })
-// says we inherit from event but I can't think of any event methods we would want to use
-spdc("HashChangeEvent", null)
+HashChangeEvent.prototype = new Event;
 
 swm("MouseEvent", function(etype){
     this.bubbles =     this.cancelable = true;
