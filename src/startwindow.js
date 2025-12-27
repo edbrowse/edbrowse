@@ -1768,6 +1768,7 @@ width: 0, height: 0
 swm("Attr", function(){ this.owner = null; this.name = ""})
 spdc("Attr", null)
 Attr.prototype.isId = function() { return this.name === "id"; }
+Attr.prototype.cloneNode = mw$.cloneAttr
 
 // this is sort of an array and sort of not.
 // For one thing, you can call setAttribute("length", "snork"), so I can't use length.

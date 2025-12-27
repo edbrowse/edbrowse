@@ -2253,6 +2253,15 @@ p = p.replace(/^\d+,/, "");
 return c;
 }
 
+// simple function to clone Attr
+function cloneAttr(deep)
+{
+var w = my$win()
+var a = new w.Attr;
+a.name = this.name, a.value = this.value;
+return a
+}
+
 // symbolic constants for compareDocumentPosition
 Object.defineProperty(this,"DOCUMENT_POSITION_DISCONNECTED",{value:1});
 Object.defineProperty(this,"DOCUMENT_POSITION_PRECEDING",{value:2});
@@ -6304,8 +6313,9 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "getAttribute", "getAttributeNames", "getAttributeNS",
 "hasAttribute", "hasAttributeNS",
 "setAttribute",  "setAttributeNS",
-"removeAttribute", "removeAttributeNS", "getAttributeNode",
-"clone1", "findObject", "correspondingObject",
+"removeAttribute", "removeAttributeNS",
+"getAttributeNode", "setAttributeNode", "removeAttributeNode",
+"clone1", "findObject", "correspondingObject", "cloneAttr",
 "compareDocumentPosition", "generalbar", "CSS",
 "Intl", "Intl_dt", "Intl_num",
 "cssGather", "cssApply", "cssDocLoad",
