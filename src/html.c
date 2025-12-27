@@ -1395,9 +1395,8 @@ char *htmlParse(char *buf, int remote)
 		loadFinishCSS();
 		run_function_bool_win(cf, "eb$qs$start");
 		runScriptsPending(true);
-		runOnload();
-		runScriptsPending(false);
 		run_function_bool_win(cf, "readyStateComplete");
+		runOnload();
 		run_event_win(cf, "window", "onfocus");
 		run_event_doc(cf, "document", "onfocus");
 		runScriptsPending(false);
