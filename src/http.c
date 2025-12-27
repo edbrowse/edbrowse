@@ -3325,9 +3325,6 @@ cdt doesn't have or need an object; it's a place holder.
 		if (jssrc)
 			jsRunScriptWin(jssrc, "frame.src", 1);
 		runScriptsPending(true);
-		run_function_bool_win(cf, "readyStateComplete");
-		runOnload();
-		runScriptsPending(false);
 		rebuildSelectors();
 	}
 	cnzFree(jssrc);
@@ -3435,9 +3432,6 @@ bool reexpandFrame(void)
 		loadFinishCSS();
 		run_function_bool_win(cf, "eb$qs$start");
 		runScriptsPending(true);
-		run_function_bool_win(cf, "readyStateComplete");
-		runOnload();
-		runScriptsPending(false);
 		rebuildSelectors();
 	}
 	cf->browseMode = true;

@@ -1073,7 +1073,8 @@ So it's not too hard I suppose, but I haven't seen the need yet.
 It fires when the first wave of scripts is complete, but before the second wave or any onload handlers etc.
 The startbrowse argument tells runScriptsPending() we are calling it
 because a new page is being browsed.
-It should dispatch DOMContentLoaded after the first scripts have run.
+It should set readyState to complete,
+then run all the onnload functions, after the synchronous scripts have run.
 
 7. Generated scripts do not run unless and until they are connected to the tree.
 If they are connected later, that is when they run.
@@ -1104,6 +1105,7 @@ bool isRooted(const Tag *t)
 	return false;
 }
 
+static void runOnload(void);
 void runScriptsPending(bool startbrowse)
 {
 	Tag *t;
@@ -1117,8 +1119,7 @@ void runScriptsPending(bool startbrowse)
 // For now I'm putting them under body.
 // Each write corresponds to the frame containing document.write.
 	for (f = &(cw->f0); f; f = f->next) {
-		if (!f->dw)
-			continue;
+		if (!f->dw) continue;
 		cf = f;
 // completely different behavior before and after browse
 // After browse, it clobbers the page.
@@ -1311,16 +1312,21 @@ afterscript:
 	}
 
 	if (!async) {
-		if(startbrowse)
-// I think it's ok to use cf here, but let's be safe.
-			run_event_doc(save_cf, "document", "onDOMContentLoaded");
-		startbrowse = false;
+		if(startbrowse) {
+			cf = save_cf;
+			run_function_bool_win(cf, "readyStateComplete");
+			runOnload();
+			startbrowse = false;
+			change = true;
+		}
 		async = true;
 		goto passes;
 	}
 
 	if (change)
 		goto top;
+
+	cf = save_cf;
 
 	if ((t = js_reset)) {
 		js_reset = 0;
@@ -1335,8 +1341,6 @@ afterscript:
 		if (rc) gotoLocation(post, 0, false, t->f0);
 		else showError();
 	}
-
-	cf = save_cf;
 }
 
 void preFormatCheck(int tagno, bool * pretag, bool * slash)
@@ -1395,8 +1399,6 @@ char *htmlParse(char *buf, int remote)
 		loadFinishCSS();
 		run_function_bool_win(cf, "eb$qs$start");
 		runScriptsPending(true);
-		run_function_bool_win(cf, "readyStateComplete");
-		runOnload();
 		run_event_win(cf, "window", "onfocus");
 		run_event_doc(cf, "document", "onfocus");
 		runScriptsPending(false);
@@ -3841,7 +3843,7 @@ static void unloadHyperlink(const char *js_function, const char *where)
 /* Run the various onload functions */
 /* Turn the onunload functions into hyperlinks */
 /* This runs after the page is parsed and before the various javascripts run, is that right? */
-void runOnload(void)
+static void runOnload(void)
 {
 	int i, action;
 	int fn;			/* form number */
@@ -3851,6 +3853,8 @@ void runOnload(void)
 		return;
 	if (intFlag)
 		return;
+
+run_event_doc(cf, "document", "onDOMContentLoaded");
 
 /* window and document onload */
 	run_event_win(cf, "window", "onload");

@@ -182,7 +182,6 @@ const Tag *gebi_c(const Tag *t, const char *id, bool lookname);
 void runningError(int msg, ...);
 void rerender(int notify);
 void delTags(int startRange, int endRange);
-void runOnload(void);
 const char *tack_fn(const char *e);
 void domSetsTimeout(int n, const char *jsrc, const char *backlink, bool isInterval);
 void scriptOnTimer( Tag *t);
