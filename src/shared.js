@@ -1812,8 +1812,7 @@ if(space && !name.match(/:/)) name = space + ":" + name;
 this.removeAttribute(name);
 }
 
-// this returns null if no such attribute, is that right,
-// or should we return a new Attr node with no value?
+// this returns null if no such attribute.
 function getAttributeNode(name) {
 if(!this.attributes$2) return null;
     name = name.toLowerCase();
@@ -1823,7 +1822,27 @@ a = null
 for(var i=0; i<this.attributes.length; ++i)
 if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
 } else a = this.attributes[name]
+if(!a) return null;
 return a;
+}
+
+// b replaces a if a is present
+function setAttributeNode(b) {
+if(typeof b != "object" || typeof b.name != "string") return null;
+var     a, name = b.name.toLowerCase();
+if(name === "length") {
+a = null
+for(var i=0; i<this.attributes.length; ++i)
+if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
+} else a = this.attributes[name];
+if(!a) a = null; else this.removeAttribute(name);
+b.owner = this;
+this.attributes.push(b);
+if(name !== "length") this.attributes[name] = b
+// there are a lot of side effects I don't want to repeat here,
+// like dataset and mutFixup and so on, so just invoke
+this.setAttribute(name, b.value)
+return a
 }
 
 /*********************************************************************
@@ -6226,7 +6245,7 @@ insertAdjacentElement,append, prepend, before, after, replaceWith,
 getAttribute, getAttributeNames, getAttributeNS,
 hasAttribute, hasAttributeNS,
 setAttribute, setAttributeNS,
-removeAttribute, removeAttributeNS, getAttributeNode,
+removeAttribute, removeAttributeNS, getAttributeNode, setAttributeNode,
 compareDocumentPosition,
 getComputedStyle,
 insertAdjacentHTML,URL,
