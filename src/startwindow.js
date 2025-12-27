@@ -1161,7 +1161,7 @@ mw$.sortTime(list);
 return list;
 },
 // at least have the object, even if it doesn't have any timestamps in it
-timing:{},
+timing:{navigationStart:0},
 }
 Object.defineProperty(window, "performance", {get: function(){return new Performance}});
 
