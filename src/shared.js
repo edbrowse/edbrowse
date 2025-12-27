@@ -1845,6 +1845,21 @@ this.setAttribute(name, b.value)
 return a
 }
 
+function removeAttributeNode(b) {
+if(typeof b != "object" || typeof b.name != "string") return null;
+var     name = b.name.toLowerCase();
+if(name === "length") {
+let i;
+for(i=0; i<this.attributes.length; ++i)
+if(this.attributes[i] == b) break;
+if(i == this.attributes.length) return null;
+} else {
+if(this.attributes[name] != b) return null;
+}
+this.removeAttribute(b.name)
+return b
+}
+
 /*********************************************************************
 cloneNode creates a copy of the node and its children recursively.
 The argument 'deep' refers to whether or not the clone will recurs.
@@ -6245,7 +6260,8 @@ insertAdjacentElement,append, prepend, before, after, replaceWith,
 getAttribute, getAttributeNames, getAttributeNS,
 hasAttribute, hasAttributeNS,
 setAttribute, setAttributeNS,
-removeAttribute, removeAttributeNS, getAttributeNode, setAttributeNode,
+removeAttribute, removeAttributeNS,
+getAttributeNode, setAttributeNode, removeAttributeNode,
 compareDocumentPosition,
 getComputedStyle,
 insertAdjacentHTML,URL,

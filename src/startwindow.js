@@ -1790,6 +1790,7 @@ sdm("removeAttribute", mw$.removeAttribute)
 sdm("removeAttributeNS", mw$.removeAttributeNS)
 sdm("getAttributeNode", mw$.getAttributeNode)
 sdm("setAttributeNode", mw$.setAttributeNode)
+sdm("removeAttributeNode", mw$.removeAttributeNode)
 
 sdm("cloneNode", function(deep) {
     window.cloneRoot1 = this;
@@ -1985,6 +1986,7 @@ Object.defineProperty(p, "className", { get: function() { var c = this.getAttrib
 Object.defineProperty(p, "parentElement", { get: function() { return this.parentNode && this.parentNode.nodeType == 1 ? this.parentNode : null; }});
 p.getAttributeNode = mw$.getAttributeNode;
 p.setAttributeNode = mw$.setAttributeNode;
+p.removeAttributeNode = mw$.removeAttributeNode;
 p.getClientRects = function(){ return []; }
 // clone
 p.cloneNode = document.cloneNode;
