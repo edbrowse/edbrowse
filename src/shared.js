@@ -1688,9 +1688,11 @@ if(!this.eb$xml) name = name.toLowerCase();
 if(implicitMember(this, name)) return null;
 // has to be a real attribute
 if(!this.attributes$2) return null;
-a = null;
+if(name === "length") {
+a = null
 for(var i=0; i<this.attributes.length; ++i)
 if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
+} else a = this.attributes[name]
 if(!a) return null;
 var v = a.value;
 var t = typeof v;
@@ -1728,16 +1730,17 @@ return;
 }
 if(implicitMember(this, name)) return;
 var oldv = null;
-// referencing attributes should create it on demand, but if it doesn't...
-if(!this.attributes) this.attributes$2 = new w.NamedNodeMap;
-a = null;
+if(name === "length") {
+a = null
 for(var i=0; i<this.attributes.length; ++i)
 if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
+} else a = this.attributes[name]
 if(!a) {
 a = new w.Attr();
 a.owner = this;
 a.name = name;
 this.attributes.push(a);
+if(name !== "length") this.attributes[name] = a
 } else {
 oldv = a.value;
 }
@@ -1791,9 +1794,12 @@ if(spilldownBool(this, name)) delete this[name];
 // class is undefined and last$class is undefined, so getComputedStyle is never called.
 if(name === "class" && !this.last$class) this.last$class = "@@";
 if(name === "id" && !this.last$id) this.last$id = "@@";
-var a = null;
+var a;
+if(name === "length") {
+a = null
 for(var i=0; i<this.attributes.length; ++i)
 if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
+} else a = this.attributes[name]
 if(!a) return;
 // Have to roll our own splice.
 var i, found = false;
@@ -1803,6 +1809,7 @@ if(found) this.attributes[i] = this.attributes[i+1];
 }
 this.attributes.length = i;
 delete this.attributes[i];
+if(name !== "length") delete this.attributes[name]
 mutFixup(this, true, name, a.value);
 }
 function removeAttributeNS(space, name) {
@@ -1815,9 +1822,12 @@ this.removeAttribute(name);
 function getAttributeNode(name) {
 if(!this.attributes$2) return null;
     name = name.toLowerCase();
-var a = null;
+var a;
+if(name === "length") {
+a = null
 for(var i=0; i<this.attributes.length; ++i)
 if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
+} else a = this.attributes[name]
 return a;
 }
 
