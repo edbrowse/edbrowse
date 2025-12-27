@@ -1420,13 +1420,16 @@ static void processError(JSContext * cx)
 	if(stack && jsSourceFile) {
 // pull line number out of the stack trace; this assumes a particular format.
 // First line is first stack frame, and should be @ function (file:line)
-// But what if file contains : or other punctuations?
-// I'll make a modest effort to guard against that.
+// But when we switch to ng the format is now at function(file:line:offset)
 		const char *p = strchr(stack, '\n');
 		if(p) {
 			if(p > stack && p[-1] == ')') --p;
 			while(p > stack && isdigitByte(p[-1])) --p;
 			if(p > stack && p[-1] == ':') --p;
+#if Q_NG
+			while(p > stack && isdigitByte(p[-1])) --p;
+			if(p > stack && p[-1] == ':') --p;
+#endif
 			if(*p == ':' && isdigitByte(p[1]))
 				lineno = atoi(p+1);
 			if(lineno < 0) lineno = 0;
