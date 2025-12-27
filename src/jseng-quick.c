@@ -2746,13 +2746,6 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 	async = get_property_bool(cx, this, "async");
 	if (!down_jsbg) async = false;
 
-// asynchronous xhr before browse and after browse go down different paths.
-// So far I can't get the before browse path to work,
-// at least on nasa.gov, which has lots of xhrs in its onload code.
-// It pushes things over to timers, which work, but the page is rendered
-// shortly after browse time instead of at browse time, which is annoying.
-	if (!cw->browseMode) async = false;
-
 	if (incoming_method && stringEqualCI(incoming_method, "post"))
 		dopost = true;
 	if (incoming_method && stringEqualCI(incoming_method, "head"))
@@ -2761,9 +2754,8 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 	JS_FreeCString(cx, incoming_method);
 
 	if(incoming_payload && *incoming_payload && dopost) {
-		if (createFormattedString(&a, "%s\1%s",
-			     incoming_url, incoming_payload) < 0)
-			i_printfExit(MSG_MemAllocError, 50);
+		createFormattedString(&a, "%s\1%s",
+			     incoming_url, incoming_payload);
 		if(pd == 1) {
 // turn utf8 back into individual bytes
 			utf2iso1(a + strlen(incoming_url) + 1, 0);
@@ -2784,7 +2776,7 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 	if (async) {
 // I'm going to put the tag in cf, the current frame, and hope that's right,
 // hope that xhr runs in a script that runs in the current frame.
-		Tag *t =     newTag(cf, cw->browseMode ? "object" : "script");
+		Tag *t =     newTag(cf, "object");
 		t->deleted = true;	// do not render this tag
 		t->step = 3;
 		t->async = true;
@@ -2801,8 +2793,7 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 		if(JS_IsString(argv[2]))
 			t->custom_h = cloneString(incoming_headers);
 		JS_FreeCString(cx, incoming_headers);
-		if (cw->browseMode)
-			scriptOnTimer(t);
+		scriptOnTimer(t);
 		pthread_create(&t->loadthread, NULL, httpConnectBack3,
 			       (void *)t);
 		t->threadcreated = true;
