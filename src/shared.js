@@ -188,9 +188,6 @@ if(typeof s.text === "string" &&
 var ss = "inline";
 if(s.src && s.src.length) ss = s.src.toString();
 if(ss.match(/^data:/)) continue;
-// assumes the search piece of the url is spurious and unreliable
-var search = ss.indexOf('?');
-if(search > 0) ss = ss.substr(0,search);
 ++idx;
 wlf(s.text, "f" + idx + ".js");
 jslocal += "f" + idx + ".js:" + ss + "\n";
@@ -202,8 +199,6 @@ var s = w.cssSource[i];
 if(typeof s.data === "string" && s.data.length &&
 s.src && s.src.length) {
 var ss = s.src.toString();
-// assumes the search piece of the url is spurious and unreliable
-ss = ss.replace(/\?.*/, "");
 ++idx;
 wlf(s.data, "f" + idx + ".css");
 jslocal += "f" + idx + ".css:" + ss + "\n";

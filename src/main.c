@@ -2316,14 +2316,10 @@ static struct JSR *jsr_top;
 const char *fetchReplace(const char *u)
 {
 	struct JSR *j = jsr_top;
-	const char *s;
-	int l;
 	if (!j)
 		return 0;	// high runner case
-	s = strchr(u, '?');
-	l = (s ? s - u : (int)strlen(u));
 	while (j) {
-		if (!strncmp(j->url, u, l) && j->url[l] == 0)
+		if (stringEqual(j->url, u))
 			return j->locf;
 		j = j->next;
 	}
@@ -2357,10 +2353,6 @@ static void loadReplacements(void)
 			continue;
 		}
 		*s++ = 0;
-		if (strchr(s, '?')) {
-			fprintf(stderr, "jslocal line has ?\n");
-			continue;
-		}
 		j = allocMem(sizeof(struct JSR));
 		j->locf = cloneString(line);
 		j->url = cloneString(s);
