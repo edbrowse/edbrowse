@@ -1980,7 +1980,7 @@ p.setAttribute = mw$.setAttribute;
 p.setAttributeNS = mw$.setAttributeNS;
 p.removeAttribute = mw$.removeAttribute;
 p.removeAttributeNS = mw$.removeAttributeNS;
-Object.defineProperty(p, "className", { get: function() { return this.getAttribute("class"); }, set: function(h) { this.setAttribute("class", h); }});
+Object.defineProperty(p, "className", { get: function() { var c = this.getAttribute("class"); if(c === null) return ""; return c; }, set: function(h) { this.setAttribute("class", h); }});
 Object.defineProperty(p, "parentElement", { get: function() { return this.parentNode && this.parentNode.nodeType == 1 ? this.parentNode : null; }});
 p.getAttributeNode = mw$.getAttributeNode;
 p.getClientRects = function(){ return []; }
