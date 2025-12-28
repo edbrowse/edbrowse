@@ -2789,30 +2789,38 @@ if(e[i].nodeName == "INPUT" && e[i].type == t && e[i].name == nn &&e[i] != this)
 }
 }
 
+// We need UnsupportedError for this
+class UnsupportedError extends Error {
+    constructor(message) { super(message); }
+}
+
 // define a custom element
 function cel_define(name, c, options) {
-var w = my$win();
-var cr = w.cel$registry;
-var ext = "";
-if(typeof options == "object" && options.extends) ext = options.extends;
-if(ext)
-alert3("define custom element " + name + " extends " + ext);
-else
-alert3("define custom element " + name);
-if(typeof name != "string" || !name.match(/.-./)) throw new Error("SyntaxError");
-if(cr[name]) throw new Error("NotSupportedError");
-if(typeof c != "function") throw new Error("DOMException");
-var o = {construct:c};
-// what other stuff should we remember in o?
-cr[name] = o;
+    const w = my$win();
+    const cr = w.cel$registry;
+    let ext = "";
+    if(typeof options == "object" && options.extends) ext = options.extends;
+    if(ext) alert3("define custom element " + name + " extends " + ext);
+    else alert3("define custom element " + name);
+    if(typeof name != "string") throw new w.DOMException("name is not a string");
+    if (!name.match(/.-./)) throw new w.DOMException(`name ${name} is invalid`);
+    if(cr.has(name)) throw new w.UnsupportedError(`name ${name} already defined`);
+    if(typeof c != "function") throw new w.DOMException("not a function");
+    const o = {construct:c};
+    // what other stuff should we remember in o?
+    cr.set(name, o);
 }
 
 function cel_get(name) {
-var w = my$win();
-var cr = w.cel$registry;
-if(typeof name != "string" || !name.match(/.-./)) throw new Error("SyntaxError");
-var o = cr[name];
-return o ? o.construct : undefined;
+    const w = my$win();
+    const cr = w.cel$registry;
+    if(typeof name != "string") throw new w.DOMException("name is not a string");
+    /* It looks like we need to allow people to get whatever an return
+    undefined if it's not there which'll be the case if the name is invalid.
+    Since we're using a map to hold everything there's no risk of using this
+    to grab bits of the object hierarchy. */
+    const o = cr.get(name);
+    return o ? o.construct : undefined;
 }
 
 // jtfn0 injects trace(blah) into the code.
@@ -6333,6 +6341,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "DOMParser",
 "xml_open", "xml_srh", "xml_grh", "xml_garh", "xml_send", "xml_parse",
 "onmessage$$running", "lastModifiedByHead", "structuredClone",
+"UnsupportedError",
 ];
 for(var i=0; i<flist.length; ++i)
 Object.defineProperty(this, flist[i], {writable:false,configurable:false});
@@ -6341,7 +6350,7 @@ Object.defineProperty(this, flist[i], {writable:false,configurable:false});
 flist = [Date, Promise, Array, Uint8Array, Error, String, URL, URLSearchParams,
 Intl_dt, Intl_num,
 EventTarget, XMLHttpRequestEventTarget, XMLHttpRequestUpload, XMLHttpRequest,
-Blob, FormData, Request, Response, Headers];
+Blob, FormData, Request, Response, Headers, UnsupportedError];
 for(var i=0; i<flist.length; ++i)
 Object.defineProperty(flist[i], "prototype", {writable:false,configurable:false});
 

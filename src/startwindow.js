@@ -160,6 +160,7 @@ DOMException.prototype = Object.create(Error.prototype)
 DOMException.prototype.constructor = DOMException
 
 if(mw$.share) { // point to native methods in the master window
+swm("UnsupportedError", mw$.UnsupportedError);
 swm("my$win", mw$.my$win)
 swm("my$doc", mw$.my$doc)
 swm("natok", mw$.natok)
@@ -1173,7 +1174,7 @@ includes: eb$falsefunction
 }
 })
 
-swm("cel$registry", {}) // custom elements registry
+swm("cel$registry", new Map) // custom elements registry
 Object.defineProperty(window, "customElements", {get:function(){ return {
 define:mw$.cel_define,
 get:mw$.cel_get,
