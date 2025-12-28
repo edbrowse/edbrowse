@@ -63,11 +63,15 @@ this.eb$cssText = function(){}
 // Other stuff too, that can be shared.
 // The window should just be there from C, but in case it isn't.
 if(!window.mw$) {
-    this.mw$ = {share:false, URL:{}};
+// mw$.share = 0 means I made up that window out of thin air
+    this.mw$ = {share:0, URL:{}};
+this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
     this.mw$.url_hrefset = () => undefined;
     this.mw$.dispatchEvent = () => undefined;
     this.mw$.addEventListener = () => undefined;
     this.mw$.removeEventListener = () => undefined;
+    this.mw$.getComputedStyle = () => {};
+    this.mw$.structuredClone = () => {};
 }
 // set window member, unseen, unchanging
 this.swm = function(k, v) { Object.defineProperty(window, k, {value:v})}
@@ -159,7 +163,7 @@ this.DOMException = function(message, name) {
 DOMException.prototype = Object.create(Error.prototype)
 DOMException.prototype.constructor = DOMException
 
-if(mw$.share) { // point to native methods in the master window
+// point to shared methods in the master window
 swm("UnsupportedError", mw$.UnsupportedError);
 swm("my$win", mw$.my$win)
 swm("my$doc", mw$.my$doc)
@@ -204,7 +208,6 @@ swm1("getComputedStyle", mw$.getComputedStyle.bind(window))
 swm("mutFixup", mw$.mutFixup)
 swm("makeSheets", mw$.makeSheets)
 swm2("structuredClone", mw$.structuredClone.bind(window))
-}
 
 swm("dom$class", "Window")
 // next two are overwritten if xml

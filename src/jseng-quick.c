@@ -3627,7 +3627,7 @@ JS_NewCFunction(mwc, nat_jobs, "jobspending", 0), JS_PROP_ENUMERABLE);
 	JS_FreeValue(mwc, r);
 
 	jsSourceFile = 0;
-	JS_DefinePropertyValueStr(mwc, mwo, "share", JS_NewInt32(mwc, 1), JS_PROP_ENUMERABLE);
+	JS_DefinePropertyValueStr(mwc, mwo, "share", JS_NewInt32(mwc, 2), JS_PROP_ENUMERABLE);
 	JS_DefinePropertyValueStr(mwc, mwo, "bp_string", JS_NewAtomString(mwc, bp_string + 1), 0);
 	JS_DefinePropertyValueStr(mwc, mwo, "trace_string", JS_NewAtomString(mwc, trace_string + 1), 0);
 

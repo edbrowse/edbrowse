@@ -9,6 +9,12 @@ First, some code that lets you run this stand alone, as a syntax check.
 qjs -C shared.js
 *********************************************************************/
 "use strict";
+
+// share = 2 means this is run from edbrowse, share is created natively
+// share = 1 means we are runnig this standalone
+// share = 0 means we are running startwindow standalone and it created share = 0
+if(!this.share) this.share = 1;
+
 if(!this.puts) {
     this.puts = (s) => undefined;
 }
