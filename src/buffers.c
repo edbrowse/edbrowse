@@ -8701,41 +8701,54 @@ rebrowse:
 		if (noStack < 2 && icmd != 'i' && !cw->dirMode &&
 			(isURL(cf->fileName) || !isURL(line)) &&
 			sameURL(line, cf->fileName)) {
-			if (icmd == 'e' || stringEqual(line, cf->fileName)) {
+			if (!cw->browseMode) {
 				setError(MSG_AlreadyInBuffer);
 				goto fail;
-			}
-/* Same url, but a different #section */
-			s = findHash(line);
-			if (!s) {	// no section specified
-// If there are lines, jump to line 1 for the g command and to $ for other commands
-				if(!cw->dot) {
-					if(debugLevel >= 1)
-						i_puts(MSG_Empty);
-					goto success;
+			} else {
+				if(!strncmp(cf->fileName, "http://", 7) &&
+				strncmp(line, "http://", 7)) {
+// the weird case, it was http://www.stuff and we took the lazy way
+// and just typed in www.stuff, and that matches on sameURL.
+					char *q;
+					createFormattedString(&q, "http://%s.browse", line);
+					nzFree(cf->fileName);
+					cf->fileName = q;
+				} else {
+					nzFree(cf->fileName);
+					cf->fileName = cloneString(line);
+					addToFilename(".browse");
 				}
-				const int targetLine = (icmd == 'g') ? 1 : cw->dol;
-				if(cw->dot == targetLine) {
+				s = findHash(line);
+				if (!s) {	// no section specified
+// If there are lines, jump to line 1 for the g command and to $ for other commands
+					if(!cw->dot) {
+						if(debugLevel >= 1)
+							i_puts(MSG_Empty);
+						goto success;
+					}
+					const int targetLine = (icmd == 'g') ? 1 : cw->dol;
+					if(cw->dot == targetLine) {
+						if(debugLevel >= 1)
+							printDot();
+						goto success;
+					}
+					struct histLabel *label =
+					    allocMem(sizeof(struct histLabel));
+					label->label = cw->dot;
+					label->prev = cw->histLabel;
+					cw->histLabel = label;
+					cw->dot = targetLine;
 					if(debugLevel >= 1)
 						printDot();
 					goto success;
 				}
-				struct histLabel *label =
-				    allocMem(sizeof(struct histLabel));
-				label->label = cw->dot;
-				label->prev = cw->histLabel;
-				cw->histLabel = label;
-				cw->dot = targetLine;
-				if(debugLevel >= 1)
-					printDot();
-				goto success;
+				line = s;
+				first = '#';
+				cmd = 'b';
+				emode = false;
+				debugPrint(2, " hash replace %s", line);
+				goto browse;
 			}
-			line = s;
-			first = '#';
-			cmd = 'b';
-			emode = false;
-			debugPrint(2, " hash replace %s", line);
-			goto browse;
 		}
 
 // Different URL, go get it.
