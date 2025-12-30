@@ -8942,7 +8942,7 @@ redirect:
 				goto success;
 			newhash = cloneString(p + 1);
 		} else {
-			if(!(p = findHash(cw->f0.fileName)))
+			if(!(p = findHash(cf->fileName)))
 				goto success;
 // have to pull #stuff out and still leave the .browse at the end.
 			s = p + strlen(p) - 7;
@@ -8957,6 +8957,12 @@ redirect:
 			debugPrint(1, "%lld", fileSize);
 			fileSize = -1;
 		}
+// muck with the file name
+		debrowseFilename(cf->fileName, false);
+		p = findHash(cf->fileName);
+		if(p) *p = 0;
+		createFormattedString(&p, "%s#%s.browse", cf->fileName, newhash);
+		nzFree(cf->fileName), cf->fileName = p;
 		debugPrint(3, "set hash %s", newhash);
 		set_location_hash(newhash);
 		unpercentString(newhash);
