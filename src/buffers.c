@@ -8958,11 +8958,13 @@ redirect:
 			fileSize = -1;
 		}
 // muck with the file name
-		debrowseFilename(cf->fileName, false);
-		p = findHash(cf->fileName);
-		if(p) *p = 0;
-		createFormattedString(&p, "%s#%s.browse", cf->fileName, newhash);
-		nzFree(cf->fileName), cf->fileName = p;
+		if(isURL(cf->fileName)) {
+			debrowseFilename(cf->fileName, false);
+			p = findHash(cf->fileName);
+			if(p) *p = 0;
+			createFormattedString(&p, "%s#%s.browse", cf->fileName, newhash);
+			nzFree(cf->fileName), cf->fileName = p;
+		}
 		debugPrint(3, "set hash %s", newhash);
 		set_location_hash(newhash);
 		unpercentString(newhash);
