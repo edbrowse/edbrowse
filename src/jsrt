@@ -367,6 +367,7 @@ document.writeln("<script language=JavaScript>document.writeln('Nested Script ')
 subject: <input type=hidden name=who value=eklhad>
 <input type=hidden name=password value=secret>
 <input type=text name=subject size=50 maxlength=80 required>
+<a href=#senddata>skip form fields</a>
 <br>State and zip:
 <select name=state onchange=newSelect(this)>
 <option selected value=-->
@@ -541,7 +542,7 @@ We'll get back to you if we like what you have to say.</textarea>
 <DIV id=sphere>Surface area is 4&#960;r<span class=sup>2</span>.
 <span id=spanc><span id=spanb>b <span id=spana>a</span> b</span> capture</span>
 </DIV>
-<input type=button name=b value=calc onclick=calc(this.form)>
+<input id=senddata type=button name=b value=calc onclick=calc(this.form)>
 <input type='text' readonly name='result' size='4'>
 <input type=button name=rw value=rewrite onclick=newwords()>
 <input type='reset' value='Reset' name='b0'>
@@ -1006,6 +1007,8 @@ q.then(pmf);
 // It will core dump on exit if quick is prior to 06/28/2025.
 var pnow = Promise.resolve(63)
 pnow.then(()=>promiseRan=true)
+
+addEventListener("hashchange", ()=>alert("hash is now " + location.hash));
 
 function relative() {
 var el = document.createElement("DIV")
