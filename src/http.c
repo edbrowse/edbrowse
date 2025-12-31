@@ -2095,10 +2095,10 @@ ftp_transfer_fail:
 			ebcurl_setError(curlret, g->urlcopy,
 					(g->foreground ? 0 : 1), g->error);
 	}
-	if (transfer_success == true && !stringEqual(url, g->urlcopy))
+	if (transfer_success == true && !stringEqual(url, g->urlcopy)) {
 		g->cfn = g->urlcopy;
-	else
-		nzFree0(g->urlcopy);
+		g->urlcopy = 0;
+	}
 
 	i_get_free(g, !transfer_success);
 
