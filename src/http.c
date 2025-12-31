@@ -1624,7 +1624,7 @@ static void ftp_ls_line(struct i_get *g, char *line)
 		char user[42], group[42];
 		char month[8];
 		int day;
-		char *q, *t;
+		char *q, *t = 0;
 // this sscanf might not work if user or group name contains spaces
 		sscanf(line + j, " %d %40s %40s %lld %3s %d",
 		       &nlinks, user, group, &fsize, month + 1, &day);
@@ -1656,18 +1656,28 @@ static void ftp_ls_line(struct i_get *g, char *line)
 				qc = '\'';
 			stringAndString(&g->buffer, &g->length, "<A HREF=x");
 			g->buffer[g->length - 1] = qc;
-			t = strstr(q, " -> ");
+// all sorts of cases aren't managed here:
+// if the file name continas " and '
+// if the file name contains % ornonascii or other chars that should be url escaped
+// if the file name contains < > or &, which should be html escaped
+			if(line[0] == 'l') t = strstr(q, " -> ");
+// This indicates symbolic link; we can't have the dereference in the href tag,
+// nor do we need it in the description.
 			if (t)
-				stringAndBytes(&g->buffer, &g->length, q,
-					       t - q);
+				stringAndBytes(&g->buffer, &g->length, q, t - q);
 			else
 				stringAndString(&g->buffer, &g->length, q);
 			stringAndChar(&g->buffer, &g->length, qc);
 			stringAndChar(&g->buffer, &g->length, '>');
-			stringAndString(&g->buffer, &g->length, q);
+			if (t)
+				stringAndBytes(&g->buffer, &g->length, q, t - q);
+			else
+				stringAndString(&g->buffer, &g->length, q);
 			stringAndString(&g->buffer, &g->length, "</A>");
 			if (line[0] == 'd')
 				stringAndChar(&g->buffer, &g->length, '/');
+			if (line[0] == 'l')
+				stringAndChar(&g->buffer, &g->length, '@');
 			stringAndString(&g->buffer, &g->length, ": ");
 			stringAndLongLong(&g->buffer, &g->length, fsize);
 			stringAndChar(&g->buffer, &g->length, '\n');
