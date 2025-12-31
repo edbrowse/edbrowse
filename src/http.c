@@ -1599,6 +1599,29 @@ static void prepHtmlString(struct i_get *g, const char *q)
 	}
 }
 
+// like the above but with an end mark
+static void prepHtmlFragment(struct i_get *g, const char *q, const char *end)
+{
+	char c;
+	if (!strpbrk(q, "<>&")) {	// no bad characters
+		stringAndBytes(&g->buffer, &g->length, q, end - q);
+		return;
+	}
+	for (; (c = *q) && q != end; ++q) {
+		char *meta = 0;
+		if (c == '<')
+			meta = "&lt;";
+		if (c == '>')
+			meta = "&gt;";
+		if (c == '&')
+			meta = "&amp;";
+		if (meta)
+			stringAndString(&g->buffer, &g->length, meta);
+		else
+			stringAndChar(&g->buffer, &g->length, c);
+	}
+}
+
 /* Format a line from an ftp directory. */
 static void ftp_ls_line(struct i_get *g, char *line)
 {
@@ -1656,30 +1679,30 @@ static void ftp_ls_line(struct i_get *g, char *line)
 				qc = '\'';
 			stringAndString(&g->buffer, &g->length, "<A HREF=x");
 			g->buffer[g->length - 1] = qc;
-// all sorts of cases aren't managed here:
-// if the file name continas " and '
+// some cases aren't managed here:
+// if the file name contains " and '
 // if the file name contains % ornonascii or other chars that should be url escaped
-// if the file name contains < > or &, which should be html escaped
+// if the file name contains < > or &, but I do handle this one
 			if(line[0] == 'l') t = strstr(q, " -> ");
 // This indicates symbolic link; we can't have the dereference in the href tag,
 // nor do we need it in the description.
 			if (t)
-				stringAndBytes(&g->buffer, &g->length, q, t - q);
+				prepHtmlFragment(g, q, t);
 			else
-				stringAndString(&g->buffer, &g->length, q);
+				prepHtmlString(g, q);
 			stringAndChar(&g->buffer, &g->length, qc);
 			stringAndChar(&g->buffer, &g->length, '>');
 			if (t)
-				stringAndBytes(&g->buffer, &g->length, q, t - q);
+				prepHtmlFragment(g, q, t);
 			else
-				stringAndString(&g->buffer, &g->length, q);
+				prepHtmlString(g, q);
 			stringAndString(&g->buffer, &g->length, "</A>");
 			if (line[0] == 'd')
 				stringAndChar(&g->buffer, &g->length, '/');
 			if (line[0] == 'l')
 				stringAndChar(&g->buffer, &g->length, '@');
 			stringAndString(&g->buffer, &g->length, ": ");
-			stringAndLongLong(&g->buffer, &g->length, fsize);
+			stringAndString(&g->buffer, &g->length, conciseSize(fsize));
 			stringAndChar(&g->buffer, &g->length, '\n');
 			return;
 		}
