@@ -1625,6 +1625,7 @@ static void ftp_ls_line(struct i_get *g, char *line)
 		char month[8];
 		int day;
 		char *q, *t;
+// this sscanf might not work if user or group name contains spaces
 		sscanf(line + j, " %d %40s %40s %lld %3s %d",
 		       &nlinks, user, group, &fsize, month + 1, &day);
 		q = strchr(line, ':');
@@ -2294,6 +2295,7 @@ gopher_transfer_fail:
 
 	if (!stringEqual(url, g->urlcopy))
 		g->cfn = g->urlcopy;
+		else nzFree(g->urlcopy);
 	g->urlcopy = 0;
 
 	if (first == '0') {
