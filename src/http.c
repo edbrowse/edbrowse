@@ -1580,7 +1580,7 @@ void *httpConnectBack3(void *ptr)
 static void prepHtmlString(struct i_get *g, const char *q)
 {
 	char c;
-	if (!strpbrk(q, "<>&")) {	// no bad characters
+	if (!strpbrk(q, "<>&\"")) {	// no bad characters
 		stringAndString(&g->buffer, &g->length, q);
 		return;
 	}
@@ -1592,6 +1592,8 @@ static void prepHtmlString(struct i_get *g, const char *q)
 			meta = "&gt;";
 		if (c == '&')
 			meta = "&amp;";
+		if (c == '"')
+			meta = "&quot;";
 		if (meta)
 			stringAndString(&g->buffer, &g->length, meta);
 		else
@@ -1603,7 +1605,7 @@ static void prepHtmlString(struct i_get *g, const char *q)
 static void prepHtmlFragment(struct i_get *g, const char *q, const char *end)
 {
 	char c;
-	if (!strpbrk(q, "<>&")) {	// no bad characters
+	if (!strpbrk(q, "<>&\"")) {	// no bad characters
 		stringAndBytes(&g->buffer, &g->length, q, end - q);
 		return;
 	}
@@ -1615,6 +1617,8 @@ static void prepHtmlFragment(struct i_get *g, const char *q, const char *end)
 			meta = "&gt;";
 		if (c == '&')
 			meta = "&amp;";
+		if (c == '"')
+			meta = "&quot;";
 		if (meta)
 			stringAndString(&g->buffer, &g->length, meta);
 		else
@@ -1674,15 +1678,9 @@ static void ftp_ls_line(struct i_get *g, char *line)
 		}
 
 		if (q && *q) {
-			char qc = '"';
-			if (strchr(q, qc))
-				qc = '\'';
-			stringAndString(&g->buffer, &g->length, "<A HREF=x");
-			g->buffer[g->length - 1] = qc;
-// some cases aren't managed here:
-// if the file name contains " and '
-// if the file name contains % ornonascii or other chars that should be url escaped
-// if the file name contains < > or &, but I do handle this one
+			stringAndString(&g->buffer, &g->length, "<A HREF=\"");
+// Some cases are not managed here:
+// if the file name contains % ornonascii or other chars that should be url escaped.
 			if(line[0] == 'l') t = strstr(q, " -> ");
 // This indicates symbolic link; we can't have the dereference in the href tag,
 // nor do we need it in the description.
@@ -1690,8 +1688,7 @@ static void ftp_ls_line(struct i_get *g, char *line)
 				prepHtmlFragment(g, q, t);
 			else
 				prepHtmlString(g, q);
-			stringAndChar(&g->buffer, &g->length, qc);
-			stringAndChar(&g->buffer, &g->length, '>');
+			stringAndString(&g->buffer, &g->length, "\">");
 			if (t)
 				prepHtmlFragment(g, q, t);
 			else
