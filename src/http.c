@@ -1680,7 +1680,7 @@ static void ftp_ls_line(struct i_get *g, char *line)
 		if (q && *q) {
 			stringAndString(&g->buffer, &g->length, "<A HREF=\"");
 // Some cases are not managed here:
-// if the file name contains % ornonascii or other chars that should be url escaped.
+// if the file name contains % or nonascii or other chars that should be url escaped.
 			if(line[0] == 'l') t = strstr(q, " -> ");
 // This indicates symbolic link; we can't have the dereference in the href tag,
 // nor do we need it in the description.
@@ -1795,21 +1795,15 @@ static void gopher_ls_line(struct i_get *g, char *line, const char *url_prot, co
 	}
 // everything else becomes hyperlink apart from item type 7 which becomes form
 	if (host) {
-		char qc = '"';
-// I just assume host and path can be quoted with either " or '
-		if (strchr(host, qc)	// should never happen
-		    || strchr(pathname, qc))
-			qc = '\'';
 		if (first != '7')
-			stringAndString(&g->buffer, &g->length, "<a href=x");
+			stringAndString(&g->buffer, &g->length, "<a href=\"");
 		else
 			stringAndString(&g->buffer, &g->length,
-					"<form action=x");
-		g->buffer[g->length - 1] = qc;
+					"<form action=\"");
 
 		if (!strncmp(pathname, "URL:", 4)) {
 // Full URL in path so use it unencoded
-			stringAndString(&g->buffer, &g->length, pathname + 4);
+			prepHtmlString(g, pathname + 4);
 			pathname = 0;
 		} else {
 // Just a path
@@ -1830,11 +1824,10 @@ static void gopher_ls_line(struct i_get *g, char *line, const char *url_prot, co
 // gopher requires us to inject the  "first" directive into the path. Wow.
 			stringAndChar(&g->buffer, &g->length, '/');
 			stringAndChar(&g->buffer, &g->length, first);
-			stringAndString(&g->buffer, &g->length, pathname);
+			prepHtmlString(g, pathname);
 		}
 		nzFree(pathname);
-		stringAndChar(&g->buffer, &g->length, qc);
-		stringAndChar(&g->buffer, &g->length, '>');
+		stringAndString(&g->buffer, &g->length, "\">");
 	}
 
 	s = strchr(text, '(');
