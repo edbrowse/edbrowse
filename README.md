@@ -1,4 +1,18 @@
-edbrowse, a line oriented editor browser.
+# Edbrowse
+
+<div align="center">
+  <img src="https://img.shields.io/badge/BROWSER-COMMAND--LINE-blue" />
+  <img src="https://img.shields.io/badge/ENGINE-QUICKJS-orange" />
+  <img src="https://img.shields.io/badge/INTERFACE-LINE--ORIENTED-green" />
+</div>
+
+
+<hr style="height:10px; visibility:hidden;" />
+<div style="background-color:black; height:10px;"></div>
+
+
+
+Edbrowse, a line oriented editor browser.
 Written and maintained by Karl Dahlke and others.
 See our home page edbrowse.org for current releases and contact information.
 See LICENSE for licensing agreements.
@@ -11,8 +25,8 @@ If edbrowse is described in a book or mainstream magazine in the future,
 perhaps this article can be reintroduced.
 
 ------------------------------------------------------------
-
-Disclaimer: this software is provided as-is,
+> [!CAUTION]
+> **Disclaimer:** this software is provided as-is,
 with no guarantee that it will perform as expected.
 It might trash your precious files.
 It might send bad data across the Internet,
@@ -34,8 +48,9 @@ You need to use a browser to read the documentation,
 which describes how to use the browser.
 Well you can always do this:
 
+```shell
 cd doc ; lynx -dump usersguide.html >usersguide.txt
-
+```
 This produces the documentation in text form,
 which you can read using your favorite editor.
 Of course we hope edbrowse will eventually become your
@@ -52,60 +67,65 @@ There are more substantial, step by step instructions for building edbrowse from
 on various platforms, in the edbrowse wiki.
 If you run into trouble you may want to consult those; this is an overview.
 
-Requirements:
+### Requirements:
 
-pcre:
+**pcre:**
 As you may know, edbrowse was originally a perl script.
 As such, it was only natural to use perl regular expressions for
 the search/substitute functions in the editor.
 Once you've experienced the power of perl regexp, you'll never
 go back to ed.  So I use the perl-compatible regular expression
-library, /lib/libpcre2-8
+library, `/lib/libpcre2-8`
 If you don't have this file, check your available packages.
 the pcre and pcre-devel packages might be there, just not installed.
 As of this writing, you need pcre2-8, which is generally available.
 
-Note that buffers.c includes <pcre2.h>.
-Some distributions put it in /usr/include/pcre2/pcre2.h,
+Note that `buffers.c` includes `<pcre2.h>`.
+Some distributions put it in `/usr/include/pcre2/pcre2.h`,
 so you'll have to adjust the source, the -I path, or make a link.
 
-libcurl:
-You need libcurl and libcurl-devel,
+**libcurl:**
+You need `libcurl` and `libcurl-devel`,
 which are included in almost every Linux distro.
 This is used for ftp, http, and https.
-Check for /usr/include/curl/curl.h
+Check for `/usr/include/curl/curl.h`
+
 Edbrowse requires version 7.55.0 or later.
 It will not compile against earlier versions.
 It's rare, but curl, and hence edbrowse, cannot access certain websites,
 giving the message
 Cannot communicate securely with peer: no common encryption algorithm(s).
 You can even see this from the command line.
+```shell
 	curl https://weloveanimals.me
+```
 You'll either get the communication error or not.
 This happens if openssl is too old,
 or doesn't support the ciphers that the website expects.
 This is beyond edbrowse, and beyond curl; you have to upgrade openssl.
 
-unixODBC:
+**unixODBC:**
 Edbrowse provides database access through odbc.
-Thus you need unixODBC and unixODBC-devel.
+Thus you need `unixODBC` and `unixODBC-devel`.
 ODBC has been stable for quite some time.
 unixODBC version 2.2.14 seems to satisfy edbrowse with odbc.
 
-quickjs-ng:
+**quickjs-ng:**
 This is the javascript engine for edbrowse.
 Edbrowse is known to build against version 0.10.1 or later. At the time of writing the current version is 0.11.0.
 Earlier versions have not been tested.
 
 If it is already packaged then you can move on to the next step.
 If it is not packaged you will need to build it from source.
+```shell
 git clone https://github.com/quickjs-ng/quickjs
+```
 the make process assumes cmake on your system, so be sure that is installed.
 make
 make install
 If header and library are not installed in the usual places,
-you may need to set PREFIX,
-or QUICKJS_INCLUDE and QUICKJS_LIB appropriately, when you make edbrowse.
+you may need to set `PREFIX`,
+or `QUICKJS_INCLUDE` and `QUICKJS_LIB` appropriately, when you make edbrowse.
 Under normal circumstances, make will just work.
 
 quickjs-ng is a fork of the original project quickjs.
@@ -113,34 +133,43 @@ You can, as an alternative, build edbrowse against the original project
 quickjs. Unfortunately versioning in quickjs is less clear and thus it is
 difficult to give exact version requirements other than that the version must
 be released after June 2025.
-the preprocessing symbol Q_NG is set to 1 for quickjs-ng, or 0 for quickjs.
+the preprocessing symbol `Q_NG` is set to 1 for quickjs-ng, or 0 for quickjs.
 This is only used by the sourcefile jseng-quick.c,
 which is the gateway between edbrowse and quickjs.
-If quickjs-ng is installed, just type make, or:
+If quickjs-ng is installed, just type `make`, or:
+```shell
 CPPFLAGS=-DQ_NG=1 QUICKJS_LIB_NAME=qjs make
+```
+
 If quickjs is installed:
+```shell
 CPPFLAGS=-DQ_NG=0 QUICKJS_LIB_NAME=quickjs make
+```
 
 It is not possible to install both simultaneously.
 There is a conflict with the executable qjs.
 To build edbrowse against a quick project that is built locally, but not installed,
-set QUICKJS_INCLUDE and QUICKJS_LIB appropriately.
+set `QUICKJS_INCLUDE` and `QUICKJS_LIB` appropriately.
 Your make command might look like this.
-
+```shell
 CPPFLAGS=-DQ_NG=0 QUICKJS_LIB_NAME=quickjs  QUICKJS_INCLUDE=/home/your_login/programs/qorig QUICKJS_LIB=/home/your_login/programs/qorig make
-
-readline:
+```
+**readline:**
 Edbrowse supports using GNU readline for handling input. As such you need
 the readline library and headers installed e.g. readline and readline-devel.
 
 ------------------------------------------------------------
 
-Compiling edbrowse:
+### Compiling edbrowse:
+> [!CAUTION]
+> For a time, edbrowse could be built on windows, but this is no longer supported.
 
-For a time, edbrowse could be built on windows, but this is no longer supported.
 On all other systems, you should be able to use make.
+```shell
 cd src
 make
+```
+
 It should just work.
 If you are building against the original project quickjs,
 or a quick package that is built locally but not installed,
@@ -148,19 +177,19 @@ see the earlier comments on environment variables
 and the edbrowse makefile.
 
 In addition to quick-related variables,
-the makefile supports the environment variables EBDEBUG=on
+the makefile supports the environment variables `EBDEBUG=on`
 (or yes or y or 1 or any nonempty string)
 for symbolic debugging via gdb,
-and EBPROF=on for profiling,
-and EBDEMIN=on for javascript deminimization.
+and `EBPROF=on` for profiling,
+and `EBDEMIN=on` for javascript deminimization.
 Distributors should not set these flags.
 
-You can test the executable by edbrowse src/jsrt
+You can test the executable by edbrowse `src/jsrt`
 jsrt means javascript regression test.
-You will get a number, the size of the file, just as you would from /bin/ed.
+You will get a number, the size of the file, just as you would from `/bin/ed`.
 Then type b for browse.
 You should get something like this; if you do then all is well.
-
+```
 relative
 body loading
 complete
@@ -172,18 +201,20 @@ lines 42 through 43 have been added
 
 Type ,p to see the page, if you wish, as though it were ed.
 Type q to exit.
-
+```
 ------------------------------------------------------------
 
 Edbrowse creates a system wide temp directory if it is not already present.
-This is /tmp/.edbrowse.
+This is `/tmp/.edbrowse`.
 This directory contains a subdirectory per user, mod 700 for added security.
 Thus one user cannot spy on the temp files, perhaps sensitive internet data,
 of another user.
 However, true multiuser security requires a root job at startup,
-e.g. in /etc/rc.d/rc.local, to create the directory with the sticky bit.
+e.g. in `/etc/rc.d/rc.local`, to create the directory with the sticky bit.
+```shell
 	mkdir /tmp/.edbrowse
 	chmod 1777 /tmp/.edbrowse
+```
 
 ------------------------------------------------------------
 
@@ -200,128 +231,136 @@ try to sort of follow our indenting style.
 
 ------------------------------------------------------------
 
-Debug levels:
-0: silent
-1: show the sizes of files and web pages as they are read and written
-2: show the url as you call up a web page,
+### Debug levels:
+**0:** silent
+
+**1:** show the sizes of files and web pages as they are read and written
+
+**2:** show the url as you call up a web page,
 and http redirection.
-3: javascript execution and errors.
+
+**3:** javascript execution and errors.
    cookies, http codes, form data, and sql statements logged.
-4: show the socket connections, and the http headers in and out.
+
+**4:** show the socket connections, and the http headers in and out.
    side effects of running javascript.
    Dynamic node linkage.
-5: messages to and from javascript, url resolution.
-Show mail headers when browsing a mail file.
-6: show javascript to be executed
-Show the entire email without sending it.
-7: reformatted regular expressions, breakline chunks,
-JSValues allocated and freed.
-8: text lines freed, debug garbage collection
-9: not used
 
-Casual users should not go beyond db2.
-Even developers rarely go beyond db4.
+**5:** messages to and from javascript, url resolution.
+Show mail headers when browsing a mail file.
+
+**6:** show javascript to be executed
+Show the entire email without sending it.
+
+**7:** reformatted regular expressions, breakline chunks,
+JSValues allocated and freed.
+
+**8:** text lines freed, debug garbage collection
+
+**9:** not used
+
+**Casual users should not go beyond db2.
+Even developers rarely go beyond db4.**
 
 ------------------------------------------------------------
 
-Sourcefiles as follows.
+### Sourcefiles as follows:
 
-src/main.c:
-Read and parse the config file.
-Entry point.
-Command line options.
-Invoke mail client if mail options are present.
-If run as an editor/browser, treat arguments as files or URLs
-and read them into buffers.
-Read commands from stdin and invoke them via the command
-interpreter in buffers.c.
-Handle interrupt.
+**src/main.c:**
+- Read and parse the config file.
+- Entry point.
+- Command line options.
+- Invoke mail client if mail options are present.
+- If run as an editor/browser, treat arguments as files or URLs
+- and read them into buffers.
+- Read commands from stdin and invoke them via the command
+- interpreter in buffers.c.
+- Handle interrupt.
 
-src/buffers.c:
-Manage all the text buffers.
-Interpret the standard ed commands, move, copy, delete, substitute, etc.
-Run the 2 letter commands, such as qt to quit.
+**src/buffers.c:**
+- Manage all the text buffers.
+- Interpret the standard ed commands, move, copy, delete, substitute, etc.
+- Run the 2 letter commands, such as qt to quit.
 
-src/stringfile.c:
-Helper functions to manage memory, strings, files, directories.
+**src/stringfile.c:**
+- Helper functions to manage memory, strings, files, directories.
 
-src/isup.c:
-Internet support routines.
-Split a url into its components.
-Decide if it's a proxy url.
-Resolve relative url into absolute url
-based on the location of the current web page.
-Send and receive cookies.  Maintain the cookie jar.
-Maintain a cache of http files.
-Remember user and password for web pages that require authentication.
-Only the basic method is implemented at this time.
-Determine the mime type of a file or web page and the corresponding plugin,
-if any. Launch the plugin automatically or on command.
-A plugin can play the file, like music, or render the file, like pdf.
-Run as an irc client.
+**src/isup.c:**
+- Internet support routines.
+- Split a url into its components.
+- Decide if it's a proxy url.
+- Resolve relative url into absolute url
+- based on the location of the current web page.
+- Send and receive cookies.  Maintain the cookie jar.
+- Maintain a cache of http files.
+- Remember user and password for web pages that require authentication.
+- Only the basic method is implemented at this time.
+- Determine the mime type of a file or web page and the corresponding plugin,
+- if any. Launch the plugin automatically or on command.
+- A plugin can play the file, like music, or render the file, like pdf.
+- Run as an irc client.
 
-src/format.c:
-Arrange text into lines and paragraphs.
-base64 encode and decode for email.
-Convert utf8, iso8859-1, unicode 16, unicode 32, etc.
-Process an html page for final display.
-Manage emojis.
-International print routines to display messages according to your locale.
+**src/format.c:**
+- Arrange text into lines and paragraphs.
+- base64 encode and decode for email.
+- Convert utf8, iso8859-1, unicode 16, unicode 32, etc.
+- Process an html page for final display.
+- Manage emojis.
+- International print routines to display messages according to your locale.
 
-src/http.c:
-Send the http request, and read the data from the web server.
-Handles https connections as well,
-and 301/302 redirection.
-gopher, ftp, sftp, download files, possibly in the background.
+**src/http.c:**
+- Send the http request, and read the data from the web server.
+- Handles https connections as well,
+- and 301/302 redirection.
+- gopher, ftp, sftp, download files, possibly in the background.
 
-src/html-tags.c:
-htmlScanner(), scan the html tags and build a tree of nodes.
-prerender(), establish attributes and linkages among these nodes.
-decorate(), decorate the tree with js objects corresponding to the html nodes,
-if js is enabled.
+**src/html-tags.c:**
+- htmlScanner(), scan the html tags and build a tree of nodes.
+- prerender(), establish attributes and linkages among these nodes.
+- decorate(), decorate the tree with js objects corresponding to the html nodes,
+- if js is enabled.
 
-src/html.c:
-Turn js side effects, like document.write or innerHTML,
-back into html tags if that makes sense.
-Enter data into forms and watch for javascript side effects.
-Submit/reset forms.
-Render the tree of html nodes into a text buffer.
-Rerender the tree after js has run, and report any changes to the user.
+**src/html.c:**
+- Turn js side effects, like document.write or innerHTML,
+- back into html tags if that makes sense.
+- Enter data into forms and watch for javascript side effects.
+- Submit/reset forms.
+- Render the tree of html nodes into a text buffer.
+- Rerender the tree after js has run, and report any changes to the user.
 
-src/sendmail.c:
-Send mail (smtp or smtps).  Encode attachments.
+**src/sendmail.c:**
+- Send mail (smtp or smtps).  Encode attachments.
 
-src/fetchmail.c:
-Fetch mail (pop3 or pop3s or imap).  Decode attachments.
-Browse mail files, separate mime components.
-Delete emails, move emails to other imap folders, search on the imap server.
+**src/fetchmail.c:**
+- Fetch mail (pop3 or pop3s or imap).  Decode attachments.
+- Browse mail files, separate mime components.
+- Delete emails, move emails to other imap folders, search on the imap server.
 
-src/messages.h:
-Symbolic constants for the warning/error messages of edbrowse.
+**src/messages.h:**
+- Symbolic constants for the warning/error messages of edbrowse.
 
-lang/msg-*:
-Edbrowse status and error messages in various languages.
-Each is converted into a const array of messages in src/msg-strings.c,
-thus src/msg-strings.c is not a source file.
+**lang/msg-*:**
+- Edbrowse status and error messages in various languages.
+- Each is converted into a const array of messages in src/msg-strings.c,
+- thus src/msg-strings.c is not a source file.
 
-lang/ebrc-*:
-Default .ebrc config file that is written to your home directory
-if you have no such file.
-Different files for different languages.
-Each is converted into a const string in src/ebrc.c,
-thus src/ebrc.c is not a source file.
+**lang/ebrc-*:**
+- Default .ebrc config file that is written to your home directory
+- if you have no such file.
+- Different files for different languages.
+- Each is converted into a const string in src/ebrc.c,
+- thus src/ebrc.c is not a source file.
 
-src/jseng-quick.c:
-The javascript engine built around the quick js library.
-Manage all the js objects corresponding to the web page in edbrowse.
-All the js details are hidden in this file.
-this is encapsulation, hiding the js library from the rest of edbrowse.
+**src/jseng-quick.c:**
+- The javascript engine built around the quick js library.
+- Manage all the js objects corresponding to the web page in edbrowse.
+- All the js details are hidden in this file. this is encapsulation, hiding the js library from the rest of edbrowse.
 
-src/js_hello*
+**src/js_hello***
 Various hello world files to exercise various javascript engines.
 These are stand alone programs; build them by make hello.
 
-src/startwindow.js:
+**src/startwindow.js:**
 Javascript that is run at the start of each session.
 This creates certain classes and methods that client js will need.
 It is converted into a const string in src/startwindow.c,
@@ -332,50 +371,51 @@ Failing this, write them in C, using the API presented by jseng-quick.c.
 Failing this, and as a last resort, write them as native code within the js engine.
 Obviously this last approach is not engine portable.
 
-src/shared.js:
+**src/shared.js:**
 Functions or classes that can safely be shared amongst all edbrowse windows.
 This saves time and memory.
 
-src/demin.js:
+**src/demin.js:**
 Third party open source javascript routines that are used for debugging
 and deminimization.
 These are snapshots; you will need to update demin.js, i.e. grab a new
 snapshot, as that software evolves.
 Distributers don't have to worry about this one,
-it isn't compiled in unless $EBDEMIN is set to on.
+it isn't compiled in unless `$EBDEMIN` is set to on.
 
-src/endwindow.js:
-This is the close of shared.js, and it stands in if demin.js is not used.
+**src/endwindow.js:**
+- This is the close of shared.js, and it stands in if demin.js is not used.
 
-src/jsrt:
+**src/jsrt:**
 This is the javascript regression test for edbrowse.
 It exercises some of the javascript DOM interactions.
 It also presents frames and hyperlinks and forms and input fields,
 so you can play around.
 
-src/acid3:
-A snapshot of http://acid3.acidtests.org, with modifications,
+**src/acid3:**
+A snapshot of `http://acid3.acidtests.org`, with modifications,
 so that some or all of the acid tests pass under edbrowse.
 This is a work in progress.
-My modifications are indicated by the comment   //@`
+My modifications are indicated by the comment`   //@` `
 
-src/dbops.c:
-Database operations; insert update delete.
+**src/dbops.c:**
+- Database operations; insert update delete.
 
-src/dbodbc.c:
-Connect edbrowse to odbc.
+**src/dbodbc.c:**
+- Connect edbrowse to odbc.
 
-src/dbinfx.ec:
+**src/dbinfx.ec:**
 Connect edbrowse directly to Informix.
 Other connectors could be built, e.g. Oracle,
 but it's probably easier just to go through odbc.
 
-src/dbstubs.c:
-Stubs for database functions, if you want to build edbrowse without database access.
+**src/dbstubs.c:**
+- Stubs for database functions, if you want to build edbrowse without database access.
 
 ------------------------------------------------------------
 
-Error conventions.
+### Error conventions:
+
 Unix commands return 0 for ok and a negative number for a problem.
 Some of my functions work this way, but most return
 true for success and false for error.
@@ -390,7 +430,8 @@ Some are beyond my control, as they come from odbc or its native driver.
 
 ------------------------------------------------------------
 
-Multiple Representations.
+### Multiple Representations:
+
 
 A web form asks for your name, and you type in Fred Flintstone.
 This piece of data is part of your edbrowse buffer.
@@ -442,51 +483,58 @@ use the showall command to reveal all of this text,
 even some sections that might not be relevant to your situation.
 Formerly invisible text might look like this.
 
+```
 You are logged in as John Smith,
 if you are not John Smith please <log out>.
+```
 
 This block might be invisible unless you are actually logged in.
 And of course the button won't work, unless you are actually logged in.
 
-All text is displayed if javascript is disabled via the js- command,
+All text is displayed if javascript is disabled via the `js-` command,
 because css doesn't run without javascript.
 
 ------------------------------------------------------------
-
-Use the help command for a quick list of all the edbrowse commands.
-This is a copy of the quick reference guide in usersguide.html,
+### Help command
+Use the `help` command for a quick list of all the edbrowse commands.
+This is a copy of the quick reference guide in `usersguide.html`,
 built into edbrowse.
 
 ------------------------------------------------------------
+### In-Built JS Debugger
 
-There is an in-built javascript dom debugger that you enter via the jdb command.
-bye to exit.
+There is an in-built javascript dom debugger that you enter via the `jdb` command.
+`bye` to exit.
+
 Javascript expressions are evaluated, and the document objects are available.
+```
 document.head is the head of your document <head>,
 document.body is the body <body>,
-document.body.firstChild is the first node under <body>, and so on.
-showscripts() shows all the javascripts, even those dynamically created.
+document.body.firstChild is the first node under <body>
+```
+and so on.
+`showscripts()` shows all the javascripts, even those dynamically created.
 Such debugging is beyond the scope of this README file.
-Read the Debugging Javascript article in the edbrowse wiki.
+Read the Debugging Javascript article in the `edbrowse wiki`.
 
 ------------------------------------------------------------
 
-It is often asked why we don't use a headless browser,
+**It is often asked why we don't use a headless browser,
 instead of trying to reinvent and maintain all that js machinery.
 Good question!
 How would we marry these very different creatures?
-Here is how it might play out.
+Here is how it might play out.**
 
 e blah.example.com  same as it works today.
 http fetch through curl.
 
-b (browse command)
+#### b (browse command)
 launch the browser, or activate a tab in the browser if it is already launched.
 I don't know if the headless interface allows for this.
 I don't want a new browser process running for every page in edbrowse.
 Hand the browser the url.
 Yeah we already have the page and in theory we could pass it the html directly,
-with a <base> tag, but it might be easier to just hand it the url and say go.
+with a `<base>` tag, but it might be easier to just hand it the url and say go.
 It is going to maintain cookies as it browses,
 and there is sometimes a transient cookie that indicates session, the "session cookie",
 so the cookie we got is no good, and the only way for the browser to get a proper cookie for its session is to fetch the url itself.
@@ -516,25 +564,31 @@ alert, prompt, console.log, and perhaps other inbuilt methods.
 These interact with the user on the screen.
 What would they do headless?
 Are there callback functions we can provide to manage these actions?
-
+```
 i=xyz
+```
+
 Set or change an input field.
 How do we pass this over to the browser?
 Use javascript, set the value of the input field to xyz.
 But how do we designate the input field in the browser?
 This is the correspondence problem.
 If the input field has an id that's easy.
+```
 querySelector("#id").value = "xyz";
+```
 But if it doesn't?
 We can't expect every checkbox and field to have an id.
 We could perhaps count the input fields leading up to this one. If there are 17 then
+```
 QuerySelectorAll("input")[17].value = "xyz";
+```
 That will usually work but not guaranteed.
 The page could have changed in some way since last we polled.
 Let's say it still lines up.
 This backdoor way doesn't call oninput or onchange etc,
 we have to call those methods ourselves.
-Or onclick() if it's a checkbox, you get the idea.
+Or `onclick()` if it's a checkbox, you get the idea.
 So what about the onchange or onclick code?
 It could alert the user to a bad input, and I wrote about alerts and such above.
 More likely it puts the error message in the page.
@@ -549,7 +603,7 @@ Half a second? Still might not be enough time.
 The browser is asynchronous from us, with no good way to coordinate, and that can cause headaches.
 this is the coordination problem.
 
-i*   push the button.
+#### i*   push the button.
 The usual problems of designating the input field in the browser.
 If we can find it, call the methods onclick, onsubmit, and finally submit.
 If js finds a problem with the form, it will indicate this with an error message on the page.
@@ -566,28 +620,28 @@ We didn't fetch it.
 We could try to fetch it but that might confuse things, because the browser has already fetched it, with its session cookie, that we don't have.
 We might have to say no raw html available in this case.
 
-g   go to a hyperlink.
+#### g   go to a hyperlink.
 onclick code, watch the return, determines whether we jump or not.
 The url itself may be javascript, it often is.
 If the page changes, how do we know? Just like the above.
-If it's a direct href=url I don't think there's a js backdoor.
+If it's a direct `href=url` I don't think there's a js backdoor.
 We have to tell the browser to go to this page, this url, not in a new tab but pushing the old page onto the history.
 Can we do that through headless?
 
-g goes to an internal anchor.  href=#blah
+g goes to an internal anchor.  `href=#blah`
 We could use our machinery to jump,
 and push the prior location onto the stack for the & command.
-Do we find that tag in the browser and call onfocus()?
+Do we find that tag in the browser and call `onfocus()`?
 
 Button says "go back to previous page".
 Implemented through the js history object.
 That's just a refocus to the previous page, it is an up command in the browser.
 How do we know to do the same?
-Do we compare window.location with all the locations on our stack, and go up if that is indicated, or push a new window if it's a new url?
+Do we compare `window.location` with all the locations on our stack, and go up if that is indicated, or push a new window if it's a new url?
 For that matter, how do we do our own up down and ^ commands?
-Use the history object in the browser for up and down, or window.close() for ^?
+Use the history object in the browser for up and down, or `window.close()` for ^?
 
-Page has a plugin.
+###### Page has a plugin.
 For music and such we just do our own.
 That works 95% of the time, but not always, not if a session cookie is required to fetch that audio, then it's a big oops!
 That happens in audio captchas.
@@ -600,7 +654,7 @@ that rendering is completely outside of anything we can get through the headless
 
 Frames on the page make everything complicated.
 It looks seamless to the sighted user but it's not.
-i=xyz within a frame has to work within the context of that frame.
+`i=xyz` within a frame has to work within the context of that frame.
 And all the other commands.
 We have to run all the javascript, on the browser, within that frame.
 We do this in our world, we know the context,
