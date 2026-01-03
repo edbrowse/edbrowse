@@ -521,6 +521,7 @@ void jsClose(void);
 void underKill(Tag *t);
 void set_basehref(const char *b);
 void set_location_hash(const char *h);
+const char *jseng_version(void);
 
 #ifdef __cplusplus
 }

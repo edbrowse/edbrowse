@@ -579,7 +579,13 @@ create in the old location to avoid surprises */
 		++s;
 
 		if (stringEqual(s, "v")) {
-			puts(version);
+			printf("edbrowse %s\n",version);
+			const int cv = LIBCURL_VERSION_NUM;
+			printf("curl %d.%d.%d\n",
+			cv >> 16,
+			(cv >> 8) & 0xff,
+			cv & 0xff);
+			printf("quickjs %s\n", jseng_version());
 			exit(0);
 		}
 

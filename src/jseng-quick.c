@@ -4569,3 +4569,7 @@ void set_location_hash(const char *h)
 	run_function_onearg(cx, g, "set_location_hash", JS_NewAtomString(cx, h));
 }
 
+const char *jseng_version(void)
+{
+	return JS_GetVersion();
+	}
