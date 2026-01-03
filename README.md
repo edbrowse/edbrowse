@@ -1,11 +1,10 @@
 # Edbrowse
 
 <div align="center">
-  <img src="https://img.shields.io/badge/BROWSER-COMMAND--LINE-blue" />
-  <img src="https://img.shields.io/badge/ENGINE-QUICKJS-orange" />
-  <img src="https://img.shields.io/badge/INTERFACE-LINE--ORIENTED-green" />
+  <img src="https://img.shields.io/badge/BROWSER-COMMAND--LINE-blue" alt="Browser: Command-Line" />
+  <img src="https://img.shields.io/badge/ENGINE-QUICKJS-orange" alt="Engine: QuickJS" />
+  <img src="https://img.shields.io/badge/INTERFACE-LINE--ORIENTED-green" alt="Interface: Line-Oriented" />
 </div>
-
 
 <hr style="height:10px; visibility:hidden;" />
 <div style="background-color:black; height:10px;"></div>
