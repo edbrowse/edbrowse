@@ -11,6 +11,7 @@ extern "C" {
 #endif
 
 // sourcefile=buffers.c
+const char *pcre_version(void);
 void undoSpecialClear(void);
 void removeHiddenNumbers(pst p, uchar terminate, int cx, const Window *w);
 pst fetchLineWindow(int n, int show, const Window *w);

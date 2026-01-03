@@ -10,6 +10,12 @@
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include <pcre2.h>
 static bool bad_utf8_alert;
+const char *pcre_version(void)
+{
+	static char buf[20];
+	sprintf(buf, "%d.%d", PCRE2_MAJOR, PCRE2_MINOR);
+	return buf;
+}
 
 #include <readline/readline.h>
 #include <readline/history.h>
