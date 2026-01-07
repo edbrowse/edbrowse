@@ -229,7 +229,7 @@ put1:
 }
 
 // For <h3><div>hello</div></h3> which should not happen, but does
-// And for <blockquote><p> which is prefectly fine
+// And for <blockquote><p> which is perfectly fine
 static void h3div(char *buf)
 {
 	char *s, *t;
@@ -1109,10 +1109,10 @@ char *htmlReformat(char *buf)
 	if(debugLayout) printf("cells<%s>\n", buf);
 	html_tr(buf);
 	if(debugLayout) printf("translate<%s>\n", buf);
-	h3div(buf);
-	if(debugLayout) printf("h3div<%s>\n", buf);
 	anchorSwap(buf);
 	if(debugLayout) printf("swap<%s>\n", buf);
+	h3div(buf);
+	if(debugLayout) printf("h3div<%s>\n", buf);
 	anchorUnframe(buf);
 	if(debugLayout) printf("unframe<%s>\n", buf);
 	html_ws(buf);
