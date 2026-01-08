@@ -68,7 +68,7 @@ sesja %d została zaktualizowana\n
 brak opcji
 formularz został zresetowany
 wysyłanie formularza
-%s: wiersz %d, 'outtype' powinno mieć wartość 't' lub 'h'
+%s: wiersz %d, 'outtype' powinno mieć wartość 't' 'g' lub 'h'
 wiele
  zalecane
 imap mailAccountNumber

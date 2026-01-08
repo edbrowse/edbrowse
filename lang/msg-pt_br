@@ -68,7 +68,7 @@ exibidor %d foi atualizado\n
 sem opções
 formulário limpo
 submetendo formulário
-%s: linha %d, outtype tem que ser definido para t ou h
+%s: linha %d, outtype tem que ser definido para t g ou h
 muitos
  recomendado
 Imap numeroDaContaDeEmail

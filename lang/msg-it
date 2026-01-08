@@ -68,7 +68,7 @@ il buffer %d è stato aggiornato\n
 no opzioni
 la form è stata resettata
 invio il form
-%s: riga %d, outtype deve essere settato a t o h
+%s: riga %d, outtype deve essere settato a t g o h
 molti
  raccomandato
 imap NumeroAccountMail

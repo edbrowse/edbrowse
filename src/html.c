@@ -1519,11 +1519,11 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 	(cw->imapMode1 ? 1 : cw->imapMode2 ? 2 : cw->imapMode3 ? 3: 0),
 	remote);
 	if (!(cf->render2|cf->render3) && (cf->fileName || suffix)) {
-		if (remote) {
-			mt = findMimeByURL(cf->fileName, &sxfirst);
-		} else if(suffix) {
+		if(suffix) {
 // we already checked for valid suffix
 			mt = findMimeBySuffix(suffix);
+		} else if (remote) {
+			mt = findMimeByURL(cf->fileName, &sxfirst);
 		} else {
 			mt = findMimeByFile(cf->fileName);
 		}
@@ -1544,9 +1544,13 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 	}
 
 	if (mt) {
-		if (cf->render1 && mt == cf->mt)
-			cf->render2 = true;
-		else
+		if (cf->render1 && mt == cf->mt) {
+			mt = 0;
+			if(suffix) {
+				setError(MSG_DoubleBrowse);
+				return false;
+			}
+		} else
 			bmode = 3;
 	}
 

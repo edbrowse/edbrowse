@@ -7546,6 +7546,12 @@ after_ib:
 		goto failg;
 	}
 
+// b.pdf but already browsing
+	if(cmd == 'b' && first == '.' && cw->browseMode) {
+		setError(MSG_BrowseAlready);
+		goto failg;
+	}
+
 // code for b.pdf and g.pdf
 	if((cmd == 'b' || cmd == 'g')
 	&& !(cw->browseMode | cw->sqlMode | cw->imapMode1 | cw->imapMode2 | cw->irciMode | cw->ircoMode)

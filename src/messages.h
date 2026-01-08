@@ -878,4 +878,5 @@ MSG_ImaskOn,
 	MSG_NoPending,
         MSG_CommandNest,
         MSG_CreateFormatStr,
+        MSG_DoubleBrowse,
 };
