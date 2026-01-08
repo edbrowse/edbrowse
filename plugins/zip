@@ -14,13 +14,14 @@ A similar system could be set up for gzip, bzip2, tar, cpio, etc.
 
 There are three plugins and a supporting bash script.
 Below are the plugins, followed by the script, which should be placed in your bin.
-The third plugin uses outtype = g, which is rare.
-A rendering program usually generates text or html, but in this case,
-the file could be anything. We don't know in advance what it is,
-so use g for generic.
-The script assumes none of the pathnames in the zip archive
-contain the " or ; characters.
-That isn't a good situation; we should fix this some day.
+
+down_url means the plugin must run from a file on your system, not a url.
+The program cannot act on a url.
+It could be a temp file however.
+edbrowse can download the file, put it into a temp, and run.
+from_file is stronger. It means the file must be a local file.
+If the file is on the internet, save it to a loca file,
+then you can use these plugins.
 
 plugin {
 type = zip
@@ -39,6 +40,11 @@ program = ebunzip %i
 outtype = H
 }
 
+This plugin uses outtype = g, which is rare.
+A rendering program usually generates text or html, but in this case
+the file could be anything. We don't know in advance what it is,
+so use g for generic.
+
 plugin {
 type = zip
 desc = zip extract file
@@ -48,6 +54,9 @@ outtype = G
 }
 
 And now for the bash script that performs the magic.
+This script assumes none of the pathnames in the zip archive
+contain the " or ; characters.
+That isn't ideal; we should fix this some day.
 
 #!/bin/bash
 if [ $# != 1 ] ; then
