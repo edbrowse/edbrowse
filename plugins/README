@@ -28,4 +28,8 @@ Everyone has their own preferred way to indent.
 If you want to indent the scripts,
 you can do so when you copy them into your own world.
 
+You can disable plugins with the pg- command.
+Plugins don't run until you enable them again.
+You can disable plugins on a one-time basis with the g- command.
+
 Send corrections additions suggestions to the maintainers.
