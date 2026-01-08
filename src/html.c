@@ -1615,8 +1615,9 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 			addToFilename(".html");
 		} else {
 			bmode = 0;
-			addToFilename(".txt");
 		}
+		if(mt->outtype == 't')
+			addToFilename(".txt");
 		cf->render4 = true;
 		if (!allowRedirection)
 			bmode = 0;

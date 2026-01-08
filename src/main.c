@@ -1827,7 +1827,7 @@ inside:
 
 		case 21:	// outtype
 			c = tolower(*v);
-			if (c != 'h' && c != 't')
+			if (c != 'h' && c != 't' && c != 'g')
 				cfgLine0(MSG_EBRC_Outtype);
 			mt->outtype = c;
 			continue;

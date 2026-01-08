@@ -68,7 +68,7 @@ session %d has been updated\n
 no options
 form has been reset
 submitting form
-%s: line %d, outtype should be set to t or h
+%s: line %d, outtype should be set to t g or h
 multiple
  recommended
 imap mailAccountNumber

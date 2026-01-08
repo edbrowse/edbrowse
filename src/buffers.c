@@ -2082,7 +2082,11 @@ uchar prebrowse, const Tag *gotag)
 			if (cf->mt->outtype == 't') {
 				cmd = 'e';
 				addToFilename(".txt");
-			} else {
+			}
+			if (cf->mt->outtype == 'g') {
+				cmd = 'e';
+			}
+			if (cf->mt->outtype == 'h') {
 				addToFilename(".html");
 			}
 			cf->render4 = true;
@@ -2185,7 +2189,11 @@ badfile:
 		if (cf->mt->outtype == 't') {
 			cmd = 'e';
 			addToFilename(".txt");
-		} else {
+		}
+		if (cf->mt->outtype == 'g') {
+			cmd = 'e';
+		}
+		if (cf->mt->outtype == 'h') {
 			addToFilename(".html");
 		}
 	} else {
@@ -8310,7 +8318,7 @@ doquit:
 			addToFilename(".html");
 			cf->render1 = cf->render2 = false;
 			if(allowRedirection) browseCurrentBuffer(NULL, false);
-		} else {
+		} else if(gmt->outtype == 't') {
 			addToFilename(".txt");
 		}
 		goto success;

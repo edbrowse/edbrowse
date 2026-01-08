@@ -3261,7 +3261,7 @@ not reading data into an existing buffer.
 If a converter, data is sent through the converter,
 and then put into the edbrowse buffer.
 render1 is true, and render2 is true if we matched on suffix.
-If outtype is h then continue browseing, as we have html.
+If outtype is h then continue browsing, as we have html.
 If mt is a player and command is b then play the buffer.
 The third call is optimization for a local file.   b thisfile.pdf
 If it has a converter than don't read the data into the buffer and then spit it
