@@ -1538,7 +1538,7 @@ bool browseCurrentBuffer(const char *suffix, bool plain)
 		return false;
 	}
 
-	if (mt && mt->from_file) {
+	if (mt && mt->from_file && remote) {
 		setError(MSG_PluginFile);
 		return false;
 	}
