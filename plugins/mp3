@@ -1,0 +1,108 @@
+Music and podcasts are typically contained in mp3 files.
+mpg123 is specifically designed to play mp3 files, although there are other players.
+Here is the plugin for mp3, using mpg123.
+
+plugin {
+type = audio/mp3
+desc = audio file in mp3 format
+suffix = mp3
+content = audio/mpeg
+program = mpg123 -q -C %i
+}
+
+When edbrowse encounters a url that ends in .mp3,
+or has an http content type of audio/mpeg,
+it plays the audio passage, just like any other browser.
+Similarly, g in directory mode will play the audio if it is an mp3 file.
+The -C option provides keyboard control.
+Use space to stop and start the music, 1 through 0 to move around in the file,
+comma to back up, period to move forward, and so on.
+
+The author of mpg123 was kind enough to add a feature for me,
+wherein the music pauses when mpg123 receives signal 10 from another process.
+With this in mind,
+establish the following hot keys through your adapter
+or using a daemon like esekeyd:
+
+sysrq|amixer -q set Master 3%-
+scroll|amixer -q set Master 3%+
+pause|killall -s10 mpg123
+
+I can be in any console, in any application, and adjust the volume of my music,
+or pause it altogether if I have to concentrate on my work or answer the phone,
+using the three keys at the upper right.
+This replicates the layout of the Mac.
+You might prefer another player, like mpv,
+but it cannot pause and restart from another console via signal 10.
+There is more information on hot keys in the sister project acsint,
+in doc/music_speech.txt.
+
+That said, there are times when mpv is preferred.
+Say you are listening to a podcast, and let's be honest,
+some of those podcasts are pretty slow.
+mpv uses brackets to change speed, without changing pitch.
+The technology is impressive!
+Here is the same descriptor using mpv.
+
+plugin {
+type = audio/mp3
+desc = audio file in mp3 format
+suffix = mp3
+content = audio/mpeg
+program = mpv %i
+}
+
+If you want mpv to emulate mpg123 at the keyboard, then do the following.
+Create the directory $HOME/.config/mpv
+Within that directory, create mpv.conf, containing:
+
+no-video
+really-quiet
+
+Create input.conf, containing:
+
+1 seek 0 absolute-percent
+2 seek 10 absolute-percent
+3 seek 20 absolute-percent
+4 seek 30 absolute-percent
+5 seek 40 absolute-percent
+6 seek 50 absolute-percent
+7 seek 60 absolute-percent
+8 seek 70 absolute-percent
+9 seek 80 absolute-percent
+0 seek 90 absolute-percent
+, seek -0.5 relative
+. seek +0.5 relative
+; seek -2.0 relative
+: seek +2.0 relative
+b seek 0 absolute-percent
+d playlist-prev
+f playlist-next
+
+This is a faithful simulation,
+thus you can press the same keys, whether you are running mpg123 or mpv.
+
+Now suppose I want the best of both worlds.
+I want mpg123 to play mp3 files by default,
+but if I am listening to a podcast, I want to call upon mpv,
+with just a couple more keystrokes, so I can speed it up with the brackets.
+The virtual suffix mpv makes it easy to do.
+None of the files end in mpv, but you can pretend like they do.
+Install the following plugins, then type g for an mp3 song,
+and g.mpv for an mp3 podcast.
+
+plugin {
+type = audio/mp3
+desc = music in mp3 format
+suffix = mp3
+content = audio/mpeg
+program = mpg123 -q -C %i
+}
+
+plugin {
+type = audio/mp3
+desc = spoken word in mp3 format
+suffix = mpv
+program = mpv %i
+}
+
