@@ -29,7 +29,7 @@ desc = zip archive
 suffix = zip
 program = ebunzip %i
 from_file
-outtype = H
+outtype = h
 }
 
 plugin {
@@ -37,7 +37,7 @@ type = zip
 desc = zip show directory
 protocol = zipxd
 program = ebunzip %i
-outtype = H
+outtype = h
 }
 
 This plugin uses outtype = g, which is rare.
@@ -50,7 +50,7 @@ type = zip
 desc = zip extract file
 protocol = zipx
 program = ebunzip %i
-outtype = G
+outtype = g
 }
 
 And now for the bash script that performs the magic.

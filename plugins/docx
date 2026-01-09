@@ -9,7 +9,7 @@ suffix = doc
 content = application/msword
 down_url
 program = catdoc %i
-outtype = T
+outtype = t
 }
 
 plugin {
@@ -19,7 +19,7 @@ suffix = rtf
 content = application/rtf
 down_url
 program = catdoc %i
-outtype = T
+outtype = t
 }
 
 Microsoft then upgraded the format, and created a new file extention, docx.
@@ -31,7 +31,7 @@ suffix = docx
 content = application/docx
 down_url
 program = docx2txt %i
-outtype = T
+outtype = t
 }
 
 Portable document format (pdf) has become the gold standard.
@@ -72,4 +72,22 @@ This happens if you scan a document with your phone, then turn it into pdf.
 In that event, pdf to text produces an empty buffer, and pdf to html
 produces one or more blank pages separated by <hr> lines.
 The document is unreadable to us, and we have to leave it at that.
+
+Markdown is a preprocessor to html.
+Thus the document can include html tags, but if there are a lot of them,
+then you probably should have written it in html in the first place.
+A well written .md file is easily readable as-is,
+yet it it is well formatted when rendered.
+Naturally, the markdown plugin will generate html,
+whereupon edbrowse can do the formatting.
+
+plugin {
+type = markdown
+desc = markdown file
+suffix = md
+content = application/markdown
+down_url
+program = pandoc -f markdown -t html %i
+outtype = h
+}
 
