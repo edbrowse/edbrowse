@@ -20,7 +20,7 @@ The program cannot act on a url.
 It could be a temp file however.
 edbrowse can download the file, put it into a temp, and run.
 from_file is stronger. It means the file must be a local file.
-If the file is on the internet, save it to a loca file,
+If the file is on the internet, save it to a local file,
 then you can use these plugins.
 
 plugin {
@@ -87,7 +87,7 @@ sed -e '/testing:/!d' -e 's/^.*testing: *//' -e 's/  *OK$//' \
 -e '/\/./d' \
 -e "s;.*;://$zf@:@&\">&</a>;" \
 -e '/\/">/s/^/d/' \
--e 's;^;<br><a href="zipx;'
+-e 's/^/<br><a href="zipx/'
 else
 unzip -t "$zf" |
 sort |
@@ -99,6 +99,6 @@ sed -e '/testing:/!d' -e 's/^.*testing: *//' -e 's/  *OK$//' \
 -e '/\/./d' \
 -e "s;.*;://$zf@:@$path&\">&</a>;" \
 -e '/\/">/s/^/d/' \
--e 's;^;<br><a href="zipx;'
+-e 's/^/<br><a href="zipx/'
 fi
 echo "</body>"

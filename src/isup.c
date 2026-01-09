@@ -3264,7 +3264,7 @@ render1 is true, and render2 is true if we matched on suffix.
 If outtype is h then continue browsing, as we have html.
 If mt is a player and command is b then play the buffer.
 The third call is optimization for a local file.   b thisfile.pdf
-If it has a converter than don't read the data into the buffer and then spit it
+If it has a converter then don't read the data into the buffer and spit it
 back out again; call the converter on the file and read that data in instead.
 If it is html then continue on to browse.
 
