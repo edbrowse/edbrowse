@@ -18,10 +18,9 @@ Edbrowse project.
 
 ### Compilation
 
-If you wish to compile Edbrowse the following instructions apply in most
-situations. If you encounter issues then Further platform-specific instructions
-and notes may be found on the
-(wiki)[https://github.com/edbrowse/edbrowse/wiki/].
+The following instructions should apply to most Unix-like environments using GNU
+compatible tools and libraries. If you encounter issues then Further
+platform-specific instructions and notes may be found on the [wiki][1].
 
 #### Requirements
 
@@ -202,3 +201,5 @@ You'll either get the communication error or not.
 This happens if openssl is too old,
 or doesn't support the ciphers that the website expects.
 This is beyond edbrowse, and beyond curl; you have to upgrade openssl.
+
+[1]: https://github.com/edbrowse/edbrowse/wiki/
