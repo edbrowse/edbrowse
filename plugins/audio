@@ -118,3 +118,14 @@ content = audio/x-wav
 program = play -q %i
 }
 
+mpv plays video files in various formats.
+There may be pictures on the screen, I don't really know, but it plays the audio.
+
+plugin {
+type = video/mp4
+desc = video file in mp4 format
+suffix = mp4,m4a,webm
+content = video/mpeg
+program = mpv %i
+}
+

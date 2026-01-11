@@ -91,3 +91,15 @@ program = pandoc -f markdown -t html %i
 outtype = h
 }
 
+e-books are often published using the epub format.
+pandoc turns these into html, ready to read.
+
+plugin {
+type = epub
+desc = electronically published book
+suffix = epub
+down_url
+program = pandoc -f epub %i
+outtype = H
+}
+
