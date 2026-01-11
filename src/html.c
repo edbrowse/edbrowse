@@ -5255,6 +5255,7 @@ past_cell_paragraph:
 				}
 			}
 			if (opentag && action == TAGACT_H) {
+				liCheck(t);
 				strcpy(hnum, ti->name);
 				strcat(hnum, " ");
 				ns_hnum();

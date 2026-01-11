@@ -240,6 +240,14 @@ static void h3div(char *buf)
 			in_h = true, s += 3;
 			continue;
 		}
+// and now for the rare case of <li> <h2> stuff </h2> </li>
+// which is invalid html but it does happen
+		if(*s == ' ' && s[1] == 'h' &&
+		(uchar)s[2] >= '1' && (uchar)s[2] <= '6' && s[3] == ' ' &&
+		s >= buf+2 && s[-1] == '*' && s[-2] == '*') {
+			in_h = true, s += 3;
+			continue;
+		}
 		if(isspaceByte(*s)) {
 			if(in_h) *s = ' ';
 		} else in_h = false;
