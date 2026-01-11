@@ -144,21 +144,6 @@ make install
 to install the executable. Note that if you used `PREFIX` when building you
 probably also want to specify that variable in the above installation command.
 
-### Temporary files
-
-Edbrowse creates a system wide temp directory if it is not already present.
-This is /tmp/.edbrowse.
-This directory contains a subdirectory per user, mod 700 for added security.
-Thus one user cannot spy on the temp files, perhaps sensitive internet data,
-of another user.
-However, true multiuser security requires a root job at startup,
-e.g. in /etc/rc.local, to create the directory with the sticky bit.
-
-```shell
-mkdir /tmp/.edbrowse
-chmod 1777 /tmp/.edbrowse
-```
-
 ### Testing
 
 You can test the installed executable by edbrowse src/jsrt

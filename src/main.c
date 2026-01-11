@@ -431,36 +431,20 @@ static void setupEdbrowseTempDirectory(void)
 	int userid;
 	ebTempDir = getenv("TMPDIR");
 	if (!ebTempDir) {
-		ebTempDir="/tmp/.edbrowse";
+		ebTempDir="/tmp";
 	}
 	userid = geteuid();
 
-// On a multiuser system, mkdir /tmp/.edbrowse at startup,
-// by root, and then chmod 1777
-
 	if (fileTypeByName(ebTempDir, 0) != 'd') {
-/* no such directory, try to make it */
-/* this temp edbrowse directory is used by everyone system wide */
-		if (mkdir(ebTempDir, MODE_rwx)) {
-			i_printf(MSG_TempDir, ebTempDir);
-			ebTempDir = 0;
-			return;
-		}
-// yes, we called mkdir with 777 above, but that was cut by umask.
-		chmod(ebTempDir, MODE_rwx);
-	}
-// make room for user ID on the end
-	ebUserDir = allocMem(strlen(ebTempDir) + 30);
-	sprintf(ebUserDir, "%s/edbrowse.%d", ebTempDir, userid);
-	if (fileTypeByName(ebUserDir, 0) != 'd') {
-/* no such directory, try to make it */
-		if (mkdir(ebUserDir, 0700)) {
-			i_printf(MSG_TempDir, ebUserDir);
-			ebUserDir = 0;
-			return;
-		}
-		chmod(ebUserDir, 0700);
-	}
+                i_printf(MSG_TempDir, ebTempDir);
+                ebTempDir = 0;
+                return;
+        }
+	createFormattedString(&ebUserDir, "%s/edbrowse.%d.XXXXXX", ebTempDir, userid);
+        if (!(ebUserDir = mkdtemp(ebUserDir))) {
+                i_printf(MSG_TempDir, ebUserDir);
+                return;
+        }
 }
 
 static void loadReplacements(void);

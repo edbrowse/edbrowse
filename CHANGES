@@ -23,6 +23,9 @@ include = directory, include all files in that directory.
 Download css files in parallel. Like the javascript files.
 Subject to the jsbg flag.
 
+More secure handling of temp files; there's no need to manually add the sticky
+bit to a custom directory any more.
+
 3.8.15
 
 The lsr (imap) and lsc (irc) commands.
