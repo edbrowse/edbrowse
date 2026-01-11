@@ -16,6 +16,9 @@ Support placing the edbrowse config file at $XDG_CONFIG_HOME/edbrowse/ebrc.
 We still fall back to $HOME/.ebrc if it's not there and use $HOME/.ebrc to
 create the initial file.
 
+include = relative-path now taken relative to the invoking config file,
+like cpp and m4 and everything else in unix.
+
 Download css files in parallel. Like the javascript files.
 Subject to the jsbg flag.
 

@@ -1868,7 +1868,7 @@ inside:
 
 		case 27:	// downdir
 			nzFree0(downDir); // in case called more than once
-			v = envFileAlloc(v);
+			v = envFileAlloc(f->file, v);
 			if(!v) continue;
 			if (fileTypeByName(v, 0) != 'd')
 // yeah, v is not freed in this pathway, oh well.
@@ -1880,7 +1880,7 @@ inside:
 			nzFree0(mailDir);
 			nzFree0(mailUnread);
 			nzFree0(mailReply);
-			v = envFileAlloc(v);
+			v = envFileAlloc(f->file, v);
 			if(!v) continue;
 			if (fileTypeByName(v, 0) != 'd')
 				cfgAbort1(MSG_EBRC_NotDir, v);
@@ -1908,7 +1908,7 @@ inside:
 
 		case 30:	// jar
 			nzFree0(cookieFile);
-			v = envFileAlloc(v);
+			v = envFileAlloc(f->file, v);
 			if(!v) continue;
 			ftype = fileTypeByName(v, 0);
 			if (ftype && ftype != 'f')
@@ -1947,7 +1947,7 @@ inside:
 
 		case 35:	// certfile
 			nzFree0(sslCerts);
-			v = envFileAlloc(v);
+			v = envFileAlloc(f->file, v);
 			if(!v) continue;
 			ftype = fileTypeByName(v, 0);
 			if (ftype && ftype != 'f')
@@ -2011,7 +2011,7 @@ inside:
 
 		case 43:	// adbook
 			nzFree0(addressFile);
-			v = envFileAlloc(v);
+			v = envFileAlloc(f->file, v);
 			if(!v) continue;
 			ftype = fileTypeByName(v, 0);
 			if (!ftype || ftype != 'f')
@@ -2025,7 +2025,7 @@ inside:
 
 		case 45: case 46:	// emojis
 			nzFree0(emojiFile);
-			v = envFileAlloc(v);
+			v = envFileAlloc(f->file, v);
 			if(!v) continue;
 			ftype = fileTypeByName(v, 0);
 			if (!ftype || ftype != 'f')
@@ -2035,7 +2035,7 @@ inside:
 			continue;
 
 		case 47: // include
-			v = envFileAlloc(v);
+			v = envFileAlloc(f->file, v);
 			if(!v) continue;
 			if(!fileIntoMemory(v, &incbuf, &inclen, 0)) {
 				showError();
@@ -2075,7 +2075,7 @@ inside:
 		case 49:	// pubkey
 // this feature is undocumented
 			nzFree0(pubKey);
-			v = envFileAlloc(v);
+			v = envFileAlloc(f->file, v);
 			if(!v) continue;
 // error legs do not free v, who cares.
 			ftype = fileTypeByName(v, 0);
@@ -2090,7 +2090,7 @@ inside:
 
 		case 50:	// irclog
 			nzFree0(irclog);
-			irclog = envFileAlloc(v);
+			irclog = envFileAlloc(f->file, v);
 			continue;
 
 		default:

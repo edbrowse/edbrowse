@@ -2509,14 +2509,39 @@ bool envFile(const char *line, const char **expanded)
 
 // Like the above, but string is allocated, and errors are printed
 // This is only used to expand pathnames in .ebrc
-char *envFileAlloc(const char *line)
+static char *envFileAlloc0(const char *path)
 {
-	const char *line2;
-	if(envFile(line, &line2))
-		return cloneString(line2);
+	const char *path2;
+	if(envFile(path, &path2))
+		return cloneString(path2);
 	showError();
 	setError(-1);
 	return 0;
+}
+
+// Like the above, but a base is given,
+// in case the path is relative.
+// This is only used to expand pathnames in .ebrc
+char *envFileAlloc(const char *base, const char *path)
+{
+// absolute path first, or perhaps we are expanding a shell variable.
+// If the latter, I assume the variable contains an absolute path.
+	if(path[0] == '/' ||
+	(path[0] == '~' && path[1] == '/') ||
+	path[0] == '$')
+		return envFileAlloc0(path);
+	char *mark = strrchr(base, '/');
+	if(!mark) // no slash to glom on to
+		return envFileAlloc0(path);
+	++mark;
+	int l = mark - base; // length of directory
+	int l2 = l + strlen(path);
+	char *path2 = allocMem(l2 + 1);
+	memcpy(path2, base, l);
+	strcpy(path2 + l, path);
+	char *path3 = envFileAlloc0(path2);
+	free(path2);
+	return path3;
 }
 
 /* Call the above routine if filename contains a  slash,

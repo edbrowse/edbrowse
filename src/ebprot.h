@@ -376,7 +376,7 @@ bool readDirectory(const char *filename, int endline, char cmd, struct lineMap *
 bool delFiles(int start, int end, bool withtext, char origcmd, char *cmd_p);
 bool moveFiles(int start, int end, int dest, char origcmd, char relative);
 bool envFile(const char *line, const char **expanded); //@
-char *envFileAlloc(const char *line); //@
+char *envFileAlloc(const char *base, const char *path); //@
 bool envFileDown(const char *line, const char **expanded) ; //@
 FILE *efopen(const char *name, const char *mode) ;
 int eopen(const char *name, int mode, int perms) ;
