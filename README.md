@@ -2,11 +2,11 @@
 
 Written and maintained by Karl Dahlke and others.
 
-See our home page <http://edbrowse.org/> for current releases and contact information.
+See our [home page][1]  for current releases and contact information.
 
-See <LICENSE> for licensing agreements.
+See [the license file][2] for licensing agreements.
 
-See <doc/building.md> for info on building and installing Edbrowse.
+See [build and installation instructions][3] for info on building and installing Edbrowse.
 
 ### Disclaimer
 
@@ -25,9 +25,11 @@ Chrome and Firefox are graphical browsers.
 Lynx and Links are full screen terminal based browsers.
 This is a fully command based browser, the only one of its kind as far as we
 know.
-The user's guide can be found as doc/usersguide.html in this package,
-or online at <http://edbrowse.org/usersguide.html>.
-The online guide corresponds to the latest stable release.
+
+For information on how to use the software please see the [user's guide][4] in
+this package, or [the online version][5]. The online guide corresponds to the
+latest stable release.
+
 Of course this reasoning is a bit circular.
 You need to use a browser to read the documentation,
 which describes how to use the browser.
@@ -41,14 +43,23 @@ This produces the documentation in text form,
 which you can read using your favorite editor.
 Of course we hope edbrowse will eventually become your
 favorite editor, whence you can browse the documentation directly.
-The <doc/> directory also includes a sample config file.
+The [doc directory[6] also includes a sample config file.
 
-If you are interested in contributing to the project the n <doc/development.md>
-contains notes and ifnormation for Edbrowse development and debugging.
+If you are interested in contributing to the project [the development instructions][7]
+contain notes and information for Edbrowse development and debugging.
 
-The <doc/history/> directory contains information on the history of edbrowse,
+The [history/ directory][8] contains information on the history of edbrowse,
 how it came to be and what it is trying to accomplish.
-<doc/history/article.wikipedia> is our wikipedia article, written in markup.
+ This includes a wikipedia article, written in markup.
 It was deleted by the wikipedia maintainers, for lack of sources.
 If edbrowse is described in a book or mainstream magazine in the future,
 perhaps this article can be reintroduced.
+
+[1]: http://edbrowse.org/
+[2]: LICENSE
+[3]: doc/insalling.md
+[4]: doc/usersguide.html
+[5]: http://edbrowse.org/usersguide.html
+[6]: doc/
+[7]: doc/developing.md
+[8]: doc/history/
