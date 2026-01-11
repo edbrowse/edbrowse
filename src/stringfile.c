@@ -2566,6 +2566,25 @@ bool envFileDown(const char *line, const char **expanded)
 	return true;
 }
 
+// create a list of include directives, for the files in a given directory.
+// This is only used to include files in .ebrc
+char *includeList(const char *dir)
+{
+	char *s;
+	int s_l;
+	s = initString(&s_l);
+	bool save_hf = showHiddenFiles;
+	showHiddenFiles = false;
+	const char *filename;
+	while((filename = nextScanFile(dir))) {
+		stringAndString(&s, &s_l, "include = ");
+		stringAndString(&s, &s_l, filename);
+		stringAndChar(&s, &s_l, '\n');
+	}
+	showHiddenFiles = save_hf;
+	return s;
+}
+
 FILE *efopen(const char *name, const char *mode)
 {
 	FILE *f;

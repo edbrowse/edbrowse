@@ -2046,7 +2046,14 @@ inside:
 				nzFree(v);
 				continue;
 			}
-// perhaps do something different herer if file is a directory - ftype == 'd'
+			if(ftype == 'd') {
+				incbuf = includeList(v);
+				inclen = strlen(incbuf);
+				printf("%s", incbuf);
+				puts("not yet implemented");
+				nzFree(incbuf), nzFree(v);
+				continue;
+			}
 			if(!fileIntoMemory(v, &incbuf, &inclen, 0)) {
 				showError();
 				setError(-1);

@@ -378,6 +378,7 @@ bool moveFiles(int start, int end, int dest, char origcmd, char relative);
 bool envFile(const char *line, const char **expanded); //@
 char *envFileAlloc(const char *base, const char *path); //@
 bool envFileDown(const char *line, const char **expanded) ; //@
+char *includeList(const char *dir);
 FILE *efopen(const char *name, const char *mode) ;
 int eopen(const char *name, int mode, int perms) ;
 void appendFile(const char *fname, const char *message, ...) ;
