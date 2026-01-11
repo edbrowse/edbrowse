@@ -435,13 +435,11 @@ static void setupEdbrowseTempDirectory(void)
 	}
 	userid = geteuid();
 
-	if (fileTypeByName(ebTempDir, 0) != 'd') {
-                i_printfExit(MSG_TempDir, ebTempDir);
-        }
+	if (fileTypeByName(ebTempDir, 0) != 'd')
+                i_printfExit(MSG_NoTempDir, ebTempDir);
 	createFormattedString(&ebUserDir, "%s/edbrowse.%d.XXXXXX", ebTempDir, userid);
-        if (!(ebUserDir = mkdtemp(ebUserDir))) {
-                i_printfExit(MSG_TempDir, ebUserDir);
-        }
+        if (!(ebUserDir = mkdtemp(ebUserDir)))
+                i_printfExit(MSG_TempDirCreate, strerror(errno));
 }
 
 static void loadReplacements(void);

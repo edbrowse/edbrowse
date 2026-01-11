@@ -779,7 +779,7 @@ no line pending
 too many nested commands
 failed to create formatted string; %s
 already browsed in this manner
-0
+failed to create temporary directory; %s
 0
 0
 0
