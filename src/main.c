@@ -1438,7 +1438,7 @@ static const char *const keywords[] = {
 	"webtimer", "mailtimer", "certfile", "datasource", "proxy",
 	"agentsite", "localizeweb", "imapfetch", "novs", "cachesize",
 	"adbook", "envelope", "emojis", "emoji",
-"include", "js", "pubkey", "irclog", 0};
+"include", "optinclude", "js", "pubkey", "irclog", 0};
 
 /* Read the config file and populate the corresponding data structures. */
 /* This routine succeeds, or aborts via one of these macros. */
@@ -1613,6 +1613,7 @@ bool readConfigFile(void)
 	char c, ftype;
 	uchar mailblock = 0;
 	bool mimeblock = false, tabblock = false;
+	bool optinclude;
 	int nest, ln, j;
 	int sn = 0;		/* script number */
 	char stack[MAXNEST];
@@ -1732,6 +1733,8 @@ inside:
 			++v;
 		if (!*v)
 			cfgLine1(MSG_EBRC_NoAttr, s);
+
+		optinclude = false;
 
 		switch (n) {
 		case 0:	// inserver
@@ -2034,9 +2037,16 @@ inside:
 			loadEmojis();
 			continue;
 
+		case 48: optinclude = true;
 		case 47: // include
 			v = envFileAlloc(f->file, v);
 			if(!v) continue;
+			ftype = fileTypeByName(v, 0);
+			if(optinclude && !ftype) {
+				nzFree(v);
+				continue;
+			}
+// perhaps do something different herer if file is a directory - ftype == 'd'
 			if(!fileIntoMemory(v, &incbuf, &inclen, 0)) {
 				showError();
 				setError(-1);
@@ -2061,7 +2071,7 @@ inside:
 			f = g;
 			goto top;
 
-		case 48:	// js
+		case 49:	// js
 			if (*v == '.')
 				++v;
 /* Is this essential?
@@ -2072,7 +2082,7 @@ inside:
 			add_ebhost(v, 'J');
 			continue;
 
-		case 49:	// pubkey
+		case 50:	// pubkey
 // this feature is undocumented
 			nzFree0(pubKey);
 			v = envFileAlloc(f->file, v);
@@ -2088,7 +2098,7 @@ inside:
 			pubKey = v;
 			continue;
 
-		case 50:	// irclog
+		case 51:	// irclog
 			nzFree0(irclog);
 			irclog = envFileAlloc(f->file, v);
 			continue;

@@ -4965,6 +4965,13 @@ So it is a matter of taste; some people use this feature and some don't.
 Like C, a relative path is taken relative to the parent config file.
 If .ebrc is in a certain directory, and you include the file "plugins", then plugins should be in that same directory.
 
+<p class=item>
+optinclude = plugins
+<p>
+Optionally include a file.
+If the file is missing, edbrowse simply marches on.
+In this case we include the plugins file, if it is present, in the same directory as the edbrowse config file.
+
 <h2 id="agent">User Agent</h2>
 
 Every time you fetch a web page from the Internet,
