@@ -152,7 +152,7 @@ This directory contains a subdirectory per user, mod 700 for added security.
 Thus one user cannot spy on the temp files, perhaps sensitive internet data,
 of another user.
 However, true multiuser security requires a root job at startup,
-e.g. in /etc/rc.d/rc.local, to create the directory with the sticky bit.
+e.g. in /etc/rc.local, to create the directory with the sticky bit.
 
 ```shell
 mkdir /tmp/.edbrowse
