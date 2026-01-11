@@ -103,7 +103,7 @@ cannot write to file %s\n
 mail saved, %d bytes
  appended
 This page is finished, please use your back key or quit.
-cannot create temporary directory %s\n
+cannot create temporary directory; %s\n
 no errors
 proxy authentication for a non-proxy url
 session %d is not active
@@ -779,7 +779,7 @@ no line pending
 too many nested commands
 failed to create formatted string; %s
 already browsed in this manner
-failed to create temporary directory; %s
+Temporary directory does not exist %s
 0
 0
 0
