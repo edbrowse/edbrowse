@@ -18,6 +18,7 @@ create the initial file.
 
 include = relative-path now taken relative to the invoking config file,
 like cpp and m4 and everything else in unix.
+include = directory, include all files in that directory.
 
 Download css files in parallel. Like the javascript files.
 Subject to the jsbg flag.

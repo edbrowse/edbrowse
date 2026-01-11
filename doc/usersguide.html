@@ -4972,8 +4972,16 @@ Optionally include a file.
 If the file is missing, edbrowse simply marches on.
 In this case we include the plugins file, if it is present, in the same directory as the edbrowse config file.
 
+<p class=item>
+optinclude = plugins.d
+<p>
+Include a directory of files.
+In this case it might be plugins in the plugins.d directory.
+The files are included in no particular order.
+
 <h2 id="agent">User Agent</h2>
 
+<p>
 Every time you fetch a web page from the Internet,
 your browser identifies itself to the host.
 This is done automatically.
