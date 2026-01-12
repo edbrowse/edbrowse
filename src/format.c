@@ -291,7 +291,7 @@ Also swap 32* whitespace, pushing invisible anchors forward.
 All this swapping preserves the length of the string.
 If a change is made, the procedure is run again,
 kinda like bubble sort.
-It has the potential to be terribly inefficient,
+It has the potential to be quadratic,
 but that doesn't seem to happen in practice.
 Use cnt to count the iterations, for debugging purposes.
 | is considered a whitespace character. Why is that?
@@ -302,6 +302,10 @@ But every cell is going to have an invisible anchor from <td>, so that js can,
 perhaps, set innerHTML inside this cell.
 So there's something there, but nothing there.
 I push these tags past the pipes, so I can clear it all away.
+But not if it's a data table; the tags have to be true to their cells.
+If a tag is <li>, then the follow on *, for <ul>,
+or the follow on number, for <ol>, is considered part of the tag.
+We can pull whitespace past a list indicator.
 *********************************************************************/
 
 static void anchorSwap(char *buf)
@@ -310,12 +314,10 @@ static void anchorSwap(char *buf)
 	bool pretag;		// <pre>
 	bool premode;		// inside <pre> </pre>
 	bool slash;		// closing tag
-	bool change;		// made a swap somewhere
-	int n = 0, cnt, tagno = 0;
+	bool change = true;		// made a swap somewhere
+	int n = 0, cnt = 0, tagno = 0;
 	char tag[20];
 
-	cnt = 0;
-	change = true;
 	while (change) {
 		change = false;
 		++cnt;
@@ -331,8 +333,7 @@ static void anchorSwap(char *buf)
 				if (c == '\t' && !premode)
 					*s = ' ';
 #endif
-				if (!w)
-					w = s;
+				if (!w) w = s;
 				continue;
 			}
 
@@ -393,6 +394,19 @@ afterforward:
 
 			if ((d == '*' || d == '{') && !premode)
 				a = s;
+			if(d == '*' &&
+			tagList[tagno]->action == TAGACT_LI) {
+				char *v = ss;
+				for(++v; *v == '*' || *v == '.' ||
+				isdigitByte(*v); ++v) ;
+// *v should always be space at this point
+				if(*v == ' ') {
+					ss = v;
+					n = ss + 1 - s;
+					memcpy(tag, s, n);
+					tag[n] = 0;
+				}
+			}
 			if(d == '<' && stringEqual(tagList[tagno]->info->name, "button"))
 				a = s;
 			s = ss;
