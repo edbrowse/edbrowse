@@ -4394,7 +4394,6 @@ static char *ns;
 static int ns_l;
 static bool invisible, tdfirst;
 static Tag *inv2;	// invisible via css
-static int listnest;		/* count nested lists */
 /* None of these tags nest, so it is reasonable to talk about
  * the current open tag. */
 static Tag *currentForm, *currentA;
@@ -4711,32 +4710,6 @@ static void tagInStream(int tagno)
 	char buf[32];
 	sprintf(buf, "%c%d*", InternalCodeChar, tagno);
 	stringAndString(&ns, &ns_l, buf);
-}
-
-/* see if a number or star is pending, waiting to be printed */
-static void liCheck(Tag *t)
-{
-	Tag *ltag; // <ol> or <ul>
-	if (listnest && (ltag = findOpenList(t))) {
-		char olbuf[32];
-		if (ltag->ninp)
-			tagInStream(ltag->ninp);
-		olbuf[0] = 0;
-		if (ltag->action == TAGACT_OL) {
-			int j = ++ltag->lic, k;
-			Tag *tli = tagList[ltag->ninp];
-// this checks for <li value=7>, but does not check for javascript
-// dynamically setting value after the html is parsed.
-// Add that in someday.
-			if(tli->value && (k = stringIsNum(tli->value)) >= 0)
-				ltag->lic = j = k;
-			sprintf(olbuf, "%d. ", j);
-		} else if(ltag->lic == 0) {
-			strcpy(olbuf, "* ");
-		}
-		if (!invisible)
-			stringAndString(&ns, &ns_l, olbuf);
-	}
 }
 
 // this routine guards against <td onclick=blah><a href=#>stuff</a></td>
@@ -5157,10 +5130,6 @@ nocolor:
 	case TAGACT_UL:
 		t->lic = t->slic;
 		t->post = false;
-		if (opentag)
-			++listnest;
-		else
-			--listnest;
 // If this is <ul> with one item or no items below,
 // and in the cell of a data table,
 // indicate with lic = -2. We will suppresss it.
@@ -5259,8 +5228,7 @@ past_cell_paragraph:
 		}
 
 // tags with id= have to be part of the screen, so you can jump to them.
-// <li> is introduced by liCheck().
-		if (t->id && opentag && action != TAGACT_LI)
+		if (t->id && opentag)
 			tagInStream(tagno);
 		break;
 
@@ -5368,13 +5336,28 @@ past_cell_paragraph:
 		break;
 
 	case TAGACT_LI:
-		if ((ltag = findOpenList(t))) {
-			if(ltag->lic == -2) break; // suppressed
-// borrow ninp to store the tag number of <li>
-			ltag->ninp = t->seqno;
-			liCheck(t);
+// we are only here on opentag. Look for containing <ol> or <ul>
+		if (!(ltag = findOpenList(t)))
+			goto nop;
+		if(ltag->lic == -2) break; // suppressed
+		char olbuf[32];
+		olbuf[0] = 0;
+		tagInStream(tagno);
+		if (ltag->action == TAGACT_OL) {
+			j = ++ltag->lic;
+// this checks for <li value=7>, but does not check for javascript
+// dynamically setting value after the html is parsed.
+// Add that in someday.
+			if(t->value && (l = stringIsNum(t->value)) >= 0)
+				ltag->lic = j = l;
+			sprintf(olbuf, "%d. ", j);
+		} else if(ltag->lic == 0) {
+			strcpy(olbuf, "* ");
 		}
-		goto nop;
+		if (!invisible)
+			stringAndString(&ns, &ns_l, olbuf);
+		stringAndChar(&ns, &ns_l, '\n');
+		break;
 
 	case TAGACT_HR:
 // <hr> can be in the midst of options, as a separater between options.
@@ -5690,7 +5673,6 @@ char *render(void)
 	ns = initString(&ns_l);
 	invisible = false;
 	inv2 = NULL;
-	listnest = 0;
 	currentForm = currentA = NULL;
 	if(cf != &cw->f0)
 		debugPrint(3, "render does not start at the top frame, context %d", cf->gsn);
