@@ -4717,7 +4717,7 @@ static void tagInStream(int tagno)
 static void liCheck(Tag *t)
 {
 	Tag *ltag; // <ol> or <ul>
-	if (listnest && (ltag = findOpenList(t)) && ltag->post) {
+	if (listnest && (ltag = findOpenList(t))) {
 		char olbuf[32];
 		if (ltag->ninp)
 			tagInStream(ltag->ninp);
@@ -4736,7 +4736,6 @@ static void liCheck(Tag *t)
 		}
 		if (!invisible)
 			stringAndString(&ns, &ns_l, olbuf);
-		ltag->post = false;
 	}
 }
 
@@ -5005,7 +5004,6 @@ nocolor:
 		}
 		if (!t->textval)
 			break;
-		liCheck(t);
 		if (!invisible) {
 // I'm not gonna include the node numbers for all the text nodes;
 // a lot of text nodes are whitespace and the tag numbers just confuse things.
@@ -5017,7 +5015,6 @@ nocolor:
 		break;
 
 	case TAGACT_A:
-		liCheck(t);
 // special code for attached images from an email
 		if(opentag && !attimg &&
 		(a = attribVal(t, "attimg")) &&
@@ -5255,7 +5252,6 @@ past_cell_paragraph:
 				}
 			}
 			if (opentag && action == TAGACT_H) {
-				liCheck(t);
 				strcpy(hnum, ti->name);
 				strcat(hnum, " ");
 				ns_hnum();
@@ -5318,7 +5314,6 @@ past_cell_paragraph:
 		itype = t->itype;
 		if (itype == INP_HIDDEN)
 			break;
-		liCheck(t);
 		if (itype == INP_TA && t->lic >= 0) {
 			j = t->lic;
 			if (j)
@@ -5375,9 +5370,9 @@ past_cell_paragraph:
 	case TAGACT_LI:
 		if ((ltag = findOpenList(t))) {
 			if(ltag->lic == -2) break; // suppressed
-			ltag->post = true;
 // borrow ninp to store the tag number of <li>
 			ltag->ninp = t->seqno;
+			liCheck(t);
 		}
 		goto nop;
 
@@ -5385,7 +5380,6 @@ past_cell_paragraph:
 // <hr> can be in the midst of options, as a separater between options.
 // We sure don't want that here.
 		if(findOpenTag(t, TAGACT_INPUT)) break;
-		liCheck(t);
 		if (retainTag) {
 			tagInStream(tagno);
 			stringAndString(&ns, &ns_l, "\r----------\r");
@@ -5477,7 +5471,6 @@ past_cell_paragraph:
 			if (tdfirst)
 				tdfirst = false;
 			else {
-				liCheck(t);
 				j = ns_l;
 				while (j && ns[j - 1] == ' ')
 					--j;
@@ -5522,7 +5515,6 @@ past_cell_paragraph:
 			static const char *openstring[] = { 0,
 				"[", "^(", "`"
 			};
-			liCheck(t);
 			tagInStream(tagno);
 			t->lic = ns_l;
 			stringAndString(&ns, &ns_l, openstring[j]);
@@ -5591,7 +5583,6 @@ unparen:
 /* back to unexpanded frame, or area */
 		if (!opentag)
 			break;
-		liCheck(t);
 		stringAndString(&ns, &ns_l,
 				(action == TAGACT_FRAME ? "\rFrame " : "\r"));
 // js often creates frames dynamically, so check for src
@@ -5637,7 +5628,6 @@ unparen:
 
 	case TAGACT_MUSIC:
 		if(!opentag) break;
-		liCheck(t);
 		if (!retainTag) break;
 		if (!t->href) break;
 		sprintf(hnum, "\r%c%d{", InternalCodeChar, tagno);
@@ -5650,7 +5640,6 @@ unparen:
 		break;
 
 	case TAGACT_IMAGE:
-		liCheck(t);
 		tagInStream(tagno);
 		if (!currentA) {
 			if (invisible) break;
