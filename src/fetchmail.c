@@ -4302,6 +4302,10 @@ static void makeLinesAndUids(const struct FOLDER *f)
 		if(!p[0]) p = "?";
 		stringAndString(&imapPaths, &imp_l, p);
 		stringAndChar(&imapPaths, &imp_l, EFS_I);
+		p = mif->reply;
+		if(!p[0]) p = "?";
+		stringAndString(&imapPaths, &imp_l, p);
+		stringAndChar(&imapPaths, &imp_l, EFS_I);
 		p = mif->to;
 		if(!p[0]) p = mif->prec;
 		if(!p[0]) p = "?";
@@ -4326,14 +4330,14 @@ static void makeLinesAndUids(const struct FOLDER *f)
 void lsEnvelope(const char *lsmode)
 {
 	int i, j, l;
-	static const char order[] = "uyftdlzr";
+	static const char order[] = "uyfFtdlzr";
 	char *p, *q;
-const char *mark[9];
+const char *mark[10];
 	const Window *pw = cw->prev; // previous window
 	const char *title = (const char *)(cw->imapMode2 ? cw->r_map[cw->dot].text :
 	pw->r_map[pw->dot].text);
 	mark[0] = title;
-	for(i = 1; i < 9; ++i)
+	for(i = 1; i < 10; ++i)
 		mark[i] = strchr(mark[i-1], EFS_I) + 1;
 
 	p = initString(&l);

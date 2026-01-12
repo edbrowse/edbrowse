@@ -305,7 +305,8 @@ I push these tags past the pipes, so I can clear it all away.
 But not if it's a data table; the tags have to be true to their cells.
 If a tag is <li>, then the follow on *, for <ul>,
 or the follow on number, for <ol>, is considered part of the tag.
-We can pull whitespace past a list indicator.
+We can thus pull whitespace past a list indicator.
+A list tag might look like   ^b379**   (for <ul>), or   ^b379*5.   (for <ol>).
 *********************************************************************/
 
 static void anchorSwap(char *buf)
