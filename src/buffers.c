@@ -1251,8 +1251,7 @@ void addToMap(int nlines, int destl)
 		memset(newmap + destl + nlines + 1, 0, LMSIZE);
 	nzFree(cw->map);
 	cw->map = newmap;
-	free(newpiece);
-	newpiece = 0;
+	nzFree0(newpiece);
 
 	if(cw->ircoMode1) {
 // capture the time stamp of the added lines in irc mode.
@@ -1425,10 +1424,9 @@ static bool inputLinesIntoBuffer(void)
 		if(!line) goto fail;
 	}
 
-	nzFree0(a_plus), a_end = false;
-
 	if (!linecount) {	/* no lines entered */
 		free(np);
+		nzFree0(a_plus), a_end = false;
 		cw->dot = endRange;
 		if (!cw->dot && cw->dol)
 			cw->dot = 1;
@@ -1439,6 +1437,9 @@ static bool inputLinesIntoBuffer(void)
 		cw->nlMode = false;
 	newpiece = np;
 	addToMap(linecount, endRange);
+	if(a_end && !inscript && debugLevel)
+		printDot();
+	nzFree0(a_plus), a_end = false;
 	return true;
 
 fail:
