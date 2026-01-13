@@ -190,6 +190,7 @@ void ebClose(int n)
 		mergeCookies();
 		eb_curl_global_cleanup();
 	}
+	rmdir(ebUserDir);
 	exit(n);
 }
 
@@ -429,7 +430,6 @@ const char *mailRedirect(const char *to, const char *from,
 static void setupEdbrowseTempDirectory(void)
 {
 	int userid = geteuid();
-	char ftype;
 	char *ebTempDir = getenv("TMPDIR");
 	if (!ebTempDir) {
 		ebTempDir="/tmp";
@@ -437,16 +437,9 @@ static void setupEdbrowseTempDirectory(void)
 
 	if (fileTypeByName(ebTempDir, 0) != 'd')
                 i_printfExit(MSG_NoTempDir, ebTempDir);
-	createFormattedString(&ebUserDir, "%s/edbrowse.%d", ebTempDir, userid);
-	ftype = fileTypeByName(ebUserDir, 0);
-	if(ftype != 'd') {
-// not there, try to create it.
-// in case it's a file or something else, delete it first
-		if(ftype) unlink(ebUserDir);
-		if(mkdir(ebUserDir, 0700))
-		i_printfExit(MSG_TempDirCreate, strerror(errno));
-	}
-// if it was already there, make sure it's owned by me, security, do this later
+	createFormattedString(&ebUserDir, "%s/edbrowse.%d.XXXXXX", ebTempDir, userid);
+        if (!(ebUserDir = mkdtemp(ebUserDir)))
+                i_printfExit(MSG_TempDirCreate, strerror(errno));
 }
 
 static void loadReplacements(void);
