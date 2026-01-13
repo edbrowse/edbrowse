@@ -20,7 +20,7 @@ char *sigFile, *sigFileEnd;
 char *cacheDir;
 int cacheSize = 1000, cacheCount = 10000;
 bool hlocal; // http local, from cache only
-char *ebTempDir, *ebUserDir;
+char *ebUserDir;
 char *userAgents[MAXAGENT + 1];
 char *currentAgent;
 int agentIndex;
@@ -428,18 +428,25 @@ const char *mailRedirect(const char *to, const char *from,
 
 static void setupEdbrowseTempDirectory(void)
 {
-	int userid;
-	ebTempDir = getenv("TMPDIR");
+	int userid = geteuid();
+	char ftype;
+	char *ebTempDir = getenv("TMPDIR");
 	if (!ebTempDir) {
 		ebTempDir="/tmp";
 	}
-	userid = geteuid();
 
 	if (fileTypeByName(ebTempDir, 0) != 'd')
                 i_printfExit(MSG_NoTempDir, ebTempDir);
-	createFormattedString(&ebUserDir, "%s/edbrowse.%d.XXXXXX", ebTempDir, userid);
-        if (!(ebUserDir = mkdtemp(ebUserDir)))
-                i_printfExit(MSG_TempDirCreate, strerror(errno));
+	createFormattedString(&ebUserDir, "%s/edbrowse.%d", ebTempDir, userid);
+	ftype = fileTypeByName(ebUserDir, 0);
+	if(ftype != 'd') {
+// not there, try to create it.
+// in case it's a file or something else, delete it first
+		if(ftype) unlink(ebUserDir);
+		if(mkdir(ebUserDir, 0700))
+		i_printfExit(MSG_TempDirCreate, strerror(errno));
+	}
+// if it was already there, make sure it's owned by me, security, do this later
 }
 
 static void loadReplacements(void);
