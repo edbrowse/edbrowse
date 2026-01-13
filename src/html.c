@@ -5360,7 +5360,7 @@ past_cell_paragraph:
 		break;
 
 	case TAGACT_HR:
-// <hr> can be in the midst of options, as a separater between options.
+// <hr> can be in the midst of options, as a separator between options.
 // We sure don't want that here.
 		if(findOpenTag(t, TAGACT_INPUT)) break;
 		if (retainTag) {

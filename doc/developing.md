@@ -101,6 +101,10 @@ Submit/reset forms.
 Render the tree of html nodes into a text buffer.
 Rerender the tree after js has run, and report any changes to the user.
 
+src/css.c:
+Parse the css files and the <style> directives.
+Apply the css attributes to the nodes that match.
+
 src/sendmail.c:
 Send mail (smtp or smtps).  Encode attachments.
 
