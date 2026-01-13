@@ -2924,6 +2924,7 @@ static bool makeTempFilename(const char *suffix, int idx, bool output)
 {
 	char *filename;
 
+	setupEdbrowseTempDirectory();
 // if no temp directory then we can't proceed
 	if (!ebUserDir) {
 		setError(MSG_TempNone);
@@ -2932,9 +2933,8 @@ static bool makeTempFilename(const char *suffix, int idx, bool output)
 
 	if (!suffix)
 		suffix = "eb";
-	if (createFormattedString(&filename, "%s/pf%d-%d.%s",
-		     ebUserDir, getpid(), idx, suffix) < 0)
-		i_printfExit(MSG_MemAllocError, strlen(ebUserDir) + 24);
+	createFormattedString(&filename, "%s/pf%d-%d.%s",
+		     ebUserDir, getpid(), idx, suffix);
 
 	if (output) {
 // free the last one, don't need it any more.

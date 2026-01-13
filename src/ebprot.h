@@ -250,6 +250,7 @@ bool mustVerifyHost(const char *url);
 const char *findProxyForURL(const char *url);
 const char *findAgentForURL(const char *url);
 const char *mailRedirect(const char *to, const char *from, const char *reply, const char *subj);
+void setupEdbrowseTempDirectory(void);
 int runEbFunction(const char *line);
 const char *getInputLineFromScript(void);
 bool runBuffer(int b, const Window *w, bool stopflag, int ln1, int ln2);

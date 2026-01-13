@@ -190,7 +190,7 @@ void ebClose(int n)
 		mergeCookies();
 		eb_curl_global_cleanup();
 	}
-	rmdir(ebUserDir);
+	if(ebUserDir) rmdir(ebUserDir);
 	exit(n);
 }
 
@@ -427,19 +427,18 @@ const char *mailRedirect(const char *to, const char *from,
 	return r;
 }
 
-static void setupEdbrowseTempDirectory(void)
+void setupEdbrowseTempDirectory(void)
 {
-	int userid = geteuid();
-	char *ebTempDir = getenv("TMPDIR");
-	if (!ebTempDir) {
+	static char *ebTempDir;
+	if(ebTempDir) return; // already ran
+	ebTempDir = getenv("TMPDIR");
+	if (!ebTempDir)
 		ebTempDir="/tmp";
-	}
-
 	if (fileTypeByName(ebTempDir, 0) != 'd')
                 i_printfExit(MSG_NoTempDir, ebTempDir);
-	createFormattedString(&ebUserDir, "%s/edbrowse.%d.XXXXXX", ebTempDir, userid);
+	createFormattedString(&ebUserDir, "%s/edbrowse.XXXXXX", ebTempDir);
         if (!(ebUserDir = mkdtemp(ebUserDir)))
-                i_printfExit(MSG_TempDirCreate, strerror(errno));
+                i_printf(MSG_TempDirCreate, strerror(errno));
 }
 
 static void loadReplacements(void);
@@ -700,7 +699,6 @@ create in the old location to avoid surprises */
 // all of edbrowse should not crash.
 	signal(SIGPIPE, SIG_IGN);
 
-	setupEdbrowseTempDirectory();
 	js_main();
 
 // This sanity check on number of files assumes they are all files,

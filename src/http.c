@@ -2146,6 +2146,7 @@ int ftpWrite(const char *url)
 		return false;
 	}
 
+	setupEdbrowseTempDirectory();
 	if (!ebUserDir) {
 		setError(MSG_TempNone);
 		return false;
