@@ -530,8 +530,6 @@ create in the old location to avoid surprises */
 	strcat(agent0, version);
 	userAgents[0] = currentAgent = agent0;
 
-	setupEdbrowseTempDirectory();
-
 	progname = argv[0];
 	++argv, --argc;
 
@@ -702,6 +700,7 @@ create in the old location to avoid surprises */
 // all of edbrowse should not crash.
 	signal(SIGPIPE, SIG_IGN);
 
+	setupEdbrowseTempDirectory();
 	js_main();
 
 // This sanity check on number of files assumes they are all files,
