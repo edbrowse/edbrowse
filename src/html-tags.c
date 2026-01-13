@@ -707,7 +707,9 @@ void freeTags(Window *w)
 			continue;
 		if (t->itype != INP_TA)
 			continue;
-		if ((n = t->lic) > 0)
+// 0 means no side buffer; -1 means the text is inline,
+// a trick when the text can be contained on one line and doesn't need a buffer.
+		if ((n = t->lic) <= 0)
 			continue;
 		freeEmptySideBuffer(n);
 	}			// loop over tags
