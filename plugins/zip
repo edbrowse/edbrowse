@@ -1,33 +1,32 @@
-It is possible to access and traverse the files inside a zip archive
-as though it were a mounted file system.
-If you are editing a directory, and MyOldWork.zip is one of the files,
-type g, and you will see a page that says Zip Archive at the top,
-with links to the files and directories at the top of the zip archive.
-From there you can descend into subdirectories, or extract files.
-Edbrowse never pulls the entire archive into a buffer, so the archive can be huge.
+# It is possible to access and traverse the files inside a zip archive
+# as though it were a mounted file system.
+# If you are editing a directory, and MyOldWork.zip is one of the files,
+# type g, and you will see a page that says Zip Archive at the top,
+# with links to the files and directories at the top of the zip archive.
+# From there you can descend into subdirectories, or extract files.
+# Edbrowse never pulls the entire archive into a buffer, so the archive can be huge.
+# 
+# The system relies on a made-up protocol zipxd://
+# You will never find this protocol in the wild.
+# It is prepended to zip files and directories,
+# then used to trigger plugins which descend further into the zip archive.
+# A similar system could be set up for gzip, bzip2, tar, cpio, etc.
 
-The system relies on a made-up protocol zipxd://
-You will never find this protocol in the wild.
-It is prepended to zip files and directories,
-then used to trigger plugins which descend further into the zip archive.
-A similar system could be set up for gzip, bzip2, tar, cpio, etc.
+# There are three plugins and a supporting bash script - edbrowse-plugin-zip.
 
-There are three plugins and a supporting bash script.
-Below are the plugins, followed by the script, which should be placed in your bin.
-
-down_url means the plugin must run from a file on your system, not a url.
-The program cannot act on a url.
-It could be a temp file however.
-edbrowse can download the file, put it into a temp, and run.
-from_file is stronger. It means the file must be a local file.
-If the file is on the internet, save it to a local file,
-then you can use these plugins.
+# down_url means the plugin must run from a file on your system, not a url.
+# The program cannot act on a url.
+# It could be a temp file however.
+# edbrowse can download the file, put it into a temp, and run.
+# from_file is stronger. It means the file must be a local file.
+# If the zip file is on the internet, save it to a local file,
+# then you can use these plugins.
 
 plugin {
 type = zip
 desc = zip archive
 suffix = zip
-program = ebunzip %i
+program = edbrowse-plugin-zip %i
 from_file
 outtype = h
 }
@@ -36,69 +35,19 @@ plugin {
 type = zip
 desc = zip show directory
 protocol = zipxd
-program = ebunzip %i
+program = edbrowse-plugin-zip %i
 outtype = h
 }
 
-This plugin uses outtype = g, which is rare.
-A rendering program usually generates text or html, but in this case
-the file could be anything. We don't know in advance what it is,
-so use g for generic.
+# This plugin uses outtype = g, which is rare.
+# A rendering program usually generates text or html, but in this case
+# the file could be anything. We don't know in advance what it is,
+# so use g for generic.
 
 plugin {
 type = zip
 desc = zip extract file
 protocol = zipx
-program = ebunzip %i
+program = edbrowse-plugin-zip %i
 outtype = g
 }
-
-And now for the bash script that performs the magic.
-This script assumes none of the pathnames in the zip archive
-contain the " or ; characters.
-That isn't ideal; we should fix this some day.
-
-#!/bin/bash
-if [ $# != 1 ] ; then
-echo "usage ebunzip zipfile[path]"
-exit 1;
-fi
-#  gather the zip file and path
-zf="$1"
-path=""
-if [[ "$zf" =~ @:@ ]] ; then
-path=${zf/*@:@/}
-zf=${zf/@:@*/}
-#  check here for file extract
-if [[ "$zf" =~ zipx: ]] ; then
-zf=${zf/zipx:??/}
-unzip -p "$zf" "$path"
-exit 0
-fi
-zf=${zf/zipxd:??/}
-fi
-# we're generating html, whence we can make links that edbrowse understands
-echo "<body>Zip Archive"
-if [ -z "$path" ] ; then
-#  this is the root directory
-unzip -t "$zf" |
-sort |
-sed -e '/testing:/!d' -e 's/^.*testing: *//' -e 's/  *OK$//' \
--e '/\/./d' \
--e "s;.*;://$zf@:@&\">&</a>;" \
--e '/\/">/s/^/d/' \
--e 's/^/<br><a href="zipx/'
-else
-unzip -t "$zf" |
-sort |
-sed -e '/testing:/!d' -e 's/^.*testing: *//' -e 's/  *OK$//' \
--e "s;^$path;@:@&;" \
--e '/^@:@/!d' -e 's/^@:@//' \
--e "s;^$path;;" \
--e '/^$/d' \
--e '/\/./d' \
--e "s;.*;://$zf@:@$path&\">&</a>;" \
--e '/\/">/s/^/d/' \
--e 's/^/<br><a href="zipx/'
-fi
-echo "</body>"

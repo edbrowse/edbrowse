@@ -6,7 +6,8 @@ Edbrowse will never be that streamlined, but this is an attempt to get closer.
 This directory contains numerous plugins for common tasks.
 In some cases there are different plugins for the same task, using different
 players, because we all have our personal preferences.
-Use the one you want.
+If you want a different player, you will need to customize the file
+or write your own.
 
 Sometimes the suffix is nothing more than a key to the plugin database.
 Suppose a plugin descriptor says:
@@ -20,13 +21,9 @@ We will use this trick from time to time.
 All files in this directory are text files.
 I don't want characters to have meaning when a file is rendered,
 and I don't want to escape certain characters with backslash.
-The plugin is the plugin; just copy it into your .ebrc file.
-The supporting shell script is the shell script; just copy it into your bin.
-
-There is no indenting here.
-Everyone has their own preferred way to indent.
-If you want to indent the scripts,
-you can do so when you copy them into your own world.
+The plugin is the plugin; just copy it into, or reference it from,
+your .ebrc file.
+The supporting shell script is the shell script; just install it into your bin.
 
 You can disable plugins with the pg- command.
 Plugins don't run until you enable them again.

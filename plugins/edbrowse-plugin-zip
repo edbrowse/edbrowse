@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# This script assumes none of the pathnames in the zip archive
+# contain the " or ; characters.
+# That isn't ideal; we should fix this some day.
+
+if [ $# != 1 ] ; then
+echo "usage ebunzip zipfile[path]"
+exit 1;
+fi
+
+#  gather the zip file and path
+zf="$1"
+path=""
+
+if [[ "$zf" =~ @:@ ]] ; then
+path=${zf/*@:@/}
+zf=${zf/@:@*/}
+#  check here for file extract
+if [[ "$zf" =~ zipx: ]] ; then
+zf=${zf/zipx:??/}
+unzip -p "$zf" "$path"
+exit 0
+fi
+zf=${zf/zipxd:??/}
+fi
+
+# we're generating html, whence we can make links that edbrowse understands
+echo "<body>Zip Archive"
+if [ -z "$path" ] ; then
+#  this is the root directory
+unzip -t "$zf" |
+sort |
+sed -e '/testing:/!d' -e 's/^.*testing: *//' -e 's/  *OK$//' \
+-e '/\/./d' \
+-e "s;.*;://$zf@:@&\">&</a>;" \
+-e '/\/">/s/^/d/' \
+-e 's/^/<br><a href="zipx/'
+else
+unzip -t "$zf" |
+sort |
+sed -e '/testing:/!d' -e 's/^.*testing: *//' -e 's/  *OK$//' \
+-e "s;^$path;@:@&;" \
+-e '/^@:@/!d' -e 's/^@:@//' \
+-e "s;^$path;;" \
+-e '/^$/d' \
+-e '/\/./d' \
+-e "s;.*;://$zf@:@$path&\">&</a>;" \
+-e '/\/">/s/^/d/' \
+-e 's/^/<br><a href="zipx/'
+fi
+echo "</body>"
+
+exit 0
