@@ -5,7 +5,7 @@
 # That isn't ideal; we should fix this some day.
 
 if [ $# != 1 ] ; then
-echo "usage ebunzip zipfile[path]"
+echo "usage edbrowse-plugin-zip zipfile[path]"
 exit 1;
 fi
 
