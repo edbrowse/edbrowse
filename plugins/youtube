@@ -1,6 +1,9 @@
 # Warning - unlike all the other players, mpv and so on,
 # the player yt-dlp may not work as distributed.
-# See youtube.explain for an explanation.
+# If it does not fetch files from youtube.com, git the latest code from
+# https://github.com/yt-dlp/yt-dlp
+# If that works you may need to uninstall the distributed version
+# and install this one.
 
 # It is possible to run youtube manually.
 # You see a youtube link, call up "yt-dlp -x --audio-format mp3",
