@@ -3605,6 +3605,18 @@ under the MIT license.
 #include <openssl/ssl.h>
 #include <openssl/err.h>	// for error-retrieval
 
+const char *ssl_version(void)
+{
+	static char buf[32];
+	const long v = OPENSSL_VERSION_NUMBER; // shorthand
+	sprintf(buf, "%d.%d.%d (%d)",
+	(int)(v >> 28),
+	(int)((v >> 16) & 0xfff),
+	(int)((v >> 4) & 0xfff),
+	(int)(v & 0xf));
+	return buf;
+}
+
 typedef unsigned int IP32bit;
 #define NULL_IP (IP32bit)(-1)
 

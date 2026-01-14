@@ -441,6 +441,7 @@ const struct MIMETYPE *findMimeByFile(const char *filename);
 const struct MIMETYPE *findMimeByContent(const char *content);
 bool runPluginCommand(const struct MIMETYPE *m, const char *inurl, const char *infile, const char *indata, int inlength, char **outdata, int *outlength);
 int playBuffer(const char *line, const char *playfile);
+const char *ssl_version(void);
 void ircSetFileName(Window *w);
 bool ircWrite(void);
 void ircRead(void);

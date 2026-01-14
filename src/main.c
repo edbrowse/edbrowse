@@ -561,6 +561,7 @@ create in the old location to avoid surprises */
 			cv >> 16,
 			(cv >> 8) & 0xff,
 			cv & 0xff);
+			printf("openssl %s\n", ssl_version());
 			printf("pcre2 %s\n", pcre_version());
 			printf("quickjs %s\n", jseng_version());
 			exit(0);
