@@ -4298,16 +4298,21 @@ static void makeLinesAndUids(const struct FOLDER *f)
 		stringAndString(&imapPaths, &imp_l, p);
 		stringAndChar(&imapPaths, &imp_l, EFS_I);
 		p = mif->from;
-		if(!p[0]) p = mif->reply;
-		if(!p[0]) p = "?";
-		stringAndString(&imapPaths, &imp_l, p);
-		stringAndChar(&imapPaths, &imp_l, EFS_I);
+		if(p[0]) {
+			stringAndString(&imapPaths, &imp_l, p);
+			stringAndChar(&imapPaths, &imp_l, ' ');
+		}
 		p = mif->reply;
 		if(!p[0]) p = "?";
 		stringAndString(&imapPaths, &imp_l, p);
 		stringAndChar(&imapPaths, &imp_l, EFS_I);
+		stringAndChar(&imapPaths, &imp_l, EFS_I);
 		p = mif->to;
-		if(!p[0]) p = mif->prec;
+		if(p[0]) {
+			stringAndString(&imapPaths, &imp_l, p);
+			stringAndChar(&imapPaths, &imp_l, ' ');
+		}
+		p = mif->prec;
 		if(!p[0]) p = "?";
 		stringAndString(&imapPaths, &imp_l, p);
 		stringAndChar(&imapPaths, &imp_l, EFS_I);
@@ -4330,7 +4335,7 @@ static void makeLinesAndUids(const struct FOLDER *f)
 void lsEnvelope(const char *lsmode)
 {
 	int i, j, l;
-	static const char order[] = "uyfFtdlzr";
+	static const char order[] = "uyfxtdlzr";
 	char *p, *q;
 const char *mark[10];
 	const Window *pw = cw->prev; // previous window

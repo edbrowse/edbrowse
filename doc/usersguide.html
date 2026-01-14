@@ -796,9 +796,8 @@ rf : refresh the envelopes in this buffer
 <br>t abc : copy email to folder abc
 <br>r : mark email as read
 <br>r- : mark email as not read
-<br> lsf : list the from field for this envelope
-<br> lsF : list the reply field (the from email address)
-<br> lst : list the to field (email address)
+<br> lsf : list the from field for this envelope, name if present and email address
+<br> lst : list the to field, name if present and email address
 <br> lsd : list the date field
 <br> lsl : list the length
 <br> lsz or lss : list the size in round numbers
@@ -4630,6 +4629,13 @@ Prescribe the format of an imap envelope, one letter per field.
 t = to, f = from, s = subject, d = date, z = size, n = number, and r = read indicator.
 The default is fs, from subject.
 This can be changed interactively with the e command.
+
+<p>
+From and to fields present the name or organization if that is provided.
+We hope that is familiar to you.
+If a name is not provided, the email address stands in.
+
+<p>
 The read indicator presents a star if the email has not been read.
 It flags the email as something you might want to read.
 
@@ -6345,9 +6351,8 @@ These ls commands work on an email that you are reading, as well as the envelope
 The ls letters are as follows:
 <p>
 y subject - but subject is probably already part of the line
-<br>f from (name or organization, if provided)
-<br>F from (email address)
-<br>t to (email address)
+<br>f from (name or organization if provided, and sender's email address)
+<br>t to (your name if provided, and your receiving email address)
 <br>d date
 <br>l length
 <br>z consise size

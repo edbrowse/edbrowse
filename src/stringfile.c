@@ -1285,10 +1285,10 @@ bool lsattrChars(const char *buf, char *dest)
 	const char *s;
 	char c, *t;
 	const char * ok_chars = "lstikpmy";
-	if(cw->imapMode2) ok_chars = "uyfFtdlzr";
-	if(cw->imapMode3) ok_chars = "uyfFtdlz";
+	if(cw->imapMode2) ok_chars = "uyftdlzr";
+	if(cw->imapMode3) ok_chars = "uyftdlz";
 	if(cw->ircoMode1) ok_chars = "ct";
-	char used[64];
+	char used[26];
 	memset(used, 0, sizeof(used));
 	t = dest;
 	for (s = buf; (c = *s); ++s) {
@@ -1298,9 +1298,9 @@ bool lsattrChars(const char *buf, char *dest)
 			rc = false;
 			continue;
 		}
-		if (used[c - 'A'])
+		if (used[c - 'a'])
 			continue;
-		used[c - 'A'] = 1;
+		used[c - 'a'] = 1;
 		*t++ = c;
 	}
 	*t = 0;
