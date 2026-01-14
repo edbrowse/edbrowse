@@ -1,6 +1,6 @@
-Going back to the 90's, Microsoft developed a format for its documents
-under MS-Word. Nix developed a program to make these documents readable.
-The same program handles rich text.
+# Going back to the 90's, Microsoft developed a format for its documents
+# under MS-Word. Nix developed a program to make these documents readable.
+# The same program handles rich text.
 
 plugin {
 type = Word doc
@@ -22,7 +22,7 @@ program = catdoc %i
 outtype = t
 }
 
-Microsoft then upgraded the format, and created a new file extention, docx.
+# Microsoft then upgraded the format, and created a new file extention, docx.
 
 plugin {
 type = docx
@@ -34,12 +34,12 @@ program = docx2txt %i
 outtype = t
 }
 
-Portable document format (pdf) has become the gold standard.
-Linux has programs to turn pdf into html or text.
-html preserves hyperlinks and other formatting directives.
-However, some documents are more readable when turned into text.
-Once again I want the best of both worlds.
-The default is text, but the virtual suffix pdfh turns pdf into html.
+# Portable document format (pdf) has become the gold standard.
+# Linux has programs to turn pdf into html or text.
+# html preserves hyperlinks and other formatting directives.
+# However, some documents are more readable when turned into text.
+# Once again I want the best of both worlds.
+# The default is text, but the virtual suffix pdfh turns pdf into html.
 
 plugin {
 type = pdf
@@ -67,19 +67,19 @@ program = pdftotext -q -opw %p %i -
 outtype = t
 }
 
-Some pdf files, far too many, are simply a pdf wrapper around an image.
-This happens if you scan a document with your phone, then turn it into pdf.
-In that event, pdf to text produces an empty buffer, and pdf to html
-produces one or more blank pages separated by <hr> lines.
-The document is unreadable to us, and we have to leave it at that.
+# Some pdf files, far too many, are simply a pdf wrapper around an image.
+# This happens if you scan a document with your phone, then turn it into pdf.
+# In that event, pdf to text produces an empty buffer, and pdf to html
+# produces one or more blank pages separated by <hr> lines.
+# The document is unreadable to us, and we have to leave it at that.
 
-Markdown is a preprocessor to html.
-Thus the document can include html tags, but if there are a lot of them,
-then you probably should have written it in html in the first place.
-A well written .md file is easily readable as-is,
-yet it it is well formatted when rendered.
-Naturally, the markdown plugin will generate html,
-whereupon edbrowse can do the formatting.
+# Markdown is a preprocessor to html.
+# Thus the document can include html tags, but if there are a lot of them,
+# then you probably should have written it in html in the first place.
+# A well written .md file is easily readable as-is,
+# yet it it is well formatted when rendered.
+# Naturally, the markdown plugin will generate html,
+# whereupon edbrowse can do the formatting.
 
 plugin {
 type = markdown
@@ -91,8 +91,8 @@ program = pandoc -f markdown -t html %i
 outtype = h
 }
 
-e-books are often published using the epub format.
-pandoc turns these into html, ready to read.
+# e-books are often published using the epub format.
+# pandoc turns these into html, ready to read.
 
 plugin {
 type = epub
