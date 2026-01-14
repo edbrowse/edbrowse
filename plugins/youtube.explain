@@ -1,0 +1,63 @@
+Youtube is a beast unto itself.
+Thus there is a special program, yt-dlp,
+designed to download video or audio from youtube.com.
+I'm not sure what yt-dlp means,
+but I remember it as download a dollop (dlp) of youtube.
+
+As I write this, yt-dlp does not work as distributed (debian), but the latest does work.
+there is a reason for this.
+Youtube is antagonistic to our needs.
+Facebook shuts us out by being excessively graphical,
+and using every javascript feature known to man,
+but they would say, if asked,
+"We didn't mean to shut you out.
+You can always use a commercial browser with voice over technology.
+We really want you to use our services."
+That's what they would say.
+In contrast, youtube does not want us,
+or anyone, to download videos from their servers to their computers.
+It opens the door to copyright infringement.
+Everybody can steal songs off of youtube without paying the artist.
+It's a legitimate concern.
+Therefore, youtube constantly does things to their website,
+so only the commercial browsers can view the videos. Hence you can "watch"
+a copyrighted video, on a one-time basis, including commercials.
+Unfortunately, we, (people who use alternate browsers),
+have to copy it to listen to it.
+We have to do the very thing youtube doesn't want us to do.
+youtube creates restrictions hand-in-hand with the commercial browsers,
+and in response, yt-dlp is constantly trying to get around these restrictions.
+Back and forth, year after year, it's a game of cat and mouse.
+For now the cat has the upper hand. 😼
+yt-dlp prints a lot of warnings along the way, but it works.
+For now I can download things from youtube and listen to them,
+as though I were using a commercial browser.
+Next year youtube may be inaccessible once again,
+and the year after that yt-dlp may catch up with the changes.
+Who can say.
+
+The first thing you need to do is test yt-dlp, as distributed.
+Make an alias, like this.
+
+alias ytget="yt-dlp -x --audio-format mp3"
+
+ytget means youtube get.
+Then try to fetch anything at all.
+How bout George Carlin on baseball versus football.
+
+ytget 'https://www.youtube.com/watch?v=IhN1ExFCXNA'
+
+does it come down ok?
+Do you have an mp3 file?
+If yes, then listen to it, and enjoy it,
+and appreciate once again the genius of the man.
+If not, then uninstall yt-dlp from your system, get the latest,
+build, and install, and hope that version works.
+
+git clone https://github.com/yt-dlp/yt-dlp
+cd yt-dlp
+make
+sudo make install
+
+Let's assume yt-dlp works, either as distributed or using the latest code.
+Now you are on your way.

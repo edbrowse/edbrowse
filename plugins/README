@@ -3,7 +3,7 @@ You don't have to go fishing around for them, then paste them into your
 config file. The music plays, the pdf file renders, etc.
 Edbrowse will never be that streamlined, but this is an attempt to get closer.
 
-This directory contains numerous plugins for common tasks.
+This directory contains plugins for common tasks.
 In some cases there are different plugins for the same task, using different
 players, because we all have our personal preferences.
 If you want a different player, you will need to customize the file
@@ -29,4 +29,3 @@ You can disable plugins with the pg- command.
 Plugins don't run until you enable them again.
 You can disable plugins on a one-time basis with the g- command.
 
-Send corrections additions suggestions to the maintainers.
