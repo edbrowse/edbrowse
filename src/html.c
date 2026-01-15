@@ -1419,86 +1419,44 @@ past_html_events:
 bool htmlTest(void)
 {
 	int j, ln;
-	int cnt = 0;
-	int fsize = 0;		/* file size */
 	char look[12];
-	bool firstline = true;
-
 	for (ln = 1; ln <= cw->dol; ++ln) {
 		char *p = (char *)fetchLine(ln, -1);
-		char c;
-		int state = 0;
-
 // special xml indicator of my own creation
 		if(ln == 1 && !memcmp(p, "`~*xml}@;", 9))
 			return true;
-
 		while (isspaceByte(*p) && *p != '\n')
 			++p;
 		if (*p == '\n')
-			continue;	/* skip blank line */
-		if (firstline && *p == '<') {
-/* check for <!doctype and other things */
-			if (memEqualCI(p + 1, "!doctype", 8))
-				return true;
-			if (memEqualCI(p + 1, "?xml", 4))
-				return true;
-			if (memEqualCI(p + 1, "!--", 3))
-				return true;
-/* If it starts with <tag, for any tag we recognize,
- * we'll call it good. */
-			for (j = 1; j < 10; ++j) {
-				if (!isalnumByte(p[j]))
-					break;
-				look[j - 1] = p[j];
-			}
-			look[j - 1] = 0;
-			if (j > 1 && (p[j] == '>' || isspaceByte(p[j]))) {
-/* something we recognize? */
-				const struct tagInfo *ti;
-				for (ti = availableTags; ti->name[0]; ++ti)
-					if (stringEqualCI(ti->name, look))
-						return true;
-			}	/* leading tag */
-		}		/* leading < */
-		firstline = false;
-
-/* count tags through the buffer */
-		for (j = 0; (c = p[j]) != '\n'; ++j) {
-			if (state == 0) {
-				if (c == '<')
-					state = 1;
-				continue;
-			}
-			if (state == 1) {
-				if (c == '/')
-					state = 2;
-				else if (isalphaByte(c))
-					state = 3;
-				else
-					state = 0;
-				continue;
-			}
-			if (state == 2) {
-				if (isalphaByte(c))
-					state = 3;
-				else
-					state = 0;
-				continue;
-			}
-			if (isalphaByte(c))
-				continue;
-			if (c == '>')
-				++cnt;
-			state = 0;
+			continue;	// skip blank line
+		if (*p != '<') return false;
+// check for <!doctype and other things
+		if (memEqualCI(p + 1, "!doctype", 8))
+			return true;
+		if (memEqualCI(p + 1, "?xml", 4))
+			return true;
+		if (memEqualCI(p + 1, "!--", 3))
+			return true;
+		if (memEqualCI(p + 1, "!if", 3))
+			return true;
+// If it starts with <tag, for any tag we recognize,
+// we'll call it good.
+		for (j = 1; j < 10; ++j) {
+			if (!isalnumByte(p[j]))
+				break;
+			look[j - 1] = p[j];
 		}
-		fsize += j;
-	}			/* loop over lines */
-
-/* we need at least one of these tags every 300 characters.
- * And we need at least 4 such tags.
- * Remember, you can always override by putting <html> at the top. */
-	return (cnt >= 4 && cnt * 300 >= fsize);
+		look[j - 1] = 0;
+		if (j > 1 && (p[j] == '>' || isspaceByte(p[j]))) {
+// something we recognize?
+			const struct tagInfo *ti;
+			for (ti = availableTags; ti->name[0]; ++ti)
+				if (stringEqualCI(ti->name, look))
+					return true;
+		}
+		return false;
+	}
+	return false;
 }
 
 bool browseCurrentBuffer(const char *suffix, bool plain)
