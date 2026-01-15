@@ -1,18 +1,33 @@
 #!/bin/bash
 
-# This script assumes none of the pathnames in the zip archive
-# contain the " or ; characters.
-# That isn't ideal; we should fix this some day.
-
 if [ $# != 1 ] ; then
 echo "usage edbrowse-plugin-zip zipfile[path]"
 exit 1;
 fi
 
+# This script assumes all ascii characters, and nice characters too,
+# not < ; " \ etc.
+# this is not ideal.
+# the next two functions move us toward a better solution.
+
+# We're going to generate <a> tags in html, with links that look like urls.
+# the url holds the zip file and the path inside.
+# If there are any odd characters in these paths, like < > or nonascii,
+# and if we don't percent encode them here, edbrowse is going to do it for us.
+# We have no choice.
+# perl is the easiest way to encode and decode.
+
+function uriEscape {
+echo "$1" | perl -e 'use URI::Escape; my $s = <>; chomp $s; print uri_escape $s;'
+}
+
+function uriUnescape {
+echo "$1" | perl -e 'use URI::Escape; my $s = <>; chomp $s; print uri_unescape $s;'
+}
+
 #  gather the zip file and path
 zf="$1"
 path=""
-
 if [[ "$zf" =~ @:@ ]] ; then
 # zip file is before @:@, path is after
 path=${zf/*@:@/}
