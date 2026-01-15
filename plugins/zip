@@ -6,8 +6,8 @@
 # From there you can descend into subdirectories, or extract files.
 # Edbrowse never pulls the entire archive into a buffer, so the archive can be huge.
 # 
-# The system relies on a made-up protocol zipxd://
-# You will never find this protocol in the wild.
+# The system relies on made-up protocols zipx:// and zipxd://
+# You will never find these protocols in the wild.
 # It is prepended to zip files and directories,
 # then used to trigger plugins which descend further into the zip archive.
 # A similar system could be set up for gzip, bzip2, tar, cpio, etc.
