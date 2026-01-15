@@ -1,11 +1,13 @@
-#  compiler and flags
-CC ?=		cc
+# compiler and flags
+CC ?= cc
 PERL ?= perl
-PREFIX ?=	/usr/local
+INSTALL ?= install -C -D
+PREFIX ?= /usr/local
 QUICKJS_INCLUDE ?= $(PREFIX)/include
 QUICKJS_LIB ?= $(PREFIX)/lib
 QUICKJS_LIB_NAME ?= qjs
 CFLAGS +=	-Wall -D_FILE_OFFSET_BITS=64
+INSTALLBASE=$(shell realpath "$(DESTDIR)/$(PREFIX)")
 
 # determine includes and linker flags
 DEPENDENCIES = libcurl:curl odbc libpcre2-8:pcre2-8 readline openssl
@@ -78,13 +80,13 @@ edbrowse: $(EBOBJS)
 
 #  You probably need to be root to do this.
 install:
-	mkdir -p -m 755 $(DESTDIR)$(PREFIX)/bin
-	install -m755 edbrowse $(DESTDIR)$(PREFIX)/bin
-	mkdir -p -m 755 $(DESTDIR)$(PREFIX)/share/doc/edbrowse
-	install -m644 ../doc/usersguide.html $(DESTDIR)$(PREFIX)/share/doc/edbrowse
+	$(INSTALL) -m755 edbrowse $(INSTALLBASE)/bin
+	$(INSTALL) -m644 ../doc/usersguide.html $(INSTALLBASE)/share/doc/edbrowse
+	$(INSTALL) -m755 ../plugins/edbrowse-plugin-* $(INSTALLBASE)/bin
+	$(INSTALL) -m644 -t $(INSTALLBASE)/share/edbrowse/plugins ../plugins/*.rc
 
-#  native Informix library for database access.
-#  Others could be built, e.g. Oracle, but odbc is the most general.
+# native Informix library for database access.
+# Others could be built, e.g. Oracle, but odbc is the most general.
 dbinfx.o : dbinfx.ec
 	esql -c dbinfx.ec
 
@@ -96,9 +98,9 @@ clean:
 	rm -f *.o edbrowse \
 	startwindow.c ebrc.c msg-strings.c
 
-#  some hello world targets, for testing and debugging
+# some hello world targets, for testing and debugging
 
-#  need packages nodejs and libnode-dev
+# need packages nodejs and libnode-dev
 js_hello_v8 : js_hello_v8.cpp
 	g++ -I/usr/include/v8 js_hello_v8.cpp -lv8 -lstdc++ -o js_hello_v8
 
@@ -109,4 +111,3 @@ js0: js0.c
 	$(CC) -I$(QUICKJS_INCLUDE) js0.c $(QUICKJS_LIB)/libquickjs.a -lm -latomic -o js0
 
 hello: js_hello_quick js0
-

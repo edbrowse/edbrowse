@@ -18,14 +18,14 @@ However, you can type b.snork, or pb.snork, or g.snork in directory mode,
 to invoke the snork plugin on the file.
 We will use this trick from time to time.
 
-All files in this directory are text files.
-I don't want characters to have meaning when a file is rendered,
-and I don't want to escape certain characters with backslash.
-The plugin is the plugin; just copy it into, or reference it from,
-your .ebrc file.
-The supporting shell script is the shell script; just install it into your bin.
+The config fragments are suffixed with .rc, the scripts all have the prefix
+edbrowse-plugin- and the decision not to suffix them with the scripting language
+(e.g. .sh for shell or .py for python) is deliberate as they are executables and
+in general executables in the path should not have an associated scripting
+language hard-coded into the file name. Plugins following these conventions will
+be automatically installed by the install rule. The scripts are installed in the
+same bin directory as edbrowse and the config fragments are installed under
+$(INSTALLBASE)/share/edbrowse/plugins directory.
 
-You can disable plugins with the pg- command.
-Plugins don't run until you enable them again.
-You can disable plugins on a one-time basis with the g- command.
-
+disable plugins with the pg- command. Plugins don't run until you enable them
+again. You can disable plugins on a one-time basis with the g- command.
