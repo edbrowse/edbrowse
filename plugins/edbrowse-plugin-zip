@@ -20,6 +20,11 @@ function uriUnescape {
 echo "$1" | perl -e 'use URI::Escape; my $s = <>; chomp $s; print uri_unescape $s;'
 }
 
+function htmlEscape {
+echo "$1" | sed \
+-e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+}
+
 if [[ "$1" =~ @:@ ]] ; then
 # this has been through our machinery and is encoded
 # protocol is either zipx or zipxd
@@ -62,7 +67,8 @@ while read line; do
 line1=$(uriEscape "$line")
 prot=zipx
 if [[ "$line" =~ / ]]; then prot=zipxd; fi
-echo "<br><a href='$prot://$zf1@:@$line1'>$line</a>"
+line2=$(htmlEscape "$line")
+echo "<br><a href='$prot://$zf1@:@$line1'>$line2</a>"
 done
 else
 # path as the left side of a sed expression
@@ -79,7 +85,8 @@ while read line; do
 line1=$(uriEscape "$line")
 prot=zipx
 if [[ "$line" =~ / ]]; then prot=zipxd; fi
-echo "<br><a href='$prot://$zf1@:@$path1$line1'>$line</a>"
+line2=$(htmlEscape "$line")
+echo "<br><a href='$prot://$zf1@:@$path1$line1'>$line2</a>"
 done
 fi
 
