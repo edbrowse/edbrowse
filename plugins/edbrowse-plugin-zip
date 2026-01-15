@@ -14,8 +14,10 @@ zf="$1"
 path=""
 
 if [[ "$zf" =~ @:@ ]] ; then
+# zip file is before @:@, path is after
 path=${zf/*@:@/}
 zf=${zf/@:@*/}
+# protocol is either zipx or zipxd
 #  check here for file extract
 if [[ "$zf" =~ zipx: ]] ; then
 zf=${zf/zipx:??/}
@@ -37,12 +39,13 @@ sed -e '/testing:/!d' -e 's/^.*testing: *//' -e 's/  *OK$//' \
 -e '/\/">/s/^/d/' \
 -e 's/^/<br><a href="zipx/'
 else
+# path as the left side of a sed expression
+path_lhs=$(echo "$path" | sed 's/[",\\.*[]/\\&/g')
 unzip -t "$zf" |
 sort |
 sed -e '/testing:/!d' -e 's/^.*testing: *//' -e 's/  *OK$//' \
--e "s;^$path;@:@&;" \
+-e "s,^$path_lhs,@:@," \
 -e '/^@:@/!d' -e 's/^@:@//' \
--e "s;^$path;;" \
 -e '/^$/d' \
 -e '/\/./d' \
 -e "s;.*;://$zf@:@$path&\">&</a>;" \
