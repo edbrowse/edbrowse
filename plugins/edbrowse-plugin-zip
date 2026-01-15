@@ -5,11 +5,6 @@ echo "usage edbrowse-plugin-zip zipfile[path]"
 exit 1;
 fi
 
-# This script assumes all ascii characters, and nice characters too,
-# not < ; " \ etc.
-# this is not ideal.
-# the next two functions move us toward a better solution.
-
 # We're going to generate <a> tags in html, with links that look like urls.
 # the url holds the zip file and the path inside.
 # If there are any odd characters in these paths, like < > or nonascii,
@@ -25,21 +20,33 @@ function uriUnescape {
 echo "$1" | perl -e 'use URI::Escape; my $s = <>; chomp $s; print uri_unescape $s;'
 }
 
-#  gather the zip file and path
-zf="$1"
-path=""
-if [[ "$zf" =~ @:@ ]] ; then
-# zip file is before @:@, path is after
-path=${zf/*@:@/}
-zf=${zf/@:@*/}
+if [[ "$1" =~ @:@ ]] ; then
+# this has been through our machinery and is encoded
 # protocol is either zipx or zipxd
+# zip file is before @:@, path is after
+zf1="$1"
+path1=${zf1/*@:@/}
+zf1=${zf1/@:@*/}
+zf=$(uriUnescape "$zf1")
+path=$(uriUnescape "$path1")
+
 #  check here for file extract
 if [[ "$zf" =~ zipx: ]] ; then
 zf=${zf/zipx:??/}
+# the unzip command gives meaning to \, so we have to escape it
+path=$(echo "$path" | sed 's/\\/\\\\/g')
 unzip -p "$zf" "$path"
 exit 0
 fi
+
 zf=${zf/zipxd:??/}
+zf1=${zf1/zipxd:??/}
+else
+# first call, has not been encoded yet
+path=
+path1=
+zf="$1"
+zf1=$(uriEscape "$zf")
 fi
 
 # we're generating html, whence we can make links that edbrowse understands
@@ -50,9 +57,13 @@ unzip -t "$zf" |
 sort |
 sed -e '/testing:/!d' -e 's/^.*testing: *//' -e 's/  *OK$//' \
 -e '/\/./d' \
--e "s;.*;://$zf@:@&\">&</a>;" \
--e '/\/">/s/^/d/' \
--e 's/^/<br><a href="zipx/'
+-e 's/\\/\\\\/g' |
+while read line; do
+line1=$(uriEscape "$line")
+prot=zipx
+if [[ "$line" =~ / ]]; then prot=zipxd; fi
+echo "<br><a href='$prot://$zf1@:@$line1'>$line</a>"
+done
 else
 # path as the left side of a sed expression
 path_lhs=$(echo "$path" | sed 's/[",\\.*[]/\\&/g')
@@ -63,10 +74,15 @@ sed -e '/testing:/!d' -e 's/^.*testing: *//' -e 's/  *OK$//' \
 -e '/^@:@/!d' -e 's/^@:@//' \
 -e '/^$/d' \
 -e '/\/./d' \
--e "s;.*;://$zf@:@$path&\">&</a>;" \
--e '/\/">/s/^/d/' \
--e 's/^/<br><a href="zipx/'
+-e 's/\\/\\\\/g' |
+while read line; do
+line1=$(uriEscape "$line")
+prot=zipx
+if [[ "$line" =~ / ]]; then prot=zipxd; fi
+echo "<br><a href='$prot://$zf1@:@$path1$line1'>$line</a>"
+done
 fi
+
 echo "</body>"
 
 exit 0
