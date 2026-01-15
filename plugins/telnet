@@ -1,0 +1,6 @@
+plugin {
+    desc = telnet protocol
+    type = */*
+    protocol = telnet
+    program = edbrowse-plugin-telnet %i
+}

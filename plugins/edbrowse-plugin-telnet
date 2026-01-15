@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+: "${1:?Missing url}"
+target_host=$(trurl -g '[must:host]' "$1")
+# trurl will output the error for us but doesn't reflect that in its return code
+[ "$target_host" ]
+# We either need to pass a port or no argument at all so default it
+target_port=$(trurl -g '[default:port]' "$1")
+telnet "$target_host" "$target_port"
