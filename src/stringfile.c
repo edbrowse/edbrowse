@@ -2503,6 +2503,11 @@ bool envFile(const char *line, const char **expanded)
 
 	strcpy(line2, s);
 	globfree(&g);
+// if you pass dir///// and it matches a directory, glob() trims off
+// all the slashes, except one. Let's finish the job.
+	t = line2 + strlen(line2) - 1;
+	while(t > line2 && *t == '/') *t-- = 0;
+
 	*expanded = line2;
 	return true;
 }
