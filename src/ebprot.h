@@ -141,7 +141,6 @@ const char *i_message(int msg);
 void i_puts(int msg);
 void i_printf(int msg, ...);
 void i_printfExit(int msg, ...);
-void i_stringAndMessage(char **s, int *l, int messageNum);
 void setError(int msg, ...); //? use these only in the foreground!
 void showError(void);
 void showErrorConditional(char cmd);
@@ -294,13 +293,19 @@ char *strmove(char *dest, const char *src) ;
 char *copyString(char *dest, const char *src, size_t n);
 int createFormattedStringV(char **strp, const char *fmt, va_list ap);
 int createFormattedString(char **strp, const char *fmt, ...);
-char *initString(int *l) ;
+// works whether the length field is int, long, long long
+#define initString(lp) ((*lp) = 0, emptyString)
 void stringAndString(char **s, int *l, const char *t) ;
+void stringAndString8(char **s, long long *l, const char *t) ;
 void stringAndBytes(char **s, int *l, const char *t, int cnt) ;
+void stringAndBytes8(char **s, long long *l, const char *t, int cnt) ;
 void stringAndChar(char **s, int *l, char c) ;
+void stringAndChar8(char **s, long long *l, char c) ;
 void stringAndNum(char **s, int *l, int n) ;
+void stringAndNum8(char **s, long long *l, int n) ;
 void stringAndLongLong(char **s, int *l, long long n) ;
 #define stringAndMessage(s, l, m) stringAndString(s, l, i_message(m))
+#define stringAndMessage8(s, l, m) stringAndString8(s, l, i_message(m))
 char *cloneString(const char *s) ;
 char *cloneMemory(const char *s, int n) ;
 void leftClipString(char *s) ;

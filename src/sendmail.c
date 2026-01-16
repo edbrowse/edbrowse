@@ -823,10 +823,8 @@ char *makeBoundary(void)
 
 struct smtp_upload {
 	const char *data;
-/* These really need to be size_t, not int!
- * fixme when edbrowse uses size_t consistently */
-	int length;
-	int pos;
+	size_t length;
+	size_t pos;
 };
 
 // Curl warns if we don't pass void pointers as data params so cast in the function

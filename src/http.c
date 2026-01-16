@@ -10,7 +10,7 @@ const char *curlCiphers;
 char curlIPV;
 int redirect_count = 0;
 char *serverData;
-int serverDataLen;
+long long serverDataLen;
 CURL *global_http_handle;
 CURLSH *global_share_handle;
 bool pluginsOn = true;
@@ -410,7 +410,7 @@ So the safest is to put it in a loop.
 showdots:
 	dots1 = g->length / CHUNKSIZE;
 	if (g->down_state == 0)
-		stringAndBytes(&g->buffer, &g->length, incoming, num_bytes);
+		stringAndBytes8(&g->buffer, &g->length, incoming, num_bytes);
 	else
 		g->length += num_bytes;
 	dots2 = g->length / CHUNKSIZE;
@@ -860,8 +860,10 @@ mimestream:
 		g->code = 200;
 		f = g->urlcopy;
 		if (mt->outtype) {
+			int templength;
 			runPluginCommand(mt, f, 0, 0, 0, &g->buffer,
-					 &g->length);
+					 &templength);
+			g->length = templength;
 			cf->render1 = true;
 			if (sxfirst)
 				cf->render2 = true;
@@ -1400,7 +1402,7 @@ Don't forget to free it in i_get_free().
 				    g->down_state == 0)
 					storeCache(g->urlcopy, g->etag,
 						   g->modtime, g->buffer,
-						   g->length);
+						   (int)g->length);
 				still_fetching = false;
 				transfer_status = true;
 			}
@@ -1582,7 +1584,7 @@ static void prepHtmlString(struct i_get *g, const char *q)
 {
 	char c;
 	if (!strpbrk(q, "<>&\"")) {	// no bad characters
-		stringAndString(&g->buffer, &g->length, q);
+		stringAndString8(&g->buffer, &g->length, q);
 		return;
 	}
 	for (; (c = *q); ++q) {
@@ -1596,9 +1598,9 @@ static void prepHtmlString(struct i_get *g, const char *q)
 		if (c == '"')
 			meta = "&quot;";
 		if (meta)
-			stringAndString(&g->buffer, &g->length, meta);
+			stringAndString8(&g->buffer, &g->length, meta);
 		else
-			stringAndChar(&g->buffer, &g->length, c);
+			stringAndChar8(&g->buffer, &g->length, c);
 	}
 }
 
@@ -1607,7 +1609,7 @@ static void prepHtmlFragment(struct i_get *g, const char *q, const char *end)
 {
 	char c;
 	if (!strpbrk(q, "<>&\"")) {	// no bad characters
-		stringAndBytes(&g->buffer, &g->length, q, end - q);
+		stringAndBytes8(&g->buffer, &g->length, q, end - q);
 		return;
 	}
 	for (; (c = *q) && q != end; ++q) {
@@ -1621,9 +1623,9 @@ static void prepHtmlFragment(struct i_get *g, const char *q, const char *end)
 		if (c == '"')
 			meta = "&quot;";
 		if (meta)
-			stringAndString(&g->buffer, &g->length, meta);
+			stringAndString8(&g->buffer, &g->length, meta);
 		else
-			stringAndChar(&g->buffer, &g->length, c);
+			stringAndChar8(&g->buffer, &g->length, c);
 	}
 }
 
@@ -1637,10 +1639,10 @@ static void ftp_ls_line(struct i_get *g, char *line)
 
 /* blank line becomes paragraph break */
 	if (!l || (memEqualCI(line, "total ", 6) && stringIsNum(line + 6))) {
-		stringAndString(&g->buffer, &g->length, "<P>\n");
+		stringAndString8(&g->buffer, &g->length, "<P>\n");
 		return;
 	}
-	stringAndString(&g->buffer, &g->length, "<br>");
+	stringAndString8(&g->buffer, &g->length, "<br>");
 
 	for (j = 0; line[j]; ++j)
 		if (!strchr("-rwxdlsS", line[j]))
@@ -1679,7 +1681,7 @@ static void ftp_ls_line(struct i_get *g, char *line)
 		}
 
 		if (q && *q) {
-			stringAndString(&g->buffer, &g->length, "<A HREF=\"");
+			stringAndString8(&g->buffer, &g->length, "<A HREF=\"");
 // Some cases are not managed here:
 // if the file name contains % or nonascii or other chars that should be url escaped.
 			if(line[0] == 'l') t = strstr(q, " -> ");
@@ -1689,25 +1691,25 @@ static void ftp_ls_line(struct i_get *g, char *line)
 				prepHtmlFragment(g, q, t);
 			else
 				prepHtmlString(g, q);
-			stringAndString(&g->buffer, &g->length, "\">");
+			stringAndString8(&g->buffer, &g->length, "\">");
 			if (t)
 				prepHtmlFragment(g, q, t);
 			else
 				prepHtmlString(g, q);
-			stringAndString(&g->buffer, &g->length, "</A>");
+			stringAndString8(&g->buffer, &g->length, "</A>");
 			if (line[0] == 'd')
-				stringAndChar(&g->buffer, &g->length, '/');
+				stringAndChar8(&g->buffer, &g->length, '/');
 			if (line[0] == 'l')
-				stringAndChar(&g->buffer, &g->length, '@');
-			stringAndString(&g->buffer, &g->length, ": ");
-			stringAndString(&g->buffer, &g->length, conciseSize(fsize));
-			stringAndChar(&g->buffer, &g->length, '\n');
+				stringAndChar8(&g->buffer, &g->length, '@');
+			stringAndString8(&g->buffer, &g->length, ": ");
+			stringAndString8(&g->buffer, &g->length, conciseSize(fsize));
+			stringAndChar8(&g->buffer, &g->length, '\n');
 			return;
 		}
 	}
 
 	prepHtmlString(g, line);
-	stringAndChar(&g->buffer, &g->length, '\n');
+	stringAndChar8(&g->buffer, &g->length, '\n');
 }
 
 /* ftp_listing: convert an FTP-style listing to html. */
@@ -1718,10 +1720,10 @@ static void ftp_listing(struct i_get *g)
 	char *incomingData = g->buffer;
 	int incomingLen = g->length;
 	g->buffer = initString(&g->length);
-	stringAndString(&g->buffer, &g->length, "<html>\n<body>\n");
+	stringAndString8(&g->buffer, &g->length, "<html>\n<body>\n");
 
 	if (!incomingLen) {
-		stringAndMessage(&g->buffer, &g->length, MSG_FTPEmptyDir);
+		stringAndMessage8(&g->buffer, &g->length, MSG_FTPEmptyDir);
 	} else {
 
 		s = incomingData;
@@ -1735,7 +1737,7 @@ static void ftp_listing(struct i_get *g)
 		}
 	}
 
-	stringAndString(&g->buffer, &g->length, "</body></html>\n");
+	stringAndString8(&g->buffer, &g->length, "</body></html>\n");
 	nzFree(incomingData);
 }
 
@@ -1786,20 +1788,20 @@ static void gopher_ls_line(struct i_get *g, char *line, const char *url_prot, co
 		++text;
 
 // gopher is very much line oriented.
-	stringAndString(&g->buffer, &g->length, "<br>\n");
+	stringAndString8(&g->buffer, &g->length, "<br>\n");
 
 // i or 3 is informational, 3 being an error.
 	if (first == 'i' || first == '3') {
 		prepHtmlString(g, text);
-		stringAndChar(&g->buffer, &g->length, '\n');
+		stringAndChar8(&g->buffer, &g->length, '\n');
 		return;
 	}
 // everything else becomes hyperlink apart from item type 7 which becomes form
 	if (host) {
 		if (first != '7')
-			stringAndString(&g->buffer, &g->length, "<a href=\"");
+			stringAndString8(&g->buffer, &g->length, "<a href=\"");
 		else
-			stringAndString(&g->buffer, &g->length,
+			stringAndString8(&g->buffer, &g->length,
 					"<form action=\"");
 
 		if (!strncmp(pathname, "URL:", 4)) {
@@ -1812,23 +1814,23 @@ static void gopher_ls_line(struct i_get *g, char *line, const char *url_prot, co
                         if (stringEqualCI(url_host, host)) {
 /* If we've a listing then whether or
  * not we're using TLS for this host it's working so stick with it. */
-                                stringAndString(&g->buffer, &g->length, url_prot);
-                                stringAndString(&g->buffer, &g->length, "://");
+                                stringAndString8(&g->buffer, &g->length, url_prot);
+                                stringAndString8(&g->buffer, &g->length, "://");
                         }
                         else
-                                stringAndString(&g->buffer, &g->length, "gopher://"); // default to plain gopher for compatibility
-			stringAndString(&g->buffer, &g->length, host);
+                                stringAndString8(&g->buffer, &g->length, "gopher://"); // default to plain gopher for compatibility
+			stringAndString8(&g->buffer, &g->length, host);
 			if (port && port != 70) {
-				stringAndChar(&g->buffer, &g->length, ':');
-				stringAndNum(&g->buffer, &g->length, port);
+				stringAndChar8(&g->buffer, &g->length, ':');
+				stringAndNum8(&g->buffer, &g->length, port);
 			}
 // gopher requires us to inject the  "first" directive into the path. Wow.
-			stringAndChar(&g->buffer, &g->length, '/');
-			stringAndChar(&g->buffer, &g->length, first);
+			stringAndChar8(&g->buffer, &g->length, '/');
+			stringAndChar8(&g->buffer, &g->length, first);
 			prepHtmlString(g, pathname);
 		}
 		nzFree(pathname);
-		stringAndString(&g->buffer, &g->length, "\">");
+		stringAndString8(&g->buffer, &g->length, "\">");
 	}
 
 	s = strchr(text, '(');
@@ -1840,16 +1842,16 @@ static void gopher_ls_line(struct i_get *g, char *line, const char *url_prot, co
 	prepHtmlString(g, text);
 	if (host) {
 		if (first == '7')
-			stringAndString(&g->buffer, &g->length,
+			stringAndString8(&g->buffer, &g->length,
 					" <input type='text'> <input type='submit'></form>");
 		else
-			stringAndString(&g->buffer, &g->length, "</a>");
+			stringAndString8(&g->buffer, &g->length, "</a>");
 	}
 	if (s) {
 		*s = '(';
 		prepHtmlString(g, s);
 	}
-	stringAndChar(&g->buffer, &g->length, '\n');
+	stringAndChar8(&g->buffer, &g->length, '\n');
 }
 
 /* gopher_listing: convert a gopher-style listing to html. */
@@ -1862,10 +1864,10 @@ static void gopher_listing(struct i_get *g)
         char url_prot[MAXPROTLEN], url_host[MAXHOSTLEN];
         getProtHostURL(g->url, url_prot, url_host);
 	g->buffer = initString(&g->length);
-	stringAndString(&g->buffer, &g->length, "<html>\n<body>\n");
+	stringAndString8(&g->buffer, &g->length, "<html>\n<body>\n");
 
 	if (!incomingLen) {
-		stringAndMessage(&g->buffer, &g->length, MSG_GopherEmptyDir);
+		stringAndMessage8(&g->buffer, &g->length, MSG_GopherEmptyDir);
 	} else {
 
 		s = incomingData;
@@ -1879,7 +1881,7 @@ static void gopher_listing(struct i_get *g)
 		}
 	}
 
-	stringAndString(&g->buffer, &g->length, "</body></html>\n");
+	stringAndString8(&g->buffer, &g->length, "</body></html>\n");
 	nzFree(incomingData);
 }
 

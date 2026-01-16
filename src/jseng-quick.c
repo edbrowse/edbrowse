@@ -2820,7 +2820,9 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 // which could be important for the functioning of the website.
 	if(altsource) {
 		debugPrint(3, "xhr uses %s", altsource);
-		rc = fileIntoMemory(altsource, &g.buffer, &g.length, 0);
+		int templength;
+		rc = fileIntoMemory(altsource, &g.buffer, &templength, 0);
+		g.length = templength;
 		g.code = 200;
 // see if we can infer content type
 		const char *v = strrchr(altsource, '.');
@@ -2838,7 +2840,7 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 		else
 			stringAndString(&outgoing_xhrheaders, &ol, "unknown");
 		stringAndString(&outgoing_xhrheaders, &ol, "\r\nContent-Length: ");
-		stringAndNum(&outgoing_xhrheaders, &ol, g.length);
+		stringAndLongLong(&outgoing_xhrheaders, &ol, g.length);
 		stringAndString(&outgoing_xhrheaders, &ol, "\r\n\r\n");
 	} else {
 		rc = httpConnect(&g);
@@ -2895,7 +2897,7 @@ static JSValue nat_playAudio(JSContext * cx, JSValueConst this, int argc, JSValu
 	result = g.buffer;
 // if result is there, then we didn't play it by plugin, and we didn't download it.
 // The sound is in our hand but what are we suppose to do with it??
-	if(result) debugPrint(3, "don't know what to do with audio result length %d", g.length);
+	if(result) debugPrint(3, "don't know what to do with audio result length %lld", g.length);
 	nzFree(result);
 		return JS_UNDEFINED;
 }

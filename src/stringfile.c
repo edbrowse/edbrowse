@@ -213,19 +213,16 @@ int createFormattedString(char **strp, const char *fmt, ...)
         return ret;
 }
 
-/* OO has a lot of unnecessary overhead, and a few inconveniences,
- * but I really miss it right now.  The following
- * routines make up for the lack of simple string concatenation in C.
- * The string space allocated is always a power of 2 - 1, starting with 1.
- * Each of these routines puts an extra 0 on the end of the "string". */
+/*********************************************************************
+OO has a lot of unnecessary overhead, and a few inconveniences,
+but I really miss it right now.  The following
+routines make up for the lack of simple string concatenation in C.
+The string space allocated is always a power of 2 - 1, starting with 1.
+Each of these routines puts an extra 0 on the end of the "string".
+initString is a macro in ebprot.h.
+It always starts the string at emptyString, then it grows from there.
+*********************************************************************/
 
-char *initString(int *l)
-{
-	*l = 0;
-	return emptyString;
-}
-
-/* String management routines realloc to one less than a power of 2 */
 void stringAndString(char **s, int *l, const char *t)
 {
 	char *p = *s;
@@ -245,6 +242,15 @@ void stringAndString(char **s, int *l, const char *t)
 		*s = p;
 	}
 	strcpy(p + oldlen, t);
+}
+
+// some long long versions, until we cut everything over consistently.
+// These assume the string length still fits in an int. Squash 8 bytes down to 4.
+void stringAndString8(char **s, long long *l, const char *t)
+{
+	int templength = *l;
+	stringAndString(s, &templength, t);
+	*l = templength;
 }
 
 void stringAndBytes(char **s, int *l, const char *t, int cnt)
@@ -269,6 +275,13 @@ void stringAndBytes(char **s, int *l, const char *t, int cnt)
 	p[oldlen + cnt] = 0;
 }
 
+void stringAndBytes8(char **s, long long *l, const char *t, int cnt)
+{
+	int templength = *l;
+	stringAndBytes(s, &templength, t, cnt);
+	*l = templength;
+}
+
 void stringAndChar(char **s, int *l, char c)
 {
 	char *p = *s;
@@ -291,11 +304,25 @@ void stringAndChar(char **s, int *l, char c)
 	p[oldlen + 1] = 0;
 }
 
+void stringAndChar8(char **s, long long *l, char c)
+{
+	int templength = *l;
+	stringAndChar(s, &templength, c);
+	*l = templength;
+}
+
 void stringAndNum(char **s, int *l, int n)
 {
 	char a[16];
 	sprintf(a, "%d", n);
 	stringAndString(s, l, a);
+}
+
+void stringAndNum8(char **s, long long *l, int n)
+{
+	int templength = *l;
+	stringAndNum(s, &templength, n);
+	*l = templength;
 }
 
 void stringAndLongLong(char **s, int *l, long long n)

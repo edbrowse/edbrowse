@@ -174,7 +174,7 @@ extern const char *ebrc_string; /* default ebrc file */
 struct i_get {
 // the data returned from the internet fetch
 	char *buffer;
-	int length;
+	long long length;
 // in case you want the headers
 	char **headers_p;
 	const char *url;
@@ -358,7 +358,7 @@ extern char *emojiFile;	// your library of emojis
 extern char *irclog; // log all your irc sessions
 extern int redirect_count;
 extern char *serverData;
-extern int serverDataLen;
+extern long long serverDataLen;
 extern char *breakLineResult;
 extern char *home;		/* home directory */
 extern char *recycleBin;	/* holds deleted files */
