@@ -2792,6 +2792,11 @@ void eb_variables(void)
 	int n, rc, i;
 	char var[12], numbuf[12];
 	static const char *hasnull = "line contains nulls";
+
+// we could be here without a window open,
+// as expanding variables in pathnames in .ebrc
+	if(!cw) return;
+
 	eb_file_name_variables(cf->fileName, "EB_FILE", "EB_BASE", "EB_DIR");
 
 	strcpy(var, "EB_DOT");

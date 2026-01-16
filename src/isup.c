@@ -4516,7 +4516,7 @@ void ircReadlineControl(void)
 void ircReadlineRelease(void)
 {
 // This code downgrades a dangerous race condition from pretty darn unlikely
-// to nearly impossible - though it it is still possible.
+// to nearly impossible - though it is still possible.
 	while(ircAlarming)   ;
 // order is important here
 	alarm(0);

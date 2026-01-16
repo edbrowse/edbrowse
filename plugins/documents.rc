@@ -77,7 +77,7 @@ outtype = t
 # Thus the document can include html tags, but if there are a lot of them,
 # then you probably should have written it in html in the first place.
 # A well written .md file is easily readable as-is,
-# yet it it is well formatted when rendered.
+# yet it is well formatted when rendered.
 # Naturally, the markdown plugin will generate html,
 # whereupon edbrowse can do the formatting.
 

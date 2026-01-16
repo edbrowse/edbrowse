@@ -2336,20 +2336,21 @@ static bool envExpand(const char *line, const char **expanded)
 	const char *s;
 	char *t;
 	const char *v;		/* result of getenv call */
-	bool inbrace;		/* ${foo} */
+	bool inbrace;		// ${foo}
+	bool eb_expanded; // our special variables like EB_FILE
 	struct passwd *pw;
 	const char *udir;	/* user directory */
 	int l;
 	static char varline[ABSPATH];
 	char var1[40];
 
-/* quick check */
+// quick check
 	if (line[0] != '~' && !strchr(line, '$')) {
 		*expanded = line;
 		return true;
 	}
 
-/* ok, need to crunch along */
+// ok, need to crunch along
 	t = varline;
 	s = line;
 
@@ -2395,7 +2396,7 @@ longline:
 			return false;
 		}
 		if (*s == '\\' && s[1] == '$') {
-/* this $ is escaped */
+// this $ is escaped
 			++s;
 appendchar:
 			*t++ = *s;
@@ -2404,7 +2405,7 @@ appendchar:
 		if (*s != '$')
 			goto appendchar;
 
-/* this is $, see if it is $var or ${var} */
+// this is $, see if it is $var or ${var}
 		inbrace = false;
 		v = s + 1;
 		if (*v == '{')
@@ -2424,6 +2425,10 @@ appendchar:
 			++v;
 		}
 		s = v - 1;
+		if(!eb_expanded) {
+			eb_variables();
+			eb_expanded = true;
+		}
 		v = getenv(var1);
 		if (!v) {
 			setError(MSG_NoEnvVar, var1);
