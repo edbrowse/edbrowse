@@ -762,6 +762,12 @@ create in the old location to avoid surprises */
 			continue;
 		}
 
+		if(!isURL(file)) {
+// trim off slashes
+			char *t = file + strlen(file) - 1;
+			while(t > file && *t == '/') *t-- = 0;
+		}
+
 		changeFileName = 0;
 		file2 = allocMem(strlen(file) + 10);
 // Every URL needs a protocol.
