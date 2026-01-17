@@ -2778,6 +2778,10 @@ static void eb_file_name_variables(const char *file_name, const char *file_var, 
 		else
 			p_setenv(var, t);
 		nzFree(t);
+	} else if (!strcmp(s, ".")) {
+		char cwdbuf[ABSPATH];
+		if (getcwd(cwdbuf, sizeof(cwdbuf)))
+			p_setenv(var, dirname(cwdbuf));
 	} else {
 		p_setenv(var, dirname(s));
 	}
