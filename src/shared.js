@@ -1775,13 +1775,13 @@ this.setAttribute(name, v);
 }
 
 function removeAttribute(name) {
-if(!this.attributes$2) return;
 if(!this.eb$xml)     name = name.toLowerCase();
 // special code for style
-if(name == "style" && this.style.dom$class == "CSSStyleDeclaration") {
-// wow I have no clue what this means but it happens, https://www.maersk.com
-return;
+if(name == "style") {
+if(this.style$2 && this.style$2.dom$class == "CSSStyleDeclaration")
+delete this.style$2;
 }
+if(!this.attributes$2) return;
 if(name.substr(0,5) == "data-") {
 var n = dataCamel(name);
 if(this.dataset$2 && this.dataset$2[n]) delete this.dataset$2[n];
