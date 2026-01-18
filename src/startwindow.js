@@ -1609,6 +1609,16 @@ var cnt = 0;
 for(var i in this) if(this.hasOwnProperty(i)) ++cnt;
 return cnt;
 }})
+CSSStyleDeclaration.prototype.item = function(n) {
+if(typeof n !== "number") return "";
+var cnt = 0;
+for(var i in this) {
+if(!this.hasOwnProperty(i)) continue;
+if(cnt == n) return i;
+++cnt;
+}
+return ""
+}
 CSSStyleDeclaration.prototype.getPropertyValue = function(p) {
 p = mw$.camelCase(p);
                 if (this[p] == undefined)                
