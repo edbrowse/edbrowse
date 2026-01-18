@@ -4427,7 +4427,9 @@ void set_gcs_number(const char *name, int n)
 		sofail();
 		return;
 	}
-	set_property_number(cx, j, name, n);
+// this should not be enumerable
+	JS_DefinePropertyValueStr(cx, j, name, JS_NewInt32(cx, n),
+	JS_PROP_CONFIGURABLE|JS_PROP_WRITABLE);
 	JS_Release(cx, j);
 }
 

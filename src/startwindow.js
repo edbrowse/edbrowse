@@ -1465,14 +1465,15 @@ list.splice(idx, 0, r);
 }
 
 swm("CSSStyleDeclaration", function(){
-        this.element = null;
-        this.style$2 = this;
+Object.defineProperty(this, "style$2", {value:this})
+Object.defineProperty(this, "element", {value:null, writable:true})
 })
 spdc("CSSStyleDeclaration", HTMLElement)
 // sheet on demand
 Object.defineProperty(CSSStyleDeclaration.prototype, "sheet", { get: function(){ if(!this.sheet$2) this.sheet$2 = new CSSStyleSheet; return this.sheet$2; }});
 
 // these are default properties of a style object
+// they should not be enumerable
 CSSStyleDeclaration.prototype.textTransform = "none", // acid test 46
 CSSStyleDeclaration.prototype.borderImageSource = "none";
 ;(function(){

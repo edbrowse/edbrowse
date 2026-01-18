@@ -2515,12 +2515,12 @@ if(s = e.style$2) {
 // Unlike the above, we remove previous values that were set by css,
 // because css is being reapplied.
 for(var k in s) {
-if(!s.hasOwnProperty(k)) continue;
-if(!k.match(/\$(\$scy|pri)$/)) continue;
-if(k.match(/\$\$scy$/) && s[k] == 100000) continue;
+var k2 = k + "$$scy"
+if(!s.hasOwnProperty(k2)) continue;
+if(s[k2] == 100000) continue;
 // this one goes away
-delete s[k];
-delete s[k.replace(/\$(\$scy|pri)$/, "")];
+delete s[k]
+delete s[k2]
 }
 } else {
 // create a style object, but if it comes up empty, we'll remove it again.
@@ -2558,8 +2558,8 @@ computeStyleInline(e.childNodes[i]);
 function cssTextGet() {
 var s = "";
 for(var k in this) {
-if(!k.match(/\$(\$scy|pri)$/)) continue;
-k=k.replace(/\$(\$scy|pri)$/, "");
+var k2 = k + "$$scy"
+if(!s[k2]) continue;
 var l = this[k];
 if(l.match(/[ \t;"'{}]/)) {
 if(l.match(/"/)) l = "'" + l + "'";
