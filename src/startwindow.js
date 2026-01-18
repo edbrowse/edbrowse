@@ -1623,13 +1623,19 @@ CSSStyleDeclaration.prototype.setProperty = function(p, v, prv) {
 p = mw$.camelCase(p);
 this[p] = v;
 var pri = p + "$pri";
-this[pri] = (prv === "important");
+Object.defineProperty(this, pri, {value:(prv === "important"),writable:true,configurable:true})
 };
 CSSStyleDeclaration.prototype.getPropertyPriority = function(p) {
 p = mw$.camelCase(p);
 var pri = p + "$pri";
 return this[pri] ? "important" : "";
 };
+CSSStyleDeclaration.prototype.removeProperty = function(p) {
+p = mw$.camelCase(p);
+delete this[p]
+delete this[p+"$$scy"]
+delete this[p+"$$pri"]
+}
 
 swm("HTMLStyleElement", function(){})
 spdc("HTMLStyleElement", HTMLElement)

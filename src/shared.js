@@ -2475,7 +2475,6 @@ Well we have to do the same so here we go.
 if(e.style$2) {
 for(var k in e.style) {
 if(!e.style.hasOwnProperty(k)) continue;
-if(k.match(/\$(\$scy|pri)$/)) continue;
 if(typeof e.style[k] == 'object') continue;
 
 /*********************************************************************
