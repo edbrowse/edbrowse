@@ -1472,10 +1472,9 @@ spdc("CSSStyleDeclaration", HTMLElement)
 // sheet on demand
 Object.defineProperty(CSSStyleDeclaration.prototype, "sheet", { get: function(){ if(!this.sheet$2) this.sheet$2 = new CSSStyleSheet; return this.sheet$2; }});
 
-// these are default properties of a style object
-// they should not be enumerable
-CSSStyleDeclaration.prototype.textTransform = "none", // acid test 46
-CSSStyleDeclaration.prototype.borderImageSource = "none";
+// These are default properties of a style object.
+// they should not be enumerable. They must however be writable,
+// so that the corresponding attributes placed on style objects are writable.
 ;(function(){
 var list =[
 "accentColor","alignContent","alignItems","alignSelf","all",
@@ -1566,22 +1565,50 @@ var list =[
 "y",
 "zIndex",];
 for(var i = 0; i < list.length; ++i)
-CSSStyleDeclaration.prototype[list[i]] = "";
+Object.defineProperty(
+CSSStyleDeclaration.prototype, list[i], {value:"",writable:true})
 })();
-CSSStyleDeclaration.prototype.borderImageOutset = "0";
-CSSStyleDeclaration.prototype.borderImageWidth = "1";
-CSSStyleDeclaration.prototype.borderImageSlice = "100%";
-CSSStyleDeclaration.prototype.border = CSSStyleDeclaration.prototype.borderBottom = CSSStyleDeclaration.prototype.borderLeft = CSSStyleDeclaration.prototype.borderRight = CSSStyleDeclaration.prototype.borderTop = "1px solid rgb(193, 193, 193)";
-CSSStyleDeclaration.prototype.borderBottomWidth = CSSStyleDeclaration.prototype.borderLeftWidth = CSSStyleDeclaration.prototype.borderRightWidth = CSSStyleDeclaration.prototype.borderTopWidth = CSSStyleDeclaration.prototype.borderWidth = "1px";
-CSSStyleDeclaration.prototype.width = "250px";
-CSSStyleDeclaration.prototype.height = "40px";
-CSSStyleDeclaration.prototype.borderImage = CSSStyleDeclaration.prototype.MozBorderImage = CSSStyleDeclaration.prototype.webkitBorderImage = CSSStyleDeclaration.prototype.WebkitBorderImage = "none 100% / 1 / 0 stretch";
-CSSStyleDeclaration.prototype.borderBottomColor = CSSStyleDeclaration.prototype.borderColor = CSSStyleDeclaration.prototype.borderLeftColor = CSSStyleDeclaration.prototype.borderRightColor = CSSStyleDeclaration.prototype.borderTopColor = "rgb(193, 193, 193)";
-CSSStyleDeclaration.prototype.borderBottomStyle = CSSStyleDeclaration.prototype.borderLeftStyle = CSSStyleDeclaration.prototype.borderRightStyle = CSSStyleDeclaration.prototype.borderStyle = CSSStyleDeclaration.prototype.borderTopStyle = "solid";
-CSSStyleDeclaration.prototype.borderImageRepeat = "stretch";
-CSSStyleDeclaration.prototype.parentRule = null;
+;(function(){
+var list =[
+// first attribute is per acid test 46
+"textTransform","borderImageSource",
+"borderImageOutset",
+"borderImageWidth",
+"borderImageSlice",
+"border","borderBottom","borderLeft","borderRight","borderTop",
+"borderBottomWidth","borderLeftWidth","borderRightWidth","borderTopWidth","borderWidth",
+"width",
+"height",
+"borderImage","MozBorderImage","webkitBorderImage","WebkitBorderImage",
+"borderBottomColor","borderColor","borderLeftColor","borderRightColor","borderTopColor",
+"borderBottomStyle","borderLeftStyle","borderRightStyle","borderStyle","borderTopStyle",
+"borderImageRepeat",
+"parentRule",];
+var v = [
+"none","none",
+"0",
+"1",
+"100%",
+"1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)",
+"1px","1px","1px","1px","1px",
+"250px",
+"40px",
+"none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch",
+"rgb(193, 193, 193)","rgb(193, 193, 193)","rgb(193, 193, 193)","rgb(193, 193, 193)","rgb(193, 193, 193)",
+"solid","solid","solid","solid","solid",
+"stretch",
+null,];
+for(var i = 0; i < list.length; ++i)
+Object.defineProperty(
+CSSStyleDeclaration.prototype, list[i], {value:v[i],writable:true})
+})();
 
 CSSStyleDeclaration.prototype.toString = function() { return "style object" };
+Object.defineProperty(CSSStyleDeclaration.prototype, "length", {get: function() {
+var cnt = 0;
+for(var i in this) if(this.hasOwnProperty(i)) ++cnt;
+return cnt;
+}})
 CSSStyleDeclaration.prototype.getPropertyValue = function(p) {
 p = mw$.camelCase(p);
                 if (this[p] == undefined)                

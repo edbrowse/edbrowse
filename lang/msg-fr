@@ -775,11 +775,11 @@ impossible de transférer un fichier vide
 impossible de transférer un fichier binaire
 pas de ligne \"non formatée\"
 fichier mail brut %05d non trouvé
-0
-0
-0
-0
-0
+pas de ligne en attente
+trop de commandes imbriquées
+échec de création de la chaîne formatée ; %s
+déjà parcouru de cette manière
+Le répertoire temporaire n'existe pas %s
 0
 0
 0
