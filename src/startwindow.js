@@ -1478,6 +1478,26 @@ Object.defineProperty(CSSStyleDeclaration.prototype, "sheet", { get: function(){
 // The whole $$scy specificity system doesn't work for these.
 Object.defineProperty(CSSStyleDeclaration.prototype, "margin", {set: function(h) {
 this.marginTop = this.marginRight = this.marginBottom = this.marginLeft = h; }})
+Object.defineProperty(CSSStyleDeclaration.prototype, "scrollMargin", {set: function(h) {
+this.scrollMarginTop = this.scrollMarginRight = this.scrollMarginBottom = this.scrollMarginLeft = h; }})
+Object.defineProperty(CSSStyleDeclaration.prototype, "padding", {set: function(h) {
+this.paddingTop = this.paddingRight = this.paddingBottom = this.paddingLeft = h; }})
+Object.defineProperty(CSSStyleDeclaration.prototype, "scrollPadding", {set: function(h) {
+this.scrollPaddingTop = this.scrollPaddingRight = this.scrollPaddingBottom = this.scrollPaddingLeft = h; }})
+Object.defineProperty(CSSStyleDeclaration.prototype, "borderRadius", {set: function(h) {
+this.borderTopLeftRadius = this.borderTopRightRadius = this.borderBottomRightRadius = this.borderBottomLeftRadius = h; }})
+Object.defineProperty(CSSStyleDeclaration.prototype, "webkitBorderRadius", {set: function(h) {
+this.webkitBorderTopLeftRadius = this.webkitBorderTopRightRadius = this.webkitBorderBottomRightRadius = this.webkitBorderBottomLeftRadius = h; }})
+Object.defineProperty(CSSStyleDeclaration.prototype, "WebkitBorderRadius", {set: function(h) {
+this.WebkitBorderTopLeftRadius = this.WebkitBorderTopRightRadius = this.WebkitBorderBottomRightRadius = this.WebkitBorderBottomLeftRadius = h; }})
+Object.defineProperty(CSSStyleDeclaration.prototype, "border", {set: function(h) {
+this.borderTop = this.borderRight = this.borderBottom = this.borderLeft = h; }})
+Object.defineProperty(CSSStyleDeclaration.prototype, "borderWidth", {set: function(h) {
+this.borderTopWidth = this.borderRightWidth = this.borderBottomWidth = this.borderLeftWidth = h; }})
+Object.defineProperty(CSSStyleDeclaration.prototype, "borderColor", {set: function(h) {
+this.borderTopColor = this.borderRightColor = this.borderBottomColor = this.borderLeftColor = h; }})
+Object.defineProperty(CSSStyleDeclaration.prototype, "borderStyle", {set: function(h) {
+this.borderTopStyle = this.borderRightStyle = this.borderBottomStyle = this.borderLeftStyle = h; }})
 
 // These are default properties of a style object.
 // they should not be enumerable. They must however be writable,
@@ -1493,7 +1513,7 @@ var list =[
 "borderBlockStart","borderBlockStartColor","borderBlockStartStyle","borderBlockStartWidth","borderBlockStyle","borderBlockWidth",
 "borderBottomLeftRadius","borderBottomRightRadius","borderCollapse",
 "borderEndEndRadius","borderEndStartRadius","borderInline","borderInlineColor","borderInlineEnd","borderInlineEndColor","borderInlineEndStyle","borderInlineEndWidth","borderInlineStart","borderInlineStartColor","borderInlineStartStyle","borderInlineStartWidth","borderInlineStyle","borderInlineWidth",
-"borderRadius","borderSpacing","borderStartEndRadius","borderStartStartRadius","borderTopLeftRadius","borderTopRightRadius",
+"borderSpacing","borderStartEndRadius","borderStartStartRadius","borderTopLeftRadius","borderTopRightRadius",
 "bottom","boxDecorationBreak","boxShadow","boxSizing",
 "breakAfter","breakBefore","breakInside",
 "captionSide","caretColor","clear","clip","clipPath","clipRule",
@@ -1531,13 +1551,13 @@ var list =[
 "opacity","order","outline","outlineColor","outlineOffset","outlineStyle","outlineWidth",
 "overflow","overflowAnchor","overflowBlock","overflowInline","overflowWrap","overflowX","overflowY",
 "overscrollBehavior","overscrollBehaviorBlock","overscrollBehaviorInline","overscrollBehaviorX","overscrollBehaviorY",
-"padding","paddingBlock","paddingBlockEnd","paddingBlockStart","paddingBottom","paddingInline","paddingInlineEnd","paddingInlineStart","paddingLeft","paddingRight","paddingTop",
+"paddingBlock","paddingBlockEnd","paddingBlockStart","paddingBottom","paddingInline","paddingInlineEnd","paddingInlineStart","paddingLeft","paddingRight","paddingTop",
 "pageBreakAfter","pageBreakBefore","pageBreakInside","paintOrder","perspective","perspectiveOrigin",
 "placeContent","placeItems","placeSelf","pointerEvents","position",
 "quotes",
 "r","resize","right","rotate","rowGap","rubyAlign","rubyPosition","rx","ry",
-"scale","scrollbarColor","scrollbarWidth","scrollBehavior","scrollMargin","scrollMarginBlock","scrollMarginBlockEnd","scrollMarginBlockStart","scrollMarginBottom","scrollMarginInline","scrollMarginInlineEnd","scrollMarginInlineStart","scrollMarginLeft","scrollMarginRight","scrollMarginTop",
-"scrollPadding","scrollPaddingBlock","scrollPaddingBlockEnd","scrollPaddingBlockStart","scrollPaddingBottom","scrollPaddingInline","scrollPaddingInlineEnd","scrollPaddingInlineStart","scrollPaddingLeft","scrollPaddingRight","scrollPaddingTop",
+"scale","scrollbarColor","scrollbarWidth","scrollBehavior","scrollMarginBlock","scrollMarginBlockEnd","scrollMarginBlockStart","scrollMarginBottom","scrollMarginInline","scrollMarginInlineEnd","scrollMarginInlineStart","scrollMarginLeft","scrollMarginRight","scrollMarginTop",
+"scrollPaddingBlock","scrollPaddingBlockEnd","scrollPaddingBlockStart","scrollPaddingBottom","scrollPaddingInline","scrollPaddingInlineEnd","scrollPaddingInlineStart","scrollPaddingLeft","scrollPaddingRight","scrollPaddingTop",
 "scrollSnapAlign","scrollSnapType",
 "shapeImageThreshold","shapeMargin","shapeOutside","shapeRendering",
 "stopColor","stopOpacity",
@@ -1554,7 +1574,7 @@ var list =[
 "webkitAnimationName","WebkitAnimationName","webkitAnimationPlayState","WebkitAnimationPlayState","webkitAnimationTimingFunction","WebkitAnimationTimingFunction",
 "webkitAppearance","WebkitAppearance",
 "webkitBackfaceVisibility","WebkitBackfaceVisibility","webkitBackgroundClip","WebkitBackgroundClip","webkitBackgroundOrigin","WebkitBackgroundOrigin","webkitBackgroundSize","WebkitBackgroundSize",
-"webkitBorderBottomLeftRadius","WebkitBorderBottomLeftRadius","webkitBorderBottomRightRadius","WebkitBorderBottomRightRadius","webkitBorderRadius","WebkitBorderRadius","webkitBorderTopLeftRadius","WebkitBorderTopLeftRadius","webkitBorderTopRightRadius","WebkitBorderTopRightRadius",
+"webkitBorderBottomLeftRadius","WebkitBorderBottomLeftRadius","webkitBorderBottomRightRadius","WebkitBorderBottomRightRadius","webkitBorderTopLeftRadius","WebkitBorderTopLeftRadius","webkitBorderTopRightRadius","WebkitBorderTopRightRadius",
 "webkitBoxAlign","WebkitBoxAlign","webkitBoxDirection","WebkitBoxDirection","webkitBoxFlex","WebkitBoxFlex","webkitBoxOrdinalGroup","WebkitBoxOrdinalGroup","webkitBoxOrient","WebkitBoxOrient",
 "webkitBoxPack","WebkitBoxPack","webkitBoxShadow","WebkitBoxShadow","webkitBoxSizing","WebkitBoxSizing",
 "webkitFilter","WebkitFilter","webkitFlex","WebkitFlex","webkitFlexBasis","WebkitFlexBasis","webkitFlexDirection","WebkitFlexDirection","webkitFlexFlow","WebkitFlexFlow","webkitFlexGrow","WebkitFlexGrow",
@@ -1582,13 +1602,13 @@ var list =[
 "borderImageOutset",
 "borderImageWidth",
 "borderImageSlice",
-"border","borderBottom","borderLeft","borderRight","borderTop",
-"borderBottomWidth","borderLeftWidth","borderRightWidth","borderTopWidth","borderWidth",
+"borderBottom","borderLeft","borderRight","borderTop",
+"borderBottomWidth","borderLeftWidth","borderRightWidth","borderTopWidth",
 "width",
 "height",
 "borderImage","MozBorderImage","webkitBorderImage","WebkitBorderImage",
-"borderBottomColor","borderColor","borderLeftColor","borderRightColor","borderTopColor",
-"borderBottomStyle","borderLeftStyle","borderRightStyle","borderStyle","borderTopStyle",
+"borderBottomColor","borderLeftColor","borderRightColor","borderTopColor",
+"borderBottomStyle","borderLeftStyle","borderRightStyle","borderTopStyle",
 "borderImageRepeat",
 "parentRule",];
 var v = [
@@ -1596,13 +1616,13 @@ var v = [
 "0",
 "1",
 "100%",
-"1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)",
-"1px","1px","1px","1px","1px",
+"1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)",
+"1px","1px","1px","1px",
 "250px",
 "40px",
 "none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch",
-"rgb(193, 193, 193)","rgb(193, 193, 193)","rgb(193, 193, 193)","rgb(193, 193, 193)","rgb(193, 193, 193)",
-"solid","solid","solid","solid","solid",
+"rgb(193, 193, 193)","rgb(193, 193, 193)","rgb(193, 193, 193)","rgb(193, 193, 193)",
+"solid","solid","solid","solid",
 "stretch",
 null,];
 for(var i = 0; i < list.length; ++i)
