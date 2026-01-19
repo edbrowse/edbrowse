@@ -1472,6 +1472,13 @@ spdc("CSSStyleDeclaration", HTMLElement)
 // sheet on demand
 Object.defineProperty(CSSStyleDeclaration.prototype, "sheet", { get: function(){ if(!this.sheet$2) this.sheet$2 = new CSSStyleSheet; return this.sheet$2; }});
 
+// when one property is shorthand for several others.
+// margin implies top right bottom left
+// How many of these are there that I don't know about?
+// The whole $$scy specificity system doesn't work for these.
+Object.defineProperty(CSSStyleDeclaration.prototype, "margin", {set: function(h) {
+this.marginTop = this.marginRight = this.marginBottom = this.marginLeft = h; }})
+
 // These are default properties of a style object.
 // they should not be enumerable. They must however be writable,
 // so that the corresponding attributes placed on style objects are writable.
@@ -1505,7 +1512,7 @@ var list =[
 "inset","insetBlock","insetBlockEnd","insetBlockStart","insetInline","insetInlineEnd","insetInlineStart","isolation",
 "justifyContent","justifyItems","justifySelf",
 "left","letterSpacing","lightingColor","lineBreak","lineHeight","listStyle","listStyleImage","listStylePosition","listStyleType",
-"margin","marginBlock","marginBlockEnd","marginBlockStart","marginBottom","marginInline","marginInlineEnd","marginInlineStart","marginLeft","marginRight","marginTop",
+"marginBlock","marginBlockEnd","marginBlockStart","marginBottom","marginInline","marginInlineEnd","marginInlineStart","marginLeft","marginRight","marginTop",
 "marker","markerEnd","markerMid","markerStart",
 "mask","maskClip","maskComposite","maskImage","maskMode","maskOrigin","maskPosition","maskPositionX","maskPositionY","maskRepeat","maskSize","maskType",
 "maxBlockSize","maxHeight","maxInlineSize","maxWidth",
@@ -1614,7 +1621,7 @@ if(typeof n !== "number") return "";
 var cnt = 0;
 for(var i in this) {
 if(!this.hasOwnProperty(i)) continue;
-if(cnt == n) return i;
+if(cnt == n) return mw$.uncamelCase(i);
 ++cnt;
 }
 return ""

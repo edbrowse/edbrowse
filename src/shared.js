@@ -941,6 +941,9 @@ function camelCase(t) {
 return t.replace(/-./g, function(f){return f[1].toUpperCase()});
 }
 function dataCamel(t) { return camelCase(t.replace(/^data-/,"")); }
+function uncamelCase(t) {
+return t.replace(/([a-z])([A-Z])/g, function(f,a,b){return a+'-'+b.toLowerCase()});
+}
 
 function isabove(a, b) {
 var j = 0;
@@ -6311,7 +6314,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "gebi", "gebtn","gebn","gebcn","cont",
 "dispatchEvent","addEventListener","removeEventListener","eb$listen","eb$unlisten",
 "NodeFilter","createNodeIterator","createTreeWalker",
-"logtime","defport","setDefaultPort","camelCase","dataCamel","isabove",
+"logtime","defport","setDefaultPort","camelCase","dataCamel","uncamelCase","isabove",
 "classList","classListAdd","classListRemove","classListReplace","classListToggle","classListContains",
 "mutFixup", "mrList","mrKids", "rowReindex", "insertRow", "deleteRow",
 "insertCell", "deleteCell",
