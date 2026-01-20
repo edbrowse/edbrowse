@@ -4,3 +4,12 @@ plugin {
     protocol = telnet
     program = edbrowse-plugin-telnet %i
 }
+
+# Requires a TLS (SSL) compatible telnet client e.g. the telnet-ssl package in
+# Debian. Otherwise you'll get an error when accessing a telnets url
+plugin {
+    desc = telnet protocol over TLS
+    type = */*
+    protocol = telnets
+    program = edbrowse-plugin-telnet %i
+}
