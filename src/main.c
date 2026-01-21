@@ -2180,7 +2180,7 @@ nokeyword:
 				mimeblock = false;
 				if (!mt->desc)
 					cfgLine0(MSG_EBRC_NDesc);
-				if (!mt->suffix && !mt->prot && !mt->content)
+				if (!mt->suffix && !mt->prot && !mt->content && !mt->urlmatch)
 					cfgLine0(MSG_EBRC_NoSuffix);
 				if (!mt->program)
 					cfgLine0(MSG_EBRC_NoProgram);
