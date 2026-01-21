@@ -2178,8 +2178,6 @@ nokeyword:
 			if (mimeblock) {
 				++maxMime;
 				mimeblock = false;
-				if (!mt->type)
-					cfgLine0(MSG_EBRC_NoType);
 				if (!mt->desc)
 					cfgLine0(MSG_EBRC_NDesc);
 				if (!mt->suffix && !mt->prot && !mt->content)

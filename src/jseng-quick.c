@@ -3866,19 +3866,24 @@ static void setup_window_2(void)
 		if (JS_IsUndefined(po) || JS_IsUndefined(mo))
 			return;
 		set_property_object(cx, mo, "enabledPlugin", po);
-		set_property_string(cx, mo, "type", mt->type);
+		if(mt->type) {
+			set_property_string(cx, mo, "type", mt->type);
 		set_property_object(cx, navmt, mt->type, mo);
-		set_property_string(cx, mo, "description", mt->desc);
-		set_property_string(cx, mo, "suffixes", mt->suffix);
+		}
+		if(mt->desc)
+			set_property_string(cx, mo, "description", mt->desc);
+		if(mt->suffix)
+			set_property_string(cx, mo, "suffixes", mt->suffix);
 /* I don't really have enough information from the config file to fill
  * in the attributes of the plugin object.
  * I'm just going to fake it.
  * Description will be the same as that of the mime type,
  * and the filename will be the program to run.
  * No idea if this is right or not. */
-		set_property_string(cx, po, "description", mt->desc);
+		if(mt->desc)
+			set_property_string(cx, po, "description", mt->desc);
 		set_property_string(cx, po, "filename", mt->program);
-/* For the name, how about the program without its options? */
+// For the name, how about the program without its options?
 		len = strcspn(mt->program, " \t");
 		save_c = mt->program[len];
 		mt->program[len] = 0;
