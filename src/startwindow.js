@@ -1759,8 +1759,8 @@ HTMLTableElement.prototype.deleteTFoot = function() {
 if(this.tFoot) this.removeChild(this.tFoot);
 }
 
-swm("TextNode", function() {
-this.data$2 = "";
+swm("TextNode", function(){
+Object.defineProperty(this, "data$2", {value:"",writable:true});
 if(arguments.length > 0) {
 // data always has to be a string
 this.data$2 += arguments[0];
@@ -1995,9 +1995,15 @@ Again, leading ; to avert a parsing ambiguity.
 var c = window.Node;
 var p = c.prototype;
 // These subordinate objects are on-demand.
-Object.defineProperty( p, "dataset", { get: function(){ return this.dataset$2 ? this.dataset$2 : this.dataset$2 = {}; }});
+Object.defineProperty( p, "dataset", { get: function(){
+if(!this.dataset$2)
+Object.defineProperty(this, "dataset$2", {value:{}})
+return this.dataset$2}})
 Object.defineProperty( p, "attributes", { get: function(){ if(!this.attributes$2) this.attributes$2 = new NamedNodeMap, this.attributes$2.owner = this, this.attributes$2.ownerDocument = my$doc(); return this.attributes$2;}});
-Object.defineProperty( p, "style", { get: function(){ if(!this.style$2) this.style$2 = new CSSStyleDeclaration, this.style$2.element = this; return this.style$2;}});
+Object.defineProperty( p, "style", { get: function(){ if(!this.style$2) {
+Object.defineProperty(this,"style$2", {value:new CSSStyleDeclaration,configurable:true});
+this.style$2.element = this}
+return this.style$2;}});
 // get elements below
 p.getRootNode = mw$.getRootNode;
 p.getElementsByTagName = mw$.getElementsByTagName;

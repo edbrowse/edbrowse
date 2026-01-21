@@ -1750,8 +1750,6 @@ oldv = a.value;
 }
 a.value = v;
 if(name.substr(0,5) == "data-") {
-// referencing dataset should create it on demand, but if it doesn't...
-if(!this.dataset) this.dataset$2 = {};
 this.dataset[dataCamel(name)] = v;
 }
 // names that spill down into the actual property
@@ -2070,8 +2068,9 @@ continue;
 // copy style object if present and its subordinate strings.
 if (node1.style$2 && node1.style$2.dom$class == "CSSStyleDeclaration") {
 if(debug) alert3("copy style");
-node2.style$2 = new w.CSSStyleDeclaration;
-node2.style$2.element = node2;
+// referencing it will create it
+node2.style;
+node2.style.element = node2;
 for (var l in node1.style$2){
 if(!node1.style$2.hasOwnProperty(l)) continue;
 if (typeof node1.style$2[l] === 'string' ||
