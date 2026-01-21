@@ -3256,8 +3256,7 @@ void my_ExecutePendingJobs(void)
 	struct list_head *jl = (struct list_head *)((char*)jsrt + JSRuntimeJobIndex);
 
 // high runner case
-    if (list_empty(jl))
-        return;
+    if (list_empty(jl)) return;
 
 // step through the jobs
     list_for_each_safe(l, l1, jl) {
@@ -3326,6 +3325,34 @@ and if that happens, then once again we need to free the context.
 	jSideEffects();
 	goto delete_and_go;
     }
+}
+
+// see if any jobs would run, if you called the above
+bool pendingJobsForCurrentWindow(void)
+{
+    JSContext *ctx;
+    JSJobEntry *e;
+				struct list_head *l;
+	struct list_head *jl = (struct list_head *)((char*)jsrt + JSRuntimeJobIndex);
+
+// high runner case
+    if (list_empty(jl)) return false;
+
+    Window *save_cw = cw;
+    Frame *save_cf = cf;
+    bool rc = false;
+
+    list_for_each(l, jl) {
+	e = list_entry(l, JSJobEntry, link);
+	ctx = e->ctx;
+// This line resets cw and cf
+	if (!frameFromContext(ctx)) continue;
+	if(sessionList[cw->sno].lw != cw) continue;
+	rc = true;
+	break;
+    }
+    cw = save_cw, cf = save_cf;
+				return rc;
 }
 
 void delPendings(const Frame *f)
