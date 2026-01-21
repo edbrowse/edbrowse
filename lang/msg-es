@@ -525,7 +525,7 @@ no se puede acceder a %s, (secure)
 %s: falta replica en la linea %d
 %s: falta tipo en a linea %d
 %s: falta descripción en la linea %d
-%s: falta sufijo o protocolo o contenido en la linea %d
+%s: falta sufijo o protocolo o contenido o urlmatch en la linea %d
 %s: falta programa en la linea %d
 %s: falta nombre de la tabla en la linea %d
 %s: falta nombre corto en la linea %d

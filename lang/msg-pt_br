@@ -525,7 +525,7 @@ impossível acessar %s, (seguro)
 %s: falta o endereço para resposta na linha %d
 %s: falta o tipo na linha %d
 %s: falta a descrição na linha %d
-%s: falta o sufixo ou a lista de protocolos na linha %d
+%s: falta o sufixo ou lista de protocolos ou content ou urlmatch na linha %d
 %s: falta o programa na linha %d
 %s: falta o nome da tabela na linha %d
 %s: falta o nome curto na linha %d

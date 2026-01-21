@@ -525,7 +525,7 @@ impossibile accedere ad %s, (sicuro)
 %s: reply mancante alla riga %d
 %s: type mancante alla riga %d
 %s: description mancante alla riga %d
-%s: suffisso o lista di protocolli mancante alla riga %d
+%s: suffisso o lista di protocolli o content o urlmatch mancante alla riga %d
 %s: program mancante alla riga %d
 %s: manca il nome della tavola alla riga %d
 %s: nome corto mancante alla riga %d

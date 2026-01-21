@@ -525,7 +525,7 @@ kann auf %s nicht zugreifen, (gesichert)
 %s: fehlendes 'reply' in Zeile %d
 %s: fehlender Typ 'type' in Zeile %d
 %s: fehlende 'description' in Zeile %d
-%s: fehlendes 'suffix' oder 'protocol' in Zeile %d
+%s: fehlendes 'suffix' oder 'protocol' oder 'content' oder 'urlmatch' in Zeile %d
 %s: fehlendes Programm in Zeile %d
 %s: fehlender Tabellenname in Zeile%d
 %s: fehlendes Kürzel in Zeile %d

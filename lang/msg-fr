@@ -525,7 +525,7 @@ impossible d'accéder à %s, (sûr)
 %s : ligne reply manquante à la ligne %d
 %s : type manquant à la ligne %d
 %s : description manquante à la ligne %d
-%s : suffixe ou liste de protocoles manquants à la ligne %d
+%s : suffixe ou liste de protocoles ou content ou urlmatch manquants à la ligne %d
 %s : programme manquant à la ligne %d
 %s : nom de table manquant à la ligne %d
 %s : surnom manquant à la ligne %d
