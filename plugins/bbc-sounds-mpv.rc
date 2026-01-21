@@ -1,0 +1,6 @@
+#plugin {
+#desc = support for bbc sounds content
+#urlmatch = bbc.co.uk/sounds/play
+#program = mpv %i
+#type = bbc
+#}

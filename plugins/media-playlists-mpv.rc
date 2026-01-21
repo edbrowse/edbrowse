@@ -1,0 +1,6 @@
+plugin {
+desc = playlists
+type = playlists
+suffix = m3u,pls
+program = mpv %i
+}
