@@ -1,0 +1,11 @@
+# Sound snippets are typically in wav files.
+# This is a much simpler encoding.
+# Here is a plugin for wav files and other files compatible with sox.
+
+plugin {
+type = audio/basic
+desc = audio file in a wave format
+suffix = wav,voc,au
+content = audio/x-wav
+program = play -q %i
+}

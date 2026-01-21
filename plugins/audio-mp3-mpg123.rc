@@ -1,0 +1,39 @@
+# Music and podcasts are typically contained in mp3 files.
+# mpg123 is specifically designed to play mp3 files, although there are other players.
+# Here is the plugin for mp3, using mpg123.
+
+
+# When edbrowse encounters a url that ends in .mp3,
+# or has an http content type of audio/mpeg,
+# it plays the audio passage, just like any other browser.
+# Similarly, g in directory mode will play the audio if it is an mp3 file.
+# The -C option provides keyboard control.
+# Use space to stop and start the music, 1 through 0 to move around in the file,
+# comma to back up, period to move forward, and so on.
+
+# The author of mpg123 was kind enough to add a feature for me,
+# wherein the music pauses when mpg123 receives signal 10 from another process.
+# With this in mind,
+# establish the following hot keys through your adapter
+# or using a daemon like esekeyd:
+
+# sysrq|amixer -q set Master 3%-
+# scroll|amixer -q set Master 3%+
+# pause|killall -s10 mpg123
+
+# I can be in any console, in any application, and adjust the volume of my music,
+# or pause it altogether if I have to concentrate on my work or answer the phone,
+# using the three keys at the upper right.
+# This replicates the layout of the Mac.
+# You might prefer another player, like mpv,
+# but it cannot pause and restart from another console via signal 10.
+# There is more information on hot keys in the sister project acsint,
+# in doc/music_speech.txt.
+
+plugin {
+type = audio/mp3
+desc = audio file in mp3 format
+suffix = mp3
+content = audio/mpeg
+program = mpg123 -q -C %i
+}

@@ -1,0 +1,10 @@
+# mpv plays video files in various formats.
+# There may be pictures on the screen, but in any case, you can hear the audio.
+
+plugin {
+type = video/mp4
+desc = video file in mpv compatible format
+suffix = mp4,m4a,webm
+content = video/mpeg
+program = mpv %i
+}

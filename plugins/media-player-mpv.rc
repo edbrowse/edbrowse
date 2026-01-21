@@ -1,0 +1,7 @@
+# Generic mpv suffix to force playing a buffer or file via mpv
+plugin {
+type = audio,video
+desc = mpv compatible media
+suffix = mpv
+program = mpv %i
+}
