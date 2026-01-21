@@ -19,4 +19,3 @@ desc = youtube
 urlmatch = youtube.com/watch?|youtube.com/embed/|godtube.com/watch
 program = mpv %i
 }
-

@@ -1,0 +1,10 @@
+# Microsoft docx format.
+plugin {
+type = docx
+desc = microsoft docx
+suffix = docx
+content = application/docx
+down_url
+program = docx2txt %i
+outtype = t
+}

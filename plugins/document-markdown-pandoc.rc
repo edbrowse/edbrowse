@@ -1,0 +1,17 @@
+# Markdown is a preprocessor to html.
+# Thus the document can include html tags, but if there are a lot of them,
+# then you probably should have written it in html in the first place.
+# A well written .md file is easily readable as-is,
+# yet it is well formatted when rendered.
+# Naturally, the markdown plugin will generate html,
+# whereupon edbrowse can do the formatting.
+
+plugin {
+type = markdown
+desc = markdown file
+suffix = md
+content = application/markdown
+down_url
+program = pandoc -f markdown -t html %i
+outtype = h
+}

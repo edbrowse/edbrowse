@@ -1,0 +1,23 @@
+# Going back to the 90's, Microsoft developed a format for its documents
+# under MS-Word. Nix developed a program to make these documents readable.
+# The same program handles rich text.
+
+plugin {
+type = Word doc
+desc = Microsoft Word document, not docx
+suffix = doc
+content = application/msword
+down_url
+program = pandoc -f doc %i
+outtype = H
+}
+
+plugin {
+type = rtf
+desc = rich text file
+suffix = rtf
+content = application/rtf
+down_url
+program = pandoc -f rtf %i
+outtype = H
+}
