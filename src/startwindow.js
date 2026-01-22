@@ -2352,11 +2352,16 @@ var evs = ["onload", "onunload", "onclick", "onchange", "oninput",
 for(var j=0; j<evs.length; ++j) {
 var evname = evs[j];
 eval('Object.defineProperty(' + cn + ', "' + evname + '$$watch", {value:true})');
+// I tried to make this property enumerable within its own set method,
+// you assign body.onload and then you should see body.onload, but I couldn't make that work.
+// So you don't see body.oonload even if you set it,
+// but at least you don't see my mythical body.onload$2
 eval('Object.defineProperty(' + cn + ', "' + evname + '", { \
-get: function() { return this.' + evname + '$2; }, \
+get: function() { return this.' + evname + '$2}, \
 set: function(f) { if(db$flags(1)) alert3((this.'+evname+'?"clobber ":"create ") + (this.nodeName ? this.nodeName : "+"+this.dom$class) + ".' + evname + '"); \
 if(typeof f == "string") f = my$win().handle$cc(f, this); \
-if(typeof f == "function") { this.' + evname + '$2 = f}}})')
+if(typeof f == "function") { Object.defineProperty(this, "' + evname + '$2", {value:f}); \
+}}})')
 }}})();
 
 // onhashchange from certain places
