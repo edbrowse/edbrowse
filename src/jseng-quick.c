@@ -3246,21 +3246,21 @@ typedef struct JSJobEntry {
     JSValue argv[];
 } JSJobEntry;
 
-void my_ExecutePendingJobs(void)
+int my_ExecutePendingJobs(void)
 {
     JSContext *ctx;
     JSJobEntry *e;
 				struct list_head *l, *l1;
     JSValue res;
-    int i, safety = 0;
+    int i, cnt = 0;
 	struct list_head *jl = (struct list_head *)((char*)jsrt + JSRuntimeJobIndex);
 
 // high runner case
-    if (list_empty(jl)) return;
+    if (list_empty(jl)) return 0;
 
 // step through the jobs
     list_for_each_safe(l, l1, jl) {
-	if(safety == 4) // I'm only going to do four of these
+	if(cnt == 10) // stop now and then to let the user interact with edbrowse
 	    break;
 	e = list_entry(l, JSJobEntry, link);
 	ctx = e->ctx;
@@ -3321,10 +3321,11 @@ and if that happens, then once again we need to free the context.
 	if(JS_IsException(res)) processError(ctx);
 	debugPrint(3, "exec complete");
 	JS_FreeValue(ctx, res);
-	++safety;
-	jSideEffects();
+	++cnt;
 	goto delete_and_go;
     }
+    if(cnt) jSideEffects();
+				return cnt;
 }
 
 // see if any jobs would run, if you called the above
@@ -3399,10 +3400,11 @@ in the target window, especially building new DOM elements within the tree,
 by DOM calls or innerHTML etc.
 *********************************************************************/
 
-void my_ExecutePendingMessages(void)
+bool my_ExecutePendingMessages(void)
 {
 	int i;
 	JSContext *cx;
+	bool rc = false;
 // This mucks with cw and cf, the calling routine must preserve them.
 	for (i = 1; i <= maxSession; ++i) {
 		if(!(cw = sessionList[i].lw) ||
@@ -3413,9 +3415,10 @@ void my_ExecutePendingMessages(void)
 			if(!cf->jslink)
 				continue;
 			cx = cf->cx;
-			run_function_bool(cx, *(JSValue*)cf->winobj, "onmessage$$running");
+			rc |= run_function_bool(cx, *(JSValue*)cf->winobj, "onmessage$$running");
 		}
 	}
+	return rc;
 }
 
 /*********************************************************************
@@ -3428,12 +3431,13 @@ in the target window, especially building new DOM elements within the tree,
 by DOM calls or innerHTML etc.
 *********************************************************************/
 
-void my_ExecutePendingMessagePorts(void)
+bool my_ExecutePendingMessagePorts(void)
 {
 	int i, j, length, owner;
 	JSContext *cx0;
 	Frame *f0, *f1;
 	JSValue g, ra;
+	bool rc = false;
 // This mucks with cw and cf, the calling routine must preserve them.
 	for (i = 1; i <= maxSession; ++i) {
 		if(!(cw = sessionList[i].lw) ||
@@ -3466,7 +3470,7 @@ void my_ExecutePendingMessagePorts(void)
 				if(f1) { // ok
 					if(f1->jslink && f1->cx) {
 						cf = f1; // set current frame
-						run_function_bool(cf->cx, port, "onmessage$$running");
+						rc |= run_function_bool(cf->cx, port, "onmessage$$running");
 					}
 				} else {
 					debugPrint(3, "no frame for MessagePort.context %d", owner);
@@ -3476,16 +3480,17 @@ void my_ExecutePendingMessagePorts(void)
 			JS_Release(cx0, ra);
 		}
 	}
+	return rc;
 }
 
-// this is temporary, we will be polling on a timer
-// to execute these pending jobs.
+// We don't use this function any more
 static JSValue nat_jobs(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
 	Window *save_cw = cw;
 	Frame *save_cf = cf;
 	my_ExecutePendingJobs();
 	my_ExecutePendingMessages();
+	my_ExecutePendingMessagePorts();
 	cw = save_cw, cf = save_cf;
 	return JS_UNDEFINED;
 }

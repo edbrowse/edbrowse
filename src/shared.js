@@ -4571,7 +4571,8 @@ var ENCODEINTO_BUILD = false;
 // NextSection
 // Ok this is my function, but it blends with the message port functions below.
 function onmessage$$running() { 
-if(this.eb$pause && !this.onmessage) return;
+let rc = false;
+if(this.eb$pause && !this.onmessage) return rc;
 if(this.onmessage || (this.onmessage$$array && this.onmessage$$array.length)) { // handlers are ready
 while(this.onmessage$$queue.length) {
 // better run messages fifo
@@ -4586,6 +4587,7 @@ if(typeof me.data == "string") datalength = me.data.length;
 if(datalength >= 200) datashow = "long";
 alert3(this.nodeName + " context " + this.eb$ctx + " processes message of length " + datalength + " ↑" +
 datashow + "↑");
+rc = true;
 if(this.onmessage)
 this.onmessage(me);
 else
@@ -4593,6 +4595,7 @@ this.onmessage$$fn(me);
 alert3("process message complete");
 }
 }
+return rc;
 }
 
 function lastModifiedByHead(url) {
