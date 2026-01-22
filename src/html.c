@@ -282,7 +282,7 @@ void jSyncup(bool fromtimer, const Tag *active)
 	char *value, *cxbuf;
 
 	if (!cw->browseMode)
-		return;		/* not necessary */
+		return;		// not necessary
 	if (cw->sank)
 		return;		/* already done */
 	cw->sank = true;
@@ -4108,42 +4108,17 @@ void runTimer(void)
 
 	currentTime();
 
+/*********************************************************************
+I should mention that the following rarely happens.
+We have a virtual timer that is always looking for pending jobs, messages, etc.
+This is a fast interval, several tims per second.
+So ssoonest always returns something, and it is almost always ready to run.
+*********************************************************************/
 	if (!(jt = soonest()) ||
 	    (jt->sec > now_sec || (jt->sec == now_sec && jt->ms > now_ms)))
 		return;
 
-	if(jt->pending) { // pending jobs
-		if(allowJS) {
-			my_ExecutePendingJobs();
-			my_ExecutePendingMessages();
-			my_ExecutePendingMessagePorts();
-		}
-		ircRead();
-// promise jobs not throttled by timerspeed
-		int n = jt->jump_sec * 1000 + jt->jump_ms;
-		jt->sec = now_sec + n / 1000;
-		jt->ms = now_ms + n % 1000;
-		if (jt->ms >= 1000)
-			jt->ms -= 1000, ++jt->sec;
-		goto done;
-	}
-
-	runTimer0(jt, save_cf);
-	if (gotimers)
-		jSideEffects();
-
-done:
-	cw = save_cw, cf = save_cf;
-}
-
-static void runTimer0(struct jsTimer *jt, const Frame *save_cf)
-{
-	Tag *t;
-
-	if (!gotimers) goto skip_execution;
-
-	cf = jt->f;
-	cw = cf->owner;
+	ircRead();
 
 /*********************************************************************
 Only syncing the foreground window is right almost all the time,
@@ -4157,6 +4132,46 @@ We need to fix this someday, though it is a very rare corner case.
 *********************************************************************/
 	if (foregroundWindow)
 		jSyncup(true, 0);
+
+	if(jt->pending) { // pending jobs
+		if(allowJS) {
+/*********************************************************************
+pending jobs, microtasks in particular, are suppose to run before timers.
+Sometimes there are dozens of these.
+This logic doesn't guarantee it but is moving toward it.
+If we've done some pending jobs, there might be more, so goto done and don't do
+any of the timers.
+Loop back around, see if the user has typed a key, if not come right back
+on the same timer and do some more.
+*********************************************************************/
+			if(my_ExecutePendingJobs()) goto done;
+			if(my_ExecutePendingMessages() |
+			my_ExecutePendingMessagePorts()) goto done;
+		}
+// promise jobs not throttled by timerspeed
+		int n = jt->jump_sec * 1000 + jt->jump_ms;
+		jt->sec = now_sec + n / 1000;
+		jt->ms = now_ms + n % 1000;
+		if (jt->ms >= 1000)
+			jt->ms -= 1000, ++jt->sec;
+		goto done;
+	}
+
+	runTimer0(jt, save_cf);
+
+done:
+	cw = save_cw, cf = save_cf;
+	jSideEffects();
+}
+
+static void runTimer0(struct jsTimer *jt, const Frame *save_cf)
+{
+	Tag *t;
+
+	if (!gotimers) goto skip_execution;
+
+	cf = jt->f;
+	cw = cf->owner;
 	jt->running = true;
 	if ((t = jt->t)) {
 // asynchronous script or xhr
