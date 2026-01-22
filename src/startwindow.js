@@ -2810,17 +2810,26 @@ swm("MutationObserver", function(f) {
     this.callback$queued = false;
 })
 spdc("MutationObserver", null)
-MutationObserver.prototype.disconnect = function() { this.active = false; }
+MutationObserver.prototype.disconnect = function() {
+alert3(`unobserving ${this.targets.size} targets: ${this.$first$.dom$class} tag ${this.$first$.eb$seqno}`)
+this.active = false;
+}
 MutationObserver.prototype.observe = function(target, cfg) {
     if(typeof cfg != "object" || !(target instanceof Node)) {
         this.active = false;
         throw new TypeError("invalid argument types");
     }
+let c = "";
+if(cfg.subtree) c += 's'
+if(cfg.childList) c += 'c'
+if(cfg.attributes) c += 'a'
+alert3(`observing ${target.dom$class} tag ${target.eb$seqno} ${c}`)
     this.targets.set(target, cfg);
     /* We will use the target map to determine if we are targeting the given
     node but this means that we don't know whether we're supposed to observe
     subtrees. Thus store that property on the observer itself. */
     if(cfg.subtree) this.subtree = true;
+if(!this.$first$) this.$first$ = target;
     this.active = true;
 }
 MutationObserver.prototype.takeRecords = function() {
