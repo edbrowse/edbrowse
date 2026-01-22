@@ -2577,16 +2577,16 @@ var z = this;
 switch(which) {
 case 'a':
 if(!this.inj$after) {
-z = this.appendChild(d.createTextNode());
-z.inj$css = true;
-this.inj$after = true;
+z = this.appendChild(d.createTextNode())
+Object.defineProperty(z, "inj$css", {value:true})
+Object.defineProperty(this, "inj$after", {value:true})
 } else z = this.lastChild;
 break;
 case 'b':
 if(!this.inj$before) {
-z = this.prependChild(d.createTextNode());
-z.inj$css = true;
-this.inj$before = true;
+z = this.prependChild(d.createTextNode())
+Object.defineProperty(z, "inj$css", {value:true})
+Object.defineProperty(this, "inj$before", {value:true})
 } else z = this.firstChild;
 break;
 }
