@@ -546,6 +546,8 @@ static void set_property_string(JSContext *cx, JSValueConst parent, const char *
 		JS_NewCFunction(cx, setter, "set", 0),
 		JS_PROP_ENUMERABLE);
 		JS_FreeAtom(cx, a);
+// so it can be not enumerable
+		JS_DefinePropertyValueStr(cx, parent, altname, JS_UNDEFINED, JS_PROP_WRITABLE);
 	}
 	if (!value)
 		value = emptyString;

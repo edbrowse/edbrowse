@@ -1999,7 +1999,12 @@ Object.defineProperty( p, "dataset", { get: function(){
 if(!this.dataset$2)
 Object.defineProperty(this, "dataset$2", {value:{}})
 return this.dataset$2}})
-Object.defineProperty( p, "attributes", { get: function(){ if(!this.attributes$2) this.attributes$2 = new NamedNodeMap, this.attributes$2.owner = this, this.attributes$2.ownerDocument = my$doc(); return this.attributes$2;}});
+Object.defineProperty( p, "attributes", { get: function(){ if(!this.attributes$2) {
+Object.defineProperty(this, "attributes$2", {value:new NamedNodeMap})
+this.attributes$2.owner = this
+this.attributes$2.ownerDocument = my$doc()
+}
+return this.attributes$2}})
 Object.defineProperty( p, "style", { get: function(){ if(!this.style$2) {
 Object.defineProperty(this,"style$2", {value:new CSSStyleDeclaration,configurable:true});
 this.style$2.element = this}
@@ -2689,7 +2694,12 @@ swm("sessionStorage", {})
 var cnlist = [localStorage, sessionStorage];
 for(var i=0; i<cnlist.length; ++i) {
 var cn = cnlist[i];
-Object.defineProperty( cn, "attributes", { get: function(){ if(!this.attributes$2) this.attributes$2 = new NamedNodeMap, this.attributes$2.owner = this, this.attributes$2.ownerDocument = document; return this.attributes$2}})
+Object.defineProperty( cn, "attributes", { get: function(){ if(!this.attributes$2) {
+Object.defineProperty(this, "attributes$2", {value:new NamedNodeMap})
+this.attributes$2.owner = this
+this.attributes$2.ownerDocument = my$doc()
+}
+return this.attributes$2}})
 // tell me we don't have to do NS versions of all these.
 cn.getAttribute = cn.getItem = mw$.getAttribute;
 cn.setAttribute = cn.setItem = mw$.setAttribute;
