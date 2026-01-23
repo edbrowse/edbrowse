@@ -3317,7 +3317,9 @@ and if that happens, then once again we need to free the context.
 			set_array_element_object(ctx, v, jj, e->argv[0]);
 		JS_FreeValue(ctx, v);
 		JS_FreeValue(ctx, g);
-		debugPrint(3, "exec promise for context %d job %d", cf->gsn, jj);
+		debugPrint(3, "exec %s for context %d job %d",
+		(e->argc == 1 ? "microtask" : "promise"),
+		cf->gsn, jj);
 	}
 
 	res = e->job_func(ctx, e->argc, (JSValueConst *)e->argv);
