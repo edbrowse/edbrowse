@@ -1046,9 +1046,8 @@ function mutFixup(b, isattr, y, z) {
         if(Array.isArray(j) || j.is$frame || (j.childNodes&&j.getElementsByTagName("iframe").length))
             frames$rebuild(w2);
     }
-    // most of the time there are no observers, so loop over that first
-    // whence this function does nothing and doesn't slow things down too much.
 
+// loop over observers
     for(let j = 0; j < list.length; ++j) {
         let o = list[j]; // the observer
         if(!o.active) continue;
@@ -1065,7 +1064,7 @@ function mutFixup(b, isattr, y, z) {
                 if (target_cfg && !target_cfg.subtree) target_cfg = undefined;
                 if (t.nodeType == 9) break; // stop at document
             }
-            if (!target_cfg) return;
+            if (!target_cfg) return null;
             const r = new o.observed$window.MutationRecord;
             if(isattr) { // the easy case
                 if(target_cfg.attributes) {
@@ -1075,29 +1074,36 @@ function mutFixup(b, isattr, y, z) {
                     r.oldValue = z;
                     return r;
                 }
-                return;
+                return null;
             }
             // ok a child of b has changed
             if(target_cfg.childList) {
                 mrKids(r, b, y, z);
                 return r;
             }
+            return null;
         })();
         if (record) {
+            let nl = o.notification$queue.length;
+            if(isattr) alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno} attribute ${y}`);
+            else alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno} children`);
             o.notification$queue.push(record);
-            w.alert3(`mutFixup: notification pushed ${record}`);
-            if (!o.callback$queued) {
-                o.observed$window.queueMicrotask(
-                    () => {
-                        o.callback$queued = false;
+/* Under this design, there will always be exactly one record in the queue.
+It eliminates race conditions, especially if the callback does things under
+promise or subsequent microtasks,
+or if the foreground code meddles with the records before the
+microtask has a chance to run.
+All records will be processed, perhaps by several microtasks,
+and they will be processed in order. */
+            let copy_records = o.takeRecords();
+            o.observed$window.queueMicrotask(
+                () => {
+                    alert3(`mutFixup: callback on ${copy_records.length} records`)
                         // Assume callback wants the observer as this for now
-                        o.callback.call(o, o.notification$queue, o);
-                        o.notification$queue.length = 0;
-                    }
-                );
-                o.callback$queued = true;
-                w.alert3("mutFixup: callback queued");
-            }
+                    o.callback.call(o, copy_records, o);
+                }
+            );
+            alert3("mutFixup: callback queued");
         }
     }
 }
@@ -2125,7 +2131,7 @@ function structuredClone(obj, options)
     const get_type = (o) => Object.prototype.toString.call(o);
     const is_type = (o1, o2) => get_type(o1) == get_type(o2);
     // our nodes all have dom$class which simplifies things
-    const is_node = (o) => !!o && !!o.dom$class;
+    const is_node = (o) => !!o && !!o.nodeType;
     /* Map objects to their new equivalents to prevent infinite cycles and
         preserve the reference structure
     */
@@ -2168,14 +2174,14 @@ function structuredClone(obj, options)
             );
             return obj;
         }
-        // Unlike the initial call don't care here to simplify logic
+// If referencing a DOM object just return it as reference.
         if (is_node(obj)) {
-            dbg("Ignoring dom node in recursive clone");
-            return;
+            dbg("Returning dom node without descending");
+            return obj;
         }
         if (typeof obj === 'function') {
-            dbg("Ignoring function in recursive clone");
-            return;
+            dbg("Returning function without descending");
+            return obj;
         }
 
         // Otherwise something which could have ref cycles

@@ -2807,7 +2807,6 @@ swm("MutationObserver", function(f) {
     this.targets = new Map;
     this.subtree = false;
     this.notification$queue = [];
-    this.callback$queued = false;
 })
 spdc("MutationObserver", null)
 MutationObserver.prototype.disconnect = function() {
