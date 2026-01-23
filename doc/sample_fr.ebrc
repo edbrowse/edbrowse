@@ -1,7 +1,6 @@
-#  .ebrc: le fichier de configuration pour edbrowse version 3.7.3
+#  .ebrc: le fichier de configuration pour edbrowse (version 3.7.3)
 #  C'est un fichier exemple.
-#  Ce fichier contient des mots de passe. 
-#  Assurez-vous qu'il ne soit pas lisible par d'autres
+#  Ce fichier contient des mots de passe. -Assurez-vous qu'il ne soit pas lisible par d'autres
 #  chmod 600 .ebrc
 #  (Evidemment, les mots de passe de cet exemple sont faux...)
 
@@ -9,10 +8,8 @@
 #  Le compte principal, chez mon fournisseur d'accès
 #  Vous y accédez via -m1.
 #  Le compte suivant est is -m2, et ainsi de suite.
-
 mail {
-# ne pas récupérer de mail sur ce compte quand -f est utilisé
-# pour récupérerr les maisl de tous les comptes
+# ne pas récupérer de mail sur ce compte quand -f est utilisé  pour récupérerr les mails de tous lescomptes
 nofetch
 #  Le serveur pop3 et le serveur smtp, pas forcément identiques.
 inserver = mail.comcast.net
@@ -92,12 +89,11 @@ downdir = /home/monlogin/téléchargements
 #  récipient des cookies - où sont stockés les cookies http .
 #  Ce fichier contient des mots de passe, mettez-le en 0600
 #  ne touchez pas à ce fichier, sauf si vous savez ce que vous faites
-
 jar = /home/monlogin/outside/cookies
 
-#  attendre 30 secondes la réponse d'un serveur web
+#  attend 30 secondes la réponse d'un serveur web
 webtimer = 30
-#  attendre 3 minutes la réponse d'un serveur mail mail
+#  attend 3 minutes la réponse d'un serveur mail mail
 mailtimer = 180
 
 #  redirection des mails à partir de l'expéditeur ou du compte de destination
@@ -173,13 +169,11 @@ outtype = T
 proxy = http|https hr.macompagnie.com direct
 proxy = http|https|ftp * proxy.macompagnie.com
 
-# Accès à la base de données : spécifie le nom de la base,
-# le nom d'utilisateur et le mot de passe
+# Accès à la base de données : spécifie le nom de la base, le nom d'utilisateur et le mot de passe
 datasource = nom_base,nom_utilisateur,mot_de_passe
 
 #  extraits de la table clients de la base nom_base
 #  consultez la documentation de edbrowse pour en savoir plus
-
 table {
    tname = clients
 #  cnm est le code de la table abrégé
@@ -203,8 +197,7 @@ table {
 #  analyser correctement, et donc on obtient une quantité d'erreurs gênantes
 #  Vous pouvez le désactiver site par site
 #  Notez, vaut mieux space.com que www.space.com
-#  à moins qu'il existe un foo.space.com, pour lequel vous avez besoin de
-#  javascript
+#  à moins qu'il existe un foo.space.com, pour lequel vous avez besoin de javascript
 
 nojs = space.com
 nojs = nasa.gov
@@ -215,8 +208,7 @@ nojs = paypal.com
 #  C'est automatique
 #  Edbrowse s'identifie lui-même comme "edbrowse/3.4.8",
 #  où le numéro après le slash signifie la version courante d'edbrowse
-#  Tout cela est bel et bon, mais certains sites n'ont aucun respect pour 
-#  edbrowse ou lynx.
+#  Tout cela est bel et bon, mais certains sites n'ont aucun respect pour edbrowse.
 #  Vous pouvez définir plusieurs agents dans ce fichier de config
 #  et les activer avec la commande `ua' (user agent).
 #  Les lignes qui suivent vous permettent de taper
@@ -224,35 +216,33 @@ nojs = paypal.com
 #  Tapez ua0 pour ressusciter l'identification standard d'edbrowse.
 
 agent = Lynx/2.8.4rel.1 libwww-FM/2.14
-agent = Mozilla/4.0 (compatible; MSIE 5.5; Windows 98; Win 9x 4.90)
+agent = Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.1; WOW64; Trident/5.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; .NET4.0C; .NET4.0E)
 
 #  Ok, vous êtes prêts à écrire votre premier script
-#  On commence par quelque chose de simple
-#  Supprimer les fins de ligne dos 
-
+#  On commence par quelque chose de simple, supprimer les fins de ligne dos 
 function+undos {
 ,s/\r$//
 }
 
-#  Une fonction pour accéder à google
+#  Une fonction pour rechercher sur le web
 #  Tout le monde le fait, tout le temps
 #  Pas certain que ce soit actuel
-#  Google change son interface web de temps en temps
-#  En fait tous les scripts d'accès au web nécessitent
-#  maintenance, parce que les sites web évoluent
+#  ces sites web changent leur interface web de temps en temps
+#  En fait tous les scripts d'accès au web nécessitent maintenance, 
+#  parce que les sites web évoluent
 #  ~0 remplace tous les arguments, en d'autres termes, le reste de la ligne.
-#  Ainsi <gg éléphants tigres appelle google,
+#  Ainsi <dgg éléphants tigres appelle duckduckdo,
 #  pour chercher "éléphants et tigres".
+nojs = duckduckgo.com
+        function:ddg {
+        b https://www.duckduckgo.com/
+        /<>/ i1=~0
+        i2*
+        g/h2 Ad/X
+        /h2 {/
+        }
 
-function+gg {
-b http://www.google.com
-/<>/ i=~0
-/</ i1*
-/^About/+2
-}
-
-#  chercher dans le dictionnaire mariam-webster
-# ~1 est le peramètre, le mot à chercher
+#  chercher dans le dictionnaire mariam-webster, ~1 est le peramètre, le mot à chercher
 #  <mw elephant
 function+mw {
 b http://www.merriam-webster.com/dictionary/~1
