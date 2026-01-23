@@ -2827,7 +2827,8 @@ alert3(`observing ${target.dom$class} tag ${target.eb$seqno} ${c}`)
     this.targets.set(target, cfg);
     /* We will use the target map to determine if we are targeting the given
     node but this means that we don't know whether we're supposed to observe
-    subtrees. Thus store that property on the observer itself. */
+    subtrees. Thus store that property on the observer itself.
+    If even one target is subtree then the observer is subtree. */
     if(cfg.subtree) this.subtree = true;
 if(!this.$first$) this.$first$ = target;
     this.active = true;

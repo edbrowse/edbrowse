@@ -3310,7 +3310,11 @@ and if that happens, then once again we need to free the context.
 		JSValue g = JS_GetGlobalObject(ctx);
 		JSValue v = JS_GetPropertyStr(ctx, g, "$pjobs");
 		int jj = get_property_number(ctx, v, "length");
-		set_array_element_object(ctx, v, jj, e->argv[2]);
+// promise has argc = 5, microtask has argc = 1
+		if(e->argc == 5)
+			set_array_element_object(ctx, v, jj, e->argv[2]);
+		if(e->argc == 1)
+			set_array_element_object(ctx, v, jj, e->argv[0]);
 		JS_FreeValue(ctx, v);
 		JS_FreeValue(ctx, g);
 		debugPrint(3, "exec promise for context %d job %d", cf->gsn, jj);
