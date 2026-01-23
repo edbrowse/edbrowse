@@ -1024,12 +1024,9 @@ the observer and queue the callback if needed. Importantly the callback happens
 async to the current script but before timers etc as a microtask. This means
 that multiple calls to this function from various parts of the currently running
 script (task) will gather records. The idea is that this happens and then the
-callback fires once and handles the lot.
-
-Note that this allows (I think per the docs I've seen) us to gather a whole
-list of records and then clear them prior to the callback. Just let the
-callback run in that case because I'm not sure what else we can, or should, do.
-Same goes for disconnecting the observer (see code in startwindow).
+callback fires once and handles the lot. This is important because there are
+cases where takeRecords can be called prior to the callback being called which
+then means the records are not acted upon.
 
 Support functions mrKids and mrList are below.
 *********************************************************************/
@@ -1084,25 +1081,35 @@ function mutFixup(b, isattr, y, z) {
             return null;
         })();
         if (record) {
-            let nl = o.notification$queue.length;
+            const nl = o.notification$queue.length;
             if(isattr) alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno} attribute ${y}`);
             else alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno} children`);
             o.notification$queue.push(record);
-/* Under this design, there will always be exactly one record in the queue.
-It eliminates race conditions, especially if the callback does things under
-promise or subsequent microtasks,
-or if the foreground code meddles with the records before the
-microtask has a chance to run.
-All records will be processed, perhaps by several microtasks,
-and they will be processed in order. */
-            let copy_records = o.takeRecords();
+            // This function returns undefined so no need to return null here
+            if (o.callback$queued) {
+                alert3("mutFixup: callback already queued");
+                return;
+            }
             o.observed$window.queueMicrotask(
                 () => {
-                    alert3(`mutFixup: callback on ${copy_records.length} records`)
+                    o.callback$queued = false;
+                    const nl = o.notification$queue.length;
+                    if (!o.active) {
+                        alert3("mutFixup: observer disconnected prior to callback");
+                        if (nl) alert3(`mutFixup: clearing ${nl} unprocessed records`);
+                        o.notification$queue.length = 0;
+                        return; // can just return undefined here
+                    }
+                    if (!nl) {
+                        alert3("mutFixup: callback queued but records cleared, not calling");
+                        return;
+                    }
+                    alert3(`mutFixup: callback on ${nl} records`);
                         // Assume callback wants the observer as this for now
-                    o.callback.call(o, copy_records, o);
+                    o.callback.call(o, o.takeRecords(), o);
                 }
             );
+            o.callback$queued = true;
             alert3("mutFixup: callback queued");
         }
     }

@@ -2810,30 +2810,34 @@ swm("MutationObserver", function(f) {
 })
 spdc("MutationObserver", null)
 MutationObserver.prototype.disconnect = function() {
-alert3(`unobserving ${this.targets.size} targets: ${this.$first$.dom$class} tag ${this.$first$.eb$seqno}`)
-this.active = false;
+    const ts = this.targets.size;
+    const nl = this.notification$queue.length;
+    const dc = this.$first$.dom$class;
+    const sn = this.$first$.eb$seqno;
+    alert3(`unobserving ${ts} targets with ${nl} unprocessed records: ${dc} tag ${sn}`);
+    this.notification$queue.length =  0;
+    this.active = false;
 }
 MutationObserver.prototype.observe = function(target, cfg) {
-    if(typeof cfg != "object" || !(target instanceof Node)) {
-        this.active = false;
+    // May have other valid targets so don't disconnect
+    if(typeof cfg != "object" || !(target instanceof Node))
         throw new TypeError("invalid argument types");
-    }
-let c = "";
-if(cfg.subtree) c += 's'
-if(cfg.childList) c += 'c'
-if(cfg.attributes) c += 'a'
-alert3(`observing ${target.dom$class} tag ${target.eb$seqno} ${c}`)
+    alert3(`observing ${target.dom$class} tag ${target.eb$seqno} config ${JSON.stringify(cfg)}`)
     this.targets.set(target, cfg);
     /* We will use the target map to determine if we are targeting the given
     node but this means that we don't know whether we're supposed to observe
     subtrees. Thus store that property on the observer itself.
     If even one target is subtree then the observer is subtree. */
     if(cfg.subtree) this.subtree = true;
-if(!this.$first$) this.$first$ = target;
+    // store for debug
+    if(!this.$first$) this.$first$ = target;
     this.active = true;
 }
 MutationObserver.prototype.takeRecords = function() {
-    const ret = structuredClone(this.notification$queue)
+    // Shallow clone as the records must refer to the DOM and are otherwise safe
+    const ret = this.notification$queue.slice();
+    /* Drop our copy of the records as we've processed them now and don't want
+        to be impacted by external changes. */
     this.notification$queue.length = 0;
     return ret;
 }
