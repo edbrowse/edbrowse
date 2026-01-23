@@ -2154,9 +2154,6 @@ function structuredClone(obj, options)
         }
     }
 
-    if (is_node(obj) || typeof obj === "function")
-        throw new this.DOMException("Unsupported object type", "DataCloneError");
-
     const property_helper = (old_obj, new_obj, key) => {
         dbg("handle property " + key);
         const value = old_obj[key];
@@ -2181,16 +2178,19 @@ function structuredClone(obj, options)
             );
             return obj;
         }
-// If referencing a DOM object just return it as reference.
-        if (is_node(obj)) {
-            dbg("Returning dom node without descending");
-            return obj;
-        }
-        if (typeof obj === 'function') {
-            dbg("Returning function without descending");
-            return obj;
-        }
+        /* structuredClone doesn't handle DOM nodes or functions regardless of
+            where they appear in the structure. Note that, due to how
+            javascript prototypes and classes work this doesn't break on
+            objects with methods assigned by prototype or using the new class
+            syntax. However directly assigning functions as object properties
+            will break. This isthe documented behaviour and is compatible with
+            modern browsers.
+        */
 
+        if (is_node(obj) || typeof obj === "function") {
+            dbg(`Unsupported object (node ${is_node(obj)}, type ${typeof obj})`);
+            throw new this.DOMException("Unsupported object type", "DataCloneError");
+        }
         // Otherwise something which could have ref cycles
         if (obj_map.has(obj)) {
             // Set up the reference cycles to be the same in the new object
@@ -2230,6 +2230,8 @@ function structuredClone(obj, options)
 
         // Technically we should do more checking but just assume object for now
         dbg("Copy object");
+        /* If one clones a class instance one ends up with a plain object per
+            the documented behaviour. */
         const new_obj = new this.Object;
         obj_map.set(obj, new_obj);
         for (const k of Object.keys(obj)) {
