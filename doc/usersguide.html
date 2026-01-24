@@ -958,7 +958,7 @@ You can subscribe by sending a message to
 
 <p>
 There is a wiki devoted to edbrowse,
-including tips and tricks, and sample .ebrc configurations and functions.
+including tips and tricks, and sample edbrowse functions to accomplish certain tasks.
 See <A href=http://edbrowse.org>edbrowse.org</A> for more information.
 
 <hr>
@@ -2066,7 +2066,7 @@ The ^ indicates the join operator, the emojis are not simply next to each other,
 26be^1f9e4 baseball glove
 
 <p>
-Refer to the sample file in the wiki for more examples of these combinations.
+Refer to the sample Emojis.txt file in the wiki for more examples of these combinations.
 
 <h2 id="bfile">Binary Files</h2>
 
@@ -4515,7 +4515,7 @@ The config file is checked for in the following locations in order:
 <p>
 The first config file found is used with the exception that if the file
 specified with -c doesn't exist no other locations are checked and so no
-config is loaded. In addition, if -c is not provided and no config is found then a sample file will be created in $HOME/.ebrc for you to edit.
+config is loaded. In addition, if -c is not provided and no config is found then a default file will be created in $HOME/.ebrc for you to edit.
 The "eb" is shorthand for edbrowse.
 The config command, issued from within edbrowse,
 will access whichever file was read.
@@ -5405,10 +5405,7 @@ as part of the fetchmail client.
 Plugins are determined by the extension of the file, or in some cases the protocol.
 They might tell edbrowse to use /usr/bin/play to play file.wav or file.voc,
 and /usr/bin/mpg123 to play file.mp3, and so on.
-Rather than repeat it all here,
-you may want to look at the plugin {...} sections in the sample config file provided with this package.
-Linux users can probably copy this part directly into their own config file.
-It generally does the right thing.
+Please review the files in the plugins directory in this project.
 Here is one example.
 
 <pre class=item>
@@ -5516,14 +5513,11 @@ outtype = H
 
 <h2 id="sampcfg">A Sample Config File</h2>
 
+<p>
 The best documentation is an example,
-so I have provided a sample config file with fake data.
-It is well commented.
-You can see a <A HREF=sample.ebrc>sample config file</A> here.
-Also available in
-<A href=sample_fr.ebrc>French</A>
-and
-<A href=sample_it.ebrc>Italian</A>.
+so you may want to read the
+<a href=../lang/ebrc-en>default config file</a>,
+which is created for you if you launch edbrowse with no config file.
 
 <hr>
 <h1 id=mailc>Chapter 7, Mail Client</h1>
