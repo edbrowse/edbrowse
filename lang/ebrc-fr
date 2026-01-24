@@ -93,18 +93,12 @@ nojs = duckduckgo.com
         /h2 {/
         }
         
-nojs = merriam-webster.com
-function+mw {
-#  recherche dans le disctionnaire mariam-webster
-b http://www.merriam-webster.com/dictionary/~0
-sw+
-/spelling suggestion/X
-if(*){
-/{.*}?/
-} else {
-/^h1/X
-/^h2/
-}
+nojs = cnrtl.fr/
+function+dico {
+	# dictionnaire du cnrtl : un paramètre, le mot
+	b https://www.cnrtl.fr/definition/~1
+	1
+	/* {~0
 }
 
 function+unf {
@@ -131,98 +125,3 @@ ll 700
 js-
 # autres paramètres personnels
 }
-
-
-
-
-
-
-
-
-
-
-plugin {
-type = audio/mp3
-desc = audio file au format mp3
-suffix = mp3
-content = audio/mpeg
-program = mpg123 -q -C %i
-}
-
-plugin {
-type = audio/x-pn-realaudio
-desc = streaming audio
-protocol = rtsp,pnm,sdp
-suffix = rm,ra,ram,m3u8
-urlmatch = youtube.com/watch?|youtube.com/embed/
-content = audio/x-scpls,application/pls+xml
-program = /usr/bin/mpv --really-quiet --load-unsafe-playlists %i
-}
-
-# ce plugin affiche un fichier, plutôt que de le "jouer"
-plugin {
-type = pdf
-desc = pdf file
-suffix = pdf
-content = application/pdf
-program = pdftohtml -i -q -noframes %i %o
-# indique que la sortie est de l'html, plutôt que du texte
-outtype = H
-down_url
-}
-
-plugin {
-type = rtf
-desc = rich text file
-suffix = rtf
-content = application/rtf
-down_url
-program = catdoc %i
-outtype = T
-}
-
-# A chaque fois que vous récupérez une page de l'internet,
-# votre navigateur s'identifie auprès du serveur
-agent = Lynx/2.8.4rel.1 libwww-FM/2.14
-agent = Mozilla/4.0 (compatible; MSIE 5.5; Windows 98; Win 9x 4.90)
-
-# Ok, nous sommes prêts à écrire notre premier script.
-# comme une fonction d'accès à google.
-# Ainsi, <gg éléphants tigres appellera google
-# pour chercher éléphants et tigres
-function+gg {
-db0
-b http://www.google.com
-sw+
-/<>/ i=~0
-db1
-/</ i1*
-/h3/p
-}
-
-# recherche dans le dictionnaire Merriam-Webster, -1 est le 1er paramètre,
-# le mot cherché
-# <mv éléphant
-function+mw {
-b http://www.merriam-webster.com/dictionary/~0
-sw+
-/spelling suggestion/X
-if(*){
-/{.*}?/
-} else {
-/^h1/X
-/^h2/
-}
-}
-# Cette fonction s'exécute au démarrage de edbrowse
-function:init {
-# met les répertoires en lecture/écriture,
-# ainsi vous pouvez renommer ou effacer des fichiers
-dw
-# affiche la taille de chaque fichier dans un listing de répertoire
-ls=s
-ll 700
-# d'autres paramètres personnels
-}
-
-# et beaucoup plus encore...

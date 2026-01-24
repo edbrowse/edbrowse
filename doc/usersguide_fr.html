@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta name="description" content="documentation Edbrowse, un éditeur orienté texte, un navigateur, et un client de courrier électronique. ">
+<meta name="description" content="documentation Edbrowse, un éditeur orienté texte, un navigateur, et un client de courrier électronique.">
 <meta name="keywords" content="
 orienté texte, ligne de commande, interactif, 
 éditeur, navigateur, client mail, 
@@ -12,9 +12,9 @@ securité, ssl,
 aveugle, script, accessible, accessibilité">
 <meta charset="UTF-8">
 <title>Documentation Edbrowse</title>
-<LINK REL="SHORTCUT ICON" href="pc. ico">
+<LINK REL="SHORTCUT ICON" href="pc.ico">
 <style>
-body { background: white; color: black; font-family: Arial,Helvetica,sans-serif; font-size: 1. 0em; }
+body { background: white; color: black; font-family: Arial,Helvetica,sans-serif; font-size: 1.0em; }
 a:link { color: red; }
 a:active { color: green; }
 a:visited { color: red; }
@@ -23,7 +23,7 @@ h1 { text-align: center; color: navy; font-size: 1.6em; }
 h2 { text-align: center; color: darkslateblue; font-size: 1.0em; }
 h3 { text-align: center; color: royalblue; font-size: 1.0em; }
 hr { border-style: solid; color: black; height: 2px; }
-p. cen { text-align: center; }
+p.cen { text-align: center; }
 p.item { color: darkgreen; }
 pre.item { color: darkgreen; }
 </style>
@@ -226,17 +226,17 @@ En fait, chaque lettre tient sur 7 bits; le huitième bit, non utilisé, est mis
 Ce système est appelé ASCII, et il est spécifique à l'anglais. 
 
 <p>
-Les <a href=https://en. wikipedia.org/wiki/Indo-European_languages>
+Les <a href=https://en.wikipedia.org/wiki/Indo-European_languages>
 langues indo-européens</a> 
 comportent plus de caractères, 
 comme ñ (espagnol), è (français), 
 et ö (allemand). 
 Ceux-ci peuvent tenir sur un octet, 
 en mettant le 8ème bit à 1, selon le standard 
-<a href=https://fr. wikipedia.org/wiki/ISO_8859>
+<a href=https://fr.wikipedia.org/wiki/ISO_8859>
 ISO8859-1</a>. 
 D'autres langues, comme le tchèque et le hongrois, se conforment au standard 
-<a href=https://en. wikipedia.org/wiki/ISO/IEC_8859-2>
+<a href=https://en.wikipedia.org/wiki/ISO/IEC_8859-2>
 iso8859-2</a>, 
 qui assigne d'autres caractères aux octets supérieurs à 127. 
 Et ensuite il y a l'iso8859-3, et ainsi de suite. 
@@ -252,7 +252,7 @@ Vous pouvez passer de l'iso8859-1 à l'iso8859-2 au milieu du document,
 ou bien utiliser un nouveau standard qui représente toutes les lettres dans toutes les langues  simultanément. 
 Ce jeu de caractères, qui ne code plus les caractères sur un seul octet, 
 est connu sous le terme 
-<a href=https://en. wikipedia.org/wiki/Utf8>
+<a href=https://en.wikipedia.org/wiki/Utf8>
 utf8</a>, 
 lequel est devenu le nouveau standard dans l'industrie informatique. 
 Les logiciels n'ont plus à sélectionner une page iso8859 et assigner des nombres aux lettres en fonction du pays dans lequel vous vivez. 
@@ -1283,7 +1283,7 @@ Taper s pour «s//% ».
 
 <li><p>
 /xyz/! cherche la première ligne qui ne contient pas xyz. 
-ed ne le fait pas, mais sed lefai, et c'est bien pratique. 
+ed ne le fait pas, mais sed le fait, et c'est bien pratique. 
 Notez que xyz est dans le tampon mémorisé, et donc c'est !. 
 tapez / pour la prochaine ligne qui ne contient pas xyz
 tapez ? pour la ligne précédente qui ne contient pas xyz
@@ -1324,7 +1324,7 @@ La plupart des nouvelles commandes, introduites par edbrowse, font apparaître u
 C'est une question de goût, et c'est en grande partie à la discrétion des développeurs de logiciels. 
 
 <li><p>
-Dans la plupart des versions de ed, la commande «z7» signifie «. ,+6p», 
+Dans la plupart des versions de ed, la commande «z7» signifie «.,+6p», 
 faisant de la ligne courante +7 la nouvelle ligne courante. 
 Je pense que c'est inconsistent, ed vous laissant quelque part ailleurs que sur la 
 dernière ligne affichée. 
@@ -4197,7 +4197,7 @@ Cette directive est habituellement placée en début de liste, pour accéder à 
 ensuite le serveur proxy est spécifié pour tous les autres. 
 
 <p>
-proxy = http|https hr. mycompany.com DIRECT
+proxy = http|https hr.mycompany.com DIRECT
 <br>
 proxy = http|https|ftp * proxy.mycompany.com
 
@@ -4292,7 +4292,7 @@ mais Javascript évolue, comme n'importe quelle autre langue ou standard,
 et je ne pouvais plus suivre. 
 
 <p>
-La troisième version utilise un moteur Javascript open source, d'abord Mozilla js, ensuite Duktape, et maintenant, depuis la version 3. 8. 0, Quick js. 
+La troisième version utilise un moteur Javascript open source, d'abord Mozilla js, ensuite Duktape, et maintenant, depuis la version 3.8.0, Quick js. 
 Ceci me permet de m'appuyer sur, plutôt que de réinventer, environ 70000 lignes de code - 
 et quelqu'un d'autre maintient ce code à mesure que Javascript évolue. 
 
@@ -4548,7 +4548,7 @@ Vous aurez besoin d'un fichier, souvent appelé un récipient de cookies,
 pour stocker vos cookies. 
 La ligne qui définit ce récipient de cookies pourrait ressembler à ceci :
 <p class=item>
-jar = /home/monlogin/. ebsys/cookie-jar
+jar = /home/monlogin/.ebsys/cookie-jar
 
 <p>
 C'est une syntaxe simple : mot-clé = valeur. 
@@ -4571,7 +4571,7 @@ Certaines sont employées pour définir un compte de courrier électronique.
 Ceci deviendra plus clair quand nous parlerons du client de courrier. 
 
 <p class=item>
-certfile = /etc/pki/tls/cert. pem
+certfile = /etc/pki/tls/cert.pem
 
 <p>
 Indique le fichier qui sauvegarde les certificats pour les connexions sécurisées. 
@@ -4592,7 +4592,7 @@ cachesize = 200
 Edbrowse stocke certaines pages localement, dans un cache, de façon à pouvoir être rechargées à partir de votre ordinateur si vous revenez sur le même site. 
 (tous les navigateurs modernes le font). 
 Vous pouvez définir l'emplacement du répertoire de cache. 
-si non défini, edbrowse sélectionne ~/. ebcache sur Unix. 
+si non défini, edbrowse sélectionne ~/.ebcache sur Unix. 
 Sur un système multi-utilisateurs, votre cache doit être privé, car il contient littéralement les pages web que vous consultez.
 Des utilisateurs distincts ne doivent pas partager le même cache.
 Le répertoire de cache est créé avec les permissions 0700, s'il n'existe pas déjà.
@@ -4705,7 +4705,7 @@ Si vous le faites, le fichier est enregistré dans le répertoire de télécharg
 Si le nom de fichier téléchargé comporte un slash, ou bien s'il n'existe pas de répertoire de téléchargement, 
 le chemin est construit relativement au répertoire courant (on assume qu'il n'est pas absolu). 
 Dans ce cas, l'expansion des métacaractères (globbing) est effectuée. 
-Par exemple, vous pouvez envoyer un fichier mp3 sur ~/musique/country/une-chanson. mp3. 
+Par exemple, vous pouvez envoyer un fichier mp3 sur ~/musique/country/une-chanson.mp3. 
 Les téléchargements s'effectuent en avant-plan, avec une échelle de progression, bloquant Edbrowse jusqu'à l'achèvement du téléchargement. 
 Si vous préférez, vous pouvez télécharger un fichier en arrière-plan en invoquant la commande bg (background). 
 C'est pratique surtout pour de gros fichiers. 
@@ -4923,7 +4923,7 @@ Les alias sont vérifiés dans votre carnet d'adresses,
 un fichier texte, orienté «ligne» spécifié ici («carnet-adresses»). 
 Si votre carnet d'adresses contient la ligne
 <p>
-fred : fred. flintstone@bedrock.us : 226 rue des tanneurs : 0555382705
+fred : fred.flintstone@bedrock.us : 226 rue des tanneurs : 0555382705
 <p>
 alors vous pouvez utiliser l'alias fred, 
 et Edbrowse substituera l'adresse électronique de Fred quand il enverra le courrier. 
@@ -4994,7 +4994,7 @@ Les fichiers sont inclus sans ordre particulier.
 Chaque fois que vous rapatriez une page Web de l'Internet, 
 votre navigateur s'identifie au centre serveur. 
 Ceci est fait automatiquement. 
-Edbrowse s'identifie en tant que «Edbrowse/3. 5. 1, 
+Edbrowse s'identifie en tant que «Edbrowse/3.5.1, 
 où le nombre après le slash indique la version en cours de Edbrowse. 
 
 <p>
@@ -5382,8 +5382,8 @@ Ci-dessous, une configuration typique pour le gmail de Google.
 
 <pre class=item>
 mail {
-  inserver = pop. gmail.com
-  outserver = smtp. gmail.com
+  inserver = pop.gmail.com
+  outserver = smtp.gmail.com
   secure
 #  Google accepte également outport = ^587
   login = utilisateur@gmail.com
@@ -5449,7 +5449,7 @@ Une video youtube, par exemple, ressemble à n'importe quelle page html, pourtan
 Utilisez l'attribut urlmatch pour ceci. 
 
 <p class=item>
-urlmatch = . youtube.com/watch?
+urlmatch = .youtube.com/watch?
 
 <p>
 Certains plugins jouent des fichiers, d'autres effectuent des traitements sur des fichiers. 
@@ -5516,11 +5516,14 @@ outtype = H
 
 <h2 id="sampcfg"> Un exemple de fichier de configuration </h2>
 
-<p>
 La meilleure documentation étant un exemple, 
 je vous propose un fichier de configuration exemple avec de fausses données; 
 Il est bien commenté. 
-Vous pouvez le télécharger <a href=../lang/ebrc-fr>exemple de fichier de configuration</a>. 
+Vous pouvez le télécharger <a href=http://Edbrowse.org/sample.ebrc>exemple de fichier de configuration</a>. 
+Egalement disponible en
+<a href=sample_fr.ebrc>Français</a>
+and
+<a href=sample_it.ebrc>Italien</a>. 
 
 <hr>
 <h1 id=mailc> Chapitre 7, Client de courrier</h1>
@@ -5560,10 +5563,10 @@ Les destinataires, les pièces jointes, et le sujet doivent apparaître au débu
 La commande «sm» est pointilleuse, aussi regardez bien la syntaxe ci-dessous :
 
 <pre>
-To: fred. flintstone@bedrock. us
-CC: barney. rubble@bedrock. us
+To: fred.flintstone@bedrock.us
+CC: barney.rubble@bedrock.us
 account: 1
-attach: hollyrock-brochure. pdf
+attach: hollyrock-brochure.pdf
 Subject: Vacances à Hollyrock
 Venez visiter Hollyrock. 
 Brochure jointe. 
@@ -5673,7 +5676,7 @@ Les alias sont vérifiés dans votre carnet d'adresses,
 un fichier texte référencé dans votre fichier de configuration «.ebrc». 
 Si votre carnet d'adresses contient la ligne :
 <p>
-fred : fred. flintstone@bedrock. us : 15 rue des tanneurs : 05555382710
+fred : fred.flintstone@bedrock.us : 15 rue des tanneurs : 05555382710
 <p>
 alors vous pouvez simplement écrire «to: fred» en tête de votre fichier. 
 Seuls les deux premiers champs du carnet d'adresses sont significatifs 
@@ -5728,7 +5731,7 @@ Si Fred et Barney sont dans votre carnet d'adresses, et vous voulez leur envoyer
 le courrier à partir de la ligne de commande, avec une pièce jointe, 
 en utilisant votre compte primaire de courrier, faites ceci. 
 <p>
-edbrowse -m1 fred ^barney hollyrock-notice +hollyrock-brochure. pdf
+edbrowse -m1 fred ^barney hollyrock-notice +hollyrock-brochure.pdf
 
 <p>
 Le ^ précédent «barney» indique qu'il est un destinataire cc. 
@@ -5758,7 +5761,7 @@ comme expliqué dans la prochaine section.
 <p>
 Souvenez-vous, vous pouvez indiquer plusieurs comptes de courrier dans votre fichier «.ebrc». 
 Le premier compte est indiqué par l'index 1, comme ci-dessus dans «-m1», et ainsi de suite. 
-Vous pouvez vous faciliter la vie beaucoup avec quelques alias dans votre fichier «. bashrc». 
+Vous pouvez vous faciliter la vie beaucoup avec quelques alias dans votre fichier «.bashrc». 
 <pre>
 # mon courrier, compte à la maison
 alias moi=" e -fm1 "
@@ -5883,7 +5886,7 @@ Par exemple, si vous souhaitez réorienter le courrier de certaines personnes, f
 <pre class=item>
 fromfilter {
 fred flintstone &gt; fredmail
-fred. flintstone@bedrock.us &gt; fredmail
+fred.flintstone@bedrock.us &gt; fredmail
 jerk@hotmail.com &gt; x
 word@m-w.com &gt; -wod
 }
@@ -5972,10 +5975,10 @@ alors le mail est redirigé.
 <p>
 Pour finir, l'adresse de réponse est recherchée dans votre carnet d'adresses. 
 Si elle est trouvée, le courrier est archivé dans un fichier dont le nom est l'alias de l'adresse. 
-Considérons une ligne de votre carnet d'adresses qui pourrait ressembler à ceci : «fred : Fred. Flintstone@SomeDomain.com». 
+Considérons une ligne de votre carnet d'adresses qui pourrait ressembler à ceci : «fred : Fred.Flintstone@SomeDomain.com». 
 Quand vous recevez un mail de cette adresse, elle est sauvegardée dans le fichier fred. 
 Ainsi vous n'avez pas besoin d'écrire des entrées superflues dans le filtre. 
-Il n'y a aucun besoin d'inclure Fred. Flintstone@SomeDomain.com &gt; fred. 
+Il n'y a aucun besoin d'inclure Fred.Flintstone@SomeDomain.com &gt; fred. 
 C'est pris en charge par votre carnet d'adresses. 
 
 <p>
@@ -6035,7 +6038,7 @@ pour faire de la place à d'autres en-têtes de courriel, comme suit.
 <p>
 Si ce message vient d'être parcouru, 
 et si des données non formatés existent encore dans l'actuelle session Edbrowse, 
-ou si les mêmes données sont présentes dans le fichier de données maildir/. reply, 
+ou si les mêmes données sont présentes dans le fichier de données maildir/.reply, 
 alors Edbrowse re-insère le numero d'identification du message d'origine. 
 Celui-ci doit faire partie de la réponse. 
 La ligne pourrait ressembler à ceci. 
@@ -6075,7 +6078,7 @@ Tous les destinataires s'affichent en haut de votre fichier.
 Certains seront indiquées par cc, s'ils étaient en copie carbone. 
 Vous pouvez supprimer un de ces destinataires avant d'envoyer votre réponse. 
 Bien sûr, vous ne voudrez probablement pas supprimer la première ligne, 
-car c'est la réponse àl'adresse. 
+car c'est la réponse à l'adresse. 
 
 <p>
 Le fichier .reply va grossir de plus en plus, à moins que vous ne le raccourcissiez de temps en temps.
@@ -6156,8 +6159,8 @@ pour imap, ressemble à ceci :
 <pre class=item>
 mail {
   imap
-  inserver = imap. gmail.com
-  outserver = smtp. gmail.com
+  inserver = imap.gmail.com
+  outserver = smtp.gmail.com
   secure
   login = quelqun@gmail.com
   password = secret
@@ -6762,7 +6765,7 @@ Une autre cible, edbrowseinf, donne accès à
 <a href="https://www.informix.com/">la base de données Informix</a>. Ceci fonctionne, 
 mais n'est pas supporté. 
 D'autres interfaces à des bases de données spécifiques peuvent être développées. 
-Vous devrez mettre en application l'interface décrite dans «dbapi. h», 
+Vous devrez mettre en application l'interface décrite dans «dbapi.h», 
 en utilisant le kit de développement de base de données écrit en C fourni par le vendeur. 
 Comme odbc peut se connecter à n'importe quelle base, cela devrait satisfaire vos besoins. 
 
@@ -6928,9 +6931,9 @@ aussi soyez certain de n'en sélectionner qu'une seule.
 <p>
 Pour travailler sur la base de données, votre fichier de configuration doit indiquer 
 le nom de la base de données, le nom d'utilisateur, et le mot de passe. 
-La source de données doit correspondre à l'une des entrées dans votre fichier .odbc. ini. 
+La source de données doit correspondre à l'une des entrées dans votre fichier .odbc.ini. 
 Nom d'utilisateur et mot de passe peuvent parfois être omis, s'ils sont inférés de votre identité sur l'ordinateur 
-ou définis dans la source de données du fichier .odbc. ini). 
+ou définis dans la source de données du fichier .odbc.ini). 
 Voici comment la ligne pourrait ressembler 
 si vous vous connectez sur la base de données «ventes», qui contient la table «clients»
 
