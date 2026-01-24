@@ -1110,15 +1110,23 @@ HTMLAudioElement.prototype.nodeName = "AUDIO"
 
 swm("HTMLTemplateElement", function(){})
 spdc("HTMLTemplateElement", HTMLElement)
-// I'm doing the content fudging here, on demand; it's easier than in C.
 Object.defineProperty(HTMLTemplateElement.prototype, "content", {
 get: function() {
 if(this.content$2) return this.content$2;
 var c, frag = document.createDocumentFragment();
-while(c = this.firstChild) frag.appendChild(c);
-this.content$2 = frag;
-return frag;
-}});
+frag.ownerDocument = new Document;
+// need to set its location to "about:blank" but I don't know how to do that.
+// Lots of setters and getters involved in location, and the current window
+// and document, and new documents created, and we need to sort all this out.
+// Children, this is really hinky; I don't know how else to do it.
+// frag has the same children as the original template element.
+// Those children still have the template as parents.
+// So frag to child to parent moves you to the template.
+for(c = this.firstChild; c; c = c.nextSibling)
+frag.childNodes.push(c)
+Object.defineProperty(this, "content$2", {value:frag})
+return frag
+}})
 
 // the performance registry
 swm("pf$registry", {mark:{},measure:{},measure0:{},resourceTiming:{}})
