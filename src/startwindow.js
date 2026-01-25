@@ -94,10 +94,27 @@ this.spdc = function(c, inherit) {
 swm("Node", function(){})
 spdc("Node", null)
 
-// a node list is and isn't an array; I don't really understand it.
-// I'll just have it inherit from array, until someone tells me I'm wrong.
-swm("NodeList", function(){})
+/*********************************************************************
+a node list is and isn't an array; I don't really understand it.
+I'll just have it inherit from array, until someone tells me I'm wrong.
+Similarly for HTMLCollection.
+I seed it with an optional array, for my own convenience.
+Users aren't suppose to instantiate anyways, so I can't get in trouble by doing this.
+*********************************************************************/
+swm("NodeList", function(v){
+if(Array.isArray(v))
+for(var i=0; i<v.length; ++i)
+this.push(v[i])
+})
 spdc("NodeList", Array)
+NodeList.prototype.toString = function(){return "[object NodeList]"}
+swm("HTMLCollection", function(v){
+if(Array.isArray(v))
+for(var i=0; i<v.length; ++i)
+this.push(v[i])
+})
+spdc("HTMLCollection", Array)
+HTMLCollection.prototype.toString = function(){return "[object HTMLCollection]"}
 
 // make sure to wrap global dispatchEvent, so this becomes this window,
 // and not the shared window.
@@ -125,8 +142,8 @@ spdc("Document", EventTarget)
 Document.prototype.activeElement = null;
 Object.defineProperty(Document.prototype, "children", {get:function(){return this.childNodes}})
 Object.defineProperty(Document.prototype, "childElementCount", {get:function(){return this.children.length}})
-Document.prototype.querySelector = querySelector;
-Document.prototype.querySelectorAll = querySelectorAll;
+Document.prototype.querySelector = querySelector
+Document.prototype.querySelectorAll = querySelectorAll
 Object.defineProperty(Document.prototype, "documentElement", {get: mw$.getElement});
 Object.defineProperty(Document.prototype, "head", {get: mw$.getHead,set:mw$.setHead});
 Object.defineProperty(Document.prototype, "body", {get: mw$.getBody,set:mw$.setBody});
@@ -1440,8 +1457,8 @@ swm("DocumentFragment", function(){})
 spdc("DocumentFragment", HTMLElement)
 DocumentFragment.prototype.nodeType = 11;
 DocumentFragment.prototype.nodeName = DocumentFragment.prototype.tagName = "#document-fragment";
-DocumentFragment.prototype.querySelector = querySelector;
-DocumentFragment.prototype.querySelectorAll = querySelectorAll;
+DocumentFragment.prototype.querySelector = querySelector
+DocumentFragment.prototype.querySelectorAll = querySelectorAll
 
 swm("CSSRule", function(){this.cssText=""})
 CSSRule.prototype.toString = function(){return this.cssText}
@@ -2023,8 +2040,8 @@ p.getElementsByTagName = mw$.getElementsByTagName;
 p.getElementsByName = mw$.getElementsByName;
 p.getElementsByClassName = mw$.getElementsByClassName;
 p.contains = mw$.nodeContains;
-p.querySelectorAll = querySelectorAll;
-p.querySelector = querySelector;
+p.querySelector = querySelector
+p.querySelectorAll = querySelectorAll
 p.matches = querySelector0;
 p.closest = function(s) { var u = this; while(u.nodeType == 1) { if(u.matches(s)) return u; u = u.parentNode; } return null; }
 // children
