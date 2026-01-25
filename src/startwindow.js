@@ -1887,9 +1887,9 @@ of objects from another context into the current context.
 Set the second parameter to true to indicate this.
 *********************************************************************/
 
-sdm("importNode", function(deep) {
-    window.cloneRoot1 = this;
-    return mw$.clone1 (this,deep, true);
+sdm("importNode", function(start,deep) {
+    window.cloneRoot1 = start;
+    return mw$.clone1 (start,deep, true);
 })
 
 swm1("Event", function(etype){
@@ -2085,7 +2085,8 @@ p.removeAttributeNode = mw$.removeAttributeNode;
 p.getClientRects = function(){ return []; }
 // clone
 p.cloneNode = document.cloneNode;
-p.importNode = document.importNode;
+// I don't see anywhere in spec that this is an Element method
+//p.importNode = document.importNode;
 p.compareDocumentPosition = mw$.compareDocumentPosition;
 // visual
 p.focus = function(){document.activeElement=this}
