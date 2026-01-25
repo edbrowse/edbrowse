@@ -4100,6 +4100,8 @@ void delTimers(const Frame *f)
 }
 
 static void runTimer0(struct jsTimer *jt, const Frame *save_cf);
+// Since timer could be in another frame or even another window,
+// I save then restore cw and cf
 void runTimer(void)
 {
 	struct jsTimer *jt;
@@ -4725,7 +4727,6 @@ static Tag *deltag;
 static void renderNode(Tag *t, bool opentag)
 {
 	int tagno = t->seqno;
-	Frame *f = t->f0;
 	char hnum[40];		// hidden number
 #define ns_hnum() stringAndString(&ns, &ns_l, hnum)
 #define ns_ic() stringAndChar(&ns, &ns_l, InternalCodeChar)
@@ -4804,12 +4805,18 @@ nocolorend:
 	if (!opentag && ti->bits & TAG_NOSLASH)
 		return;
 
+// We will call eb$visible to derive visibility, that in turn my restyle
+// certain tags, that in turn requires us to be in the frame
+// of the tags we are looking at.
+// render(), which calls this, restores cf.
+	cf = t->f0;
+
 	if (opentag) {
 // what is the visibility now?
 		uchar v_now = 2;
 		if(allowJS && t->jslink) {
 			t->disval =
-			    run_function_onearg_win(f, "eb$visible", t);
+			    run_function_onearg_win(cf, "eb$visible", t);
 // If things appear upon hover, they do this sometimes if your mouse
 // is anywhere in that section, so maybe we should see them.
 // Also if color is transparent then it surely changes to a color
@@ -4830,7 +4837,7 @@ nocolorend:
 			v_now = DIS_COLOR;
 		if (t->action == TAGACT_TEXT && v_now == DIS_HOVER) {
 			Tag *y = t;
-			while (y && y->f0 == f) {
+			while (y && y->f0 == cf) {
 				uchar dv = y->disval;
 				if (dv == DIS_TRANSPARENT)
 					v_now = DIS_INVISIBLE;
@@ -4872,7 +4879,7 @@ nocolorend:
 		retainTag = false;
 		invisible = opentag;
 /* special case for noscript with no js */
-		if (action == TAGACT_NOSCRIPT && !f->cx)
+		if (action == TAGACT_NOSCRIPT && !cf->cx)
 			invisible = false;
 	}
 
@@ -5515,30 +5522,15 @@ unparen:
 
 	case TAGACT_AREA:
 	case TAGACT_FRAME:
-		if (!retainTag)
-			break;
-
-// we call javascript to see if nodes are visible, acting through css,
-// these calls need to happen within the relevant frame.
-		if(t->f1 && opentag) {
-			if(t->f0 != cf)
-				debugPrint(3, "render frame mismatch: tag %d current %d owned by %d", t->seqno, cf->gsn, t->f0->gsn);
-			cf = t->f1;
-		}
-		if(t->f1 && !opentag) {
-			cf = t->f0;
-		}
-
+		if (!retainTag) break;
 		if (t->f1 && !t->contracted) {	/* expanded frame */
 			sprintf(hnum, "\r%c%d*%s\r", InternalCodeChar, tagno,
 				(opentag ? "`--" : "--`"));
 			ns_hnum();
 			break;
 		}
-
-/* back to unexpanded frame, or area */
-		if (!opentag)
-			break;
+// frame or area is not expanded
+		if (!opentag) break;
 		stringAndString(&ns, &ns_l,
 				(action == TAGACT_FRAME ? "\rFrame " : "\r"));
 // js often creates frames dynamically, so check for src
@@ -5635,10 +5627,12 @@ unparen:
 #undef checkDisabled
 }
 
-/* returns an allocated string */
+// We could call render from an inner frame, though it has to render the whole
+// page; so save and restore cf.
+// This returns an allocated string.
 char *render(void)
 {
-	Frame *f;
+	Frame *f, *save_cf = cf;
 	rowspan();
 	for (f = &cw->f0; f; f = f->next)
 		if (f->cx)
@@ -5647,12 +5641,9 @@ char *render(void)
 	invisible = false;
 	inv2 = NULL;
 	currentForm = currentA = NULL;
-	if(cf != &cw->f0)
-		debugPrint(3, "render does not start at the top frame, context %d", cf->gsn);
 	traverse_callback = renderNode;
 	traverseAll();
-	if(cf != &cw->f0)
-		debugPrint(3, "render does not end at the top frame, context %d", cf->gsn);
+	cf = save_cf;
 	return ns;
 }
 
