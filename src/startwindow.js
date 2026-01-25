@@ -2036,10 +2036,20 @@ this.style$2.element = this}
 return this.style$2;}});
 // get elements below
 p.getRootNode = mw$.getRootNode;
-p.getElementsByTagName = mw$.getElementsByTagName;
-p.getElementsByName = mw$.getElementsByName;
-p.getElementsByClassName = mw$.getElementsByClassName;
-p.contains = mw$.nodeContains;
+// An HTMLCollection around the getElements functions
+swm("live$wrapper", function(f, start, arg) {
+// get the result as an array
+var a = f.call(start, arg)
+var c = new HTMLCollection(a)
+// set an observer to watch the subtree based at start,
+// and when children are added or removed, recompute the array.
+// This is called a live array.
+// It is not yet implemented.
+return c})
+p.getElementsByTagName = function(t) { return live$wrapper(mw$.getElementsByTagName, this, t)}
+p.getElementsByName = function(t) { return live$wrapper(mw$.getElementsByName, this, t)}
+p.getElementsByClassName = function(t) { return live$wrapper(mw$.getElementsByClassName, this, t)}
+p.contains = mw$.nodeContains
 p.querySelector = querySelector
 p.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
 p.matches = querySelector0;
