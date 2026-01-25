@@ -1917,7 +1917,7 @@ else alert3("no kids, type " + typeof node1.childNodes);
 }
 
 if(node1.nodeName == "#text")
-node2 = d.createTextNode();
+node2 = d.createTextNode(node1.data);
 else if(node1.nodeName == "#comment")
 node2 = d.createComment();
 else if(node1.nodeName == "#document-fragment")
