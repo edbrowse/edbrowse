@@ -1767,8 +1767,13 @@ this.dataset[dataCamel(name)] = v;
 // names that spill down into the actual property
 // should we be doing any of this for xml nodes?
 if(spilldown(name)) this[name] = v;
-if(spilldownResolve(this, name)) this.href$2 = resolveURL(w.eb$base, v);
-if(spilldownResolveURL(this, name)) this.href$2 = new (w.URL)(resolveURL(w.eb$base, v));
+// href$2 not enumerable. cloneNode still works because it finds
+// href in the attributes and copies it there,
+// whence spilldown puts href$2 in node2.
+if(spilldownResolve(this, name))
+Object.defineProperty(this, "href$2", {value:resolveURL(w.eb$base, v),configurable:true,writable:true})
+if(spilldownResolveURL(this, name))
+Object.defineProperty(this, "href$2", {value:new (w.URL)(resolveURL(w.eb$base, v)),configurable:true,writable:true})
 if(spilldownBool(this, name)) {
 // This one is required by acid test 43, I don't understand it at all.
 if(name == "checked" && v == "checked")
