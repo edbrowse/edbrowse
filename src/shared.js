@@ -1883,18 +1883,21 @@ return b
 cloneNode creates a copy of the node and its children recursively.
 The argument 'deep' refers to whether or not the clone will recurs.
 clone1 is a helper function that is not tied to any particular prototype.
+into means we are cloning into this context, as in importNode().
 It's frickin complicated, so set cloneDebug to debug it.
-Ths into parameter indicates clone comes into this context.
-Not used yet.
 *********************************************************************/
 
 function clone1(node1,deep, into) {
 var node2;
 var i, j;
 var kids = null;
-var debug = db$flags(2);
-var w = my$win();
-var d = my$doc();
+var debug = db$flags(2)
+var w0 = my$win()
+var w = w0
+// if cloneNode then refer to the window that created the node
+if(!into && node1.ownerDocument && node1.ownerDocument.defaultView)
+w = node1.ownerDocument.defaultView
+var d = w.document
 
 // WARNING: don't use instanceof Array here.
 // Array is a different class in another frame.
@@ -1919,12 +1922,12 @@ if(debug) alert3("skipping style object");
 return;
 } else
 node2 = d.createElement(node1.nodeName);
-if(node1 == w.cloneRoot1) w.cloneRoot2 = node2;
+if(node1 == w0.cloneRoot1) w0.cloneRoot2 = node2;
 
 if (deep && kids) {
 for(i = 0; i < kids.length; ++i) {
 var current_item = kids[i];
-node2.appendChild(clone1(current_item,true));
+node2.appendChild(clone1(current_item,deep, into));
 }
 }
 
@@ -2278,6 +2281,7 @@ return c;
 }
 
 // simple function to clone Attr
+// not use by cloneNode - that calls setAttribute to do that function
 function cloneAttr()
 {
 var w = my$win()

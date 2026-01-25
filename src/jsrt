@@ -958,10 +958,6 @@ fail(174);
 var fn = document.createElement("iframe");
 if(fn.contentWindow.height !== 768) fail(167);
 if(fn.contentDocument.style.bgcolor !== "white") fail(168);
-// This function produces a memory leak; the window goes away
-// when this function goes away, but edbrowse retains it via
-// context0 in jseng-duk.c.
-// Well it does go away when the window closes, I suppose that's good enough.
 })();
 
 if(querySelector(".inject").firstChild.style.display != "round") fail(175);
