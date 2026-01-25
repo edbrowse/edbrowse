@@ -615,7 +615,7 @@ var t = this.getAttribute("name");
 return typeof t == "string" ? t : undefined}, 
 set: function(n) {
 var isinput = (this.dom$class == "HTMLInputElement" || this.dom$class == "HTMLButtonElement" || this.dom$class == "HTMLSelectElement");
-if(!isinput) { this.name$2 = n; return; }
+if(!isinput) { Object.defineProperty(this, "name$2", {value:n,writable:true,configurable:true}); return}
 var f = this.form;
 if(f && f.dom$class == "HTMLFormElement") {
 var oldname = this.getAttribute("name");
