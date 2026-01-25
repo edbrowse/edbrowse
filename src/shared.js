@@ -2064,6 +2064,8 @@ continue;
 if(item == "value" &&
 !Array.isArray(node1) && !(node1.dom$class == "HTMLOptionElement"))
 continue;
+if((item == "nodeName" || item == "tagName") && node1.nodeType == 1)
+continue;
 if(debug) {
 var showstring = node1[item];
 if(showstring.length > 140) showstring = "long";
@@ -2075,6 +2077,8 @@ continue;
 
 if (typeof node1[item] === 'number') {
 if(item == "eb$seqno") continue;
+if(item == "nodeType" && node1.nodeType == 1)
+continue;
 if(debug) alert3("copy number " + item + " = " + node1[item]);
 node2[item] = node1[item];
 continue;
