@@ -1884,9 +1884,11 @@ cloneNode creates a copy of the node and its children recursively.
 The argument 'deep' refers to whether or not the clone will recurs.
 clone1 is a helper function that is not tied to any particular prototype.
 It's frickin complicated, so set cloneDebug to debug it.
+Ths into parameter indicates clone comes into this context.
+Not used yet.
 *********************************************************************/
 
-function clone1(node1,deep) {
+function clone1(node1,deep, into) {
 var node2;
 var i, j;
 var kids = null;
@@ -2276,9 +2278,12 @@ return c;
 }
 
 // simple function to clone Attr
-function cloneAttr(deep)
+function cloneAttr()
 {
 var w = my$win()
+// if part of an html element, use its context
+if(this.owner && this.owner.ownerDocument && this.owner.ownerDocument.defaultView)
+w = this.owner.ownerDocument.defaultView
 var a = new w.Attr;
 a.name = this.name, a.value = this.value;
 return a

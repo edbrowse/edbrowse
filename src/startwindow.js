@@ -1878,19 +1878,19 @@ sdm("removeAttributeNode", mw$.removeAttributeNode)
 
 sdm("cloneNode", function(deep) {
     window.cloneRoot1 = this;
-    return mw$.clone1 (this,deep);
+    return mw$.clone1 (this,deep, false);
 })
 
 /*********************************************************************
-importNode seems to be the same as cloneNode, except it is copying a tree
+importNode is the same as cloneNode, except it is copying a tree
 of objects from another context into the current context.
-But this is how quickjs works by default.
-foo.s = cloneNode(bar.s);
-If bar is in another context that's ok, we read those objects and create
-copies of them in the current context.
+Set the second parameter to true to indicate this.
 *********************************************************************/
 
-sdm("importNode", function(src, deep) { return src.cloneNode(deep)})
+sdm("importNode", function(deep) {
+    window.cloneRoot1 = this;
+    return mw$.clone1 (this,deep, true);
+})
 
 swm1("Event", function(etype){
     // event state is kept read-only by forcing
@@ -2010,7 +2010,7 @@ return this.dataset$2}})
 Object.defineProperty( p, "attributes", { get: function(){ if(!this.attributes$2) {
 Object.defineProperty(this, "attributes$2", {value:new NamedNodeMap})
 this.attributes$2.owner = this
-this.attributes$2.ownerDocument = my$doc()
+this.attributes$2.ownerDocument = this.ownerDocument ? this.ownerDocument : my$doc()
 }
 return this.attributes$2}})
 Object.defineProperty( p, "style", { get: function(){ if(!this.style$2) {
