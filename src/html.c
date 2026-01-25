@@ -4367,7 +4367,8 @@ create_hyperlink:
 /* the new string, the result of the render operation */
 static char *ns;
 static int ns_l;
-static bool invisible, tdfirst;
+static bool tdfirst;
+static int invisible;
 static Tag *inv2;	// invisible via css
 /* None of these tags nest, so it is reasonable to talk about
  * the current open tag. */
@@ -4876,14 +4877,15 @@ nocolorend:
 		retainTag = false;
 	if (ti->bits & TAG_INVISIBLE) {
 		if(opentag) debugPrint(6, "tag is invisible");
+		else debugPrint(6, "invisible tag is closed");
 		retainTag = false;
-		invisible = opentag;
+		opentag ? ++invisible : --invisible;
 /* special case for noscript with no js */
 		if (action == TAGACT_NOSCRIPT && !cf->cx)
 			invisible = false;
 	}
 
-	if (doColors && opentag) {
+	if (retainTag && doColors && opentag) {
 		char *u0, *u1, *u2, *u3;
 		char *color, *recolor = 0;
 		t->iscolor = false;
