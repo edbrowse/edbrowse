@@ -143,7 +143,7 @@ Document.prototype.activeElement = null;
 Object.defineProperty(Document.prototype, "children", {get:function(){return this.childNodes}})
 Object.defineProperty(Document.prototype, "childElementCount", {get:function(){return this.children.length}})
 Document.prototype.querySelector = querySelector
-Document.prototype.querySelectorAll = querySelectorAll
+Document.prototype.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
 Object.defineProperty(Document.prototype, "documentElement", {get: mw$.getElement});
 Object.defineProperty(Document.prototype, "head", {get: mw$.getHead,set:mw$.setHead});
 Object.defineProperty(Document.prototype, "body", {get: mw$.getBody,set:mw$.setBody});
@@ -1458,7 +1458,7 @@ spdc("DocumentFragment", HTMLElement)
 DocumentFragment.prototype.nodeType = 11;
 DocumentFragment.prototype.nodeName = DocumentFragment.prototype.tagName = "#document-fragment";
 DocumentFragment.prototype.querySelector = querySelector
-DocumentFragment.prototype.querySelectorAll = querySelectorAll
+DocumentFragment.prototype.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
 
 swm("CSSRule", function(){this.cssText=""})
 CSSRule.prototype.toString = function(){return this.cssText}
@@ -2041,7 +2041,7 @@ p.getElementsByName = mw$.getElementsByName;
 p.getElementsByClassName = mw$.getElementsByClassName;
 p.contains = mw$.nodeContains;
 p.querySelector = querySelector
-p.querySelectorAll = querySelectorAll
+p.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
 p.matches = querySelector0;
 p.closest = function(s) { var u = this; while(u.nodeType == 1) { if(u.matches(s)) return u; u = u.parentNode; } return null; }
 // children
