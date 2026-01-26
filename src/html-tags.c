@@ -3700,6 +3700,8 @@ void traverseAll(void)
 			traverseNode(t);
 		}
 	}
+	if(cw->numTags > numtags)
+		debugPrint(3, "traversal added %d nodes", cw->numTags - numtags);
 	if (treeOverflow)
 		debugPrint(3, "malformed tree!");
 }
