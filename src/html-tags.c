@@ -3685,11 +3685,15 @@ static void traverseNode(Tag *node)
 void traverseAll(void)
 {
 	Tag *t;
-	int i;
+	int i, numtags;
 	treeOverflow = false;
-	for (i = 0; i < cw->numTags; ++i)
+// when template turns into fragment, an additional tag is created,
+// and we don't want to travers that new tag. Leads to a malformed tree.
+// So remember the end.
+	numtags = cw->numTags;
+	for (i = 0; i < numtags; ++i)
 		tagList[i]->visited = false;
-	for (i = 0; i < cw->numTags; ++i) {
+	for (i = 0; i < numtags; ++i) {
 		t = tagList[i];
 		if (!t->parent && !t->dead) {
 			debugPrint(6, "traverse start at %s %d", t->info->name, t->seqno);
@@ -4479,6 +4483,10 @@ static void jsNode(Tag *t, bool opentag)
 	if (!opentag) {
 // although we have to close the optgroup
 		if(action == TAGACT_OPTG) currentOG = 0;
+		if(action == TAGACT_TEMPLATE) {
+// when I reference content, the getter does everything we need
+			get_property_bool_t(t, "content");
+		}
 		return;
 	}
 	if (t->step >= 2)
@@ -4721,8 +4729,9 @@ Needless to say that's not good!
 		break;
 
 	case TAGACT_TEMPLATE:
-		if(!opentag) break;
-		domLink(t, "HTMLTemplateElement", 0, 0, 4);
+		if(opentag) {
+			domLink(t, "HTMLTemplateElement", 0, 0, 4);
+		}
 		break;
 
 	case TAGACT_BASE:

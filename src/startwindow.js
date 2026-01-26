@@ -1135,12 +1135,8 @@ frag.ownerDocument = new Document;
 // need to set its location to "about:blank" but I don't know how to do that.
 // Lots of setters and getters involved in location, and the current window
 // and document, and new documents created, and we need to sort all this out.
-// Children, this is really hinky; I don't know how else to do it.
-// frag has the same children as the original template element.
-// Those children still have the template as parents.
-// So frag to child to parent moves you to the template.
-for(c = this.firstChild; c; c = c.nextSibling)
-frag.childNodes.push(c)
+while(c = this.firstChild)
+frag.appendChild(c)
 Object.defineProperty(this, "content$2", {value:frag})
 return frag
 }})
