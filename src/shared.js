@@ -108,7 +108,7 @@ return r;
 
 function by_esn(n) {
 if(typeof n != "number") { alert("numeric argument expected"); return; }
-var a = my$doc().getElementsByTagName("*");
+var a = gebtn(my$doc(), "*", true)
 for(var i = 0; i < a.length; ++i)
 if(a[i].eb$seqno === n) return a[i];
 return null;
@@ -132,7 +132,7 @@ s = d.scripts[i];
 s.from$html = true;
 slist.push(s);
 }
-var getlist = d.getElementsByTagName("script");
+var getlist = gebtn(d, "script", true)
 for(i=0; i<getlist.length; ++i) {
 s = getlist[i];
 if(!s.from$html) slist.push(s);
@@ -163,7 +163,7 @@ w.$ss = slist;
 function showframes() {
 var i, s, m;
 var w = my$win(), d = my$doc();
-var slist = d.getElementsByTagName("iframe");
+var slist = gebtn(d, "iframe", true);
 for(i=0; i<slist.length; ++i) {
 s = slist[i];
 m = i + ": cx" + (s.eb$expf ? s.contentWindow.eb$ctx : "?") + " " + s.src;
@@ -500,7 +500,7 @@ neither are true then there's not much else we can do here.
 
 function getElementsByClassName(s) {
 if(!s) { // missing or null argument
-alert3("getElementsByTagName(type " + typeof s + ")");
+alert3("getElementsByClassName(type " + typeof s + ")");
 return new (my$win().Array);
 }
 s = s . replace (/^\s+/, '') . replace (/\s+$/, '');
@@ -1040,7 +1040,7 @@ function mutFixup(b, isattr, y, z) {
     // and the thing added or removed is a frame or an array or it has frames below.
     if(!isattr && (w2 = isRooted(b))) {
         const j = typeof y == "object" ? y : z;
-        if(Array.isArray(j) || j.is$frame || (j.childNodes&&j.getElementsByTagName("iframe").length))
+        if(Array.isArray(j) || j.is$frame || (j.childNodes&&gebtn(j, "iframe", true).length))
             frames$rebuild(w2);
     }
 
@@ -1176,7 +1176,7 @@ for(i=0; i<(l=w.frames$2.length); ++i) {
 f = w.frames$2[i];
 if(f.name) delete w.frames[f.name];
 }
-f2 = w.document.getElementsByTagName("iframe");
+f2 = gebtn(w.document, "iframe", true);
 l2 = f2.length;
 alert3("rebuild frames in context " + w.eb$ctx + " lengths " + l + " and " + l2);
 if(l2 < l) for(i=l2; i<l; ++i) delete w.frames[i];
