@@ -2638,14 +2638,16 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 // If pages increases hugely, we don't test here if the cache is too full.
 // That will have to wait until the next addition.
 		e->pages = newpages;
-// etag shouldn't change; don't mess with it.
-// If the server added an etag, that wasn't there before, we'll probably
-// continue to match on mod time, and if some day we don't, then we'll store the etag.
+		const char *oldtag = e->etag;
+		e->etag = etag;
 		newrec = record2string(e);
 		newlen = strlen(newrec);
-// it should be the same length, unless the size of the file changed.
-		if (newlen == e->textlength) {
+// it should be the same length, unless the size of the file changed
+// or the etag changed.
+		if (newlen == e->textlength && strlen(oldtag) == strlen(etag)) {
 // record is the same length, update it insitu
+			e->etag = oldtag;
+			strcpy((char*)e->etag, etag);
 			lseek(control_fh, e->offset, 0);
 			write(control_fh, newrec, newlen);
 			setControlTime();
