@@ -2638,7 +2638,7 @@ sdm("DOCUMENT_FRAGMENT_NODE", 11)
 //but offer the legacy document.all.tags method.
 sdm("all", {})
 document.all.tags = function(s) {
-return mw$.gebtn(document.body, s.toLowerCase());
+return mw$.gebtn(document.body, s.toLowerCase(), false, true);
 }
 
 /*********************************************************************

@@ -108,7 +108,7 @@ return r;
 
 function by_esn(n) {
 if(typeof n != "number") { alert("numeric argument expected"); return; }
-var a = gebtn(my$doc(), "*", true)
+var a = gebtn(my$doc(), "*", true, true)
 for(var i = 0; i < a.length; ++i)
 if(a[i].eb$seqno === n) return a[i];
 return null;
@@ -132,7 +132,7 @@ s = d.scripts[i];
 s.from$html = true;
 slist.push(s);
 }
-var getlist = gebtn(d, "script", true)
+var getlist = gebtn(d, "script", true, true)
 for(i=0; i<getlist.length; ++i) {
 s = getlist[i];
 if(!s.from$html) slist.push(s);
@@ -163,7 +163,7 @@ w.$ss = slist;
 function showframes() {
 var i, s, m;
 var w = my$win(), d = my$doc();
-var slist = gebtn(d, "iframe", true);
+var slist = gebtn(d, "iframe", true, true);
 for(i=0; i<slist.length; ++i) {
 s = slist[i];
 m = i + ": cx" + (s.eb$expf ? s.contentWindow.eb$ctx : "?") + " " + s.src;
@@ -400,11 +400,17 @@ alert3("getElementsByTagName(type " + typeof s + ")");
 return new (my$win().Array);
 }
 s = s.toLowerCase();
-return gebtn(this, s, true);
+return gebtn(this, s, true, false);
 }
 
-function gebtn(top, s, first) {
+function gebtn(top, s, first, all) {
 var a = new (my$win().Array);
+// The result should be all nodes, no texts, no comments.
+// And I don't believe we should descend into a document or document fragment,
+// although that is not clear. Of course the top node
+// can be document, we call document.getElementsByTagName all the time.
+// That said, sometimes I want all the nodes, for internal use.
+if(!first && !all && top.nodeType != 1) return a;
 if(!first && (s === '*' || (top.nodeName && top.nodeName.toLowerCase() === s)))
 a.push(top);
 if(top.childNodes) {
@@ -413,7 +419,7 @@ if(top.childNodes) {
 if(!top.is$frame)
 for(var i=0; i<top.childNodes.length; ++i) {
 var c = top.childNodes[i];
-a = a.concat(gebtn(c, s, false));
+a = a.concat(gebtn(c, s, false, all));
 }
 }
 return a;
@@ -429,6 +435,7 @@ return gebn(this, s, true);
 
 function gebn(top, s, first) {
 var a = new (my$win().Array);
+if(!first && top.nodeType != 1) return a;
 if(!first && (s === '*' || top.name === s))
 a.push(top);
 if(top.childNodes) {
@@ -511,6 +518,7 @@ return gebcn(this, sa, true);
 
 function gebcn(top, sa, first) {
 var a = new (my$win().Array);
+if(!first && top.nodeType != 1) return a;
 if(!first && top.cl$present) {
 var ok = true;
 for(var i=0; i<sa.length; ++i) {
@@ -767,7 +775,7 @@ if(typeof mask != "number")
 mask = 0xffffffff;
 // let's reuse some software
 if(typeof root == "object") {
-o.list = gebtn(root, "*");
+o.list = gebtn(root, "*", false, true)
 if(!root.nodeType)
 alert3("NodeIterator root object is not a node");
 } else {
@@ -814,7 +822,7 @@ o.callback = callback;
 if(typeof mask != "number")
 mask = 0xffffffff;
 if(typeof root == "object") {
-o.list = gebtn(root, "*");
+o.list = gebtn(root, "*", false, true)
 if(!root.nodeType)
 alert3("TreeWalker root object is not a node");
 o.currentNode = root;
@@ -1040,7 +1048,7 @@ function mutFixup(b, isattr, y, z) {
     // and the thing added or removed is a frame or an array or it has frames below.
     if(!isattr && (w2 = isRooted(b))) {
         const j = typeof y == "object" ? y : z;
-        if(Array.isArray(j) || j.is$frame || (j.childNodes&&gebtn(j, "iframe", true).length))
+        if(Array.isArray(j) || j.is$frame || (j.childNodes&&gebtn(j, "iframe", true, false).length))
             frames$rebuild(w2);
     }
 
@@ -1176,7 +1184,7 @@ for(i=0; i<(l=w.frames$2.length); ++i) {
 f = w.frames$2[i];
 if(f.name) delete w.frames[f.name];
 }
-f2 = gebtn(w.document, "iframe", true);
+f2 = gebtn(w.document, "iframe", true, false);
 l2 = f2.length;
 alert3("rebuild frames in context " + w.eb$ctx + " lengths " + l + " and " + l2);
 if(l2 < l) for(i=l2; i<l; ++i) delete w.frames[i];
