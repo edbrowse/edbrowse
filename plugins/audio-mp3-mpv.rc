@@ -7,6 +7,8 @@
 # no-video
 # really-quiet
 
+# realy-quiet is so quiet you don't even get the titles and artists from
+# streaming services, so you might prefer quiet.
 # Create input.conf, containing:
 
 # 1 seek 0 absolute-percent
@@ -33,7 +35,7 @@
 plugin {
 type = audio/mp3
 desc = audio file in mp3 format
-suffix = mp3
+suffix = mpv
 content = audio/mpeg
 program = mpv %i
 }
