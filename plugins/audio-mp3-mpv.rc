@@ -4,30 +4,32 @@
 # Create the directory $HOME/.config/mpv
 # Within that directory, create mpv.conf, containing:
 
-# no-video
-# really-quiet
+#	no-video
+#	quiet
 
-# realy-quiet is so quiet you don't even get the titles and artists from
-# streaming services, so you might prefer quiet.
+# You could use really-quiet instead, but then you don't get the titles
+# and artists from streaming services. So quiet is probably best.
+# Then really-quiet on the command line overrides.
+
 # Create input.conf, containing:
 
-# 1 seek 0 absolute-percent
-# 2 seek 10 absolute-percent
-# 3 seek 20 absolute-percent
-# 4 seek 30 absolute-percent
-# 5 seek 40 absolute-percent
-# 6 seek 50 absolute-percent
-# 7 seek 60 absolute-percent
-# 8 seek 70 absolute-percent
-# 9 seek 80 absolute-percent
-# 0 seek 90 absolute-percent
-# , seek -0.5 relative
-# . seek +0.5 relative
-# ; seek -2.0 relative
-# : seek +2.0 relative
-# b seek 0 absolute-percent
-# d playlist-prev
-# f playlist-next
+#	1 seek 0 absolute-percent
+#	2 seek 10 absolute-percent
+#	3 seek 20 absolute-percent
+#	4 seek 30 absolute-percent
+#	5 seek 40 absolute-percent
+#	6 seek 50 absolute-percent
+#	7 seek 60 absolute-percent
+#	8 seek 70 absolute-percent
+#	9 seek 80 absolute-percent
+#	0 seek 90 absolute-percent
+#	, seek -0.5 relative
+#	. seek +0.5 relative
+#	; seek -2.0 relative
+#	: seek +2.0 relative
+#	b seek 0 absolute-percent
+#	d playlist-prev
+#	f playlist-next
 
 # This is a faithful simulation,
 # thus you can press the same keys, whether you are running mpg123 or mpv.
@@ -37,5 +39,5 @@ type = audio/mp3
 desc = audio file in mp3 format
 suffix = mpv
 content = audio/mpeg
-program = mpv %i
+program = mpv --really-quiet %i
 }

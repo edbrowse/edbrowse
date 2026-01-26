@@ -6,6 +6,8 @@ Use strict js in shared.js and startwindow.js
 
 Append .html or .txt after running a rendering plugin.
 
+Put standard plugins in the plugins directory, for the user.
+
 Optimize the performance of the http cache.
 
 the a:text c:text and i:text commands.
