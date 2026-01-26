@@ -1088,38 +1088,45 @@ function mutFixup(b, isattr, y, z) {
             }
             return null;
         })();
-        if (record) {
-            const nl = o.notification$queue.length;
-            if(isattr) alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno} attribute ${y}`);
-            else alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno} children`);
-            o.notification$queue.push(record);
-            // This function returns undefined so no need to return null here
-            if (o.callback$queued) {
-                alert3("mutFixup: callback already queued");
-                return;
-            }
-            o.observed$window.queueMicrotask(
-                () => {
-                    o.callback$queued = false;
-                    const nl = o.notification$queue.length;
-                    if (!o.active) {
-                        alert3("mutFixup: observer disconnected prior to callback");
-                        if (nl) alert3(`mutFixup: clearing ${nl} unprocessed records`);
-                        o.notification$queue.length = 0;
-                        return; // can just return undefined here
-                    }
-                    if (!nl) {
-                        alert3("mutFixup: callback queued but records cleared, not calling");
-                        return;
-                    }
-                    alert3(`mutFixup: callback on ${nl} records`);
-                        // Assume callback wants the observer as this for now
-                    o.callback.call(o, o.takeRecords(), o);
-                }
-            );
-            o.callback$queued = true;
-            alert3("mutFixup: callback queued");
+        if (!record) continue;
+        const nl = o.notification$queue.length;
+        if(isattr) alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno} attribute ${y}`);
+        else alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno} children`);
+        o.notification$queue.push(record);
+        if (o.callback$queued) {
+            alert3("mutFixup: callback already queued");
+            continue;
         }
+        if(!o.async) {
+// this is not the default case. Only for our internal use.
+// We might turn off async to implement live arrays,
+// to act immediatley when the subtree changes.
+            alert3(`mutFixup: synchronously processing ${nl+1} records`);
+            o.callback.call(o, o.takeRecords(), o);
+            continue;
+        }
+// the default behavior, call microtask and do it asynchronously
+        o.observed$window.queueMicrotask(
+            () => {
+                o.callback$queued = false;
+                const nl = o.notification$queue.length;
+                if (!o.active) {
+                    alert3("mutFixup: observer disconnected prior to callback");
+                    if (nl) alert3(`mutFixup: clearing ${nl} unprocessed records`);
+                    o.notification$queue.length = 0;
+                    return; // can just return undefined here
+                }
+                if (!nl) {
+                    alert3("mutFixup: callback queued but records cleared, not calling");
+                    return;
+                }
+                alert3(`mutFixup: callback on ${nl} records`);
+// Assume callback wants the observer as this for now
+                o.callback.call(o, o.takeRecords(), o);
+            }
+        );
+        o.callback$queued = true;
+        alert3("mutFixup: callback queued");
     }
 }
 

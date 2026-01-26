@@ -2838,6 +2838,7 @@ swm("MutationObserver", function(f) {
     this.active = false;
     this.targets = new Map;
     this.subtree = false;
+    this.async = true; // run as microtask by default
     this.notification$queue = [];
 })
 spdc("MutationObserver", null)
