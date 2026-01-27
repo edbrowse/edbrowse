@@ -469,23 +469,15 @@ function getElementById(s) {
     }
     // look for nonsense to build up the hash
     alert3("getElementById triggering id hash build");
-    gebi(this, "*@%impossible`[]")
+    gebi(this, this, "*@%impossible`[]")
     let ref = gebi_hash.get(s);
     let e;
     if(ref) e = ref.deref();
     return e ? e : null;
 }
 
-function gebi(top, s) {
+function gebi(d, top, s) {
     if (top.id) {
-/*
-the function isn't bound to the document object so we need to get
-it. I'm not sure if a child document should be able to have an id
-but handle it if so by assuming that either we have an ownerDocument
-property or that we're being called with a document object. If
-neither are true then there's not much else we can do here.
-*/
-        const d = (top.ownerDocument ? top.ownerDocument : top);
         const gebi_hash = d.id$hash;
         const gebi_registry = d.id$registry;
         gebi_hash.set(top.id, new (my$win()).WeakRef(top));
@@ -498,7 +490,7 @@ neither are true then there's not much else we can do here.
         if (top.is$frame) return null;
         for (let i in top.childNodes) {
             let c = top.childNodes[i];
-            let res = gebi(c, s);
+            let res = gebi(d, c, s);
             if (res) return res;
         }
     }
