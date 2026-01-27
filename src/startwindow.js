@@ -1806,8 +1806,8 @@ var c = new TextNode(t);
  * which has to put stuff under the text node, so against this
  * unlikely occurence, I have to create the array.
  * I have to treat a text node like an html node. */
-c.childNodes = [];
-c.parentNode = null;
+    Object.defineProperty(c, "childNodes", {value:[],writable:true,configurable:true});
+    Object.defineProperty(c, "parentNode", {value:null,writable:true,configurable:true});
 if(this.eb$xml) c.eb$xml = true;
 eb$logElement(c, "text");
 return c;
@@ -1828,8 +1828,8 @@ XMLCdata.prototype.nodeType = 4;
 sdm2("createComment", function(t) {
 if(t == undefined) t = "";
 var c = new Comment(t);
-c.childNodes = [];
-c.parentNode = null;
+    Object.defineProperty(c, "childNodes", {value:[],writable:true,configurable:true});
+    Object.defineProperty(c, "parentNode", {value:null,writable:true,configurable:true});
 eb$logElement(c, "comment");
 return c;
 })
@@ -2468,8 +2468,8 @@ var x = cel$registry[s];
 if(x) { // here we go
 c = new x.construct;
 if(c instanceof HTMLElement) {
-c.childNodes = [];
-c.parentNode = null;
+    Object.defineProperty(c, "childNodes", {value:[],writable:true,configurable:true});
+    Object.defineProperty(c, "parentNode", {value:null,writable:true,configurable:true});
 c.nodeName = c.tagName = this.eb$xml ? s : s.toUpperCase();
 if(this.eb$xml) c.eb$xml = true;
 }
@@ -2531,8 +2531,8 @@ case "iframe": c = new HTMLIFrameElement; break;
 case "select": c = new HTMLSelectElement; break;
 case "option":
 c = new Option;
-c.childNodes = [];
-c.parentNode = null;
+    Object.defineProperty(c, "childNodes", {value:[],writable:true,configurable:true});
+    Object.defineProperty(c, "parentNode", {value:null,writable:true,configurable:true});
 if(this.eb$xml) c.eb$xml = true;
 c.selected = true; // jquery says we should do this
 // we don't log options because rebuildSelectors() checks
@@ -2550,8 +2550,8 @@ unknown = true;
 c = new HTMLUnknownElement;
 }
 
-c.childNodes = [];
-c.parentNode = null;
+    Object.defineProperty(c, "childNodes", {value:[],writable:true,configurable:true});
+    Object.defineProperty(c, "parentNode", {value:null,writable:true,configurable:true});
 if(this.eb$xml && !(c instanceof HTMLFrameElement) && !(c instanceof HTMLIFrameElement)) c.eb$xml = true;
 // Split on : if this comes from a name space
 var colon = t.split(':');

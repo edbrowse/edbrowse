@@ -544,7 +544,7 @@ static void set_property_string(JSContext *cx, JSValueConst parent, const char *
 		JS_DefinePropertyGetSet(cx, parent, a,
 		JS_NewCFunction(cx, getter, "get", 0),
 		JS_NewCFunction(cx, setter, "set", 0),
-		JS_PROP_ENUMERABLE);
+		0);
 		JS_FreeAtom(cx, a);
 // so it can be not enumerable
 		JS_DefinePropertyValueStr(cx, parent, altname, JS_UNDEFINED, JS_PROP_WRITABLE);
@@ -638,6 +638,12 @@ static void set_property_object(JSContext *cx, JSValueConst parent, const char *
 	JS_SetPropertyStr(cx, parent, name, JS_DupValue(cx, child));
 }
 
+static void define_hidden_property_object(JSContext *cx, JSValueConst parent, const char *name, JSValueConst child)
+{
+	JS_DefinePropertyValueStr(cx, parent, name, JS_DupValue(cx, child),
+	JS_PROP_CONFIGURABLE|JS_PROP_WRITABLE);
+}
+
 void set_property_object_t(const Tag *t, const char *name, const Tag *t2)
 {
 	if (!allowJS || !t->jslink || !t2->jslink)
@@ -687,6 +693,15 @@ static JSValue instantiate_array(JSContext *cx, JSValueConst parent, const char 
 	JSValue a = JS_NewArray(cx);
 	grab(a);
 	set_property_object(cx, parent, name, a);
+	return a;
+}
+
+static JSValue instantiate_hidden_array(JSContext *cx, JSValueConst parent, const char *name)
+{
+	debugPrint(5, "new Array");
+	JSValue a = JS_NewArray(cx);
+	grab(a);
+	define_hidden_property_object(cx, parent, name, a);
 	return a;
 }
 
@@ -4023,7 +4038,9 @@ idx = get_arraylength(cx, cn);
 
 connectTagObject(t, oo);
 	JS_Release(cx, cn);
-	cn = instantiate_array(cx, oo, "childNodes");
+	cn = instantiate_hidden_array(cx, oo, "childNodes");
+	JS_DefinePropertyValueStr(cx, oo, "parentNode", JS_NULL,
+	JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE);
 	JS_Release(cx, cn);
 	JS_Release(cx, oa);
 }
@@ -4034,7 +4051,9 @@ void establish_js_textnode(Tag *t, const char *fpn)
 	JSValue cn;
 	 JSValue tagobj = instantiate(cx, *((JSValue*)cf->winobj), fpn, "TextNode");
 	if(cf->xmlMode) set_property_bool(cx, tagobj, "eb$xml", true);
-	cn = instantiate_array(cx, tagobj, "childNodes");
+	cn = instantiate_hidden_array(cx, tagobj, "childNodes");
+	JS_DefinePropertyValueStr(cx, tagobj, "parentNode", JS_NULL,
+	JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE);
 	connectTagObject(t, tagobj);
 	JS_Release(cx, cn);
 }
@@ -4091,7 +4110,7 @@ void domLink(Tag *t, const char *classname,	/* instantiate this class */
 	const char *membername = 0;	/* usually symname */
 	const char *tcn = t->jclass;
 	const char *stylestring = attribVal(t, "style");
-	JSValue ca; // child array
+	JSValue cn; // child nodes
 	char classtweak[MAXTAGNAME + 4];
 
 	debugPrint(5, "domLink %s.%d name %s",
@@ -4170,13 +4189,14 @@ That's how it was for a long time, but I think we only do this on form.
 			membername = fakePropName(), fakeName = true;
 
 		if (isradio) {	// the first radio button
-			io = instantiate_array(cx,
-			(fakeName ? *((JSValue*)cf->winobj) : owner), membername);
+			if(fakeName)
+				io = instantiate_hidden_array(cx, *((JSValue*)cf->winobj), membername);
+			else
+				io = instantiate_array(cx, owner, membername);
 			if(JS_IsUndefined(io))
 				return;
 			set_property_string(cx, io, "type", "radio");
 		} else {
-		JSValue ca;	// child array
 /* A standard input element, just create it. */
 			io = instantiate(cx,
 (fakeName ? *((JSValue*)cf->winobj) : owner), membername, classtweak);
@@ -4184,8 +4204,10 @@ That's how it was for a long time, but I think we only do this on form.
 				return;
 			if(cf->xmlMode) set_property_bool(cx, io, "eb$xml", true);
 // Not an array; needs the childNodes array beneath it for the children.
-			ca = instantiate_array(cx, io, "childNodes");
-			JS_Release(cx, ca);
+			cn = instantiate_hidden_array(cx, io, "childNodes");
+			JS_DefinePropertyValueStr(cx, io, "parentNode", JS_NULL,
+			JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE);
+			JS_Release(cx, cn);
 		}
 
 /* If this node contains style='' of one or more name-value pairs,
@@ -4221,21 +4243,20 @@ Don't do any of this if the tag is itself <style>. */
 				set_property_object(cx, alist, idname, io);
 #endif
 			JS_Release(cx, alist);
-		}		/* list indicated */
+		}		// list indicated
 	}
 
 	if (isradio) {
 // drop down to the element within the radio array, and return that element.
 // io becomes the object associated with this radio button.
 // At present, io is an array.
-// Borrow ca, so we can free things.
 		length = get_arraylength(cx, io);
-		ca = instantiate_array_element(cx, io, length, "HTMLInputElement");
-		if(cf->xmlMode) set_property_bool(cx, ca, "eb$xml", true);
+		cn = instantiate_array_element(cx, io, length, "HTMLInputElement");
+		if(cf->xmlMode) set_property_bool(cx, cn, "eb$xml", true);
 		JS_Release(cx, io);
-		if(JS_IsUndefined(ca))
+		if(JS_IsUndefined(cn))
 			return;
-		io = ca;
+		io = cn; // now io is the new radio button at the end of the array
 	}
 
 	if(symname) set_property_string(cx, io, "name", symname);
