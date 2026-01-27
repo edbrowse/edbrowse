@@ -4461,7 +4461,7 @@ establish_js_option(t, sel, currentOG);
 	if (!cl)
 		cl = emptyString;
 	set_property_string_t(t, "class", cl);
-	set_property_string_t(t, "last$class", cl);
+	define_hidden_property_string_t(t, "last$class", cl);
 
 	if (t->checked && !sel->multiple)
 		set_property_number_t(sel, "selectedIndex", t->lic);
@@ -4517,7 +4517,7 @@ Needless to say that's not good!
 			const char *w = t->textval;
 			set_property_string_t(t, "data", w);
 			set_property_string_t(t, "class", t->jclass);
-			set_property_string_t(t, "last$class", t->jclass);
+			define_hidden_property_string_t(t, "last$class", t->jclass);
 			if(t->deleted && t->parent && t->parent->action == TAGACT_SCRIPT)
 				set_property_bool_t(t, "eb$nomove", true);
 		}

@@ -571,6 +571,24 @@ void set_property_string_doc(const Frame *f, const char *name, const char *v)
 	set_property_string(f->cx, *((JSValue*)f->docobj), name, v);
 }
 
+// define property as a string but make it not enumerable
+static void define_hidden_property_string(JSContext *cx, JSValueConst parent, const char *name,
+			    const char *value)
+{
+	if (!value)
+		value = emptyString;
+	JS_DefinePropertyValueStr(cx, parent, name,
+	JS_NewAtomString(cx, value),
+	JS_PROP_WRITABLE|JS_PROP_CONFIGURABLE);
+}
+
+void define_hidden_property_string_t(const Tag *t, const char *name, const char * v)
+{
+	if(!t->jslink || !allowJS)
+		return;
+	define_hidden_property_string(t->f0->cx, *((JSValue*)t->jv), name, v);
+}
+
 static void set_property_bool(JSContext *cx, JSValueConst parent, const char *name, bool n)
 {
 	JS_SetPropertyStr(cx, parent, name, JS_NewBool(cx, n));
@@ -4183,7 +4201,7 @@ Don't do any of this if the tag is itself <style>. */
 		if (!tcn)
 			tcn = emptyString;
 		set_property_string(cx, io, "class", tcn);
-		set_property_string(cx, io, "last$class", tcn);
+		define_hidden_property_string(cx, io, "last$class", tcn);
 
 // only anchors with href go into links[]
 		if (list && stringEqual(list, "links") &&
@@ -4223,7 +4241,7 @@ Don't do any of this if the tag is itself <style>. */
 	if(symname) set_property_string(cx, io, "name", symname);
 	if(idname) {
 		set_property_string(cx, io, "id", idname);
-		set_property_string(cx, io, "last$id", idname);
+		define_hidden_property_string(cx, io, "last$id", idname);
 	}
 
 	if (t->action == TAGACT_INPUT) {

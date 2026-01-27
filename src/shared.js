@@ -1826,8 +1826,10 @@ if(spilldownResolveURL(this, name)) delete this[name];
 if(spilldownBool(this, name)) delete this[name];
 // acid test 48 removes class before we can check its visibility.
 // class is undefined and last$class is undefined, so getComputedStyle is never called.
-if(name === "class" && !this.last$class) this.last$class = "@@";
-if(name === "id" && !this.last$id) this.last$id = "@@";
+if(name === "class" && !this.last$class)
+Object.defineProperty(this, "last$class", {value:"@@",writable:true})
+if(name === "id" && !this.last$id)
+Object.defineProperty(this, "last$id", {value:"@@",writable:true})
 var a;
 if(name === "length") {
 a = null

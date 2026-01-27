@@ -511,6 +511,7 @@ char * get_property_string_t(const Tag *t, const char *name);
 void set_property_bool_t(const Tag *t, const char *name, bool v);
 void set_property_number_t(const Tag *t, const char *name, int v);
 void set_property_string_t(const Tag *t, const char *name, const char * v);
+void define_hidden_property_string_t(const Tag *t, const char *name, const char * v);
 void set_property_string_win(const Frame *f, const char *name, const char *v);
 void set_property_object_doc(const Frame *f, const char *name, const Tag *t2);
 void set_property_string_doc(const Frame *f, const char *name, const char *v);

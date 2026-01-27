@@ -614,7 +614,8 @@ empty:
 
 	char *newbuf;
 	int l, colno = 0, space = 0;
-	if (ismail && flow && !longword) flowed = true;
+	if (ismail && flow && !longword && stringEqual(ct, "text/plain"))
+		flowed = true;
 	else if (longline) ce = "quoted-printable";
 	newbuf = initString(&l);
 	v = buf + buflen;
