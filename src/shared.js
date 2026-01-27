@@ -1929,8 +1929,9 @@ kids = node1.childNodes;
 // We should always be cloning a node.
 if(debug) alert3("clone " + node1.nodeName + " {");
 if(debug) {
-if(kids) alert3("kids " + kids.length);
-else alert3("no kids, type " + typeof node1.childNodes);
+if(kids) {
+if(kids.length) alert3("kids " + kids.length);
+} else alert3("no childNodes, type " + typeof node1.childNodes);
 }
 
 if(node1.nodeName == "#text")
@@ -1941,17 +1942,10 @@ else if(node1.nodeName == "#document-fragment")
 node2 = d.createDocumentFragment();
 else if(node1.dom$class == "CSSStyleDeclaration") {
 if(debug) alert3("skipping style object");
-return;
+return null;
 } else
 node2 = d.createElement(node1.nodeName);
 if(node1 == w0.cloneRoot1) w0.cloneRoot2 = node2;
-
-if (deep && kids) {
-for(i = 0; i < kids.length; ++i) {
-var current_item = kids[i];
-node2.appendChild(clone1(current_item,deep, into));
-}
-}
 
 var lostElements = false;
 
@@ -2083,6 +2077,8 @@ if(item == "value" &&
 continue;
 if((item == "nodeName" || item == "tagName") && node1.nodeType == 1)
 continue;
+// these are spilldown from the attributes, and will be copied over as attributes
+if(item == "class" || item == "id") continue;
 if(debug) {
 var showstring = node1[item];
 if(showstring.length > 140) showstring = "long";
@@ -2102,6 +2098,8 @@ continue;
 }
 
 if (typeof node1[item] === 'boolean') {
+// these are spilldown from the attributes, and will be copied over as attributes
+if(item == "aria-hidden") continue;
 if(debug) alert3("copy boolean " + item + " = " + node1[item]);
 node2[item] = node1[item];
 continue;
@@ -2150,6 +2148,13 @@ e2[i] = node2[item];
 if(debug) alert3("patching element " + i + " through to " + item);
 break;
 }
+}
+}
+
+if (deep && kids) {
+for(i = 0; i < kids.length; ++i) {
+var current_item = kids[i];
+node2.appendChild(clone1(current_item,deep, into));
 }
 }
 
