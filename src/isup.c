@@ -2644,7 +2644,11 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 		newlen = strlen(newrec);
 // it should be the same length, unless the size of the file changed
 // or the etag changed.
-		if (newlen == e->textlength && strlen(oldtag) == strlen(etag)) {
+// Note that we could have lost (or I guess gained) an etag due to server
+// config changes.
+		if (
+                    newlen == e->textlength && etag && oldtag
+                    && strlen(oldtag) == strlen(etag)) {
 // record is the same length, update it insitu
 			e->etag = oldtag;
 			strcpy((char*)e->etag, etag);
