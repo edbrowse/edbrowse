@@ -3355,6 +3355,8 @@ cdt doesn't have or need an object; it's a place holder.
 			jsRunScriptWin(jssrc, "frame.src", 1);
 		runScriptsPending(true);
 		rebuildSelectors();
+	} else {
+		xml_off();
 	}
 	cnzFree(jssrc);
 	cf->browseMode = true;
@@ -3462,6 +3464,8 @@ bool reexpandFrame(void)
 		run_function_bool_win(cf, "eb$qs$start");
 		runScriptsPending(true);
 		rebuildSelectors();
+	} else {
+		xml_off();
 	}
 	cf->browseMode = true;
 	addToFilename(".browse");

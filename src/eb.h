@@ -740,9 +740,14 @@ enum {
 };
 extern const char *const inp_others[];
 
+// context variables when parsing and decorating html
+struct parseContext {
+	bool malformed; // tree is somehow malformed
+	void *callback; // actually nodeFunction but that typedef has to appear below
+};
+
 /* For traversing a tree of html nodes, this is the callback function */
-typedef void (*nodeFunction) (struct htmlTag * node, bool opentag);
-extern nodeFunction traverse_callback;
+typedef void (*nodeFunction) (struct htmlTag * node, bool opentag, struct parseContext *pc);
 
 /* Return codes for base64Decode() */
 #define GOOD_BASE64_DECODE 0

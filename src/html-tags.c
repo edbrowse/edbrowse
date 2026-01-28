@@ -18,7 +18,28 @@ which we must then import into the edbrowse tree of tags.
 // This makes a lot of output; maybe it should go to a file like debug css does
 bool debugScanner;
 bool browseMail;
-static bool isXML; // parse as xml
+
+/*********************************************************************
+isXML is a static variable that means these tags are parsed as xml, not html.
+It affects a dozen different functions:
+htmlScanner, pullAnd, makeTag,
+scannerError1, scannerError2,
+decorate, jsNode, pushAttributes;
+thus a variable outside all those functions is more convenient.
+However, it's risky in a system that is suppose to be reentrant.
+html can run a script, which invokes innerHTML, thus html should be reentrant.
+Furthermore, said scrip could call DOMParser, which parses xml.
+Thus html can invoke xml.
+However, xml cannot invoke html.
+xml does not run scripts.
+So it is fair to turn isXML on when parsing xml, then turn it off
+when finished, and if we return to parsing html, that's fine.
+htmlScanner turns it on, if the first 9 characters of the text are a magic code.
+decorate turns it off when finished.
+If we don't decorate, e.g. because there is no javascript,
+we need to call xml_off to turn it off.
+*********************************************************************/
+static bool isXML;
 
 static const char htmltag[] = "html";
 static const char innerhtmltag[] = "innerhtml";
@@ -762,7 +783,6 @@ void htmlScanner(const char *htmltext, Tag *above, bool isgen)
 	start_idx = cw->numTags;
 	overnode = above;
 	htmlGenerated = isgen;
-	isXML = false;
 // magic code to say this is xml
 	if(!strncmp(htmltext, "`~*xml}@;", 9)) isXML = true, htmltext += 9;
 	if(isXML) scannerInfo1("xml parsing", 0), cf->xmlMode = true;
@@ -3669,45 +3689,43 @@ static unsigned andLookup(char *entity, char *v)
 }
 
 // Here is a general routine to traverse the tree, with a callback function.
-nodeFunction traverse_callback;
-static bool treeOverflow;
-
-static void traverseNode(Tag *node)
+static void traverseNode(Tag *node, struct parseContext *pc)
 {
+	const nodeFunction f = pc->callback;
 	Tag *child;
 	if (node->visited) {
-		treeOverflow = true;
+		pc->malformed = true;
 		debugPrint(4, "node revisit %s %d", node->info->name, node->seqno);
 		return;
 	}
 	node->visited = true;
-	(*traverse_callback) (node, true);
+	(*f) (node, true, pc);
 	for (child = node->firstchild; child; child = child->sibling)
-		traverseNode(child);
-	(*traverse_callback) (node, false);
+		traverseNode(child, pc);
+	(*f) (node, false, pc);
 }
 
-void traverseAll(void)
+void traverseAll(struct parseContext *pc)
 {
 	Tag *t;
 	int i, numtags;
-	treeOverflow = false;
 // when template turns into fragment, an additional tag is created,
-// and we don't want to travers that new tag. Leads to a malformed tree.
+// and we don't want to traverse that new tag. Leads to a malformed tree.
 // So remember the end.
 	numtags = cw->numTags;
+	pc->malformed = false;
 	for (i = 0; i < numtags; ++i)
 		tagList[i]->visited = false;
 	for (i = 0; i < numtags; ++i) {
 		t = tagList[i];
 		if (!t->parent && !t->dead) {
 			debugPrint(6, "traverse start at %s %d", t->info->name, t->seqno);
-			traverseNode(t);
+			traverseNode(t, pc);
 		}
 	}
 	if(cw->numTags > numtags)
 		debugPrint(3, "traversal added %d nodes", cw->numTags - numtags);
-	if (treeOverflow)
+	if (pc->malformed)
 		debugPrint(3, "malformed tree!");
 }
 
@@ -3836,8 +3854,8 @@ static bool tagBelow(Tag *t, int action)
 }
 
 // callback functions in this file
-static void prerenderNode(Tag *node, bool opentag);
-static void jsNode(Tag *node, bool opentag);
+static void prerenderNode(Tag *node, bool opentag, struct parseContext *pc);
+static void jsNode(Tag *node, bool opentag, struct parseContext *pc);
 static void pushAttributes(const Tag *t);
 static int nopt;		/* number of options */
 // None of these tags nest, so it is reasonable to talk about
@@ -4001,7 +4019,7 @@ static void fillEmptySelect(Tag *sel)
 	sel->lic = 1; // now 1 item selected
 }
 
-static void prerenderNode(Tag *t, bool opentag)
+static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
 {
 	int itype;		/* input type */
 	int j;
@@ -4357,6 +4375,8 @@ Are there other situations where we need to supress meta processing?
 
 void prerender(void)
 {
+	struct parseContext pc;
+
 // make sure table has tbody
 	insert_tbody();
 
@@ -4366,8 +4386,8 @@ currentAudio = NULL;
 	currentStyle = NULL;
 	optg = NULL;
 	nzFree0(radioCheck);
-	traverse_callback = prerenderNode;
-	traverseAll();
+	pc.callback = prerenderNode;
+	traverseAll(&pc);
 	currentForm = NULL;
 	nzFree0(radioCheck);
 }
@@ -4474,7 +4494,7 @@ establish_js_option(t, sel, currentOG);
 
 Tag *innerParent;
 
-static void jsNode(Tag *t, bool opentag)
+static void jsNode(Tag *t, bool opentag, struct parseContext *pc)
 {
 	const struct tagInfo *ti = t->info;
 	int action = t->action;
@@ -4836,13 +4856,20 @@ static void pushAttributes(const Tag *t)
 /* decorate the tree of nodes with js objects */
 void decorate(void)
 {
+	struct parseContext pc;
 	currentOG = 0;
 	if(isXML) {
 		set_property_bool_doc(cf, "eb$xml", true);
 		set_property_string_doc(cf, "dom$class", "XMLDocument");
 	}
-	traverse_callback = jsNode;
-	traverseAll();
+	pc.callback = jsNode;
+	traverseAll(&pc);
+	isXML = false;
+}
+
+void xml_off(void)
+{
+	isXML = false;
 }
 
 /*********************************************************************

@@ -206,7 +206,7 @@ bool attribPresent(const Tag *t, const char *name);
 Tag *newTag(const Frame *f, const char *tagname);
 void freeTags(struct ebWindow *w);
 void initTagArray(void);
-void traverseAll(void);
+void traverseAll(struct parseContext *pc);
 Tag *findOpenTag(Tag *t, int action);
 Tag *findOpenSection(Tag *t);
 Tag *findOpenList(Tag *t);
@@ -215,6 +215,7 @@ void htmlInputHelper(Tag *t);
 void prerender(void);
 const char *fakePropName(void);
 void decorate(void);
+void xml_off(void);
 void rowspan(void);
 
 // sourcefile=http.c

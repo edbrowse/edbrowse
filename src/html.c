@@ -1408,6 +1408,8 @@ char *htmlParse(char *buf, int remote)
 		run_event_doc(cf, "document", "onfocus");
 		runScriptsPending(false);
 		rebuildSelectors();
+	} else {
+		xml_off();
 	}
 past_html_events:
 	debugPrint(3, "end parse html from browse");
@@ -4730,7 +4732,7 @@ static int ahref_under(const Tag *t)
 
 static Tag *deltag;
 
-static void renderNode(Tag *t, bool opentag)
+static void renderNode(Tag *t, bool opentag, struct parseContext *pc)
 {
 	int tagno = t->seqno;
 	char hnum[40];		// hidden number
@@ -5648,8 +5650,9 @@ char *render(void)
 	invisible = false;
 	inv2 = NULL;
 	currentForm = currentA = NULL;
-	traverse_callback = renderNode;
-	traverseAll();
+	struct parseContext pc;
+	pc.callback = renderNode;
+	traverseAll(&pc);
 	cf = save_cf;
 	return ns;
 }
