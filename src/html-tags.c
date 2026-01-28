@@ -1403,6 +1403,11 @@ static void findAttributes(const char *start, const char *end)
 		t->disabled = true;
 	if (stringInListCI(t->attributes, "hidden") >= 0)
 		t->hidden = true;
+// async and defer are the same as far as edbrowse is concerned.
+	if (stringInListCI(t->attributes, "async") >= 0)
+		t->async = true;
+	if (stringInListCI(t->attributes, "defer") >= 0)
+		t->async = true;
 	if (stringInListCI(t->attributes, "multiple") >= 0)
 		t->multiple = true;
 	if (stringInListCI(t->attributes, "required") >= 0)

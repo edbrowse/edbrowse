@@ -867,6 +867,15 @@ void loadScriptData(Tag *t)
 // don't background fetch for xml, because the scripts never run
 // and we can't guarantee to complete the fetch.
 			if(cf->xmlMode) jsbg = false;
+
+// async and defer are the same, as far is edbrowse is concerned.
+// If neither is set we need the script right now.
+// However, we don't execute it now, and we should.
+// We need to implement that some day - but it scares me.
+			if(!t->async)
+				t->async = (get_property_bool_t(t, "async") || get_property_bool_t(t, "defer"));
+			if(!t->async) jsbg = false;
+
 			if(jsbg) {
 // We can't background fetch if this is under <template>
 				const Tag *u;
@@ -1160,10 +1169,6 @@ passes:
 			continue;
 		}
 		if(!isRooted(t)) continue;
-// defer is equivalent to async in edbrowse
-// these are not meaningful on inline stcipts
-		if(t->href)
-			t->async = (get_property_bool_t(t, "async") || get_property_bool_t(t, "defer"));
 		if(t->async != async) continue;
 		cf = t->f0;
 		if (!is_subframe(cf, save_cf))
