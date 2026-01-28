@@ -58,6 +58,8 @@ EBOBJS = main.o buffers.o sendmail.o fetchmail.o \
 	html.o html-tags.o format.o stringfile.o ebrc.o \
 	msg-strings.o http.o isup.o css.o startwindow.o dbops.o dbodbc.o \
 	jseng-quick.o
+PLUGIN_SCRIPTS := $(wildcard ../plugins/scripts/edbrowse-plugin-*)
+PLUGIN_CONFIG := $(wildcard ../plugins/config/*.rc)
 
 #  Header file dependencies.
 $(EBOBJS) : eb.h ebprot.h messages.h
@@ -79,11 +81,17 @@ edbrowse: $(EBOBJS)
 
 
 #  You probably need to be root to do this.
-install:
+install: install-edbrowse install-doc install-plugins
+
+install-edbrowse: edbrowse
 	$(INSTALL) -m755 edbrowse $(INSTALLBASE)/bin
-	$(INSTALL) -m644 ../doc/usersguide.html $(INSTALLBASE)/share/doc/edbrowse
-	$(INSTALL) -m755 -t $(INSTALLBASE)/bin ../plugins/scripts/edbrowse-plugin-*
-	$(INSTALL) -m644 -t $(INSTALLBASE)/share/edbrowse/plugins ../plugins/config/*.rc
+
+install-doc: ../doc/usersguide.html
+	$(INSTALL) -m644 $< $(INSTALLBASE)/share/doc/edbrowse
+
+install-plugins: $(PLUGIN_SCRIPTS) $(PLUGIN_CONFIG)
+	$(INSTALL) -m755 -t $(INSTALLBASE)/bin $(PLUGIN_SCRIPTS)
+	$(INSTALL) -m644 -t $(INSTALLBASE)/share/edbrowse/plugins $(PLUGIN_CONFIG)
 
 # native Informix library for database access.
 # Others could be built, e.g. Oracle, but odbc is the most general.
