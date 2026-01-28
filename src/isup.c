@@ -2609,7 +2609,7 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 
 	if (!setLock())
 		return;
-
+        if (!etag) etag = emptyString;
 /* find the url */
 	e = entries;
 	l = strlen(url);
@@ -2646,9 +2646,7 @@ void storeCache(const char *url, const char *etag, time_t modtime,
 // or the etag changed.
 // Note that we could have lost (or I guess gained) an etag due to server
 // config changes.
-		if (
-                    newlen == e->textlength && etag && oldtag
-                    && strlen(oldtag) == strlen(etag)) {
+		if (newlen == e->textlength && strlen(oldtag) == strlen(etag)) {
 // record is the same length, update it insitu
 			e->etag = oldtag;
 			strcpy((char*)e->etag, etag);
