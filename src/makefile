@@ -7,8 +7,10 @@ QUICKJS_INCLUDE ?= $(PREFIX)/include
 QUICKJS_LIB ?= $(PREFIX)/lib
 QUICKJS_LIB_NAME ?= qjs
 CFLAGS +=	-Wall -D_FILE_OFFSET_BITS=64
-INSTALLBASE=$(shell realpath "$(DESTDIR)/$(PREFIX)")
-
+INSTALLBASE ?= $(shell realpath "$(DESTDIR)/$(PREFIX)")
+DOCDIR ?= $(INSTALLBASE)/share/doc/edbrowse
+BINDIR ?= $(INSTALLBASE)/bin
+PLUGINSDIR ?= $(INSTALLBASE)/share/edbrowse/plugins
 # determine includes and linker flags
 DEPENDENCIES = libcurl:curl odbc libpcre2-8:pcre2-8 readline openssl
 INCLUDES = $(shell ./make-helper.sh pkg-config-includes $(DEPENDENCIES))
@@ -60,7 +62,7 @@ EBOBJS = main.o buffers.o sendmail.o fetchmail.o \
 	jseng-quick.o
 PLUGIN_SCRIPTS := $(wildcard ../plugins/scripts/edbrowse-plugin-*)
 PLUGIN_CONFIG := $(wildcard ../plugins/config/*.rc)
-
+DOCS := $(wildcard ../doc/*.html)
 #  Header file dependencies.
 $(EBOBJS) : eb.h ebprot.h messages.h
 dbodbc.o dbinfx.o dbops.o : dbapi.h
@@ -81,17 +83,17 @@ edbrowse: $(EBOBJS)
 
 
 #  You probably need to be root to do this.
-install: install-edbrowse install-doc install-plugins
+install: install-edbrowse install-docs install-plugins
 
 install-edbrowse: edbrowse
-	$(INSTALL) -m755 edbrowse $(INSTALLBASE)/bin
+	$(INSTALL) -m755 -t $(BINDIR) edbrowse
 
-install-doc: ../doc/usersguide.html
-	$(INSTALL) -m644 $< $(INSTALLBASE)/share/doc/edbrowse
+install-docs: $(DOCS)
+	$(INSTALL) -m644 -t $(DOCDIR) $^
 
 install-plugins: $(PLUGIN_SCRIPTS) $(PLUGIN_CONFIG)
-	$(INSTALL) -m755 -t $(INSTALLBASE)/bin $(PLUGIN_SCRIPTS)
-	$(INSTALL) -m644 -t $(INSTALLBASE)/share/edbrowse/plugins $(PLUGIN_CONFIG)
+	$(INSTALL) -m755 -t $(BINDIR) $(PLUGIN_SCRIPTS)
+	$(INSTALL) -m644 -t $(PLUGINSDIR) $(PLUGIN_CONFIG)
 
 # native Informix library for database access.
 # Others could be built, e.g. Oracle, but odbc is the most general.
