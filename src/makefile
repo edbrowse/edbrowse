@@ -82,8 +82,8 @@ edbrowse: $(EBOBJS)
 install:
 	$(INSTALL) -m755 edbrowse $(INSTALLBASE)/bin
 	$(INSTALL) -m644 ../doc/usersguide.html $(INSTALLBASE)/share/doc/edbrowse
-	$(INSTALL) -m755 ../plugins/edbrowse-plugin-* $(INSTALLBASE)/bin
-	$(INSTALL) -m644 -t $(INSTALLBASE)/share/edbrowse/plugins ../plugins/*.rc
+	$(INSTALL) -m755 -t $(INSTALLBASE)/bin ../plugins/scripts/edbrowse-plugin-*
+	$(INSTALL) -m644 -t $(INSTALLBASE)/share/edbrowse/plugins ../plugins/config/*.rc
 
 # native Informix library for database access.
 # Others could be built, e.g. Oracle, but odbc is the most general.
