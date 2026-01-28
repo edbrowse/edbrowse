@@ -215,7 +215,6 @@ void htmlInputHelper(Tag *t);
 void prerender(void);
 const char *fakePropName(void);
 void decorate(void);
-void xml_off(void);
 void rowspan(void);
 
 // sourcefile=http.c

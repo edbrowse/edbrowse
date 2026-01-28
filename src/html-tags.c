@@ -19,28 +19,6 @@ which we must then import into the edbrowse tree of tags.
 bool debugScanner;
 bool browseMail;
 
-/*********************************************************************
-isXML is a static variable that means these tags are parsed as xml, not html.
-It affects a dozen different functions:
-htmlScanner, pullAnd, makeTag,
-scannerError1, scannerError2,
-decorate, jsNode, pushAttributes;
-thus a variable outside all those functions is more convenient.
-However, it's risky in a system that is suppose to be reentrant.
-html can run a script, which invokes innerHTML, thus html should be reentrant.
-Furthermore, said scrip could call DOMParser, which parses xml.
-Thus html can invoke xml.
-However, xml cannot invoke html.
-xml does not run scripts.
-So it is fair to turn isXML on when parsing xml, then turn it off
-when finished, and if we return to parsing html, that's fine.
-htmlScanner turns it on, if the first 9 characters of the text are a magic code.
-decorate turns it off when finished.
-If we don't decorate, e.g. because there is no javascript,
-we need to call xml_off to turn it off.
-*********************************************************************/
-static bool isXML;
-
 static const char htmltag[] = "html";
 static const char innerhtmltag[] = "innerhtml";
 static const char headtag[] = "head";
@@ -66,13 +44,13 @@ static void scannerInfo3(const char *msg, const char *w, int n)
 static void scannerError1(const char *msg, int n)
 {
 	if(debugScanner) printf(msg, n), nl();
-	else if(isXML) debugPrint(3, msg, n);
+	else if(cf->xmlMode) debugPrint(3, msg, n);
 }
 
 static void scannerError2(const char *msg, const char *w)
 {
 	if(debugScanner) printf(msg, w), nl();
-	else if(isXML) debugPrint(3, msg, w);
+	else if(cf->xmlMode) debugPrint(3, msg, w);
 }
 
 static void findAttributes(const char *start, const char *end);
@@ -320,7 +298,7 @@ static void makeTag(const char *name, const char *lowname, bool slash, const cha
 	if(!slash) {
 		working_t = t = newTag(cf, name);
 // xml parse comes from the xhr system, so we need the javascript objects
-		if(isXML) t->doorway = true;
+		if(cf->xmlMode) t->doorway = true;
 		if((t->action == TAGACT_HTML || t->action == TAGACT_BODY) && htmlGenerated)
 			goto skiplink;
 		t->parent = parent = stack ? stack->t : overnode;
@@ -342,7 +320,7 @@ skiplink:
 		k->start = mark;
 		k->next = stack, stack = k;
 
-		if(isXML) goto past_html_open_semantics;
+		if(cf->xmlMode) goto past_html_open_semantics;
 		if(stringEqual(lowname, htmltag)) {
 			headbody = 1;
 			scannerInfo1("in html", 0);
@@ -366,7 +344,7 @@ skiplink:
 		}
 past_html_open_semantics: ;
 	} else {
-		if(isXML) goto past_html_close_semantics;
+		if(cf->xmlMode) goto past_html_close_semantics;
 		if(stringEqual(lowname, headtag)) {
 			headbody = 3;
 			scannerInfo1("post head", 0);
@@ -768,6 +746,7 @@ void htmlScanner(const char *htmltext, Tag *above, bool isgen)
 	char *w;
 	bool slash; // </foo>
 	bool ws; // all whitespace
+	bool xml = false; // parsing xml
 	char qc; // quote character
 	char tagname[MAXTAGNAME];
 	char lowname[MAXTAGNAME];
@@ -784,8 +763,21 @@ void htmlScanner(const char *htmltext, Tag *above, bool isgen)
 	overnode = above;
 	htmlGenerated = isgen;
 // magic code to say this is xml
-	if(!strncmp(htmltext, "`~*xml}@;", 9)) isXML = true, htmltext += 9;
-	if(isXML) scannerInfo1("xml parsing", 0), cf->xmlMode = true;
+	if(!strncmp(htmltext, "`~*xml}@;", 9)) {
+/*********************************************************************
+When we are scanning xml, the entire frame is xml, and wholly xml, and forever xml.
+If javascript calls DOMParser to parse some xml, it creates a new frame inside to do it.
+This is a completely different mechanism from innerHTML,
+which runs within the current frame.
+Thus it is fair to set xml mode in the frame, a global variable if you will,
+and reference that everywhere.
+*********************************************************************/
+		cf->xmlMode = true;
+// and some shorthand for within this function
+	xml = true;
+		htmltext += 9;
+		scannerInfo1("xml parsing", 0);
+	}
 	seek = s = htmltext, ln = 1, premode = false;
 
 // loop looking for tags
@@ -825,7 +817,7 @@ between:
 // after </body> is under document and not under document.body
 // So this is a patch and not a great solution.
 			if((!ws || (headbody >= 4 && !atWall))) {
-				if(!isXML) pushState(seek, true);
+				if(!xml) pushState(seek, true);
 				w = pullAnd(seek, lt, false);
 				if(!premode) compress(w);
 				  scannerInfo2("text{%s}", w);
@@ -887,7 +879,7 @@ closecomment:
 // for <!----> u could be less than t
 			w = (u <= t ? 0 : pullString(t, u - t));
 			if(w && headbody == 0 && memEqualCI(t, "doctype", 7) &&
-			!isalnumByte(t[7]) && !isXML) {
+			!isalnumByte(t[7]) && !xml) {
 				scannerInfo1("doctype", 0);
 				makeTag("doctype", "doctype", false, 0);
 				working_t->textval = w;
@@ -969,7 +961,7 @@ so also break out at >< like a new tag is starting.
 		s = seek; // ready to march on
 
 		if(slash) {
-			if(isXML) goto past_html_close_semantics;
+			if(xml) goto past_html_close_semantics;
 			if(stringEqual(lowname, bodytag) && bodycount > 1) {
 				strcpy(tagname, innerbodytag), --bodycount;
 				strcpy(lowname, innerbodytag);
@@ -988,7 +980,7 @@ past_html_close_semantics:
 // we use to do this but then you can't paste two html documents together
 			if(headbody == 6) goto stop;
 #endif
-			if(!isXML && isWall(lowname)) {
+			if(!xml && isWall(lowname)) {
 				atWall = true;
 				if(lasttext) trimWhite(lasttext->textval);
 				lasttext = 0;
@@ -998,7 +990,7 @@ past_html_close_semantics:
 
 // create this tag in the edbrowse world.
 		scannerInfo3("<%s> line %d", tagname, ln);
-		if(isXML) goto past_html_open_semantics;
+		if(xml) goto past_html_open_semantics;
 // has to start and end with html
 		if(stringEqual(lowname, htmltag)) {
 			if(headbody == 0) goto tag_ok;
@@ -1102,23 +1094,23 @@ tag_ok:
 
 past_html_open_semantics:
 		makeTag(tagname, lowname, false, seek);
-		if(!isXML && isWall(lowname)) {
+		if(!xml && isWall(lowname)) {
 			atWall = true;
 			lasttext = 0;
 		}
 		i = working_t->action;
-		if(!isXML && (i == TAGACT_INPUT || i == TAGACT_SELECT)) {
+		if(!xml && (i == TAGACT_INPUT || i == TAGACT_SELECT)) {
 			atWall = false;
 			lasttext = 0;
 		}
 // The HTML5 specification says that user agents should strip the first
 // newline immediately after the <pre> tag.
-		if(!isXML && i == TAGACT_PRE) {
+		if(!xml && i == TAGACT_PRE) {
 			if(*s == '\r') ++s, ++seek;
 			if(*s == '\n') ++s, ++seek;
 		}
 		findAttributes(t, gt);
-		if(!isXML && isAutoclose(lowname)) {
+		if(!xml && isAutoclose(lowname)) {
 			scannerInfo2("%s autoclose", tagname);
 			makeTag(tagname, lowname, true, seek);
 		} else if(*gt == '>' && gt[-1] == '/') {
@@ -1283,7 +1275,7 @@ With this understanding, we can, and should, scan for </title
 			if(!isspaceByte(*u)) ws = false;
 		}
 		if(headbody < 5 && !ws) {
-			if(!isXML) pushState(seek, true);
+			if(!xml) pushState(seek, true);
 			w = pullAnd(seek, seek + strlen(seek), false);
 			if(!premode) compress(w), trimWhite(w);
 			  scannerInfo2("text{%s}", w);
@@ -1294,7 +1286,7 @@ With this understanding, we can, and should, scan for </title
 	}
 
 stop:
-	if(isXML) goto past_html_final_semantics;
+	if(xml) goto past_html_final_semantics;
 
 // we should have a head and a body
 	pushState(s, false);
@@ -1637,7 +1629,7 @@ Thus, this long block comment is here to explain the next line of code.
 *********************************************************************/
 
 		if(*s != ';' && // oops, bad html
-		(intag | isXML))
+		(intag | cf->xmlMode))
 			u = 0; // never mind
 		else
 			u = andLookup(entity, s);
@@ -4786,7 +4778,7 @@ Needless to say that's not good!
 
 // doctype and html are at the top of an html document.
 // for xml, anything can be at the top.
-	if ((isXML && !linked_in) || (action == TAGACT_HTML || action == TAGACT_DOCTYPE)) {
+	if ((cf->xmlMode && !linked_in) || (action == TAGACT_HTML || action == TAGACT_DOCTYPE)) {
 		run_function_onearg_doc(cf, "eb$apch1", t);
 		linked_in = true;
 	}
@@ -4836,7 +4828,7 @@ static void pushAttributes(const Tag *t)
 		if (!u)
 			u = emptyString;
 		x = cloneString(a[i]);
-		if(!isXML) caseShift(x, 'l');
+		if(!cf->xmlMode) caseShift(x, 'l');
 
 		if (stringEqual(x, "style")) {	// no clue
 			nzFree(x);
@@ -4856,19 +4848,13 @@ static void pushAttributes(const Tag *t)
 void decorate(void)
 {
 	struct parseContext pc;
-	if(isXML) {
+	if(cf->xmlMode) {
 		set_property_bool_doc(cf, "eb$xml", true);
 		set_property_string_doc(cf, "dom$class", "XMLDocument");
 	}
 	pc.callback = jsNode;
 	pc.currentOG = 0;
 	traverseAll(&pc);
-	isXML = false;
-}
-
-void xml_off(void)
-{
-	isXML = false;
 }
 
 /*********************************************************************

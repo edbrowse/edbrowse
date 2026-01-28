@@ -1416,8 +1416,6 @@ char *htmlParse(char *buf, int remote)
 		run_event_doc(cf, "document", "onfocus");
 		runScriptsPending(false);
 		rebuildSelectors();
-	} else {
-		xml_off();
 	}
 past_html_events:
 	debugPrint(3, "end parse html from browse");
