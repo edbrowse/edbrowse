@@ -744,6 +744,7 @@ extern const char *const inp_others[];
 struct parseContext {
 	bool malformed; // tree is somehow malformed
 	void *callback; // actually nodeFunction but that typedef has to appear below
+	Tag *currentOG; // option group
 };
 
 /* For traversing a tree of html nodes, this is the callback function */

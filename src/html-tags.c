@@ -4458,8 +4458,7 @@ static void formControlJS(Tag *t)
 	}
 }
 
-static Tag *currentOG;
-static void optionJS(Tag *t)
+static void optionJS(Tag *t, Tag *og)
 {
 	Tag *sel = t->controller;
 	const char *tx = t->textval;
@@ -4477,7 +4476,7 @@ static void optionJS(Tag *t)
 /* no point if the controlling select doesn't have a js object */
 	if (!sel->jslink)
 		return;
-establish_js_option(t, sel, currentOG);
+establish_js_option(t, sel, og);
 // nodeName and nodeType set in constructor
 	set_property_string_t(t, "text", t->textval);
 	set_property_string_t(t, "value", t->value);
@@ -4509,7 +4508,7 @@ static void jsNode(Tag *t, bool opentag, struct parseContext *pc)
 // all the js variables are on the open tag
 	if (!opentag) {
 // although we have to close the optgroup
-		if(action == TAGACT_OPTG) currentOG = 0;
+		if(action == TAGACT_OPTG) pc->currentOG = 0;
 		if(action == TAGACT_TEMPLATE) {
 // when I reference content, the getter does everything we need
 			get_property_bool_t(t, "content");
@@ -4600,7 +4599,7 @@ Needless to say that's not good!
 
 	case TAGACT_OPTION:
 		if(t->controller) {
-			optionJS(t);
+			optionJS(t, pc->currentOG);
 // The parent child relationship has already been established,
 // don't break, just return;
 			pushAttributes(t);
@@ -4612,7 +4611,7 @@ Needless to say that's not good!
 
 	case TAGACT_OPTG:
 		domLink(t, "HTMLOptGroupElement", 0, 0, 4);
-		currentOG = t;
+		pc->currentOG = t;
 		break;
 
 	case TAGACT_DATAL:
@@ -4857,12 +4856,12 @@ static void pushAttributes(const Tag *t)
 void decorate(void)
 {
 	struct parseContext pc;
-	currentOG = 0;
 	if(isXML) {
 		set_property_bool_doc(cf, "eb$xml", true);
 		set_property_string_doc(cf, "dom$class", "XMLDocument");
 	}
 	pc.callback = jsNode;
+	pc.currentOG = 0;
 	traverseAll(&pc);
 	isXML = false;
 }
