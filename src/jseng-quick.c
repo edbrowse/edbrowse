@@ -1087,13 +1087,15 @@ static char *run_script(JSContext *cx, const char *s)
 	JSValue r;
 	char *s2 = 0;
 	const char *s3;
+	const char *ebnobp = getenv("EBNOBP");
 	int commapresent;
 
 // special debugging code to replace bp@ and trace@ with expanded macros.
 // Warning: breakpoints and tracing can change the flow of execution
 // in unusual cases, e.g. when a js verifyer checks f.toString(),
 // and of course it will be very different with the debugging stuff in it.
-	if (strstr(s, "bp@(") || strstr(s, "trace@(")) {
+	if((!ebnobp || !*ebnobp) &&
+	(strstr(s, "bp@(") || strstr(s, "trace@("))) {
 		int l;
 		const char *u, *v1, *v2;
 
