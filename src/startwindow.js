@@ -2470,8 +2470,12 @@ c = new x.construct;
 if(c instanceof HTMLElement) {
     Object.defineProperty(c, "childNodes", {value:[],writable:true,configurable:true});
     Object.defineProperty(c, "parentNode", {value:null,writable:true,configurable:true});
-c.nodeName = c.tagName = this.eb$xml ? s : s.toUpperCase();
-if(this.eb$xml) c.eb$xml = true;
+if(this.eb$xml)
+c.eb$xml = true;
+else
+s = s.toUpperCase()
+    Object.defineProperty(c, "nodeName", {value:s,writable:true,configurable:true});
+    Object.defineProperty(c, "tagName", {value:s,writable:true,configurable:true});
 }
 eb$logElement(c, t);
 return c;
@@ -2556,10 +2560,14 @@ if(this.eb$xml && !(c instanceof HTMLFrameElement) && !(c instanceof HTMLIFrameE
 // Split on : if this comes from a name space
 var colon = t.split(':');
 if(colon.length == 2) {
-c.nodeName = c.tagName = t;
-c.prefix = colon[0], c.localName = colon[1];
-} else if(c.nodeType == 1)
-c.nodeName = c.tagName = (unknown || this.eb$xml) ? s : s.toUpperCase();
+    Object.defineProperty(c, "nodeName", {value:t,writable:true,configurable:true});
+    Object.defineProperty(c, "tagName", {value:t,writable:true,configurable:true});
+    c.prefix = colon[0], c.localName = colon[1];
+} else if(c.nodeType == 1) {
+    var s2 = (unknown || this.eb$xml) ? s : s.toUpperCase();
+    Object.defineProperty(c, "nodeName", {value:s2,writable:true,configurable:true});
+    Object.defineProperty(c, "tagName", {value:s2,writable:true,configurable:true});
+}
 if(t == "input") { // name and type are automatic attributes acid test 53
 c.name = c.type = "";
 }
