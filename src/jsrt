@@ -1006,6 +1006,22 @@ pnow.then(()=>promiseRan=true)
 
 addEventListener("hashchange", ()=>alert("hash is now " + location.hash));
 
+function xmlTest() {
+var xml_string = '<p><p><dIv>inside</dIv></p></p><script src="http://nothing.nowhere.com/nonsense.js"></scr' + 'ipt>'
+var o = DOMParser().parseFromString(xml_string, "text/xml");
+if(!o.eb$xml) fail(270);
+// make sure paragraphs nest, as they should in xml
+var p2 = o.firstChild.firstChild;
+if(p2.nodeName != "p") fail(271);
+// tags are case sensitive
+if(p2.firstChild.nodeName != "dIv") fail(272);
+var s = o.lastChild; // the script
+// run at db3 it should not try to load or run the script
+if(!s.src.match(/^http:/)) fail(273);
+xmlo = o; // in case you want to look at it
+}
+xmlTest();
+
 function relative() {
 var el = document.createElement("DIV")
 el.innerHTML = "<img src=/foo snork=77 id=garage>";

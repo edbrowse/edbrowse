@@ -772,6 +772,14 @@ void loadScriptData(Tag *t)
 	bool jsbg = down_jsbg;
 	struct i_get g;
 
+	if(cf->xmlMode) {
+// I don't believe we load or run scripts under xml.
+// If we load them, but don't run them, then this has to change somewhat.
+// step = 5 means the script loaded and ran.
+		t->step = 5;
+		return;
+	}
+
 // If this tag is under <template>, and we clone it again and again,
 // we could be asked to prepare it again and again.
 	if((n = get_property_number_t(t, "eb$step")) > 0) {
