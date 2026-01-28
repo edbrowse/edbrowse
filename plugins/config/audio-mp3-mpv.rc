@@ -37,7 +37,7 @@
 plugin {
 type = audio/mp3
 desc = audio file in mp3 format
-suffix = mpv
+suffix = mp3
 content = audio/mpeg
 program = mpv --really-quiet %i
 }
