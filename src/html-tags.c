@@ -64,7 +64,11 @@ static Tag *working_t, *lasttext;
 static int ln; // line number
 static int start_idx;
 static Tag *overnode;
+
+// is this generated html, rather than from a web page?
+// This is only used for the duration of the html scanner.
 static bool htmlGenerated;
+
 // 0 prehtml 1 prehead, 2 inhead, 3 posthead, 4 inbody, 5 postbody 6 posthtml
 static uchar headbody;
 // This isn't counting 13 bodies buried in the basement, it tracks <body>
@@ -3894,15 +3898,8 @@ void formControl(Tag *t, bool namecheck)
 	}
 	if (cform)
 		t->controller = cform;
-// tidy doesn't mind input elements freely floating about,
-// so I guess I won't complain about them either.
-#if 0
-	else if (itype != INP_BUTTON && itype != INP_SUBMIT && !htmlGenerated)
-		debugPrint(3, "%s is not part of a fill-out form",
-			   t->info->desc);
-#endif
-	if (namecheck && !myname && !htmlGenerated)
-		debugPrint(3, "%s does not have a name", t->info->desc);
+	if (namecheck && !myname)
+		debugPrint(4, "%s does not have a name", t->info->desc);
 }
 
 const char *const inp_types[] = {
