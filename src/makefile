@@ -62,7 +62,7 @@ EBOBJS = main.o buffers.o sendmail.o fetchmail.o \
 	jseng-quick.o
 PLUGIN_SCRIPTS := $(wildcard ../plugins/scripts/edbrowse-plugin-*)
 PLUGIN_CONFIG := $(wildcard ../plugins/config/*.rc)
-DOCS := $(wildcard ../doc/*.html)
+DOCS := ../doc/usersguide.html ../doc/usersguide_fr.html
 #  Header file dependencies.
 $(EBOBJS) : eb.h ebprot.h messages.h
 dbodbc.o dbinfx.o dbops.o : dbapi.h
