@@ -630,9 +630,9 @@ static void runGeneratedHtml(Tag *t, const char *h)
 	else
 		debugPrint(4, "parse under top");
 	debugGenerated(h);
-	htmlScanner(h, t, true);
-	prerender();
-	decorate();
+	const int startpos = htmlScanner(h, t, true);
+	prerender(startpos);
+	decorate(startpos);
 	debugPrint(3, "end parse html from docwrite");
 }
 
@@ -1394,9 +1394,9 @@ char *htmlParse(char *buf, int remote)
 	cf->hbase = cloneString(cf->fileName);
 
 	debugPrint(3, "parse html from browse");
-	htmlScanner(buf, NULL, false);
+	const int startpos = htmlScanner(buf, NULL, false);
 	nzFree(buf);
-	prerender();
+	prerender(startpos);
 
 /* if the html doesn't use javascript, then there's
  * no point in generating it.
@@ -1406,7 +1406,7 @@ char *htmlParse(char *buf, int remote)
 		freeJSContext(cf);
 
 	if (isJSAlive) {
-		decorate();
+		decorate(startpos);
 		set_basehref(cf->hbase);
 		if(cf->xmlMode) goto past_html_events;
 		loadFinishCSS();
@@ -5659,7 +5659,7 @@ char *render(void)
 	currentForm = currentA = NULL;
 	struct parseContext pc;
 	pc.callback = renderNode;
-	traverseAll(&pc);
+	traverseAll(0, &pc);
 	cf = save_cf;
 	return ns;
 }
@@ -5829,10 +5829,10 @@ void html_from_setter(Tag *t, const char *h)
 
 // Cut all the children away from t
 	underKill(t);
-	htmlScanner(h, t, true);
-	prerender();
+	const int startpos = htmlScanner(h, t, true);
+	prerender(startpos);
 	innerParent = t;
-	decorate();
+	decorate(startpos);
 	innerParent = 0;
 	debugPrint(3, "end parse html from innerHTML");
 }

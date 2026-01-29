@@ -3336,9 +3336,9 @@ So check for serverData null here. Once again we pop the frame.
 	cdt->attributes = allocZeroMem(sizeof(char*));
 	cdt->atvals = allocZeroMem(sizeof(char*));
 	debugPrint(3, "parse html from frame");
-	htmlScanner(serverData, cdt, false);
+	const int startpos = htmlScanner(serverData, cdt, false);
 	nzFree0(serverData);	// don't need it any more
-	prerender();
+	prerender(startpos);
 
 /*********************************************************************
 At this point cdt->step is 1; the html tree is built, but not decorated.
@@ -3347,7 +3347,7 @@ cdt doesn't have or need an object; it's a place holder.
 	cdt->step = 2;
 
 	if (cf->jslink) {
-		decorate();
+		decorate(startpos);
 		set_basehref(cf->hbase);
 		if(!cf->xmlMode) {
 			loadFinishCSS();
@@ -3450,15 +3450,15 @@ bool reexpandFrame(void)
 		createJSContext(cf);
 
 	debugPrint(3, "parse html from frame replace");
-	htmlScanner(serverData, cdt, false);
+	const int startpos = htmlScanner(serverData, cdt, false);
 	nzFree0(serverData);	// don't need it any more
 	cf->browseMode = false;
 	cdt->step = 0;
-	prerender();
+	prerender(startpos);
 	cdt->step = 2;
 
 	if (cf->jslink) {
-		decorate();
+		decorate(startpos);
 		set_basehref(cf->hbase);
 		if(!cf->xmlMode) {
 			loadFinishCSS();

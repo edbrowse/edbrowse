@@ -742,9 +742,10 @@ void initTagArray(void)
 }
 
 // Now for the scanner, create edbrowse tags corresponding to the html tags.
-void htmlScanner(const char *htmltext, Tag *above, bool isgen)
+// Returns the start position of the new tags.
+int htmlScanner(const char *htmltext, Tag *above, bool isgen)
 {
-	int i;
+	int i, startpos;
 	const char *lt; // les than sign
 	const char *gt; // greater than sign
 	const char *s, *t, *u;
@@ -759,6 +760,7 @@ void htmlScanner(const char *htmltext, Tag *above, bool isgen)
 	static const char texttag[] = "text";
 
 	backupTags();
+	startpos = cw->numTags;
 
 	headbody = 0, bodycount = htmlcount = 0;
 	stack = 0;
@@ -1337,6 +1339,7 @@ past_html_final_semantics:
 	browseMail = false;
 
 //	printTags();
+	return startpos;
 }
 
 static void pushState(const char *start, bool head_ok)
@@ -3702,24 +3705,38 @@ static void traverseNode(Tag *node, struct parseContext *pc)
 	(*f) (node, false, pc);
 }
 
-void traverseAll(struct parseContext *pc)
+void traverseAll(int start, struct parseContext *pc)
 {
-	Tag *t;
+	Tag *t, *u;
 	int i, numtags;
-// when template turns into fragment, an additional tag is created,
-// and we don't want to traverse that new tag. Leads to a malformed tree.
-// So remember the end.
-	numtags = cw->numTags;
+	bool action = false;
 	pc->malformed = false;
-	for (i = 0; i < numtags; ++i)
+	numtags = cw->numTags;
+	for (i = start; i < numtags; ++i)
 		tagList[i]->visited = false;
-	for (i = 0; i < numtags; ++i) {
+	for (i = start; i < numtags; ++i) {
 		t = tagList[i];
-		if (!t->parent && !t->dead) {
-			debugPrint(4, "traverse start at %s %d", t->info->name, t->seqno);
-			traverseNode(t, pc);
+// for innerHTML, first couple of tags, html and body, are dead, as they are skipped.
+		if(t->dead) continue;
+// we have to start with a node that has no parent, or parent is outside this span
+		if((u = t->parent) && u->seqno >= start && u->seqno < numtags) continue;
+		if(t->visited) {
+			if(!u)
+				debugPrint(4,
+				"%s %d already visited, perhaps removed",
+				t->info->name, t->seqno);
+			else
+				debugPrint(4,
+				"%s %d already visited, perhaps moved to %s %d",
+				t->info->name, t->seqno, u->info->name, u->seqno);
+			continue;
 		}
+		debugPrint(4, "traverse starts at %s %d", t->info->name, t->seqno);
+		traverseNode(t, pc);
+		action = true;
 	}
+	if(!action)
+		debugPrint(4, "traverseAll finds no live tags to traverse");
 	if(cw->numTags > numtags)
 		debugPrint(3, "traversal added %d nodes", cw->numTags - numtags);
 	if (pc->malformed)
@@ -4363,7 +4380,7 @@ Are there other situations where we need to supress meta processing?
 	}			// switch
 }
 
-void prerender(void)
+void prerender(int start)
 {
 	struct parseContext pc;
 
@@ -4377,7 +4394,9 @@ currentAudio = NULL;
 	optg = NULL;
 	nzFree0(radioCheck);
 	pc.callback = prerenderNode;
-	traverseAll(&pc);
+
+	debugPrint(4, "prerender starts at %d", start);
+	traverseAll(start, &pc);
 	currentForm = NULL;
 	nzFree0(radioCheck);
 }
@@ -4843,7 +4862,7 @@ static void pushAttributes(const Tag *t)
 }
 
 /* decorate the tree of nodes with js objects */
-void decorate(void)
+void decorate(int start)
 {
 	struct parseContext pc;
 	if(cf->xmlMode) {
@@ -4852,7 +4871,9 @@ void decorate(void)
 	}
 	pc.callback = jsNode;
 	pc.currentOG = 0;
-	traverseAll(&pc);
+
+	debugPrint(4, "decorate starts at %d", start);
+	traverseAll(start, &pc);
 }
 
 /*********************************************************************

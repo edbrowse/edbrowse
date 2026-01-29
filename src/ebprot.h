@@ -199,22 +199,22 @@ bool showHeaders(int ln);
 void html_from_setter( Tag *innerParent, const char *h);
 
 // sourcefile=html-tags.c
-void htmlScanner(const char *htmltext, Tag *above, bool isgen);
+int htmlScanner(const char *htmltext, Tag *above, bool isgen);
 void setTagAttr(Tag *t, const char *name, char *val);
 const char *attribVal(const Tag *t, const char *name);
 bool attribPresent(const Tag *t, const char *name);
 Tag *newTag(const Frame *f, const char *tagname);
 void freeTags(struct ebWindow *w);
 void initTagArray(void);
-void traverseAll(struct parseContext *pc);
+void traverseAll(int start, struct parseContext *pc);
 Tag *findOpenTag(Tag *t, int action);
 Tag *findOpenSection(Tag *t);
 Tag *findOpenList(Tag *t);
 void formControl(Tag *t, bool namecheck);
 void htmlInputHelper(Tag *t);
-void prerender(void);
+void prerender(int start);
 const char *fakePropName(void);
-void decorate(void);
+void decorate(int start);
 void rowspan(void);
 
 // sourcefile=http.c
