@@ -880,9 +880,11 @@ void loadScriptData(Tag *t)
 // If neither is set we need the script right now.
 // However, we don't execute it now, and we should.
 // We need to implement that some day - but it scares me.
-			if(!t->async)
-				t->async = (get_property_bool_t(t, "async") || get_property_bool_t(t, "defer"));
-			if(!t->async) jsbg = false;
+			if(is_js) {
+				if(!t->async)
+					t->async = (get_property_bool_t(t, "async") || get_property_bool_t(t, "defer"));
+				if(!t->async) jsbg = false;
+			}
 
 			if(jsbg) {
 // We can't background fetch if this is under <template>
