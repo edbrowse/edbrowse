@@ -552,6 +552,10 @@ onclick="alert('rock and ½ roll')">
 
 <DIV id=tag_with_data_attribute data-dog-food=abc></DIV>
 
+<template id=animals>
+<p>lions and tigers</p><hr>
+</template>
+
 <script type=text/javascript language=JavaScript>
 // set up for nested spans with onclick handlers
 // document.getElementById("spana").addEventListener("click", (e)=>{alert("a"); if(!confirm("do you really want to see b")) e.cancelled = true});
@@ -1021,6 +1025,11 @@ if(!s.src.match(/^http:/)) fail(273);
 xmlo = o; // in case you want to look at it
 }
 xmlTest();
+
+atemplate = document.getElementById("animals").content;
+if(atemplate.nodeType != 11) fail(280);
+if(atemplate.firstChild.nodeName != "P") fail(281);
+if(atemplate.lastChild.nodeName != "HR") fail(282);
 
 function relative() {
 var el = document.createElement("DIV")

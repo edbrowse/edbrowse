@@ -3722,11 +3722,11 @@ void traverseAll(int start, struct parseContext *pc)
 		if((u = t->parent) && u->seqno >= start && u->seqno < numtags) continue;
 		if(t->visited) {
 			if(!u)
-				debugPrint(4,
+				debugPrint(3,
 				"%s %d already visited, perhaps removed",
 				t->info->name, t->seqno);
 			else
-				debugPrint(4,
+				debugPrint(3,
 				"%s %d already visited, perhaps moved to %s %d",
 				t->info->name, t->seqno, u->info->name, u->seqno);
 			continue;
