@@ -4169,7 +4169,8 @@ on the same timer and do some more.
 		jt->ms = now_ms + n % 1000;
 		if (jt->ms >= 1000)
 			jt->ms -= 1000, ++jt->sec;
-		goto done;
+		cw = save_cw, cf = save_cf;
+		return;
 	}
 
 	runTimer0(jt, save_cf);
