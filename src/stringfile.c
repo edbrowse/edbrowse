@@ -2603,12 +2603,17 @@ bool envFileDown(const char *line, const char **expanded)
 	return true;
 }
 
+static int include_cmp(const void *s, const void *t)
+{
+	return strcmp(*(const char**)s, *(const char**)t);
+}
+
 // create a list of include directives, for the files in a given directory.
 // This is only used to include files in .ebrc
 char *includeList(const char *dir)
 {
 	char *s;
-	int s_l;
+	int s_l, cnt = 0;
 	s = initString(&s_l);
 	bool save_hf = showHiddenFiles;
 	showHiddenFiles = false;
@@ -2616,10 +2621,30 @@ char *includeList(const char *dir)
 	while((filename = nextScanFile(dir))) {
 		stringAndString(&s, &s_l, "include = ");
 		stringAndString(&s, &s_l, filename);
-		stringAndChar(&s, &s_l, '\n');
+		stringAndChar(&s, &s_l, 0);
+		++cnt;
 	}
 	showHiddenFiles = save_hf;
-	return s;
+	if(!cnt) return s; // no files
+// sort - just so the order is predictable
+	const char ** a = allocMem(cnt * sizeof(const char*));
+	const char *t = s;
+	int i;
+	for(i = 0; i < cnt; ++i) {
+		a[i] = t;
+		t = t + strlen(t) + 1;
+	}
+	qsort(a, cnt, sizeof(const char*), include_cmp);
+// now put the string back together
+	char *u;
+	int u_l;
+	u = initString(&u_l);
+	for(i = 0; i < cnt; ++i) {
+		stringAndString(&u, &u_l, a[i]);
+		stringAndChar(&u, &u_l, '\n');
+	}
+	nzFree(s);
+	return u;
 }
 
 FILE *efopen(const char *name, const char *mode)
