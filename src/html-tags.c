@@ -478,21 +478,22 @@ static void backupTags(void)
 	int i, n = 0;
 	while(cw->numTags &&
 	(t = tagList[cw->numTags-1]) && t->dead) {
-		if(!delmessage) { debugPrint(5, "deleting dead tags"); delmessage = true; }
+		if(!delmessage) { debugPrint(4, "deleting dead tags"); delmessage = true; }
 		for(i = 0; forbidden[i]; ++i)
 			if(t->action == forbidden[i]) {
 stop:
-				debugPrint(5, "stop at %s", t->info->name);
+				debugPrint(4, "stop at %s", t->info->name);
 				return;
 			}
 // unlikely case where html ends in </pre>, which is always a dead tag.
 		if(t->action == TAGACT_PRE && t->slash
 		&& !tagList[cw->numTags-2]->dead)
 			goto stop;
+		debugPrint(4, "backup %s", t->info->name);
 		freeTag(t);
 		--cw->numTags, ++n;
 	}
-	if(delmessage) debugPrint(5, "stop at live after %d", n);
+	if(delmessage) debugPrint(4, "%d tags deleted", n);
 }
 
 // for debugging
@@ -3715,7 +3716,7 @@ void traverseAll(struct parseContext *pc)
 	for (i = 0; i < numtags; ++i) {
 		t = tagList[i];
 		if (!t->parent && !t->dead) {
-			debugPrint(6, "traverse start at %s %d", t->info->name, t->seqno);
+			debugPrint(4, "traverse start at %s %d", t->info->name, t->seqno);
 			traverseNode(t, pc);
 		}
 	}
