@@ -1748,11 +1748,15 @@ void infShow(int tagno, const char *search)
 		eb_printf(" disabled");
 	if (t->name)
 		eb_printf(" %s", t->name);
-	if(t->itype == INP_SUBMIT && t->controller && !inputDisabled(t)) {
-		if(!infPush(tagno, NULL) && debugLevel >= 3)
-			showError();
-	} else
-		nl();
+	if(t->itype == INP_SUBMIT &&
+	!inputDisabled(t) &&
+	debugLevel >= 3) {
+		if(t->controller && t->controller->href)
+			  eb_printf(" %s", t->controller->href);
+		else if(attribVal(t, "onclick"))
+			  eb_printf(" %s", attribVal(t, "onclick"));
+		}
+	nl();
 
 	if(t->ninp && t->itype == INP_TEXT)
 		t = tagList[t->ninp];
