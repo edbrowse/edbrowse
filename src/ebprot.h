@@ -214,7 +214,7 @@ void formControl(Tag *t, bool namecheck);
 void htmlInputHelper(Tag *t);
 void prerender(int start);
 const char *fakePropName(void);
-void decorate(int start);
+void decorate(int start, Tag *above);
 void rowspan(void);
 
 // sourcefile=http.c

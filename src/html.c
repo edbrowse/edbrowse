@@ -632,7 +632,7 @@ static void runGeneratedHtml(Tag *t, const char *h)
 	debugGenerated(h);
 	const int startpos = htmlScanner(h, t, true);
 	prerender(startpos);
-	decorate(startpos);
+	decorate(startpos, 0);
 	debugPrint(3, "end parse html from docwrite");
 }
 
@@ -1406,7 +1406,7 @@ char *htmlParse(char *buf, int remote)
 		freeJSContext(cf);
 
 	if (isJSAlive) {
-		decorate(startpos);
+		decorate(startpos, 0);
 		set_basehref(cf->hbase);
 		if(cf->xmlMode) goto past_html_events;
 		loadFinishCSS();
@@ -5835,9 +5835,7 @@ void html_from_setter(Tag *t, const char *h)
 	underKill(t);
 	const int startpos = htmlScanner(h, t, true);
 	prerender(startpos);
-	innerParent = t;
-	decorate(startpos);
-	innerParent = 0;
+	decorate(startpos, t);
 	debugPrint(3, "end parse html from innerHTML");
 }
 

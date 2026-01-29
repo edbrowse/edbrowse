@@ -4500,8 +4500,6 @@ establish_js_option(t, sel, og);
 		set_property_number_t(sel, "selectedIndex", t->lic);
 }
 
-Tag *innerParent;
-
 static void jsNode(Tag *t, bool opentag, struct parseContext *pc)
 {
 	const struct tagInfo *ti = t->info;
@@ -4801,10 +4799,10 @@ Needless to say that's not good!
 	}
 
 // innerHTML should never apply in the xml world
-	if (!t->parent && innerParent) {
+	if (!t->parent && pc->innerParent) {
 // this is the top of innerHTML or some such.
 // It is never html head or body, as those are skipped.
-		run_function_onearg_t(innerParent, "eb$apch1", t);
+		run_function_onearg_t(pc->innerParent, "eb$apch1", t);
 		linked_in = true;
 	}
 
@@ -4862,7 +4860,7 @@ static void pushAttributes(const Tag *t)
 }
 
 /* decorate the tree of nodes with js objects */
-void decorate(int start)
+void decorate(int start, Tag *above)
 {
 	struct parseContext pc;
 	if(cf->xmlMode) {
@@ -4871,6 +4869,7 @@ void decorate(int start)
 	}
 	pc.callback = jsNode;
 	pc.currentOG = 0;
+	pc.innerParent = above;
 
 	debugPrint(4, "decorate starts at %d", start);
 	traverseAll(start, &pc);

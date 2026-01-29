@@ -3347,7 +3347,7 @@ cdt doesn't have or need an object; it's a place holder.
 	cdt->step = 2;
 
 	if (cf->jslink) {
-		decorate(startpos);
+		decorate(startpos, 0);
 		set_basehref(cf->hbase);
 		if(!cf->xmlMode) {
 			loadFinishCSS();
@@ -3458,7 +3458,7 @@ bool reexpandFrame(void)
 	cdt->step = 2;
 
 	if (cf->jslink) {
-		decorate(startpos);
+		decorate(startpos, 0);
 		set_basehref(cf->hbase);
 		if(!cf->xmlMode) {
 			loadFinishCSS();

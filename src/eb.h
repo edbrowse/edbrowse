@@ -700,7 +700,6 @@ We need to review all this some day.
 };
 
 typedef struct htmlTag Tag;
-extern Tag *innerParent;
 
 /* htmlTag.action */
 enum {
@@ -745,6 +744,7 @@ struct parseContext {
 	bool malformed; // tree is somehow malformed
 	void *callback; // actually nodeFunction but that typedef has to appear below
 	Tag *currentOG; // option group
+	Tag *innerParent; // which tag invoked innerHTML
 };
 
 /* For traversing a tree of html nodes, this is the callback function */
