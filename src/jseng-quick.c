@@ -582,6 +582,14 @@ static void define_hidden_property_string(JSContext *cx, JSValueConst parent, co
 	JS_PROP_WRITABLE|JS_PROP_CONFIGURABLE);
 }
 
+static void define_hidden_property_number(JSContext *cx, JSValueConst parent, const char *name,
+			    int n)
+{
+	JS_DefinePropertyValueStr(cx, parent, name,
+	JS_NewInt32(cx, n),
+	JS_PROP_WRITABLE|JS_PROP_CONFIGURABLE);
+}
+
 void define_hidden_property_string_t(const Tag *t, const char *name, const char * v)
 {
 	if(!t->jslink || !allowJS)
@@ -4090,7 +4098,10 @@ static void processStyles(JSValueConst so, const char *stylestring)
 				set_property_string(cf->cx, so, s, sv);
 // Should we set a specification level here, perhaps high,
 // so the css sheets don't overwrite it?
-// sv + "$$scy" = 99999;
+				char *u;
+				createFormattedString(&u, "%s$$scy", s);
+				define_hidden_property_number(cf->cx, so, u, 99999);
+				nzFree(u);
 			}
 		}
 	}
