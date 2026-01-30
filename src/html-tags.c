@@ -4520,6 +4520,13 @@ static void jsNode(Tag *t, bool opentag, struct parseContext *pc)
 // when I reference content, the getter does everything we need
 			get_property_bool_t(t, "content");
 		}
+// test to see if we should run this script right now.
+// It should be part of the html, not generated - I think.
+// And definitely not xml.
+		if(action == TAGACT_SCRIPT && !t->scriptgen &&
+		!cf->xmlMode) {
+			debugPrint(3, "should run now");
+		}
 		return;
 	}
 	if (t->step >= 2)
