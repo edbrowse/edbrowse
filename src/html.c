@@ -971,6 +971,10 @@ void loadScriptData(Tag *t)
 success:
 	t->step = 4;
 	set_property_number_t(t, "eb$step", 4);
+// test to see if we should run this script right now.
+// It should be part of the html, not generated - I think.
+	if(is_js && !t->scriptgen)
+		debugPrint(3, "should run now");
 	return;
 
 fail:

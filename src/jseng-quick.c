@@ -2099,6 +2099,8 @@ JSValueConst b_j, const char *b_name)
 				set_property_string(parent->f0->cx,
 				*((JSValue*)parent->jv), "value", emptyString);
 			}
+			if (parent->action == TAGACT_SCRIPT)
+				parent->scriptgen = true;
 		}
 		return;
 	}
