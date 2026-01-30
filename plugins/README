@@ -18,14 +18,24 @@ However, you can type b.snork, or pb.snork, or g.snork in directory mode,
 to invoke the snork plugin on the file.
 We will use this trick from time to time.
 
-The config fragments are suffixed with .rc, the scripts all have the prefix
-edbrowse-plugin- and the decision not to suffix them with the scripting language
-(e.g. .sh for shell or .py for python) is deliberate as they are executables and
-in general executables in the path should not have an associated scripting
-language hard-coded into the file name. Plugins following these conventions will
-be automatically installed by the install rule. The scripts are installed in the
-same bin directory as edbrowse and the config fragments are installed under
-$(INSTALLBASE)/share/edbrowse/plugins directory.
+The config fragments are suffixed with .rc and live in the config directory. The
+scripts all have the prefix edbrowse-plugin- and live in the scripts directory.
+The decision not to suffix them with the scripting language (e.g. .sh for shell
+or .py for python) is deliberate as they are executables and in general
+executables in the path should not have an associated scripting language
+hard-coded into the file name. Plugins following these conventions will be
+automatically installed by the install rule. The scripts are installed in the
+same bin directory as Edbrowse and the config fragments are installed under
+$PLUGINSDIR directory. In the case of different plugins providing the same
+suffix, the alphabetical order of includes is used to provide a predictable
+default by prefixing the config fragment's filename with a number e.g.
+01-audio-mp3-mpg123.rc for the default and 02-audio-mp3-mpv.rc for the mpv
+version. Only plugins which provide duplicate functionality are prefixed in this
+way. The first plugin handling a given content type, URL or suffix wins so if
+you prefer to use a different plugin you can override these defaults by either
+placing a symlink to your preferred installed plugin config fragment or a custom
+plugin config fragment in a local plugins directory which you can then include
+prior to the system default one in your config file.
 
 disable plugins with the pg- command. Plugins don't run until you enable them
 again. You can disable plugins on a one-time basis with the g- command.
