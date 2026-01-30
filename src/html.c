@@ -1128,13 +1128,104 @@ bool isRooted(const Tag *t)
 	return false;
 }
 
+static void runScriptNow(Frame *runframe, Tag *t)
+{
+	const char *a; // for attribute
+	const char *gc_name; // garbage collection name
+	const char *sourcefile;
+	int ln; // line number
+
+	t->step = 5; // now running the script
+	set_property_number_t(t, "eb$step", 5);
+
+	if (t->inxhr) {
+// xhr looks like an asynchronous script.
+		run_function_bool_t(t, "parseResponse");
+/*********************************************************************
+Ok this is subtle. I put it on a script tag, and t.jv.onload exists!
+That is the function that is run by xhr.
+So runOnload() comes along and runs it again, unless we do something.
+I will disconnect here, and also check for inxhr in runOnload().
+	*********************************************************************/
+		disconnectTagObject(t);
+		t->dead = true;
+// allow garbage collection to recapture the object if it wants to
+		gc_name = get_property_string_t(t, "backlink");
+		if (gc_name)
+			delete_property_win(cf, gc_name);
+		cnzFree(gc_name);
+		return;
+	}
+
+// If no language is specified, javascript is default.
+	a = get_property_string_t(t, "language");
+	if (a && *a && (!memEqualCI(a, "javascript", 10) || isalphaByte(a[10]))) {
+		debugPrint(3, "script tag %d language %s not executed", t->seqno, a);
+		cnzFree(a);
+		return;
+	}
+	cnzFree(a);
+// Also reject a script if a type is specified and it is not JS.
+// For instance, some JSON pairs in script tags on amazon.com
+	a = get_property_string_t(t, "type");
+// allow for type 5e5857709a179301c738ca91-text/javascript, which really happens.
+// Also application/javascript.
+	if (a && *a && !stringEqualCI(a, "javascript") &&
+	((ln = strlen(a)) < 11 || !stringEqualCI(a + ln - 11, "/javascript"))) {
+		debugPrint(3, "script tag %d type %s not executed", t->seqno, a);
+		cnzFree(a);
+		return;
+	}
+	cnzFree(a);
+
+	sourcefile = t->js_file;
+	if (!sourcefile) sourcefile = "generated";
+	ln = t->js_ln;
+	if (!ln) ln = 1;
+	if (cf != runframe)
+		debugPrint(4, "running script at a lower frame %s",
+		sourcefile);
+	debugPrint(3, "exec %s at %d", sourcefile, ln);
+	jsRunData(t, sourcefile, ln);
+	debugPrint(3, "exec complete");
+
+// Last step, look for document.write from this script
+	if (!cf->dw) return;
+// completely different behavior before and after browse
+// After browse, it clobbers the page.
+	if(cf->browseMode) {
+		run_function_onestring_t(cf->bodytag, "eb$dbih",
+		strstr(cf->dw, "<body>")+6);
+	} else {
+// Any newly generated scripts have to run next. Move them up in the linked list.
+		Tag *t1, *t2, *u;
+		for(u = t; u; u = u->same)
+			t1 = u;
+// t1 is now last real script in the list.
+		stringAndString(&cf->dw, &cf->dw_l, "</body>");
+		runGeneratedHtml(t, cf->dw);
+		run_function_onearg_win(cf, "eb$uplift", t);
+		for(u = t1; u; u = u->same)
+			t2 = u;
+		if(t1 != t && t2 != t1) {
+			Tag *t3 = t->same;
+			t->same = t1->same;
+			t2->same = t3;
+			t1->same = 0;
+			for(u = t->same; u != t3; u = u->same)
+				if(u->jslink)
+					loadScriptData(u);
+		}
+	}
+	nzFree0(cf->dw);
+	cf->dw_l = 0;
+}
+
 static void runOnload(void);
 void runScriptsPending(bool startbrowse)
 {
 	Tag *t;
-	char *sourcefile;
-	const char *a;
-	int ln, n;
+	int n;
 	bool change, async;
 	Frame *f, *save_cf = cf;
 
@@ -1217,93 +1308,7 @@ passes:
 			t->step = 4;	// loaded
 		}
 
-		t->step = 5;	// now running the script
-		set_property_number_t(t, "eb$step", 5);
-
-		if (t->inxhr) {
-// xhr looks like an asynchronous script before browse
-			char *gc_name;
-			run_function_bool_t(t, "parseResponse");
-/*********************************************************************
-Ok this is subtle. I put it on a script tag, and t.jv.onload exists!
-That is the function that is run by xhr.
-So runOnload() comes along and runs it again, unless we do something.
-I will disconnect here, and also check for inxhr in runOnload().
-*********************************************************************/
-			disconnectTagObject(t);
-			t->dead = true;
-// allow garbage collection to recapture the object if it wants to
-			gc_name = get_property_string_t(t, "backlink");
-			if (gc_name)
-				delete_property_win(cf, gc_name);
-			goto afterscript;
-		}
-
-// If no language is specified, javascript is default.
-		a = get_property_string_t(t, "language");
-		if (a && *a && (!memEqualCI(a, "javascript", 10) || isalphaByte(a[10]))) {
-			debugPrint(3, "script tag %d language %s not executed", t->seqno, a);
-			cnzFree(a);
-			goto afterscript;
-		}
-		cnzFree(a);
-// Also reject a script if a type is specified and it is not JS.
-// For instance, some JSON pairs in script tags on amazon.com
-		a = get_property_string_t(t, "type");
-// allow for type 5e5857709a179301c738ca91-text/javascript, which really happens.
-// Also application/javascript.
-		if (a && *a && !stringEqualCI(a, "javascript") &&
-		((ln = strlen(a)) < 11 || !stringEqualCI(a + ln - 11, "/javascript"))) {
-			debugPrint(3, "script tag %d type %s not executed", t->seqno, a);
-			cnzFree(a);
-			goto afterscript;
-		}
-		cnzFree(a);
-
-		sourcefile = t->js_file;
-		if (!sourcefile) sourcefile = "generated";
-		ln = t->js_ln;
-		if (!ln) ln = 1;
-		if (cf != save_cf)
-			debugPrint(4, "running script at a lower frame %s",
-				   sourcefile);
-		debugPrint(3, "exec %s at %d", sourcefile, ln);
-		jsRunData(t, sourcefile, ln);
-		debugPrint(3, "exec complete");
-
-afterscript:
-/* look for document.write from this script */
-		if (cf->dw) {
-// completely different behavior before and after browse
-// After browse, it clobbers the page.
-			if(cf->browseMode) {
-				run_function_onestring_t(cf->bodytag,
-				"eb$dbih",
-				strstr(cf->dw, "<body>")+6);
-			} else {
-// Any newly generated scripts have to run next. Move them up in the linked list.
-				Tag *t1, *t2, *u;
-				for(u = t; u; u = u->same)
-					t1 = u;
-// t1 is now last real script in the list.
-				stringAndString(&cf->dw, &cf->dw_l, "</body>");
-				runGeneratedHtml(t, cf->dw);
-				run_function_onearg_win(cf, "eb$uplift", t);
-				for(u = t1; u; u = u->same)
-					t2 = u;
-				if(t1 != t && t2 != t1) {
-					Tag *t3 = t->same;
-					t->same = t1->same;
-					t2->same = t3;
-					t1->same = 0;
-					for(u = t->same; u != t3; u = u->same)
-						if(u->jslink)
-	loadScriptData(u);
-				}
-			}
-			nzFree0(cf->dw);
-			cf->dw_l = 0;
-		}
+		runScriptNow(save_cf, t);
 
 		change = true;
 	}
