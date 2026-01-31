@@ -2855,7 +2855,6 @@ sdm("xmlVersion", 0)
 swm("MutationObserver", function(f) {
     // We need to know what window we're in to queue the callback microtask
     this.observed$window = my$win();
-    window.mutList.push(this);
     if (typeof f !== "function") throw new TypeError("not a function");
     this.callback = f;
     this.active = false;
@@ -2873,6 +2872,7 @@ MutationObserver.prototype.disconnect = function() {
     alert3(`unobserving ${ts} targets with ${nl} unprocessed records: ${dc} tag ${sn}`);
     this.notification$queue.length =  0;
     this.active = false;
+    window.mutList.delete(this);
 }
 MutationObserver.prototype.observe = function(target, cfg) {
     // May have other valid targets so don't disconnect
@@ -2886,8 +2886,9 @@ MutationObserver.prototype.observe = function(target, cfg) {
     If even one target is subtree then the observer is subtree. */
     if(cfg.subtree) this.subtree = true;
     // store for debug
-    if(!this.$first$) this.$first$ = target;
+    if(!this.$first$) Object.defineProperty(this, "$first$", {value: target});
     this.active = true;
+    window.mutList.add(this);
 }
 MutationObserver.prototype.takeRecords = function() {
     // Shallow clone as the records must refer to the DOM and are otherwise safe
@@ -2901,7 +2902,7 @@ MutationObserver.prototype.takeRecords = function() {
 swm("MutationRecord", function(){})
 spdc("MutationRecord", null)
 
-swm("mutList", [])
+swm("mutList", new Set)
 
 swm1("crypto", {})
 crypto.getRandomValues = function(a) {

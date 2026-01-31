@@ -1044,10 +1044,17 @@ function mutFixup(b, isattr, y, z) {
             frames$rebuild(w2);
     }
 
-// loop over observers
-    for(let j = 0; j < list.length; ++j) {
-        let o = list[j]; // the observer
-        if(!o.active) continue;
+    // loop over observers, no need to make a copy since even if a sync
+    // observer disconnects itself the set iteration is specified to be
+    // consistent */
+    for(const o of list) {
+        if(!o.active) {
+            // not sure if this happens now but may be someone did something
+            // unfortunate
+            alert3("mutFixup: disconnecting inactive observer");
+            o.disconnect();
+            continue;
+        }
         const record = (function() {
             /* check our target: either we're the direct target or we're below an
             observer which cares about subtrees. */

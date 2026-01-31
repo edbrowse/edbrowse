@@ -450,20 +450,14 @@
       expect(i.nextNode(), document.getElementById('instructions').firstChild);
       expect(i.nextNode().nodeName, "SPAN");
       expect(i.nextNode().nodeName, "#text");
-//@` I guess browsers parse document.write at time of generation,
-// edbrowse doesn't, it parses the page, runs the script, parses document.write
-// html, in that order. So I process <a> in the html first, then <area>
-// in document.write, and that is the order they appear in document.links.
-// Originally document.links[1]; I changed it to 0.
-      expect(i.nextNode(), document.links[0]);
-      expect(i.nextNode(), document.links[0].firstChild);
+      expect(i.nextNode(), document.links[1]);
+      expect(i.nextNode(), document.links[1].firstChild);
       expect(i.nextNode(), document.getElementById('instructions').lastChild);
       expect(i.nextNode(), null);
       // walk it backwards for good measure
       expect(i.previousNode(), document.getElementById('instructions').lastChild);
-//@` earlier comments about document.links
-      expect(i.previousNode(), document.links[0].firstChild);
-      expect(i.previousNode(), document.links[0]);
+      expect(i.previousNode(), document.links[1].firstChild);
+      expect(i.previousNode(), document.links[1]);
       expect(i.previousNode().nodeName, "#text");
       expect(i.previousNode().nodeName, "SPAN");
       expect(i.previousNode(), document.getElementById('instructions').firstChild);
@@ -541,8 +535,7 @@
       expect(w.parentNode(), document.body);
       expect(w.lastChild().id, "instructions");
       expect(w.lastChild().data.substr(0,1), ".");
-//@` Same problem with the order of the links, change 1 to 0 here.
-      expect(w.previousNode(), document.links[0].firstChild);
+      expect(w.previousNode(), document.links[1].firstChild);
       return 1;
     },
     function () {

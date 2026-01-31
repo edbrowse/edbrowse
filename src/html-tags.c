@@ -3689,20 +3689,63 @@ static unsigned andLookup(char *entity, char *v)
 }
 
 // Here is a general routine to traverse the tree, with a callback function.
-static void traverseNode(Tag *node, struct parseContext *pc)
+static void traverseNode(Tag *t, struct parseContext *pc)
 {
 	const nodeFunction f = pc->callback;
-	Tag *child;
-	if (node->visited) {
+	Tag *child, *next_child, *u;
+
+	if (t->visited) {
 		pc->malformed = true;
-		debugPrint(4, "node revisit %s %d", node->info->name, node->seqno);
+		debugPrint(4, "node revisit %s %d", t->info->name, t->seqno);
 		return;
 	}
-	node->visited = true;
-	(*f) (node, true, pc);
-	for (child = node->firstchild; child; child = child->sibling)
+	t->visited = true;
+
+// open tag <foo>
+	(*f) (t, true, pc);
+
+	for (child = t->firstchild; child; child = child->sibling) {
+/*********************************************************************
+This will take some splaining. Suppose the html looks like:
+paragraph1 script paragraph3, and script is going to append paragraph2.
+When the script runs, the entire tree is build internally, the tree we are
+traversing right now. Not the tree of objects, that hasn't been built yet,
+but our tree of pointers in C is built.
+script runs and puts paragraph2 in place properly in the tree of objects,
+because paragraph3 hasn't been placed yet,
+but it puts paragraph2 after paragraph3 in the C world.
+That's more than just wrong, it's inconsistent!
+So we have to pretend like this is the end of the tree, like we haven't
+gone any farther, like we haven't yet place paragraph3.
+Cut off the rest of the nodes, then put them back
+after the script has run. It's a wild ride.
+<body><p>first paragraph
+<script>
+var p = document.createElement("p");
+p.appendChild(document.createTextNode("second paragraph"));
+document.body.appendChild(p);
+</script>
+<p>third paragraph
+</body>
+We could make sure we only do this for the decorate phase,
+e.g. no need to do this when rendering the page for display.
+But those checks probably take as much time as actually doing it
+when the pointers don't change out from under us.
+*********************************************************************/
+
+		next_child = child->sibling, child->sibling = 0;
 		traverseNode(child, pc);
-	(*f) (node, false, pc);
+		if(pc->abort) return;
+		if(!child->sibling || !next_child) { // high runner case
+			child->sibling = next_child;
+		} else {
+			for(u = child; u->sibling; u = u->sibling)  ;
+			u->sibling = next_child;
+		}
+	}
+
+// close tag </foo>
+	(*f) (t, false, pc);
 }
 
 void traverseAll(int start, struct parseContext *pc)
@@ -3711,6 +3754,7 @@ void traverseAll(int start, struct parseContext *pc)
 	int i, numtags;
 	bool action = false;
 	pc->malformed = false;
+	pc->abort = false;
 	numtags = cw->numTags;
 	for (i = start; i < numtags; ++i)
 		tagList[i]->visited = false;
@@ -3738,9 +3782,23 @@ void traverseAll(int start, struct parseContext *pc)
 	if(!action)
 		debugPrint(4, "traverseAll finds no live tags to traverse");
 	if(cw->numTags > numtags)
-		debugPrint(3, "traversal added %d nodes", cw->numTags - numtags);
+		debugPrint(3, "traverseAll added %d nodes", cw->numTags - numtags);
 	if (pc->malformed)
 		debugPrint(3, "malformed tree!");
+
+/*********************************************************************
+Suppose this is generated html, and it is parsed, and we leave all its
+visited flags set. Then above, some of these nodes are moved into the tree
+that is being created, moved into that tree by a higher script.
+When decorate runs into this node, as a child in the higher tree,
+it sees visited = true, and doesn't proceed.
+We want it to proceed, even though it won't do anything,
+even though these nodes are already decorated with js objects,
+even though these nodes are already at step 2,
+we want it to proceed so we don't get error messages about a malformed tree.
+*********************************************************************/
+	for (i = start; i < numtags; ++i)
+		tagList[i]->visited = false;
 }
 
 Tag *findOpenTag(Tag *t, int action)
@@ -3905,9 +3963,6 @@ static void makeButton(void)
 
 void formControl(Tag *t, bool namecheck)
 {
-#if 0
-	int itype = t->itype;
-#endif
 	char *myname = (t->name ? t->name : t->id);
 	Tag *cform = currentForm;
 	if (!cform) {
@@ -4399,6 +4454,7 @@ currentAudio = NULL;
 	traverseAll(start, &pc);
 	currentForm = NULL;
 	nzFree0(radioCheck);
+	debugPrint(4, "prerender complete");
 }
 
 static char fakePropLast[24];
@@ -4500,6 +4556,21 @@ establish_js_option(t, sel, og);
 		set_property_number_t(sel, "selectedIndex", t->lic);
 }
 
+// tkae a snapshot of the nodes going up the tree
+static char *upSnap(const Tag *t)
+{
+	char buf[24];
+	char *up;
+	int up_l;
+	up = initString(&up_l);
+	while(t) {
+		sprintf(buf, "|%d", t->seqno);
+		stringAndString(&up, &up_l, buf);
+		t = t->parent;
+	}
+	return up;
+}
+
 static void jsNode(Tag *t, bool opentag, struct parseContext *pc)
 {
 	const struct tagInfo *ti = t->info;
@@ -4523,9 +4594,29 @@ static void jsNode(Tag *t, bool opentag, struct parseContext *pc)
 // test to see if we should run this script right now.
 // It should be part of the html, not generated - I think.
 // And definitely not xml.
-		if(action == TAGACT_SCRIPT && !t->scriptgen &&
-		!cf->xmlMode) {
-			debugPrint(3, "should run now");
+		if(action == TAGACT_SCRIPT && !cf->xmlMode) {
+			if(t->scriptgen) {
+				debugPrint(3, "script postponed because it is generated by another script");
+			} else if(t->async) {
+				debugPrint(3, "script postponed because it is async");
+			} else {
+// But first ... do we have to have the css in place before the script runs?
+// I really don't know. If we call it, we are running this rather nontrivial
+// computation before each inline script.
+				loadFinishCSS();
+				run_function_bool_win(cf, "eb$qs$start");
+			char *up1 = upSnap(t);
+			runScriptNow(cf, t);
+			char *up2 = upSnap(t);
+// this doesn't catch every possible weird thing a script might do
+// to itself, but most of them.
+			if(!stringEqual(up1, up2)) {
+				debugPrint(0, "script removes or moves itself within the tree. Decoration process aborted. Results of this browse are unpredictable!");
+				pc->abort = true;
+			}
+			nzFree(up1);
+			nzFree(up2);
+			}
 		}
 		return;
 	}
@@ -4880,6 +4971,7 @@ void decorate(int start, Tag *above)
 
 	debugPrint(4, "decorate starts at %d", start);
 	traverseAll(start, &pc);
+	debugPrint(4, "decorate complete");
 }
 
 /*********************************************************************

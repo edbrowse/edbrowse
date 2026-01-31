@@ -742,6 +742,7 @@ extern const char *const inp_others[];
 // context variables when parsing and decorating html
 struct parseContext {
 	bool malformed; // tree is somehow malformed
+	bool abort; // traversal aborted, should never happen
 	void *callback; // actually nodeFunction but that typedef has to appear below
 	Tag *currentOG; // option group
 	Tag *innerParent; // which tag invoked innerHTML
