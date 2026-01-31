@@ -137,6 +137,12 @@ swm("Document", function() {
             this.id$hash.delete(i);
         }
     )});
+    Object.defineProperty(this, "collection$registry", {value: new FinalizationRegistry(
+        (o) => {
+            alert3("GC triggers disconnect of collection observer");
+            o.disconnect();
+        }
+    )});
 });
 spdc("Document", EventTarget)
 Document.prototype.activeElement = null;
@@ -2033,15 +2039,24 @@ return this.style$2;}});
 // get elements below
 p.getRootNode = mw$.getRootNode;
 // An HTMLCollection around the getElements functions
-swm("live$wrapper", function(f, start, arg) {
-// get the result as an array
-var a = f.call(start, arg)
-var c = new HTMLCollection(a)
-// set an observer to watch the subtree based at start,
-// and when children are added or removed, recompute the array.
-// This is called a live array.
-// It is not yet implemented.
-return c})
+swm("live$wrapper", function(f, target, arg, config) {
+    // todo: add caching for observers
+    const d = (target.nodeType == 9)? target : ((target.ownerDocument)? target.ownerDocument: my$doc());
+    const collection = new HTMLCollection();
+    const ref = new WeakRef(collection);
+     const cb = () => {
+        const c = ref.deref();
+        if (c) {
+            c.length = 0;
+            c.push(...f.call(target, arg));
+        }
+    };
+    cb(); // populate the collection
+    const o = new MutationObserver(cb);
+    o.async = false; // live arrays update synchronously
+    o.observe(target, config);
+    d.collection$registry.register(collection, o);
+    return collection});
 p.getElementsByTagName = function(t) { return live$wrapper(mw$.getElementsByTagName, this, t)}
 p.getElementsByName = function(t) { return live$wrapper(mw$.getElementsByName, this, t)}
 p.getElementsByClassName = function(t) { return live$wrapper(mw$.getElementsByClassName, this, t)}
