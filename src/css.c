@@ -654,7 +654,7 @@ const char * const allowableStyleElements[] = {
 "borderWidth",
 "borderColor",
 "borderStyle",
-};
+0};
 
 static void cssStats(void)
 {
