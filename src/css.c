@@ -928,6 +928,7 @@ struct mod {
 struct rule {
 	struct rule *next;
 	char *atname, *atval;
+	bool prop_ok;
 };
 
 struct hashhead {
@@ -1765,6 +1766,10 @@ lastrule:
 			a[t - r1] = 0;
 			camelCase(a);
 			rule->atname = a;
+			rule->prop_ok =
+			(stringInList(allowableStyleElements, a) >= 0);
+			if(!rule->prop_ok)
+				debugPrint(3, "invalid css property %s", a);
 			++t;
 			while (isspaceByte(*t))
 				++t;
@@ -3413,7 +3418,7 @@ static Tag **qsaInternal(const char *selstring, Tag *top)
 	if (!selstring) selstring = emptyString;
 // Compile the selector. The string has to be allocated.
 	s = allocMem(strlen(selstring) + 20);
-	sprintf(s, "%s{c:g}", selstring);
+	sprintf(s, "%s{x:g}", selstring);
 	d0 = cssPieces(s);
 	if (!d0) {
 		debugPrint(3, "querySelectorAll(%s) yields no descriptors", selstring);
@@ -3613,10 +3618,7 @@ the before after rules straight up.
 		bool has;
 		enum ej_proptype what;
 
-		if(stringInList(allowableStyleElements, r->atname) < 0) {
-			debugPrint(4, "invalid css property %s", r->atname);
-			continue;
-		}
+		if(!r->prop_ok) continue;
 
 // hover only looks for display visible
 		if (matchhover) {
