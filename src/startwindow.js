@@ -1498,27 +1498,29 @@ Object.defineProperty(CSSStyleDeclaration.prototype, "sheet", { get: function(){
 // How many of these are there that I don't know about?
 // The whole $$scy specificity system doesn't work for these.
 Object.defineProperty(CSSStyleDeclaration.prototype, "margin", {set: function(h) {
-this.marginLeft = this.marginBottom = this.marginRight = this.marginTop = h; }})
+this.marginLeft = this.marginBottom = this.marginRight = this.marginTop = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "scrollMargin", {set: function(h) {
-this.scrollMarginLeft = this.scrollMarginBottom = this.scrollMarginRight = this.scrollMarginTop = h; }})
+this.scrollMarginLeft = this.scrollMarginBottom = this.scrollMarginRight = this.scrollMarginTop = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "padding", {set: function(h) {
-this.paddingLeft = this.paddingBottom = this.paddingRight = this.paddingTop = h; }})
+this.paddingLeft = this.paddingBottom = this.paddingRight = this.paddingTop = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "scrollPadding", {set: function(h) {
-this.scrollPaddingLeft = this.scrollPaddingBottom = this.scrollPaddingRight = this.scrollPaddingTop = h; }})
+this.scrollPaddingLeft = this.scrollPaddingBottom = this.scrollPaddingRight = this.scrollPaddingTop = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderRadius", {set: function(h) {
-this.borderBottomLeftRadius = this.borderBottomRightRadius = this.borderTopRightRadius = this.borderTopLeftRadius = h; }})
+this.borderBottomLeftRadius = this.borderBottomRightRadius = this.borderTopRightRadius = this.borderTopLeftRadius = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "webkitBorderRadius", {set: function(h) {
-this.webkitBorderBottomLeftRadius = this.webkitBorderBottomRightRadius = this.webkitBorderTopRightRadius = this.webkitBorderTopLeftRadius = h; }})
+this.webkitBorderBottomLeftRadius = this.webkitBorderBottomRightRadius = this.webkitBorderTopRightRadius = this.webkitBorderTopLeftRadius = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "WebkitBorderRadius", {set: function(h) {
-this.WebkitBorderBottomLeftRadius = this.WebkitBorderBottomRightRadius = this.WebkitBorderTopRightRadius = this.WebkitBorderTopLeftRadius = h; }})
+this.WebkitBorderBottomLeftRadius = this.WebkitBorderBottomRightRadius = this.WebkitBorderTopRightRadius = this.WebkitBorderTopLeftRadius = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "border", {set: function(h) {
-this.borderLeft = this.borderBottom = this.borderRight = this.borderTop = h; }})
+this.borderWidth = this.borderColor = this.borderStyle = this.borderImage = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderWidth", {set: function(h) {
-this.borderLeftWidth = this.borderBottomWidth = this.borderRightWidth = this.borderTopWidth = h; }})
+this.borderLeftWidth = this.borderBottomWidth = this.borderRightWidth = this.borderTopWidth = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderColor", {set: function(h) {
-this.borderLeftColor = this.borderBottomColor = this.borderRightColor = this.borderTopColor = h; }})
+this.borderLeftColor = this.borderBottomColor = this.borderRightColor = this.borderTopColor = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderStyle", {set: function(h) {
-this.borderLeftStyle = this.borderBottomStyle = this.borderRightStyle = this.borderTopStyle = h; }})
+this.borderLeftStyle = this.borderBottomStyle = this.borderRightStyle = this.borderTopStyle = h}})
+Object.defineProperty(CSSStyleDeclaration.prototype, "borderImage", {set: function(h) {
+this.borderImageSource = this.borderImageOutset = this.borderImageWidth = this.borderImageSlice = this.borderImageRepeat = h}})
 
 // These are default properties of a style object.
 // they should not be enumerable. They must however be writable,
@@ -1619,29 +1621,25 @@ CSSStyleDeclaration.prototype, list[i], {value:"",writable:true})
 ;(function(){
 var list =[
 // first attribute is per acid test 46
-"textTransform","borderImageSource",
-"borderImageOutset",
-"borderImageWidth",
-"borderImageSlice",
+"textTransform",
+"borderImageSource","borderImageOutset","borderImageWidth","borderImageSlice",
 "borderBottom","borderLeft","borderRight","borderTop",
 "borderBottomWidth","borderLeftWidth","borderRightWidth","borderTopWidth",
 "width",
 "height",
-"borderImage","MozBorderImage","webkitBorderImage","WebkitBorderImage",
+"MozBorderImage","webkitBorderImage","WebkitBorderImage",
 "borderBottomColor","borderLeftColor","borderRightColor","borderTopColor",
 "borderBottomStyle","borderLeftStyle","borderRightStyle","borderTopStyle",
 "borderImageRepeat",
 "parentRule",];
 var v = [
-"none","none",
-"0",
-"1",
-"100%",
+"none",
+"none","0","1","100%",
 "1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)",
 "1px","1px","1px","1px",
 "250px",
 "40px",
-"none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch",
+"none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch",
 "rgb(193, 193, 193)","rgb(193, 193, 193)","rgb(193, 193, 193)","rgb(193, 193, 193)",
 "solid","solid","solid","solid",
 "stretch",
