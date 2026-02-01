@@ -2039,9 +2039,9 @@ return this.style$2;}});
 // get elements below
 p.getRootNode = mw$.getRootNode;
 // An HTMLCollection around the getElements functions
-swm("live$wrapper", function(f, target, arg, config) {
+swm("live$wrapper", function(f, target, arg, type) {
     // todo: add caching for observers
-    const d = (target.nodeType == 9)? target : ((target.ownerDocument)? target.ownerDocument: my$doc());
+    const d = (target.nodeType == 9) ? target : (target.ownerDocument ? target.ownerDocument: my$doc());
     const collection = new HTMLCollection();
     const ref = new WeakRef(collection);
      const cb = () => {
@@ -2054,12 +2054,14 @@ swm("live$wrapper", function(f, target, arg, config) {
     cb(); // populate the collection
     const o = new MutationObserver(cb);
     o.async = false; // live arrays update synchronously
-    o.observe(target, config);
+    const cfg = {subtree: true};
+    cfg[type] = true;
+    o.observe(target, cfg);
     d.collection$registry.register(collection, o);
     return collection});
-p.getElementsByTagName = function(t) { return live$wrapper(mw$.getElementsByTagName, this, t)}
-p.getElementsByName = function(t) { return live$wrapper(mw$.getElementsByName, this, t)}
-p.getElementsByClassName = function(t) { return live$wrapper(mw$.getElementsByClassName, this, t)}
+p.getElementsByTagName = function(t) { return live$wrapper(mw$.getElementsByTagName, this, t, "childList")}
+p.getElementsByName = function(t) { return live$wrapper(mw$.getElementsByName, this, t, "attributes")}
+p.getElementsByClassName = function(t) { return live$wrapper(mw$.getElementsByClassName, this, t, "attributes")}
 p.contains = mw$.nodeContains
 p.querySelector = querySelector
 p.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
