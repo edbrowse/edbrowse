@@ -28,6 +28,10 @@ Subject to the jsbg flag.
 More secure handling of temp files; there's no need to manually add the sticky
 bit to a custom directory any more.
 
+Mutation observers call their functions as microtasks.
+
+Run html scripts (not deferred or async) when you see them, not after browse.
+
 3.8.15
 
 The lsr (imap) and lsc (irc) commands.
