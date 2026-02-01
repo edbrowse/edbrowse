@@ -628,7 +628,6 @@ const char * const allowableStyleElements[] = {
 "borderTopWidth",
 "width",
 "height",
-"borderImage",
 "MozBorderImage",
 "webkitBorderImage",
 "WebkitBorderImage",
@@ -654,6 +653,7 @@ const char * const allowableStyleElements[] = {
 "borderWidth",
 "borderColor",
 "borderStyle",
+"borderImage",
 0};
 
 static void cssStats(void)
