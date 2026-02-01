@@ -2732,10 +2732,10 @@ void debrowseFilename(char *s, bool strip2)
 {
 	char *t;
 	if (!s) return;
-	if(cw->browseMode) {
-		t = strrchr(s, '.');
-		if (t && stringEqual(t, ".browse")) *t = 0;
-	}
+// note that browseMode may not be set, because we have a new empty buffer
+// and are fetching a new web page.
+	t = strrchr(s, '.');
+	if (t && stringEqual(t, ".browse")) *t = 0;
 	if(cw->f0.render4 || (cf->render5 && strip2)) {
 		t = strrchr(s, '.');
 		if (t && (stringEqual(t, ".html") || stringEqual(t, ".txt")))
