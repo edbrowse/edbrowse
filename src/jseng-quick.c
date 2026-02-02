@@ -4076,7 +4076,8 @@ static void processStyles(JSValueConst so, const char *stylestring)
 	char *s;		// gets truncated to the style name
 	char *sv;
 	char *next;
-	for (s = workstring; *s; s = next) {
+	s = workstring, skipWhite2(&s);
+	for (; *s; s = next) {
 		next = strchr(s, ';');
 		if (!next) {
 			next = s + strlen(s);
@@ -4092,9 +4093,9 @@ static void processStyles(JSValueConst so, const char *stylestring)
 			skipWhite2(&sv);
 			trimWhite(s);
 			trimWhite(sv);
-// the property name has to be nonempty
-			if (*s) {
 				camelCase(s);
+// the property name has to be one of a prescribed set
+			if (stringInList(allowableStyleElements, s) >= 0) {
 				set_property_string(cf->cx, so, s, sv);
 // Should we set a specification level here, perhaps high,
 // so the css sheets don't overwrite it?

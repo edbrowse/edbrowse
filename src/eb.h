@@ -52,9 +52,9 @@ typedef unsigned char uchar;
 // between edbrowse and the js engine.
 typedef void *jsobjtype;
 
-extern int ignore; // used to suppress warnings
 extern const char *jsSourceFile; // sourcefile providing the javascript
 extern int jsLineno; // js line number
+extern const char * const allowableStyleElements[];
 extern int undo1line; // special undo line number
 extern char frameContent[];
 	extern const char startWindowJS[];

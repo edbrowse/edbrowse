@@ -3710,8 +3710,11 @@ This will take some splaining. Suppose the html looks like:
 paragraph1 script paragraph3, and script is going to append paragraph2.
 When the script runs, the entire tree is build internally, the tree we are
 traversing right now. Not the tree of objects, that hasn't been built yet,
-but our tree of pointers in C is built.
-script runs and puts paragraph2 in place properly in the tree of objects,
+but our tree of pointers in C is built. Remember that
+we need our own tree within C, because all this has to run without javascript,
+so we have a tree here in C and a tree of js objects,
+and they absolutely have to be in sync at all times. Now the script runs,
+and puts paragraph2 in place properly in the tree of objects,
 because paragraph3 hasn't been placed yet,
 but it puts paragraph2 after paragraph3 in the C world.
 That's more than just wrong, it's inconsistent!
@@ -3719,6 +3722,7 @@ So we have to pretend like this is the end of the tree, like we haven't
 gone any farther, like we haven't yet place paragraph3.
 Cut off the rest of the nodes, then put them back
 after the script has run. It's a wild ride.
+
 <body><p>first paragraph
 <script>
 var p = document.createElement("p");
@@ -3727,18 +3731,20 @@ document.body.appendChild(p);
 </script>
 <p>third paragraph
 </body>
-We could make sure we only do this for the decorate phase,
-e.g. no need to do this when rendering the page for display.
-But those checks probably take as much time as actually doing it
+
+We could do this pointer magic only in the decorate phase,
+e.g. no need to do this when rendering the page for display,
+but those checks probably take as much time as actually doing it
 when the pointers don't change out from under us.
 *********************************************************************/
 
 		next_child = child->sibling, child->sibling = 0;
+		debugPrint(5, "%s lifts up %s", child->info->name, next_child ? next_child->info->name : "empty");
 		traverseNode(child, pc);
 		if(pc->abort) return;
-		if(!child->sibling || !next_child) { // high runner case
-			child->sibling = next_child;
-		} else {
+		debugPrint(5, "after sibling %s %s above", child->sibling ? child->sibling->info->name : "empty",
+		next_child ? next_child->info->name : "empty");
+		if(next_child) {
 			for(u = child; u->sibling; u = u->sibling)  ;
 			u->sibling = next_child;
 		}

@@ -1,7 +1,7 @@
 // stringname=startWindowJS
 /*********************************************************************
 This file contains support javascript functions used by a browser.
-They are easier to write here in javascript, then in C using the js api.
+They are easier to write here in javascript than in C using the js api.
 And it is portable amongst all js engines.
 This file is converted into a C string and compiled and run
 at the start of each javascript window.
@@ -1504,27 +1504,25 @@ Object.defineProperty(CSSStyleDeclaration.prototype, "sheet", { get: function(){
 // How many of these are there that I don't know about?
 // The whole $$scy specificity system doesn't work for these.
 Object.defineProperty(CSSStyleDeclaration.prototype, "margin", {set: function(h) {
-this.marginTop = this.marginRight = this.marginBottom = this.marginLeft = h; }})
+this.marginLeft = this.marginBottom = this.marginRight = this.marginTop = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "scrollMargin", {set: function(h) {
-this.scrollMarginTop = this.scrollMarginRight = this.scrollMarginBottom = this.scrollMarginLeft = h; }})
+this.scrollMarginLeft = this.scrollMarginBottom = this.scrollMarginRight = this.scrollMarginTop = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "padding", {set: function(h) {
-this.paddingTop = this.paddingRight = this.paddingBottom = this.paddingLeft = h; }})
+this.paddingLeft = this.paddingBottom = this.paddingRight = this.paddingTop = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "scrollPadding", {set: function(h) {
-this.scrollPaddingTop = this.scrollPaddingRight = this.scrollPaddingBottom = this.scrollPaddingLeft = h; }})
+this.scrollPaddingLeft = this.scrollPaddingBottom = this.scrollPaddingRight = this.scrollPaddingTop = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderRadius", {set: function(h) {
-this.borderTopLeftRadius = this.borderTopRightRadius = this.borderBottomRightRadius = this.borderBottomLeftRadius = h; }})
-Object.defineProperty(CSSStyleDeclaration.prototype, "webkitBorderRadius", {set: function(h) {
-this.webkitBorderTopLeftRadius = this.webkitBorderTopRightRadius = this.webkitBorderBottomRightRadius = this.webkitBorderBottomLeftRadius = h; }})
-Object.defineProperty(CSSStyleDeclaration.prototype, "WebkitBorderRadius", {set: function(h) {
-this.WebkitBorderTopLeftRadius = this.WebkitBorderTopRightRadius = this.WebkitBorderBottomRightRadius = this.WebkitBorderBottomLeftRadius = h; }})
+this.borderBottomLeftRadius = this.borderBottomRightRadius = this.borderTopRightRadius = this.borderTopLeftRadius = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "border", {set: function(h) {
-this.borderTop = this.borderRight = this.borderBottom = this.borderLeft = h; }})
+this.borderImage = this.borderColor = this.borderStyle = this.borderWidth = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderWidth", {set: function(h) {
-this.borderTopWidth = this.borderRightWidth = this.borderBottomWidth = this.borderLeftWidth = h; }})
+this.borderLeftWidth = this.borderBottomWidth = this.borderRightWidth = this.borderTopWidth = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderColor", {set: function(h) {
-this.borderTopColor = this.borderRightColor = this.borderBottomColor = this.borderLeftColor = h; }})
+this.borderLeftColor = this.borderBottomColor = this.borderRightColor = this.borderTopColor = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderStyle", {set: function(h) {
-this.borderTopStyle = this.borderRightStyle = this.borderBottomStyle = this.borderLeftStyle = h; }})
+this.borderLeftStyle = this.borderBottomStyle = this.borderRightStyle = this.borderTopStyle = h}})
+Object.defineProperty(CSSStyleDeclaration.prototype, "borderImage", {set: function(h) {
+this.borderImageRepeat = this.borderImageOutset = this.borderImageWidth = this.borderImageSlice = this.borderImageSource = h}})
 
 // These are default properties of a style object.
 // they should not be enumerable. They must however be writable,
@@ -1601,7 +1599,6 @@ var list =[
 "webkitAnimationName","WebkitAnimationName","webkitAnimationPlayState","WebkitAnimationPlayState","webkitAnimationTimingFunction","WebkitAnimationTimingFunction",
 "webkitAppearance","WebkitAppearance",
 "webkitBackfaceVisibility","WebkitBackfaceVisibility","webkitBackgroundClip","WebkitBackgroundClip","webkitBackgroundOrigin","WebkitBackgroundOrigin","webkitBackgroundSize","WebkitBackgroundSize",
-"webkitBorderBottomLeftRadius","WebkitBorderBottomLeftRadius","webkitBorderBottomRightRadius","WebkitBorderBottomRightRadius","webkitBorderTopLeftRadius","WebkitBorderTopLeftRadius","webkitBorderTopRightRadius","WebkitBorderTopRightRadius",
 "webkitBoxAlign","WebkitBoxAlign","webkitBoxDirection","WebkitBoxDirection","webkitBoxFlex","WebkitBoxFlex","webkitBoxOrdinalGroup","WebkitBoxOrdinalGroup","webkitBoxOrient","WebkitBoxOrient",
 "webkitBoxPack","WebkitBoxPack","webkitBoxShadow","WebkitBoxShadow","webkitBoxSizing","WebkitBoxSizing",
 "webkitFilter","WebkitFilter","webkitFlex","WebkitFlex","webkitFlexBasis","WebkitFlexBasis","webkitFlexDirection","WebkitFlexDirection","webkitFlexFlow","WebkitFlexFlow","webkitFlexGrow","WebkitFlexGrow",
@@ -1625,29 +1622,25 @@ CSSStyleDeclaration.prototype, list[i], {value:"",writable:true})
 ;(function(){
 var list =[
 // first attribute is per acid test 46
-"textTransform","borderImageSource",
-"borderImageOutset",
-"borderImageWidth",
-"borderImageSlice",
+"textTransform",
+"borderImageSource","borderImageOutset","borderImageWidth","borderImageSlice",
 "borderBottom","borderLeft","borderRight","borderTop",
 "borderBottomWidth","borderLeftWidth","borderRightWidth","borderTopWidth",
 "width",
 "height",
-"borderImage","MozBorderImage","webkitBorderImage","WebkitBorderImage",
+"MozBorderImage","webkitBorderImage","WebkitBorderImage",
 "borderBottomColor","borderLeftColor","borderRightColor","borderTopColor",
 "borderBottomStyle","borderLeftStyle","borderRightStyle","borderTopStyle",
 "borderImageRepeat",
 "parentRule",];
 var v = [
-"none","none",
-"0",
-"1",
-"100%",
+"none",
+"none","0","1","100%",
 "1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)",
 "1px","1px","1px","1px",
 "250px",
 "40px",
-"none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch",
+"none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch",
 "rgb(193, 193, 193)","rgb(193, 193, 193)","rgb(193, 193, 193)","rgb(193, 193, 193)",
 "solid","solid","solid","solid",
 "stretch",

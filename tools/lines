@@ -6,5 +6,5 @@ cat `
 /bin/ls -1 *.[ch] startwindow.js shared.js ../tools/*.pl ../perl/edbrowse.pl ../plugins/config/* ../plugins/scripts/* |
 egrep -v "startwindow.c|msg-strings.c|ebrc.c"` |
 wc -l | tr -d ' ')
-#  but subtract 2000 for the table in html-tags.c
-echo $((l-2000))
+#  but subtract 2600 for the lists in html-tags.c and css.c
+echo $((l-2600))
