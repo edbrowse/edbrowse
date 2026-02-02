@@ -2782,6 +2782,10 @@ static void eb_file_name_variables(const char *file_name, const char *file_var, 
 		char cwdbuf[ABSPATH];
 		if (getcwd(cwdbuf, sizeof(cwdbuf)))
 			p_setenv(var, dirname(cwdbuf));
+	} else if (!strcmp(s, "..")) {
+		char cwdbuf[ABSPATH];
+		if (getcwd(cwdbuf, sizeof(cwdbuf)))
+			p_setenv(var, dirname(dirname(cwdbuf)));
 	} else {
 		p_setenv(var, dirname(s));
 	}
