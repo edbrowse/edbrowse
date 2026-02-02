@@ -2942,8 +2942,6 @@ MutationObserver.prototype.observe = function(target, cfg) {
     subtrees. Thus store that property on the observer itself.
     If even one target is subtree then the observer is subtree. */
     if(cfg.subtree) this.subtree = true;
-    // store for debug
-    if(!this.$first$) Object.defineProperty(this, "$first$", {value: new WeakRef(target)});
     this.active = true;
     window.mutList.add(this);
 }
