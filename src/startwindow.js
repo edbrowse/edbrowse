@@ -109,7 +109,8 @@ class Eb$IterableWeakMap {
     }
 
     constructor(iterable) {
-        for (const [key, value] of iterable) this.set(key, value);
+        if (iterable)
+            for (const [key, value] of iterable) this.set(key, value);
     }
 
     set(key, value) {
