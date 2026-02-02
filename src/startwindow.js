@@ -136,6 +136,9 @@ class Eb$IterableWeakMap {
         return true;
     }
 
+    /* Use generators so that we don't end up holding a list of strong refs
+        during iteration */
+
     *[Symbol.iterator]() {
         for (const ref of this.#refSet) {
             const key = ref.deref();
@@ -155,6 +158,11 @@ class Eb$IterableWeakMap {
 
     *values() {
         for (const [key, value] of this)  yield value;
+    }
+
+    // This may not be accurate as we don't deref the keys
+    get size() {
+        return this.#refSet.size;
     }
 }
 
