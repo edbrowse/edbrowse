@@ -2922,12 +2922,13 @@ spdc("MutationObserver", null)
 MutationObserver.prototype.disconnect = function() {
     const ts = this.targets.size;
     const nl = this.notification$queue.length;
-    const first = this.$first$.deref();
-    const dc = first.dom$class;
-    const sn = first.eb$seqno;
-    alert3(`unobserving ${ts} targets with ${nl} unprocessed records: ${dc} tag ${sn}`);
+    alert3(`Disconnecting from ${ts} targets with ${nl} unprocessed records`);
     this.notification$queue.length =  0;
     this.active = false;
+    for (const t of this.targets.keys()) {
+        alert3(`Disconnecting ${t.dom$class} tag ${t.eb$seqno}`);
+        this.targets.delete(t);
+    }
     window.mutList.delete(this);
 }
 MutationObserver.prototype.observe = function(target, cfg) {
