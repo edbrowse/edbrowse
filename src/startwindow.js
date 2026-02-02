@@ -1512,7 +1512,7 @@ this.webkitBorderBottomLeftRadius = this.webkitBorderBottomRightRadius = this.we
 Object.defineProperty(CSSStyleDeclaration.prototype, "WebkitBorderRadius", {set: function(h) {
 this.WebkitBorderBottomLeftRadius = this.WebkitBorderBottomRightRadius = this.WebkitBorderTopRightRadius = this.WebkitBorderTopLeftRadius = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "border", {set: function(h) {
-this.borderWidth = this.borderColor = this.borderStyle = this.borderImage = h}})
+this.borderImage = this.borderColor = this.borderStyle = this.borderWidth = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderWidth", {set: function(h) {
 this.borderLeftWidth = this.borderBottomWidth = this.borderRightWidth = this.borderTopWidth = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderColor", {set: function(h) {
@@ -1520,7 +1520,7 @@ this.borderLeftColor = this.borderBottomColor = this.borderRightColor = this.bor
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderStyle", {set: function(h) {
 this.borderLeftStyle = this.borderBottomStyle = this.borderRightStyle = this.borderTopStyle = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderImage", {set: function(h) {
-this.borderImageSource = this.borderImageOutset = this.borderImageWidth = this.borderImageSlice = this.borderImageRepeat = h}})
+this.borderImageRepeat = this.borderImageOutset = this.borderImageWidth = this.borderImageSlice = this.borderImageSource = h}})
 
 // These are default properties of a style object.
 // they should not be enumerable. They must however be writable,
