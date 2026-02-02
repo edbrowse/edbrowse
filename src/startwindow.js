@@ -1507,10 +1507,6 @@ Object.defineProperty(CSSStyleDeclaration.prototype, "scrollPadding", {set: func
 this.scrollPaddingLeft = this.scrollPaddingBottom = this.scrollPaddingRight = this.scrollPaddingTop = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderRadius", {set: function(h) {
 this.borderBottomLeftRadius = this.borderBottomRightRadius = this.borderTopRightRadius = this.borderTopLeftRadius = h}})
-Object.defineProperty(CSSStyleDeclaration.prototype, "webkitBorderRadius", {set: function(h) {
-this.webkitBorderBottomLeftRadius = this.webkitBorderBottomRightRadius = this.webkitBorderTopRightRadius = this.webkitBorderTopLeftRadius = h}})
-Object.defineProperty(CSSStyleDeclaration.prototype, "WebkitBorderRadius", {set: function(h) {
-this.WebkitBorderBottomLeftRadius = this.WebkitBorderBottomRightRadius = this.WebkitBorderTopRightRadius = this.WebkitBorderTopLeftRadius = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "border", {set: function(h) {
 this.borderImage = this.borderColor = this.borderStyle = this.borderWidth = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderWidth", {set: function(h) {
@@ -1597,7 +1593,6 @@ var list =[
 "webkitAnimationName","WebkitAnimationName","webkitAnimationPlayState","WebkitAnimationPlayState","webkitAnimationTimingFunction","WebkitAnimationTimingFunction",
 "webkitAppearance","WebkitAppearance",
 "webkitBackfaceVisibility","WebkitBackfaceVisibility","webkitBackgroundClip","WebkitBackgroundClip","webkitBackgroundOrigin","WebkitBackgroundOrigin","webkitBackgroundSize","WebkitBackgroundSize",
-"webkitBorderBottomLeftRadius","WebkitBorderBottomLeftRadius","webkitBorderBottomRightRadius","WebkitBorderBottomRightRadius","webkitBorderTopLeftRadius","WebkitBorderTopLeftRadius","webkitBorderTopRightRadius","WebkitBorderTopRightRadius",
 "webkitBoxAlign","WebkitBoxAlign","webkitBoxDirection","WebkitBoxDirection","webkitBoxFlex","WebkitBoxFlex","webkitBoxOrdinalGroup","WebkitBoxOrdinalGroup","webkitBoxOrient","WebkitBoxOrient",
 "webkitBoxPack","WebkitBoxPack","webkitBoxShadow","WebkitBoxShadow","webkitBoxSizing","WebkitBoxSizing",
 "webkitFilter","WebkitFilter","webkitFlex","WebkitFlex","webkitFlexBasis","WebkitFlexBasis","webkitFlexDirection","WebkitFlexDirection","webkitFlexFlow","WebkitFlexFlow","webkitFlexGrow","WebkitFlexGrow",
