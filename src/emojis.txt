@@ -1,0 +1,963 @@
+#  library of emojis for edbrowse.
+# These are the most frequently used.
+# emoji = pathname in your config file to take advantage of this library,
+# or make a local copy so you can customize it for yourself.
+
+#  Emojis are organized into groups.
+# Reference an emoji in edbrowse by ~jgroup.item. It is part of input processing.
+# ~j is suppose to remind you of emojis. ~e was taken,
+# as per the syntax for entering bytes in hex.
+# You can enter a unique fragment of a group or an item,
+# e.g. ~jhea.blu for the blue heart.
+# Type ~jheart to get a menu of all the hearts.
+
+# include the accented letters that you might use here, n tilde, o umlaut, etc.
+# you probably have keyboard shortcuts for these, if linux is configured
+# for your language, so you might not need very many of these.
+accent {
+109 c Circumflex
+259 schwa
+261 latin g
+2c8 vertline
+331 low macron
+}
+
+# Greek letters. Used in quite a few contexts.
+greek {
+391 Alpha
+392 Beta
+393 Gamma
+394 Delta
+395 Epsilon
+396 Zeta
+397 Eta
+398 Theta
+399 Iota
+39a Kappa
+39b Lambda
+39c Mu
+39d Nu
+39e Xi
+39f Omicron
+3a0 Pi
+3a1 Rho
+3a3 Sigma
+3a4 Tau
+3a5 Upsilon
+3a6 Phi
+3a7 Chi
+3a8 Psi
+3a9 Omega
+3b1 alpha
+3b2 beta
+3b3 gamma
+3b4 delta
+3b5 epsilon
+3b6 zeta
+3b7 eta
+3b8 theta
+3b9 iota
+3ba kappa
+3bb lambda
+3bc mu
+3bd nu
+3be xi
+3bf omicron
+3c0 pi
+3c1 rho
+3c2 final sigma
+3c3 sigma
+3c4 tau
+3c5 upsilon
+3c6 phi
+3c7 chi
+3c8 psi
+3c9 omega
+}
+
+#  common non-ASCII punctuations
+punctuation {
+2018 open single quote
+2019 close single quote
+201c open double quote
+201d close double quote
+2022 bullet
+2026 ellipsis
+2032 prime
+2033 double prime
+2034 triple prime
+203c bang bang
+203d interrobang
+2705 white heavy check mark
+2713 check mark
+2714 heavy check mark
+2122 trade mark
+ae registered
+}
+
+shapes {
+25a0 black square
+25a1 white square
+26aa medium white circle
+1f534 large red circle
+1f535 large blue circle
+1f536 large orange diamond
+1f539 small blue diamond
+1f546 white latin cross
+}
+
+money {
+a2 cents
+a3 pounds
+a5 yen
+20ac euro
+1f3e6 bank
+1f4b0 money bag
+1fa99 coin
+20bf bitcoin
+1f4b2 heavy dollar sign
+1f4b5 banknote with dollar sign
+1f4b8 money with wings
+1f911 money mouth
+}
+
+arrows {
+2190 left
+2191 up
+2192 right
+2193 down
+21d4 left right
+21d5 up down
+}
+
+math {
+d7 times
+2153 one third
+2154 two thirds
+2200 for all
+2201 complement
+2202 partial differential
+2203 there exists
+2204 there does not exist
+2205 empty set
+2207 del
+2208 member of
+2209 not a member of
+220d small contains as member
+2211 sum
+2250 limit
+221a square root
+221e infinity
+2220 angle
+2229 intersection
+222a union
+222b integral
+2245 congruent to
+2260 not equal
+2261 equivalent
+2264 less equal
+2265 greatr equal
+2282 proper subset of
+2283 proper superset of
+2284 not a subset of
+2285 not a superset of
+2286 subset of
+2287 superset of
+22c5 dot product
+2295 direct sum
+}
+
+chess {
+2654 white king
+2655 white queen
+2656 white rook
+2657 white bishop
+2658 white knight
+2659 white pawn
+265a black king
+265b black queen
+265c black rook
+265d black bishop
+265e black knight
+265f black pawn
+}
+
+suits {
+2660 black spade
+2665 black heart
+2666 black diamond
+2663 black club
+2664 white spade
+2661 white heart
+2662 white diamond
+2667 white club
+}
+
+cards {
+1f0a0 back of card
+1f0a1 aice of spades
+1f0a2 2 of spades
+1f0a3 3 of spades
+1f0a4 4 of spades
+1f0a5 5 of spades
+1f0a6 6 of spades
+1f0a7 7 of spades
+1f0a8 8 of spades
+1f0a9 9 of spades
+1f0aa ten of spades
+1f0ab jack of spades
+1f0ad queen of spades
+1f0ae king of spades
+1f0b1 aice of hearts
+1f0b2 2 of hearts
+1f0b3 3 of hearts
+1f0b4 4 of hearts
+1f0b5 5 of hearts
+1f0b6 6 of hearts
+1f0b7 7 of hearts
+1f0b8 8 of hearts
+1f0b9 9 of hearts
+1f0ba ten of hearts
+1f0bb jack of hearts
+1f0bd queen of hearts
+1f0be king of hearts
+1f0c1 aice of diamonds
+1f0c2 2 of diamonds
+1f0c3 3 of diamonds
+1f0c4 4 of diamonds
+1f0c5 5 of diamonds
+1f0c6 6 of diamonds
+1f0c7 7 of diamonds
+1f0c8 8 of diamonds
+1f0c9 9 of diamonds
+1f0ca ten of diamonds
+1f0cb jack of diamonds
+1f0cd queen of diamonds
+1f0ce king of diamonds
+1f0cf joker
+1f0d1 aice of clubs
+1f0d2 2 of clubs
+1f0d3 3 of clubs
+1f0d4 4 of clubs
+1f0d5 5 of clubs
+1f0d6 6 of clubs
+1f0d7 7 of clubs
+1f0d8 8 of clubs
+1f0d9 9 of clubs
+1f0da ten of clubs
+1f0db jack of clubs
+1f0dd queen of clubs
+1f0de king of clubs
+}
+
+heart {
+2764 original
+1f499 blue
+1f49a green
+1f49b yellow
+1f49c purple
+1f9e1 orange
+1f5a4 black
+1f493 beating
+1f494 broken
+1f495 two hearts
+1f496 sparkling
+1f497 growing
+1f498 arrow through heart
+1f49d ribbon on heart
+1f49e revolving heart
+1f49f decoration
+1f491 couple
+}
+
+hand {
+1f446 pointing up
+1f447 pointing down
+1f448 pointing left
+1f449 pointing right
+1f44c ok
+1f91e fingers crossed
+1f91f i love you
+262e peace
+1f596 vulcan
+1f918 horns
+1f590 fingers apart
+1f44d thumbs up
+1f44e thumbs down
+1f44b waving
+1f44f clapping
+1f450 open
+1f64f folded
+270b raised
+270c victory
+1f3fd brown victory
+270a raised fist
+1f3fc brown raised fist
+1f595 middle finger
+}
+
+bugs {
+1fab0 fly
+1f99f mosquito
+1f577 spider
+1f578 spider web
+1f982 scorpion
+1f41c ant
+1f41d honey bee
+1f98b butterfly
+1f41b bug
+1f41e ladybug
+1f997 cricket
+}
+
+# they're not all fish but you get the idea
+fish {
+1f41f fish
+1f420 tropical fish
+1f421 blow fish
+1f988 shark
+1f42c dolphin
+1f40b whale
+1f433 spouting whale
+1f419 octopus
+1f41a spiral shell
+}
+
+birds {
+1f426 bird
+1f426^2b1b blackbird
+1f427 penguin
+1f413 rooster
+1f414 chicken
+1f423 hatching chick
+1f424 baby chick
+1f983 turkey
+1f986 duck
+1f9a2 swan
+1fabf goose
+1f985 eagle
+1f989 owl
+1f54a peace dove
+1fab6 feather
+}
+
+animals {
+1f408 cat
+1f431 cat face
+1f415 dog
+1f436 dog face
+1f429 poodle
+1f43e paw prints
+1f40e horse
+1f434 horse face
+1f410 goat
+1f411 sheep
+1f40f ram
+1f412 monkey
+1f416 pig
+1f437 pig face
+1f417 boar
+1f418 elephant
+1f404 cow
+1f402 ox
+1f403 water buffalo
+1f981 lion face
+1f405 tiger
+1f406 leopard
+1f407 rabbit
+1f42a dromedary
+1f42b bactrian
+1f43b bear face
+1f43c panda face
+1f428 koala
+1f43f chipmunk
+1f98a fox face
+1f98c deer
+1f98d gorilla
+1f98f rhinoceros
+1f99b hippo
+1f992 giraffe face
+1f993 zebra
+1f998 kangaroo
+1f400 rat
+1f439 hamster face
+1f987 bat
+1f40a crocodile
+1f98e lizard
+1f40c snail
+1f40d snake
+1f422 turtle
+1f438 frog face
+1f980 crab
+1f99e lobster
+1fabc jellyfish
+1fab1 worm
+1f996 t rex
+}
+
+plants {
+2698 flower
+1f490 bouquet
+2618 shamrock
+1f33c blossom
+1f338 cherry blossom
+1f337 tulip
+1f339 rose
+1f33a hibiscus
+1f33b sunflower
+1fab4 potted plant
+1f33d ear of maize
+1f33e ear of rice
+1f340 4 leaf clover
+1f341 maple leaf
+1f342 falling leaf
+1f343 fluttering leaf
+1f331 seedling
+1f330 chestnut
+1f332 evergreen
+1f333 leafy tree
+1f334 palm tree
+1f335 cactus
+}
+
+music {
+266d flat
+266f sharp
+1f3b5 note
+1f3b6 notes
+1f3bc score
+1f3b7 saxophone
+1f3b8 guitar
+1f3b9 keyboard
+1f3ba trumpet
+1f3bb violin
+1fa88 flute
+1f941 drum with drumsticks
+1f514 bell
+}
+
+party {
+1f64c hands up celebration
+1f389 party popper
+1f388 balloon
+1f38a confetti ball
+1f381 wrapped present
+2728 sparkles
+1f382 birthday cake
+1f37b clinking beer mugs
+1f942 clinking glasses
+1f37e bottle with popping cork
+1f973 face with party horn and party hat
+}
+
+clock {
+1f550 clock face 1 oclock
+1f551 clock face 2 oclock
+1f552 clock face 3 oclock
+1f553 clock face 4 oclock
+1f554 clock face 5 oclock
+1f555 clock face 6 oclock
+1f556 clock face 7 oclock
+1f557 clock face 8 oclock
+1f558 clock face 9 oclock
+1f559 clock face 10 oclock
+1f55a clock face 11 oclock
+1f55b clock face 12 oclock
+1f55c clock face one thirty
+1f55d clock face two thirty
+1f55e clock face three thirty
+1f55f clock face four thirty
+1f560 clock face five thirty
+1f561 clock face six thirty
+1f562 clock face seven thirty
+1f563 clock face eight thirty
+1f564 clock face nine thirty
+1f565 clock face ten thirty
+1f566 clock face eleven thirty
+1f567 clock face twelve thirty
+23f0 alarm clock
+1f570 mantel clock
+23f1 stopwatch
+23f2 timer
+}
+
+#  there are a lot of these; you may not want all of them.
+face {
+263a white smiling face
+1f600 grin
+1f601 grin smile
+1f929 grin with star eyes
+1f92a grin large eye small eye
+1f60f smirk
+1f603 open mouth
+1f642 slightly smiling
+1f604 smile open mouth smiling eyes
+1f60a smile with smiling eyes
+1f60d smile with heart eyes
+1f970 smile with 3 hearts
+1f92d smile with smiling eyes and hand covering mouth
+1f626 frown with open mouth
+1f641 slightly frowning
+1f617 kissing
+1f618 blow a kiss
+1f619 kiss smile
+1f61a kiss closed eyes
+1f606 closed eyes
+1f609 wink
+1f61b tongue out
+1f61c tongue out and winking
+1f61d tongue out and closed eyes
+1f62e face with open mouth
+1f636 no mouth
+1f644 rolling eyes
+1f97a pleading eyes
+1f92b finger on lips
+1f910 zipper mouth
+1f92c serious with symbols covering mouth
+1f974 uneven eyes and wavy mouth
+1f928 one eyebrow raised
+1f602 tears of joy
+1f62d cry out loud
+1f60c relieved
+1f611 vacant
+1f612 amused
+1f614 pensive
+1f914 thinking
+1f615 confused
+1f616 confounded
+1f61e disappointed
+1f625 disappointed relieved
+1f620 angry
+1f621 pouting
+1f622 crying
+1f623 persevering
+1f624 triumphant
+1f627 anguish
+1f61f worried
+1f628 fearful
+1f631 scream of fear
+1f629 weary
+1f62b tired
+1f971 yawning
+1f62a sleepy
+1f634 sleeping
+1f927 sneezing
+1f62c grimace
+1f62f hushed
+1f632 astonished
+1f633 flushed
+1f635 dizzy
+1f917 hugging
+1f922 nauseated
+1f92e vomiting
+1f605 cold sweat
+1f630 open mouth and cold sweat
+1f975 overheated
+1f976 freezing
+1f60b eating
+1f924 drooling
+1f643 upside down
+1f92f shocked face with exploding head
+1f5e3 speaking head in silhouette
+#  faces with extra things on them
+1f607 halo
+1f608 devil horns
+1f60e sunglasses
+1f920 cowboy hat
+1f637 medical mask
+1f912 thermometer
+1f9d0 monocle
+}
+
+#  don't we love our cats
+catface {
+1f638 grin with smiling eyes
+1f639 tears of joy
+1f63a smile with open mouth
+1f63b smile with heart eyes
+1f63c wry smile
+1f640 weary
+}
+
+#  letters to designate a country or area
+# put 2 of these together to make a flag; but the common flags are listed below
+regional {
+1f1e6 A
+1f1e7 B
+1f1e8 C
+1f1e9 D
+1f1ea E
+1f1eb F
+1f1ec G
+1f1ed H
+1f1ee I
+1f1ef J
+1f1f0 K
+1f1f1 L
+1f1f2 M
+1f1f3 N
+1f1f4 O
+1f1f5 P
+1f1f6 Q
+1f1f7 R
+1f1f8 S
+1f1f9 T
+1f1fa U
+1f1fb V
+1f1fc W
+1f1fd X
+1f1fe Y
+1f1ff Z
+}
+
+flags {
+1f1e8+1f1e6 canada
+1f1e8+1f1f3 china
+1f1ea+1f1ec egypt
+1f1eb+1f1f7 france
+1f1e9+1f1ea germany
+1f1ec+1f1e7 great britain
+1f1ee+1f1f1 israel
+1f1ee+1f1f9 italy
+1f1ef+1f1f5 japan
+1f1f2+1f1fd mexico
+1f1ea+1f1f8 spain
+1f1f7+1f1fa russia
+1f1fa+1f1f8 united states
+}
+
+office {
+1f481 person at desk
+1f9d1^1f4bc male office worker
+1f469^1f4bc female office worker
+1f4bc brief case
+1f5a5 desktop computer
+1f4bb personal computer
+1f5a9 calculator
+1f5d2 spiral notebook
+1f5d3 spiral calendar
+1f4c8 chart upward trend
+1f4c9 chart downward trend
+1f4ca bar chart
+2702 scissors
+1f4ce paperclip
+2709 envelope
+270d writing hand
+270f pencil
+1f58a ballpoint pen
+1f9fb roll of paper
+1f4cf ruler
+1f4d0 triangular ruler
+1f4d5 book
+1f4da books
+1f4d6 open book
+260e telephone
+1f4de telephone receiver
+1f4f1 cell phone
+1f5d1 waste basket
+}
+
+mail {
+2709 envelope
+1f4e9 arrow pointing down to envelope
+1f4e6 package
+1f4ea mailbox with lowered flag
+1f4eb mailbox with raised flag
+1f4ec open mailbox with raised flag
+1f4f0 newspaper
+}
+
+fruit {
+1f347 grapes
+1f348 melon
+1f349 watermelon
+1f34a tangerine
+1f34b lemon
+1f34b^1f7e9 lime
+1f34c banana
+1f34d pineapple
+1f34e red apple
+1f34f green apple
+1f350 pear
+1f351 peach
+1f352 cherries
+1f353 strawberry
+1fad0 blueberries
+}
+
+food {
+1f354 hamburger
+1f355 pizza slice
+1f357 chicken leg
+1f356 meat on the bone
+1f32d hot dog
+1f32e taco
+1f32f burrito
+1f35d spaghetti
+1f96a sandwich
+1f953 bacon
+1f95a egg
+1f95e pancakes
+1f35a bowl of rice
+1f35b rice with curry
+1f35c steaming bowl
+1f363 sushi
+1f95f dumpling
+1f35e bread
+1f954 potato
+1f360 roasted sweet potato
+1f35f french fries
+1f957 green salad
+1f955 carrot
+1f345 tomato
+1f346 egg plant
+1f336 hot pepper
+1f344 mushroom
+1f374 fork and knife
+1f37d fork knife and plate
+}
+
+treats {
+1f370 shortcake
+1f967 pie
+1f368 ice cream
+1f366 soft ice cream
+1f369 doughnut
+1f36a cookie
+1f36b chocolate bar
+1f36c candy
+1f37f popcorn
+1f95c peanuts
+1f36d lollipop
+1f36f honey pot
+}
+
+drinks {
+2615 hot beverage
+1f95b glass of milk
+1f37c baby bottle
+1f375 teacup without handle
+1f964 cup with straw
+1f377 wine glass
+1f378 cocktail glass
+1f942 clinking glasses
+1f379 tropical drink
+1f37a beer mug
+1f37b clinking beer mugs
+1f37e bottle with popping cork
+1f943 tumbler glass
+}
+
+sky {
+2609 sun
+263c sun with rays
+2600 black sun with rays
+1f31e sun with face
+1f305 sunrise
+1f304 sunrise over mountains
+1f307 sunset over buildings
+1f313 first quarter moon
+1f315 full moon
+1f317 last quarter moon
+1fa90 ringed planet
+1f31f glowing star
+1f320 shooting star
+2605 black star
+2606 white star
+1f303 night with stars
+1f30c milky way
+1f308 rainbow
+2604 comet
+2601 cloud
+1f327 cloud with rain
+1f329 cloud with lightning
+26c8 cloud with lightning and rain
+1f328 snow cloud
+1f32a cloud with tornado
+1f32b fog
+}
+
+earth {
+1f30d globe europe africa
+1f30e globe americas
+1f30f globe asia australia
+1f310 globe with meridians
+1f5fa world map
+}
+
+#  audio visual
+av {
+1f3a4 microphone
+1f9d1^1f3a4 singer
+1f3a7 headphone
+1f508 speaker
+1f4e2 loudspeaker
+1f50a speaker with sound waves
+1f4fb radio
+1f4fa television
+1f4f7 camera
+1f4f8 camera with flash
+1f3a5 movie camera
+1f3ae video game
+}
+
+sports {
+26be baseball
+26be^1f9e4 baseball glove
+26bd soccer ball
+1f3c8 football
+1f3c9 rugby
+1f3c0 basketball and hoop
+1f3d1 hockey stick and ball
+1f3d2 hockey stick and puck
+1f3b3 bowling
+1f3be tennis racket and ball
+1f3bf ski and ski boot
+1f3c2 snowboarder
+26f8 ice skate
+1f3c3 runner
+1f3cc golfer
+1f45f athletic shoe
+1f3c4 surfer
+1f3ca swimmer
+1f3a3 fishing pole with fish
+1f3cb weight lifter
+1f3c7 running horse
+1f3cd racing motorcycle
+1f3c5 sports medal
+1f947 first place medal
+1f3c6 trophy
+}
+
+xmas {
+1f384 christmas tree
+1f332 evergreen
+1f385 father christmas
+1f936 mother christmas
+2603 snowman
+2744 snowflake
+1f381 wrapped present
+2763 heart bang ornament
+1f31f glowing star
+2728 sparkles
+}
+
+wedding {
+1f492 wedding
+1f470 bride with veil
+1f935 man in tuxedo
+1f491 couple with heart
+1f48d ring
+1f490 bouquet
+26ea church
+}
+
+transportation {
+2708 airplane
+1f6eb airplane leaving
+1f6ec airplane arriving
+1f681 helicopter
+1f680 rocket
+1f682 steam locomotive
+1f690 mini bus
+1f691 ambulance
+1f692 fire engine
+1f693 police car
+1f697 automobile
+1f698 automobile front
+26fd fuel pump
+1f699 rv
+1f6b2 bicycle
+26f5 sailboat
+1f6a2 ship
+1f6f3 passenger ship
+1f6a4 speedboat
+}
+
+mythical {
+1f409 dragon
+1f432 dragon face
+1f984 unicorn
+1f479 japanese ogre
+1f47b ghost
+1f47c baby angel
+1f47d e t alien
+1f47e alien monster
+1f47f imp
+1f9db vampire
+1f9de genie
+1f9df zombie
+}
+
+tools {
+1f528 hammer
+1fa9a saw
+1f527 wrench
+1fa9b screwdriver
+1f529 nut and bolt
+1fa9c ladder
+1fab5 wood
+26d3 chains
+}
+
+medical {
+1f468^2695 doctor
+1f469^2695 nurse
+1fa7a stethoscope
+1f637 face with medical mask
+1f912 face with thermometer
+1f3e5 hospital
+1fa78 drop of blood
+1f48a pill
+1f489 syringe
+1fa79 bandage
+1fa7c crutch
+1f493 beating heart
+1fac1 lungs
+}
+
+bathroom {
+1f6bd toilet
+1f6c1 bath tub
+1f6c0 person in bath
+1f6bf shower
+1f9fc bar of soap
+1faa5 toothbrush
+1fa92 razor
+}
+
+misc {
+2614 umbrella with raindrops
+1f30b volcano
+1f383 jack o lantern
+1f393 graduation cap
+1f3a8 artist palette
+1f58c paint brush
+1f3b0 slot machine
+1f3b1 billiards
+1f3b2 game die
+1f3d4 snow capped mountain
+1f3d6 beach with umbrella
+1f3dd desert island
+1f3e2 office building
+1f401 house
+1f48b kiss mark
+1f4ac speech balloon
+1f4ad thought balloon
+1f4e3 cheering megaphone
+1f511 key
+1f525 fire
+1f56f candle
+1f52b pistol
+1f5f3 ballot box with ballot
+1f648 see no evil
+1f649 hear no evil
+1f64a speak no evil
+1f6a8 police light
+1f6ac smoking
+1f6d1 stop sign
+26a0 warning
+26a1 high voltage
+1f923 roll on floor laughing
+}
+

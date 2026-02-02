@@ -3708,7 +3708,7 @@ static void traverseNode(Tag *t, struct parseContext *pc)
 /*********************************************************************
 This will take some splaining. Suppose the html looks like:
 paragraph1 script paragraph3, and script is going to append paragraph2.
-When the script runs, the entire tree is build internally, the tree we are
+When the script runs, the entire tree is built internally, the tree we are
 traversing right now. Not the tree of objects, that hasn't been built yet,
 but our tree of pointers in C is built. Remember that
 we need our own tree within C, because all this has to run without javascript,
@@ -3719,7 +3719,7 @@ because paragraph3 hasn't been placed yet,
 but it puts paragraph2 after paragraph3 in the C world.
 That's more than just wrong, it's inconsistent!
 So we have to pretend like this is the end of the tree, like we haven't
-gone any farther, like we haven't yet place paragraph3.
+gone any farther, like we haven't yet placed paragraph3.
 Cut off the rest of the nodes, then put them back
 after the script has run. It's a wild ride.
 
