@@ -2912,7 +2912,7 @@ swm("MutationObserver", function(f) {
     if (typeof f !== "function") throw new TypeError("not a function");
     this.callback = f;
     this.active = false;
-    this.targets = new Map;
+    this.targets = new Eb$IterableWeakMap;
     this.subtree = false;
     this.async = true; // run as microtask by default
     this.notification$queue = [];
@@ -2921,8 +2921,9 @@ spdc("MutationObserver", null)
 MutationObserver.prototype.disconnect = function() {
     const ts = this.targets.size;
     const nl = this.notification$queue.length;
-    const dc = this.$first$.dom$class;
-    const sn = this.$first$.eb$seqno;
+    const first = this.$first$.deref();
+    const dc = first.dom$class;
+    const sn = first.eb$seqno;
     alert3(`unobserving ${ts} targets with ${nl} unprocessed records: ${dc} tag ${sn}`);
     this.notification$queue.length =  0;
     this.active = false;
@@ -2940,7 +2941,7 @@ MutationObserver.prototype.observe = function(target, cfg) {
     If even one target is subtree then the observer is subtree. */
     if(cfg.subtree) this.subtree = true;
     // store for debug
-    if(!this.$first$) Object.defineProperty(this, "$first$", {value: target});
+    if(!this.$first$) Object.defineProperty(this, "$first$", {value: new WeakRef(target)});
     this.active = true;
     window.mutList.add(this);
 }

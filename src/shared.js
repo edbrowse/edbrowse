@@ -1055,6 +1055,12 @@ function mutFixup(b, isattr, y, z) {
             o.disconnect();
             continue;
         }
+        if(!o.targets.size) {
+            // no remaining targets so clean up
+            alert3("mutFixup: disconnecting observer with no targets");
+            o.disconnect();
+            continue;
+        }
         const record = (function() {
             /* check our target: either we're the direct target or we're below an
             observer which cares about subtrees. */
