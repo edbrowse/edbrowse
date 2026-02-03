@@ -4606,16 +4606,13 @@ static void jsNode(Tag *t, bool opentag, struct parseContext *pc)
 			} else if(t->async) {
 				debugPrint(3, "script postponed because it is async");
 			} else {
-// But first ... do we have to have the css in place before the script runs?
-// I really don't know. If we call it, we are running this rather nontrivial
-// computation before each inline script.
-				loadFinishCSS();
-				run_function_bool_win(cf, "eb$qs$start");
 			char *up1 = upSnap(t);
 			runScriptNow(cf, t);
 			char *up2 = upSnap(t);
-// this doesn't catch every possible weird thing a script might do
-// to itself, but most of them.
+// Did the script remove itself, or move itself to a new place,
+// while we're in the middle of building the tree?!
+// this doesn't catch every possible weird thing a script might do,
+// but most of them.
 			if(!stringEqual(up1, up2)) {
 				debugPrint(0, "script removes or moves itself within the tree. Decoration process aborted. Results of this browse are unpredictable!");
 				pc->abort = true;

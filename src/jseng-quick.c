@@ -4472,40 +4472,6 @@ void rebuildSelectors(void)
 static const char soj[] = "soj$";
 static void sofail() { debugPrint(3, "no style object"); }
 
-#if 0
-// I don't think we need thi any more - if we ever did.
-// when comfortable, delete it altogether.
-bool has_gcs(const char *name)
-{
-	JSContext * cx = cf->cx;
-	bool l;
-	JSValue g = *(JSValue*)cf->winobj, j;
-	j = get_property_object(cx,  g, soj);
-	if(JS_IsUndefined(j)) {
-		sofail();
-		return false;
-	}
-	        l = has_property(cx, j, name);
-	JS_Release(cx, j);
-	return l;
-}
-
-enum ej_proptype typeof_gcs(const char *name)
-{
-	enum ej_proptype l;
-	JSContext * cx = cf->cx;
-	JSValue g = *(JSValue*)cf->winobj, j;
-	j = get_property_object(cx,  g, soj);
-	if(JS_IsUndefined(j)) {
-		sofail();
-		return EJ_PROP_NONE;
-	}
-	        l = typeof_property(cx, j, name);
-	JS_Release(cx, j);
-	return l;
-}
-#endif
-
 int get_gcs_number(const char *name)
 {
 	JSContext * cx = cf->cx;
