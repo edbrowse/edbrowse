@@ -2936,6 +2936,28 @@ if(l >= 4)
 s.borderImage =  h[3];
 }
 
+function borderImageShort(s, h) {
+if(h === null || h === undefined) return;
+if(typeof h !== "string") h = String(h)
+h = h.split(/\s+/);
+var l = h.length;
+delete s.borderImageSource;
+delete s.borderImageSlice;
+delete s.borderImageWidth;
+delete s.borderImageOutset;
+delete s.borderImageRepeat;
+if(l >= 1)
+s.borderImageSource = h[0];
+if(l >= 2)
+s.borderImageSlice = h[1];
+if(l >= 3)
+s.borderImageWidth =  h[2];
+if(l >= 4)
+s.borderImageOutset =  h[3];
+if(l >= 5)
+s.borderImageRepeat =  h[4];
+}
+
 function injectSetup(which) {
 var w = my$win();
 var d = my$doc();
@@ -6705,7 +6727,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "makeSheets", "getComputedStyle", "computeStyleInline", "cssTextGet",
 "marginShort", "scrollMarginShort", "paddingShort", "scrollPaddingShort",
 "borderRadiusShort", "borderWidthShort", "borderColorShort", "borderStyleShort",
-"backgroundShort", "fontShort", "borderShort",
+"backgroundShort", "fontShort", "borderShort", "borderImageShort",
 "injectSetup", "eb$visible",
 "insertAdjacentHTML", "htmlString", "outer$1", "textUnder", "newTextUnder",
 "EventTarget", "XMLHttpRequestEventTarget", "XMLHttpRequestUpload", "XMLHttpRequest",

@@ -1593,7 +1593,7 @@ mw$.borderColorShort(this, h)}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderStyle", {set: function(h) {
 mw$.borderStyleShort(this, h)}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderImage", {set: function(h) {
-this.borderImageRepeat = this.borderImageOutset = this.borderImageWidth = this.borderImageSlice = this.borderImageSource = h}})
+mw$.borderImageShort(this, h)}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "background", {set: function(h) {
 mw$.backgroundShort(this, h)}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "font", {set: function(h) {
