@@ -3642,10 +3642,27 @@ the before after rules straight up.
 			continue;
 		}
 
-// don't repeat an attribute. Hardly ever happens except for acid test 0.
-// I keep the first one - though it's possible I should keep the second one,
-// but in acid test 0 the second value is bogus, which I don't test for,
-// so this might be wrong but it gets around that test.
+/*********************************************************************
+When bulkmatch is true, we are doing the broad spectrum css, all rules,
+all nodes, only to determine what is visible on the page.
+edbrowse doesn't care about font size or margin top or any of those things.
+So if it is a bulk match and the rule is not connected with visibility,
+skip it. But wait - that doesn't write the property into the style object.
+Well guess what - we're not suppose to.
+In getComputedStyle we are, but not in general.
+In fact, when I fall through this test, and write display = block
+into the style object, I'm not suppose to. It makes it
+easy to determine visibility, but some day we need to find a better way.
+*********************************************************************/
+		if(bulkmatch && !r->visrel)
+			continue;
+
+/*********************************************************************
+don't repeat an attribute. Hardly ever happens except for acid test 0.
+I keep the first one - though it's possible I should keep the last one,
+but in acid test 0 the second value is bogus, which I don't test for,
+so this might be wrong but it gets around that test.
+*********************************************************************/
 		for (r1 = r0; r1 != r; r1 = r1->next)
 			if (stringEqual(r1->atname, r->atname))
 				break;
