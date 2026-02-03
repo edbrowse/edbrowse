@@ -137,6 +137,10 @@ class Eb$IterableWeakMap {
         return true;
     }
 
+    has(key) {
+        return this.#weakMap.has(key);
+    }
+
     /* Use generators so that we don't end up holding a list of strong refs
         during iteration */
 
