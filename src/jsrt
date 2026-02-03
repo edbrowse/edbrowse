@@ -356,7 +356,7 @@ onload=formLoad(this.name) onunload=formUnload(this.name)>
 {"foo":736,"bar":737}
 </script>
 
-<script language=JavaScript type=text/javascript>
+<script language=JavaScript type=text/javascript defer>
 function catdog(item) { alert('fluffy'); if(item.checked&&document.forms[1].dog.checked) alert('chased by dog'); }
 
 // Let javascript generate another javascript tag
