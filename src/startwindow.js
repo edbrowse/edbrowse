@@ -1573,33 +1573,15 @@ Object.defineProperty(CSSStyleDeclaration.prototype, "sheet", { get: function(){
 // when one property is shorthand for several others.
 // margin implies top right bottom left
 // How many of these are there that I don't know about?
-// The whole $$scy specificity system doesn't work for these.
-Object.defineProperty(CSSStyleDeclaration.prototype, "margin", {set: function(h) {
-mw$.marginShort(this, h)}})
-Object.defineProperty(CSSStyleDeclaration.prototype, "scrollMargin", {set: function(h) {
-mw$.scrollMarginShort(this, h)}})
-Object.defineProperty(CSSStyleDeclaration.prototype, "padding", {set: function(h) {
-mw$.paddingShort(this, h)}})
-Object.defineProperty(CSSStyleDeclaration.prototype, "scrollPadding", {set: function(h) {
-mw$.scrollPaddingShort(this, h)}})
-Object.defineProperty(CSSStyleDeclaration.prototype, "borderRadius", {set: function(h) {
-mw$.borderRadiusShort(this, h)}})
-Object.defineProperty(CSSStyleDeclaration.prototype, "border", {set: function(h) {
-mw$.borderShort(this, h)}})
-Object.defineProperty(CSSStyleDeclaration.prototype, "borderWidth", {set: function(h) {
-mw$.borderWidthShort(this, h)}})
-Object.defineProperty(CSSStyleDeclaration.prototype, "borderColor", {set: function(h) {
-mw$.borderColorShort(this, h)}})
-Object.defineProperty(CSSStyleDeclaration.prototype, "borderStyle", {set: function(h) {
-mw$.borderStyleShort(this, h)}})
-Object.defineProperty(CSSStyleDeclaration.prototype, "borderImage", {set: function(h) {
-mw$.borderImageShort(this, h)}})
-Object.defineProperty(CSSStyleDeclaration.prototype, "background", {set: function(h) {
-mw$.backgroundShort(this, h)}})
-Object.defineProperty(CSSStyleDeclaration.prototype, "font", {set: function(h) {
-mw$.fontShort(this, h)}})
-Object.defineProperty(CSSStyleDeclaration.prototype, "inset", {set: function(h) {
-mw$.insetShort(this, h)}})
+// Not clear how this meshes with the $$scy specificity system.
+;(function(){
+var list = ["margin", "scrollMargin", "padding", "scrollPadding",
+"borderRadius", "border",
+"borderWidth", "borderColor", "borderStyle", "borderImage",
+"background", "font", "inset",];
+for(var k of list) {
+eval('Object.defineProperty(CSSStyleDeclaration.prototype, "' + k + '", {set: function(h) {mw$.' + k + 'Short(this, h)}})');
+}})();
 
 // These are default properties of a style object.
 // they should not be enumerable. They must however be writable,
