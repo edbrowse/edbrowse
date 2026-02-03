@@ -2894,6 +2894,9 @@ delete s.fontWeight;
 delete s.fontSize;
 delete s.lineHeight;
 delete s.fontFamily;
+delete s.fontVariant;
+delete s.fontSizeAdjust;
+delete s.fontStretch;
 if(l >= 1)
 s.fontStyle = h[0];
 if(l >= 2)
@@ -2905,7 +2908,32 @@ if(parts.length >= 2)
 s.lineHeight = parts[1];
 }
 if(l >= 4)
-s.fontFamily = h.slice(3).join("");
+s.fontFamily = h[3];
+if(l >= 5)
+s.fontVariant = h[4];
+if(l >= 6)
+s.fontSizeAdjust = h[5];
+if(l >= 7)
+s.fontStretch = h[6];
+}
+
+function borderShort(s, h) {
+if(h === null || h === undefined) return;
+if(typeof h !== "string") h = String(h)
+h = h.split(/\s+/);
+var l = h.length;
+delete s.borderWidth;
+delete s.borderStyle;
+delete s.borderColor;
+delete s.borderImage;
+if(l >= 1)
+s.borderWidth = h[0];
+if(l >= 2)
+s.borderStyle = h[1];
+if(l >= 3)
+s.borderColor =  h[2];
+if(l >= 4)
+s.borderImage =  h[3];
 }
 
 function injectSetup(which) {
@@ -6677,7 +6705,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "makeSheets", "getComputedStyle", "computeStyleInline", "cssTextGet",
 "marginShort", "scrollMarginShort", "paddingShort", "scrollPaddingShort",
 "borderRadiusShort", "borderWidthShort", "borderColorShort", "borderStyleShort",
-"backgroundShort", "fontShort",
+"backgroundShort", "fontShort", "borderShort",
 "injectSetup", "eb$visible",
 "insertAdjacentHTML", "htmlString", "outer$1", "textUnder", "newTextUnder",
 "EventTarget", "XMLHttpRequestEventTarget", "XMLHttpRequestUpload", "XMLHttpRequest",

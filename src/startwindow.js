@@ -1585,7 +1585,7 @@ mw$.scrollPaddingShort(this, h)}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderRadius", {set: function(h) {
 mw$.borderRadiusShort(this, h)}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "border", {set: function(h) {
-this.borderImage = this.borderColor = this.borderStyle = this.borderWidth = h}})
+mw$.borderShort(this, h)}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderWidth", {set: function(h) {
 mw$.borderWidthShort(this, h)}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderColor", {set: function(h) {
