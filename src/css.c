@@ -182,7 +182,6 @@ const char * const allowableStyleElements[] = {
 "float",
 "floodColor",
 "floodOpacity",
-"font",
 "fontFamily",
 "fontFeatureSettings",
 "fontKerning",
@@ -633,6 +632,8 @@ const char * const allowableStyleElements[] = {
 "borderImageRepeat",
 "parentRule",
 // shorthand
+"background",
+"font",
 "margin",
 "scrollMargin",
 "padding",
@@ -643,7 +644,6 @@ const char * const allowableStyleElements[] = {
 "borderStyle",
 "borderImage",
 "border",
-"background",
 0};
 
 static void cssStats(void)

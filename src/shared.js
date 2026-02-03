@@ -2884,6 +2884,30 @@ if(l >= 4)
 s.backgroundPosition = h[3];
 }
 
+function fontShort(s, h) {
+if(h === null || h === undefined) return;
+if(typeof h !== "string") h = String(h)
+h = h.split(/\s+/);
+var l = h.length;
+delete s.fontStyle;
+delete s.fontWeight;
+delete s.fontSize;
+delete s.lineHeight;
+delete s.fontFamily;
+if(l >= 1)
+s.fontStyle = h[0];
+if(l >= 2)
+s.fontWeight = h[1];
+if(l >= 3) {
+var parts = h[2].split('/');
+s.fontSize = parts[0];
+if(parts.length >= 2)
+s.lineHeight = parts[1];
+}
+if(l >= 4)
+s.fontFamily = h.slice(3).join("");
+}
+
 function injectSetup(which) {
 var w = my$win();
 var d = my$doc();
@@ -6653,7 +6677,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "makeSheets", "getComputedStyle", "computeStyleInline", "cssTextGet",
 "marginShort", "scrollMarginShort", "paddingShort", "scrollPaddingShort",
 "borderRadiusShort", "borderWidthShort", "borderColorShort", "borderStyleShort",
-"backgroundShort",
+"backgroundShort", "fontShort",
 "injectSetup", "eb$visible",
 "insertAdjacentHTML", "htmlString", "outer$1", "textUnder", "newTextUnder",
 "EventTarget", "XMLHttpRequestEventTarget", "XMLHttpRequestUpload", "XMLHttpRequest",

@@ -1596,6 +1596,8 @@ Object.defineProperty(CSSStyleDeclaration.prototype, "borderImage", {set: functi
 this.borderImageRepeat = this.borderImageOutset = this.borderImageWidth = this.borderImageSlice = this.borderImageSource = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "background", {set: function(h) {
 mw$.backgroundShort(this, h)}})
+Object.defineProperty(CSSStyleDeclaration.prototype, "font", {set: function(h) {
+mw$.fontShort(this, h)}})
 
 // These are default properties of a style object.
 // they should not be enumerable. They must however be writable,
@@ -1623,7 +1625,7 @@ var list =[
 "emptyCells","fill","fillOpacity","fillRule","filter",
 "flex","flexBasis","flexDirection","flexFlow","flexGrow","flexShrink","flexWrap",
 "float","floodColor","floodOpacity",
-"font","fontFamily","fontFeatureSettings","fontKerning","fontLanguageOverride","fontSize","fontSizeAdjust","fontStretch","fontStyle","fontSynthesis","fontVariant","fontVariantAlternates","fontVariantCaps","fontVariantEastAsian","fontVariantLigatures","fontVariantNumeric","fontVariantPosition","fontWeight",
+"fontFamily","fontFeatureSettings","fontKerning","fontLanguageOverride","fontSize","fontSizeAdjust","fontStretch","fontStyle","fontSynthesis","fontVariant","fontVariantAlternates","fontVariantCaps","fontVariantEastAsian","fontVariantLigatures","fontVariantNumeric","fontVariantPosition","fontWeight",
 "gap","grid","gridArea","gridAutoColumns","gridAutoFlow","gridAutoRows","gridColumn","gridColumnEnd","gridColumnGap","gridColumnStart",
 "gridGap","gridRow","gridRowEnd","gridRowGap","gridRowStart","gridTemplate","gridTemplateAreas","gridTemplateColumns","gridTemplateRows",
 "hyphens","imageOrientation","imageRendering","imeMode","inlineSize",
