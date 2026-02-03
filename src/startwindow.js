@@ -1575,7 +1575,7 @@ Object.defineProperty(CSSStyleDeclaration.prototype, "sheet", { get: function(){
 // How many of these are there that I don't know about?
 // The whole $$scy specificity system doesn't work for these.
 Object.defineProperty(CSSStyleDeclaration.prototype, "margin", {set: function(h) {
-this.marginLeft = this.marginBottom = this.marginRight = this.marginTop = h}})
+mw$.marginShort(this, h)}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "scrollMargin", {set: function(h) {
 this.scrollMarginLeft = this.scrollMarginBottom = this.scrollMarginRight = this.scrollMarginTop = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "padding", {set: function(h) {

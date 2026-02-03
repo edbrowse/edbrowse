@@ -2630,6 +2630,38 @@ s=s+ k + ':' + l + '; ';
 return s;
 }
 
+// various css shorthand properties
+function marginShort(s, h) {
+// don't want to blow up if it's not a string
+if(h === null || h === undefined) return;
+// this should already be a string, but...
+if(typeof h !== "string") h = String(h)
+h = h.split(/\s+/);
+var l = h.length;
+if(l == 1) {
+s.marginLeft = s.marginBottom = s.marginRight = s.marginTop = h[0];
+return;
+}
+if(l == 2) {
+s.marginTop = s.marginBottom = h[0];
+s.marginLeft = s.marginRight = h[1];
+return;
+}
+if(l == 3) {
+s.marginTop = h[0];
+s.marginLeft = s.marginRight = h[1];
+s.marginBottom = h[2];
+return;
+}
+if(l >= 4) {
+s.marginTop = h[0];
+s.marginRight = h[1];
+s.marginBottom = h[2];
+s.marginLeft = h[3];
+return;
+}
+}
+
 function injectSetup(which) {
 var w = my$win();
 var d = my$doc();
@@ -6397,6 +6429,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "Intl", "Intl_dt", "Intl_num",
 "cssGather", "cssApply", "cssDocLoad",
 "makeSheets", "getComputedStyle", "computeStyleInline", "cssTextGet",
+"marginShort",
 "injectSetup", "eb$visible",
 "insertAdjacentHTML", "htmlString", "outer$1", "textUnder", "newTextUnder",
 "EventTarget", "XMLHttpRequestEventTarget", "XMLHttpRequestUpload", "XMLHttpRequest",
