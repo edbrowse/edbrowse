@@ -648,6 +648,7 @@ const char * const allowableStyleElements[] = {
 
 static const char * const displayableStyleElements[] = {
 "display", "visibility", "color",
+"content", // for before and after modifiers
 0};
 
 static void cssStats(void)
@@ -4088,6 +4089,8 @@ static void cssEverybody(void)
 		matchtype = l % 3;
 		for (d = d0; d; d = d->next) {
 			if (d->error)
+				continue;
+			if(!d->visrel)
 				continue;
 			a = qsa2(d, NULL);
 			if (!a)
