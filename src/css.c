@@ -646,6 +646,10 @@ const char * const allowableStyleElements[] = {
 "inset",
 0};
 
+static const char * const displayableStyleElements[] = {
+"display", "visibility", "color",
+0};
+
 static void cssStats(void)
 {
 	bool first = true;
@@ -880,6 +884,7 @@ struct desc {
 	char *lhs, *rhs;
 	short bc;		// brace count
 	uchar error;
+	bool visrel; // relevant to visibility
 	struct sel *selectors;
 	struct rule *rules;
 	int highspec;		// specificity when this descriptor matches
@@ -918,7 +923,8 @@ struct mod {
 struct rule {
 	struct rule *next;
 	char *atname, *atval;
-	bool prop_ok;
+	bool prop_ok; // property name is ok
+	bool visrel; // relevant to visibility
 };
 
 struct hashhead {
@@ -1758,6 +1764,9 @@ lastrule:
 			(stringInList(allowableStyleElements, a) >= 0);
 			if(!rule->prop_ok)
 				debugPrint(3, "invalid css property %s", a);
+			rule->visrel =
+			(stringInList(displayableStyleElements, a) >= 0);
+			d->visrel |= rule->visrel;
 			++t;
 			while (isspaceByte(*t))
 				++t;
@@ -2426,6 +2435,8 @@ static void cssPiecesPrint(const struct desc *d)
 					errorMessage[d->error], d->lhs);
 			continue;
 		}
+		if(d->visrel)
+			fprintf(cssfile, "👀");
 		for (sel = d->selectors; sel; sel = sel->next) {
 			if (sel != d->selectors)
 				fprintf(cssfile, ",");
