@@ -82,7 +82,6 @@ const char * const allowableStyleElements[] = {
 "appearance",
 "aspectRatio",
 "backfaceVisibility",
-"background",
 "backgroundAttachment",
 "backgroundBlendMode",
 "backgroundClip",
@@ -639,11 +638,12 @@ const char * const allowableStyleElements[] = {
 "padding",
 "scrollPadding",
 "borderRadius",
-"border",
 "borderWidth",
 "borderColor",
 "borderStyle",
 "borderImage",
+"border",
+"background",
 0};
 
 static void cssStats(void)

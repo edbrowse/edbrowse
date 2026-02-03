@@ -1594,6 +1594,8 @@ Object.defineProperty(CSSStyleDeclaration.prototype, "borderStyle", {set: functi
 this.borderLeftStyle = this.borderBottomStyle = this.borderRightStyle = this.borderTopStyle = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderImage", {set: function(h) {
 this.borderImageRepeat = this.borderImageOutset = this.borderImageWidth = this.borderImageSlice = this.borderImageSource = h}})
+Object.defineProperty(CSSStyleDeclaration.prototype, "background", {set: function(h) {
+this.backgroundColor = this.backgroundImage = this.backgroundRepeat = this.backgroundPosition = h}})
 
 // These are default properties of a style object.
 // they should not be enumerable. They must however be writable,
@@ -1603,7 +1605,7 @@ var list =[
 "accentColor","alignContent","alignItems","alignSelf","all",
 "animation","animationDelay","animationDuration","animationFillMode","animationIterationCount","animationName","animationPlayState","animationTimingFunction",
 "appearance","aspectRatio",
-"backfaceVisibility","background","backgroundAttachment","backgroundBlendMode","backgroundClip","backgroundColor","backgroundImage",
+"backfaceVisibility","backgroundAttachment","backgroundBlendMode","backgroundClip","backgroundColor","backgroundImage",
 "backgroundOrigin","backgroundPosition","backgroundPositionX","backgroundPositionY","backgroundRepeat","backgroundSize",
 "blockSize","borderBlock","borderBlockColor","borderBlockEnd","borderBlockEndColor","borderBlockEndStyle","borderBlockEndWidth",
 "borderBlockStart","borderBlockStartColor","borderBlockStartStyle","borderBlockStartWidth","borderBlockStyle","borderBlockWidth",
