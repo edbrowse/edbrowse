@@ -190,6 +190,15 @@ but it's probably easier just to go through odbc.
 src/dbstubs.c:
 Stubs for database functions, if you want to build edbrowse without database access.
 
+src/emojis.txt:
+a library of common emojis. Point to this in your config file.
+
+plugins/config/*.rc:
+Common plugins. Include these from your config file.
+
+plugins/scripts/*:
+Scripts that support some of the plugins.
+
 ------------------------------------------------------------
 
 Error conventions.

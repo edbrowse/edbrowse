@@ -1198,6 +1198,7 @@ if(f.name) delete w.frames[f.name];
 }
 f2 = gebtn(w.document, "iframe", true, false);
 l2 = f2.length;
+if(l2 != l)
 alert3("rebuild frames in context " + w.eb$ctx + " lengths " + l + " and " + l2);
 if(l2 < l) for(i=l2; i<l; ++i) delete w.frames[i];
 if(l2 > l) for(i=l; i<l2; ++i)
