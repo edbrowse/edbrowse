@@ -1577,25 +1577,25 @@ Object.defineProperty(CSSStyleDeclaration.prototype, "sheet", { get: function(){
 Object.defineProperty(CSSStyleDeclaration.prototype, "margin", {set: function(h) {
 mw$.marginShort(this, h)}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "scrollMargin", {set: function(h) {
-this.scrollMarginLeft = this.scrollMarginBottom = this.scrollMarginRight = this.scrollMarginTop = h}})
+mw$.scrollMarginShort(this, h)}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "padding", {set: function(h) {
-this.paddingLeft = this.paddingBottom = this.paddingRight = this.paddingTop = h}})
+mw$.paddingShort(this, h)}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "scrollPadding", {set: function(h) {
-this.scrollPaddingLeft = this.scrollPaddingBottom = this.scrollPaddingRight = this.scrollPaddingTop = h}})
+mw$.scrollPaddingShort(this, h)}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderRadius", {set: function(h) {
-this.borderBottomLeftRadius = this.borderBottomRightRadius = this.borderTopRightRadius = this.borderTopLeftRadius = h}})
+mw$.borderRadiusShort(this, h)}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "border", {set: function(h) {
 this.borderImage = this.borderColor = this.borderStyle = this.borderWidth = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderWidth", {set: function(h) {
-this.borderLeftWidth = this.borderBottomWidth = this.borderRightWidth = this.borderTopWidth = h}})
+mw$.borderWidthShort(this, h)}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderColor", {set: function(h) {
-this.borderLeftColor = this.borderBottomColor = this.borderRightColor = this.borderTopColor = h}})
+mw$.borderColorShort(this, h)}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderStyle", {set: function(h) {
-this.borderLeftStyle = this.borderBottomStyle = this.borderRightStyle = this.borderTopStyle = h}})
+mw$.borderStyleShort(this, h)}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "borderImage", {set: function(h) {
 this.borderImageRepeat = this.borderImageOutset = this.borderImageWidth = this.borderImageSlice = this.borderImageSource = h}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "background", {set: function(h) {
-this.backgroundColor = this.backgroundImage = this.backgroundRepeat = this.backgroundPosition = h}})
+mw$.backgroundShort(this, h)}})
 
 // These are default properties of a style object.
 // they should not be enumerable. They must however be writable,

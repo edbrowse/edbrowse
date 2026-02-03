@@ -1725,8 +1725,6 @@ lastrule:
 			for (t = r1; t < r2; ++t) {
 				if (*t == ':')
 					break;
-				if (isupperByte(*t))
-					*t = tolower(*t);
 				if ((isdigitByte(*t) && t > r1) ||
 				    isalphaByte(*t) || *t == '-')
 					continue;
@@ -3605,9 +3603,6 @@ the before after rules straight up.
 
 	s = initString(&sl);
 	for (r = r0; r; r = r->next) {
-		bool has;
-		enum ej_proptype what;
-
 		if(!r->prop_ok) continue;
 
 // hover only looks for display visible
@@ -3635,12 +3630,15 @@ the before after rules straight up.
 			stringAndString(&s, &sl, r->atval);
 			continue;
 		}
+#if 0
 // if it appears to be part of the prototype, and not the object,
 // I won't write it.
+// what the hell was this for?
 		has = has_gcs(r->atname);
 		what = typeof_gcs(r->atname);
 		if (has && !what)
 			continue;
+#endif
 
 // don't repeat an attribute. Hardly ever happens except for acid test 0.
 		for (r1 = r0; r1 != r; r1 = r1->next)

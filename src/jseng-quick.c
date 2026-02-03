@@ -4472,6 +4472,9 @@ void rebuildSelectors(void)
 static const char soj[] = "soj$";
 static void sofail() { debugPrint(3, "no style object"); }
 
+#if 0
+// I don't think we need thi any more - if we ever did.
+// when comfortable, delete it altogether.
 bool has_gcs(const char *name)
 {
 	JSContext * cx = cf->cx;
@@ -4501,6 +4504,7 @@ enum ej_proptype typeof_gcs(const char *name)
 	JS_Release(cx, j);
 	return l;
 }
+#endif
 
 int get_gcs_number(const char *name)
 {

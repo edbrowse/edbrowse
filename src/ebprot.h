@@ -523,8 +523,6 @@ void establish_js_option(Tag *t, Tag *sel, Tag *og);
 void establish_js_textnode(Tag *t, const char *fpn);
 void domLink(Tag *t, const char *classname, const char *list, const Tag *owntag, int extra);
 void rebuildSelectors(void);
-bool has_gcs(const char *name);
-enum ej_proptype typeof_gcs(const char *name);
 int get_gcs_number(const char *name);
 void set_gcs_number(const char *name, int n);
 void set_gcs_bool(const char *name, bool v);

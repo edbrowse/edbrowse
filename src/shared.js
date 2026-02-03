@@ -2662,6 +2662,228 @@ return;
 }
 }
 
+function scrollMarginShort(s, h) {
+if(h === null || h === undefined) return;
+if(typeof h !== "string") h = String(h)
+h = h.split(/\s+/);
+var l = h.length;
+if(l == 1) {
+s.scrollMarginLeft = s.scrollMarginBottom = s.scrollMarginRight = s.scrollMarginTop = h[0];
+return;
+}
+if(l == 2) {
+s.scrollMarginTop = s.scrollMarginBottom = h[0];
+s.scrollMarginLeft = s.scrollMarginRight = h[1];
+return;
+}
+if(l == 3) {
+s.scrollMarginTop = h[0];
+s.scrollMarginLeft = s.scrollMarginRight = h[1];
+s.scrollMarginBottom = h[2];
+return;
+}
+if(l >= 4) {
+s.scrollMarginTop = h[0];
+s.scrollMarginRight = h[1];
+s.scrollMarginBottom = h[2];
+s.scrollMarginLeft = h[3];
+return;
+}
+}
+
+function paddingShort(s, h) {
+if(h === null || h === undefined) return;
+if(typeof h !== "string") h = String(h)
+h = h.split(/\s+/);
+var l = h.length;
+if(l == 1) {
+s.paddingLeft = s.paddingBottom = s.paddingRight = s.paddingTop = h[0];
+return;
+}
+if(l == 2) {
+s.paddingTop = s.paddingBottom = h[0];
+s.paddingLeft = s.paddingRight = h[1];
+return;
+}
+if(l == 3) {
+s.paddingTop = h[0];
+s.paddingLeft = s.paddingRight = h[1];
+s.paddingBottom = h[2];
+return;
+}
+if(l >= 4) {
+s.paddingTop = h[0];
+s.paddingRight = h[1];
+s.paddingBottom = h[2];
+s.paddingLeft = h[3];
+return;
+}
+}
+
+function scrollPaddingShort(s, h) {
+if(h === null || h === undefined) return;
+if(typeof h !== "string") h = String(h)
+h = h.split(/\s+/);
+var l = h.length;
+if(l == 1) {
+s.scrollPaddingLeft = s.scrollPaddingBottom = s.scrollPaddingRight = s.scrollPaddingTop = h[0];
+return;
+}
+if(l == 2) {
+s.scrollPaddingTop = s.scrollPaddingBottom = h[0];
+s.scrollPaddingLeft = s.scrollPaddingRight = h[1];
+return;
+}
+if(l == 3) {
+s.scrollPaddingTop = h[0];
+s.scrollPaddingLeft = s.scrollPaddingRight = h[1];
+s.scrollPaddingBottom = h[2];
+return;
+}
+if(l >= 4) {
+s.scrollPaddingTop = h[0];
+s.scrollPaddingRight = h[1];
+s.scrollPaddingBottom = h[2];
+s.scrollPaddingLeft = h[3];
+return;
+}
+}
+
+function borderRadiusShort(s, h) {
+if(h === null || h === undefined) return;
+if(typeof h !== "string") h = String(h)
+h = h.split(/\s+/);
+var l = h.length;
+if(l == 1) {
+s.borderBottomLeftRadius = s.borderBottomRightRadius = s.borderTopRightRadius = s.borderTopLeftRadius = h[0];
+return;
+}
+if(l == 2) {
+s.borderTopLeftRadius = s.borderBottomRightRadius = h[0];
+s.borderBottomLeftRadius = s.borderTopRightRadius = h[1];
+return;
+}
+if(l == 3) {
+s.borderTopLeftRadius = h[0];
+s.borderBottomLeftRadius = s.borderTopRightRadius = h[1];
+s.borderBottomRightRadius = h[2];
+return;
+}
+if(l >= 4) {
+s.borderTopLeftRadius = h[0];
+s.borderTopRightRadius = h[1];
+s.borderBottomRightRadius = h[2];
+s.borderBottomLeftRadius = h[3];
+return;
+}
+}
+
+function borderWidthShort(s, h) {
+if(h === null || h === undefined) return;
+if(typeof h !== "string") h = String(h)
+h = h.split(/\s+/);
+var l = h.length;
+if(l == 1) {
+s.borderLeftWidth = s.borderBottomWidth = s.borderRightWidth = s.borderTopWidth = h[0];
+return;
+}
+if(l == 2) {
+s.borderTopWidth = s.borderBottomWidth = h[0];
+s.borderLeftWidth = s.borderRightWidth = h[1];
+return;
+}
+if(l == 3) {
+s.borderTopWidth = h[0];
+s.borderLeftWidth = s.borderRightWidth = h[1];
+s.borderBottomWidth = h[2];
+return;
+}
+if(l >= 4) {
+s.borderTopWidth = h[0];
+s.borderRightWidth = h[1];
+s.borderBottomWidth = h[2];
+s.borderLeftWidth = h[3];
+return;
+}
+}
+
+function borderColorShort(s, h) {
+if(h === null || h === undefined) return;
+if(typeof h !== "string") h = String(h)
+h = h.split(/\s+/);
+var l = h.length;
+if(l == 1) {
+s.borderLeftColor = s.borderBottomColor = s.borderRightColor = s.borderTopColor = h[0];
+return;
+}
+if(l == 2) {
+s.borderTopColor = s.borderBottomColor = h[0];
+s.borderLeftColor = s.borderRightColor = h[1];
+return;
+}
+if(l == 3) {
+s.borderTopColor = h[0];
+s.borderLeftColor = s.borderRightColor = h[1];
+s.borderBottomColor = h[2];
+return;
+}
+if(l >= 4) {
+s.borderTopColor = h[0];
+s.borderRightColor = h[1];
+s.borderBottomColor = h[2];
+s.borderLeftColor = h[3];
+return;
+}
+}
+
+function borderStyleShort(s, h) {
+if(h === null || h === undefined) return;
+if(typeof h !== "string") h = String(h)
+h = h.split(/\s+/);
+var l = h.length;
+if(l == 1) {
+s.borderLeftStyle = s.borderBottomStyle = s.borderRightStyle = s.borderTopStyle = h[0];
+return;
+}
+if(l == 2) {
+s.borderTopStyle = s.borderBottomStyle = h[0];
+s.borderLeftStyle = s.borderRightStyle = h[1];
+return;
+}
+if(l == 3) {
+s.borderTopStyle = h[0];
+s.borderLeftStyle = s.borderRightStyle = h[1];
+s.borderBottomStyle = h[2];
+return;
+}
+if(l >= 4) {
+s.borderTopStyle = h[0];
+s.borderRightStyle = h[1];
+s.borderBottomStyle = h[2];
+s.borderLeftStyle = h[3];
+return;
+}
+}
+
+function backgroundShort(s, h) {
+if(h === null || h === undefined) return;
+if(typeof h !== "string") h = String(h)
+h = h.split(/\s+/);
+var l = h.length;
+delete s.backgroundColor;
+delete s.backgroundImage;
+delete s.backgroundRepeat;
+delete s.backgroundPosition;
+if(l >= 1)
+s.backgroundColor = h[0];
+if(l >= 2)
+s.backgroundImage = h[1];
+if(l >= 3)
+s.backgroundRepeat = h[2];
+if(l >= 4)
+s.backgroundPosition = h[3];
+}
+
 function injectSetup(which) {
 var w = my$win();
 var d = my$doc();
@@ -6429,7 +6651,9 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "Intl", "Intl_dt", "Intl_num",
 "cssGather", "cssApply", "cssDocLoad",
 "makeSheets", "getComputedStyle", "computeStyleInline", "cssTextGet",
-"marginShort",
+"marginShort", "scrollMarginShort", "paddingShort", "scrollPaddingShort",
+"borderRadiusShort", "borderWidthShort", "borderColorShort", "borderStyleShort",
+"backgroundShort",
 "injectSetup", "eb$visible",
 "insertAdjacentHTML", "htmlString", "outer$1", "textUnder", "newTextUnder",
 "EventTarget", "XMLHttpRequestEventTarget", "XMLHttpRequestUpload", "XMLHttpRequest",
