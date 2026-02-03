@@ -223,7 +223,6 @@ const char * const allowableStyleElements[] = {
 "imageRendering",
 "imeMode",
 "inlineSize",
-"inset",
 "insetBlock",
 "insetBlockEnd",
 "insetBlockStart",
@@ -644,6 +643,7 @@ const char * const allowableStyleElements[] = {
 "borderStyle",
 "borderImage",
 "border",
+"inset",
 0};
 
 static void cssStats(void)

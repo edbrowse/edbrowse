@@ -1598,6 +1598,8 @@ Object.defineProperty(CSSStyleDeclaration.prototype, "background", {set: functio
 mw$.backgroundShort(this, h)}})
 Object.defineProperty(CSSStyleDeclaration.prototype, "font", {set: function(h) {
 mw$.fontShort(this, h)}})
+Object.defineProperty(CSSStyleDeclaration.prototype, "inset", {set: function(h) {
+mw$.insetShort(this, h)}})
 
 // These are default properties of a style object.
 // they should not be enumerable. They must however be writable,
@@ -1629,7 +1631,7 @@ var list =[
 "gap","grid","gridArea","gridAutoColumns","gridAutoFlow","gridAutoRows","gridColumn","gridColumnEnd","gridColumnGap","gridColumnStart",
 "gridGap","gridRow","gridRowEnd","gridRowGap","gridRowStart","gridTemplate","gridTemplateAreas","gridTemplateColumns","gridTemplateRows",
 "hyphens","imageOrientation","imageRendering","imeMode","inlineSize",
-"inset","insetBlock","insetBlockEnd","insetBlockStart","insetInline","insetInlineEnd","insetInlineStart","isolation",
+"insetBlock","insetBlockEnd","insetBlockStart","insetInline","insetInlineEnd","insetInlineStart","isolation",
 "justifyContent","justifyItems","justifySelf",
 "left","letterSpacing","lightingColor","lineBreak","lineHeight","listStyle","listStyleImage","listStylePosition","listStyleType",
 "marginBlock","marginBlockEnd","marginBlockStart","marginBottom","marginInline","marginInlineEnd","marginInlineStart","marginLeft","marginRight","marginTop",

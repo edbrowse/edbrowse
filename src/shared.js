@@ -2958,6 +2958,35 @@ if(l >= 5)
 s.borderImageRepeat =  h[4];
 }
 
+function insetShort(s, h) {
+if(h === null || h === undefined) return;
+if(typeof h !== "string") h = String(h)
+h = h.split(/\s+/);
+var l = h.length;
+if(l == 1) {
+s.left = s.bottom = s.right = s.top = h[0];
+return;
+}
+if(l == 2) {
+s.top = s.bottom = h[0];
+s.left = s.right = h[1];
+return;
+}
+if(l == 3) {
+s.top = h[0];
+s.left = s.right = h[1];
+s.bottom = h[2];
+return;
+}
+if(l >= 4) {
+s.top = h[0];
+s.right = h[1];
+s.bottom = h[2];
+s.left = h[3];
+return;
+}
+}
+
 function injectSetup(which) {
 var w = my$win();
 var d = my$doc();
@@ -6728,6 +6757,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "marginShort", "scrollMarginShort", "paddingShort", "scrollPaddingShort",
 "borderRadiusShort", "borderWidthShort", "borderColorShort", "borderStyleShort",
 "backgroundShort", "fontShort", "borderShort", "borderImageShort",
+"insetShort",
 "injectSetup", "eb$visible",
 "insertAdjacentHTML", "htmlString", "outer$1", "textUnder", "newTextUnder",
 "EventTarget", "XMLHttpRequestEventTarget", "XMLHttpRequestUpload", "XMLHttpRequest",
