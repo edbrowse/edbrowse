@@ -4606,6 +4606,9 @@ static void jsNode(Tag *t, bool opentag, struct parseContext *pc)
 			} else if(t->async) {
 				debugPrint(3, "script postponed because it is async");
 			} else {
+// make sure the live array of frames is up to date,
+// in case we have seen some <iframe> tags
+			run_function_bool_win(cf, "frames$rebuild");
 			char *up1 = upSnap(t);
 			runScriptNow(cf, t);
 			char *up2 = upSnap(t);

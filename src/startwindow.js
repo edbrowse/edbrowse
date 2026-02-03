@@ -2897,6 +2897,7 @@ Object.defineProperty(CSSStyleDeclaration.prototype, "cssText", { get: mw$.cssTe
 set: function(h) { var w = my$win(); w.soj$ = this; eb$cssText.call(this,h); delete w.soj$; } });
 
 swm("eb$qs$start", function() { mw$.cssGather(true); mw$.frames$rebuild(window);})
+swm("frames$rebuild", function() {mw$.frames$rebuild(window);})
 
 swm("DOMParser", mw$.DOMParser)
 
