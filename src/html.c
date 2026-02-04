@@ -4831,9 +4831,8 @@ nocolorend:
 	if (!opentag && ti->bits & TAG_NOSLASH)
 		return;
 
-// We will call eb$visible to derive visibility, that in turn my restyle
-// certain tags, that in turn requires us to be in the frame
-// of the tags we are looking at.
+// We will call eb$visible to derive visibility, that in turn invokes css,
+// that in turn requires us to be in the frame of the tags we are looking at.
 // render(), which calls this, restores cf.
 	cf = t->f0;
 
@@ -4841,8 +4840,11 @@ nocolorend:
 // what is the visibility now?
 		uchar v_now = 2;
 		if(allowJS && t->jslink) {
-			t->disval =
-			    run_function_onearg_win(cf, "eb$visible", t);
+			t->disval = 0;
+// lots of text nodes, and they don't carry visibility information
+			if(action != TAGACT_TEXT)
+				t->disval =
+				    run_function_onearg_win(cf, "eb$visible", t);
 // If things appear upon hover, they do this sometimes if your mouse
 // is anywhere in that section, so maybe we should see them.
 // Also if color is transparent then it surely changes to a color
