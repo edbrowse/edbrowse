@@ -3372,13 +3372,15 @@ and if that happens, then once again we need to free the context.
 // promise has argc = 5, microtask has argc = 1
 		if(e->argc == 5)
 			set_array_element_object(ctx, v, jj, e->argv[2]);
-		if(e->argc == 1)
+		else if(e->argc)
 			set_array_element_object(ctx, v, jj, e->argv[0]);
 		JS_FreeValue(ctx, v);
 		JS_FreeValue(ctx, g);
 		debugPrint(3, "exec %s for context %d job %d",
-		(e->argc == 1 ? "microtask" : "promise"),
+		(e->argc == 1 ? "microtask" : e->argc == 5 ? "promise" : "pending"),
 		cf->gsn, jj);
+		if(e->argc != 1 && e->argc != 5)
+			debugPrint(3, "%d arguments", e->argc);
 	}
 
 	res = e->job_func(ctx, e->argc, (JSValueConst *)e->argv);
