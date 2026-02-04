@@ -2541,61 +2541,20 @@ s[k] = e.style[k];
 return s;
 }
 
-// A different version, run when the class or id changes.
-// It writes the changes back to the style node, does not create a new one.
+// A different version, focus is only on visibility.
+// Thus we pass 10 as the third parameter to cssapply().
 function computeStyleInline(e) {
-var s, w = my$win();
-var created = false;
-
-e.last$class = e.class, e.last$id = e.id;
-
+var w = my$win();
+var s = new w.CSSStyleDeclaration;
 // don't put a style under a style.
 // There are probably other nodes I should skip too.
-if(e.dom$class == "CSSStyleDeclaration" || e.dom$class == "HTMLStyleElement") return;
-if(e.nodeType != 1 && e.nodeType != 3) return;
-
-if(s = e.style$2) {
-// Unlike the above, we remove previous values that were set by css,
-// because css is being reapplied.
-for(var k in s) {
-var k2 = k + "$$scy"
-if(!s.hasOwnProperty(k2)) continue;
-if(s[k2] == 99999) continue;
-// this one goes away
-delete s[k]
-delete s[k2]
-}
-} else {
-// create a style object, but if it comes up empty, we'll remove it again.
-s = new w.CSSStyleDeclaration;
-created = true;
-}
-
-// This is called on a (possibly large) subtree of nodes,
-// so please verify the css style sheets before hand.
-// cssGather(false, this);
-
+if(e.nodeType != 1 ||
+e.dom$class == "CSSStyleDeclaration" || e.dom$class == "HTMLStyleElement") return s;
 // apply all the css rules
 w.soj$ = s;
 cssApply(w.eb$ctx, e, 10);
 delete w.soj$;
-// style has been recomputed
-if(created) {
-// is there anything there?
-for(var k in s) {
-if(!s.hasOwnProperty(k)) continue;
-if(k == "element" || k == "ownerDocument")
-continue;
-e.style$2 = s;
-s.element = e;
-break;
-}
-}
-
-// descend into the children
-if(e.childNodes)
-for(var i=0; i<e.childNodes.length; ++i)
-computeStyleInline(e.childNodes[i]);
+return s;
 }
 
 function cssTextGet() {
@@ -2993,59 +2952,29 @@ break;
 w.soj$ = z.style;
 }
 
-/*********************************************************************
-This function doesn't do all it should, and I'm not even sure what it should do.
-If class changes from x to y, it throws out the old css derived attributes
-and rebuilds the style using computeStyleInline().
-Rules with .x don't apply any more; rules with .y now apply.
-If prior javascript had specifically set style.foo = "bar",
-if will persist if foo was not derived from css;
-but it will go away and be recomputed if foo came from css.
-Maybe that's the right thing to do, maybe not, I don't know.
-In theory, changing class could effect the style of any node anywhere in the tree.
-In fact, setting any attribute in one node could change the style of any node
-anywhere in the tree.
-I don't recompute the styles for every node in the entire tree
-every time you set an attribute in a node;
-it would be tremendously slow!
-I only watch for changes to class or id,
-and when that happens I recompute styles for that node and the subtree below.
-That is my compromise.
-Finally, any hover effects from .y are not considered, just as they are not
-considered in getComputedStyle().
-And any hover effects from .x are lost.
-Injected text, as in .x:before { content:hello } remains.
-I don't know if that's right either.
-*********************************************************************/
-
-function eb$visible(t) {
 // see the DIS_ values in eb.h
+function eb$visible(t) {
 var c, rc = 0;
-var so; // style object
+var s1; // original style object
+var s2; // computed style object
+var w = my$win();
 if(!t) return 0;
 if(t.hidden || t["aria-hidden"]) return 1;
-// If class has changed, recompute style.
-// If id has changed, recompute style, but I don't think that ever happens.
-if(t.class != t.last$class || t.id != t.last$id) {
-var w = my$win();
-if(t.last$class) alert3("restyle " + t.nodeName + "." + t.last$class + "." + t.class+"#"+t.last$id+"#"+t.id);
-else alert4("restyle " + t.nodeName + "." + t.last$class + "." + t.class+"#"+t.last$id+"#"+t.id);
 if(w.rr$start) {
 cssGather(false, w);
 delete w.rr$start;
 }
-computeStyleInline(t);
-}
-if(!(so = t.style$2)) return 0;
-if(so.display == "none" || so.visibility == "hidden") {
+s1 = t.style$2 ? t.style$2 : {};
+s2 = computeStyleInline(t);
+if(s2.display == "none" || s2.visibility == "hidden") {
 rc = 1;
 // It is hidden, does it come to light on hover?
-if(so.hov$vis) rc = 2;
+if(s1.hov$vis) rc = 2;
 return rc;
 }
-if((c = so.color) && c != "inherit") {
+if((c = s2.color) && c != "inherit") {
 rc = (c == "transparent" ? 4 : 3);
-if(rc == 4 && so.hov$col) rc = 5;
+if(rc == 4 && s1.hov$col) rc = 5;
 }
 return rc;
 }
