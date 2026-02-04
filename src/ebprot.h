@@ -133,6 +133,7 @@ char *makeDosNewlines(char *p);
 bool parseDataURI(const char *uri, char **mediatype, char **data, int *data_l);
 uchar fromHex(char d, char e);
 char *closeColor(const char *s);
+const char *color2rgb(const char *word);
 void clearEmojis(void);
 void loadEmojis(void);
 char *selectEmoji(const char *p, int len);

@@ -886,6 +886,7 @@ struct desc {
 	short bc;		// brace count
 	uchar error;
 	bool visrel; // relevant to visibility
+	bool prop_ok; // at least one rule where the property is ok
 	struct sel *selectors;
 	struct rule *rules;
 	int highspec;		// specificity when this descriptor matches
@@ -1765,6 +1766,7 @@ lastrule:
 			(stringInList(allowableStyleElements, a) >= 0);
 			if(!rule->prop_ok)
 				debugPrint(3, "invalid css property %s", a);
+			d->prop_ok |= rule->prop_ok;
 			rule->visrel =
 			(stringInList(displayableStyleElements, a) >= 0);
 			d->visrel |= rule->visrel;
