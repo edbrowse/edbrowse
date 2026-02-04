@@ -2510,25 +2510,17 @@ if(e.style$2) {
 for(var k in e.style) {
 if(!e.style.hasOwnProperty(k)) continue;
 if(typeof e.style[k] == 'object') continue;
-
-/*********************************************************************
-Every property in the style object was put their deliberately,
-by html <tag style=rules> or by a javascript assignment.
-This takes precedence.
-However we aren't quite there year, still a couple properties
-related to visibility that I stash in the style object for convenience.
-I'm working on that one.
-Meantime the next if is for one of my falst display assignments.
-*********************************************************************/
-
-if(!s[k] && // not assigned through css
- e.style[k+"$$scy"] < 99999) // is placed in style by an earlier css run
-continue;
-
 // Ok carry this one across.
 s[k] = e.style[k];
 }
 }
+
+// Browsers turn colors into rgb. I think that's confusing,
+// but if they do it then I guess we should too.
+for(var k in s)
+if(s.hasOwnProperty(k) &&
+(k == "color" || k.match(/Color$/)))
+s[k] = color2rgb(s[k]);
 
 return s;
 }

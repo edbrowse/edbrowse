@@ -1888,6 +1888,20 @@ static JSValue nat_confirm(JSContext * cx, JSValueConst this, int argc, JSValueC
 	return JS_NewBool(cx, answer);
 }
 
+static JSValue nat_rgb(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
+{
+	const char *word = 0;
+	const char *answer = 0;
+	JSValue v;
+	if (argc > 0)
+		word = JS_ToCString(cx, argv[0]);
+	answer = color2rgb(word);
+	v = JS_NewAtomString(cx, answer);
+	if(word)
+		JS_FreeCString(cx, word);
+	return v;
+}
+
 // Sometimes control c can interrupt long running javascript, if the script
 // calls our native methods.
 static bool jsCheckAndThrow(JSContext * cx)
@@ -3629,6 +3643,8 @@ JS_NewCFunction(mwc, nat_logputs, "logputs", 2), JS_PROP_ENUMERABLE);
 JS_NewCFunction(mwc, nat_prompt, "prompt", 2), JS_PROP_ENUMERABLE);
     JS_DefinePropertyValueStr(mwc, mwo, "confirm",
 JS_NewCFunction(mwc, nat_confirm, "confirm", 1), JS_PROP_ENUMERABLE);
+    JS_DefinePropertyValueStr(mwc, mwo, "color2rgb",
+JS_NewCFunction(mwc, nat_rgb, "rgb", 1), JS_PROP_ENUMERABLE);
     JS_DefinePropertyValueStr(mwc, mwo, "win$close",
 JS_NewCFunction(mwc, nat_win_close, "win_close", 0), JS_PROP_ENUMERABLE);
     JS_DefinePropertyValueStr(mwc, mwo, "fileModTime",

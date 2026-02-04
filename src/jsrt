@@ -954,7 +954,7 @@ fail(164);
 
 if(document.body.style.fontSize != "1.0em") fail(169);
 style2 = getComputedStyle(document.body,'')
-if(style2.color != "black") fail(165);
+if(style2.color != "rgb(0,0,0)") fail(165);
 // I don't know which way this is suppose to go
 // if(style2.fontSize != "1.0em") fail(166);
 if(querySelector(".filbert #pecan").nodeName != "TR")
