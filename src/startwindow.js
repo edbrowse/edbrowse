@@ -2914,11 +2914,11 @@ spdc("MutationObserver", null)
 MutationObserver.prototype.disconnect = function() {
     const ts = this.targets.size;
     const nl = this.notification$queue.length;
-    alert3(`Disconnecting from ${ts} targets with ${nl} unprocessed records`);
+    alert3(`MutationObserver disconnecting from ${ts} targets with ${nl} unprocessed records`);
     this.notification$queue.length =  0;
     this.active = false;
     for (const t of this.targets.keys()) {
-        alert3(`Disconnecting ${t.dom$class} tag ${t.eb$seqno}`);
+        alert4(`MutationObserver disconnecting ${t.dom$class} tag ${t.eb$seqno}`);
         // Clear the strong reference in case the observer is being dropped
         t.eb$observers.delete(this);
         // Clear the weak reference in case the observer is being reused
