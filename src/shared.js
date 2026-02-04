@@ -2462,9 +2462,10 @@ break;
 function getComputedStyle(e,pe) {
 var s, w = my$win();
 
-if(!pe) pe = 0;
-else if(pe == ":before") pe = 1;
-else if(pe == ":after") pe = 2;
+if(typeof pe != "string") pe = 0;
+else if(pe.match(/^\s*$/)) pe = 0;
+else if(pe.match(/:before$/)) pe = 1;
+else if(pe.match(/:after$/)) pe = 2;
 else { alert3("getComputedStyle pseudoelement " + pe + " is invalid"); pe = 0; }
 
 /*********************************************************************
@@ -2510,29 +2511,8 @@ this.soj$ = s;
 cssApply(this.eb$ctx, e, pe);
 delete this.soj$;
 
-/*********************************************************************
-Now for the confusion.
-https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle
-Very clearly states s is the result of css pages and <style> tags,
-and not javascript assigned values.
-
-  The returned object is the same {CSSStyleDeclaration} type as the object
-  returned from the element's {style} property.
-  However, the two objects have different purposes:
-  * The object from getComputedStyle is read-only,
-  and should be used to inspect the element's style — including those set by a
-  <style> element or an external stylesheet.
-  * The element.style object should be used to set styles on that element,
-  or inspect styles directly added to it from JavaScript manipulation or the
-  global style attribute.
-
-See - if js sets a style attribute directly it is not suppose to carry
-across to the new style object.
-But in stark contradiction to this paragraph,
-browsers carry the style attributes across no matter how they were set.
-Huh???
-Well we have to do the same so here we go.
-*********************************************************************/
+// If js sets a style property, or if it is set by style= in the html tag,
+// it carries across, and in fact it takes precedence.
 
 if(e.style$2) {
 for(var k in e.style) {
@@ -2540,16 +2520,18 @@ if(!e.style.hasOwnProperty(k)) continue;
 if(typeof e.style[k] == 'object') continue;
 
 /*********************************************************************
-This should be a real attribute now.
-If it was set by the css system, and is no longer,
-maybe we shouldn't carry it across.
-Acid test: see how the slash comes back to light after class hidden is removed.
-<span id="slash" class="hidden">/</span>
-Specificity indicates it comes from css, except for 100000,
-which is style.cssText = "color:green", and that should carry across.
+Every property in the style object was put their deliberately,
+by html <tag style=rules> or by a javascript assignment.
+This takes precedence.
+However we aren't quite there year, still a couple properties
+related to visibility that I stash in the style object for convenience.
+I'm working on that one.
+Meantime the next if is for one of my falst display assignments.
 *********************************************************************/
 
-if(!s[k] &&  e.style[k+"$$scy"] < 100000) continue;
+if(!s[k] && // not assigned through css
+ e.style[k+"$$scy"] < 99999) // is placed in style by an earlier css run
+continue;
 
 // Ok carry this one across.
 s[k] = e.style[k];
@@ -2578,7 +2560,7 @@ if(s = e.style$2) {
 for(var k in s) {
 var k2 = k + "$$scy"
 if(!s.hasOwnProperty(k2)) continue;
-if(s[k2] == 100000) continue;
+if(s[k2] == 99999) continue;
 // this one goes away
 delete s[k]
 delete s[k2]
@@ -2595,7 +2577,7 @@ created = true;
 
 // apply all the css rules
 w.soj$ = s;
-cssApply(w.eb$ctx, e, 0);
+cssApply(w.eb$ctx, e, 10);
 delete w.soj$;
 // style has been recomputed
 if(created) {

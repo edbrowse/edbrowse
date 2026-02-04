@@ -3725,6 +3725,7 @@ void cssApply(int frameNumber, Tag *t, int pe)
 	Frame *save_cf = cf;
 	struct cssmaster *cm;
 	struct desc *d;
+	bool visibility_only = false;
 	Frame *new_f = frameFromWindow(frameNumber);
 // no clue what to do if new_f is null, should never happen
 	if(new_f) cf = new_f;
@@ -3735,6 +3736,8 @@ void cssApply(int frameNumber, Tag *t, int pe)
 	if (!cm)
 		goto done;
 
+	if(pe >= 10) pe -= 10, visibility_only = true;
+
 // it's a getComputedStyle match
 	gcsmatch = true, matchtype = pe;
 // defer to the js
@@ -3743,10 +3746,16 @@ void cssApply(int frameNumber, Tag *t, int pe)
 	nzFree(t->id);
 	t->id = get_property_string_t(t, "id");
 
+// this is cheeky- but do_rules checks bulkmatch then visibility,
+// so set bulkmatch temporarily.
+	bulkmatch = visibility_only;
 	for (d = cm->descriptors; d; d = d->next) {
+		if(d->error) continue;
+		if(visibility_only && !d->visrel) continue;
 		if (qsaMatchGroup(t, d))
 			do_rules(0, d->rules, d->highspec);
 	}
+	bulkmatch = false;
 
 done:
 	cf = save_cf;
