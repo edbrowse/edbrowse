@@ -737,7 +737,6 @@ document.dispatchEvent(e);
 // before after unless we set showall+, so one wonders if it's even worth it.
 if(document.getElementsByClassName("inject")[0].firstChild.data != "My ") fail(173);
 if(document.spans[0].lastChild.data != " zip") fail(174);
-if(querySelector(".inject").firstChild.style.display != "round") fail(175);
 if(document.body.style.hasOwnProperty("animation")) fail(176);
 if(document.styleSheets[0].cssRules[0].cssText.substr(0,4) != "body") fail(180);
 }

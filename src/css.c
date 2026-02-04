@@ -961,7 +961,7 @@ static char matchtype;		// 0 plain 1 before 2 after
 static bool matchhover;		// match on :hover selectors.
 static Tag *rootnode;
 static Tag **doclist;
-static int doclist_a, doclist_n,  bulktotal;
+static int doclist_a, doclist_n;
 static void build_doclist(Tag *top);
 static void hashBuild(void);
 static void hashFree(void);
@@ -2291,7 +2291,6 @@ void cssDocLoad(int frameNumber, char *start, bool pageload)
 	hashBuild();
 	hashPrint();
 	cssEverybody();
-	debugPrint(3, "%d css assignments", bulktotal);
 	hashFree();
 	nzFree(doclist);
 
@@ -3645,20 +3644,7 @@ the before after rules straight up.
 			continue;
 		}
 
-/*********************************************************************
-When bulkmatch is true, we are doing the broad spectrum css, all rules,
-all nodes, only to determine what is visible on the page.
-edbrowse doesn't care about font size or margin top or any of those things.
-So if it is a bulk match and the rule is not connected with visibility,
-skip it. But wait - that doesn't write the property into the style object.
-Well guess what - we're not suppose to.
-In getComputedStyle we are, but not in general.
-In fact, when I fall through this test, and write display = block
-into the style object, I'm not suppose to. It makes it
-easy to determine visibility, but some day we need to find a better way.
-*********************************************************************/
-		if(bulkmatch && !r->visrel)
-			continue;
+		if(bulkmatch) continue;
 
 /*********************************************************************
 don't repeat an attribute. Hardly ever happens except for acid test 0.
@@ -3681,8 +3667,6 @@ so this might be wrong but it gets around that test.
 			continue;
 		}
 
-		if (bulkmatch)
-			++bulktotal;
 		set_gcs_string(r->atname, r->atval);
 		set_gcs_number(a, highspec);
 		free(a);
@@ -3753,6 +3737,7 @@ void cssApply(int frameNumber, Tag *t, int pe)
 	bulkmatch = visibility_only;
 	for (d = cm->descriptors; d; d = d->next) {
 		if(d->error) continue;
+		if(!d->prop_ok) continue;
 		if(visibility_only && !d->visrel) continue;
 		if (qsaMatchGroup(t, d))
 			do_rules(0, d->rules, d->highspec);
@@ -4091,7 +4076,6 @@ static void cssEverybody(void)
 	int l;
 
 	bulkmatch = true;
-	bulktotal = 0;
 	skiproot = false;
 	rootnode = 0;
 
@@ -4099,9 +4083,7 @@ static void cssEverybody(void)
 		matchhover = (l >= 3);
 		matchtype = l % 3;
 		for (d = d0; d; d = d->next) {
-			if (d->error)
-				continue;
-			if(!d->visrel)
+			if (d->error || !d->prop_ok || !d->visrel)
 				continue;
 			a = qsa2(d, NULL);
 			if (!a)
