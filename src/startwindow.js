@@ -2930,14 +2930,17 @@ MutationObserver.prototype.observe = function(target, cfg) {
     if(cfg.subtree)
         this.observe$subtree(target, cfg);
 }
-MutationObserver.prototype.observe$target = function (target, cfg) {
+MutationObserver.prototype.observe$target = function (target, cfg, dbg=alert3) {
     // May have other valid targets so don't disconnect
     if(typeof cfg != "object" || !(target instanceof Node))
         throw new TypeError("invalid argument types");
-    alert3(`observing ${target.dom$class} tag ${target.eb$seqno} config ${JSON.stringify(cfg)}`)
+    dbg(`observing ${target.dom$class} tag ${target.eb$seqno} config ${JSON.stringify(cfg)}`)
     this.targets.set(target, cfg);
     this.active = true;
-    if (!target.eb$observers) Object.defineProperty(target, "eb$observers", {value: new Set});
+    if (!target.eb$observers) {
+        dbg("Attaching first observer");
+        Object.defineProperty(target, "eb$observers", {value: new Set});
+    }
     target.eb$observers.add(this);
 }
 MutationObserver.prototype.observe$subtree = function(target, cfg) {
@@ -2956,7 +2959,7 @@ MutationObserver.prototype.observe$subtree = function(target, cfg) {
     let n;
     while (i < a.length) {
         n = a[i++];
-        if(!this.targets.has(n)) this.observe$target(n, cfg);
+        if (!this.targets.has(n)) this.observe$target(n, cfg, alert4);
         if (n.is$frame) continue;
         if (n.childNodes) a.push(...n.childNodes);
     }
