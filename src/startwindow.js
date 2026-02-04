@@ -2907,7 +2907,6 @@ swm("MutationObserver", function(f) {
     this.callback = f;
     this.active = false;
     this.targets = new Eb$IterableWeakMap;
-    this.subtree = false;
     this.async = true; // run as microtask by default
     this.notification$queue = [];
 })
@@ -2920,23 +2919,47 @@ MutationObserver.prototype.disconnect = function() {
     this.active = false;
     for (const t of this.targets.keys()) {
         alert3(`Disconnecting ${t.dom$class} tag ${t.eb$seqno}`);
+        // Clear the strong reference in case the observer is being dropped
+        t.eb$observers.delete(this);
+        // Clear the weak reference in case the observer is being reused
         this.targets.delete(t);
     }
-    window.mutList.delete(this);
 }
 MutationObserver.prototype.observe = function(target, cfg) {
+    this.observe$target(target, cfg);
+    if(cfg.subtree)
+        this.observe$subtree(target, cfg);
+}
+MutationObserver.prototype.observe$target = function (target, cfg) {
     // May have other valid targets so don't disconnect
     if(typeof cfg != "object" || !(target instanceof Node))
         throw new TypeError("invalid argument types");
     alert3(`observing ${target.dom$class} tag ${target.eb$seqno} config ${JSON.stringify(cfg)}`)
     this.targets.set(target, cfg);
-    /* We will use the target map to determine if we are targeting the given
-    node but this means that we don't know whether we're supposed to observe
-    subtrees. Thus store that property on the observer itself.
-    If even one target is subtree then the observer is subtree. */
-    if(cfg.subtree) this.subtree = true;
     this.active = true;
-    window.mutList.add(this);
+    if (!target.eb$observers) Object.defineProperty(target, "eb$observers", {value: new Set});
+    target.eb$observers.add(this);
+}
+MutationObserver.prototype.observe$subtree = function(target, cfg) {
+    /* If we're observing subtrees then we need to directly observe those
+        targets as well as the idea is that if a subtree is moved we keep
+        observing that. We will fix appended children in mutFixup. This also
+        means that, if the surrounding scripting doesn't care about this
+        observer (i.e. doesn't hold any other strong references) and all its
+        targets go away then it'll be cleaned up also. This is per spec, avoids
+        a memory leak and makes the mutFixup code much simpler when it comes
+        to handling advanced observer use-cases.
+    */
+    if (target.is$frame) return;
+    let a = target.childNodes.slice();
+    let i = 0;
+    let n;
+    while (i < a.length) {
+        n = a[i++];
+        if(!this.targets.has(n)) this.observe$target(n, cfg);
+        if (n.is$frame) continue;
+        if (n.childNodes) a.push(...n.childNodes);
+    }
 }
 MutationObserver.prototype.takeRecords = function() {
     // Shallow clone as the records must refer to the DOM and are otherwise safe
@@ -2949,9 +2972,6 @@ MutationObserver.prototype.takeRecords = function() {
 
 swm("MutationRecord", function(){})
 spdc("MutationRecord", null)
-
-swm("mutList", new Set)
-
 swm1("crypto", {})
 crypto.getRandomValues = function(a) {
 if(typeof a != "object") return NULL;

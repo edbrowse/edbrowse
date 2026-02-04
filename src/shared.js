@@ -1034,7 +1034,6 @@ Support functions mrKids and mrList are below.
 function mutFixup(b, isattr, y, z) {
     const w = my$win();
     let w2; // might not be the same window as w
-    const list = w.mutList;
     // frames is a live array of windows.
     // Test: a change to the tree, and the base node is rooted,
     // and the thing added or removed is a frame or an array or it has frames below.
@@ -1043,11 +1042,21 @@ function mutFixup(b, isattr, y, z) {
         if(Array.isArray(j) || j.is$frame || (j.childNodes&&gebtn(j, "iframe", true, false).length))
             frames$rebuild(w2);
     }
+    /* Observers only look downward through the tree and we know that we will
+        have propagated them because, on construction, we handle subtrees and
+        then this function is called on targets with changed children. We don't
+        need to handle removing targets because either a removed node is gone
+        and will drop out of the observer or it's been moved and we should keep
+        observing it anyway. What this means is that we can safely just check
+        the list of observers on target and fix the subtree ones as we go.
+    */
+    const observers = b.eb$observers
+    if (!observers) return;
 
-    // loop over observers, no need to make a copy since even if a sync
-    // observer disconnects itself the set iteration is specified to be
-    // consistent */
-    for(const o of list) {
+    /* No need to make a copy since even if a sync observer disconnects itself
+        the set iteration is specified to be consistent
+    */
+    for(const o of observers) {
         if(!o.active) {
             // not sure if this happens now but may be someone did something
             // unfortunate
@@ -1055,25 +1064,9 @@ function mutFixup(b, isattr, y, z) {
             o.disconnect();
             continue;
         }
-        if(!o.targets.size) {
-            // no remaining targets so clean up
-            alert3("mutFixup: disconnecting observer with no targets");
-            o.disconnect();
-            continue;
-        }
+
         const record = (function() {
-            /* check our target: either we're the direct target or we're below an
-            observer which cares about subtrees. */
             let target_cfg = o.targets.get(b);
-            // climb up the tree
-            for (let t = b; !target_cfg && o.subtree && t; t = t.parentNode) {
-                target_cfg = o.targets.get(t);
-                /* I have no idea if one can have an observer with a mixture
-                of subtree and non-subtree configs but try not to surprise
-                people if so */
-                if (target_cfg && !target_cfg.subtree) target_cfg = undefined;
-                if (t.nodeType == 9) break; // stop at document
-            }
             if (!target_cfg) return null;
             const r = new o.observed$window.MutationRecord;
             if(isattr) { // the easy case
@@ -1081,12 +1074,13 @@ function mutFixup(b, isattr, y, z) {
                     r.type = "attributes";
                     r.attributeName = y;
                     r.target = b;
-                    r.oldValue = z;
+                    if (cfg.attributeOldValue) r.oldValue = z;
                     return r;
                 }
                 return null;
             }
-            // ok a child of b has changed
+            // ok a child of b has changed; fix up the subtree even if we aren't observing child node changes
+            if (target_cfg.subtree) o.observe$subtree(b, target_cfg);
             if(target_cfg.childList) {
                 mrKids(r, b, y, z);
                 return r;
@@ -1103,14 +1097,12 @@ function mutFixup(b, isattr, y, z) {
             continue;
         }
         if(!o.async) {
-// this is not the default case. Only for our internal use.
-// We might turn off async to implement live arrays,
-// to act immediatley when the subtree changes.
+            // Only for our internal use in implementing live collections.
             alert3(`mutFixup: synchronously processing ${nl+1} records`);
             o.callback.call(o, o.takeRecords(), o);
             continue;
         }
-// the default behavior, call microtask and do it asynchronously
+        // the default behavior, call microtask and do it asynchronously
         o.observed$window.queueMicrotask(
             () => {
                 o.callback$queued = false;
@@ -1126,7 +1118,7 @@ function mutFixup(b, isattr, y, z) {
                     return;
                 }
                 alert3(`mutFixup: callback on ${nl} records`);
-// Assume callback wants the observer as this for now
+                // Assume callback wants the observer as this for now
                 o.callback.call(o, o.takeRecords(), o);
             }
         );
