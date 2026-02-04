@@ -1683,8 +1683,8 @@ function spilldown(name) {
 if(name.match(/^on[a-zA-Z]*$/)) return true;
 // I'm not sure value should spill down, setAttribute("value","blah")
 return name == "value" ||
-// class shouldn't spill down. But if we don't, the class == last$class system fails.
-// which I'm not using any more anyways.
+// class shouldn't spill down. But if we don't, then I don't think my
+// getElementsByClassName or querySelector(".class") work properly.
 name == "class";
 }
 

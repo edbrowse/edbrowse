@@ -4606,6 +4606,8 @@ static void jsNode(Tag *t, bool opentag, struct parseContext *pc)
 			} else if(t->async && t->href) {
 				debugPrint(3, "script postponed because it is async");
 			} else {
+// in case the script calls getComputedStyle
+			loadFinishCSS();
 // make sure the live array of frames is up to date,
 // in case we have seen some <iframe> tags
 			run_function_bool_win(cf, "frames$rebuild");

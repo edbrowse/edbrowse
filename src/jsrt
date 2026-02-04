@@ -730,7 +730,11 @@ onlv++;
 var e = document.createEvent();
 e.type = "snork";
 document.dispatchEvent(e);
-// This css stuff has to run after eb$qs$start
+
+// These css checks have to run after eb$qs$start.
+// In fact the before after inject is the only reason to run or even have the
+// eb$qs$start machinery, which is complicated, and we don't even see these
+// before after unless we set showall+, so one wonders if it's even worth it.
 if(document.getElementsByClassName("inject")[0].firstChild.data != "My ") fail(173);
 if(document.spans[0].lastChild.data != " zip") fail(174);
 if(querySelector(".inject").firstChild.style.display != "round") fail(175);
