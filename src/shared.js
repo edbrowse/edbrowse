@@ -1684,8 +1684,7 @@ if(name.match(/^on[a-zA-Z]*$/)) return true;
 // I'm not sure value should spill down, setAttribute("value","blah")
 return name == "value" ||
 // class shouldn't spill down. But if we don't, the class == last$class system fails.
-// We don't detect a change in class and rerun the css rules.
-// We could push it down to new$class and compare new$class and last$class.
+// which I'm not using any more anyways.
 name == "class";
 }
 
@@ -1830,12 +1829,6 @@ if(spilldown(name)) delete this[name];
 if(spilldownResolve(this, name)) delete this[name];
 if(spilldownResolveURL(this, name)) delete this[name];
 if(spilldownBool(this, name)) delete this[name];
-// acid test 48 removes class before we can check its visibility.
-// class is undefined and last$class is undefined, so getComputedStyle is never called.
-if(name === "class" && !this.last$class)
-Object.defineProperty(this, "last$class", {value:"@@",writable:true})
-if(name === "id" && !this.last$id)
-Object.defineProperty(this, "last$id", {value:"@@",writable:true})
 var a;
 if(name === "length") {
 a = null
@@ -2009,7 +2002,6 @@ if(debug) alert3("linking form.radio " + item + " with " + a1.length + " buttons
 a2.type = a1.type;
 a2.nodeName = a1.nodeName;
 if(a1.class) a2.setAttribute("class", a1.class);
-a2.last$class = a1.last$class;
 for(i = 0; i < a1.length; ++i) {
 var p = findObject(a1[i]);
 if(p.length) {

@@ -4239,7 +4239,6 @@ Don't do any of this if the tag is itself <style>. */
 		if (!tcn)
 			tcn = emptyString;
 		set_property_string(cx, io, "class", tcn);
-		define_hidden_property_string(cx, io, "last$class", tcn);
 
 // only anchors with href go into links[]
 		if (list && stringEqual(list, "links") &&
@@ -4278,7 +4277,6 @@ Don't do any of this if the tag is itself <style>. */
 	if(symname) set_property_string(cx, io, "name", symname);
 	if(idname) {
 		set_property_string(cx, io, "id", idname);
-		define_hidden_property_string(cx, io, "last$id", idname);
 	}
 
 	if (t->action == TAGACT_INPUT) {
