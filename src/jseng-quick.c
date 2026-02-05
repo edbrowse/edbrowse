@@ -3328,7 +3328,7 @@ int my_ExecutePendingJobs(void)
 			debugPrint(3, "frameFromContext finds master window");
 		else
 			debugPrint(3, "frameFromContext cannot find a frame for pointer %p", ctx);
-		debugPrint(3, "It is not safe to run this job or even free it!");
+		debugPrint(3, "It is not safe to run this job (%d arguments), or even free it!", e->argc);
 		debugPrint(3, "But it's not great leaving it around either.");
 		debugPrint(3, "Deleting it from the pending queue and hoping for the best. 🤞");
 		    list_del(&e->link);
