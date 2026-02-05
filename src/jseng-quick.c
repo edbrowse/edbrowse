@@ -165,10 +165,8 @@ static bool frameFromContext(jsobjtype cx)
 	int i;
 	Window *w;
 	Frame *f;
-	if(cx == mwc) {
-		debugPrint(3, "frameFromContext is master window, job is not executed");
+	if(cx == mwc)
 		return false;
-	}
 	for (i = 1; i <= maxSession; ++i) {
 		for (w = sessionList[i].lw; w; w = w->prev) {
 			for (f = &(w->f0); f; f = f->next) {
@@ -179,7 +177,6 @@ static bool frameFromContext(jsobjtype cx)
 			}
 		}
 	}
-	debugPrint(3, "frameFromContext cannot find the frame, job is not executed");
 	return false;
 }
 
@@ -3327,34 +3324,15 @@ int my_ExecutePendingJobs(void)
 	ctx = e->ctx;
 // This line resets cw and cf, and we don't put it back, so the calling routine must restore it.
 	if (!frameFromContext(ctx)) {
-	debugPrint(3, "Promise job deleted because its frame could not be found");
-delete_and_go:
-	    list_del(&e->link);
-	    for(i = 0; i < e->argc; i++)
-		JS_FreeValue(ctx, e->argv[i]);
-	    js_free(ctx, e);
-
-/*********************************************************************
-On June 28 2025, quickjs made a significant change, commit 458c34d.
-The context for a pending job would be duplicated via JS_DupContext(),
-which doesn't really duplicate, it increments the reference count.
-It is then our responsibility to free it, which doesn't really free it,
-it decrements the reference count. Like rm in Unix
-which doesn't really remove the file unless the link count drops to zero.
-If your quickjs is prior to this commit it will probably blow up,
-for then we would actually free the context, and then go on to try to use it.
-There isn't a version number I can key on, so I'll just do what I have to do
-and hope your quickjs is current.
-Then, in November of 2025, we switched to the quickjs-ng engine,
-and it does not do this odd behavior, so I don't want to free the context.
-But some day quickjs-ng might absorb that change from quickjs,
-and if that happens, then once again we need to free the context.
-*********************************************************************/
-#if ! Q_NG
-	JS_FreeContext(ctx);
-#endif
-
-	    continue;
+		if(ctx == mwc)
+			debugPrint(3, "frameFromContext finds master window");
+		else
+			debugPrint(3, "frameFromContext cannot find a frame for pointer %p", ctx);
+		debugPrint(3, "It is not safe to run this job or even free it!");
+		debugPrint(3, "But it's not great leaving it around either.");
+		debugPrint(3, "Deleting it from the pending queue and hoping for the best. 🤞");
+		    list_del(&e->link);
+		continue;
 	}
 
 // Browsing a new web page in the current session pushes the old one, like ^z
@@ -3391,8 +3369,32 @@ and if that happens, then once again we need to free the context.
 	debugPrint(3, "exec complete");
 	JS_FreeValue(ctx, res);
 	++cnt;
-	goto delete_and_go;
+	    list_del(&e->link);
+	    for(i = 0; i < e->argc; i++)
+		JS_FreeValue(ctx, e->argv[i]);
+	    js_free(ctx, e);
+
+/*********************************************************************
+On June 28 2025, quickjs made a significant change, commit 458c34d.
+The context for a pending job would be duplicated via JS_DupContext(),
+which doesn't really duplicate, it increments the reference count.
+It is then our responsibility to free it, which doesn't really free it,
+it decrements the reference count. Like rm in Unix
+which doesn't really remove the file unless the link count drops to zero.
+If your quickjs is prior to this commit it will probably blow up,
+for then we would actually free the context, and then go on to try to use it.
+There isn't a version number I can key on, so I'll just do what I have to do
+and hope your quickjs is current.
+Then, in November of 2025, we switched to the quickjs-ng engine,
+and it does not do this odd behavior, so I don't want to free the context.
+But some day quickjs-ng might absorb that change from quickjs,
+and if that happens, then once again we need to free the context.
+*********************************************************************/
+#if ! Q_NG
+	JS_FreeContext(ctx);
+#endif
     }
+
 				return cnt;
 }
 
@@ -3428,7 +3430,7 @@ void delPendings(const Frame *f)
 {
 	    JSJobEntry *e;
 	struct list_head *l, *l1;
-	    int i, delcount = 0;
+	    int i, delcount = 0, keepcount = 0;
 	struct list_head *jl = (struct list_head *)((char*)jsrt + JSRuntimeJobIndex);
 
 	    if(!f->jslink)
@@ -3436,7 +3438,10 @@ void delPendings(const Frame *f)
 
 	    list_for_each_safe(l, l1, jl) {
 		e = list_entry(l, JSJobEntry, link);
-		if (f->cx != e->ctx)     continue;
+		if (f->cx != e->ctx) {
+			++keepcount;
+			continue;
+		}
 		list_del(&e->link);
 		++delcount;
 		for(i = 0; i < e->argc; i++)
@@ -3448,8 +3453,8 @@ void delPendings(const Frame *f)
 #endif
 	    }
 
-	    if(delcount)
-		debugPrint(3, "%d pendings deleted", delcount);
+	debugPrint(3, "%d pendings deleted, %d pendings kept",
+	delcount, keepcount);
 }
 
 // don't need these quick macros any more
@@ -3783,7 +3788,8 @@ static void createJSContext_0(Frame *f)
 	cx = f->cx = JS_NewContext(jsrt);
 	if (!cx)
 		return;
-	debugPrint(3, "create js context %d", f->gsn);
+	debugPrint(3, "create js context %d pointer %p",
+	f->gsn, cx);
 // the global object, which will become window,
 // and the document object.
 	f->winobj = allocMem(sizeof(JSValue));
