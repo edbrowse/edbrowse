@@ -3318,8 +3318,8 @@ int my_ExecutePendingJobs(void)
 
 // step through the jobs
     list_for_each_safe(l, l1, jl) {
- /* stop now and then to let the user interact with edbrowse unless we're
- cleaning up when we really want to run all the finalizers */
+/* stop now and then to let the user interact with edbrowse unless we're
+cleaning up when we really want to run all the finalizers */
 	if(cnt == 10 && !freeing_context)
             break;
 	e = list_entry(l, JSJobEntry, link);
@@ -3343,7 +3343,7 @@ int my_ExecutePendingJobs(void)
 // Browsing a new web page in the current session pushes the old one, like ^z
 // in Linux. The prior page suspends, and the timers and pendings suspend.
 // ^ is like fg, bringing it back to life.
-	if(sessionList[cw->sno].lw != cw)
+	if(!freeing_context && sessionList[cw->sno].lw != cw)
             continue;
 
 	if(debugLevel >= 3) {
