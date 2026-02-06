@@ -66,12 +66,13 @@ if(!window.mw$) {
 // mw$.share = 0 means I made up that window out of thin air
     this.mw$ = {share:0, URL:{}};
 this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
-    this.mw$.url_hrefset = () => undefined;
     this.mw$.dispatchEvent = () => undefined;
     this.mw$.addEventListener = () => undefined;
     this.mw$.removeEventListener = () => undefined;
     this.mw$.getComputedStyle = () => {};
     this.mw$.structuredClone = () => {};
+    this.mw$.setupClasses = () => {};
+    this.URL = function(){}
 }
 // set window member, unseen, unchanging
 this.swm = function(k, v) { Object.defineProperty(window, k, {value:v})}
@@ -559,145 +560,8 @@ if(n > l) return undefined;
 return this.charAt(l-n);
 }
 
-/*********************************************************************
-The URL class is head-spinning in its complexity and its side effects.
-Almost all of these can be handled in JS,
-except for setting window.location or document.location to a new url,
-which replaces the web page you are looking at.
-You'll see me call the native method eb$newLocation to do that.
-Now, here's one reason, perhaps not the only reason, we can't share the
-URL class. Why it has to stay here in startwindow.js.
-This may apply to every other DOM class as well.
-There are websites that replace URL.prototype.toString with their own function.
-They want to change the way URLs stringify, or whatever. I can't
-prevent sites from doing that, things might not work properly without it!
-So, if site A does that in the shared window, and site B invokes
-a.href.toString, directly or indirectly, B is calling a function from
-the unrelated website A.
-This could really screw things up, or worse, site A could use it to hack into
-site B, hoping site B is your banking site or something important.
-So I can't define URL over there and say URL = mw$.url over here.
-Ok, but what if I say URL = function(){}; URL.prototype = new mw$.URL;
-That puts all those methods and getters and setters,
-and there are a lot of them, in the prototype chain.
-Course I have to lock them down in the shared window, as described above.
-They all have to be readonly.
-Well, If this window wants to create its own URL.prototype.toString function,
-it can't, because the toString that is next in the prototype chain is readonly.
-I don't know if this is javascript standard or quick js.
-It sort of makes sense if you think about it, but it means
-I don't have any practical way to share this class. So here we go.
-Note the use of swm2, people will replace with their own URL class.
-If they do, I remember this URL class and all its methods with z$URL.
-I don't know if that's a good idea or not.
-*********************************************************************/
+mw$.setupClasses(window);
 
-swm2("URL", function() {
-let h = "";
-if(arguments.length == 1) h= arguments[0];
-if(arguments.length == 2) h= mw$.resolveURL(arguments[1], arguments[0]);
-this.href = h;
-})
-swm("z$URL", URL)
-spdc("URL", null)
-Object.defineProperty(URL.prototype, "rebuild", {value:mw$.url_rebuild})
-
-Object.defineProperty(URL.prototype, "protocol", {
-  get: function() {return this.protocol$val; },
-  set: function(v) { this.protocol$val = v; this.rebuild(); },
-enumerable:true});
-Object.defineProperty(URL.prototype, "pathname", {
-  get: function() {return this.pathname$val; },
-  set: function(v) { this.pathname$val = v; this.rebuild(); },
-enumerable:true});
-Object.defineProperty(URL.prototype, "search", {
-  get: function() {return this.search$val; },
-  set: function(v) { this.search$val = v; this.rebuild(); },
-enumerable:true});
-Object.defineProperty(URL.prototype, "searchParams", {
-  get: function() {return new URLSearchParams(this.search$val); },
-// is there a setter?
-enumerable:true});
-Object.defineProperty(URL.prototype, "hash", {
-  get: function() {return this.hash$val; },
-  set: function(v) { if(typeof v != "string") return; if(!v.match(/^#/)) v = '#'+v; this.hash$val = v; this.rebuild(); },
-enumerable:true});
-Object.defineProperty(URL.prototype, "port", {
-  get: function() {return this.port$val; },
-  set: function(v) { this.port$val = v;
-if(this.hostname$val.length)
-this.host$val = this.hostname$val + ":" + v;
-this.rebuild(); },
-enumerable:true});
-Object.defineProperty(URL.prototype, "hostname", {
-  get: function() {return this.hostname$val; },
-  set: function(v) { this.hostname$val = v;
-if(this.port$val)
-this.host$val = v + ":" +  this.port$val;
-this.rebuild(); },
-enumerable:true});
-Object.defineProperty(URL.prototype, "host", {
-  get: function() {return this.host$val; },
-  set: function(v) { this.host$val = v;
-if(v.match(/:/)) {
-this.hostname$val = v.replace(/:.*/, "");
-this.port$val = v.replace(/^.*:/, "");
-} else {
-this.hostname$val = v;
-this.port$val = "";
-}
-this.rebuild(); },
-enumerable:true});
-Object.defineProperty(URL.prototype, "href", {
-  get: function() {return this.href$val; },
-  set: mw$.url_hrefset,
-enumerable:true});
-
-URL.prototype.toString = function() {  return this.href$val; }
-Object.defineProperty(URL.prototype, "toString", {enumerable:false});
-// use toString in the following - in case they replace toString with their own function.
-// Don't just grab href$val, tempting as that is.
-Object.defineProperty(URL.prototype, "length", { get: function() { return this.toString().length; }});
-URL.prototype.concat = function(s) {  return this.toString().concat(s); }
-Object.defineProperty(URL.prototype, "concat", {enumerable:false});
-URL.prototype.startsWith = function(s) {  return this.toString().startsWith(s); }
-Object.defineProperty(URL.prototype, "startsWith", {enumerable:false});
-URL.prototype.endsWith = function(s) {  return this.toString().endsWith(s); }
-Object.defineProperty(URL.prototype, "endsWith", {enumerable:false});
-URL.prototype.includes = function(s) {  return this.toString().includes(s); }
-Object.defineProperty(URL.prototype, "includes", {enumerable:false});
-/*
-Can't turn URL.search into String.search, because search is already a
-property of URL, that is, the search portion of the URL.
-URL.prototype.search = function(s) { return this.toString().search(s); }
-*/
-
-URL.prototype.indexOf = function(s) {  return this.toString().indexOf(s); }
-Object.defineProperty(URL.prototype, "indexOf", {enumerable:false});
-URL.prototype.lastIndexOf = function(s) {  return this.toString().lastIndexOf(s); }
-Object.defineProperty(URL.prototype, "lastIndexOf", {enumerable:false});
-URL.prototype.substring = function(from, to) {  return this.toString().substring(from, to); }
-Object.defineProperty(URL.prototype, "substring", {enumerable:false});
-URL.prototype.substr = function(from, to) {return this.toString().substr(from, to);}
-Object.defineProperty(URL.prototype, "substr", {enumerable:false});
-URL.prototype.toLowerCase = function() {  return this.toString().toLowerCase(); }
-Object.defineProperty(URL.prototype, "toLowerCase", {enumerable:false});
-URL.prototype.toUpperCase = function() {  return this.toString().toUpperCase(); }
-Object.defineProperty(URL.prototype, "toUpperCase", {enumerable:false});
-URL.prototype.match = function(s) {  return this.toString().match(s); }
-Object.defineProperty(URL.prototype, "match", {enumerable:false});
-URL.prototype.replace = function(s, t) {  return this.toString().replace(s, t); }
-Object.defineProperty(URL.prototype, "replace", {enumerable:false});
-URL.prototype.split = function(s) { return this.toString().split(s); }
-Object.defineProperty(URL.prototype, "split", {enumerable:false});
-URL.prototype.slice = function(from, to) { return this.toString().slice(from, to); }
-Object.defineProperty(URL.prototype, "slice", {enumerable:false});
-URL.prototype.charAt = function(n) { return this.toString().charAt(n); }
-Object.defineProperty(URL.prototype, "charAt", {enumerable:false});
-URL.prototype.charCodeAt = function(n) { return this.toString().charCodeAt(n); }
-Object.defineProperty(URL.prototype, "charCodeAt", {enumerable:false});
-URL.prototype.trim = function() { return this.toString().trim(); }
-Object.defineProperty(URL.prototype, "trim", {enumerable:false});
 
 /* According to MDN Element isn't a synonym for HTMLElement as SVGElement
 should also inherit from it but leave as is until we get there */
