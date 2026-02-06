@@ -3296,6 +3296,128 @@ All components are strings, except for port,
 and all should be defined, even if they are empty.
 *********************************************************************/
 
+function url_rebuild() {
+var h = "";
+if(this.protocol$val) {
+// protocol includes the colon
+h = this.protocol$val;
+var plc = h.toLowerCase();
+if(plc != "mailto:" && plc != "telnet:" && plc != "javascript:")
+h += "//";
+}
+if(this.host$val) {
+h += this.host$val;
+} else if(this.hostname$val) {
+h += this.hostname$val;
+if(this.port$val) h += ":" + this.port$val;
+}
+if(this.pathname$val) {
+// pathname should always begin with /, should we check for that?
+if(!this.pathname$val.match(/^\//))
+h += "/";
+h += this.pathname$val;
+}
+if(this.search$val) {
+// search should always begin with ?, should we check for that?
+h += this.search$val;
+}
+if(this.hash$val) {
+// hash should always begin with #, should we check for that?
+h += this.hash$val;
+}
+this.href$val = h;
+if(this.eb$ctx) {
+// replace the web page
+eb$newLocation('r' + this.eb$ctx + this.href$val + '\n');
+}
+}
+
+function url_hrefset(v) {
+var w = my$win(), inconstruct = true, firstassign = false;
+// if passed a url, turn it back into a string
+if(v === null || v === undefined) v = "";
+if(v.dom$class == "URL" || v instanceof w.URL) v = v.toString();
+if(typeof v != "string") return;
+if(v.substr(0,7) == "Wp`Set@") v = v.substr(7), firstassign = true;
+v = resolveURL(w.eb$base, v);
+// return or blow up if v is not a url; not yet implemented
+if(typeof this.href$val == "string") inconstruct = false;
+if(inconstruct) {
+Object.defineProperty(this, "href$val", {enumerable:false, writable:true, value:v});
+Object.defineProperty(this, "protocol$val", {enumerable:false, writable:true, value:""});
+Object.defineProperty(this, "hostname$val", {enumerable:false, writable:true, value:""});
+Object.defineProperty(this, "host$val", {enumerable:false, writable:true, value:""});
+Object.defineProperty(this, "port$val", {enumerable:false, writable:true, value:""});
+Object.defineProperty(this, "pathname$val", {enumerable:false, writable:true, value:""});
+Object.defineProperty(this, "search$val", {enumerable:false, writable:true, value:""});
+Object.defineProperty(this, "hash$val", {enumerable:false, writable:true, value:""});
+} else {
+this.href$val = v;
+this.port$val = this.protocol$val = this.host$val = this.hostname$val = this.pathname$val = this.search$val = this.hash$val = "";
+}
+if(v.match(/^[a-zA-Z]*:/)) {
+this.protocol$val = v.replace(/:.*/, "");
+this.protocol$val += ":";
+v = v.replace(/^[a-zA-z]*:\/*/, "");
+}
+if(v.match(/[/#?]/)) {
+/* contains / ? or # */
+this.host$val = v.replace(/[/#?].*/, "");
+v = v.replace(/^[^/#?]*/, "");
+} else {
+/* no / ? or #, the whole thing is the host, www.foo.bar */
+this.host$val = v;
+v = "";
+}
+// Watch out, ipv6 has : in the middle.
+if(this.host$val.substr(0,1) == '[') { // I'll assume this is ipv6
+if(this.host$val.match(/]:/)) {
+this.hostname$val = this.host$val.replace(/]:.*/, "]");
+this.port$val = this.host$val.replace(/^.*]:/, "");
+} else {
+this.hostname$val = this.host$val;
+//this.port$val = setDefaultPort(this.protocol$val);
+}
+} else {
+if(this.host$val.match(/:/)) {
+this.hostname$val = this.host$val.replace(/:.*/, "");
+this.port$val = this.host$val.replace(/^.*:/, "");
+} else {
+this.hostname$val = this.host$val;
+//this.port$val = setDefaultPort(this.protocol$val);
+}
+}
+// perhaps set protocol to http if it looks like a url?
+// as in edbrowse foo.bar.com
+// Ends in standard tld, or looks like an ip4 address, or starts with www.
+if(this.protocol$val == "" &&
+(this.hostname$val.match(/\.(com|org|net|info|biz|gov|edu|us|uk|ca|au)$/) ||
+this.hostname$val.match(/^\d+\.\d+\.\d+\.\d+$/) ||
+this.hostname$val.match(/^\[[\da-fA-F:]+]$/) ||
+this.hostname$val.match(/^www\..*\.[a-zA-Z]{2,}$/))) {
+this.protocol$val = "http:";
+}
+if(v.match(/[#?]/)) {
+this.pathname$val = v.replace(/[#?].*/, "");
+v = v.replace(/^[^#?]*/, "");
+} else {
+this.pathname$val = v;
+v = "";
+}
+if(this.pathname$val == "")
+this.pathname$val = "/";
+if(v.match(/#/)) {
+this.search$val = v.replace(/#.*/, "");
+this.hash$val = v.replace(/^[^#]*/, "");
+} else {
+this.search$val = v;
+}
+if(!firstassign && this.eb$ctx) {
+// replace the web page
+eb$newLocation('r' + this.eb$ctx + this.href$val + '\n');
+}
+};
+
 // sort some objects based on timestamp.
 // There should only be a few, thus a bubble sort.
 // If there are many, this will hang for a long time.
@@ -3603,249 +3725,6 @@ return sign + m + s;
 function Intl() {}
 Object.defineProperty(Intl, "DateTimeFormat", {value:Intl_dt})
 Object.defineProperty(Intl, "NumberFormat", {value:Intl_num})
-
-/*********************************************************************
-We can define the various classes for the running window here,
-if we are always careful to use the window parameter w in everything we do,
-in creating objects and arrays, etc.
-This lets us put more software into the shared window.
-*********************************************************************/
-
-function setupClasses(w) {
-// we really need some shorthand here
-let odp = w.Object.defineProperty;
-// set window property (swp), invisible and unchangeable
-function swp(k, v) { odp(w, k, {value:v})}
-// visible (enumerable), but still protected
-function swpv(k, v) { odp(w, k, {value:v,enumerable:true})}
-// set window property unseen, but changeable
-function swpc(k, v) { odp(w, k, {value:v, writable:true, configurable:true})}
-// establish the prototype, for inheritance, then set dom$class.
-// If our made-up class is z$Foo, dom$class becomes Foo.
-// (we only have a couple of these).
-// the letters mean set window property prototype.
-function swpp(c, inherit) {
-    const v = c.replace(/^z\$/, "");
-    if(inherit)
-        odp(w[c], "prototype", {value:new inherit});
-    odp(w[c].prototype, "dom$class", {value:v});
-}
-
-// here comes the URL class, which is head-spinning in its complexity.
-// Note the use of swpc, window property changeable, because people can and do
-// replace the standard URL class with their own, or even pieces of it,
-// such as the toString method.  😬
-swpc("URL", function() {
-let h = "";
-if(arguments.length == 1) h= arguments[0];
-if(arguments.length == 2) h= resolveURL(arguments[1], arguments[0]);
-this.href = h;
-})
-swpp("URL", null)
-// z$URL is a synonym, for our own purposes.
-swp("z$URL", w.URL)
-
-// we need a couple of helper functions
-function url_rebuild() {
-var h = "";
-if(this.protocol$val) {
-// protocol includes the colon
-h = this.protocol$val;
-var plc = h.toLowerCase();
-if(plc != "mailto:" && plc != "telnet:" && plc != "javascript:")
-h += "//";
-}
-if(this.host$val) {
-h += this.host$val;
-} else if(this.hostname$val) {
-h += this.hostname$val;
-if(this.port$val) h += ":" + this.port$val;
-}
-if(this.pathname$val) {
-// pathname should always begin with /, should we check for that?
-if(!this.pathname$val.match(/^\//))
-h += "/";
-h += this.pathname$val;
-}
-if(this.search$val) {
-// search should always begin with ?, should we check for that?
-h += this.search$val;
-}
-if(this.hash$val) {
-// hash should always begin with #, should we check for that?
-h += this.hash$val;
-}
-this.href$val = h;
-if(this.eb$ctx) {
-// replace the web page
-eb$newLocation('r' + this.eb$ctx + this.href$val + '\n');
-}
-}
-
-function url_hrefset(v) {
-var w = my$win(), inconstruct = true, firstassign = false;
-// if passed a url, turn it back into a string
-if(v === null || v === undefined) v = "";
-if(v.dom$class == "URL" || v instanceof w.URL) v = v.toString();
-if(typeof v != "string") return;
-if(v.substr(0,7) == "Wp`Set@") v = v.substr(7), firstassign = true;
-v = resolveURL(w.eb$base, v);
-// return or blow up if v is not a url; not yet implemented
-if(typeof this.href$val == "string") inconstruct = false;
-if(inconstruct) {
-Object.defineProperty(this, "href$val", {enumerable:false, writable:true, value:v});
-Object.defineProperty(this, "protocol$val", {enumerable:false, writable:true, value:""});
-Object.defineProperty(this, "hostname$val", {enumerable:false, writable:true, value:""});
-Object.defineProperty(this, "host$val", {enumerable:false, writable:true, value:""});
-Object.defineProperty(this, "port$val", {enumerable:false, writable:true, value:""});
-Object.defineProperty(this, "pathname$val", {enumerable:false, writable:true, value:""});
-Object.defineProperty(this, "search$val", {enumerable:false, writable:true, value:""});
-Object.defineProperty(this, "hash$val", {enumerable:false, writable:true, value:""});
-} else {
-this.href$val = v;
-this.port$val = this.protocol$val = this.host$val = this.hostname$val = this.pathname$val = this.search$val = this.hash$val = "";
-}
-if(v.match(/^[a-zA-Z]*:/)) {
-this.protocol$val = v.replace(/:.*/, "");
-this.protocol$val += ":";
-v = v.replace(/^[a-zA-z]*:\/*/, "");
-}
-if(v.match(/[/#?]/)) {
-/* contains / ? or # */
-this.host$val = v.replace(/[/#?].*/, "");
-v = v.replace(/^[^/#?]*/, "");
-} else {
-/* no / ? or #, the whole thing is the host, www.foo.bar */
-this.host$val = v;
-v = "";
-}
-// Watch out, ipv6 has : in the middle.
-if(this.host$val.substr(0,1) == '[') { // I'll assume this is ipv6
-if(this.host$val.match(/]:/)) {
-this.hostname$val = this.host$val.replace(/]:.*/, "]");
-this.port$val = this.host$val.replace(/^.*]:/, "");
-} else {
-this.hostname$val = this.host$val;
-//this.port$val = setDefaultPort(this.protocol$val);
-}
-} else {
-if(this.host$val.match(/:/)) {
-this.hostname$val = this.host$val.replace(/:.*/, "");
-this.port$val = this.host$val.replace(/^.*:/, "");
-} else {
-this.hostname$val = this.host$val;
-//this.port$val = setDefaultPort(this.protocol$val);
-}
-}
-// perhaps set protocol to http if it looks like a url?
-// as in edbrowse foo.bar.com
-// Ends in standard tld, or looks like an ip4 address, or starts with www.
-if(this.protocol$val == "" &&
-(this.hostname$val.match(/\.(com|org|net|info|biz|gov|edu|us|uk|ca|au)$/) ||
-this.hostname$val.match(/^\d+\.\d+\.\d+\.\d+$/) ||
-this.hostname$val.match(/^\[[\da-fA-F:]+]$/) ||
-this.hostname$val.match(/^www\..*\.[a-zA-Z]{2,}$/))) {
-this.protocol$val = "http:";
-}
-if(v.match(/[#?]/)) {
-this.pathname$val = v.replace(/[#?].*/, "");
-v = v.replace(/^[^#?]*/, "");
-} else {
-this.pathname$val = v;
-v = "";
-}
-if(this.pathname$val == "")
-this.pathname$val = "/";
-if(v.match(/#/)) {
-this.search$val = v.replace(/#.*/, "");
-this.hash$val = v.replace(/^[^#]*/, "");
-} else {
-this.search$val = v;
-}
-if(!firstassign && this.eb$ctx) {
-// replace the web page
-eb$newLocation('r' + this.eb$ctx + this.href$val + '\n');
-}
-}
-
-// don't forget the w here, and in other vital places below.
-let urlp = w.URL.prototype;
-odp(urlp, "rebuild", {value:url_rebuild})
-odp(urlp, "protocol", {
-  get: function() {return this.protocol$val; },
-  set: function(v) { this.protocol$val = v; this.rebuild(); },
-enumerable:true});
-odp(urlp, "pathname", {
-  get: function() {return this.pathname$val; },
-  set: function(v) { this.pathname$val = v; this.rebuild(); },
-enumerable:true});
-odp(urlp, "search", {
-  get: function() {return this.search$val; },
-  set: function(v) { this.search$val = v; this.rebuild(); },
-enumerable:true});
-odp(urlp, "searchParams", {
-  get: function() {return new w.URLSearchParams(this.search$val); },
-// is there a setter?
-enumerable:true});
-odp(urlp, "hash", {
-  get: function() {return this.hash$val; },
-  set: function(v) { if(typeof v != "string") return; if(!v.match(/^#/)) v = '#'+v; this.hash$val = v; this.rebuild(); },
-enumerable:true});
-odp(urlp, "port", {
-  get: function() {return this.port$val; },
-  set: function(v) { this.port$val = v;
-if(this.hostname$val.length)
-this.host$val = this.hostname$val + ":" + v;
-this.rebuild(); },
-enumerable:true});
-odp(urlp, "hostname", {
-  get: function() {return this.hostname$val; },
-  set: function(v) { this.hostname$val = v;
-if(this.port$val)
-this.host$val = v + ":" +  this.port$val;
-this.rebuild(); },
-enumerable:true});
-odp(urlp, "host", {
-  get: function() {return this.host$val; },
-  set: function(v) { this.host$val = v;
-if(v.match(/:/)) {
-this.hostname$val = v.replace(/:.*/, "");
-this.port$val = v.replace(/^.*:/, "");
-} else {
-this.hostname$val = v;
-this.port$val = "";
-}
-this.rebuild(); },
-enumerable:true})
-odp(urlp, "href", {
-  get: function() {return this.href$val; },
-  set: url_hrefset,
-enumerable:true})
-odp(urlp, "toString", {enumerable:false,writable:true,configurable:true,value:function() {  return this.href$val}})
-// use toString in the following - in case they replace toString with their own function.
-// Don't just grab href$val, tempting as that may be.
-odp(urlp, "length", {enumerable:false,get:function() { return this.toString().length; }})
-odp(urlp, "concat", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().concat(s); }})
-odp(urlp, "startsWith", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().startsWith(s); }})
-odp(urlp, "endsWith", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().endsWith(s); }})
-odp(urlp, "includes", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().includes(s); }})
-// Can't turn URL.search into String.search, because search is already a
-// property of URL, that is, the search portion of the URL.
-odp(urlp, "indexOf", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().indexOf(s); }})
-odp(urlp, "lastIndexOf", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().lastIndexOf(s); }})
-odp(urlp, "substring", {enumerable:false,writable:true,configurable:true,value:function(from, to) {  return this.toString().substring(from, to); }})
-odp(urlp, "substr", {enumerable:false,writable:true,configurable:true,value:function(from, to) {return this.toString().substr(from, to);}})
-odp(urlp, "toLowerCase", {enumerable:false,writable:true,configurable:true,value:function() {  return this.toString().toLowerCase(); }})
-odp(urlp, "toUpperCase", {enumerable:false,writable:true,configurable:true,value:function() {  return this.toString().toUpperCase(); }})
-odp(urlp, "match", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().match(s); }})
-odp(urlp, "replace", {enumerable:false,writable:true,configurable:true,value:function(s, t) {  return this.toString().replace(s, t); }})
-odp(urlp, "split", {enumerable:false,writable:true,configurable:true,value:function(s) { return this.toString().split(s); }})
-odp(urlp, "slice", {enumerable:false,writable:true,configurable:true,value:function(from, to) { return this.toString().slice(from, to); }})
-odp(urlp, "charAt", {enumerable:false,writable:true,configurable:true,value:function(n) { return this.toString().charAt(n); }})
-odp(urlp, "charCodeAt", {enumerable:false,writable:true,configurable:true,value:function(n) { return this.toString().charCodeAt(n); }})
-odp(urlp, "trim", {enumerable:false,writable:true,configurable:true,value:function() { return this.toString().trim(); }})
-
-}
 
 // Code beyond this point is third party, but necessary for the operation of the browser.
 
@@ -6776,8 +6655,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "MessagePortPolyfill", "MessageChannelPolyfill",
 "clickfn", "checkset", "cel_define", "cel_get",
 "jtfn0", "jtfn1", "jtfn2", "jtfn3", "deminimize", "addTrace",
-"setupClasses",
-"sortTime",
+"url_rebuild", "url_hrefset", "sortTime",
 "DOMParser",
 "xml_open", "xml_srh", "xml_grh", "xml_garh", "xml_send", "xml_parse",
 "onmessage$$running", "lastModifiedByHead", "structuredClone",
