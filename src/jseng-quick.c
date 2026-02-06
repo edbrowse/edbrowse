@@ -3325,7 +3325,6 @@ cleaning up when we really want to run all the finalizers */
 	e = list_entry(l, JSJobEntry, link);
 	ctx = e->ctx;
         if (freeing_context && ctx != freeing_context) continue;
-        list_del(&e->link);
 // This line resets cw and cf, and we don't put it back, so the calling routine must restore it.
 	if (!frameFromContext(ctx)) {
             if(ctx == mwc)
@@ -3335,6 +3334,7 @@ cleaning up when we really want to run all the finalizers */
 		debugPrint(3, "It is not safe to run this job (%d arguments), or even free it!", e->argc);
 		debugPrint(3, "But it's not great leaving it around either.");
 		debugPrint(3, "Deleting it from the pending queue and hoping for the best. 🤞");
+	        list_del(&e->link);
 		continue;
             }
         }
@@ -3371,6 +3371,7 @@ cleaning up when we really want to run all the finalizers */
                 debugPrint(3, "%d arguments", e->argc);
         }
 
+        list_del(&e->link);
         res = e->job_func(ctx, e->argc, (JSValueConst *)e->argv);
 // Promise jobs never seem to return an error. That's why I didn't check for it.
 // But MicroTask jobs do. If the called function fails, we see it.
@@ -3399,6 +3400,7 @@ and it does not do this odd behavior, so I don't want to free the context.
 But some day quickjs-ng might absorb that change from quickjs,
 and if that happens, then once again we need to free the context.
 *********************************************************************/
+
 #if ! Q_NG
 	JS_FreeContext(ctx);
 #endif
@@ -4009,6 +4011,8 @@ void freeJSContext(Frame *f)
 {
 	if (!f->jslink)
 		return;
+	Window *save_cw = cw;
+	Frame *save_cf = cf;
 	debugPrint(3, "begin js context cleanup for %d", f->gsn);
         freeing_context = f->cx;
 /* Run GC explicitly prior to freeing the frame to at least have a chance of
@@ -4029,6 +4033,7 @@ is fine as there is no guarantee re: job (rather than timer) timing */
 	f->winobj = f->docobj = f->cx = 0;
 	f->jslink = false;
         freeing_context = NULL;
+	cw = save_cw, cf = save_cf;
 }
 
 static bool has_property(JSContext *cx, JSValueConst parent, const char *name)
