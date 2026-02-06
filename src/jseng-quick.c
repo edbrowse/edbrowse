@@ -4016,11 +4016,12 @@ void freeJSContext(Frame *f)
 /* Run GC explicitly prior to freeing the frame to at least have a chance of
 catching the finalisers. This actually runs over the whole runtime but js is
 single-threaded so we should be good */
-        JS_RunGC(jsrt);
+        do {
+            JS_RunGC(jsrt);
 /* quick uses pending jobs for finalizers, again running over the whole runtime
 is fine as there is no guarantee re: job (rather than timer) timing */
-        my_ExecutePendingJobs();
-// I guess we could need to do the above again but hopefully this is good enough
+        } while(my_ExecutePendingJobs());
+
 	JS_FreeContext(f->cx);
 	debugPrint(3, "complete js context cleanup for %d", f->gsn);
 	cssFree(f);
