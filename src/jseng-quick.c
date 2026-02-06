@@ -3325,7 +3325,7 @@ cleaning up when we really want to run all the finalizers */
 	e = list_entry(l, JSJobEntry, link);
 	ctx = e->ctx;
         if (freeing_context && ctx != freeing_context) continue;
-
+        list_del(&e->link);
 // This line resets cw and cf, and we don't put it back, so the calling routine must restore it.
 	if (!frameFromContext(ctx)) {
             if(ctx == mwc)
@@ -3335,7 +3335,6 @@ cleaning up when we really want to run all the finalizers */
 		debugPrint(3, "It is not safe to run this job (%d arguments), or even free it!", e->argc);
 		debugPrint(3, "But it's not great leaving it around either.");
 		debugPrint(3, "Deleting it from the pending queue and hoping for the best. 🤞");
-                list_del(&e->link);
 		continue;
             }
         }
@@ -3376,11 +3375,10 @@ cleaning up when we really want to run all the finalizers */
 // Promise jobs never seem to return an error. That's why I didn't check for it.
 // But MicroTask jobs do. If the called function fails, we see it.
 // So I check for that.
-        if(JS_IsException(res)) processError(ctx);
+        if(!freeing_context && JS_IsException(res)) processError(ctx);
         debugPrint(3, "exec complete");
         JS_FreeValue(ctx, res);
         ++cnt;
-        list_del(&e->link);
         for(i = 0; i < e->argc; i++)
             JS_FreeValue(ctx, e->argv[i]);
         js_free(ctx, e);
@@ -3437,6 +3435,8 @@ bool pendingJobsForCurrentWindow(void)
 				return rc;
 }
 
+#if 0
+// This breaks finalizers and appears to have other nasty effects on GC. It also doesn't free the job args so leaks there.
 void delPendings(const Frame *f)
 {
 	    JSJobEntry *e;
@@ -3467,7 +3467,7 @@ void delPendings(const Frame *f)
 	debugPrint(3, "%d pendings deleted, %d pendings kept",
 	delcount, keepcount);
 }
-
+#endif
 // don't need these quick macros any more
 #undef list_for_each
 #undef list_for_each_safe
@@ -4011,8 +4011,6 @@ void freeJSContext(Frame *f)
 		return;
 	debugPrint(3, "begin js context cleanup for %d", f->gsn);
         freeing_context = f->cx;
-	JS_Release(f->cx, *((JSValue*)f->winobj));
-	JS_Release(f->cx, *((JSValue*)f->docobj));
 /* Run GC explicitly prior to freeing the frame to at least have a chance of
 catching the finalisers. This actually runs over the whole runtime but js is
 single-threaded so we should be good */
@@ -4021,7 +4019,8 @@ single-threaded so we should be good */
 /* quick uses pending jobs for finalizers, again running over the whole runtime
 is fine as there is no guarantee re: job (rather than timer) timing */
         } while(my_ExecutePendingJobs());
-
+	JS_Release(f->cx, *((JSValue*)f->winobj));
+	JS_Release(f->cx, *((JSValue*)f->docobj));
 	JS_FreeContext(f->cx);
 	debugPrint(3, "complete js context cleanup for %d", f->gsn);
 	cssFree(f);

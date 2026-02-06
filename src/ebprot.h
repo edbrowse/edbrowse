@@ -482,7 +482,10 @@ int my_ExecutePendingJobs(void);
 bool pendingJobsForCurrentWindow(void);
 bool my_ExecutePendingMessages(void);
 bool my_ExecutePendingMessagePorts(void);
+#if 0
+// Unsafe (see comments in jseng-quick.c)
 void delPendings(const Frame *f);
+#endif
 void js_main(void);
 void createJSContext(Frame *f);
 void freeJSContext(Frame *f);
