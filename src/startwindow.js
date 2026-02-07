@@ -73,22 +73,33 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
     this.mw$.getComputedStyle = () => {};
     this.mw$.structuredClone = () => {};
 }
-// set window member, unseen, unchanging
-this.swm = function(k, v) { Object.defineProperty(window, k, {value:v})}
-// visible, but still protected
-this.swm1 = function(k, v) { Object.defineProperty(window, k, {value:v,enumerable:true})}
-// unseen, but changeable
-this.swm2 = function(k, v) { Object.defineProperty(window, k, {value:v, writable:true, configurable:true})}
 
-// this is called as each html element is built
+// We need some shorthand for this rather large file.
+// Think of these as macros; they are deleted at the end so they don't persist.
+this.odp = Object.defineProperty;
+// set window member, unseen, unchanging
+this.swm = function(k, v) { odp(window, k, {value:v})}
+// visible (enumerable), but still protected
+this.swm1 = function(k, v) { odp(window, k, {value:v,enumerable:true})}
+// unseen, but changeable
+this.swm2 = function(k, v) { odp(window, k, {value:v, writable:true, configurable:true})}
+
 // establish the prototype for inheritance, then set dom$class
+// this is called as each html element is built
 // If our made-up class is z$Foo, dom$class becomes Foo
-this.spdc = function(c, inherit) {
+// Letters mean set window member prototype
+this.swmp = function(c, inherit) {
     const v = c.replace(/^z\$/, "");
     if(inherit)
-        Object.defineProperty(window[c], "prototype", {value:new inherit})
-    Object.defineProperty(window[c].prototype, "dom$class", {value:v})
+        odp(window[c], "prototype", {value:new inherit})
+    odp(window[c].prototype, "dom$class", {value:v})
 }
+
+// set document member, analogs of the set window member functions
+this.sdm = function(k, v) { odp(document, k, {value:v})}
+this.sdm1 = function(k, v) { odp(document, k, {value:v,enumerable:true})}
+this.sdm2 = function(k, v) { odp(document, k, {value:v, writable:true, configurable:true})}
+
 /* Extremely useful even if non-standard hence the Eb$ prefix but use a named
     class as if people see it it really doesn't matter and makes the definition
     work better.
@@ -173,7 +184,7 @@ class Eb$IterableWeakMap {
 
 // The first DOM class is Node, at the head of all else.
 swm("Node", function(){})
-spdc("Node", null)
+swmp("Node", null)
 
 /*********************************************************************
 a node list is and isn't an array; I don't really understand it.
@@ -187,14 +198,14 @@ if(Array.isArray(v))
 for(var i=0; i<v.length; ++i)
 this.push(v[i])
 })
-spdc("NodeList", Array)
+swmp("NodeList", Array)
 NodeList.prototype.toString = function(){return "[object NodeList]"}
 swm("HTMLCollection", function(v){
 if(Array.isArray(v))
 for(var i=0; i<v.length; ++i)
 this.push(v[i])
 })
-spdc("HTMLCollection", Array)
+swmp("HTMLCollection", Array)
 HTMLCollection.prototype.toString = function(){return "[object HTMLCollection]"}
 
 // make sure to wrap global dispatchEvent, so this becomes this window,
@@ -204,52 +215,52 @@ swm("addEventListener", mw$.addEventListener.bind(window))
 swm("removeEventListener", mw$.removeEventListener.bind(window))
 
 swm("EventTarget", function() {})
-spdc("EventTarget", Node)
+swmp("EventTarget", Node)
 EventTarget.prototype.addEventListener = mw$.addEventListener;
 EventTarget.prototype.removeEventListener = mw$.removeEventListener;
 EventTarget.prototype.dispatchEvent = mw$.dispatchEvent;
 
 swm("Document", function() {
-    Object.defineProperty(this, "childNodes", {value:[],writable:true,configurable:true});
-    Object.defineProperty(this, "id$hash", {value: new Map});
-    Object.defineProperty(this, "id$registry", {value: new FinalizationRegistry(
+    odp(this, "childNodes", {value:[],writable:true,configurable:true});
+    odp(this, "id$hash", {value: new Map});
+    odp(this, "id$registry", {value: new FinalizationRegistry(
         (i) => {
             alert3(`GC triggers delete of element with id ${i} from id hash`);
             this.id$hash.delete(i);
         }
     )});
 });
-spdc("Document", EventTarget)
-Document.prototype.activeElement = null;
-Object.defineProperty(Document.prototype, "children", {get:function(){return this.childNodes}})
-Object.defineProperty(Document.prototype, "childElementCount", {get:function(){return this.children.length}})
-Document.prototype.querySelector = querySelector
-Document.prototype.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
-Object.defineProperty(Document.prototype, "documentElement", {get: mw$.getElement});
-Object.defineProperty(Document.prototype, "head", {get: mw$.getHead,set:mw$.setHead});
-Object.defineProperty(Document.prototype, "body", {get: mw$.getBody,set:mw$.setBody});
+swmp("Document", EventTarget)
+this.docp = Document.prototype; // shorthand
+// We may abbreviate prototypes for the various classes when building them,
+// but we'll always delete it once the class is built.
+docp.activeElement = null;
+odp(docp, "children", {get:function(){return this.childNodes}})
+odp(docp, "childElementCount", {get:function(){return this.children.length}})
+docp.querySelector = querySelector
+docp.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
+odp(docp, "documentElement", {get: mw$.getElement});
+odp(docp, "head", {get: mw$.getHead,set:mw$.setHead});
+odp(docp, "body", {get: mw$.getBody,set:mw$.setBody});
 // scrollingElement makes no sense in edbrowse, I think body is our best bet
-Object.defineProperty(Document.prototype, "scrollingElement", {get: mw$.getBody});
-Object.defineProperty(Document.prototype, "URL", {get: function(){return this.location ? this.location.toString() : null}})
-Object.defineProperty(Document.prototype, "documentURI", {get: function(){return this.URL}})
-Object.defineProperty(Document.prototype, "cookie", {
+odp(docp, "scrollingElement", {get: mw$.getBody});
+odp(docp, "URL", {get: function(){return this.location ? this.location.toString() : null}})
+odp(docp, "documentURI", {get: function(){return this.URL}})
+odp(docp, "cookie", {
 get: eb$getcook, set: eb$setcook});
-Document.prototype.defaultView = window
-Document.prototype.readyState = "interactive"
-Document.prototype.visibilityState = "visible"
-Document.prototype.getElementById = mw$.getElementById
+docp.defaultView = window
+docp.readyState = "interactive"
+docp.visibilityState = "visible"
+docp.getElementById = mw$.getElementById
 // the other getElementsBy we inherit from Node
-Document.prototype.nodeName = "#document"
-Document.prototype.tagName = "document"
-Document.prototype.nodeType = 9
+docp.nodeName = "#document"
+docp.tagName = "document"
+docp.nodeType = 9
+delete window.docp;
 
 // the most important line is right here
 swm1("document", new Document)
 
-// set document member, analogs of the set window member functions
-this.sdm = function(k, v) { Object.defineProperty(document, k, {value:v})}
-this.sdm1 = function(k, v) { Object.defineProperty(document, k, {value:v,enumerable:true})}
-this.sdm2 = function(k, v) { Object.defineProperty(document, k, {value:v, writable:true, configurable:true})}
 /* Apparently people want to muck with DOMException so can't be shared as
 otherwise we end up with read-only prototype chain issues */
 this.DOMException = function(message, name) {
@@ -324,7 +335,7 @@ this.toString = Object.prototype.toString = function() {
         this.dom$class ? "[object "+this.dom$class+"]" : toString$nat.call(this)
     ) : toString$nat.call(this);
 }
-Object.defineProperty(window, "toString", {enumerable:false})
+odp(window, "toString", {enumerable:false})
 
 swm1("scroll", eb$voidfunction)
 swm1("scrollTo", eb$voidfunction)
@@ -338,9 +349,9 @@ swm1("blur", document.blur)
 swm1("focus", document.focus)
 
 swm1("self", window)
-Object.defineProperty(window, "parent", {get: eb$parent,enumerable:true});
-Object.defineProperty(window, "top", {get: eb$top,enumerable:true});
-Object.defineProperty(window, "frameElement", {get: eb$frameElement,enumerable:true});
+odp(window, "parent", {get: eb$parent,enumerable:true});
+odp(window, "top", {get: eb$top,enumerable:true});
+odp(window, "frameElement", {get: eb$frameElement,enumerable:true});
 
 sdm("write", eb$write)
 sdm("writeln", eb$writeln)
@@ -384,8 +395,8 @@ swm2("step$go", "")
 } else {
 // step$l should control the entire session, all frames.
 // This is a trick to have a global variable across all frames.
-Object.defineProperty(window, "step$l", {get:function(){return top.step$l}, set:function(x){top.step$l=x}});
-Object.defineProperty(window, "step$go", {get:function(){return top.step$go}, set:function(x){top.step$go=x}});
+odp(window, "step$l", {get:function(){return top.step$l}, set:function(x){top.step$l=x}});
+odp(window, "step$go", {get:function(){return top.step$go}, set:function(x){top.step$go=x}});
 // I don't use this trick on step$exp, because an expression should really live within its frame
 }
 
@@ -424,7 +435,7 @@ swm("directories", false)
 if(window == top) {
 swm1("name", "unspecifiedFrame")
 } else {
-Object.defineProperty(window, "name", {get:function(){return frameElement.name}});
+odp(window, "name", {get:function(){return frameElement.name}});
 // there is no setter here, should there be? Can we set name to something?
 // Should it propagate back up to the frame element name?
 }
@@ -529,8 +540,8 @@ sdm("styleSheets", [])
 
 swm2("frames$2", []);
 swm1("frames", {})
-Object.defineProperty(frames, "length", {get:function(){return frames$2.length}})
-Object.defineProperty(window, "length", {get:function(){return frames$2.length},enumerable:true})
+odp(frames, "length", {get:function(){return frames$2.length}})
+odp(window, "length", {get:function(){return frames$2.length},enumerable:true})
 
 // to debug a.href = object or other weird things.
 swm("hrefset$p", [])
@@ -599,44 +610,45 @@ if(arguments.length == 2) h= mw$.resolveURL(arguments[1], arguments[0]);
 this.href = h;
 })
 swm("z$URL", URL)
-spdc("URL", null)
-Object.defineProperty(URL.prototype, "rebuild", {value:mw$.url_rebuild})
+swmp("URL", null)
+this.urlp = URL.prototype; // shorthand
+odp(urlp, "rebuild", {value:mw$.url_rebuild})
 
-Object.defineProperty(URL.prototype, "protocol", {
+odp(urlp, "protocol", {
   get: function() {return this.protocol$val; },
   set: function(v) { this.protocol$val = v; this.rebuild(); },
 enumerable:true});
-Object.defineProperty(URL.prototype, "pathname", {
+odp(urlp, "pathname", {
   get: function() {return this.pathname$val; },
   set: function(v) { this.pathname$val = v; this.rebuild(); },
 enumerable:true});
-Object.defineProperty(URL.prototype, "search", {
+odp(urlp, "search", {
   get: function() {return this.search$val; },
   set: function(v) { this.search$val = v; this.rebuild(); },
 enumerable:true});
-Object.defineProperty(URL.prototype, "searchParams", {
+odp(urlp, "searchParams", {
   get: function() {return new URLSearchParams(this.search$val); },
 // is there a setter?
 enumerable:true});
-Object.defineProperty(URL.prototype, "hash", {
+odp(urlp, "hash", {
   get: function() {return this.hash$val; },
   set: function(v) { if(typeof v != "string") return; if(!v.match(/^#/)) v = '#'+v; this.hash$val = v; this.rebuild(); },
 enumerable:true});
-Object.defineProperty(URL.prototype, "port", {
+odp(urlp, "port", {
   get: function() {return this.port$val; },
   set: function(v) { this.port$val = v;
 if(this.hostname$val.length)
 this.host$val = this.hostname$val + ":" + v;
 this.rebuild(); },
 enumerable:true});
-Object.defineProperty(URL.prototype, "hostname", {
+odp(urlp, "hostname", {
   get: function() {return this.hostname$val; },
   set: function(v) { this.hostname$val = v;
 if(this.port$val)
 this.host$val = v + ":" +  this.port$val;
 this.rebuild(); },
 enumerable:true});
-Object.defineProperty(URL.prototype, "host", {
+odp(urlp, "host", {
   get: function() {return this.host$val; },
   set: function(v) { this.host$val = v;
 if(v.match(/:/)) {
@@ -648,63 +660,41 @@ this.port$val = "";
 }
 this.rebuild(); },
 enumerable:true});
-Object.defineProperty(URL.prototype, "href", {
+odp(urlp, "href", {
   get: function() {return this.href$val; },
   set: mw$.url_hrefset,
 enumerable:true});
-
-URL.prototype.toString = function() {  return this.href$val; }
-Object.defineProperty(URL.prototype, "toString", {enumerable:false});
+odp(urlp, "toString", {enumerable:false,writable:true,configurable:true,value:function() {  return this.href$val}})
 // use toString in the following - in case they replace toString with their own function.
-// Don't just grab href$val, tempting as that is.
-Object.defineProperty(URL.prototype, "length", { get: function() { return this.toString().length; }});
-URL.prototype.concat = function(s) {  return this.toString().concat(s); }
-Object.defineProperty(URL.prototype, "concat", {enumerable:false});
-URL.prototype.startsWith = function(s) {  return this.toString().startsWith(s); }
-Object.defineProperty(URL.prototype, "startsWith", {enumerable:false});
-URL.prototype.endsWith = function(s) {  return this.toString().endsWith(s); }
-Object.defineProperty(URL.prototype, "endsWith", {enumerable:false});
-URL.prototype.includes = function(s) {  return this.toString().includes(s); }
-Object.defineProperty(URL.prototype, "includes", {enumerable:false});
-/*
-Can't turn URL.search into String.search, because search is already a
-property of URL, that is, the search portion of the URL.
-URL.prototype.search = function(s) { return this.toString().search(s); }
-*/
-
-URL.prototype.indexOf = function(s) {  return this.toString().indexOf(s); }
-Object.defineProperty(URL.prototype, "indexOf", {enumerable:false});
-URL.prototype.lastIndexOf = function(s) {  return this.toString().lastIndexOf(s); }
-Object.defineProperty(URL.prototype, "lastIndexOf", {enumerable:false});
-URL.prototype.substring = function(from, to) {  return this.toString().substring(from, to); }
-Object.defineProperty(URL.prototype, "substring", {enumerable:false});
-URL.prototype.substr = function(from, to) {return this.toString().substr(from, to);}
-Object.defineProperty(URL.prototype, "substr", {enumerable:false});
-URL.prototype.toLowerCase = function() {  return this.toString().toLowerCase(); }
-Object.defineProperty(URL.prototype, "toLowerCase", {enumerable:false});
-URL.prototype.toUpperCase = function() {  return this.toString().toUpperCase(); }
-Object.defineProperty(URL.prototype, "toUpperCase", {enumerable:false});
-URL.prototype.match = function(s) {  return this.toString().match(s); }
-Object.defineProperty(URL.prototype, "match", {enumerable:false});
-URL.prototype.replace = function(s, t) {  return this.toString().replace(s, t); }
-Object.defineProperty(URL.prototype, "replace", {enumerable:false});
-URL.prototype.split = function(s) { return this.toString().split(s); }
-Object.defineProperty(URL.prototype, "split", {enumerable:false});
-URL.prototype.slice = function(from, to) { return this.toString().slice(from, to); }
-Object.defineProperty(URL.prototype, "slice", {enumerable:false});
-URL.prototype.charAt = function(n) { return this.toString().charAt(n); }
-Object.defineProperty(URL.prototype, "charAt", {enumerable:false});
-URL.prototype.charCodeAt = function(n) { return this.toString().charCodeAt(n); }
-Object.defineProperty(URL.prototype, "charCodeAt", {enumerable:false});
-URL.prototype.trim = function() { return this.toString().trim(); }
-Object.defineProperty(URL.prototype, "trim", {enumerable:false});
+// Don't just grab href$val, tempting as that may be.
+odp(urlp, "length", {enumerable:false,get:function() { return this.toString().length; }})
+odp(urlp, "concat", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().concat(s); }})
+odp(urlp, "startsWith", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().startsWith(s); }})
+odp(urlp, "endsWith", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().endsWith(s); }})
+odp(urlp, "includes", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().includes(s); }})
+// Can't turn URL.search into String.search, because search is already a
+// property of URL, that is, the search portion of the URL.
+odp(urlp, "indexOf", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().indexOf(s); }})
+odp(urlp, "lastIndexOf", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().lastIndexOf(s); }})
+odp(urlp, "substring", {enumerable:false,writable:true,configurable:true,value:function(from, to) {  return this.toString().substring(from, to); }})
+odp(urlp, "substr", {enumerable:false,writable:true,configurable:true,value:function(from, to) {return this.toString().substr(from, to);}})
+odp(urlp, "toLowerCase", {enumerable:false,writable:true,configurable:true,value:function() {  return this.toString().toLowerCase(); }})
+odp(urlp, "toUpperCase", {enumerable:false,writable:true,configurable:true,value:function() {  return this.toString().toUpperCase(); }})
+odp(urlp, "match", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().match(s); }})
+odp(urlp, "replace", {enumerable:false,writable:true,configurable:true,value:function(s, t) {  return this.toString().replace(s, t); }})
+odp(urlp, "split", {enumerable:false,writable:true,configurable:true,value:function(s) { return this.toString().split(s); }})
+odp(urlp, "slice", {enumerable:false,writable:true,configurable:true,value:function(from, to) { return this.toString().slice(from, to); }})
+odp(urlp, "charAt", {enumerable:false,writable:true,configurable:true,value:function(n) { return this.toString().charAt(n); }})
+odp(urlp, "charCodeAt", {enumerable:false,writable:true,configurable:true,value:function(n) { return this.toString().charCodeAt(n); }})
+odp(urlp, "trim", {enumerable:false,writable:true,configurable:true,value:function() { return this.toString().trim(); }})
+delete window.urlp;
 
 /* According to MDN Element isn't a synonym for HTMLElement as SVGElement
 should also inherit from it but leave as is until we get there */
 swm2("HTMLElement", function(){})
 swm2("Element", HTMLElement)
-spdc("HTMLElement", Node)
-Object.defineProperty(HTMLElement.prototype, "name", {
+swmp("HTMLElement", Node)
+odp(HTMLElement.prototype, "name", {
 get: function() {
 var isinput = (this.dom$class == "HTMLInputElement" || this.dom$class == "HTMLButtonElement" || this.dom$class == "HTMLSelectElement");
 if(!isinput) return this.name$2 ;
@@ -724,22 +714,22 @@ if(!f.elements[n]) f.elements[n] = this;
 }
 this.setAttribute("name", n);
 }});
-Object.defineProperty(HTMLElement.prototype, "id", {
+odp(HTMLElement.prototype, "id", {
 get:function(){ var t = this.getAttribute("id");
 return typeof t == "string" ? t : undefined; },
 set:function(v) { this.setAttribute("id", v)}});
-Object.defineProperty(HTMLElement.prototype, "title", {
+odp(HTMLElement.prototype, "title", {
 get:function(){ var t = this.getAttribute("title");
 // in the real world this is always a string, but acid test 3 has numbers for titles
 var y = typeof t;
 return y == "string" || y == "number" ? t : undefined; },
 set:function(v) { this.setAttribute("title", v);}});
 // almost anything can be disabled, an entire div section, etc
-Object.defineProperty(HTMLElement.prototype, "disabled", {
+odp(HTMLElement.prototype, "disabled", {
 get:function(){ var t = this.getAttribute("disabled");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("disabled", v);}});
-Object.defineProperty(HTMLElement.prototype, "hidden", {
+odp(HTMLElement.prototype, "hidden", {
 get:function(){ var t = this.getAttribute("hidden");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("hidden", v);}});
@@ -766,7 +756,7 @@ if(o.slotAssignment) r.slotAssignment = o.slotAssignment;
 }
 return r;
 }
-Object.defineProperty(HTMLElement.prototype, "shadowRoot", {
+odp(HTMLElement.prototype, "shadowRoot", {
 get:function(){
 var r = this.firstChild;
 if(r && r.nodeName == "SHADOWROOT" && r.mode == "open") return r;
@@ -775,11 +765,11 @@ return null;
 
 swm2("SVGElement", function(){})
 // Use the correct name for the prototype even if it's an incorrect synonym
-spdc("SVGElement", Element)
+swmp("SVGElement", Element)
 
 swm("z$HTML", function(){})
-spdc("z$HTML", HTMLElement)
-Object.defineProperty(z$HTML.prototype, "eb$win", {get: function(){return this.parentNode ? this.parentNode.defaultView : undefined}});
+swmp("z$HTML", HTMLElement)
+odp(z$HTML.prototype, "eb$win", {get: function(){return this.parentNode ? this.parentNode.defaultView : undefined}});
 // Some screen attributes that are suppose to be there.
 z$HTML.prototype.doScroll = eb$voidfunction;
 z$HTML.prototype.clientHeight = 768;
@@ -793,25 +783,25 @@ z$HTML.prototype.scrollLeft = 0;
 
 // is there a difference between DocType ad DocumentType?
 swm("z$DocType", function(){ this.nodeType = 10, this.nodeName = "DOCTYPE"})
-spdc("z$DocType", HTMLElement)
+swmp("z$DocType", HTMLElement)
 swm("DocumentType", function(){})
-spdc("DocumentType", HTMLElement)
+swmp("DocumentType", HTMLElement)
 swm("CharacterData", function(){})
-spdc("CharacterData", null)
+swmp("CharacterData", null)
 swm("HTMLHeadElement", function(){})
-spdc("HTMLHeadElement", HTMLElement)
+swmp("HTMLHeadElement", HTMLElement)
 swm("HTMLMetaElement", function(){})
-spdc("HTMLMetaElement", HTMLElement)
+swmp("HTMLMetaElement", HTMLElement)
 swm("z$Title", function(){})
-spdc("z$Title", HTMLElement)
-Object.defineProperty(z$Title.prototype, "text", {
+swmp("z$Title", HTMLElement)
+odp(z$Title.prototype, "text", {
 get: function(){ return this.firstChild && this.firstChild.nodeName == "#text" && this.firstChild.data || "";}
 // setter should change the title of the document, not yet implemented
 });
 swm("HTMLLinkElement", function(){})
-spdc("HTMLLinkElement", HTMLElement)
+swmp("HTMLLinkElement", HTMLElement)
 // It's a list but why would it ever be more than one?
-Object.defineProperty(HTMLLinkElement.prototype, "relList", {
+odp(HTMLLinkElement.prototype, "relList", {
 get: function() { var a = this.rel ? [this.rel] : [];
 // edbrowse only supports stylesheet
 a.supports = function(s) { return s === "stylesheet"; }
@@ -819,7 +809,7 @@ return a;
 }});
 
 swm("HTMLBodyElement", function(){})
-spdc("HTMLBodyElement", HTMLElement)
+swmp("HTMLBodyElement", HTMLElement)
 HTMLBodyElement.prototype.doScroll = eb$voidfunction;
 HTMLBodyElement.prototype.clientHeight = 768;
 HTMLBodyElement.prototype.clientWidth = 1024;
@@ -833,19 +823,19 @@ HTMLBodyElement.prototype.scrollLeft = 0;
 HTMLBodyElement.prototype.eb$dbih = function(s){this.innerHTML = s}
 
 swm("ShadowRoot", function(){})
-spdc("ShadowRoot", HTMLElement)
+swmp("ShadowRoot", HTMLElement)
 
 swm("HTMLBaseElement", function(){})
-spdc("HTMLBaseElement", HTMLElement)
+swmp("HTMLBaseElement", HTMLElement)
 
 swm("HTMLFormElement", function(){this.elements = []})
-spdc("HTMLFormElement", HTMLElement)
+swmp("HTMLFormElement", HTMLElement)
 HTMLFormElement.prototype.submit = eb$formSubmit;
 HTMLFormElement.prototype.reset = eb$formReset;
-Object.defineProperty(HTMLFormElement.prototype, "length", { get: function() { return this.elements.length;}});
+odp(HTMLFormElement.prototype, "length", { get: function() { return this.elements.length;}});
 
 swm("Validity", function(){})
-spdc("Validity", null)
+swmp("Validity", null)
 /*********************************************************************
 All these should be getters, or should they?
 Consider the tooLong attribute.
@@ -867,9 +857,9 @@ Validity.prototype.stepMismatch =
 Validity.prototype.tooLong =
 Validity.prototype.tooShort =
 Validity.prototype.typeMismatch = false;
-Object.defineProperty(Validity.prototype, "valueMissing", {
+odp(Validity.prototype, "valueMissing", {
 get: function() {let o = this.owner;  return o.required && o.value == ""; }});
-Object.defineProperty(Validity.prototype, "valid", {
+odp(Validity.prototype, "valid", {
 get: function() { // only need to check items with getters
 return !(this.valueMissing)}});
 
@@ -915,25 +905,25 @@ swm("HTMLSelectElement", function() {
     this.validity = new Validity;
     this.validity.owner = this;
 })
-spdc("HTMLSelectElement", HTMLElement)
-Object.defineProperty(HTMLSelectElement.prototype, "value", {
+swmp("HTMLSelectElement", HTMLElement)
+odp(HTMLSelectElement.prototype, "value", {
     get: function() {
         const a = this.options;
         const n = this.selectedIndex;
         return (this.multiple || n < 0 || n >= a.length) ? "" : a[n].value;
     }
 });
-Object.defineProperty(HTMLSelectElement.prototype, "type", {
+odp(HTMLSelectElement.prototype, "type", {
     get:function(){ return this.multiple ? "select-multiple" : "select-one"}
 });
-Object.defineProperty(HTMLSelectElement.prototype, "multiple", {
+odp(HTMLSelectElement.prototype, "multiple", {
     get: function() {
         const t = this.getAttribute("multiple");
         return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true
     },
     set:function(v) { this.setAttribute("multiple", v);}
 });
-Object.defineProperty(HTMLSelectElement.prototype, "size", {
+odp(HTMLSelectElement.prototype, "size", {
     get: function() {
         const t = this.getAttribute("size");
         if(typeof t == "number") return t;
@@ -942,7 +932,7 @@ Object.defineProperty(HTMLSelectElement.prototype, "size", {
     },
     set: function(v) { this.setAttribute("size", v);}
 });
-Object.defineProperty(HTMLSelectElement.prototype, "required", {
+odp(HTMLSelectElement.prototype, "required", {
     get:function() {
         const t = this.getAttribute("required");
         return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true
@@ -974,7 +964,7 @@ HTMLSelectElement.prototype.eb$bso = function() { // build selected options arra
 }
 
 swm("HTMLInputElement", function(){this.validity = new Validity, this.validity.owner = this})
-spdc("HTMLInputElement", HTMLElement)
+swmp("HTMLInputElement", HTMLElement)
 HTMLInputElement.prototype.selectionStart = 0;
 HTMLInputElement.prototype.selectionEnd = -1;
 HTMLInputElement.prototype.selectionDirection = "none";
@@ -988,11 +978,11 @@ HTMLInputElement.prototype.select = eb$voidfunction;
 HTMLInputElement.prototype.click = mw$.clickfn;
 // We only need this in the rare case of setting click and clearing
 // the other radio buttons. acid test 43
-Object.defineProperty(HTMLInputElement.prototype, "checked", {
+odp(HTMLInputElement.prototype, "checked", {
 get: function() { return this.checked$2 ? true : false; },
 set: mw$.checkset});
 // type property is automatically in the getAttribute system, acid test 53
-Object.defineProperty(HTMLInputElement.prototype, "type", {
+odp(HTMLInputElement.prototype, "type", {
 get:function(){ var t = this.getAttribute("type");
 // input type is special, tidy converts it to lower case, so I will too.
 // Also acid test 54 requires it.
@@ -1000,130 +990,130 @@ return typeof t == "string" ? this.eb$xml ? t : t.toLowerCase() : undefined; },
 set:function(v) { this.setAttribute("type", v);
 if(v.toLowerCase() == "checkbox" && !this.value) this.value = "on";
 }});
-Object.defineProperty(HTMLInputElement.prototype, "placeholder", {
+odp(HTMLInputElement.prototype, "placeholder", {
 get:function(){ var t = this.getAttribute("placeholder");
 var y = typeof t;
 return y == "string" || y == "number" ? t : ""; },
 set:function(v) { this.setAttribute("placeholder", v);}});
-Object.defineProperty(HTMLInputElement.prototype, "multiple", {
+odp(HTMLInputElement.prototype, "multiple", {
 get:function(){ var t = this.getAttribute("multiple");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("multiple", v);}});
-Object.defineProperty(HTMLInputElement.prototype, "required", {
+odp(HTMLInputElement.prototype, "required", {
 get:function(){ var t = this.getAttribute("required");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("required", v);}});
-Object.defineProperty(HTMLInputElement.prototype, "readOnly", {
+odp(HTMLInputElement.prototype, "readOnly", {
 get:function(){ var t = this.getAttribute("readonly");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("readonly", v);}});
-Object.defineProperty(HTMLInputElement.prototype, "step", {
+odp(HTMLInputElement.prototype, "step", {
 get:function(){ var t = this.getAttribute("step");
 var y = typeof t;
 return y == "number" || y == "string" ? t : undefined},
 set:function(v) { this.setAttribute("step", v);}});
-Object.defineProperty(HTMLInputElement.prototype, "minLength", {
+odp(HTMLInputElement.prototype, "minLength", {
 get:function(){ var t = this.getAttribute("minlength");
 var y = typeof t;
 return y == "number" || y == "string" ? t : undefined},
 set:function(v) { this.setAttribute("minlength", v);}});
-Object.defineProperty(HTMLInputElement.prototype, "maxLength", {
+odp(HTMLInputElement.prototype, "maxLength", {
 get:function(){ var t = this.getAttribute("maxlength");
 var y = typeof t;
 return y == "number" || y == "string" ? t : undefined},
 set:function(v) { this.setAttribute("maxlength", v);}});
-Object.defineProperty(HTMLInputElement.prototype, "size", {
+odp(HTMLInputElement.prototype, "size", {
 get:function(){ var t = this.getAttribute("size");
 var y = typeof t;
 return y == "number" || y == "string" ? t : undefined},
 set:function(v) { this.setAttribute("size", v);}});
 
 swm("HTMLButtonElement", function(){})
-spdc("HTMLButtonElement", HTMLElement)
+swmp("HTMLButtonElement", HTMLElement)
 HTMLButtonElement.prototype.click = mw$.clickfn;
 // type property is automatically in the getAttribute system, acid test 59
-Object.defineProperty(HTMLButtonElement.prototype, "type", {
+odp(HTMLButtonElement.prototype, "type", {
 get:function(){ var t = this.getAttribute("type");
 // default is submit, acid test 59
 return typeof t == "string" ? t.toLowerCase() : "submit"; },
 set:function(v) { this.setAttribute("type", v);}});
 
 swm("HTMLTextAreaElement", function(){})
-spdc("HTMLTextAreaElement", HTMLElement)
-Object.defineProperty(HTMLTextAreaElement.prototype, "innerText", {
+swmp("HTMLTextAreaElement", HTMLElement)
+odp(HTMLTextAreaElement.prototype, "innerText", {
 get: function() { return this.value},
 set: function(t) { this.value = t }});
-Object.defineProperty(HTMLTextAreaElement.prototype, "type", {
+odp(HTMLTextAreaElement.prototype, "type", {
 get: function() { return "textarea"}});
-Object.defineProperty(HTMLTextAreaElement.prototype, "placeholder", {
+odp(HTMLTextAreaElement.prototype, "placeholder", {
 get:function(){ var t = this.getAttribute("placeholder");
 var y = typeof t;
 return y == "string" || y == "number" ? t : ""; },
 set:function(v) { this.setAttribute("placeholder", v);}});
-Object.defineProperty(HTMLTextAreaElement.prototype, "required", {
+odp(HTMLTextAreaElement.prototype, "required", {
 get:function(){ var t = this.getAttribute("required");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("required", v);}});
-Object.defineProperty(HTMLTextAreaElement.prototype, "readOnly", {
+odp(HTMLTextAreaElement.prototype, "readOnly", {
 get:function(){ var t = this.getAttribute("readonly");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("readonly", v);}});
 
 swm("z$Datalist", function() {})
-spdc("z$Datalist", HTMLElement)
-Object.defineProperty(z$Datalist.prototype, "multiple", {
+swmp("z$Datalist", HTMLElement)
+odp(z$Datalist.prototype, "multiple", {
 get:function(){ var t = this.getAttribute("multiple");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("multiple", v);}});
 
 swm("HTMLImageElement", function(){})
 swm2("Image", HTMLImageElement)
-spdc("HTMLImageElement", HTMLElement)
-Object.defineProperty(HTMLImageElement.prototype, "alt", {
+swmp("HTMLImageElement", HTMLElement)
+odp(HTMLImageElement.prototype, "alt", {
 get:function(){ var t = this.getAttribute("alt");
 return typeof t == "string" ? t : undefined},
 set:function(v) { this.setAttribute("alt", v);
 }});
 
 swm("HTMLFrameElement", function(){})
-spdc("HTMLFrameElement", HTMLElement)
+swmp("HTMLFrameElement", HTMLElement)
 HTMLFrameElement.prototype.is$frame = true;
-Object.defineProperty(HTMLFrameElement.prototype, "contentDocument", { get: eb$getter_cd});
-Object.defineProperty(HTMLFrameElement.prototype, "contentWindow", { get: eb$getter_cw});
+odp(HTMLFrameElement.prototype, "contentDocument", { get: eb$getter_cd});
+odp(HTMLFrameElement.prototype, "contentWindow", { get: eb$getter_cw});
 // These may be different but for now I'm calling them the same.
 swm("HTMLIFrameElement", function(){})
-spdc("HTMLIFrameElement", HTMLFrameElement)
+swmp("HTMLIFrameElement", HTMLFrameElement)
 
 swm("HTMLAnchorElement", function(){})
-spdc("HTMLAnchorElement", HTMLElement)
+swmp("HTMLAnchorElement", HTMLElement)
 swm("HTMLOListElement", function(){})
-spdc("HTMLOListElement", HTMLElement)
+swmp("HTMLOListElement", HTMLElement)
 swm("HTMLUListElement", function(){})
-spdc("HTMLUListElement", HTMLElement)
+swmp("HTMLUListElement", HTMLElement)
 swm("HTMLDListElement", function(){})
-spdc("HTMLDListElement", HTMLElement)
+swmp("HTMLDListElement", HTMLElement)
 swm("HTMLLIElement", function(){})
-spdc("HTMLLIElement", HTMLElement)
+swmp("HTMLLIElement", HTMLElement)
 
 swm("HTMLTableSectionElement", function(){})
-spdc("HTMLTableSectionElement", HTMLElement)
+swmp("HTMLTableSectionElement", HTMLElement)
 swm("z$tBody", function(){ this.rows = []})
-spdc("z$tBody", HTMLTableSectionElement)
+swmp("z$tBody", HTMLTableSectionElement)
 swm("z$tHead", function(){ this.rows = []})
-spdc("z$tHead", HTMLTableSectionElement)
+swmp("z$tHead", HTMLTableSectionElement)
 swm("z$tFoot", function(){ this.rows = []})
-spdc("z$tFoot", HTMLTableSectionElement)
+swmp("z$tFoot", HTMLTableSectionElement)
 
 swm("z$tCap", function(){})
-spdc("z$tCap", HTMLElement)
+swmp("z$tCap", HTMLElement)
 swm("HTMLTableElement", function(){ this.rows = []; this.tBodies = []})
-spdc("HTMLTableElement", HTMLElement)
+swmp("HTMLTableElement", HTMLElement)
 swm("HTMLTableRowElement", function(){ this.cells = []})
-spdc("HTMLTableRowElement", HTMLElement)
+swmp("HTMLTableRowElement", HTMLElement)
 swm("HTMLTableCellElement", function(){})
-spdc("HTMLTableCellElement", HTMLElement)
+swmp("HTMLTableCellElement", HTMLElement)
 swm("HTMLDivElement", function(){})
-spdc("HTMLDivElement", HTMLElement)
+swmp("HTMLDivElement", HTMLElement)
 HTMLDivElement.prototype.doScroll = eb$voidfunction;
 HTMLDivElement.prototype.align = "left";
 HTMLDivElement.prototype.click = function() {
@@ -1134,56 +1124,56 @@ this.dispatchEvent(e);
 }
 
 swm("HTMLLabelElement", function(){})
-spdc("HTMLLabelElement", HTMLElement)
-Object.defineProperty(HTMLLabelElement.prototype, "htmlFor", { get: function() { return this.getAttribute("for"); }, set: function(h) { this.setAttribute("for", h); }});
+swmp("HTMLLabelElement", HTMLElement)
+odp(HTMLLabelElement.prototype, "htmlFor", { get: function() { return this.getAttribute("for"); }, set: function(h) { this.setAttribute("for", h); }});
 swm("HTMLUnknownElement", function(){})
-spdc("HTMLUnknownElement", HTMLElement)
+swmp("HTMLUnknownElement", HTMLElement)
 swm("HTMLObjectElement", function(){})
-spdc("HTMLObjectElement", HTMLElement)
+swmp("HTMLObjectElement", HTMLElement)
 swm("HTMLAreaElement", function(){})
-spdc("HTMLAreaElement", HTMLElement)
+swmp("HTMLAreaElement", HTMLElement)
 
 swm("HTMLSpanElement", function(){})
-spdc("HTMLSpanElement", HTMLElement)
+swmp("HTMLSpanElement", HTMLElement)
 HTMLSpanElement.prototype.doScroll = eb$voidfunction;
 // should this click be on HTMLElement?
 HTMLSpanElement.prototype.click = HTMLDivElement.prototype.click;
 
 swm("HTMLParagraphElement", function(){})
-spdc("HTMLParagraphElement", HTMLElement)
+swmp("HTMLParagraphElement", HTMLElement)
 
 swm("HTMLHeadingElement", function(){})
-spdc("HTMLHeadingElement", HTMLElement)
+swmp("HTMLHeadingElement", HTMLElement)
 swm("z$Header", function(){})
-spdc("z$Header", HTMLElement)
+swmp("z$Header", HTMLElement)
 swm("z$Footer", function(){})
-spdc("z$Footer", HTMLElement)
+swmp("z$Footer", HTMLElement)
 swm("HTMLScriptElement", function(){})
-spdc("HTMLScriptElement", HTMLElement)
+swmp("HTMLScriptElement", HTMLElement)
 HTMLScriptElement.supports = function(t) {
 if(typeof t != "string") return false;
 t = t.toLowerCase();
 if(t.match(/\bjavascript\b/)) return true;
 if(t.match(/\bjson\b/)) return true;
 return false}
-Object.defineProperty(HTMLScriptElement.prototype, "async", {
+odp(HTMLScriptElement.prototype, "async", {
 get:function(){ var t = this.getAttribute("async");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("async", v);}});
-Object.defineProperty(HTMLScriptElement.prototype, "defer", {
+odp(HTMLScriptElement.prototype, "defer", {
 get:function(){ var t = this.getAttribute("defer");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("defer", v);}});
-Object.defineProperty(HTMLScriptElement.prototype, "type", {
+odp(HTMLScriptElement.prototype, "type", {
 get:function(){ var t = this.getAttribute("type"); if(!t) t = ""; return t;},
 set:function(v) { this.setAttribute("type", v)}});
 HTMLScriptElement.prototype.eb$step = 0;
 HTMLScriptElement.prototype.text = "";
 
 swm("z$Timer", function(){this.nodeName = "TIMER"})
-spdc("z$Timer", null)
+swmp("z$Timer", null)
 swm("HTMLMediaElement", function(){})
-spdc("HTMLMediaElement", HTMLElement)
+swmp("HTMLMediaElement", HTMLElement)
 HTMLMediaElement.prototype.autoplay = false;
 HTMLMediaElement.prototype.muted = false;
 HTMLMediaElement.prototype.defaultMuted = false;
@@ -1203,12 +1193,12 @@ if(typeof t == "string") this.src = t;
 if(typeof t == "object") this.src = t.toString();
 })
 swm("Audio", HTMLAudioElement)
-spdc("HTMLAudioElement", HTMLMediaElement)
+swmp("HTMLAudioElement", HTMLMediaElement)
 HTMLAudioElement.prototype.nodeName = "AUDIO"
 
 swm("HTMLTemplateElement", function(){})
-spdc("HTMLTemplateElement", HTMLElement)
-Object.defineProperty(HTMLTemplateElement.prototype, "content", {
+swmp("HTMLTemplateElement", HTMLElement)
+odp(HTMLTemplateElement.prototype, "content", {
 get: function() {
 if(this.content$2) return this.content$2;
 var c, frag = document.createDocumentFragment();
@@ -1224,7 +1214,7 @@ return frag
 
 // the performance registry
 swm("pf$registry", {mark:{},measure:{},measure0:{},resourceTiming:{}})
-Object.defineProperty(pf$registry, "measure0", {enumerable:false});
+odp(pf$registry, "measure0", {enumerable:false});
 swm1("Performance", function(){})
 Performance.prototype = {
 // timeOrigin is the start time of this window, I guess
@@ -1269,7 +1259,7 @@ return list;
 // at least have the object, even if it doesn't have any timestamps in it
 timing:{navigationStart:0},
 }
-Object.defineProperty(window, "performance", {get: function(){return new Performance}});
+odp(window, "performance", {get: function(){return new Performance}});
 
 // this is a stub, I hope I don't have to implement this stuff.
 swm("PerformanceObserver", {
@@ -1280,7 +1270,7 @@ includes: eb$falsefunction
 })
 
 swm("cel$registry", new Map) // custom elements registry
-Object.defineProperty(window, "customElements", {get:function(){ return {
+odp(window, "customElements", {get:function(){ return {
 define:mw$.cel_define,
 get:mw$.cel_get,
 }},enumerable:true});
@@ -1461,7 +1451,7 @@ strokeRect: eb$nullfunction,
 strokeText: eb$nullfunction,
 transform: eb$nullfunction,
 translate: eb$nullfunction }}})
-spdc("HTMLCanvasElement", HTMLElement)
+swmp("HTMLCanvasElement", HTMLElement)
 HTMLCanvasElement.prototype.toDataURL = function() {
 if(this.height === 0  || this.width === 0) return "data:,";
 // this is just a stub
@@ -1528,10 +1518,10 @@ this.createMediaStreamTrackSource = eb$voidfunction;
 this.suspend = eb$voidfunction;
 this.close = eb$voidfunction;
 })
-spdc("AudioContext", null)
+swmp("AudioContext", null)
 
 swm("DocumentFragment", function(){})
-spdc("DocumentFragment", HTMLElement)
+swmp("DocumentFragment", HTMLElement)
 DocumentFragment.prototype.nodeType = 11;
 DocumentFragment.prototype.nodeName = DocumentFragment.prototype.tagName = "#document-fragment";
 DocumentFragment.prototype.querySelector = querySelector
@@ -1545,7 +1535,7 @@ swm("CSSRuleList", function(){})
 CSSRuleList.prototype = new Array;
 
 swm("CSSStyleSheet", function() { this.cssRules = new CSSRuleList})
-spdc("CSSStyleSheet", null)
+swmp("CSSStyleSheet", null)
 CSSStyleSheet.prototype.insertRule = function(r, idx) {
 var list = this.cssRules;
 (typeof idx == "number" && idx >= 0 && idx <= list.length || (idx = 0));
@@ -1570,9 +1560,9 @@ swm("CSSStyleDeclaration", function(){
 Object.defineProperty(this, "style$2", {value:this})
 Object.defineProperty(this, "element", {value:null, writable:true})
 })
-spdc("CSSStyleDeclaration", HTMLElement)
+swmp("CSSStyleDeclaration", HTMLElement)
 // sheet on demand
-Object.defineProperty(CSSStyleDeclaration.prototype, "sheet", { get: function(){ if(!this.sheet$2) this.sheet$2 = new CSSStyleSheet; return this.sheet$2; }});
+odp(CSSStyleDeclaration.prototype, "sheet", { get: function(){ if(!this.sheet$2) this.sheet$2 = new CSSStyleSheet; return this.sheet$2; }});
 
 // when one property is shorthand for several others.
 // margin implies top right bottom left
@@ -1584,7 +1574,7 @@ var list = ["margin", "scrollMargin", "padding", "scrollPadding",
 "borderWidth", "borderColor", "borderStyle", "borderImage",
 "background", "font", "inset",];
 for(var k of list) {
-eval('Object.defineProperty(CSSStyleDeclaration.prototype, "' + k + '", {set: function(h) {mw$.' + k + 'Short(this, h)}})');
+eval('odp(CSSStyleDeclaration.prototype, "' + k + '", {set: function(h) {mw$.' + k + 'Short(this, h)}})');
 }})();
 
 // These are default properties of a style object.
@@ -1679,8 +1669,7 @@ var list =[
 "y",
 "zIndex",];
 for(var i = 0; i < list.length; ++i)
-Object.defineProperty(
-CSSStyleDeclaration.prototype, list[i], {value:"",writable:true})
+odp(CSSStyleDeclaration.prototype, list[i], {value:"",writable:true})
 })();
 ;(function(){
 var list =[
@@ -1709,12 +1698,11 @@ var v = [
 "stretch",
 null,];
 for(var i = 0; i < list.length; ++i)
-Object.defineProperty(
-CSSStyleDeclaration.prototype, list[i], {value:v[i],writable:true})
+odp(CSSStyleDeclaration.prototype, list[i], {value:v[i],writable:true})
 })();
 
 CSSStyleDeclaration.prototype.toString = function() { return "style object" };
-Object.defineProperty(CSSStyleDeclaration.prototype, "length", {get: function() {
+odp(CSSStyleDeclaration.prototype, "length", {get: function() {
 var cnt = 0;
 for(var i in this) if(this.hasOwnProperty(i)) ++cnt;
 return cnt;
@@ -1758,11 +1746,11 @@ delete this[p+"$$pri"]
 }
 
 swm("HTMLStyleElement", function(){})
-spdc("HTMLStyleElement", HTMLElement)
+swmp("HTMLStyleElement", HTMLElement)
 // Kind of a hack to make this like the link element
-Object.defineProperty(HTMLStyleElement.prototype, "css$data", {
+odp(HTMLStyleElement.prototype, "css$data", {
 get: function() { var s = ""; for(var i=0; i<this.childNodes.length; ++i) if(this.childNodes[i].nodeName == "#text") s += this.childNodes[i].data; return s; }});
-Object.defineProperty(HTMLStyleElement.prototype, "sheet", { get: function(){ if(!this.sheet$2) this.sheet$2 = new CSSStyleSheet; return this.sheet$2; }});
+odp(HTMLStyleElement.prototype, "sheet", { get: function(){ if(!this.sheet$2) this.sheet$2 = new CSSStyleSheet; return this.sheet$2; }});
 
 HTMLTableElement.prototype.insertRow = mw$.insertRow;
 HTMLTableSectionElement.prototype.insertRow = mw$.insertRow;
@@ -1849,14 +1837,14 @@ if(arguments.length > 0) {
 this.data$2 += arguments[0];
 }
 })
-spdc("TextNode", HTMLElement)
+swmp("TextNode", HTMLElement)
 TextNode.prototype.nodeName = TextNode.prototype.tagName = "#text";
 TextNode.prototype.nodeType = 3;
 
 // setter insures data is always a string, because roving javascript might
 // node.data = 7;  ...  if(node.data.match(/x/) ...
 // and boom! It blows up because Number doesn't have a match function.
-Object.defineProperty(TextNode.prototype, "data", {
+odp(TextNode.prototype, "data", {
 get: function() { return this.data$2; },
 set: function(s) { this.data$2 = s + ""; }});
 
@@ -1878,12 +1866,12 @@ return c;
 swm("Comment", function(t) {
 this.data = t;
 })
-spdc("Comment", HTMLElement)
+swmp("Comment", HTMLElement)
 Comment.prototype.nodeName = Comment.prototype.tagName = "#comment";
 Comment.prototype.nodeType = 8;
 
 swm("XMLCdata", function(t) {})
-spdc("XMLCdata", HTMLElement)
+swmp("XMLCdata", HTMLElement)
 XMLCdata.prototype.nodeName = XMLCdata.prototype.tagName = "#cdata-section";
 XMLCdata.prototype.nodeType = 4;
 
@@ -1903,7 +1891,7 @@ this.text = arguments[0];
 if(arguments.length > 1)
 this.value = arguments[1];
 })
-spdc("HTMLOptionElement", HTMLElement)
+swmp("HTMLOptionElement", HTMLElement)
 swm2("Option", HTMLOptionElement)
 Option.prototype.selected = false;
 Option.prototype.defaultSelected = false;
@@ -1911,7 +1899,7 @@ Option.prototype.nodeName = Option.prototype.tagName = "OPTION";
 Option.prototype.text = Option.prototype.value = "";
 
 swm("HTMLOptGroupElement", function() {})
-spdc("HTMLOptGroupElement", HTMLElement)
+swmp("HTMLOptGroupElement", HTMLElement)
 HTMLOptGroupElement.prototype.nodeName = HTMLOptGroupElement.prototype.tagName = "OPTGROUP";
 
 sdm("getBoundingClientRect", function(){
@@ -1924,14 +1912,14 @@ width: 0, height: 0
 
 // The Attr class and getAttributeNode().
 swm("Attr", function(){ this.owner = null; this.name = ""})
-spdc("Attr", null)
+swmp("Attr", null)
 Attr.prototype.isId = function() { return this.name === "id"; }
 Attr.prototype.cloneNode = mw$.cloneAttr
 
 // this is sort of an array and sort of not.
 // For one thing, you can call setAttribute("length", "snork"), so I can't use length.
 swm("NamedNodeMap", function() { this.length = 0})
-spdc("NamedNodeMap", null)
+swmp("NamedNodeMap", null)
 NamedNodeMap.prototype.push = function(s) { this[this.length++] = s; }
 NamedNodeMap.prototype.item = function(n) { return this[n]; }
 NamedNodeMap.prototype.getNamedItem = function(name) { return this[name.toLowerCase()]; }
@@ -1980,7 +1968,7 @@ swm1("Event", function(etype){
     this.timeStamp = new Date().getTime();
 if(typeof etype == "string") this.type = etype;
 })
-spdc("Event", null)
+swmp("Event", null)
 
 Event.prototype.preventDefault = function(){ this.defaultPrevented = true; }
 
@@ -2049,7 +2037,7 @@ swm("MediaQueryList", function() {
     this.matches = false;
     this.media = "";
 });
-spdc("MediaQueryList", null)
+swmp("MediaQueryList", null)
 MediaQueryList.prototype.addEventListener = mw$.addEventListener;
 MediaQueryList.prototype.removeEventListener = mw$.removeEventListener;
 MediaQueryList.prototype.nodeName = "MediaQueryList";
@@ -2078,17 +2066,17 @@ Again, leading ; to avert a parsing ambiguity.
 var c = window.Node;
 var p = c.prototype;
 // These subordinate objects are on-demand.
-Object.defineProperty( p, "dataset", { get: function(){
+odp( p, "dataset", { get: function(){
 if(!this.dataset$2)
 Object.defineProperty(this, "dataset$2", {value:{}})
 return this.dataset$2}})
-Object.defineProperty( p, "attributes", { get: function(){ if(!this.attributes$2) {
+odp( p, "attributes", { get: function(){ if(!this.attributes$2) {
 Object.defineProperty(this, "attributes$2", {value:new NamedNodeMap})
 this.attributes$2.owner = this
 this.attributes$2.ownerDocument = this.ownerDocument ? this.ownerDocument : my$doc()
 }
 return this.attributes$2}})
-Object.defineProperty( p, "style", { get: function(){ if(!this.style$2) {
+odp( p, "style", { get: function(){ if(!this.style$2) {
 Object.defineProperty(this,"style$2", {value:new CSSStyleDeclaration,configurable:true});
 this.style$2.element = this}
 return this.style$2;}});
@@ -2131,18 +2119,18 @@ p.eb$rmch2 = document.eb$rmch2;
 p.eb$insbf = document.eb$insbf;
 p.removeChild = mw$.removeChild;
 p.remove = function() { if(this.parentNode) this.parentNode.removeChild(this);}
-Object.defineProperty(p, "firstChild", { get: function() { return (this.childNodes && this.childNodes.length) ? this.childNodes[0] : null; } });
-Object.defineProperty(p, "firstElementChild", { get: function() { var u = this.childNodes; if(!u) return null; for(var i=0; i<u.length; ++i) if(u[i].nodeType == 1) return u[i]; return null; }});
-Object.defineProperty(p, "lastChild", { get: function() { return (this.childNodes && this.childNodes.length) ? this.childNodes[this.childNodes.length-1] : null; } });
-Object.defineProperty(p, "lastElementChild", { get: function() { var u = this.childNodes; if(!u) return null; for(var i=u.length-1; i>=0; --i) if(u[i].nodeType == 1) return u[i]; return null; }});
-Object.defineProperty(p, "childElementCount", { get: function() { var z=0, u = this.childNodes; if(!u) return z; for(var i=0; i<u.length; ++i) if(u[i].nodeType == 1) ++z; return z; }});
-Object.defineProperty(p, "nextSibling", { get: function() { return mw$.getSibling(this,"next"); } });
-Object.defineProperty(p, "nextElementSibling", { get: function() { return mw$.getElementSibling(this,"next"); } });
-Object.defineProperty(p, "previousSibling", { get: function() { return mw$.getSibling(this,"previous"); } });
-Object.defineProperty(p, "previousElementSibling", { get: function() { return mw$.getElementSibling(this,"previous"); } });
+odp(p, "firstChild", { get: function() { return (this.childNodes && this.childNodes.length) ? this.childNodes[0] : null; } });
+odp(p, "firstElementChild", { get: function() { var u = this.childNodes; if(!u) return null; for(var i=0; i<u.length; ++i) if(u[i].nodeType == 1) return u[i]; return null; }});
+odp(p, "lastChild", { get: function() { return (this.childNodes && this.childNodes.length) ? this.childNodes[this.childNodes.length-1] : null; } });
+odp(p, "lastElementChild", { get: function() { var u = this.childNodes; if(!u) return null; for(var i=u.length-1; i>=0; --i) if(u[i].nodeType == 1) return u[i]; return null; }});
+odp(p, "childElementCount", { get: function() { var z=0, u = this.childNodes; if(!u) return z; for(var i=0; i<u.length; ++i) if(u[i].nodeType == 1) ++z; return z; }});
+odp(p, "nextSibling", { get: function() { return mw$.getSibling(this,"next"); } });
+odp(p, "nextElementSibling", { get: function() { return mw$.getElementSibling(this,"next"); } });
+odp(p, "previousSibling", { get: function() { return mw$.getSibling(this,"previous"); } });
+odp(p, "previousElementSibling", { get: function() { return mw$.getElementSibling(this,"previous"); } });
 // children is subtly different from childnodes; this code taken from
 // https://developer.mozilla.org/en-US/docs/Web/API/ParentNode/children
-Object.defineProperty(p, 'children', {
+odp(p, 'children', {
 get: function() {
 var i = 0, node, nodes = this.childNodes, children = [];
 if(!nodes) return children;
@@ -2162,8 +2150,8 @@ p.setAttribute = mw$.setAttribute;
 p.setAttributeNS = mw$.setAttributeNS;
 p.removeAttribute = mw$.removeAttribute;
 p.removeAttributeNS = mw$.removeAttributeNS;
-Object.defineProperty(p, "className", { get: function() { var c = this.getAttribute("class"); if(c === null) return ""; return c; }, set: function(h) { this.setAttribute("class", h); }});
-Object.defineProperty(p, "parentElement", { get: function() { return this.parentNode && this.parentNode.nodeType == 1 ? this.parentNode : null; }});
+odp(p, "className", { get: function() { var c = this.getAttribute("class"); if(c === null) return ""; return c; }, set: function(h) { this.setAttribute("class", h); }});
+odp(p, "parentElement", { get: function() { return this.parentNode && this.parentNode.nodeType == 1 ? this.parentNode : null; }});
 p.getAttributeNode = mw$.getAttributeNode;
 p.setAttributeNode = mw$.setAttributeNode;
 p.removeAttributeNode = mw$.removeAttributeNode;
@@ -2182,7 +2170,7 @@ p.removeEventListener = mw$.removeEventListener;
 p.dispatchEvent = mw$.dispatchEvent;
 p.insertAdjacentHTML = mw$.insertAdjacentHTML;
 // outerHTML is dynamic; should innerHTML be?
-Object.defineProperty(p, "outerHTML", { get: function() { return mw$.htmlString(this);},
+odp(p, "outerHTML", { get: function() { return mw$.htmlString(this);},
 set: function(h) { mw$.outer$1(this,h); }});
 p.injectSetup = mw$.injectSetup;
 // constants
@@ -2190,15 +2178,15 @@ p.ELEMENT_NODE = 1, p.TEXT_NODE = 3, p.COMMENT_NODE = 8, p.DOCUMENT_NODE = 9, p.
 // default tabIndex is 0 but running js can override this.
 p.tabIndex = 0;
 // class and text methods
-Object.defineProperty(p, "classList", { get : function() { return mw$.classList(this);}});
+odp(p, "classList", { get : function() { return mw$.classList(this);}});
 p.cl$present = true;
-Object.defineProperty(p, "textContent", {
+odp(p, "textContent", {
 get: function() { return mw$.textUnder(this, 0); },
 set: function(s) { return mw$.newTextUnder(this, s, 0); }});
-Object.defineProperty(p, "contentText", {
+odp(p, "contentText", {
 get: function() { return mw$.textUnder(this, 1); },
 set: function(s) { return mw$.newTextUnder(this, s, 1); }});
-Object.defineProperty(p, "nodeValue", {
+odp(p, "nodeValue", {
 get: function() { return this.nodeType == 3 ? this.data : this.nodeType == 4 ? this.text : null;},
 set: function(h) { if(this.nodeType == 3) this.data = h; if (this.nodeType == 4) this.text = h }});
 p.clientHeight = 16;
@@ -2445,12 +2433,12 @@ var evs = ["onload", "onunload", "onclick", "onchange", "oninput",
 "onsubmit", "onreset", "onmessage"];
 for(var j=0; j<evs.length; ++j) {
 var evname = evs[j];
-eval('Object.defineProperty(' + cn + ', "' + evname + '$$watch", {value:true})');
+eval('odp(' + cn + ', "' + evname + '$$watch", {value:true})');
 // I tried to make this property enumerable within its own set method,
 // you assign body.onload and then you should see body.onload, but I couldn't make that work.
 // So you don't see body.oonload even if you set it,
 // but at least you don't see my mythical body.onload$2
-eval('Object.defineProperty(' + cn + ', "' + evname + '", { \
+eval('odp(' + cn + ', "' + evname + '", { \
 get: function() { return this.' + evname + '$2}, \
 set: function(f) { if(db$flags(1)) alert3((this.'+evname+'?"clobber ":"create ") + (this.nodeName ? this.nodeName : "+"+this.dom$class) + ".' + evname + '"); \
 if(typeof f == "string") f = my$win().handle$cc(f, this); \
@@ -2464,8 +2452,8 @@ if(typeof f == "function") { Object.defineProperty(this, "' + evname + '$2", {va
 var cnlist = ["HTMLBodyElement.prototype", "SVGElement", "window"];
 for(var i=0; i<cnlist.length; ++i) {
 var cn = cnlist[i];
-eval('Object.defineProperty(' + cn + ', "onhashchange$$watch", {value:true})');
-eval('Object.defineProperty(' + cn + ', "onhashchange", { \
+eval('odp(' + cn + ', "onhashchange$$watch", {value:true})');
+eval('odp(' + cn + ', "onhashchange", { \
 get: function() { return this.onhashchange$2; }, \
 set: function(f) { if(db$flags(1)) alert3((this.onhashchange?"clobber ":"create ") + (this.nodeName ? this.nodeName : "+"+this.dom$class) + ".onhashchange"); \
 if(typeof f == "string") f = my$win().handle$cc(f, this); \
@@ -2727,7 +2715,7 @@ Meantime, this should serve.
 We may want to put it on Document.prototype, not just the primary document,
 I don't know if that makes sense.
 *********************************************************************/
-Object.defineProperty(document, "lastModified", {
+odp(document, "lastModified", {
 get: function() {
 return mw$.lastModifiedByHead(this.location);
 }});
@@ -2744,21 +2732,21 @@ swm2("$jt$sn", 0)
 sdm("childNodes", [])
 // We'll make another childNodes array belowe every node in the tree.
 // document should always and only have two children: DOCTYPE and HTML
-Object.defineProperty(document, "firstChild", {
+odp(document, "firstChild", {
 get: function() { return this.childNodes[0]; }});
-Object.defineProperty(document, "firstElementChild", {
+odp(document, "firstElementChild", {
 get: function() { return this.childNodes[1]; }});
-Object.defineProperty(document, "lastChild", {
+odp(document, "lastChild", {
 get: function() { return this.childNodes[document.childNodes.length-1]; }});
-Object.defineProperty(document, "lastElementChild", {
+odp(document, "lastElementChild", {
 get: function() { return this.childNodes[document.childNodes.length-1]; }});
-Object.defineProperty(document, "nextSibling", {
+odp(document, "nextSibling", {
 get: function() { return mw$.getSibling(this,"next"); }});
-Object.defineProperty(document, "nextElementSibling", {
+odp(document, "nextElementSibling", {
 get: function() { return mw$.getElementSibling(this,"next"); }});
-Object.defineProperty(document, "previousSibling", {
+odp(document, "previousSibling", {
 get: function() { return mw$.getSibling(this,"previous"); }});
-Object.defineProperty(document, "previousElementSibling", {
+odp(document, "previousElementSibling", {
 get: function() { return mw$.getElementSibling(this,"previous"); }});
 
 /*********************************************************************
@@ -2801,7 +2789,7 @@ swm("sessionStorage", {})
 var cnlist = [localStorage, sessionStorage];
 for(var i=0; i<cnlist.length; ++i) {
 var cn = cnlist[i];
-Object.defineProperty( cn, "attributes", { get: function(){ if(!this.attributes$2) {
+odp( cn, "attributes", { get: function(){ if(!this.attributes$2) {
 Object.defineProperty(this, "attributes$2", {value:new NamedNodeMap})
 this.attributes$2.owner = this
 this.attributes$2.ownerDocument = my$doc()
@@ -2821,12 +2809,12 @@ this.removeItem(this.attributes[l-1].name);
 
 // we seem to be missing Array.item
 Array.prototype.item = function(x) { return this[x] };
-Object.defineProperty(Array.prototype, "item", { enumerable: false});
+odp(Array.prototype, "item", { enumerable: false});
 
 // On the first call this setter just creates the url, the location of the
 // current web page, But on the next call it has the side effect of replacing
 // the web page with the new url.
-Object.defineProperty(window, "location", {
+odp(window, "location", {
 get: function() { return window.location$2; },
 set: function(h) {
 if(!window.location$2) {
@@ -2837,11 +2825,11 @@ window.location$2.href = h;
 }, enumerable:true});
 // We need location$2 so we can define origin and replace etc
 swm2("location$2", new URL)
-Object.defineProperty(location$2, "origin", {get:function(){
+odp(location$2, "origin", {get:function(){
 return this.protocol ? this.protocol + "//" + this.host : null}});
-Object.defineProperty(window, "origin", {get: function(){return location.origin}});
+odp(window, "origin", {get: function(){return location.origin}});
 sdm("location$2", new URL)
-Object.defineProperty(document, "location", {
+odp(document, "location", {
 get: function() { return this.location$2; },
 set: function(h) {
 if(!this.location$2) {
@@ -2851,10 +2839,10 @@ this.location$2.href = h;
 }
 }, enumerable:true});
     location.replace = document.location.replace = function(s) { this.href = s};
-Object.defineProperty(window.location,'replace',{enumerable:false});
-Object.defineProperty(document.location,'replace',{enumerable:false});
-Object.defineProperty(window.location,'eb$ctx',{value:eb$ctx});
-Object.defineProperty(document.location,'eb$ctx',{value:eb$ctx});
+odp(window.location,'replace',{enumerable:false});
+odp(document.location,'replace',{enumerable:false});
+odp(window.location,'eb$ctx',{value:eb$ctx});
+odp(document.location,'eb$ctx',{value:eb$ctx});
 
 // Window constructor, passes the url back to edbrowse
 // so it can open a new web page.
@@ -2881,7 +2869,7 @@ return Window.apply(this, arguments);
 swm("constructor", Window)
 
 // Apply rules to a given style object, which is this.
-Object.defineProperty(CSSStyleDeclaration.prototype, "cssText", { get: mw$.cssTextGet,
+odp(CSSStyleDeclaration.prototype, "cssText", { get: mw$.cssTextGet,
 set: function(h) { var w = my$win(); w.soj$ = this; eb$cssText.call(this,h); delete w.soj$; } });
 
 swm("eb$qs$start", function() { mw$.cssGather(true); mw$.frames$rebuild(window);})
@@ -2910,7 +2898,7 @@ swm("MutationObserver", function(f) {
     this.async = true; // run as microtask by default
     this.notification$queue = [];
 })
-spdc("MutationObserver", null)
+swmp("MutationObserver", null)
 MutationObserver.prototype.disconnect = function() {
     const ts = this.targets.size;
     const nl = this.notification$queue.length;
@@ -2974,7 +2962,7 @@ MutationObserver.prototype.takeRecords = function() {
 }
 
 swm("MutationRecord", function(){})
-spdc("MutationRecord", null)
+swmp("MutationRecord", null)
 swm1("crypto", {})
 crypto.getRandomValues = function(a) {
 if(typeof a != "object") return NULL;
@@ -3023,7 +3011,7 @@ if(typeof ms == "number") alert3("abort after " + ms + "ms not implemented");
 return c; }
 
 swm("AbortController", function(){})
-Object.defineProperty(AbortController.prototype, "signal",
+odp(AbortController.prototype, "signal",
 {get:function(){return new AbortSignal}});
 AbortController.prototype.abort = function(){
 alert3("abort dom request not implemented"); }
@@ -3108,6 +3096,8 @@ ResizeObserver.prototype.unobserve = eb$voidfunction;
 
 // don't need these any more
 ;(function() {
-    let names_to_delete = ["swm", "sdm", "swm1", "sdm1", "swm2", "sdm2", "spdc"];
+    let names_to_delete = ["odp",
+    "swm", "swm1", "swm2", "swmp",
+    "sdm", "sdm1", "sdm2"];
     for (let i in names_to_delete) delete window[names_to_delete[i]];
 })();
