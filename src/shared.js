@@ -4484,6 +4484,57 @@ let spanp = w.HTMLSpanElement.prototype;
 spanp.doScroll = eb$voidfunction;
 spanp.click = divp.click;
 
+// h1 through h6 and our own classes for header footer
+swp("HTMLHeadingElement", function(){})
+swpp("HTMLHeadingElement", w.HTMLElement)
+swp("z$Header", function(){})
+swpp("z$Header", w.HTMLElement)
+swp("z$Footer", function(){})
+swpp("z$Footer", w.HTMLElement)
+
+// media and audio
+swp("HTMLMediaElement", function(){})
+swpp("HTMLMediaElement", w.HTMLElement)
+let mediap = w.HTMLMediaElement.prototype;
+mediap.autoplay = false;
+mediap.muted = false;
+mediap.defaultMuted = false;
+mediap.paused = false;
+mediap.audioTracks = new w.Array;
+mediap.videoTracks = new w.Array;
+mediap.textTracks = new w.Array;
+mediap.controls = false;
+mediap.controller = null;
+mediap.volume = 1.0;
+mediap.play = eb$playAudio;
+mediap.load = eb$voidfunction;
+mediap.pause = eb$voidfunction;
+
+swp("HTMLAudioElement", function(t){
+// arg to constructor is the url of the audio
+if(typeof t == "string") this.src = t;
+if(typeof t == "object") this.src = t.toString();
+})
+swp("Audio", w.HTMLAudioElement)
+swpp("HTMLAudioElement", w.HTMLMediaElement)
+w.HTMLAudioElement.prototype.nodeName = "AUDIO"
+
+swp("HTMLTemplateElement", function(){})
+swpp("HTMLTemplateElement", w.HTMLElement)
+odp(w.HTMLTemplateElement.prototype, "content", {
+get: function() {
+if(this.content$2) return this.content$2;
+var c, frag = d.createDocumentFragment();
+frag.ownerDocument = new w.Document;
+// need to set its location to "about:blank" but I don't know how to do that.
+// Lots of setters and getters involved in location, and the current window
+// and document, and new documents created, and we need to sort all this out.
+while(c = this.firstChild)
+frag.appendChild(c)
+odp(this, "content$2", {value:frag})
+return frag
+}})
+
 // more classes to come
 }
 

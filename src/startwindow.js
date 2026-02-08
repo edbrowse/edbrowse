@@ -44,7 +44,7 @@ this.eb$getter_cd = function() { return null}
 this.eb$getter_cw = function() { return null}
 ;(function() { let void_functions = ["addEventListener",
     "removeEventListener", "eb$apch1", "eb$apch2", "eb$rmch2", "eb$insbf",
-    "eb$hasFocus", "eb$write", "eb$writeln", "eb$playAudio"];
+    "eb$hasFocus", "eb$write", "eb$writeln"];
 for (let i in void_functions) window[void_functions[i]] = eb$voidfunction; })();
 this.my$win = function() { return window}
 this.my$doc = function() { return document}
@@ -75,6 +75,7 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
     this.URL = function(){}
     this.HTMLFormElement = function(){}
     this.HTMLImageElement = function(){}
+    this.HTMLMediaElement = function(){}
     this.HTMLAnchorElement = function(){}
     this.HTMLScriptElement = function(){}
     this.HTMLLinkElement = function(){}
@@ -783,54 +784,8 @@ swmp("HTMLObjectElement", HTMLElement)
 swm("HTMLAreaElement", function(){})
 swmp("HTMLAreaElement", HTMLElement)
 
-swm("HTMLHeadingElement", function(){})
-swmp("HTMLHeadingElement", HTMLElement)
-swm("z$Header", function(){})
-swmp("z$Header", HTMLElement)
-swm("z$Footer", function(){})
-swmp("z$Footer", HTMLElement)
-
 swm("z$Timer", function(){this.nodeName = "TIMER"})
 swmp("z$Timer", null)
-swm("HTMLMediaElement", function(){})
-swmp("HTMLMediaElement", HTMLElement)
-HTMLMediaElement.prototype.autoplay = false;
-HTMLMediaElement.prototype.muted = false;
-HTMLMediaElement.prototype.defaultMuted = false;
-HTMLMediaElement.prototype.paused = false;
-HTMLMediaElement.prototype.audioTracks = [];
-HTMLMediaElement.prototype.videoTracks = [];
-HTMLMediaElement.prototype.textTracks = [];
-HTMLMediaElement.prototype.controls = false;
-HTMLMediaElement.prototype.controller = null;
-HTMLMediaElement.prototype.volume = 1.0;
-HTMLMediaElement.prototype.play = eb$playAudio;
-HTMLMediaElement.prototype.load = eb$voidfunction;
-HTMLMediaElement.prototype.pause = eb$voidfunction;
-swm("HTMLAudioElement", function(t){
-// arg to constructor is the url of the audio
-if(typeof t == "string") this.src = t;
-if(typeof t == "object") this.src = t.toString();
-})
-swm("Audio", HTMLAudioElement)
-swmp("HTMLAudioElement", HTMLMediaElement)
-HTMLAudioElement.prototype.nodeName = "AUDIO"
-
-swm("HTMLTemplateElement", function(){})
-swmp("HTMLTemplateElement", HTMLElement)
-odp(HTMLTemplateElement.prototype, "content", {
-get: function() {
-if(this.content$2) return this.content$2;
-var c, frag = document.createDocumentFragment();
-frag.ownerDocument = new Document;
-// need to set its location to "about:blank" but I don't know how to do that.
-// Lots of setters and getters involved in location, and the current window
-// and document, and new documents created, and we need to sort all this out.
-while(c = this.firstChild)
-frag.appendChild(c)
-Object.defineProperty(this, "content$2", {value:frag})
-return frag
-}})
 
 // the performance registry
 swm("pf$registry", {mark:{},measure:{},measure0:{},resourceTiming:{}})
@@ -964,10 +919,10 @@ Ok - a.href is a url object, but script.src is a string.
 You won't find that anywhere in the documentation, w3 schools etc, nope, I just
 respond to the javascript in the wild, and that's what it seems to expect.
 I only know for sure a.href is URL, and script.src is string,
-everything else is a guess.
+everything else here is a guess.
 *********************************************************************/
 
-; (function() {
+(function() {
 var cnlist = ["HTMLFormElement", "HTMLImageElement", "HTMLScriptElement", "HTMLBaseElement", "HTMLLinkElement", "HTMLMediaElement"];
 var ulist = ["action", "src", "src", "href", "href", "src"];
 for(var i=0; i<cnlist.length; ++i) {

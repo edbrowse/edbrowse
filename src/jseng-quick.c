@@ -3681,6 +3681,8 @@ JS_NewCFunction(mwc, nat_formSubmit, "formSubmit", 0), 0);
 JS_NewCFunction(mwc, nat_formReset, "formReset", 0), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$fetchHTTP",
 JS_NewCFunction(mwc, nat_fetchHTTP, "fetchHTTP", 4), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$playAudio",
+JS_NewCFunction(mwc, nat_playAudio, "play_audio", 0), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "jobsPending",
 JS_NewCFunction(mwc, nat_jobs, "jobspending", 0), JS_PROP_ENUMERABLE);
 
@@ -3775,7 +3777,7 @@ JS_NewCFunction(mwc, nat_jobs, "jobspending", 0), JS_PROP_ENUMERABLE);
 		JSContext *job_cx;
 			debugPrint(3, "pending jobs queue found at location %d", JSRuntimeJobIndex);
 // We can't run this job, because it isn't in a proper frame or window.
-// The error message mjight confuse, so let quick run the job.
+// The error message might confuse, so let quick run the job.
 		JS_ExecutePendingJob(jsrt, &job_cx);
 		domSetsTimeout(350, "@@pending", 0, true);
 	} else {
@@ -3844,8 +3846,6 @@ JS_NewCFunction(cx, nat_qs, "qs", 2), 0);
 JS_NewCFunction(cx, nat_qs0, "qs0", 1), 0);
     JS_DefinePropertyValueStr(cx, g, "eb$cssText",
 JS_NewCFunction(cx, nat_cssText, "cssText", 1), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$playAudio",
-JS_NewCFunction(cx, nat_playAudio, "play_audio", 0), 0);
 
 // these really belong in document, but I'm putting them in
 // window and we can copy them to document later.
