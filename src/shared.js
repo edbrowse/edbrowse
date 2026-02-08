@@ -544,6 +544,7 @@ return false;
 function dispatchEvent (e) {
     let dbg = () => undefined;
     let t = this;
+    let rc;
     e.eventPhase = 0;
     /* This isn't all necessary with modern events (see eb$listen) but it
     saves duplicating a bunch of code */
@@ -558,6 +559,7 @@ function dispatchEvent (e) {
         // We can always cancel events in the case of a return code... I think
         const special = e.type === "error" || e.type === "mouseover";
         e.cancelled = e.cancelled || ((!special && !r) || (special && r));
+        return r;
     }
 
     if(db$flags(1))
@@ -606,7 +608,8 @@ function dispatchEvent (e) {
         const fn = t[`on${e.type}$$fn`];
         if(typeof fn == "function") {
             dbg("fire handlers");
-            runEventHandler(fn, e, t);
+            rc = runEventHandler(fn, e, t);
+            if(rc === false) return rc;
         }
     }
 
@@ -629,10 +632,12 @@ function dispatchEvent (e) {
         const handlers_fn = t[handlers];
         if(typeof handlers_fn == "function") {
             dbg("fires handlers");
-            runEventHandler(handlers_fn,  e, t);
+            rc = runEventHandler(handlers_fn,  e, t);
+            if(rc === false) return rc;
         } else if (typeof inline_fn == "function") {
             dbg("fires assigned");
-            runEventHandler(inline_fn, e, t);
+            rc = runEventHandler(inline_fn, e, t);
+            if(rc === false) return rc;
         }
     }
     return !e.defaultPrevented;
