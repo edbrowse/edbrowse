@@ -2950,59 +2950,6 @@ if(!s) return;
 top.appendChild(my$doc().createTextNode(s));
 }
 
-function clickfn() {
-var w = my$win();
-var nn = this.nodeName, t = this.type;
-// as though the user had clicked on this
-if(nn == "BUTTON" || (nn == "INPUT" &&
-(t == "button" || t == "reset" || t == "submit" || t == "checkbox" || t == "radio"))) {
-var e = new w.Event;
-e.initEvent("click", true, true);
-if(!this.dispatchEvent(e)) return;
-// do what the tag says to do
-if(this.form && this.form.dom$class == "HTMLFormElement") {
-if(t == "submit") {
-e.initEvent("submit", true, true);
-if(this.dispatchEvent(e) && this.form.submit)
-this.form.submit();
-}
-if(t == "reset") {
-e.initEvent("reset", true, true);
-if(this.dispatchEvent(e) && this.form.reset)
-this.form.reset();
-}
-}
-if(t != "checkbox" && t != "radio") return;
-this.checked$2 = (this.checked$2 ? false : true);
-// if it's radio and checked we need to uncheck the others.
-if(this.form && this.checked$2 && t == "radio" &&
-(nn = this.name) && (e = this.form[nn]) && Array.isArray(e)) {
-for(var i=0; i<e.length; ++i)
-if(e[i] != this) e[i].checked$2 = false;
-} else // try it another way
-if(this.checked$2 && t == "radio" && this.parentNode && (e = this.parentNode.childNodes) && (nn = this.name)) {
-for(var i=0; i<e.length; ++i)
-if(e[i].nodeName == "INPUT" && e[i].type == t && e[i].name == nn &&e[i] != this) e[i].checked$2 = false;
-}
-}
-}
-
-function checkset(n) {
-if(typeof n !== "boolean") n = false;
-this.checked$2 = n;
-var nn = this.nodeName, t = this.type, e;
-// if it's radio and checked we need to uncheck the others.
-if(this.form && this.checked$2 && t == "radio" &&
-(nn = this.name) && (e = this.form[nn]) && Array.isArray(e)) {
-for(var i=0; i<e.length; ++i)
-if(e[i] != this) e[i].checked$2 = false;
-} else // try it another way
-if(this.checked$2 && t == "radio" && this.parentNode && (e = this.parentNode.childNodes) && (nn = this.name)) {
-for(var i=0; i<e.length; ++i)
-if(e[i].nodeName == "INPUT" && e[i].type == t && e[i].name == nn &&e[i] != this) e[i].checked$2 = false;
-}
-}
-
 // We need UnsupportedError for this
 class UnsupportedError extends Error {
     constructor(message) { super(message); }
@@ -4232,6 +4179,161 @@ selp.remove = function(idx) {
     if(typeof idx == "number" && idx >= 0 && idx < n)
     this.removeChild(this.options[idx]);
 }
+
+// input, textarea, button; the other input classes
+swp("HTMLInputElement", function(){this.validity = new w.Validity, this.validity.owner = this})
+swpp("HTMLInputElement", w.HTMLElement)
+swp("HTMLButtonElement", function(){})
+swpp("HTMLButtonElement", w.HTMLElement)
+swp("HTMLTextAreaElement", function(){})
+swpp("HTMLTextAreaElement", w.HTMLElement)
+
+let inputp = w.HTMLInputElement.prototype;
+let buttonp = w.HTMLButtonElement.prototype;
+let tareap = w.HTMLTextAreaElement.prototype;
+
+// we need a couple of helper functions for clicking on a radio input field
+function clickfn() {
+let nn = this.nodeName, t = this.type;
+// as though the user had clicked on this
+if(nn == "BUTTON" || (nn == "INPUT" &&
+(t == "button" || t == "reset" || t == "submit" || t == "checkbox" || t == "radio"))) {
+var e = new w.Event;
+e.initEvent("click", true, true);
+if(!this.dispatchEvent(e)) return;
+// do what the tag says to do
+if(this.form && this.form.dom$class == "HTMLFormElement") {
+if(t == "submit") {
+e.initEvent("submit", true, true);
+if(this.dispatchEvent(e) && this.form.submit)
+this.form.submit();
+}
+if(t == "reset") {
+e.initEvent("reset", true, true);
+if(this.dispatchEvent(e) && this.form.reset)
+this.form.reset();
+}
+}
+if(t != "checkbox" && t != "radio") return;
+this.checked$2 = (this.checked$2 ? false : true);
+// if it's radio and checked we need to uncheck the others.
+if(this.form && this.checked$2 && t == "radio" &&
+(nn = this.name) && (e = this.form[nn]) && Array.isArray(e)) {
+for(var i=0; i<e.length; ++i)
+if(e[i] != this) e[i].checked$2 = false;
+} else // try it another way
+if(this.checked$2 && t == "radio" && this.parentNode && (e = this.parentNode.childNodes) && (nn = this.name)) {
+for(var i=0; i<e.length; ++i)
+if(e[i].nodeName == "INPUT" && e[i].type == t && e[i].name == nn &&e[i] != this) e[i].checked$2 = false;
+}
+}
+}
+
+function checkset(n) {
+if(typeof n !== "boolean") n = false;
+this.checked$2 = n;
+var nn = this.nodeName, t = this.type, e;
+// if it's radio and checked we need to uncheck the others.
+if(this.form && this.checked$2 && t == "radio" &&
+(nn = this.name) && (e = this.form[nn]) && Array.isArray(e)) {
+for(var i=0; i<e.length; ++i)
+if(e[i] != this) e[i].checked$2 = false;
+} else // try it another way
+if(this.checked$2 && t == "radio" && this.parentNode && (e = this.parentNode.childNodes) && (nn = this.name)) {
+for(var i=0; i<e.length; ++i)
+if(e[i].nodeName == "INPUT" && e[i].type == t && e[i].name == nn &&e[i] != this) e[i].checked$2 = false;
+}
+}
+
+inputp.selectionStart = 0;
+inputp.selectionEnd = -1;
+inputp.selectionDirection = "none";
+// I don't know what this function does, something visual I think.
+inputp.setSelectionRange = function(s, e, dir) {
+if(typeof s == "number") this.selectionStart = s;
+if(typeof e == "number") this.selectionEnd = e;
+if(typeof dir == "string") this.selectionDirection = dir;
+}
+inputp.select = eb$voidfunction;
+inputp.click = clickfn;
+// We only need this in the rare case of setting click and clearing
+// the other radio buttons. acid test 43
+odp(inputp, "checked", {
+get: function() { return this.checked$2 ? true : false; },
+set: checkset});
+// type property is automatically in the getAttribute system, acid test 53
+odp(inputp, "type", {
+get:function(){ var t = this.getAttribute("type");
+// input type is special, tidy converts it to lower case, so I will too.
+// Also acid test 54 requires it.
+return typeof t == "string" ? this.eb$xml ? t : t.toLowerCase() : undefined; },
+set:function(v) { this.setAttribute("type", v);
+if(v.toLowerCase() == "checkbox" && !this.value) this.value = "on";
+}});
+odp(inputp, "placeholder", {
+get:function(){ var t = this.getAttribute("placeholder");
+var y = typeof t;
+return y == "string" || y == "number" ? t : ""; },
+set:function(v) { this.setAttribute("placeholder", v);}});
+odp(inputp, "multiple", {
+get:function(){ var t = this.getAttribute("multiple");
+return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
+set:function(v) { this.setAttribute("multiple", v);}});
+odp(inputp, "required", {
+get:function(){ var t = this.getAttribute("required");
+return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
+set:function(v) { this.setAttribute("required", v);}});
+odp(inputp, "readOnly", {
+get:function(){ var t = this.getAttribute("readonly");
+return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
+set:function(v) { this.setAttribute("readonly", v);}});
+odp(inputp, "step", {
+get:function(){ var t = this.getAttribute("step");
+var y = typeof t;
+return y == "number" || y == "string" ? t : undefined},
+set:function(v) { this.setAttribute("step", v);}});
+odp(inputp, "minLength", {
+get:function(){ var t = this.getAttribute("minlength");
+var y = typeof t;
+return y == "number" || y == "string" ? t : undefined},
+set:function(v) { this.setAttribute("minlength", v);}});
+odp(inputp, "maxLength", {
+get:function(){ var t = this.getAttribute("maxlength");
+var y = typeof t;
+return y == "number" || y == "string" ? t : undefined},
+set:function(v) { this.setAttribute("maxlength", v);}});
+odp(inputp, "size", {
+get:function(){ var t = this.getAttribute("size");
+var y = typeof t;
+return y == "number" || y == "string" ? t : undefined},
+set:function(v) { this.setAttribute("size", v);}});
+
+buttonp.click = clickfn;
+// type property is automatically in the getAttribute system, acid test 59
+odp(buttonp, "type", {
+get:function(){ var t = this.getAttribute("type");
+// default is submit, acid test 59
+return typeof t == "string" ? t.toLowerCase() : "submit"; },
+set:function(v) { this.setAttribute("type", v);}});
+
+odp(tareap, "innerText", {
+get: function() { return this.value},
+set: function(t) { this.value = t }});
+odp(tareap, "type", {
+get: function() { return "textarea"}});
+odp(tareap, "placeholder", {
+get:function(){ var t = this.getAttribute("placeholder");
+var y = typeof t;
+return y == "string" || y == "number" ? t : ""; },
+set:function(v) { this.setAttribute("placeholder", v);}});
+odp(tareap, "required", {
+get:function(){ var t = this.getAttribute("required");
+return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
+set:function(v) { this.setAttribute("required", v);}});
+odp(tareap, "readOnly", {
+get:function(){ var t = this.getAttribute("readonly");
+return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
+set:function(v) { this.setAttribute("readonly", v);}});
 
 // more classes to come
 }
@@ -7162,7 +7264,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "Headers", "Request", "Response", "fetch",
 "TextEncoder", "TextDecoder",
 "MessagePortPolyfill", "MessageChannelPolyfill",
-"clickfn", "checkset", "cel_define", "cel_get",
+"cel_define", "cel_get",
 "jtfn0", "jtfn1", "jtfn2", "jtfn3", "deminimize", "addTrace",
 "setupClasses",
 "sortTime",
