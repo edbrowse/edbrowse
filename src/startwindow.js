@@ -75,6 +75,7 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
     this.URL = function(){}
     this.HTMLFormElement = function(){}
     this.HTMLImageElement = function(){}
+    this.HTMLAnchorElement = function(){}
     this.HTMLScriptElement = function(){}
 }
 
@@ -821,17 +822,6 @@ odp(HTMLFrameElement.prototype, "contentWindow", { get: eb$getter_cw});
 // These may be different but for now I'm calling them the same.
 swm("HTMLIFrameElement", function(){})
 swmp("HTMLIFrameElement", HTMLFrameElement)
-
-swm("HTMLAnchorElement", function(){})
-swmp("HTMLAnchorElement", HTMLElement)
-swm("HTMLOListElement", function(){})
-swmp("HTMLOListElement", HTMLElement)
-swm("HTMLUListElement", function(){})
-swmp("HTMLUListElement", HTMLElement)
-swm("HTMLDListElement", function(){})
-swmp("HTMLDListElement", HTMLElement)
-swm("HTMLLIElement", function(){})
-swmp("HTMLLIElement", HTMLElement)
 
 swm("HTMLDivElement", function(){})
 swmp("HTMLDivElement", HTMLElement)

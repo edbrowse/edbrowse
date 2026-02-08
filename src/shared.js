@@ -4389,6 +4389,20 @@ set:function(v) { this.setAttribute("type", v)}})
 scriptp.eb$step = 0;
 scriptp.text = "";
 
+// the all important <a>, the whole point of the internet
+swp("HTMLAnchorElement", function(){})
+swpp("HTMLAnchorElement", w.HTMLElement)
+
+// classes that support lists in html
+swp("HTMLOListElement", function(){})
+swpp("HTMLOListElement", w.HTMLElement)
+swp("HTMLUListElement", function(){})
+swpp("HTMLUListElement", w.HTMLElement)
+swp("HTMLDListElement", function(){})
+swpp("HTMLDListElement", w.HTMLElement)
+swp("HTMLLIElement", function(){})
+swpp("HTMLLIElement", w.HTMLElement)
+
 // more classes to come
 }
 
