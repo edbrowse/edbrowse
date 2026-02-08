@@ -1553,95 +1553,6 @@ if(item.name$2 && this.elements[item.name$2] == item) delete this.elements[item.
 return item;
 }
 
-// It's crude, but just reindex all the rows in a table
-function rowReindex(t) {
-// climb up to find Table
-while(t.dom$class != "HTMLTableElement") {
-if(t.is$frame) return;
-t = t.parentNode;
-if(!t) return;
-}
-
-var i, j, n = 0;
-var s; // section
-t.rows.length = 0;
-if(s = t.tHead) {
-for(j=0; j<s.rows.length; ++j)
-t.rows.push(s.rows[j]), s.rows[j].rowIndex = n++, s.rows[j].sectionRowIndex = j;
-}
-for(i=0; i<t.tBodies.length; ++i) {
-s = t.tBodies[i];
-for(j=0; j<s.rows.length; ++j)
-t.rows.push(s.rows[j]), s.rows[j].rowIndex = n++, s.rows[j].sectionRowIndex = j;
-}
-if(s = t.tFoot) {
-for(j=0; j<s.rows.length; ++j)
-t.rows.push(s.rows[j]), s.rows[j].rowIndex = n++, s.rows[j].sectionRowIndex = j;
-}
-
-j = 0;
-for(s=t.firstChild; s; s=s.nextSibling)
-if(s.dom$class == "HTMLTableRowElement")
-t.rows.push(s), s.rowIndex = n++, s.sectionRowIndex = j;
-}
-
-// insert row into a table or body or head or foot
-function insertRow(idx) {
-if(idx === undefined) idx = -1;
-if(typeof idx !== "number") return null;
-var t = this;
-var nrows = t.rows.length;
-if(idx < 0) idx = nrows;
-if(idx > nrows) return null;
-// Should this be ownerDocument, the context that created the table,
-// or my$doc(), the running context. I think the latter is safer.
-var r = my$doc().createElement("tr");
-if(t.dom$class != "HTMLTableElement") {
-if(idx == nrows) t.appendChild(r);
-else t.insertBefore(r, t.rows[idx]);
-} else {
-// put this row in the same section as the next row
-if(idx == nrows) {
-if(nrows) t.rows[nrows-1].parentNode.appendChild(r);
-else if(t.tHead) t.tHead.appendChild(r);
-else if(t.tBodies.length) t.tBodies[0].appendChild(r);
-else if(t.tFoot) t.tFoot.appendChild(r);
-// No sections, what now? acid test 51 suggests if should not go into the table.
-} else {
-t.rows[idx].parentNode.insertBefore(r, t.rows[idx]);
-}
-}
-return r;
-}
-
-function deleteRow(r) {
-if(r.dom$class != "HTMLTableRowElement") return;
-this.removeChild(r);
-}
-
-function insertCell(idx) {
-if(idx === undefined) idx = -1;
-if(typeof idx !== "number") return null;
-var t = this;
-var n = t.childNodes.length;
-if(idx < 0) idx = n;
-if(idx > n) return null;
-var r = my$doc().createElement("td");
-if(idx == n)
-t.appendChild(r);
-else
-t.insertBefore(r, t.childNodes[idx]);
-return r;
-}
-
-function deleteCell(n) {
-var l = this.cells.length;
-if(typeof n != "number") n = -1;
-if(n == -1) n = 0;
-if(n >= 0 && n < l)
-this.removeChild(this.cells[n]);
-}
-
 /*********************************************************************
 This is a workaround, when setAttribute is doing something it shouldn't,
 like form.setAttribute("elements") or some such.
@@ -3596,12 +3507,46 @@ function Intl() {}
 Object.defineProperty(Intl, "DateTimeFormat", {value:Intl_dt})
 Object.defineProperty(Intl, "NumberFormat", {value:Intl_num})
 
-// returns default port as an integer, based on protocol
+// Returns default port as an integer, based on protocol.
+// Used by the URL class below, but other places as well.
 function setDefaultPort(p) {
 var port = 0;
 p = p.toLowerCase().replace(/:/, "");
 if(defport.hasOwnProperty(p)) port = defport[p];
 return port;
+}
+
+// It's crude, but just reindex all the rows in a table.
+// Used by the Table class below, but other places as well.
+function rowReindex(t) {
+// climb up to find Table
+while(t.dom$class != "HTMLTableElement") {
+if(t.is$frame) return;
+t = t.parentNode;
+if(!t) return;
+}
+
+var i, j, n = 0;
+var s; // section
+t.rows.length = 0;
+if(s = t.tHead) {
+for(j=0; j<s.rows.length; ++j)
+t.rows.push(s.rows[j]), s.rows[j].rowIndex = n++, s.rows[j].sectionRowIndex = j;
+}
+for(i=0; i<t.tBodies.length; ++i) {
+s = t.tBodies[i];
+for(j=0; j<s.rows.length; ++j)
+t.rows.push(s.rows[j]), s.rows[j].rowIndex = n++, s.rows[j].sectionRowIndex = j;
+}
+if(s = t.tFoot) {
+for(j=0; j<s.rows.length; ++j)
+t.rows.push(s.rows[j]), s.rows[j].rowIndex = n++, s.rows[j].sectionRowIndex = j;
+}
+
+j = 0;
+for(s=t.firstChild; s; s=s.nextSibling)
+if(s.dom$class == "HTMLTableRowElement")
+t.rows.push(s), s.rowIndex = n++, s.sectionRowIndex = j;
 }
 
 /*********************************************************************
@@ -3612,6 +3557,9 @@ This lets us put more software into the shared window.
 *********************************************************************/
 
 function setupClasses(w) {
+const d = w.document;
+let i;  // general loop counter
+
 // we really need some shorthand here
 let odp = w.Object.defineProperty;
 // set window property (swp), invisible and unchangeable
@@ -3844,6 +3792,283 @@ odp(urlp, "slice", {enumerable:false,writable:true,configurable:true,value:funct
 odp(urlp, "charAt", {enumerable:false,writable:true,configurable:true,value:function(n) { return this.toString().charAt(n); }})
 odp(urlp, "charCodeAt", {enumerable:false,writable:true,configurable:true,value:function(n) { return this.toString().charCodeAt(n); }})
 odp(urlp, "trim", {enumerable:false,writable:true,configurable:true,value:function() { return this.toString().trim(); }})
+
+// tables, table sections, rows, cells.
+// First some helper functions to add and remove rows from a table or section,
+// add and remove cells from a row.
+
+function insertRow(idx) {
+if(idx === undefined) idx = -1;
+if(typeof idx !== "number") return null;
+var t = this;
+var nrows = t.rows.length;
+if(idx < 0) idx = nrows;
+if(idx > nrows) return null;
+/*********************************************************************
+Should the new row be created within the context that created the table,
+or the running context? (If code in one frame modifies a table in another.)
+I'm going with the former.
+And what if the web page replaces document.createElement, in the
+table creating context or in the running context?
+Ideally we should use the original z$createElement just to be safe.
+*********************************************************************/
+var r = d.createElement("tr");
+if(t.dom$class != "HTMLTableElement") {
+if(idx == nrows) t.appendChild(r);
+else t.insertBefore(r, t.rows[idx]);
+} else {
+// put this row in the same section as the next row
+if(idx == nrows) {
+if(nrows) t.rows[nrows-1].parentNode.appendChild(r);
+else if(t.tHead) t.tHead.appendChild(r);
+else if(t.tBodies.length) t.tBodies[0].appendChild(r);
+else if(t.tFoot) t.tFoot.appendChild(r);
+// No sections, what now? acid test 51 suggests it should not go into the table.
+} else {
+t.rows[idx].parentNode.insertBefore(r, t.rows[idx]);
+}
+}
+return r;
+}
+
+function deleteRow(r) {
+if(r.dom$class != "HTMLTableRowElement") return;
+this.removeChild(r);
+}
+
+function insertCell(idx) {
+if(idx === undefined) idx = -1;
+if(typeof idx !== "number") return null;
+var t = this;
+var n = t.childNodes.length;
+if(idx < 0) idx = n;
+if(idx > n) return null;
+var r = d.createElement("td");
+if(idx == n)
+t.appendChild(r);
+else
+t.insertBefore(r, t.childNodes[idx]);
+return r;
+}
+
+function deleteCell(n) {
+var l = this.cells.length;
+if(typeof n != "number") n = -1;
+if(n == -1) n = 0;
+if(n >= 0 && n < l)
+this.removeChild(this.cells[n]);
+}
+
+// classes and prototypes for table, sections, row, cell
+swp("HTMLTableSectionElement", function(){})
+swpp("HTMLTableSectionElement", w.HTMLElement)
+swp("z$tBody", function(){ this.rows = new w.Array})
+swpp("z$tBody", w.HTMLTableSectionElement)
+swp("z$tHead", function(){ this.rows = new w.Array})
+swpp("z$tHead", w.HTMLTableSectionElement)
+swp("z$tFoot", function(){ this.rows = new w.Array})
+swpp("z$tFoot", w.HTMLTableSectionElement)
+swp("z$tCap", function(){}) // caption
+swpp("z$tCap", w.HTMLElement)
+swp("HTMLTableElement", function(){ this.rows = new w.Array; this.tBodies = new w.Array})
+swpp("HTMLTableElement", w.HTMLElement)
+swp("HTMLTableRowElement", function(){ this.cells = new w.Array})
+swpp("HTMLTableRowElement", w.HTMLElement)
+swp("HTMLTableCellElement", function(){})
+swpp("HTMLTableCellElement", w.HTMLElement)
+
+let tablep = w.HTMLTableElement.prototype;
+let tablesecp = w.HTMLTableSectionElement.prototype;
+let trp = w.HTMLTableRowElement.prototype;
+
+tablep.insertRow = insertRow;
+tablesecp.insertRow = insertRow;
+tablep.deleteRow = deleteRow;
+tablesecp.deleteRow = deleteRow;
+trp.insertCell = insertCell;
+trp.deleteCell = deleteCell;
+
+// rows under a table section
+tablesecp.appendChildNative = appendChild;
+tablesecp.appendChild = function(newobj) {
+if(!newobj) return null;
+if(newobj.nodeType == 11) return appendFragment(this, newobj);
+this.appendChildNative(newobj);
+if(newobj.dom$class == "HTMLTableRowElement") // shouldn't be anything other than TR
+this.rows.push(newobj), rowReindex(this);
+return newobj;
+}
+tablesecp.insertBeforeNative = insertBefore;
+tablesecp.insertBefore = function(newobj, item) {
+if(!newobj) return null;
+if(!item) return this.appendChild(newobj);
+if(newobj.nodeType == 11) return insertFragment(this, newobj, item);
+const r = this.insertBeforeNative(newobj, item);
+if(!r) return null;
+if(newobj.dom$class == "HTMLTableRowElement")
+for(i=0; i<this.rows.length; ++i)
+if(this.rows[i] == item) {
+this.rows.splice(i, 0, newobj);
+rowReindex(this);
+break;
+}
+return newobj;
+}
+tablesecp.removeChildNative = removeChild;
+tablesecp.removeChild = function(item) {
+if(!item) return null;
+if(!this.removeChildNative(item))
+return null;
+if(item.dom$class == "HTMLTableRowElement")
+for(i=0; i<this.rows.length; ++i)
+if(this.rows[i] == item) {
+this.rows.splice(i, 1);
+rowReindex(this);
+break;
+}
+return item;
+}
+
+tablep.createCaption = function() {
+if(this.caption) return this.caption;
+let c = d.createElement("caption");
+this.appendChild(c);
+return c;
+}
+tablep.deleteCaption = function() {
+if(this.caption) this.removeChild(this.caption);
+}
+
+tablep.createTHead = function() {
+if(this.tHead) return this.tHead;
+let c = d.createElement("thead");
+this.prependChild(c);
+return c;
+}
+tablep.deleteTHead = function() {
+if(this.tHead) this.removeChild(this.tHead);
+}
+tablep.createTFoot = function() {
+if(this.tFoot) return this.tFoot;
+let c = d.createElement("tfoot");
+this.insertBefore(c, this.caption);
+return c;
+}
+tablep.deleteTFoot = function() {
+if(this.tFoot) this.removeChild(this.tFoot);
+}
+
+// rows or bodies under a table
+tablep.appendChildNative = appendChild;
+tablep.appendChild = function(newobj) {
+if(!newobj) return null;
+if(newobj.nodeType == 11) return appendFragment(this, newobj);
+this.appendChildNative(newobj);
+if(newobj.dom$class == "HTMLTableRowElement") rowReindex(this);
+if(newobj.dom$class == "tBody") {
+this.tBodies.push(newobj);
+if(newobj.rows.length) rowReindex(this);
+}
+if(newobj.dom$class == "tCap") this.caption = newobj;
+if(newobj.dom$class == "tHead") {
+this.tHead = newobj;
+if(newobj.rows.length) rowReindex(this);
+}
+if(newobj.dom$class == "tFoot") {
+this.tFoot = newobj;
+if(newobj.rows.length) rowReindex(this);
+}
+return newobj;
+}
+tablep.insertBeforeNative = insertBefore;
+tablep.insertBefore = function(newobj, item) {
+if(!newobj) return null;
+if(!item) return this.appendChild(newobj);
+if(newobj.nodeType == 11) return insertFragment(this, newobj, item);
+const r = this.insertBeforeNative(newobj, item);
+if(!r) return null;
+if(newobj.dom$class == "HTMLTableRowElement") rowReindex(this);
+if(newobj.dom$class == "tBody")
+for(i=0; i<this.tBodies.length; ++i)
+if(this.tBodies[i] == item) {
+this.tBodies.splice(i, 0, newobj);
+if(newobj.rows.length) rowReindex(this);
+break;
+}
+if(newobj.dom$class == "tCap") this.caption = newobj;
+if(newobj.dom$class == "tHead") {
+this.tHead = newobj;
+if(newobj.rows.length) rowReindex(this);
+}
+if(newobj.dom$class == "tFoot") {
+this.tFoot = newobj;
+if(newobj.rows.length) rowReindex(this);
+}
+return newobj;
+}
+tablep.removeChildNative = removeChild;
+tablep.removeChild = function(item) {
+if(!item) return null;
+if(!this.removeChildNative(item))
+return null;
+if(item.dom$class == "HTMLTableRowElement") rowReindex(this);
+if(item.dom$class == "tBody")
+for(i=0; i<this.tBodies.length; ++i)
+if(this.tBodies[i] == item) {
+this.tBodies.splice(i, 1);
+if(item.rows.length) rowReindex(this);
+break;
+}
+if(item == this.caption) delete this.caption;
+if(item.dom$class == "tHead") {
+if(item == this.tHead) delete this.tHead;
+if(item.rows.length) rowReindex(this);
+}
+if(item.dom$class == "tFoot") {
+if(item == this.tFoot) delete this.tFoot;
+if(item.rows.length) rowReindex(this);
+}
+return item;
+}
+
+// row methods
+trp.appendChildNative = appendChild;
+trp.appendChild = function(newobj) {
+if(!newobj) return null;
+if(newobj.nodeType == 11) return appendFragment(this, newobj);
+this.appendChildNative(newobj);
+if(newobj.nodeName === "TD") // shouldn't be anything other than TD
+this.cells.push(newobj);
+return newobj;
+}
+trp.insertBeforeNative = insertBefore;
+trp.insertBefore = function(newobj, item) {
+if(!newobj) return null;
+if(!item) return this.appendChild(newobj);
+if(newobj.nodeType == 11) return insertFragment(this, newobj, item);
+const r = this.insertBeforeNative(newobj, item);
+if(!r) return null;
+if(newobj.nodeName === "TD")
+for(i=0; i<this.cells.length; ++i)
+if(this.cells[i] == item) {
+this.cells.splice(i, 0, newobj);
+break;
+}
+return newobj;
+}
+trp.removeChildNative = removeChild;
+trp.removeChild = function(item) {
+if(!item) return null;
+if(!this.removeChildNative(item))
+return null;
+if(item.nodeName === "TD")
+for(i=0; i<this.cells.length; ++i)
+if(this.cells[i] == item) {
+this.cells.splice(i, 1);
+break;
+}
+return item;
+}
 
 }
 
@@ -6743,8 +6968,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "NodeFilter","createNodeIterator","createTreeWalker",
 "logtime","defport","setDefaultPort","camelCase","dataCamel","uncamelCase","isabove",
 "classList","classListAdd","classListRemove","classListReplace","classListToggle","classListContains",
-"mutFixup", "mrList","mrKids", "rowReindex", "insertRow", "deleteRow",
-"insertCell", "deleteCell",
+"mutFixup", "mrList","mrKids", "rowReindex",
 "appendFragment", "insertFragment",
 "isRooted", "frames$rebuild",
 "runScriptWhenAttached", "traceBreakReplace",

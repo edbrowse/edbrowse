@@ -576,32 +576,6 @@ if(n > l) return undefined;
 return this.charAt(l-n);
 }
 
-/*********************************************************************
-    Originally I developed the shared window for efficiency.
-    There's no point in "compiling" the entire dom every time we bring up a new web page. Other browsers don't do that!
-    That still holds but now there is another consideration: the context that holds startwindow.js never goes away, even if we free it.
-    So the less in startwindow, the better.
-    To this end I will try to move more stuff to the shared window.
-This includes the definition of most of the DOM classes.
-They still have to be "built" at runtime however; it's not a true compile.
-Here's why - using URL as an example.
-There are websites that replace URL.prototype.toString with their own function.
-They want to change the way URLs stringify, or whatever. I can't
-prevent sites from doing that, things might not work properly without it!
-So, if site A does that in the shared window, and site B invokes
-a.href.toString, directly or indirectly, B is calling a function from
-the unrelated website A.
-This could screw things up, or worse, site A could use it to hack into
-site B, hoping site B is your banking site or something important.
-So I can't define URL over there and say URL = mw$.url over here.
-However, the shared window can "build" the URL class over here,
-when asked to do so, and then the user is free to muck with the class
-or its prototype methods or anything else.
-So here is the line that does a lot!
-*********************************************************************/
-
-mw$.setupClasses(window);
-
 /* According to MDN Element isn't a synonym for HTMLElement as SVGElement
 should also inherit from it but leave as is until we get there */
 swm2("HTMLElement", function(){})
@@ -679,6 +653,32 @@ return null;
 swm2("SVGElement", function(){})
 // Use the correct name for the prototype even if it's an incorrect synonym
 swmp("SVGElement", Element)
+
+/*********************************************************************
+    Originally I developed the shared window for efficiency.
+    There's no point in "compiling" the entire dom every time we bring up a new web page. Other browsers don't do that!
+    That still holds but now there is another consideration: the context that holds startwindow.js never goes away, even if we free it.
+    So the less in startwindow, the better.
+    To this end I will try to move more stuff to the shared window.
+This includes the definition of most of the DOM classes.
+They still have to be "built" at runtime however; it's not a true compile.
+Here's why - using URL as an example.
+There are websites that replace URL.prototype.toString with their own function.
+They want to change the way URLs stringify, or whatever. I can't
+prevent sites from doing that, things might not work properly without it!
+So, if site A does that in the shared window, and site B invokes
+a.href.toString, directly or indirectly, B is calling a function from
+the unrelated website A.
+This could screw things up, or worse, site A could use it to hack into
+site B, hoping site B is your banking site or something important.
+So I can't define URL over there and say URL = mw$.url over here.
+However, the shared window can "build" the URL class over here,
+when asked to do so, and then the user is free to muck with the class
+or its prototype methods or anything else.
+So here is the line that does a lot!
+*********************************************************************/
+
+mw$.setupClasses(window);
 
 swm("z$HTML", function(){})
 swmp("z$HTML", HTMLElement)
@@ -1008,23 +1008,6 @@ swmp("HTMLDListElement", HTMLElement)
 swm("HTMLLIElement", function(){})
 swmp("HTMLLIElement", HTMLElement)
 
-swm("HTMLTableSectionElement", function(){})
-swmp("HTMLTableSectionElement", HTMLElement)
-swm("z$tBody", function(){ this.rows = []})
-swmp("z$tBody", HTMLTableSectionElement)
-swm("z$tHead", function(){ this.rows = []})
-swmp("z$tHead", HTMLTableSectionElement)
-swm("z$tFoot", function(){ this.rows = []})
-swmp("z$tFoot", HTMLTableSectionElement)
-
-swm("z$tCap", function(){})
-swmp("z$tCap", HTMLElement)
-swm("HTMLTableElement", function(){ this.rows = []; this.tBodies = []})
-swmp("HTMLTableElement", HTMLElement)
-swm("HTMLTableRowElement", function(){ this.cells = []})
-swmp("HTMLTableRowElement", HTMLElement)
-swm("HTMLTableCellElement", function(){})
-swmp("HTMLTableCellElement", HTMLElement)
 swm("HTMLDivElement", function(){})
 swmp("HTMLDivElement", HTMLElement)
 HTMLDivElement.prototype.doScroll = eb$voidfunction;
@@ -1665,84 +1648,6 @@ odp(HTMLStyleElement.prototype, "css$data", {
 get: function() { var s = ""; for(var i=0; i<this.childNodes.length; ++i) if(this.childNodes[i].nodeName == "#text") s += this.childNodes[i].data; return s; }});
 odp(HTMLStyleElement.prototype, "sheet", { get: function(){ if(!this.sheet$2) this.sheet$2 = new CSSStyleSheet; return this.sheet$2; }});
 
-HTMLTableElement.prototype.insertRow = mw$.insertRow;
-HTMLTableSectionElement.prototype.insertRow = mw$.insertRow;
-HTMLTableElement.prototype.deleteRow = mw$.deleteRow;
-HTMLTableSectionElement.prototype.deleteRow = mw$.deleteRow;
-HTMLTableRowElement.prototype.insertCell = mw$.insertCell;
-HTMLTableRowElement.prototype.deleteCell = mw$.deleteCell;
-
-// rows under a table section
-HTMLTableSectionElement.prototype.appendChildNative = mw$.appendChild;
-HTMLTableSectionElement.prototype.appendChild = function(newobj) {
-if(!newobj) return null;
-if(newobj.nodeType == 11) return mw$.appendFragment(this, newobj);
-this.appendChildNative(newobj);
-if(newobj.dom$class == "HTMLTableRowElement") // shouldn't be anything other than TR
-this.rows.push(newobj), rowReindex(this);
-return newobj;
-}
-HTMLTableSectionElement.prototype.insertBeforeNative = mw$.insertBefore;
-HTMLTableSectionElement.prototype.insertBefore = function(newobj, item) {
-if(!newobj) return null;
-if(!item) return this.appendChild(newobj);
-if(newobj.nodeType == 11) return mw$.insertFragment(this, newobj, item);
-var r = this.insertBeforeNative(newobj, item);
-if(!r) return null;
-if(newobj.dom$class == "HTMLTableRowElement")
-for(var i=0; i<this.rows.length; ++i)
-if(this.rows[i] == item) {
-this.rows.splice(i, 0, newobj);
-rowReindex(this);
-break;
-}
-return newobj;
-}
-HTMLTableSectionElement.prototype.removeChildNative = mw$.removeChild;
-HTMLTableSectionElement.prototype.removeChild = function(item) {
-if(!item) return null;
-if(!this.removeChildNative(item))
-return null;
-if(item.dom$class == "HTMLTableRowElement")
-for(var i=0; i<this.rows.length; ++i)
-if(this.rows[i] == item) {
-this.rows.splice(i, 1);
-rowReindex(this);
-break;
-}
-return item;
-}
-
-HTMLTableElement.prototype.createCaption = function() {
-if(this.caption) return this.caption;
-var c = my$doc().createElement("caption");
-this.appendChild(c);
-return c;
-}
-HTMLTableElement.prototype.deleteCaption = function() {
-if(this.caption) this.removeChild(this.caption);
-}
-
-HTMLTableElement.prototype.createTHead = function() {
-if(this.tHead) return this.tHead;
-var c = my$doc().createElement("thead");
-this.prependChild(c);
-return c;
-}
-HTMLTableElement.prototype.deleteTHead = function() {
-if(this.tHead) this.removeChild(this.tHead);
-}
-
-HTMLTableElement.prototype.createTFoot = function() {
-if(this.tFoot) return this.tFoot;
-var c = my$doc().createElement("tfoot");
-this.insertBefore(c, this.caption);
-return c;
-}
-HTMLTableElement.prototype.deleteTFoot = function() {
-if(this.tFoot) this.removeChild(this.tFoot);
-}
-
 swm("TextNode", function(){
 Object.defineProperty(this, "data$2", {value:"",writable:true});
 if(arguments.length > 0) {
@@ -2196,117 +2101,6 @@ HTMLSelectElement.prototype.remove = function(idx) {
     const n = this.options.length;
     if(typeof idx == "number" && idx >= 0 && idx < n)
     this.removeChild(this.options[idx]);
-}
-
-// rows or bodies under a table
-HTMLTableElement.prototype.appendChildNative = mw$.appendChild;
-HTMLTableElement.prototype.appendChild = function(newobj) {
-if(!newobj) return null;
-if(newobj.nodeType == 11) return mw$.appendFragment(this, newobj);
-this.appendChildNative(newobj);
-if(newobj.dom$class == "HTMLTableRowElement") rowReindex(this);
-if(newobj.dom$class == "tBody") {
-this.tBodies.push(newobj);
-if(newobj.rows.length) rowReindex(this);
-}
-if(newobj.dom$class == "tCap") this.caption = newobj;
-if(newobj.dom$class == "tHead") {
-this.tHead = newobj;
-if(newobj.rows.length) rowReindex(this);
-}
-if(newobj.dom$class == "tFoot") {
-this.tFoot = newobj;
-if(newobj.rows.length) rowReindex(this);
-}
-return newobj;
-}
-HTMLTableElement.prototype.insertBeforeNative = mw$.insertBefore;
-HTMLTableElement.prototype.insertBefore = function(newobj, item) {
-if(!newobj) return null;
-if(!item) return this.appendChild(newobj);
-if(newobj.nodeType == 11) return mw$.insertFragment(this, newobj, item);
-var r = this.insertBeforeNative(newobj, item);
-if(!r) return null;
-if(newobj.dom$class == "HTMLTableRowElement") rowReindex(this);
-if(newobj.dom$class == "tBody")
-for(var i=0; i<this.tBodies.length; ++i)
-if(this.tBodies[i] == item) {
-this.tBodies.splice(i, 0, newobj);
-if(newobj.rows.length) rowReindex(this);
-break;
-}
-if(newobj.dom$class == "tCap") this.caption = newobj;
-if(newobj.dom$class == "tHead") {
-this.tHead = newobj;
-if(newobj.rows.length) rowReindex(this);
-}
-if(newobj.dom$class == "tFoot") {
-this.tFoot = newobj;
-if(newobj.rows.length) rowReindex(this);
-}
-return newobj;
-}
-HTMLTableElement.prototype.removeChildNative = mw$.removeChild;
-HTMLTableElement.prototype.removeChild = function(item) {
-if(!item) return null;
-if(!this.removeChildNative(item))
-return null;
-if(item.dom$class == "HTMLTableRowElement") rowReindex(this);
-if(item.dom$class == "tBody")
-for(var i=0; i<this.tBodies.length; ++i)
-if(this.tBodies[i] == item) {
-this.tBodies.splice(i, 1);
-if(item.rows.length) rowReindex(this);
-break;
-}
-if(item == this.caption) delete this.caption;
-if(item.dom$class == "tHead") {
-if(item == this.tHead) delete this.tHead;
-if(item.rows.length) rowReindex(this);
-}
-if(item.dom$class == "tFoot") {
-if(item == this.tFoot) delete this.tFoot;
-if(item.rows.length) rowReindex(this);
-}
-return item;
-}
-
-HTMLTableRowElement.prototype.appendChildNative = mw$.appendChild;
-HTMLTableRowElement.prototype.appendChild = function(newobj) {
-if(!newobj) return null;
-if(newobj.nodeType == 11) return mw$.appendFragment(this, newobj);
-this.appendChildNative(newobj);
-if(newobj.nodeName === "TD") // shouldn't be anything other than TD
-this.cells.push(newobj);
-return newobj;
-}
-HTMLTableRowElement.prototype.insertBeforeNative = mw$.insertBefore;
-HTMLTableRowElement.prototype.insertBefore = function(newobj, item) {
-if(!newobj) return null;
-if(!item) return this.appendChild(newobj);
-if(newobj.nodeType == 11) return mw$.insertFragment(this, newobj, item);
-var r = this.insertBeforeNative(newobj, item);
-if(!r) return null;
-if(newobj.nodeName === "TD")
-for(var i=0; i<this.cells.length; ++i)
-if(this.cells[i] == item) {
-this.cells.splice(i, 0, newobj);
-break;
-}
-return newobj;
-}
-HTMLTableRowElement.prototype.removeChildNative = mw$.removeChild;
-HTMLTableRowElement.prototype.removeChild = function(item) {
-if(!item) return null;
-if(!this.removeChildNative(item))
-return null;
-if(item.nodeName === "TD")
-for(var i=0; i<this.cells.length; ++i)
-if(this.cells[i] == item) {
-this.cells.splice(i, 1);
-break;
-}
-return item;
 }
 
 /*********************************************************************

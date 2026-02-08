@@ -1501,6 +1501,7 @@ static void processError(JSContext * cx)
 static void connectTagObject(Tag *t, JSValue p)
 {
 	JSContext *cx = t->f0->cx;
+	if(t->jslink) return;
 	t->jv = allocMem(sizeof(p));
 	*((JSValue*)t->jv) = p;
 	t->jslink = true;
