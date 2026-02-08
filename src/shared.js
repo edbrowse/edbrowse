@@ -4441,6 +4441,49 @@ bodyp.scrollLeft = 0;
 // secret way of setting body.innerHTML
 bodyp.eb$dbih = function(s){this.innerHTML = s}
 
+// fake class to support <html>
+swp("z$HTML", function(){})
+swpp("z$HTML", w.HTMLElement)
+let htmlp = w.z$HTML.prototype;
+odp(htmlp, "eb$win", {get: function(){return this.parentNode ? this.parentNode.defaultView : undefined}});
+// Some screen attributes that are suppose to be there.
+htmlp.doScroll = eb$voidfunction;
+htmlp.clientHeight = 768;
+htmlp.clientWidth = 1024;
+htmlp.offsetHeight = 768;
+htmlp.offsetWidth = 1024;
+htmlp.scrollHeight = 768;
+htmlp.scrollWidth = 1024;
+htmlp.scrollTop = 0;
+htmlp.scrollLeft = 0;
+
+// is there a difference between DocType ad DocumentType?
+swp("z$DocType", function(){ this.nodeType = 10, this.nodeName = "DOCTYPE"})
+swpp("z$DocType", w.HTMLElement)
+swp("DocumentType", function(){})
+swpp("DocumentType", w.HTMLElement)
+
+// <div> <p> <span>
+swp("HTMLDivElement", function(){})
+swpp("HTMLDivElement", w.HTMLElement)
+let divp = w.HTMLDivElement.prototype;
+divp.doScroll = eb$voidfunction;
+divp.align = "left";
+// should this click be on w.HTMLElement?
+divp.click = function() {
+// as though the user had clicked on this
+var e = new Event;
+e.initEvent("click", true, true);
+this.dispatchEvent(e);
+}
+swp("HTMLParagraphElement", function(){})
+swpp("HTMLParagraphElement", w.HTMLElement)
+swp("HTMLSpanElement", function(){})
+swpp("HTMLSpanElement", w.HTMLElement)
+let spanp = w.HTMLSpanElement.prototype;
+spanp.doScroll = eb$voidfunction;
+spanp.click = divp.click;
+
 // more classes to come
 }
 

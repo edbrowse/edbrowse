@@ -684,25 +684,6 @@ So here is the line that does a lot!
 
 mw$.setupClasses(window);
 
-swm("z$HTML", function(){})
-swmp("z$HTML", HTMLElement)
-odp(z$HTML.prototype, "eb$win", {get: function(){return this.parentNode ? this.parentNode.defaultView : undefined}});
-// Some screen attributes that are suppose to be there.
-z$HTML.prototype.doScroll = eb$voidfunction;
-z$HTML.prototype.clientHeight = 768;
-z$HTML.prototype.clientWidth = 1024;
-z$HTML.prototype.offsetHeight = 768;
-z$HTML.prototype.offsetWidth = 1024;
-z$HTML.prototype.scrollHeight = 768;
-z$HTML.prototype.scrollWidth = 1024;
-z$HTML.prototype.scrollTop = 0;
-z$HTML.prototype.scrollLeft = 0;
-
-// is there a difference between DocType ad DocumentType?
-swm("z$DocType", function(){ this.nodeType = 10, this.nodeName = "DOCTYPE"})
-swmp("z$DocType", HTMLElement)
-swm("DocumentType", function(){})
-swmp("DocumentType", HTMLElement)
 swm("CharacterData", function(){})
 swmp("CharacterData", null)
 
@@ -792,17 +773,6 @@ odp(HTMLFrameElement.prototype, "contentWindow", { get: eb$getter_cw});
 swm("HTMLIFrameElement", function(){})
 swmp("HTMLIFrameElement", HTMLFrameElement)
 
-swm("HTMLDivElement", function(){})
-swmp("HTMLDivElement", HTMLElement)
-HTMLDivElement.prototype.doScroll = eb$voidfunction;
-HTMLDivElement.prototype.align = "left";
-HTMLDivElement.prototype.click = function() {
-// as though the user had clicked on this
-var e = new Event;
-e.initEvent("click", true, true);
-this.dispatchEvent(e);
-}
-
 swm("HTMLLabelElement", function(){})
 swmp("HTMLLabelElement", HTMLElement)
 odp(HTMLLabelElement.prototype, "htmlFor", { get: function() { return this.getAttribute("for"); }, set: function(h) { this.setAttribute("for", h); }});
@@ -812,15 +782,6 @@ swm("HTMLObjectElement", function(){})
 swmp("HTMLObjectElement", HTMLElement)
 swm("HTMLAreaElement", function(){})
 swmp("HTMLAreaElement", HTMLElement)
-
-swm("HTMLSpanElement", function(){})
-swmp("HTMLSpanElement", HTMLElement)
-HTMLSpanElement.prototype.doScroll = eb$voidfunction;
-// should this click be on HTMLElement?
-HTMLSpanElement.prototype.click = HTMLDivElement.prototype.click;
-
-swm("HTMLParagraphElement", function(){})
-swmp("HTMLParagraphElement", HTMLElement)
 
 swm("HTMLHeadingElement", function(){})
 swmp("HTMLHeadingElement", HTMLElement)
