@@ -42,8 +42,6 @@ this.eb$top = function() { return this}
 this.eb$frameElement = function() { return this}
 this.eb$getter_cd = function() { return null}
 this.eb$getter_cw = function() { return null}
-this.eb$formSubmit = function() { print("submit")}
-this.eb$formReset = function() { print("reset")}
 ;(function() { let void_functions = ["addEventListener",
     "removeEventListener", "eb$apch1", "eb$apch2", "eb$rmch2", "eb$insbf",
     "eb$hasFocus", "eb$write", "eb$writeln", "eb$playAudio"];
@@ -75,6 +73,7 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
     this.mw$.setupClasses = () => {};
 // classes that setupClasses would have built, but didn't.
     this.URL = function(){}
+    this.HTMLFormElement = function(){}
 }
 
 // We need some shorthand for this rather large file.
@@ -740,12 +739,6 @@ swmp("ShadowRoot", HTMLElement)
 
 swm("HTMLBaseElement", function(){})
 swmp("HTMLBaseElement", HTMLElement)
-
-swm("HTMLFormElement", function(){this.elements = []})
-swmp("HTMLFormElement", HTMLElement)
-HTMLFormElement.prototype.submit = eb$formSubmit;
-HTMLFormElement.prototype.reset = eb$formReset;
-odp(HTMLFormElement.prototype, "length", { get: function() { return this.elements.length;}});
 
 swm("Validity", function(){})
 swmp("Validity", null)
@@ -1838,13 +1831,6 @@ p.offsetHeight = 16;
 p.offsetWidth = 120;
 p.dir = "auto";
 })();
-
-HTMLFormElement.prototype.appendChildNative = mw$.appendChild;
-HTMLFormElement.prototype.appendChild = mw$.formAppendChild;
-HTMLFormElement.prototype.insertBeforeNative = mw$.insertBefore;
-HTMLFormElement.prototype.insertBefore = mw$.formInsertBefore;
-HTMLFormElement.prototype.removeChildNative = mw$.removeChild;
-HTMLFormElement.prototype.removeChild = mw$.formRemoveChild;
 
 /*********************************************************************
 acid test 48 sets frame.onclick to a string, then expects that function to run

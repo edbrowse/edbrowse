@@ -3675,6 +3675,10 @@ JS_NewCFunction(mwc, nat_clearTimeout, "clearInterval", 1), 0);
 JS_NewCFunction(mwc, nat_css_start, "css_start", 3), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "cssApply",
 JS_NewCFunction(mwc, nat_cssApply, "cssApply", 3), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$formSubmit",
+JS_NewCFunction(mwc, nat_formSubmit, "formSubmit", 0), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$formReset",
+JS_NewCFunction(mwc, nat_formReset, "formReset", 0), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$fetchHTTP",
 JS_NewCFunction(mwc, nat_fetchHTTP, "fetchHTTP", 4), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "jobsPending",
@@ -3824,10 +3828,6 @@ JS_NewCFunction(cx, nat_parent, "parent", 0), 0);
 JS_NewCFunction(cx, nat_top, "top", 0), 0);
     JS_DefinePropertyValueStr(cx, g, "eb$frameElement",
 JS_NewCFunction(cx, nat_fe, "fe", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$formSubmit",
-JS_NewCFunction(cx, nat_formSubmit, "formSubmit", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$formReset",
-JS_NewCFunction(cx, nat_formReset, "formReset", 0), 0);
     JS_DefinePropertyValueStr(cx, g, "eb$getcook",
 JS_NewCFunction(cx, nat_getcook, "getcook", 0), 0);
     JS_DefinePropertyValueStr(cx, g, "eb$setcook",

@@ -1492,73 +1492,6 @@ p.removeChild(this);
 }
 
 /*********************************************************************
-Yes, Form is weird.
-If you add an input to a form, it adds under childNodes in the usual way,
-but also must add in the elements[] array.
-Same for insertBefore and removeChild.
-When adding an input element to a form,
-linnk form[element.name] to that element.
-*********************************************************************/
-
-function formname(parent, child) {
-var s;
-if(typeof child.name === "string")
-s = child.name;
-else if(typeof child.id === "string")
-s = child.id;
-else return;
-if(!parent[s]) parent[s] = child;
-if(!parent.elements[s]) parent.elements[s] = child;
-}
-
-function formAppendChild(newobj) {
-if(!newobj) return null;
-if(newobj.nodeType == 11) return mw$.appendFragment(this, newobj);
-this.appendChildNative(newobj);
-if(newobj.nodeName === "INPUT" || newobj.nodeName === "SELECT") {
-this.elements.push(newobj);
-newobj.form = this;
-formname(this, newobj);
-}
-return newobj;
-}
-
-function formInsertBefore(newobj, item) {
-if(!newobj) return null;
-if(!item) return this.appendChild(newobj);
-if(newobj.nodeType == 11) return mw$.insertFragment(this, newobj, item);
-var r = this.insertBeforeNative(newobj, item);
-if(!r) return null;
-if(newobj.nodeName === "INPUT" || newobj.nodeName === "SELECT") {
-for(var i=0; i<this.elements.length; ++i)
-if(this.elements[i] == item) {
-this.elements.splice(i, 0, newobj);
-break;
-}
-newobj.form = this;
-formname(this, newobj);
-}
-return newobj;
-}
-
-function formRemoveChild(item) {
-if(!item) return null;
-if(!this.removeChildNative(item))
-return null;
-if(item.nodeName === "INPUT" || item.nodeName === "SELECT") {
-for(var i=0; i<this.elements.length; ++i)
-if(this.elements[i] == item) {
-this.elements.splice(i, 1);
-break;
-}
-delete item.form;
-if(item.name$2 && this[item.name$2] == item) delete this[item.name$2];
-if(item.name$2 && this.elements[item.name$2] == item) delete this.elements[item.name$2];
-}
-return item;
-}
-
-/*********************************************************************
 This is a workaround, when setAttribute is doing something it shouldn't,
 like form.setAttribute("elements") or some such.
 I call these implicit members, we shouldn't mess with them.
@@ -4339,6 +4272,89 @@ odp(tareap, "readOnly", {
 get:function(){ var t = this.getAttribute("readonly");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("readonly", v);}});
+
+// the html form
+swp("HTMLFormElement", function(){this.elements = new w.Array})
+swpp("HTMLFormElement", w.HTMLElement)
+
+/*********************************************************************
+most of the work is done by helper functions, 2 native and 4 below.
+The first is used by the other three.
+If you add an input to a form, it adds under childNodes in the usual way,
+but also must add in the elements[] array.
+Same for insertBefore and removeChild.
+When adding an input element to a form,
+linnk form[element.name] to that element.
+*********************************************************************/
+
+function formname(parent, child) {
+var s;
+if(typeof child.name === "string")
+s = child.name;
+else if(typeof child.id === "string")
+s = child.id;
+else return;
+if(!parent[s]) parent[s] = child;
+if(!parent.elements[s]) parent.elements[s] = child;
+}
+
+function formAppendChild(newobj) {
+if(!newobj) return null;
+if(newobj.nodeType == 11) return appendFragment(this, newobj);
+this.appendChildNative(newobj);
+if(newobj.nodeName === "INPUT" || newobj.nodeName === "SELECT") {
+this.elements.push(newobj);
+newobj.form = this;
+formname(this, newobj);
+}
+return newobj;
+}
+
+function formInsertBefore(newobj, item) {
+if(!newobj) return null;
+if(!item) return this.appendChild(newobj);
+if(newobj.nodeType == 11) return insertFragment(this, newobj, item);
+var r = this.insertBeforeNative(newobj, item);
+if(!r) return null;
+if(newobj.nodeName === "INPUT" || newobj.nodeName === "SELECT") {
+for(var i=0; i<this.elements.length; ++i)
+if(this.elements[i] == item) {
+this.elements.splice(i, 0, newobj);
+break;
+}
+newobj.form = this;
+formname(this, newobj);
+}
+return newobj;
+}
+
+function formRemoveChild(item) {
+if(!item) return null;
+if(!this.removeChildNative(item))
+return null;
+if(item.nodeName === "INPUT" || item.nodeName === "SELECT") {
+for(var i=0; i<this.elements.length; ++i)
+if(this.elements[i] == item) {
+this.elements.splice(i, 1);
+break;
+}
+delete item.form;
+if(item.name$2 && this[item.name$2] == item) delete this[item.name$2];
+if(item.name$2 && this.elements[item.name$2] == item) delete this.elements[item.name$2];
+}
+return item;
+}
+
+let formp = w.HTMLFormElement.prototype;
+formp.submit = eb$formSubmit;
+formp.reset = eb$formReset;
+odp(formp, "length", { get: function() { return this.elements.length;}})
+formp.appendChildNative = appendChild;
+formp.appendChild = formAppendChild;
+formp.insertBeforeNative = insertBefore;
+formp.insertBefore = formInsertBefore;
+formp.removeChildNative = removeChild;
+formp.removeChild = formRemoveChild;
 
 // more classes to come
 }
@@ -7246,7 +7262,6 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "appendChild", "prependChild", "insertBefore", "removeChild", "replaceChild", "hasChildNodes",
 "getSibling", "getElementSibling", "insertAdjacentElement",
 "append", "prepend", "before", "after", "replaceWith",
-"formname", "formAppendChild", "formInsertBefore", "formRemoveChild",
 "implicitMember", "spilldown","spilldownResolve","spilldownResolveURL","spilldownBool",
 "getAttribute", "getAttributeNames", "getAttributeNS",
 "hasAttribute", "hasAttributeNS",
