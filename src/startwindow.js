@@ -72,12 +72,18 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
     this.mw$.removeEventListener = () => undefined;
     this.mw$.getComputedStyle = () => {};
     this.mw$.structuredClone = () => {};
+    this.mw$.setupClasses = () => {};
+// classes that setupClasses would have built, but didn't.
+    this.URL = function(){}
 }
 
 // We need some shorthand for this rather large file.
 // Think of these as macros; they are deleted at the end so they don't persist.
 this.odp = Object.defineProperty;
-// set window member, unseen, unchanging
+// remember, we can't use odp inside function that run later:
+// constructors, setters, methods, etc.
+
+// set a window member, unseen, unchanging
 this.swm = function(k, v) { odp(window, k, {value:v})}
 // visible (enumerable), but still protected
 this.swm1 = function(k, v) { odp(window, k, {value:v,enumerable:true})}
@@ -221,9 +227,9 @@ EventTarget.prototype.removeEventListener = mw$.removeEventListener;
 EventTarget.prototype.dispatchEvent = mw$.dispatchEvent;
 
 swm("Document", function() {
-    odp(this, "childNodes", {value:[],writable:true,configurable:true});
-    odp(this, "id$hash", {value: new Map});
-    odp(this, "id$registry", {value: new FinalizationRegistry(
+    Object.defineProperty(this, "childNodes", {value:[],writable:true,configurable:true});
+    Object.defineProperty(this, "id$hash", {value: new Map});
+    Object.defineProperty(this, "id$registry", {value: new FinalizationRegistry(
         (i) => {
             alert3(`GC triggers delete of element with id ${i} from id hash`);
             this.id$hash.delete(i);
@@ -571,123 +577,30 @@ return this.charAt(l-n);
 }
 
 /*********************************************************************
-The URL class is head-spinning in its complexity and its side effects.
-Almost all of these can be handled in JS,
-except for setting window.location or document.location to a new url,
-which replaces the web page you are looking at.
-You'll see me call the native method eb$newLocation to do that.
-Now, here's one reason, perhaps not the only reason, we can't share the
-URL class. Why it has to stay here in startwindow.js.
-This may apply to every other DOM class as well.
+    Originally I developed the shared window for efficiency.
+    There's no point in "compiling" the entire dom every time we bring up a new web page. Other browsers don't do that!
+    That still holds but now there is another consideration: the context that holds startwindow.js never goes away, even if we free it.
+    So the less in startwindow, the better.
+    To this end I will try to move more stuff to the shared window.
+This includes the definition of most of the DOM classes.
+They still have to be "built" at runtime however; it's not a true compile.
+Here's why - using URL as an example.
 There are websites that replace URL.prototype.toString with their own function.
 They want to change the way URLs stringify, or whatever. I can't
 prevent sites from doing that, things might not work properly without it!
 So, if site A does that in the shared window, and site B invokes
 a.href.toString, directly or indirectly, B is calling a function from
 the unrelated website A.
-This could really screw things up, or worse, site A could use it to hack into
+This could screw things up, or worse, site A could use it to hack into
 site B, hoping site B is your banking site or something important.
 So I can't define URL over there and say URL = mw$.url over here.
-Ok, but what if I say URL = function(){}; URL.prototype = new mw$.URL;
-That puts all those methods and getters and setters,
-and there are a lot of them, in the prototype chain.
-Course I have to lock them down in the shared window, as described above.
-They all have to be readonly.
-Well, If this window wants to create its own URL.prototype.toString function,
-it can't, because the toString that is next in the prototype chain is readonly.
-I don't know if this is javascript standard or quick js.
-It sort of makes sense if you think about it, but it means
-I don't have any practical way to share this class. So here we go.
-Note the use of swm2, people will replace with their own URL class.
-If they do, I remember this URL class and all its methods with z$URL.
-I don't know if that's a good idea or not.
+However, the shared window can "build" the URL class over here,
+when asked to do so, and then the user is free to muck with the class
+or its prototype methods or anything else.
+So here is the line that does a lot!
 *********************************************************************/
 
-swm2("URL", function() {
-let h = "";
-if(arguments.length == 1) h= arguments[0];
-if(arguments.length == 2) h= mw$.resolveURL(arguments[1], arguments[0]);
-this.href = h;
-})
-swm("z$URL", URL)
-swmp("URL", null)
-this.urlp = URL.prototype; // shorthand
-odp(urlp, "rebuild", {value:mw$.url_rebuild})
-
-odp(urlp, "protocol", {
-  get: function() {return this.protocol$val; },
-  set: function(v) { this.protocol$val = v; this.rebuild(); },
-enumerable:true});
-odp(urlp, "pathname", {
-  get: function() {return this.pathname$val; },
-  set: function(v) { this.pathname$val = v; this.rebuild(); },
-enumerable:true});
-odp(urlp, "search", {
-  get: function() {return this.search$val; },
-  set: function(v) { this.search$val = v; this.rebuild(); },
-enumerable:true});
-odp(urlp, "searchParams", {
-  get: function() {return new URLSearchParams(this.search$val); },
-// is there a setter?
-enumerable:true});
-odp(urlp, "hash", {
-  get: function() {return this.hash$val; },
-  set: function(v) { if(typeof v != "string") return; if(!v.match(/^#/)) v = '#'+v; this.hash$val = v; this.rebuild(); },
-enumerable:true});
-odp(urlp, "port", {
-  get: function() {return this.port$val; },
-  set: function(v) { this.port$val = v;
-if(this.hostname$val.length)
-this.host$val = this.hostname$val + ":" + v;
-this.rebuild(); },
-enumerable:true});
-odp(urlp, "hostname", {
-  get: function() {return this.hostname$val; },
-  set: function(v) { this.hostname$val = v;
-if(this.port$val)
-this.host$val = v + ":" +  this.port$val;
-this.rebuild(); },
-enumerable:true});
-odp(urlp, "host", {
-  get: function() {return this.host$val; },
-  set: function(v) { this.host$val = v;
-if(v.match(/:/)) {
-this.hostname$val = v.replace(/:.*/, "");
-this.port$val = v.replace(/^.*:/, "");
-} else {
-this.hostname$val = v;
-this.port$val = "";
-}
-this.rebuild(); },
-enumerable:true});
-odp(urlp, "href", {
-  get: function() {return this.href$val; },
-  set: mw$.url_hrefset,
-enumerable:true});
-odp(urlp, "toString", {enumerable:false,writable:true,configurable:true,value:function() {  return this.href$val}})
-// use toString in the following - in case they replace toString with their own function.
-// Don't just grab href$val, tempting as that may be.
-odp(urlp, "length", {enumerable:false,get:function() { return this.toString().length; }})
-odp(urlp, "concat", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().concat(s); }})
-odp(urlp, "startsWith", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().startsWith(s); }})
-odp(urlp, "endsWith", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().endsWith(s); }})
-odp(urlp, "includes", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().includes(s); }})
-// Can't turn URL.search into String.search, because search is already a
-// property of URL, that is, the search portion of the URL.
-odp(urlp, "indexOf", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().indexOf(s); }})
-odp(urlp, "lastIndexOf", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().lastIndexOf(s); }})
-odp(urlp, "substring", {enumerable:false,writable:true,configurable:true,value:function(from, to) {  return this.toString().substring(from, to); }})
-odp(urlp, "substr", {enumerable:false,writable:true,configurable:true,value:function(from, to) {return this.toString().substr(from, to);}})
-odp(urlp, "toLowerCase", {enumerable:false,writable:true,configurable:true,value:function() {  return this.toString().toLowerCase(); }})
-odp(urlp, "toUpperCase", {enumerable:false,writable:true,configurable:true,value:function() {  return this.toString().toUpperCase(); }})
-odp(urlp, "match", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().match(s); }})
-odp(urlp, "replace", {enumerable:false,writable:true,configurable:true,value:function(s, t) {  return this.toString().replace(s, t); }})
-odp(urlp, "split", {enumerable:false,writable:true,configurable:true,value:function(s) { return this.toString().split(s); }})
-odp(urlp, "slice", {enumerable:false,writable:true,configurable:true,value:function(from, to) { return this.toString().slice(from, to); }})
-odp(urlp, "charAt", {enumerable:false,writable:true,configurable:true,value:function(n) { return this.toString().charAt(n); }})
-odp(urlp, "charCodeAt", {enumerable:false,writable:true,configurable:true,value:function(n) { return this.toString().charCodeAt(n); }})
-odp(urlp, "trim", {enumerable:false,writable:true,configurable:true,value:function() { return this.toString().trim(); }})
-delete window.urlp;
+mw$.setupClasses(window);
 
 /* According to MDN Element isn't a synonym for HTMLElement as SVGElement
 should also inherit from it but leave as is until we get there */
