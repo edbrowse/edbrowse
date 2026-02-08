@@ -4403,6 +4403,44 @@ swpp("HTMLDListElement", w.HTMLElement)
 swp("HTMLLIElement", function(){})
 swpp("HTMLLIElement", w.HTMLElement)
 
+// <head> and friends
+swp("HTMLHeadElement", function(){})
+swpp("HTMLHeadElement", w.HTMLElement)
+swp("HTMLMetaElement", function(){})
+swpp("HTMLMetaElement", w.HTMLElement)
+swp("z$Title", function(){})
+swpp("z$Title", w.HTMLElement)
+odp(w.z$Title.prototype, "text", {
+get: function(){ return this.firstChild && this.firstChild.nodeName == "#text" && this.firstChild.data || "";}
+// setter should change the title of the document, not yet implemented
+});
+swp("HTMLLinkElement", function(){})
+swpp("HTMLLinkElement", w.HTMLElement)
+// It's a list but why would it ever be more than one?
+odp(w.HTMLLinkElement.prototype, "relList", {
+get: function() { var a = new w.Aray;
+if(this.rel) a.push(this.rel);
+// edbrowse only supports stylesheet
+a.supports = function(s) { return s === "stylesheet"; }
+return a;
+}})
+
+// <body>
+swp("HTMLBodyElement", function(){})
+swpp("HTMLBodyElement", w.HTMLElement)
+let bodyp = w.HTMLBodyElement.prototype;
+bodyp.doScroll = eb$voidfunction;
+bodyp.clientHeight = 768;
+bodyp.clientWidth = 1024;
+bodyp.offsetHeight = 768;
+bodyp.offsetWidth = 1024;
+bodyp.scrollHeight = 768;
+bodyp.scrollWidth = 1024;
+bodyp.scrollTop = 0;
+bodyp.scrollLeft = 0;
+// secret way of setting body.innerHTML
+bodyp.eb$dbih = function(s){this.innerHTML = s}
+
 // more classes to come
 }
 

@@ -77,6 +77,8 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
     this.HTMLImageElement = function(){}
     this.HTMLAnchorElement = function(){}
     this.HTMLScriptElement = function(){}
+    this.HTMLLinkElement = function(){}
+    this.HTMLBodyElement = function(){}
 }
 
 // We need some shorthand for this rather large file.
@@ -703,39 +705,6 @@ swm("DocumentType", function(){})
 swmp("DocumentType", HTMLElement)
 swm("CharacterData", function(){})
 swmp("CharacterData", null)
-swm("HTMLHeadElement", function(){})
-swmp("HTMLHeadElement", HTMLElement)
-swm("HTMLMetaElement", function(){})
-swmp("HTMLMetaElement", HTMLElement)
-swm("z$Title", function(){})
-swmp("z$Title", HTMLElement)
-odp(z$Title.prototype, "text", {
-get: function(){ return this.firstChild && this.firstChild.nodeName == "#text" && this.firstChild.data || "";}
-// setter should change the title of the document, not yet implemented
-});
-swm("HTMLLinkElement", function(){})
-swmp("HTMLLinkElement", HTMLElement)
-// It's a list but why would it ever be more than one?
-odp(HTMLLinkElement.prototype, "relList", {
-get: function() { var a = this.rel ? [this.rel] : [];
-// edbrowse only supports stylesheet
-a.supports = function(s) { return s === "stylesheet"; }
-return a;
-}});
-
-swm("HTMLBodyElement", function(){})
-swmp("HTMLBodyElement", HTMLElement)
-HTMLBodyElement.prototype.doScroll = eb$voidfunction;
-HTMLBodyElement.prototype.clientHeight = 768;
-HTMLBodyElement.prototype.clientWidth = 1024;
-HTMLBodyElement.prototype.offsetHeight = 768;
-HTMLBodyElement.prototype.offsetWidth = 1024;
-HTMLBodyElement.prototype.scrollHeight = 768;
-HTMLBodyElement.prototype.scrollWidth = 1024;
-HTMLBodyElement.prototype.scrollTop = 0;
-HTMLBodyElement.prototype.scrollLeft = 0;
-// document.body.innerHTML =
-HTMLBodyElement.prototype.eb$dbih = function(s){this.innerHTML = s}
 
 swm("ShadowRoot", function(){})
 swmp("ShadowRoot", HTMLElement)
