@@ -4356,6 +4356,39 @@ formp.insertBefore = formInsertBefore;
 formp.removeChildNative = removeChild;
 formp.removeChild = formRemoveChild;
 
+swp("HTMLImageElement", function(){})
+swpc("Image", w.HTMLImageElement)
+swpp("HTMLImageElement", w.HTMLElement)
+let imagep = w.HTMLImageElement.prototype;
+odp(imagep, "alt", {
+get:function(){ var t = this.getAttribute("alt");
+return typeof t == "string" ? t : undefined},
+set:function(v) { this.setAttribute("alt", v);
+}})
+
+swp("HTMLScriptElement", function(){})
+swpp("HTMLScriptElement", w.HTMLElement)
+w.HTMLScriptElement.supports = function(t) {
+if(typeof t != "string") return false;
+t = t.toLowerCase();
+if(t.match(/\bjavascript\b/)) return true;
+if(t.match(/\bjson\b/)) return true;
+return false}
+let scriptp = w.HTMLScriptElement.prototype;
+odp(scriptp, "async", {
+get:function(){ var t = this.getAttribute("async");
+return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
+set:function(v) { this.setAttribute("async", v);}})
+odp(scriptp, "defer", {
+get:function(){ var t = this.getAttribute("defer");
+return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
+set:function(v) { this.setAttribute("defer", v);}})
+odp(scriptp, "type", {
+get:function(){ var t = this.getAttribute("type"); if(!t) t = ""; return t;},
+set:function(v) { this.setAttribute("type", v)}})
+scriptp.eb$step = 0;
+scriptp.text = "";
+
 // more classes to come
 }
 

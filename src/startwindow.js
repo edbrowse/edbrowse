@@ -74,6 +74,8 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
 // classes that setupClasses would have built, but didn't.
     this.URL = function(){}
     this.HTMLFormElement = function(){}
+    this.HTMLImageElement = function(){}
+    this.HTMLScriptElement = function(){}
 }
 
 // We need some shorthand for this rather large file.
@@ -811,15 +813,6 @@ get:function(){ var t = this.getAttribute("multiple");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("multiple", v);}});
 
-swm("HTMLImageElement", function(){})
-swm2("Image", HTMLImageElement)
-swmp("HTMLImageElement", HTMLElement)
-odp(HTMLImageElement.prototype, "alt", {
-get:function(){ var t = this.getAttribute("alt");
-return typeof t == "string" ? t : undefined},
-set:function(v) { this.setAttribute("alt", v);
-}});
-
 swm("HTMLFrameElement", function(){})
 swmp("HTMLFrameElement", HTMLElement)
 HTMLFrameElement.prototype.is$frame = true;
@@ -876,27 +869,6 @@ swm("z$Header", function(){})
 swmp("z$Header", HTMLElement)
 swm("z$Footer", function(){})
 swmp("z$Footer", HTMLElement)
-swm("HTMLScriptElement", function(){})
-swmp("HTMLScriptElement", HTMLElement)
-HTMLScriptElement.supports = function(t) {
-if(typeof t != "string") return false;
-t = t.toLowerCase();
-if(t.match(/\bjavascript\b/)) return true;
-if(t.match(/\bjson\b/)) return true;
-return false}
-odp(HTMLScriptElement.prototype, "async", {
-get:function(){ var t = this.getAttribute("async");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("async", v);}});
-odp(HTMLScriptElement.prototype, "defer", {
-get:function(){ var t = this.getAttribute("defer");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("defer", v);}});
-odp(HTMLScriptElement.prototype, "type", {
-get:function(){ var t = this.getAttribute("type"); if(!t) t = ""; return t;},
-set:function(v) { this.setAttribute("type", v)}});
-HTMLScriptElement.prototype.eb$step = 0;
-HTMLScriptElement.prototype.text = "";
 
 swm("z$Timer", function(){this.nodeName = "TIMER"})
 swmp("z$Timer", null)
@@ -1081,7 +1053,7 @@ var ulist = ["action", "src", "src", "href", "href", "src"];
 for(var i=0; i<cnlist.length; ++i) {
 var cn = cnlist[i]; // class name
 var u = ulist[i]; // url name
-eval('Object.defineProperty(' + cn + '.prototype, "' + u + '", { ' +
+eval('odp(' + cn + '.prototype, "' + u + '", { ' +
 'get: function() { return this.href$2 ? this.href$2 : ""}, ' +
 'set: function(h) { if(h instanceof URL || h.dom$class == "URL") h = h.toString(); ' +
 'if(h === null || h === undefined) h = ""; ' +
