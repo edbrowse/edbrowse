@@ -3558,7 +3558,6 @@ This lets us put more software into the shared window.
 
 function setupClasses(w) {
 const d = w.document;
-let i;  // general loop counter
 
 // we really need some shorthand here
 let odp = w.Object.defineProperty;
@@ -3906,7 +3905,7 @@ if(newobj.nodeType == 11) return insertFragment(this, newobj, item);
 const r = this.insertBeforeNative(newobj, item);
 if(!r) return null;
 if(newobj.dom$class == "HTMLTableRowElement")
-for(i=0; i<this.rows.length; ++i)
+for(let i=0; i<this.rows.length; ++i)
 if(this.rows[i] == item) {
 this.rows.splice(i, 0, newobj);
 rowReindex(this);
@@ -3920,7 +3919,7 @@ if(!item) return null;
 if(!this.removeChildNative(item))
 return null;
 if(item.dom$class == "HTMLTableRowElement")
-for(i=0; i<this.rows.length; ++i)
+for(let i=0; i<this.rows.length; ++i)
 if(this.rows[i] == item) {
 this.rows.splice(i, 1);
 rowReindex(this);
@@ -3989,7 +3988,7 @@ const r = this.insertBeforeNative(newobj, item);
 if(!r) return null;
 if(newobj.dom$class == "HTMLTableRowElement") rowReindex(this);
 if(newobj.dom$class == "tBody")
-for(i=0; i<this.tBodies.length; ++i)
+for(let i=0; i<this.tBodies.length; ++i)
 if(this.tBodies[i] == item) {
 this.tBodies.splice(i, 0, newobj);
 if(newobj.rows.length) rowReindex(this);
@@ -4013,7 +4012,7 @@ if(!this.removeChildNative(item))
 return null;
 if(item.dom$class == "HTMLTableRowElement") rowReindex(this);
 if(item.dom$class == "tBody")
-for(i=0; i<this.tBodies.length; ++i)
+for(let i=0; i<this.tBodies.length; ++i)
 if(this.tBodies[i] == item) {
 this.tBodies.splice(i, 1);
 if(item.rows.length) rowReindex(this);
@@ -4049,7 +4048,7 @@ if(newobj.nodeType == 11) return insertFragment(this, newobj, item);
 const r = this.insertBeforeNative(newobj, item);
 if(!r) return null;
 if(newobj.nodeName === "TD")
-for(i=0; i<this.cells.length; ++i)
+for(let i=0; i<this.cells.length; ++i)
 if(this.cells[i] == item) {
 this.cells.splice(i, 0, newobj);
 break;
@@ -4062,7 +4061,7 @@ if(!item) return null;
 if(!this.removeChildNative(item))
 return null;
 if(item.nodeName === "TD")
-for(i=0; i<this.cells.length; ++i)
+for(let i=0; i<this.cells.length; ++i)
 if(this.cells[i] == item) {
 this.cells.splice(i, 1);
 break;
@@ -4070,6 +4069,171 @@ break;
 return item;
 }
 
+// options, option groups, and the select element
+swp("HTMLOptionElement", function() {
+if(arguments.length > 0)
+this.text = arguments[0];
+if(arguments.length > 1)
+this.value = arguments[1];
+})
+swpp("HTMLOptionElement", w.HTMLElement)
+swpc("Option", w.HTMLOptionElement)
+let optp = w.HTMLOptionElement.prototype;
+optp.selected = false;
+optp.defaultSelected = false;
+optp.nodeName = optp.tagName = "OPTION";
+optp.text = optp.value = "";
+
+swp("HTMLOptGroupElement", function() {})
+swpp("HTMLOptGroupElement", w.HTMLElement)
+let optgp = w.HTMLOptGroupElement.prototype;
+optgp.nodeName = optgp.tagName = "OPTGROUP";
+
+swp("HTMLSelectElement", function() {
+    this.selectedIndex = -1;
+    this.options = new w.Array;
+    this.selectedOptions = new w.Array;
+    this.validity = new w.Validity;
+    this.validity.owner = this;
+})
+swpp("HTMLSelectElement", w.HTMLElement)
+let selp = w.HTMLSelectElement.prototype;
+odp(selp, "value", {
+    get: function() {
+        const a = this.options;
+        const n = this.selectedIndex;
+        return (this.multiple || n < 0 || n >= a.length) ? "" : a[n].value;
+    }
+});
+odp(selp, "type", {
+    get:function(){ return this.multiple ? "select-multiple" : "select-one"}
+});
+odp(selp, "multiple", {
+    get: function() {
+        const t = this.getAttribute("multiple");
+        return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true
+    },
+    set:function(v) { this.setAttribute("multiple", v);}
+});
+odp(selp, "size", {
+    get: function() {
+        const t = this.getAttribute("size");
+        if(typeof t == "number") return t;
+        if(typeof t == "string" && t.match(/^\d+$/)) return parseInt(t);
+        return 0;
+    },
+    set: function(v) { this.setAttribute("size", v);}
+});
+odp(selp, "required", {
+    get:function() {
+        const t = this.getAttribute("required");
+        return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true
+    },
+    set: function(v) { this.setAttribute("required", v);}
+});
+
+selp.eb$bso = function() { // build selected options array
+    // do not replace the array with a new one, this is suppose to be a live array
+    const a = this.selectedOptions;
+    const o = this.options;
+    a.length = 0;
+    o.length = 0;
+    const cn = this.childNodes;
+    for(let i=0; i<cn.length; ++i) {
+        if (cn[i].nodeName == "OPTION") {
+            o.push(cn[i]);
+            if(cn[i].selected) a.push(cn[i]);
+        }
+        if(cn[i].nodeName != "OPTGROUP") continue;
+        const og = cn[i];
+        const cn2 = og.childNodes;
+        for(let j=0; j<cn2.length; ++j)
+            if(cn2[j].nodeName == "OPTION") {
+                o.push(cn2[j]);
+                if(cn2[j].selected) a.push(cn2[j]);
+            }
+    }
+}
+
+/*********************************************************************
+Look out! Select class maintains an array of options beneath,
+just as Form maintains an array of elements beneath, so you'd
+think we could copy the form code and tweak a few things, but no.
+Options under select lists are maintained by rebuildSelectors in jseng-quick.c.
+That is how we synchronize option lists.
+So we don't want to synchronize by side-effects.
+In other words, we don't want to pass the actions back to edbrowse,
+as appendChild does. So I kinda have to reproduce what they do
+here, with just js, and no action in C.
+Actually we shouldn't be calling this routine at all; should be calling add(),
+so I don't even know if this makes sense.
+*********************************************************************/
+
+selp.appendChild = function(newobj) {
+    if(!newobj) return null;
+    // should only be options!
+    if(!(newobj.dom$class == "HTMLOptionElement")) return newobj;
+    isabove(newobj, this);
+    if(newobj.parentNode) newobj.parentNode.removeChild(newobj);
+    const l = this.childNodes.length;
+    if(newobj.defaultSelected) newobj.selected = true, this.selectedIndex = l;
+    this.childNodes.push(newobj); newobj.parentNode = this;
+    this.eb$bso();
+    mutFixup(this, false, newobj, null);
+    return newobj;
+}
+selp.insertBefore = function(newobj, item) {
+    let i;
+    if(!newobj) return null;
+    if(!item) return this.appendChild(newobj);
+    if(!(newobj.dom$class == "HTMLOptionElement")) return newobj;
+    isabove(newobj, this);
+    if(newobj.parentNode) newobj.parentNode.removeChild(newobj);
+    for(i=0; i<this.childNodes.length; ++i)
+        if(this.childNodes[i] == item) {
+            this.childNodes.splice(i, 0, newobj);
+            newobj.parentNode = this;
+            if(newobj.defaultSelected) {
+                newobj.selected = true;
+                this.selectedIndex = i;
+            }
+            break;
+        }
+    if(i == this.childNodes.length) {
+        // side effect, object is freeed from wherever it was.
+        return null;
+    }
+    this.eb$bso();
+    mutFixup(this, false, newobj, null);
+    return newobj;
+}
+selp.removeChild = function(item) {
+    let i;
+    if(!item) return null;
+    for(i=0; i<this.childNodes.length; ++i)
+        if(this.childNodes[i] == item) break;
+    if(i == this.childNodes.length) return null;
+    this.childNodes.splice(i, 1);
+    item.parentNode = null;
+    this.eb$bso();
+    mutFixup(this, false, i, item);
+    return item;
+}
+
+// these routines do not account for optgroups
+selp.add = function(o, idx) {
+    const n = this.options.length;
+    if(typeof idx != "number" || idx < 0 || idx > n) idx = n;
+    if(idx == n) this.appendChild(o);
+    else this.insertBefore(o, this.childNodes[idx]);
+}
+selp.remove = function(idx) {
+    const n = this.options.length;
+    if(typeof idx == "number" && idx >= 0 && idx < n)
+    this.removeChild(this.options[idx]);
+}
+
+// more classes to come
 }
 
 // Code beyond this point is third party, but necessary for the operation of the browser.

@@ -811,71 +811,6 @@ return;
 alert3("textarea.innerHTML is too complicated for me to render");
 })
 
-swm("HTMLSelectElement", function() {
-    this.selectedIndex = -1;
-    this.options = [];
-    this.selectedOptions = [];
-    this.validity = new Validity;
-    this.validity.owner = this;
-})
-swmp("HTMLSelectElement", HTMLElement)
-odp(HTMLSelectElement.prototype, "value", {
-    get: function() {
-        const a = this.options;
-        const n = this.selectedIndex;
-        return (this.multiple || n < 0 || n >= a.length) ? "" : a[n].value;
-    }
-});
-odp(HTMLSelectElement.prototype, "type", {
-    get:function(){ return this.multiple ? "select-multiple" : "select-one"}
-});
-odp(HTMLSelectElement.prototype, "multiple", {
-    get: function() {
-        const t = this.getAttribute("multiple");
-        return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true
-    },
-    set:function(v) { this.setAttribute("multiple", v);}
-});
-odp(HTMLSelectElement.prototype, "size", {
-    get: function() {
-        const t = this.getAttribute("size");
-        if(typeof t == "number") return t;
-        if(typeof t == "string" && t.match(/^\d+$/)) return parseInt(t);
-        return 0;
-    },
-    set: function(v) { this.setAttribute("size", v);}
-});
-odp(HTMLSelectElement.prototype, "required", {
-    get:function() {
-        const t = this.getAttribute("required");
-        return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true
-    },
-    set: function(v) { this.setAttribute("required", v);}
-});
-
-HTMLSelectElement.prototype.eb$bso = function() { // build selected options array
-    // do not replace the array with a new one, this is suppose to be a live array
-    const a = this.selectedOptions;
-    const o = this.options;
-    a.length = 0;
-    o.length = 0;
-    const cn = this.childNodes;
-    for(let i=0; i<cn.length; ++i) {
-        if (cn[i].nodeName == "OPTION") {
-            o.push(cn[i]);
-            if(cn[i].selected) a.push(cn[i]);
-        }
-        if(cn[i].nodeName != "OPTGROUP") continue;
-        const og = cn[i];
-        const cn2 = og.childNodes;
-        for(let j=0; j<cn2.length; ++j)
-            if(cn2[j].nodeName == "OPTION") {
-                o.push(cn2[j]);
-                if(cn2[j].selected) a.push(cn2[j]);
-            }
-    }
-}
-
 swm("HTMLInputElement", function(){this.validity = new Validity, this.validity.owner = this})
 swmp("HTMLInputElement", HTMLElement)
 HTMLInputElement.prototype.selectionStart = 0;
@@ -1702,24 +1637,6 @@ eb$logElement(c, "comment");
 return c;
 })
 
-// The Option class, these are choices in a dropdown list.
-swm("HTMLOptionElement", function() {
-if(arguments.length > 0)
-this.text = arguments[0];
-if(arguments.length > 1)
-this.value = arguments[1];
-})
-swmp("HTMLOptionElement", HTMLElement)
-swm2("Option", HTMLOptionElement)
-Option.prototype.selected = false;
-Option.prototype.defaultSelected = false;
-Option.prototype.nodeName = Option.prototype.tagName = "OPTION";
-Option.prototype.text = Option.prototype.value = "";
-
-swm("HTMLOptGroupElement", function() {})
-swmp("HTMLOptGroupElement", HTMLElement)
-HTMLOptGroupElement.prototype.nodeName = HTMLOptGroupElement.prototype.tagName = "OPTGROUP";
-
 sdm("getBoundingClientRect", function(){
 return {
 top: 0, bottom: 0, left: 0, right: 0,
@@ -2024,84 +1941,6 @@ HTMLFormElement.prototype.insertBeforeNative = mw$.insertBefore;
 HTMLFormElement.prototype.insertBefore = mw$.formInsertBefore;
 HTMLFormElement.prototype.removeChildNative = mw$.removeChild;
 HTMLFormElement.prototype.removeChild = mw$.formRemoveChild;
-
-/*********************************************************************
-Look out! Select class maintains an array of options beneath,
-just as Form maintains an array of elements beneath, so you'd
-think we could copy the above code and tweak a few things, but no.
-Options under select lists are maintained by rebuildSelectors in ebjs.c.
-That is how we synchronize option lists.
-So we don't want to synchronize by side-effects.
-In other words, we don't want to pass the actions back to edbrowse,
-as appendChild does. So I kinda have to reproduce what they do
-here, with just js, and no action in C.
-Actually we shouldn't be calling this routine at all; should be calling add(),
-so I don't even know if this makes sense.
-*********************************************************************/
-
-HTMLSelectElement.prototype.appendChild = function(newobj) {
-    if(!newobj) return null;
-    // should only be options!
-    if(!(newobj.dom$class == "HTMLOptionElement")) return newobj;
-    mw$.isabove(newobj, this);
-    if(newobj.parentNode) newobj.parentNode.removeChild(newobj);
-    const l = this.childNodes.length;
-    if(newobj.defaultSelected) newobj.selected = true, this.selectedIndex = l;
-    this.childNodes.push(newobj); newobj.parentNode = this;
-    this.eb$bso();
-    mutFixup(this, false, newobj, null);
-    return newobj;
-}
-HTMLSelectElement.prototype.insertBefore = function(newobj, item) {
-    let i;
-    if(!newobj) return null;
-    if(!item) return this.appendChild(newobj);
-    if(!(newobj.dom$class == "HTMLOptionElement")) return newobj;
-    mw$.isabove(newobj, this);
-    if(newobj.parentNode) newobj.parentNode.removeChild(newobj);
-    for(i=0; i<this.childNodes.length; ++i)
-        if(this.childNodes[i] == item) {
-            this.childNodes.splice(i, 0, newobj);
-            newobj.parentNode = this;
-            if(newobj.defaultSelected) {
-                newobj.selected = true;
-                this.selectedIndex = i;
-            }
-            break;
-        }
-    if(i == this.childNodes.length) {
-        // side effect, object is freeed from wherever it was.
-        return null;
-    }
-    this.eb$bso();
-    mutFixup(this, false, newobj, null);
-    return newobj;
-}
-HTMLSelectElement.prototype.removeChild = function(item) {
-    let i;
-    if(!item) return null;
-    for(i=0; i<this.childNodes.length; ++i)
-        if(this.childNodes[i] == item) break;
-    if(i == this.childNodes.length) return null;
-    this.childNodes.splice(i, 1);
-    item.parentNode = null;
-    this.eb$bso();
-    mutFixup(this, false, i, item);
-    return item;
-}
-
-// these routines do not account for optgroups
-HTMLSelectElement.prototype.add = function(o, idx) {
-    const n = this.options.length;
-    if(typeof idx != "number" || idx < 0 || idx > n) idx = n;
-    if(idx == n) this.appendChild(o);
-    else this.insertBefore(o, this.childNodes[idx]);
-}
-HTMLSelectElement.prototype.remove = function(idx) {
-    const n = this.options.length;
-    if(typeof idx == "number" && idx >= 0 && idx < n)
-    this.removeChild(this.options[idx]);
-}
 
 /*********************************************************************
 acid test 48 sets frame.onclick to a string, then expects that function to run
