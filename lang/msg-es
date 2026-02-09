@@ -775,11 +775,11 @@ no se puede reenviar un archivo vacío
 no se puede reenviar un archivo binario
 no hay ninguna línea \"unformated\"
 no se ha encontrado el archivo de correo %05d sin procesar
-0
-0
-0
-0
-0
+No hay ninguna línea pendiente para agregar
+Demasiados comandos anidados
+Error al crear la cadena formateada; %s
+Ya se exploró de esta manera
+El directorio temporal no existe %s
 0
 0
 0

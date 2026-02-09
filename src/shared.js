@@ -3728,6 +3728,14 @@ odp(textp, "data", {
 get: function() { return this.data$2; },
 set: function(s) { this.data$2 = s + ""; }})
 
+swp("DocumentFragment", function(){})
+swpp("DocumentFragment", w.HTMLElement)
+let fragp = w.DocumentFragment.prototype;
+fragp.nodeType = 11;
+fragp.nodeName = fragp.tagName = "#document-fragment";
+fragp.querySelector = w.querySelector
+fragp.querySelectorAll = function(c,s) { return new w.NodeList(w.querySelectorAll.call(this,c,s)) }
+
 // tables, table sections, rows, cells.
 // First some helper functions to add and remove rows from a table or section,
 // add and remove cells from a row.
@@ -4576,6 +4584,25 @@ if(typeof t == "object") this.src = t.toString();
 swp("Audio", w.HTMLAudioElement)
 swpp("HTMLAudioElement", w.HTMLMediaElement)
 w.HTMLAudioElement.prototype.nodeName = "AUDIO"
+
+/*********************************************************************
+AudioContext, for playing music etc.
+This one we could implement, but I'm not sure if we should.
+If speech comes out of the same speakers as music, as it often does,
+you might not want to hear it, you might rather see the url, or have a button
+to push, and then you call up the music only if / when you want it.
+Not sure what to do, so it's pretty much stubs for now.
+*********************************************************************/
+swp("AudioContext", function() {
+this.outputLatency = 1.0;
+this.createMediaElementSource = eb$voidfunction;
+this.createMediaStreamSource = eb$voidfunction;
+this.createMediaStreamDestination = eb$voidfunction;
+this.createMediaStreamTrackSource = eb$voidfunction;
+this.suspend = eb$voidfunction;
+this.close = eb$voidfunction;
+})
+swpp("AudioContext", null)
 
 swp("HTMLTemplateElement", function(){})
 swpp("HTMLTemplateElement", w.HTMLElement)

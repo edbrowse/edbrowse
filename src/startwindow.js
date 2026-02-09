@@ -847,32 +847,6 @@ swm1("postMessage", function (message,target_origin, transfer) {
 })
 swm("onmessage$$running", mw$.onmessage$$running)
 
-/*********************************************************************
-AudioContext, for playing music etc.
-This one we could implement, but I'm not sure if we should.
-If speech comes out of the same speakers as music, as it often does,
-you might not want to hear it, you might rather see the url, or have a button
-to push, and then you call up the music only if / when you want it.
-Not sure what to do, so it's pretty much stubs for now.
-*********************************************************************/
-swm("AudioContext", function() {
-this.outputLatency = 1.0;
-this.createMediaElementSource = eb$voidfunction;
-this.createMediaStreamSource = eb$voidfunction;
-this.createMediaStreamDestination = eb$voidfunction;
-this.createMediaStreamTrackSource = eb$voidfunction;
-this.suspend = eb$voidfunction;
-this.close = eb$voidfunction;
-})
-swmp("AudioContext", null)
-
-swm("DocumentFragment", function(){})
-swmp("DocumentFragment", HTMLElement)
-DocumentFragment.prototype.nodeType = 11;
-DocumentFragment.prototype.nodeName = DocumentFragment.prototype.tagName = "#document-fragment";
-DocumentFragment.prototype.querySelector = querySelector
-DocumentFragment.prototype.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
-
 sdm2("createTextNode", function(t) {
 if(t == undefined) t = "";
 var c = new TextNode(t);
