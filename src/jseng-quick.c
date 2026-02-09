@@ -3681,6 +3681,14 @@ JS_NewCFunction(mwc, nat_formSubmit, "formSubmit", 0), 0);
 JS_NewCFunction(mwc, nat_formReset, "formReset", 0), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$fetchHTTP",
 JS_NewCFunction(mwc, nat_fetchHTTP, "fetchHTTP", 4), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$getter_cd",
+JS_NewCFunction(mwc, getter_cd, "getter_cd", 0), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$getter_cw",
+JS_NewCFunction(mwc, getter_cw, "getter_cw", 0), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$unframe",
+JS_NewCFunction(mwc, nat_unframe, "unframe", 1), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$unframe2",
+JS_NewCFunction(mwc, nat_unframe2, "unframe2", 1), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$playAudio",
 JS_NewCFunction(mwc, nat_playAudio, "play_audio", 0), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "jobsPending",
@@ -3807,10 +3815,6 @@ static void createJSContext_0(Frame *f)
 
     JS_DefinePropertyValueStr(cx, g, "eb$media",
 JS_NewCFunction(cx, nat_media, "media", 1), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$unframe",
-JS_NewCFunction(cx, nat_unframe, "unframe", 1), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$unframe2",
-JS_NewCFunction(cx, nat_unframe2, "unframe2", 1), 0);
 // Yes, there really are sites that overwrite setTimeout
     JS_DefinePropertyValueStr(cx, g, "setTimeout",
 JS_NewCFunction(cx, nat_setTimeout, "setTimeout", 2),
@@ -3834,10 +3838,6 @@ JS_NewCFunction(cx, nat_fe, "fe", 0), 0);
 JS_NewCFunction(cx, nat_getcook, "getcook", 0), 0);
     JS_DefinePropertyValueStr(cx, g, "eb$setcook",
 JS_NewCFunction(cx, nat_setcook, "setcook", 1), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$getter_cd",
-JS_NewCFunction(cx, getter_cd, "getter_cd", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$getter_cw",
-JS_NewCFunction(cx, getter_cw, "getter_cw", 0), 0);
     JS_DefinePropertyValueStr(cx, g, "querySelectorAll",
 JS_NewCFunction(cx, nat_qsa, "qsa", 2), 0);
     JS_DefinePropertyValueStr(cx, g, "querySelector",

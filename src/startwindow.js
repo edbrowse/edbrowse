@@ -73,12 +73,6 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
     this.mw$.setupClasses = () => {};
 // classes that setupClasses would have built, but didn't.
     this.URL = function(){}
-    this.HTMLFormElement = function(){}
-    this.HTMLImageElement = function(){}
-    this.HTMLMediaElement = function(){}
-    this.HTMLAnchorElement = function(){}
-    this.HTMLScriptElement = function(){}
-    this.HTMLLinkElement = function(){}
     this.HTMLBodyElement = function(){}
 }
 
@@ -554,9 +548,6 @@ swm1("frames", {})
 odp(frames, "length", {get:function(){return frames$2.length}})
 odp(window, "length", {get:function(){return frames$2.length},enumerable:true})
 
-// to debug a.href = object or other weird things.
-swm("hrefset$p", [])
-swm("hrefset$a", [])
 // pending jobs, mostly to debug promise functions.
 swm("$pjobs", [])
 
@@ -691,9 +682,6 @@ swmp("CharacterData", null)
 swm("ShadowRoot", function(){})
 swmp("ShadowRoot", HTMLElement)
 
-swm("HTMLBaseElement", function(){})
-swmp("HTMLBaseElement", HTMLElement)
-
 swm("Validity", function(){})
 swmp("Validity", null)
 /*********************************************************************
@@ -765,15 +753,6 @@ get:function(){ var t = this.getAttribute("multiple");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("multiple", v);}});
 
-swm("HTMLFrameElement", function(){})
-swmp("HTMLFrameElement", HTMLElement)
-HTMLFrameElement.prototype.is$frame = true;
-odp(HTMLFrameElement.prototype, "contentDocument", { get: eb$getter_cd});
-odp(HTMLFrameElement.prototype, "contentWindow", { get: eb$getter_cw});
-// These may be different but for now I'm calling them the same.
-swm("HTMLIFrameElement", function(){})
-swmp("HTMLIFrameElement", HTMLFrameElement)
-
 swm("HTMLLabelElement", function(){})
 swmp("HTMLLabelElement", HTMLElement)
 odp(HTMLLabelElement.prototype, "htmlFor", { get: function() { return this.getAttribute("for"); }, set: function(h) { this.setAttribute("for", h); }});
@@ -781,8 +760,6 @@ swm("HTMLUnknownElement", function(){})
 swmp("HTMLUnknownElement", HTMLElement)
 swm("HTMLObjectElement", function(){})
 swmp("HTMLObjectElement", HTMLElement)
-swm("HTMLAreaElement", function(){})
-swmp("HTMLAreaElement", HTMLElement)
 
 swm("z$Timer", function(){this.nodeName = "TIMER"})
 swmp("z$Timer", null)
@@ -849,100 +826,6 @@ odp(window, "customElements", {get:function(){ return {
 define:mw$.cel_define,
 get:mw$.cel_get,
 }},enumerable:true});
-
-/*********************************************************************
-If foo is an anchor, then foo.href = blah
-builds the url object; there are a lot of side effects here.
-Same for form.action, script.src, etc.
-I believe that a new URL should be resolved against the base, that is,
-/foobar becomes www.xyz.com/foobar, though I'm not sure.
-We ought not do this in the generic URL class, but for these assignments, I think yes.
-The URL class already resolves when updating a URL,
-so this is just for a new url A.href = "/foobar";
-There is no base when html is first processed, so start with an empty string,
-so we don't seg fault. resolveURL does nothing in this case.
-This is seen by eb$base = "" above.
-When base is set, and more html is generated and parsed, the url is resolved
-in html, and then again here in js.
-The first time it becomes its own url, then remains so,
-I don't think this is a problem, but not entirely sure.
-There may be shortcuts associated with these url members.
-Some websites refer to A.protocol, which has not explicitly been set.
-I assume they mean A.href.protocol, the protocol of the url object.
-Do we have to do this for every component of the URL object,
-and for every class that has such an object?
-I don't know, but here we go.
-This is a loop over classes, then a loop over url components.
-The leading ; averts a javascript parsing ambiguity.
-don't take it out!
-*********************************************************************/
-
-; (function() {
-var cnlist = ["HTMLAnchorElement", "HTMLAreaElement", "HTMLFrameElement"];
-var ulist = ["href", "href", "src"];
-for(var i=0; i<cnlist.length; ++i) {
-var cn = cnlist[i]; // class name
-var u = ulist[i]; // url name
-eval('Object.defineProperty(' + cn + '.prototype, "' + u + '", { ' +
-'get: function() { return this.href$2 ? this.href$2 : ""}, ' +
-'set: function(h) { if(h === null || h === undefined) h = ""; ' +
-'if(h instanceof URL || h.dom$class == "URL") h = h.toString(); ' +
-'var w = my$win(); ' +
-'if(typeof h != "string") { alert3("hrefset " + typeof h); ' +
-'w.hrefset$p.push("' + cn + '"); ' +
-'w.hrefset$a.push(h); ' +
-'return; } ' +
-'/* h is a string version of the url. Dont know what to do if h is empty. */ ' +
-'if(!h) return; ' +
-'var last_href = (this.href$2 ? this.href$2.toString() : null); ' +
-'this.setAttribute("' + u +'",h); ' +
-'/* special code for setting frame.src, redirect to a new page. */ ' +
-'h = this.href$2.href$val; ' +
-'if(this.is$frame && this.eb$expf && last_href != h) { ' +
-'/* There is a nasty corner case here, dont know if it ever happens. What if we are replacing the running frame? window.parent.src = new_url; See if we can get around it this way. */ ' +
-'if(w == this.contentWindow) { w.location = h; return; } ' +
-'delete this.eb$expf; ' +
-'eb$unframe(this); /* fix links on the edbrowse side */ ' +
-'/* I can force the opening of this new frame, but should I? */ ' +
-'this.contentDocument; eb$unframe2(this); ' +
-'} }});');
-var piecelist = ["protocol", "pathname", "host", "search", "hostname", "port", "hash"];
-for(var j=0; j<piecelist.length; ++j) {
-var piece = piecelist[j];
-eval('Object.defineProperty(' + cn + '.prototype, "' + piece + '", {get: function() { return this.href$2 ? this.href$2.' + piece + ' : null},set: function(x) { if(this.href$2) this.href$2.' + piece + ' = x; }});');
-}
-}
-})();
-
-/*********************************************************************
-Ok - a.href is a url object, but script.src is a string.
-You won't find that anywhere in the documentation, w3 schools etc, nope, I just
-respond to the javascript in the wild, and that's what it seems to expect.
-I only know for sure a.href is URL, and script.src is string,
-everything else here is a guess.
-*********************************************************************/
-
-(function() {
-var cnlist = ["HTMLFormElement", "HTMLImageElement", "HTMLScriptElement", "HTMLBaseElement", "HTMLLinkElement", "HTMLMediaElement"];
-var ulist = ["action", "src", "src", "href", "href", "src"];
-for(var i=0; i<cnlist.length; ++i) {
-var cn = cnlist[i]; // class name
-var u = ulist[i]; // url name
-eval('odp(' + cn + '.prototype, "' + u + '", { ' +
-'get: function() { return this.href$2 ? this.href$2 : ""}, ' +
-'set: function(h) { if(h instanceof URL || h.dom$class == "URL") h = h.toString(); ' +
-'if(h === null || h === undefined) h = ""; ' +
-'var w = my$win(); ' +
-'if(typeof h != "string") { alert3("hrefset " + typeof h); ' +
-'w.hrefset$p.push("' + cn + '"); ' +
-'w.hrefset$a.push(h); ' +
-'return; } ' +
-'if(!h) return; ' +
-'var last_href = (this.href$2 ? this.href$2 : null); ' +
-'this.setAttribute("' + u +'",h) ' +
-' }});');
-}
-})();
 
 /*********************************************************************
 When a script runs it may call document.write. But where to put those nodes?

@@ -4408,6 +4408,8 @@ swp("HTMLHeadElement", function(){})
 swpp("HTMLHeadElement", w.HTMLElement)
 swp("HTMLMetaElement", function(){})
 swpp("HTMLMetaElement", w.HTMLElement)
+swp("HTMLBaseElement", function(){})
+swpp("HTMLBaseElement", w.HTMLElement)
 swp("z$Title", function(){})
 swpp("z$Title", w.HTMLElement)
 odp(w.z$Title.prototype, "text", {
@@ -4534,6 +4536,96 @@ frag.appendChild(c)
 odp(this, "content$2", {value:frag})
 return frag
 }})
+
+swp("HTMLAreaElement", function(){})
+swpp("HTMLAreaElement", w.HTMLElement)
+
+swp("HTMLFrameElement", function(){})
+swpp("HTMLFrameElement", w.HTMLElement)
+let framep = w.HTMLFrameElement.prototype;
+framep.is$frame = true;
+odp(framep, "contentDocument", { get: eb$getter_cd});
+odp(framep, "contentWindow", { get: eb$getter_cw});
+
+// These may be different but for now I'm calling them the same.
+swp("HTMLIFrameElement", function(){})
+swpp("HTMLIFrameElement", w.HTMLFrameElement)
+
+/*********************************************************************
+If foo is an anchor, then foo.href = "some_url"
+builds the url object. Same for frame.src, etc.
+I believe that a new URL should be resolved against the base, that is,
+/foobar becomes www.xyz.com/foobar, though I'm not sure.
+We ought not do this in the generic URL class, but for these assignments, I think yes.
+The URL class already resolves when updating a URL,
+so this is just for a new url A.href = "/foobar".
+There may be shortcuts associated with these url members.
+Some websites refer to A.protocol, which has not explicitly been set.
+I assume they mean A.href.protocol, the protocol of the url object.
+That suggests a loop over classes, then a loop over url components.
+Note, the leading semicolon here is important,
+otherwise this statement blends with the last to create something you didn't want.
+Or you could end the last statement with a semicolon.
+*********************************************************************/
+
+; (function() {
+const cnlist = ["HTMLAnchorElement", "HTMLAreaElement", "HTMLFrameElement"];
+const ulist = ["href", "href", "src"];
+for(let i=0; i<cnlist.length; ++i) {
+const cn = cnlist[i]; // class name
+const u = ulist[i]; // url name
+eval('odp(w.' + cn + '.prototype, "' + u + '", { ' +
+'get: function() { return this.href$2 ? this.href$2 : ""}, ' +
+'set: function(h) { if(h === null || h === undefined) h = ""; ' +
+'if(h instanceof w.URL || h.dom$class == "URL") h = h.toString(); ' +
+'if(typeof h != "string") { alert3("hrefset " + typeof h); ' +
+'return; } ' +
+'if(!h) return; ' +
+'let last_href = (this.href$2 ? this.href$2.toString() : null); ' +
+'this.setAttribute("' + u +'",h); ' +
+'/* special code for setting frame.src, redirect to a new page. */ ' +
+'h = this.href$2.href$val; ' +
+'if(this.is$frame && this.eb$expf && last_href != h) { ' +
+'/* There is a nasty corner case here, dont know if it ever happens. What if we are replacing the running frame? window.parent.src = new_url; See if we can get around it this way. */ ' +
+'if(w == this.contentWindow) { w.location = h; return; } ' +
+'delete this.eb$expf; ' +
+'eb$unframe(this); /* fix links on the edbrowse side */ ' +
+'/* I can force the opening of this new frame, but should I? */ ' +
+'this.contentDocument; eb$unframe2(this); ' +
+'} }});');
+const piecelist = ["protocol", "pathname", "host", "search", "hostname", "port", "hash"];
+for(let j=0; j<piecelist.length; ++j) {
+let piece = piecelist[j];
+eval('odp(w.' + cn + '.prototype, "' + piece + '", {get: function() { return this.href$2 ? this.href$2.' + piece + ' : null},set: function(x) { if(this.href$2) this.href$2.' + piece + ' = x; }});');
+}
+}
+})();
+
+/*********************************************************************
+Ok - a.href is a url object, but script.src is a string.
+You won't find that anywhere in the documentation, w3 schools etc, nope, I just
+respond to the javascript in the wild, and that's what it seems to expect.
+I only know for sure a.href is URL, and script.src is string,
+everything else is a guess.
+*********************************************************************/
+
+; (function() {
+const cnlist = ["HTMLFormElement", "HTMLImageElement", "HTMLScriptElement", "HTMLBaseElement", "HTMLLinkElement", "HTMLMediaElement"];
+const ulist = ["action", "src", "src", "href", "href", "src"];
+for(let i=0; i<cnlist.length; ++i) {
+const cn = cnlist[i]; // class name
+const u = ulist[i]; // url name
+eval('odp(w.' + cn + '.prototype, "' + u + '", { ' +
+'get: function() { return this.href$2 ? this.href$2 : ""}, ' +
+'set: function(h) { if(h instanceof w.URL || h.dom$class == "URL") h = h.toString(); ' +
+'if(h === null || h === undefined) h = ""; ' +
+'if(typeof h != "string") { alert3("hrefset " + typeof h); ' +
+'return; } ' +
+'if(!h) return; ' +
+'this.setAttribute("' + u +'",h) ' +
+' }});');
+}
+})();
 
 // more classes to come
 }
