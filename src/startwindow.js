@@ -873,35 +873,6 @@ DocumentFragment.prototype.nodeName = DocumentFragment.prototype.tagName = "#doc
 DocumentFragment.prototype.querySelector = querySelector
 DocumentFragment.prototype.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
 
-swm("CSSRule", function(){this.cssText=""})
-CSSRule.prototype.toString = function(){return this.cssText}
-
-swm("CSSRuleList", function(){})
-// This isn't really right, but it's easy
-CSSRuleList.prototype = new Array;
-
-swm("CSSStyleSheet", function() { this.cssRules = new CSSRuleList})
-swmp("CSSStyleSheet", null)
-CSSStyleSheet.prototype.insertRule = function(r, idx) {
-var list = this.cssRules;
-(typeof idx == "number" && idx >= 0 && idx <= list.length || (idx = 0));
-if(idx == list.length)
-list.push(r);
-else
-list.splice(idx, 0, r);
-// There may be side effects here, I don't know.
-// For now I just want the method to exist so js will march on.
-}
-CSSStyleSheet.prototype.addRule = function(sel, r, idx) {
-var list = this.cssRules;
-(typeof idx == "number" && idx >= 0 && idx <= list.length || (idx = list.length));
-r = sel + "{" + r + "}";
-if(idx == list.length)
-list.push(r);
-else
-list.splice(idx, 0, r);
-}
-
 sdm2("createTextNode", function(t) {
 if(t == undefined) t = "";
 var c = new TextNode(t);

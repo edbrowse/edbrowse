@@ -933,6 +933,7 @@ telnet: 23,
 smb: 139
 };
 
+// use by the css system and the dataset system
 function camelCase(t) {
 return t.replace(/-./g, function(f){return f[1].toUpperCase()});
 }
@@ -4946,6 +4947,35 @@ p = camelCase(p);
 delete this[p]
 delete this[p+"$$scy"]
 delete this[p+"$$pri"]
+}
+
+swp("CSSRule", function(){this.cssText=""})
+w. CSSRule.prototype = new w.Object;
+w. CSSRule.prototype.toString = function(){return this.cssText}
+
+swp("CSSRuleList", function(){})
+// This isn't really right, but it's easy
+w. CSSRuleList.prototype = new w.Array;
+
+swp("CSSStyleSheet", function() { this.cssRules = new w.CSSRuleList})
+swpp("CSSStyleSheet", null)
+let cssp = w.CSSStyleSheet.prototype;
+cssp.insertRule = function(r, idx) {
+let list = this.cssRules;
+(typeof idx == "number" && idx >= 0 && idx <= list.length || (idx = 0));
+if(idx == list.length)
+list.push(r);
+else
+list.splice(idx, 0, r);
+}
+cssp.addRule = function(sel, r, idx) {
+var list = this.cssRules;
+(typeof idx == "number" && idx >= 0 && idx <= list.length || (idx = list.length));
+r = sel + "{" + r + "}";
+if(idx == list.length)
+list.push(r);
+else
+list.splice(idx, 0, r);
 }
 
 // stragglers

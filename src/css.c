@@ -2259,7 +2259,7 @@ void cssDocLoad(int frameNumber, char *start, bool pageload)
 // This could be run again and again, if the style nodes change.
 	if (cm->descriptors) {
 		debugPrint(3,
-			   "free and recompile css descriptors due to dom changes");
+			   "free and recompile css descriptors due to css changes");
 		cssPiecesFree(cm->descriptors);
 		recompile = true;
 	}
