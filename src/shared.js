@@ -5120,6 +5120,128 @@ swpp("XMLCdata", w.HTMLElement)
 let xmlcp = w.XMLCdata.prototype;
 xmlcp.nodeName = xmlcp.tagName = "#cdata-section";
 xmlcp.nodeType = 4;
+
+// We've defined the HTMLElement classes, now let's create instances of them.
+sdpc("createElement", function(s) {
+let c;
+if(!s) { // a null or missing argument
+alert3("bad createElement( type" + typeof s + ')');
+return null;
+}
+let t = s.toLowerCase();
+
+// check for custom elements first
+var x = w.cel$registry[s];
+if(x) { // here we go
+c = new x.construct;
+if(c instanceof w.HTMLElement) {
+    odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
+    odp(c, "parentNode", {value:null,writable:true,configurable:true});
+if(this.eb$xml)
+c.eb$xml = true;
+else
+s = s.toUpperCase()
+    odp(c, "nodeName", {value:s,writable:true,configurable:true});
+    odp(c, "tagName", {value:s,writable:true,configurable:true});
+}
+eb$logElement(c, t);
+return c;
+}
+
+if(!t.match(/^[a-z:\d_-]+$/) || t.match(/^[\d_-]/)) {
+alert3("bad createElement(" + t + ')');
+// acid3 says we should throw an exception here.
+// But we get these kinds of strings from www.oranges.com all the time.
+// I'll just return null and tweak acid3 accordingly.
+// throw error code 5
+return null;
+}
+
+let unknown = false;
+switch(t) {
+case "shadowroot": c = new w.ShadowRoot; break;
+case "body": c = new w.HTMLBodyElement; break;
+// is it ok that head isn't here?
+case "object": c = new w.HTMLObjectElement; break;
+case "a": c = new w.HTMLAnchorElement; break;
+case "area": c = new w.HTMLAreaElement; break;
+case "image": t = "img";
+case "img": c = new w.HTMLImageElement; break;
+case "link": c = new w.HTMLLinkElement; break;
+case "meta": c = new w.HTMLMetaElement; break;
+case "cssstyledeclaration":
+c = new w.CSSStyleDeclaration; c.element = null; break;
+case "style": c = new w.HTMLStyleElement; break;
+case "script": c = new w.HTMLScriptElement; break;
+case "template": c = new w.HTMLTemplateElement; break;
+// this isn't standard; it is mine
+case "newdocument": c = new w.Document; break;
+case "div": c = new w.HTMLDivElement; break;
+case "span": c = new w.HTMLSpanElement; break;
+case "label": c = new w.HTMLLabelElement; break;
+case "p": c = new w.HTMLParagraphElement; break;
+case "ol": c = new w.HTMLOListElement; break;
+case "ul": c = new w.HTMLUListElement; break;
+case "dl": c = new w.HTMLDListElement; break;
+case "li": c = new w.HTMLLIElement; break;
+case "h1": case "h2": case "h3": case "h4": case "h5": case "H6": c = new w.HTMLHeadingElement; break;
+case "header": c = new w.z$Header; break;
+case "footer": c = new w.z$Footer; break;
+case "table": c = new w.HTMLTableElement; break;
+case "tbody": c = new w.z$tBody; break;
+case "tr": c = new w.HTMLTableRowElement; break;
+case "td": c = new w.HTMLTableCellElement; break;
+case "caption": c = new w.z$tCap; break;
+case "thead": c = new w.z$tHead; break;
+case "tfoot": c = new w.z$tFoot; break;
+case "canvas": c = new w.HTMLCanvasElement; break;
+case "audio": case "video": c = new w.HTMLAudioElement; break;
+case "fragment": c = new w.DocumentFragment; break;
+case "frame": c = new w.HTMLFrameElement; break;
+case "iframe": c = new w.HTMLIFrameElement; break;
+case "select": c = new w.HTMLSelectElement; break;
+case "option":
+c = new w.Option;
+    odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
+    odp(c, "parentNode", {value:null,writable:true,configurable:true});
+if(this.eb$xml) c.eb$xml = true;
+c.selected = true; // jquery says we should do this
+// we don't log options because rebuildSelectors() checks
+// the dropdown lists after every js run.
+return c;
+case "form": c = new w.HTMLFormElement; break;
+case "input": c = new w.HTMLInputElement; break;
+case "textarea": c = new w.HTMLTextAreaElement; break;
+case "element": c = new w.HTMLElement; break;
+case "button": c = new w.HTMLButtonElement; break;
+case "svg": c = new w.SVGElement; break;
+default:
+unknown = true;
+// alert("createElement default " + s);
+c = new w.HTMLUnknownElement;
+}
+
+    odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
+    odp(c, "parentNode", {value:null,writable:true,configurable:true});
+if(this.eb$xml && !(c instanceof w.HTMLFrameElement) && !(c instanceof w.HTMLIFrameElement)) c.eb$xml = true;
+// Split on : if this comes from a name space
+let colon = t.split(':');
+if(colon.length == 2) {
+    odp(c, "nodeName", {value:t,writable:true,configurable:true});
+    odp(c, "tagName", {value:t,writable:true,configurable:true});
+    c.prefix = colon[0], c.localName = colon[1];
+} else if(c.nodeType == 1) {
+    let s2 = (unknown || this.eb$xml) ? s : s.toUpperCase();
+    odp(c, "nodeName", {value:s2,writable:true,configurable:true});
+    odp(c, "tagName", {value:s2,writable:true,configurable:true});
+}
+if(t == "input") { // name and type are automatic attributes acid test 53
+c.name = c.type = "";
+}
+eb$logElement(c, s);
+return c;
+} )
+
 }
 
 // Code beyond this point is third party, but necessary for the operation of the browser.
