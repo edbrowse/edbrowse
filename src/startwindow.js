@@ -847,41 +847,10 @@ swm1("postMessage", function (message,target_origin, transfer) {
 })
 swm("onmessage$$running", mw$.onmessage$$running)
 
-sdm2("createTextNode", function(t) {
-if(t == undefined) t = "";
-var c = new TextNode(t);
-/* A text node chould never have children, and does not need childNodes array,
- * but there is improper html out there <text> <stuff> </text>
- * which has to put stuff under the text node, so against this
- * unlikely occurence, I have to create the array.
- * I have to treat a text node like an html node. */
-    Object.defineProperty(c, "childNodes", {value:[],writable:true,configurable:true});
-    Object.defineProperty(c, "parentNode", {value:null,writable:true,configurable:true});
-if(this.eb$xml) c.eb$xml = true;
-eb$logElement(c, "text");
-return c;
-})
-
-swm("Comment", function(t) {
-this.data = t;
-})
-swmp("Comment", HTMLElement)
-Comment.prototype.nodeName = Comment.prototype.tagName = "#comment";
-Comment.prototype.nodeType = 8;
-
 swm("XMLCdata", function(t) {})
 swmp("XMLCdata", HTMLElement)
 XMLCdata.prototype.nodeName = XMLCdata.prototype.tagName = "#cdata-section";
 XMLCdata.prototype.nodeType = 4;
-
-sdm2("createComment", function(t) {
-if(t == undefined) t = "";
-var c = new Comment(t);
-    Object.defineProperty(c, "childNodes", {value:[],writable:true,configurable:true});
-    Object.defineProperty(c, "parentNode", {value:null,writable:true,configurable:true});
-eb$logElement(c, "comment");
-return c;
-})
 
 sdm("getBoundingClientRect", function(){
 return {
@@ -1409,11 +1378,6 @@ c.name = c.type = "";
 eb$logElement(c, s);
 return c;
 } )
-
-sdm2("createDocumentFragment", function() {
-var c = this.createElement("fragment");
-return c;
-})
 
 sdm("implementation", {
 owner: document,

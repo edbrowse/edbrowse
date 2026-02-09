@@ -3463,6 +3463,10 @@ function swpp(c, inherit) {
     odp(w[c].prototype, "dom$class", {value:v});
 }
 
+// Establish properties under document, as we did with window.
+// These are not classes and will not have custom prototypes.
+function sdpc(k, v) { odp(d, k, {value:v, writable:true, configurable:true})}
+
 // here comes the URL class, which is head-spinning in its complexity.
 // Note the use of swpc, window property changeable, because people can and do
 // replace the standard URL class with their own, or even pieces of it,
@@ -3728,6 +3732,41 @@ odp(textp, "data", {
 get: function() { return this.data$2; },
 set: function(s) { this.data$2 = s + ""; }})
 
+// Since we are createing all these classes here, does it make sense to
+// include the methods to properly instantiate those classes?  Perhaps.
+sdpc("createTextNode", function(t) {
+if(t == undefined) t = "";
+const c = new w.TextNode(t);
+/* A text node chould never have children, and does not need childNodes array,
+ * but there is improper html out there <text> <stuff> </text>
+ * which has to put stuff under the text node, so against this
+ * unlikely occurence, I have to create the array.
+ * I have to treat a text node like an html node. */
+    odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
+    odp(c, "parentNode", {value:null,writable:true,configurable:true});
+if(this.eb$xml) c.eb$xml = true;
+eb$logElement(c, "text");
+return c;
+})
+
+swp("Comment", function(t) {
+this.data = t;
+})
+swpp("Comment", w.HTMLElement)
+let cmtp = w.Comment.prototype;
+cmtp.nodeName = cmtp.tagName = "#comment";
+cmtp.nodeType = 8;
+
+
+sdpc("createComment", function(t) {
+if(t == undefined) t = "";
+const c = new w.Comment(t);
+    odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
+    odp(c, "parentNode", {value:null,writable:true,configurable:true});
+eb$logElement(c, "comment");
+return c;
+})
+
 swp("DocumentFragment", function(){})
 swpp("DocumentFragment", w.HTMLElement)
 let fragp = w.DocumentFragment.prototype;
@@ -3735,6 +3774,11 @@ fragp.nodeType = 11;
 fragp.nodeName = fragp.tagName = "#document-fragment";
 fragp.querySelector = w.querySelector
 fragp.querySelectorAll = function(c,s) { return new w.NodeList(w.querySelectorAll.call(this,c,s)) }
+
+sdpc("createDocumentFragment", function() {
+const c = this.createElement("fragment");
+return c;
+})
 
 // tables, table sections, rows, cells.
 // First some helper functions to add and remove rows from a table or section,
@@ -7905,8 +7949,6 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "showscripts", "showframes", "searchscripts", "snapshot", "aloop",
 "showarg", "showarglist",
 "set_location_hash",
-"eb$newLocation","eb$logElement",
-"resolveURL", "eb$fetchHTTP",
 "setTimeout", "clearTimeout", "setInterval", "clearInterval",
 "getElement", "getHead", "setHead", "getBody", "setBody",
 "getRootNode","wrapString",
@@ -7954,7 +7996,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "onmessage$$running", "lastModifiedByHead", "structuredClone",
 "UnsupportedError",
 ];
-for(var i=0; i<flist.length; ++i)
+for(let i=0; i<flist.length; ++i)
 Object.defineProperty(this, flist[i], {writable:false,configurable:false});
 
 // some class prototypes
