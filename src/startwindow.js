@@ -73,6 +73,8 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
     this.mw$.setupClasses = () => {};
 // classes that setupClasses would have built, but didn't.
     this.URL = function(){}
+    this.HTMLElement = function(){}
+    this.SVGElement = function(){}
     this.HTMLBodyElement = function(){}
     this.CSSStyleDeclaration = function(){}
 }
@@ -573,84 +575,6 @@ if(n > l) return undefined;
 return this.charAt(l-n);
 }
 
-/* According to MDN Element isn't a synonym for HTMLElement as SVGElement
-should also inherit from it but leave as is until we get there */
-swm2("HTMLElement", function(){})
-swm2("Element", HTMLElement)
-swmp("HTMLElement", Node)
-odp(HTMLElement.prototype, "name", {
-get: function() {
-var isinput = (this.dom$class == "HTMLInputElement" || this.dom$class == "HTMLButtonElement" || this.dom$class == "HTMLSelectElement");
-if(!isinput) return this.name$2 ;
-// name property is automatically in the getAttribute system, acid test 53
-var t = this.getAttribute("name");
-return typeof t == "string" ? t : undefined}, 
-set: function(n) {
-var isinput = (this.dom$class == "HTMLInputElement" || this.dom$class == "HTMLButtonElement" || this.dom$class == "HTMLSelectElement");
-if(!isinput) { Object.defineProperty(this, "name$2", {value:n,writable:true,configurable:true}); return}
-var f = this.form;
-if(f && f.dom$class == "HTMLFormElement") {
-var oldname = this.getAttribute("name");
-if(oldname && f[oldname] == this) delete f[oldname];
-if(oldname && f.elements[oldname] == this) delete f.elements[oldname];
-if(!f[n]) f[n] = this;
-if(!f.elements[n]) f.elements[n] = this;
-}
-this.setAttribute("name", n);
-}});
-odp(HTMLElement.prototype, "id", {
-get:function(){ var t = this.getAttribute("id");
-return typeof t == "string" ? t : undefined; },
-set:function(v) { this.setAttribute("id", v)}});
-odp(HTMLElement.prototype, "title", {
-get:function(){ var t = this.getAttribute("title");
-// in the real world this is always a string, but acid test 3 has numbers for titles
-var y = typeof t;
-return y == "string" || y == "number" ? t : undefined; },
-set:function(v) { this.setAttribute("title", v);}});
-// almost anything can be disabled, an entire div section, etc
-odp(HTMLElement.prototype, "disabled", {
-get:function(){ var t = this.getAttribute("disabled");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("disabled", v);}});
-odp(HTMLElement.prototype, "hidden", {
-get:function(){ var t = this.getAttribute("hidden");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("hidden", v);}});
-HTMLElement.prototype.ownerDocument = document;
-HTMLElement.prototype.nodeType = 1;
-HTMLElement.prototype.attachShadow = function(o){
-// I should have a list of allowed tags here, but custom tags are allowed,
-// and I don't know how to determine that,
-// so I'll just reject a few tags.
-var nn = this.nodeName;
-if(nn == "A" || nn == "FRAME" || nn == "IFRAME" | nn == "#document" || nn == "#text" || nn == "#comment" ||
-nn == "TABLE" || nn == "TH" || nn == "TD" || nn == "TR" || nn == "FORM" || nn == "INPUT" ||
-nn == "SHADOWROOT") // no shadow root within a shadow root
-return null;
-var r = document.createElement("ShadowRoot");
-this.appendChild(r); // are we suppose to do this?
-r.mode = "open";
-r.delegatesFocus = false;
-r.slotAssignment = "";
-if(typeof o == "object") {
-if(o.mode) r.mode = o.mode;
-if(o.delegatesFocus) r.delegatesFocus = o.delegatesFocus;
-if(o.slotAssignment) r.slotAssignment = o.slotAssignment;
-}
-return r;
-}
-odp(HTMLElement.prototype, "shadowRoot", {
-get:function(){
-var r = this.firstChild;
-if(r && r.nodeName == "SHADOWROOT" && r.mode == "open") return r;
-return null;
-}});
-
-swm2("SVGElement", function(){})
-// Use the correct name for the prototype even if it's an incorrect synonym
-swmp("SVGElement", Element)
-
 /*********************************************************************
     Originally I developed the shared window for efficiency.
     There's no point in "compiling" the entire dom every time we bring up a new web page. Other browsers don't do that!
@@ -679,6 +603,37 @@ mw$.setupClasses(window);
 
 swm("ShadowRoot", function(){})
 swmp("ShadowRoot", HTMLElement)
+
+// setupClasses doesn't establish the shadow root properties,
+// mostly cause I don't understand them.
+// Let's approximate them here.
+HTMLElement.prototype.attachShadow = function(o){
+// I should have a list of allowed tags here, but custom tags are allowed,
+// and I don't know how to determine that,
+// so I'll just reject a few tags.
+var nn = this.nodeName;
+if(nn == "A" || nn == "FRAME" || nn == "IFRAME" | nn == "#document" || nn == "#text" || nn == "#comment" ||
+nn == "TABLE" || nn == "TH" || nn == "TD" || nn == "TR" || nn == "FORM" || nn == "INPUT" ||
+nn == "SHADOWROOT") // no shadow root within a shadow root
+return null;
+var r = document.createElement("ShadowRoot");
+this.appendChild(r); // are we suppose to do this?
+r.mode = "open";
+r.delegatesFocus = false;
+r.slotAssignment = "";
+if(typeof o == "object") {
+if(o.mode) r.mode = o.mode;
+if(o.delegatesFocus) r.delegatesFocus = o.delegatesFocus;
+if(o.slotAssignment) r.slotAssignment = o.slotAssignment;
+}
+return r;
+}
+odp(HTMLElement.prototype, "shadowRoot", {
+get:function(){
+var r = this.firstChild;
+if(r && r.nodeName == "SHADOWROOT" && r.mode == "open") return r;
+return null;
+}});
 
 /*********************************************************************
 This is a special routine for textarea.innerHTML = "some html text";
@@ -846,11 +801,6 @@ swm1("postMessage", function (message,target_origin, transfer) {
     }
 })
 swm("onmessage$$running", mw$.onmessage$$running)
-
-swm("XMLCdata", function(t) {})
-swmp("XMLCdata", HTMLElement)
-XMLCdata.prototype.nodeName = XMLCdata.prototype.tagName = "#cdata-section";
-XMLCdata.prototype.nodeType = 4;
 
 sdm("getBoundingClientRect", function(){
 return {

@@ -3714,6 +3714,59 @@ odp(valp, "valid", {
 get: function() { // only need to check items with getters
 return !(this.valueMissing)}})
 
+// The html element, which is the head of the DOM nodes that you know and love.
+swp("HTMLElement", function(){})
+swpp("HTMLElement", w.Node)
+let elemp = w.HTMLElement.prototype;
+/* According to MDN Element isn't a synonym for HTMLElement, as SVGElement
+should also inherit from it, but leave as is until we get there */
+swpc("Element", w.HTMLElement)
+// spillup and spilldown for id and name
+odp(elemp, "name", {
+get: function() {
+const isinput = (this.dom$class == "HTMLInputElement" || this.dom$class == "HTMLButtonElement" || this.dom$class == "HTMLSelectElement");
+if(!isinput) return this.name$2 ;
+// name property spills up and down for input, acid test 53
+let t = this.getAttribute("name");
+return typeof t == "string" ? t : undefined}, 
+set: function(n) {
+const isinput = (this.dom$class == "HTMLInputElement" || this.dom$class == "HTMLButtonElement" || this.dom$class == "HTMLSelectElement");
+if(!isinput) { odp(this, "name$2", {value:n,writable:true,configurable:true}); return}
+const f = this.form;
+if(f && f.dom$class == "HTMLFormElement") {
+const oldname = this.getAttribute("name");
+if(oldname && f[oldname] == this) delete f[oldname];
+if(oldname && f.elements[oldname] == this) delete f.elements[oldname];
+if(!f[n]) f[n] = this;
+if(!f.elements[n]) f.elements[n] = this;
+}
+this.setAttribute("name", n);
+}});
+odp(elemp, "id", {
+get:function(){ var t = this.getAttribute("id");
+return typeof t == "string" ? t : undefined; },
+set:function(v) { this.setAttribute("id", v)}});
+odp(elemp, "title", {
+get:function(){ const t = this.getAttribute("title");
+// in the real world this is always a string, but acid test 3 has numbers for titles
+const y = typeof t;
+return y == "string" || y == "number" ? t : undefined; },
+set:function(v) { this.setAttribute("title", v);}});
+// almost anything can be disabled, an entire div section, etc
+odp(elemp, "disabled", {
+get:function(){ const t = this.getAttribute("disabled");
+return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
+set:function(v) { this.setAttribute("disabled", v);}});
+odp(elemp, "hidden", {
+get:function(){ const t = this.getAttribute("hidden");
+return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
+set:function(v) { this.setAttribute("hidden", v);}});
+elemp.ownerDocument = d;
+elemp.nodeType = 1;
+
+swp("SVGElement", function(){})
+swpp("SVGElement", w.Element)
+
 swp("TextNode", function(){
 odp(this, "data$2", {value:"",writable:true})
 if(arguments.length > 0) {
@@ -5062,6 +5115,11 @@ odp(w.z$Datalist.prototype, "multiple", {
 get:function(){ var t = this.getAttribute("multiple");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("multiple", v);}});
+swp("XMLCdata", function(t) {})
+swpp("XMLCdata", w.HTMLElement)
+let xmlcp = w.XMLCdata.prototype;
+xmlcp.nodeName = xmlcp.tagName = "#cdata-section";
+xmlcp.nodeType = 4;
 }
 
 // Code beyond this point is third party, but necessary for the operation of the browser.
@@ -7949,7 +8007,6 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "showscripts", "showframes", "searchscripts", "snapshot", "aloop",
 "showarg", "showarglist",
 "set_location_hash",
-"setTimeout", "clearTimeout", "setInterval", "clearInterval",
 "getElement", "getHead", "setHead", "getBody", "setBody",
 "getRootNode","wrapString",
 "getElementsByTagName", "getElementsByClassName", "getElementsByName", "getElementById","nodeContains",
@@ -7974,7 +8031,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "clone1", "findObject", "correspondingObject", "cloneAttr",
 "compareDocumentPosition", "generalbar", "CSS",
 "Intl", "Intl_dt", "Intl_num",
-"cssGather", "cssApply", "cssDocLoad",
+"cssGather",
 "makeSheets", "getComputedStyle", "computeStyleInline", "cssTextGet",
 "marginShort", "scrollMarginShort", "paddingShort", "scrollPaddingShort",
 "borderRadiusShort", "borderWidthShort", "borderColorShort", "borderStyleShort",
