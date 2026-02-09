@@ -676,40 +676,8 @@ So here is the line that does a lot!
 
 mw$.setupClasses(window);
 
-swm("CharacterData", function(){})
-swmp("CharacterData", null)
-
 swm("ShadowRoot", function(){})
 swmp("ShadowRoot", HTMLElement)
-
-swm("Validity", function(){})
-swmp("Validity", null)
-/*********************************************************************
-All these should be getters, or should they?
-Consider the tooLong attribute.
-tooLong could compare the length of the input with the maxLength attribute,
-that's what the gettter would do, but edbrowse already does that at entry time.
-In general, shouldn't edbrowse check for most r all of these on entry,
-so then most of these wouldn't have to be getters?
-patternMismatch on email and url, etc.
-One thing that always has to be a getter is valueMissing,
-cause it starts out empty of course, and is a required field.
-And valid is a getter, true if everything else is false.
-*********************************************************************/
-Validity.prototype.badInput =
-Validity.prototype.customError =
-Validity.prototype.patternMismatch =
-Validity.prototype.rangeOverflow =
-Validity.prototype.rangeUnderflow =
-Validity.prototype.stepMismatch =
-Validity.prototype.tooLong =
-Validity.prototype.tooShort =
-Validity.prototype.typeMismatch = false;
-odp(Validity.prototype, "valueMissing", {
-get: function() {let o = this.owner;  return o.required && o.value == ""; }});
-odp(Validity.prototype, "valid", {
-get: function() { // only need to check items with getters
-return !(this.valueMissing)}});
 
 /*********************************************************************
 This is a special routine for textarea.innerHTML = "some html text";
@@ -745,24 +713,6 @@ return;
 }
 alert3("textarea.innerHTML is too complicated for me to render");
 })
-
-swm("z$Datalist", function() {})
-swmp("z$Datalist", HTMLElement)
-odp(z$Datalist.prototype, "multiple", {
-get:function(){ var t = this.getAttribute("multiple");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("multiple", v);}});
-
-swm("HTMLLabelElement", function(){})
-swmp("HTMLLabelElement", HTMLElement)
-odp(HTMLLabelElement.prototype, "htmlFor", { get: function() { return this.getAttribute("for"); }, set: function(h) { this.setAttribute("for", h); }});
-swm("HTMLUnknownElement", function(){})
-swmp("HTMLUnknownElement", HTMLElement)
-swm("HTMLObjectElement", function(){})
-swmp("HTMLObjectElement", HTMLElement)
-
-swm("z$Timer", function(){this.nodeName = "TIMER"})
-swmp("z$Timer", null)
 
 // the performance registry
 swm("pf$registry", {mark:{},measure:{},measure0:{},resourceTiming:{}})
@@ -852,69 +802,6 @@ else p.appendChild(c);
 c = hold;
 }
 })
-
-// Canvas method draws a picture. That's meaningless for us,
-// but it still has to be there.
-// Because of the canvas element, I can't but the monster getContext function
-// into the prototype, I have to set it in the constructor.
-swm("HTMLCanvasElement", function() {
-this.getContext = function(x) { return {
-canvas: this,
- addHitRegion: eb$nullfunction,
-arc: eb$nullfunction,
-arcTo: eb$nullfunction,
-beginPath: eb$nullfunction,
-bezierCurveTo: eb$nullfunction,
-clearHitRegions: eb$nullfunction,
-clearRect: eb$nullfunction,
-clip: eb$nullfunction,
-closePath: eb$nullfunction,
-createImageData: eb$nullfunction,
-createLinearGradient: eb$nullfunction,
-createPattern: eb$nullfunction,
-createRadialGradient: eb$nullfunction,
-drawFocusIfNeeded: eb$nullfunction,
-drawImage: eb$nullfunction,
-drawWidgetAsOnScreen: eb$nullfunction,
-drawWindow: eb$nullfunction,
-ellipse: eb$nullfunction,
-fill: eb$nullfunction,
-fillRect: eb$nullfunction,
-fillText: eb$nullfunction,
-getImageData: eb$nullfunction,
-getLineDash: eb$nullfunction,
-isPointInPath: eb$nullfunction,
-isPointInStroke: eb$nullfunction,
-lineTo: eb$nullfunction,
-measureText: function(s) {
-// returns a TextMetrics object, whatever that is.
-// Height and width will depend on the font, but this is just a stub.
-return {height: 12, width: s.length * 7};
-},
-moveTo: eb$nullfunction,
-putImageData: eb$nullfunction,
-quadraticCurveTo: eb$nullfunction,
-rect: eb$nullfunction,
-removeHitRegion: eb$nullfunction,
-resetTransform: eb$nullfunction,
-restore: eb$nullfunction,
-rotate: eb$nullfunction,
-save: eb$nullfunction,
-scale: eb$nullfunction,
-scrollPathIntoView: eb$nullfunction,
-setLineDash: eb$nullfunction,
-setTransform: eb$nullfunction,
-stroke: eb$nullfunction,
-strokeRect: eb$nullfunction,
-strokeText: eb$nullfunction,
-transform: eb$nullfunction,
-translate: eb$nullfunction }}})
-swmp("HTMLCanvasElement", HTMLElement)
-HTMLCanvasElement.prototype.toDataURL = function() {
-if(this.height === 0  || this.width === 0) return "data:,";
-// this is just a stub
-return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAADElEQVQImWNgoBMAAABpAAFEI8ARAAAAAElFTkSuQmCC";
-}
 
 swm("onmessage$$queue", []);
 swm1("postMessage", function (message,target_origin, transfer) {
@@ -1202,31 +1089,6 @@ delete this[p]
 delete this[p+"$$scy"]
 delete this[p+"$$pri"]
 }
-
-swm("HTMLStyleElement", function(){})
-swmp("HTMLStyleElement", HTMLElement)
-// Kind of a hack to make this like the link element
-odp(HTMLStyleElement.prototype, "css$data", {
-get: function() { var s = ""; for(var i=0; i<this.childNodes.length; ++i) if(this.childNodes[i].nodeName == "#text") s += this.childNodes[i].data; return s; }});
-odp(HTMLStyleElement.prototype, "sheet", { get: function(){ if(!this.sheet$2) this.sheet$2 = new CSSStyleSheet; return this.sheet$2; }});
-
-swm("TextNode", function(){
-Object.defineProperty(this, "data$2", {value:"",writable:true});
-if(arguments.length > 0) {
-// data always has to be a string
-this.data$2 += arguments[0];
-}
-})
-swmp("TextNode", HTMLElement)
-TextNode.prototype.nodeName = TextNode.prototype.tagName = "#text";
-TextNode.prototype.nodeType = 3;
-
-// setter insures data is always a string, because roving javascript might
-// node.data = 7;  ...  if(node.data.match(/x/) ...
-// and boom! It blows up because Number doesn't have a match function.
-odp(TextNode.prototype, "data", {
-get: function() { return this.data$2; },
-set: function(s) { this.data$2 = s + ""; }});
 
 sdm2("createTextNode", function(t) {
 if(t == undefined) t = "";

@@ -1250,12 +1250,11 @@ return r
 
 function runScriptWhenAttached(s) {
 if(s.dom$class != "HTMLScriptElement") return; // not a script
-var w = isRooted(s); // the rooting window
+const w = isRooted(s); // the rooting window
 if(!w) return;
-var d = w.document;
-var n = s.eb$step
-var inbrowse = (d.readyState != "complete");
-// backslashes are needed to suppress my code complression feature
+const d = w.document;
+const n = s.eb$step
+const inbrowse = (d.readyState != "complete");
 alert3(`script ${s.eb$seqno} attached ${inbrowse?"during":"after"} browse type ${s.type} src ${s.src} length ${s.text.length} step ${n}`);
 if(n >= 5) return; // already run
 if(inbrowse) return;
@@ -3677,6 +3676,57 @@ odp(urlp, "charAt", {enumerable:false,writable:true,configurable:true,value:func
 odp(urlp, "charCodeAt", {enumerable:false,writable:true,configurable:true,value:function(n) { return this.toString().charCodeAt(n); }})
 odp(urlp, "trim", {enumerable:false,writable:true,configurable:true,value:function() { return this.toString().trim(); }})
 
+swp("CharacterData", function(){})
+swpp("CharacterData", null)
+
+swp("Validity", function(){})
+swpp("Validity", null)
+/*********************************************************************
+All these should be getters, or should they?
+Consider the tooLong attribute.
+tooLong could compare the length of the input with the maxLength attribute,
+that's what the gettter would do, but edbrowse already does that at entry time.
+In general, shouldn't edbrowse check for most r all of these on entry,
+so then most of these wouldn't have to be getters?
+patternMismatch on email and url, etc.
+One thing that always has to be a getter is valueMissing,
+cause <input> starts out empty.
+And valid is a getter, true if everything else is false.
+*********************************************************************/
+let valp =w.Validity.prototype;
+valp.badInput =
+valp.customError =
+valp.patternMismatch =
+valp.rangeOverflow =
+valp.rangeUnderflow =
+valp.stepMismatch =
+valp.tooLong =
+valp.tooShort =
+valp.typeMismatch = false;
+odp(valp, "valueMissing", {
+get: function() {let o = this.owner;  return o.required && o.value == ""; }})
+odp(valp, "valid", {
+get: function() { // only need to check items with getters
+return !(this.valueMissing)}})
+
+swp("TextNode", function(){
+odp(this, "data$2", {value:"",writable:true})
+if(arguments.length > 0) {
+// data always has to be a string
+this.data$2 += arguments[0];
+}
+})
+swpp("TextNode", w.HTMLElement)
+let textp = w.TextNode.prototype;
+textp.nodeName = textp.tagName = "#text";
+textp.nodeType = 3;
+// setter insures data is always a string, because roving javascript might:
+// node.data = 7;  ...  if(node.data.match(/x/) ...
+// and boom! It blows up because Number doesn't have a match function.
+odp(textp, "data", {
+get: function() { return this.data$2; },
+set: function(s) { this.data$2 = s + ""; }})
+
 // tables, table sections, rows, cells.
 // First some helper functions to add and remove rows from a table or section,
 // add and remove cells from a row.
@@ -4403,6 +4453,11 @@ swpp("HTMLDListElement", w.HTMLElement)
 swp("HTMLLIElement", function(){})
 swpp("HTMLLIElement", w.HTMLElement)
 
+swp("HTMLLabelElement", function(){})
+swpp("HTMLLabelElement", w.HTMLElement)
+let labelp = w.HTMLLabelElement.prototype;
+odp(labelp, "htmlFor", { get: function() { return this.getAttribute("for"); }, set: function(h) { this.setAttribute("for", h); }})
+
 // <head> and friends
 swp("HTMLHeadElement", function(){})
 swpp("HTMLHeadElement", w.HTMLElement)
@@ -4474,7 +4529,7 @@ divp.align = "left";
 // should this click be on w.HTMLElement?
 divp.click = function() {
 // as though the user had clicked on this
-var e = new Event;
+var e = new w.Event;
 e.initEvent("click", true, true);
 this.dispatchEvent(e);
 }
@@ -4627,7 +4682,92 @@ eval('odp(w.' + cn + '.prototype, "' + u + '", { ' +
 }
 })();
 
-// more classes to come
+// Canvas method draws a picture. That's meaningless for us,
+// but it still has to be there.
+// Because of the canvas element, I can't put the monster getContext function
+// into the prototype, I have to set it in the constructor.
+swp("HTMLCanvasElement", function() {
+this.getContext = function(x) { return {
+canvas: this,
+ addHitRegion: eb$nullfunction,
+arc: eb$nullfunction,
+arcTo: eb$nullfunction,
+beginPath: eb$nullfunction,
+bezierCurveTo: eb$nullfunction,
+clearHitRegions: eb$nullfunction,
+clearRect: eb$nullfunction,
+clip: eb$nullfunction,
+closePath: eb$nullfunction,
+createImageData: eb$nullfunction,
+createLinearGradient: eb$nullfunction,
+createPattern: eb$nullfunction,
+createRadialGradient: eb$nullfunction,
+drawFocusIfNeeded: eb$nullfunction,
+drawImage: eb$nullfunction,
+drawWidgetAsOnScreen: eb$nullfunction,
+drawWindow: eb$nullfunction,
+ellipse: eb$nullfunction,
+fill: eb$nullfunction,
+fillRect: eb$nullfunction,
+fillText: eb$nullfunction,
+getImageData: eb$nullfunction,
+getLineDash: eb$nullfunction,
+isPointInPath: eb$nullfunction,
+isPointInStroke: eb$nullfunction,
+lineTo: eb$nullfunction,
+measureText: function(s) {
+// returns a TextMetrics object, whatever that is.
+// Height and width will depend on the font, but this is just a stub.
+return {height: 12, width: s.length * 7};
+},
+moveTo: eb$nullfunction,
+putImageData: eb$nullfunction,
+quadraticCurveTo: eb$nullfunction,
+rect: eb$nullfunction,
+removeHitRegion: eb$nullfunction,
+resetTransform: eb$nullfunction,
+restore: eb$nullfunction,
+rotate: eb$nullfunction,
+save: eb$nullfunction,
+scale: eb$nullfunction,
+scrollPathIntoView: eb$nullfunction,
+setLineDash: eb$nullfunction,
+setTransform: eb$nullfunction,
+stroke: eb$nullfunction,
+strokeRect: eb$nullfunction,
+strokeText: eb$nullfunction,
+transform: eb$nullfunction,
+translate: eb$nullfunction }}})
+swpp("HTMLCanvasElement", w.HTMLElement)
+let canvasp = w.HTMLCanvasElement.prototype;
+canvasp.toDataURL = function() {
+if(this.height === 0  || this.width === 0) return "data:,";
+// this is just a stub
+return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAADElEQVQImWNgoBMAAABpAAFEI8ARAAAAAElFTkSuQmCC";
+}
+
+swp("HTMLStyleElement", function(){})
+swpp("HTMLStyleElement", w.HTMLElement)
+// Kind of a hack to make this like the link element
+let stylep = w.HTMLStyleElement.prototype;
+odp(stylep, "css$data", {
+get: function() { let s = ""; for(let i=0; i<this.childNodes.length; ++i) if(this.childNodes[i].nodeName == "#text") s += this.childNodes[i].data; return s; }});
+// this is one of those on-demand properties, so check sheet$2.
+odp(stylep, "sheet", { get: function(){ if(!this.sheet$2) this.sheet$2 = new w.CSSStyleSheet; return this.sheet$2; }})
+
+// stragglers
+swp("HTMLUnknownElement", function(){})
+swpp("HTMLUnknownElement", w.HTMLElement)
+swp("HTMLObjectElement", function(){})
+swpp("HTMLObjectElement", w.HTMLElement)
+swp("z$Timer", function(){this.nodeName = "TIMER"})
+swpp("z$Timer", null)
+swp("z$Datalist", function() {})
+swpp("z$Datalist", w.HTMLElement)
+odp(w.z$Datalist.prototype, "multiple", {
+get:function(){ var t = this.getAttribute("multiple");
+return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
+set:function(v) { this.setAttribute("multiple", v);}});
 }
 
 // Code beyond this point is third party, but necessary for the operation of the browser.
