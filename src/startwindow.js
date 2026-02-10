@@ -562,6 +562,24 @@ swm("DOCUMENT_POSITION_CONTAINS", 8)
 swm("DOCUMENT_POSITION_CONTAINED_BY", 16)
 sdm("compareDocumentPosition", mw$.compareDocumentPosition)
 
+sdm("getAttribute", mw$.getAttribute)
+sdm("hasAttribute", mw$.hasAttribute)
+sdm("getAttributeNames", mw$.getAttributeNames)
+sdm("getAttributeNS", mw$.getAttributeNS)
+sdm("hasAttributeNS", mw$.hasAttributeNS)
+sdm("setAttribute", mw$.setAttribute)
+sdm("setAttributeNS", mw$.setAttributeNS)
+sdm("removeAttribute", mw$.removeAttribute)
+sdm("removeAttributeNS", mw$.removeAttributeNS)
+sdm("getAttributeNode", mw$.getAttributeNode)
+sdm("setAttributeNode", mw$.setAttributeNode)
+sdm("removeAttributeNode", mw$.removeAttributeNode)
+
+sdm("cloneNode", function(deep) {
+    window.cloneRoot1 = this;
+    return mw$.clone1 (this,deep, false);
+})
+
 // This should be in the native string class
 String.prototype.at = function(n) {
 if(typeof n != "number") return undefined;
@@ -826,24 +844,6 @@ NamedNodeMap.prototype.getNamedItem = function(name) { return this[name.toLowerC
 NamedNodeMap.prototype.setNamedItem = function(name, v) { this.owner.setAttribute(name, v);}
 NamedNodeMap.prototype.removeNamedItem = function(name) { this.owner.removeAttribute(name);}
 
-sdm("getAttribute", mw$.getAttribute)
-sdm("hasAttribute", mw$.hasAttribute)
-sdm("getAttributeNames", mw$.getAttributeNames)
-sdm("getAttributeNS", mw$.getAttributeNS)
-sdm("hasAttributeNS", mw$.hasAttributeNS)
-sdm("setAttribute", mw$.setAttribute)
-sdm("setAttributeNS", mw$.setAttributeNS)
-sdm("removeAttribute", mw$.removeAttribute)
-sdm("removeAttributeNS", mw$.removeAttributeNS)
-sdm("getAttributeNode", mw$.getAttributeNode)
-sdm("setAttributeNode", mw$.setAttributeNode)
-sdm("removeAttributeNode", mw$.removeAttributeNode)
-
-sdm("cloneNode", function(deep) {
-    window.cloneRoot1 = this;
-    return mw$.clone1 (this,deep, false);
-})
-
 /*********************************************************************
 importNode is the same as cloneNode, except it is copying a tree
 of objects from another context into the current context.
@@ -953,36 +953,10 @@ return q;
 
 sdm("insertAdjacentHTML", mw$.insertAdjacentHTML)
 
-/*********************************************************************
-Add prototype methods to the standard nodes, nodes that have children,
-and the normal set of methods to go with those children.
-Form has children for sure, but if we add <input> to Form,
-we also have to add it to the array Form.elements.
-So there are some nodes that we have to do outside this loop.
-Again, leading ; to avert a parsing ambiguity.
-*********************************************************************/
+// Most of the instance method for the Node class are defined
+// in the shared window. These are here because they reference
+// NodeList or HTMLCollection.
 
-; (function() {
-var c = window.Node;
-var p = c.prototype;
-// These subordinate objects are on-demand.
-odp( p, "dataset", { get: function(){
-if(!this.dataset$2)
-Object.defineProperty(this, "dataset$2", {value:{}})
-return this.dataset$2}})
-odp( p, "attributes", { get: function(){ if(!this.attributes$2) {
-Object.defineProperty(this, "attributes$2", {value:new NamedNodeMap})
-this.attributes$2.owner = this
-this.attributes$2.ownerDocument = this.ownerDocument ? this.ownerDocument : my$doc()
-}
-return this.attributes$2}})
-odp( p, "style", { get: function(){ if(!this.style$2) {
-Object.defineProperty(this,"style$2", {value:new CSSStyleDeclaration,configurable:true});
-this.style$2.element = this}
-return this.style$2;}});
-// get elements below
-p.getRootNode = mw$.getRootNode;
-// An HTMLCollection around the getElements functions
 swm("live$wrapper", function(f, start, arg) {
 // get the result as an array
 var a = f.call(start, arg)
@@ -992,113 +966,14 @@ var c = new HTMLCollection(a)
 // This is called a live array.
 // It is not yet implemented.
 return c})
-p.getElementsByTagName = function(t) { return live$wrapper(mw$.getElementsByTagName, this, t)}
-p.getElementsByName = function(t) { return live$wrapper(mw$.getElementsByName, this, t)}
-p.getElementsByClassName = function(t) { return live$wrapper(mw$.getElementsByClassName, this, t)}
-p.contains = mw$.nodeContains
-p.querySelector = querySelector
-p.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
-p.matches = querySelector0;
-p.closest = function(s) { var u = this; while(u.nodeType == 1) { if(u.matches(s)) return u; u = u.parentNode; } return null; }
-// children
-p.hasChildNodes = mw$.hasChildNodes;
-p.appendChild = mw$.appendChild;
-p.prependChild = mw$.prependChild;
-p.insertBefore = mw$.insertBefore;
-p.insertAdjacentElement = mw$.insertAdjacentElement;
-p.append = mw$.append;
-p.prepend = mw$.prepend;
-p.before = mw$.before;
-p.after = mw$.after;
-p.replaceWith = mw$.replaceWith;
-p.replaceChild = mw$.replaceChild;
-// These are native, so it's ok to bounce off of document.
-p.eb$apch1 = document.eb$apch1;
-p.eb$apch2 = document.eb$apch2;
-p.eb$rmch2 = document.eb$rmch2;
-p.eb$insbf = document.eb$insbf;
-p.removeChild = mw$.removeChild;
-p.remove = function() { if(this.parentNode) this.parentNode.removeChild(this);}
-odp(p, "firstChild", { get: function() { return (this.childNodes && this.childNodes.length) ? this.childNodes[0] : null; } });
-odp(p, "firstElementChild", { get: function() { var u = this.childNodes; if(!u) return null; for(var i=0; i<u.length; ++i) if(u[i].nodeType == 1) return u[i]; return null; }});
-odp(p, "lastChild", { get: function() { return (this.childNodes && this.childNodes.length) ? this.childNodes[this.childNodes.length-1] : null; } });
-odp(p, "lastElementChild", { get: function() { var u = this.childNodes; if(!u) return null; for(var i=u.length-1; i>=0; --i) if(u[i].nodeType == 1) return u[i]; return null; }});
-odp(p, "childElementCount", { get: function() { var z=0, u = this.childNodes; if(!u) return z; for(var i=0; i<u.length; ++i) if(u[i].nodeType == 1) ++z; return z; }});
-odp(p, "nextSibling", { get: function() { return mw$.getSibling(this,"next"); } });
-odp(p, "nextElementSibling", { get: function() { return mw$.getElementSibling(this,"next"); } });
-odp(p, "previousSibling", { get: function() { return mw$.getSibling(this,"previous"); } });
-odp(p, "previousElementSibling", { get: function() { return mw$.getElementSibling(this,"previous"); } });
-// children is subtly different from childnodes; this code taken from
-// https://developer.mozilla.org/en-US/docs/Web/API/ParentNode/children
-odp(p, 'children', {
-get: function() {
-var i = 0, node, nodes = this.childNodes, children = [];
-if(!nodes) return children;
-while(i<nodes.length) {
-node = nodes[i++];
-if (node.nodeType === 1)  children.push(node);
-}
-return children;
-}});
-// attributes
-p.hasAttribute = mw$.hasAttribute;
-p.hasAttributeNS = mw$.hasAttributeNS;
-p.getAttribute = mw$.getAttribute;
-p.getAttributeNS = mw$.getAttributeNS;
-p.getAttributeNames = mw$.getAttributeNames;
-p.setAttribute = mw$.setAttribute;
-p.setAttributeNS = mw$.setAttributeNS;
-p.removeAttribute = mw$.removeAttribute;
-p.removeAttributeNS = mw$.removeAttributeNS;
-odp(p, "className", { get: function() { var c = this.getAttribute("class"); if(c === null) return ""; return c; }, set: function(h) { this.setAttribute("class", h); }});
-odp(p, "parentElement", { get: function() { return this.parentNode && this.parentNode.nodeType == 1 ? this.parentNode : null; }});
-p.getAttributeNode = mw$.getAttributeNode;
-p.setAttributeNode = mw$.setAttributeNode;
-p.removeAttributeNode = mw$.removeAttributeNode;
-p.getClientRects = function(){ return []; }
-// clone
-p.cloneNode = document.cloneNode;
-// I don't see anywhere in spec that this is an Element method
-//p.importNode = document.importNode;
-p.compareDocumentPosition = mw$.compareDocumentPosition;
-// visual
-p.focus = function(){document.activeElement=this}
-p.blur = blur;
-p.getBoundingClientRect = document.getBoundingClientRect;
-p.addEventListener = mw$.addEventListener;
-p.removeEventListener = mw$.removeEventListener;
-p.dispatchEvent = mw$.dispatchEvent;
-p.insertAdjacentHTML = mw$.insertAdjacentHTML;
-// outerHTML is dynamic; should innerHTML be?
-odp(p, "outerHTML", { get: function() { return mw$.htmlString(this);},
-set: function(h) { mw$.outer$1(this,h); }});
-p.injectSetup = mw$.injectSetup;
-// constants
-p.ELEMENT_NODE = 1, p.TEXT_NODE = 3, p.COMMENT_NODE = 8, p.DOCUMENT_NODE = 9, p.DOCUMENT_TYPE_NODE = 10, p.DOCUMENT_FRAGMENT_NODE = 11;
-// default tabIndex is 0 but running js can override this.
-p.tabIndex = 0;
-// class and text methods
-odp(p, "classList", { get : function() { return mw$.classList(this);}});
-p.cl$present = true;
-odp(p, "textContent", {
-get: function() { return mw$.textUnder(this, 0); },
-set: function(s) { return mw$.newTextUnder(this, s, 0); }});
-odp(p, "contentText", {
-get: function() { return mw$.textUnder(this, 1); },
-set: function(s) { return mw$.newTextUnder(this, s, 1); }});
-odp(p, "nodeValue", {
-get: function() { return this.nodeType == 3 ? this.data : this.nodeType == 4 ? this.text : null;},
-set: function(h) { if(this.nodeType == 3) this.data = h; if (this.nodeType == 4) this.text = h }});
-p.clientHeight = 16;
-p.clientWidth = 120;
-p.scrollHeight = 16;
-p.scrollWidth = 120;
-p.scrollTop = 0;
-p.scrollLeft = 0;
-p.offsetHeight = 16;
-p.offsetWidth = 120;
-p.dir = "auto";
-})();
+
+this.nodep = Node.prototype;
+nodep.getElementsByTagName = function(t) { return live$wrapper(mw$.getElementsByTagName, this, t)}
+nodep.getElementsByName = function(t) { return live$wrapper(mw$.getElementsByName, this, t)}
+nodep.getElementsByClassName = function(t) { return live$wrapper(mw$.getElementsByClassName, this, t)}
+
+nodep.querySelector = querySelector
+nodep.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
 
 /*********************************************************************
 acid test 48 sets frame.onclick to a string, then expects that function to run
@@ -1677,6 +1552,6 @@ ResizeObserver.prototype.unobserve = eb$voidfunction;
 ;(function() {
     let names_to_delete = ["odp",
     "swm", "swm1", "swm2", "swmp",
-    "sdm", "sdm1", "sdm2"];
+    "sdm", "sdm1", "sdm2", "nodep"];
     for (let i in names_to_delete) delete window[names_to_delete[i]];
 })();

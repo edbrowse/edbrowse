@@ -3714,6 +3714,175 @@ odp(valp, "valid", {
 get: function() { // only need to check items with getters
 return !(this.valueMissing)}})
 
+// Node is the king of all classes. I don't define it here, because it has
+// some complexity with the window object. So define it in startwindow.js.
+// But we can set most of the instance methods here. These methods,
+// e.g. appendchild, are often functions within this file anyways.
+let nodep = w.Node.prototype;
+// These subordinate objects are on-demand.
+odp( nodep, "dataset", { get: function(){
+if(!this.dataset$2)
+odp(this, "dataset$2", {value:new w.Object})
+return this.dataset$2}})
+odp( nodep, "attributes", { get: function(){ if(!this.attributes$2) {
+odp(this, "attributes$2", {value:new w.NamedNodeMap})
+this.attributes$2.owner = this
+this.attributes$2.ownerDocument = this.ownerDocument ? this.ownerDocument : d;
+}
+return this.attributes$2}})
+odp( nodep, "style", { get: function(){ if(!this.style$2) {
+odp(this,"style$2", {value:new w.CSSStyleDeclaration,configurable:true});
+this.style$2.element = this}
+return this.style$2;}});
+nodep.getRootNode = getRootNode;
+nodep.contains = nodeContains;
+nodep.matches = w.querySelector0;
+nodep.closest = function(s) {
+let u = this;
+while(u.nodeType == 1) { if(u.matches(s)) return u; u = u.parentNode; }
+return null}
+nodep.hasChildNodes = hasChildNodes;
+nodep.appendChild = appendChild;
+nodep.prependChild = prependChild;
+nodep.insertBefore = insertBefore;
+nodep.insertAdjacentElement = insertAdjacentElement;
+nodep.append = append;
+nodep.prepend = prepend;
+nodep.before = before;
+nodep.after = after;
+nodep.replaceWith = replaceWith;
+nodep.replaceChild = replaceChild;
+// These are native, so it's ok to bounce off of document.
+nodep.eb$apch1 = d.eb$apch1;
+nodep.eb$apch2 = d.eb$apch2;
+nodep.eb$rmch2 = d.eb$rmch2;
+nodep.eb$insbf = d.eb$insbf;
+nodep.removeChild = removeChild;
+nodep.remove = function() {
+if(this.parentNode) this.parentNode.removeChild(this)}
+odp(nodep, "firstChild", {
+get: function() {
+return (this.childNodes && this.childNodes.length) ?
+this.childNodes[0] : null; } })
+odp(nodep, "firstElementChild", {
+get: function() {
+let u = this.childNodes;
+if(!u) return null;
+for(let i=0; i<u.length; ++i) if(u[i].nodeType == 1) return u[i];
+return null}});
+odp(nodep, "lastChild", {
+get: function() {
+return (this.childNodes && this.childNodes.length) ?
+this.childNodes[this.childNodes.length-1] : null} })
+odp(nodep, "lastElementChild", {
+get: function() {
+let u = this.childNodes;
+if(!u) return null;
+for(let i=u.length-1; i>=0; --i) if(u[i].nodeType == 1) return u[i];
+return null}})
+odp(nodep, "childElementCount", {
+get: function() {
+let z=0, u = this.childNodes;
+if(!u) return z;
+for(let i=0; i<u.length; ++i) if(u[i].nodeType == 1) ++z;
+return z}})
+odp(nodep, "nextSibling", { get: function() {
+return getSibling(this,"next")} })
+odp(nodep, "nextElementSibling", { get: function() {
+return getElementSibling(this,"next")} })
+odp(nodep, "previousSibling", { get: function() {
+return getSibling(this,"previous")} })
+odp(nodep, "previousElementSibling", { get: function() {
+return getElementSibling(this,"previous")} })
+// children is subtly different from childnodes; this code taken from
+// https://developer.mozilla.org/en-US/docs/Web/API/ParentNode/children
+odp(nodep, 'children', {
+get: function() {
+let i = 0, node, nodes = this.childNodes, children = new w.Array;
+if(!nodes) return children;
+while(i<nodes.length) {
+node = nodes[i++];
+if (node.nodeType === 1)  children.push(node);
+}
+return children;
+}})
+// attributes
+nodep.hasAttribute = hasAttribute;
+nodep.hasAttributeNS = hasAttributeNS;
+nodep.getAttribute = getAttribute;
+nodep.getAttributeNS = getAttributeNS;
+nodep.getAttributeNames = getAttributeNames;
+nodep.setAttribute = setAttribute;
+nodep.setAttributeNS = setAttributeNS;
+nodep.removeAttribute = removeAttribute;
+nodep.removeAttributeNS = removeAttributeNS;
+odp(nodep, "className", {
+get: function() {
+let c = this.getAttribute("class");
+if(c === null) return "";
+return c; },
+set: function(h) {
+this.setAttribute("class", h)}})
+odp(nodep, "parentElement", {
+get: function() {
+return this.parentNode && this.parentNode.nodeType == 1 ?
+this.parentNode : null}})
+nodep.getAttributeNode = getAttributeNode;
+nodep.setAttributeNode = setAttributeNode;
+nodep.removeAttributeNode = removeAttributeNode;
+nodep.getClientRects = function(){ return new w.Array; }
+// clone
+nodep.cloneNode = d.cloneNode;
+// I don't see anywhere in spec that this is an Element method
+//nodep.importNode = d.importNode;
+nodep.compareDocumentPosition = compareDocumentPosition;
+// visual
+nodep.focus = function(){d.activeElement=this}
+nodep.blur = function(){d.activeElement=null}
+nodep.getBoundingClientRect = d.getBoundingClientRect;
+nodep.addEventListener = addEventListener;
+nodep.removeEventListener = removeEventListener;
+nodep.dispatchEvent = dispatchEvent;
+nodep.insertAdjacentHTML = insertAdjacentHTML;
+// outerHTML is dynamic; should innerHTML be?
+odp(nodep, "outerHTML", { get: function() { return htmlString(this);},
+set: function(h) { outer$1(this,h); }});
+nodep.injectSetup = injectSetup;
+// constants
+nodep.ELEMENT_NODE = 1
+nodep.TEXT_NODE = 3
+nodep.COMMENT_NODE = 8
+nodep.DOCUMENT_NODE = 9
+nodep.DOCUMENT_TYPE_NODE = 10
+nodep.DOCUMENT_FRAGMENT_NODE = 11
+// default tabIndex is 0 but running js can override this.
+nodep.tabIndex = 0
+// class and text methods
+odp(nodep, "classList", { get : function() { return classList(this);}});
+nodep.cl$present = true;
+odp(nodep, "textContent", {
+get: function() { return textUnder(this, 0); },
+set: function(s) { return newTextUnder(this, s, 0); }});
+odp(nodep, "contentText", {
+get: function() { return textUnder(this, 1); },
+set: function(s) { return newTextUnder(this, s, 1); }});
+odp(nodep, "nodeValue", {
+get: function() {
+return this.nodeType == 3 ?
+this.data : this.nodeType == 4 ? this.text : null;},
+set: function(h) {
+if(this.nodeType == 3) this.data = h;
+if (this.nodeType == 4) this.text = h }})
+nodep.clientHeight = 16;
+nodep.clientWidth = 120;
+nodep.scrollHeight = 16;
+nodep.scrollWidth = 120;
+nodep.scrollTop = 0;
+nodep.scrollLeft = 0;
+nodep.offsetHeight = 16;
+nodep.offsetWidth = 120;
+nodep.dir = "auto";
+
 // The html element, which is the head of the DOM nodes that you know and love.
 swp("HTMLElement", function(){})
 swpp("HTMLElement", w.Node)
