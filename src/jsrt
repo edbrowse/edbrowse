@@ -785,9 +785,9 @@ document.writeln(" Last Script");
 if(onlv != 93) fail(1000);
 }
 
-setTimeout("joker()", 30000);
+setTimeout("joker()", 10000);
 function joker() {
-alert("30 seconds have passed!");
+alert("10 seconds have passed!");
 var j = document.createTextNode(" And the timer text");
 document.body.appendChild(j);
 }
