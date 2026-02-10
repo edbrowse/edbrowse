@@ -546,32 +546,52 @@ function dispatchEvent (e) {
     let dbg = () => undefined;
     let t = this;
     e.eventPhase = 0;
-    /* This isn't all necessary with modern events (see eb$listen) but it
-    saves duplicating a bunch of code */
 
-    const runEventHandler = (f, e, t) => {
+    const runEventHandler = (h) => {
         e.currentTarget = t;
+        const inline = typeof h == "function";
+        const f = inline ? h : h.func;
+        if (!(inline || e.do$phases.has(e.eventPhase))) return;
+        dbg(`fires ${inline ? "assigned" : `handler ${h.ehsn}`}`);
         let r = f.call(t, e);
-        /* I think I'm doing the boolean check correctly here per the HTML 5 and
-        web IDL specs */
-        r = (r !== undefined && typeof r !== "string") ? !!r : undefined;
-        // No I don't know why mouseover events get special handling either
-        // We can always cancel events in the case of a return code... I think
-        const special = e.type === "error" || e.type === "mouseover";
-        e.cancelled = e.cancelled || ((!special && !r) || (special && r));
+        // Events added by listeners ignore return values these days
+        if (inline) {
+            const special = e.type === "error";
+            if ((!special && !r) || (special && r)) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+            }
+            return !e.stop$propagating$immediate;
+        }
+        h.ran = true;
+        if (h.do$once) {
+            dbg("Remove one-shot listener");
+            t.removeEventListener(e.type, f, h.do$phases.has(1));
+        }
+        return !e.stop$propagating$immediate;
+    }
+
+    const runHandlerArray = () => {
+        const prop = `on${e.type}$$array`;
+        // Don't care if it's an actual array as long as it's iterable
+        const handlers = t[prop];
+        if (!handlers) return;
+        // We want to log which handlers ran for debugging
+        for (h of handlers) h.ran = false;
+        for (h of handlers) if (!runEventHandler(h)) return false;
+        // If we've stopped immediate propagation we can't be here
+        return !e.stop$propagating;
     }
 
     if(db$flags(1))
         dbg = (m) => {
             const phases = ["dispatch", "capture", "current", "bubble"];
-            alert3(`dispatchEvent ${t.nodeName}.${e.type} ${phases[e.eventPhase]}: ${m}`);
+            const prefix = `dispatchEvent ${t.nodeName} event ${e.type}`
+            alert3(`${prefix} tag ${t.eb$seqno} phase ${phases[e.eventPhase]}: ${m}`);
         };
 
+
     dbg(`tag ${(this.eb$seqno >= 0 ? this.eb$seqno : "?")}`);
-    if(e.cancelled) {
-        dbg("event cancelled");
-        return !e.defaultPrevented;
-    }
 
     e.target = this;
     const pathway = [];
@@ -595,47 +615,25 @@ function dispatchEvent (e) {
 
     // Capture phase: outer to inner elements
     e.eventPhase = 1;
-    for(let l = pathway.length - 1; l > 0; --l) {
-        t = pathway[l];
-        // Event handlers may choose to cancel events.
-        // Display debug for the node receiving the event in this case.
-        if(e.cancelled) {
-            dbg("event cancelled");
-            return !e.defaultPrevented;
-        }
-        // Attribute based event handlers don't ever capture
-        const fn = t[`on${e.type}$$fn`];
-        if(typeof fn == "function") {
-            dbg("fire handlers");
-            runEventHandler(fn, e, t);
-        }
-    }
+    let l = pathway.length - 1;
+    do {
+        t = pathway[l--];
+    } while (l > 0 && runHandlerArray() && !e.stop$propagating);
 
     // Bubble phase, inner to outer. Also includes target phase.
-    for(let l = 0; l < pathway.length; ++l) {
-        t = pathway[l];
-        if(e.cancelled) {
-            dbg("event cancelled");
-            return !e.defaultPrevented;
-        }
+    l = 0;
+    do {
+        t = pathway[l++];
         e.eventPhase = l ? 3 : 2;
-        if(l && !e.bubbles) {
+        if (l && !e.bubbles) {
             dbg("not bubbling");
-            return !e.defaultPrevented;
+            break;
         }
         // Most event handlers including inline bubble and all run on target
-        const inline = `on${e.type}`;
-        const handlers = `${inline}$$fn`;
-        const inline_fn = t[inline];
-        const handlers_fn = t[handlers];
-        if(typeof handlers_fn == "function") {
-            dbg("fires handlers");
-            runEventHandler(handlers_fn,  e, t);
-        } else if (typeof inline_fn == "function") {
-            dbg("fires assigned");
-            runEventHandler(inline_fn, e, t);
-        }
-    }
+        const ep = `on${e.type}`;
+        const inline_fn = t[ep];
+        if (typeof inline_fn == "function") runEventHandler(inline_fn, e, t);
+    } while (runHandlerArray());
     return !e.defaultPrevented;
 }
 
@@ -660,80 +658,68 @@ function removeEventListener(ev, handler, iscapture) {
     return eb$unlisten.call(this, ev, handler, iscapture, true);
 }
 
-function eb$listen(ev, handler, iscapture, addon) {
-if(addon) ev = "on" + ev;
-var evfn = ev + "$$fn";
-var evarray = ev + "$$array"; // array of handlers
-var iscap = false, once = false, passive = false;
-// legacy, iscapture could be boolean, or object, or missing
-var captype = typeof iscapture;
-if(captype == "boolean" && iscapture) iscap = true;
-if(captype == "object") {
-if(iscapture.capture || iscapture.useCapture) iscap = true;
-if(iscapture.once) once = true;
-if(iscapture.passive) passive = true; // don't know how to implement this yet
-}
-if(!handler) {
-alert3((addon ? "listen " : "attach ") + this.nodeName + "." + ev + " for " + (iscap?"capture":"bubble") + " with null handler");
-return;
-}
-if(iscap) handler.do$capture = true; else handler.do$bubble = true;
-if(once) handler.do$once = true;
-if(passive) handler.do$passive = true;
-// event handler serial number, for debugging
-if(!handler.ehsn) handler.ehsn = db$flags(4);
-if(db$flags(1))  alert3((addon ? "listen " : "attach ") + this.nodeName + "." + ev + " tag " + (this.eb$seqno >= 0 ? this.eb$seqno : -1) + " handler " + handler.ehsn + " for " + (handler.do$capture?"capture":"bubble"));
+function eb$listen(ev, handler, iscapture, addon)
+{
+    const h = {
+        do$phases: new my$win().Set,
+        func: handler
+    };
+    if(addon) ev = `on${ev}`;
+    evarray = `${ev}$$array`; // array of handlers
+    // legacy, iscapture could be boolean, or object, or missing
+    let captype = typeof iscapture;
+    if (captype == "boolean" && iscapture) h.do$phases.add(1);
+    if (captype == "object") {
+        if (iscapture.capture || iscapture.useCapture) h.do$phases.add(1);
+        if (iscapture.once) h.do$once = true;
+        if (iscapture.passive) h.do$passive = true; // don't know how to implement this yet
+    }
+    if (!h.do$phases.has(1)) h.do$phases.add(3);
+    h.do$phases.add(2);
+    if (!handler) {
+        alert3((addon ? "listen " : "attach ") + this.nodeName + "." + ev + " for " + (iscap?"capture":"bubble") + " with null handler");
+        return;
+    }
+    // event handler serial number, for debugging
+    if (!h.ehsn) h.ehsn = db$flags(4);
+    if (db$flags(1))  alert3((addon ? "listen " : "attach ") + this.nodeName + "." + ev + " tag " + (this.eb$seqno >= 0 ? this.eb$seqno : -1) + " handler " + handler.ehsn + " for " + (handler.do$capture?"capture":"bubble"));
 
-if(!this[evarray]) {
-/* attaching the first handler */
-if(db$flags(1))  alert3("establish " + this.nodeName + "." + evfn);
-eval(
-'Object.defineProperty(this, "'+evfn+'", {value:function(e){ var rc, a = this["' + evarray + '"]; ' +
-'if(this["' + ev + '"] && e.eventPhase < 3) { ' +
-'alert3("fire orig tag " + (this.eb$seqno >= 0 ? this.eb$seqno : -1)); rc = this["' + ev + '"](e); alert3("endfire orig");} ' +
-'if((typeof rc == "boolean" || typeof rc == "number") && !rc) return false; ' +
-'for(var i = 0; i<a.length; ++i) a[i].did$run = false; ' +
-'for(var i = 0; i<a.length; ++i) { var h = a[i];if(h.did$run) continue; ' +
-'if(e.eventPhase== 1 && !h.do$capture || e.eventPhase == 3 && !h.do$bubble) continue; ' +
-'var ehsn = h.ehsn; ' +
-'if(ehsn) ehsn = "" + ehsn; else ehsn = ""; /* from int to string */ ' +
-'h.did$run = true; alert3("fire tag " + (this.eb$seqno >= 0 ? this.eb$seqno : -1) + (ehsn.length ? " handler " + ehsn : "")); rc = h.call(this,e); alert3("endfire handler " + ehsn); ' +
-'if(h.do$once) { alert3("once"); this.removeEventListener(e.type, h, h.do$capture); } ' +
-'if((typeof rc == "boolean" || typeof rc == "number") && !rc) return false; ' +
-'i = -1} return true}})')
-Object.defineProperty(this, evarray, {value:[]})
+    if (!this[evarray]) {
+        Object.defineProperty(this, evarray, {value:[]})
 }
-/* Duplicate handlers are allowed and are sometimes deliberately used although
-they're generally not recommended. It's also really hard to reliably deduplicate
-handlers these days with modern coding practices. As such I'm not sure what
-other sanity checks we can or should do which won't break things. */
-this[evarray].push(handler);
+    /* Duplicate handlers are allowed and are sometimes deliberately used although
+    they're generally not recommended. It's also really hard to reliably deduplicate
+    handlers these days with modern coding practices. As such I'm not sure what
+    other sanity checks we can or should do which won't break things. */
+    this[evarray].push(h);
 }
 
 // here is unlisten, the opposite of listen.
 // what if every handler is removed and there is an empty array?
 // the assumption is that this is not a problem.
-function eb$unlisten(ev, handler, iscapture, addon) {
-var ehsn = (handler.ehsn ? handler.ehsn : 0);
-if(addon) ev = "on" + ev;
-if(db$flags(1))  alert3((addon ? "unlisten " : "detach ") + this.nodeName + "." + ev + " tag " + (this.eb$seqno >= 0 ? this.eb$seqno : -1) + " handler " + ehsn);
-var evarray = ev + "$$array"; // array of handlers
-// remove original html handler after other events have been added.
-if(this[ev] == handler) {
-delete this[ev];
-return;
-}
-// If other events have been added, check through the array.
-if(this[evarray]) {
-var a = this[evarray]; // shorthand
-for(var i = 0; i<a.length; ++i)
-if(a[i] == handler) {
-if(iscapture && a[i].do$capture || !iscapture && a[i].do$bubble) {
-a.splice(i, 1);
-return;
-}
-}
-}
+function eb$unlisten(ev, handler, iscapture, addon)
+{
+    let ehsn = (handler.ehsn ? handler.ehsn : 0);
+    if(addon) ev = "on" + ev;
+    if(db$flags(1))  alert3((addon ? "unlisten " : "detach ") + this.nodeName + "." + ev + " tag " + (this.eb$seqno >= 0 ? this.eb$seqno : -1) + " handler " + ehsn);
+    const evarray = ev + "$$array";
+    if(this[ev] == handler) {
+        delete this[ev];
+        return;
+    }
+    // If other events have been added, check through the array.
+    const target_phase = iscapture ? 1 : 3;
+    if(this[evarray]) {
+        const a = this[evarray];
+        for(let i = 0; i < a.length; ++i) {
+            if(a[i].func == handler) {
+                if (a[i].do$phases.has(target_phase)) {
+                    a.splice(i, 1);
+                    return;
+                }
+            }
+        }
+    }
 }
 
 // Here comes the Iterator and Walker.

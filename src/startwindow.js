@@ -843,19 +843,25 @@ swm1("Event", function(etype){
     // be appropriate in the long run and we'll
     // have to decide if we simply dont adhere to
     // the read-only restriction of the specification
-    this.bubbles =     this.cancelable = true;
-    this.cancelled = this.defaultPrevented = false;
-    this.currentTarget =     this.target = null;
+    this.bubbles = true;
+    this.cancelable = true;
+    this.stop$propagating = false;
+    this.stop$propagating$immediate = false;
+    this.defaultPrevented = false;
+    this.currentTarget = null;
+    this.target = null;
     this.eventPhase = 0;
     this.timeStamp = new Date().getTime();
 if(typeof etype == "string") this.type = etype;
 })
 swmp("Event", null)
 
-Event.prototype.preventDefault = function(){ this.defaultPrevented = true; }
-
-Event.prototype.stopPropagation = function(){ if(this.cancelable)this.cancelled = true; }
-
+Event.prototype.preventDefault = function() { if(this.cancelable) this.defaultPrevented = true; }
+Event.prototype.stopPropagation = function() { this.stop$propagating = true; }
+Event.prototype.stopPropagation = function()
+{
+    this.stop$propagating$imediate = true;
+}
 // deprecated - I guess - but a lot of people still use it.
 Event.prototype.initEvent = function(t, bubbles, cancel) {
 this.type = t, this.bubbles = bubbles, this.cancelable = cancel; this.defaultPrevented = false; }
