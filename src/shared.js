@@ -215,40 +215,26 @@ wlf(jslocal, "jslocal");
 alert("bye   ub   ci+   /<head/r from   w base   q");
 }
 
-function set_location_hash(h) { h = '#'+h;
-var w = my$win(), d = my$doc(), body = d.body;
-var loc = w.location$2;
-// save the old url, but I don't know if it's a URL or a string
-var oldURL = loc.toString();
-loc.hash$val = h;
-loc.href$val = loc.href$val.replace(/#.*/, "") + h; 
-var newURL = loc.toString();
-loc = d.location$2;
-loc.hash$val = h;
-loc.href$val = loc.href$val.replace(/#.*/, "") + h;
-// call the onhashchange handlers
-// this code comes from dispatchEvent, but is simpler.
-var e = new (w.HashChangeEvent);
-e.eventPhase = 2, e.target = e.currentTarget = w;
-e.oldURL = oldURL, e.newURL = newURL;
-var fn1 = "on" + e.type;
-var fn2 = fn1 + "$$fn";
-if(typeof w[fn2] == "function") {
-if(db$flags(1)) alert3("current Window hashchange");
-w[fn2](e);
-} else if(typeof w[fn1] == "function") {
-if(db$flags(1)) alert3("current Window hashchange\nfire assigned");
-w[fn1](e);
-if(db$flags(1)) alert3("endfire assigned");
-}
-if(typeof body[fn2] == "function") {
-if(db$flags(1)) alert3("current Body hashchange");
-body[fn2](e);
-} else if(typeof body[fn1] == "function") {
-if(db$flags(1)) alert3("current Body hashchange\nfire assigned");
-body[fn1](e);
-if(db$flags(1)) alert3("endfire assigned");
-}
+function set_location_hash(h)
+{
+    h = '#'+h;
+    constt w = my$win();
+    const d = my$doc();
+    const body = d.body;
+    let loc = w.location$2;
+    // save the old url, but I don't know if it's a URL or a string
+    const oldURL = loc.toString();
+    loc.hash$val = h;
+    loc.href$val = loc.href$val.replace(/#.*/, "") + h;
+    const newURL = loc.toString();
+    loc = d.location$2;
+    loc.hash$val = h;
+    loc.href$val = loc.href$val.replace(/#.*/, "") + h;
+    let e = new (w.HashChangeEvent);
+    e.oldURL = oldURL;
+    e.newURL = newURL;
+    w.dispatchEvent(e);
+    body.dispatchEvent(e);
 }
 
 // run an expression in a loop.
@@ -546,7 +532,6 @@ function dispatchEvent (e) {
     let dbg = () => undefined;
     let t = this;
     e.eventPhase = 0;
-
     const runEventHandler = (h) => {
         e.currentTarget = t;
         const inline = typeof h == "function";
