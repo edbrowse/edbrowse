@@ -302,10 +302,45 @@ alert(e.stack);
 <a href="ftp://ftp.netbsd.org/">NetBsd FTP site</a>
 <form>
 <script>
+// these can't be in a try block
 function gopherJump()
 {
     alert("Jumping to gopherspace in 5 seconds");
     setTimeout(() => window.location.href = "gopher://gopher.floodgap.com/1/", 5000);
+}
+
+// xhrTest() succeeds even if allowXHR is off, which is weird.
+// Not that I want it to fail if allowXHR is off either. IDK
+function xhrTest()
+{
+var xhr = new XMLHttpRequest;
+xhr.onload = () => alert("base onload");
+xhr.addEventListener("load", function(e){
+ alert(`target ${e.target} phase ${e.eventPhase} response length ${this.responseText.length}`)
+if(this.responseText.indexOf("100% text based") > 0) alert("looks good"); else alert("search text not found");
+})
+xhr.open("get", "http://edbrowse.org", true);
+xhr.send("", 0);
+}
+
+async function awaitTest()
+{
+function resolveAfter5Seconds(x) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(x);
+    }, 5000);   });
+}
+function greeting() { alert("done waiting"); return ", Baby"}
+alert(await resolveAfter5Seconds("your 5 seconds are up") + greeting())
+} // returns the Promise object
+
+async function awaitFetchTest()
+{
+function showcamp(o) { alert("camp " + o.camp); }
+// p_json is the promise of the json object
+const p_json = (await fetch("http://www.edbrowse.org/jscamp.json")).json();
+p_json.then(showcamp);
 }
 </script>
 <button onclick="gopherJump()">Jump to gopherspace</button>
@@ -900,38 +935,6 @@ test_removeListener();
 
 // This comes after the original onsubmit function
 document.forms[1].addEventListener("submit", function(e) { alert("submit phase "+e.eventPhase);});
-
-// xhrTest() succeeds even if allowXHR is off, which is weird.
-// Not that I want it to fail if allowXHR is off either. IDK
-// and not sure I want to run this internet test every time.
-function xhrTest() {
-var xhr = new XMLHttpRequest;
-xhr.onload = () => alert("base onload");
-xhr.addEventListener("load", function(e){
- alert(`target ${e.target} phase ${e.eventPhase} response length ${this.responseText.length}`)
-if(this.responseText.indexOf("100% text based") > 0) alert("looks good"); else alert("search text not found");
-})
-xhr.open("get", "http://edbrowse.org", true);
-xhr.send("", 0);
-}
-
-async function awaitTest() {
-function resolveAfter5Seconds(x) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(x);
-    }, 5000);   });
-}
-function greeting() { alert("done waiting"); return ", Baby"}
-alert(await resolveAfter5Seconds("your 5 seconds are up") + greeting())
-} // returns the Promise object
-
-async function awaitFetchTest() {
-function showcamp(o) { alert("camp " + o.camp); }
-// p_json is the promise of the json object
-const p_json = (await fetch("http://www.edbrowse.org/jscamp.json")).json();
-p_json.then(showcamp);
-}
 
 function test_siblings() {
 var x1 = document.createElement("div");
