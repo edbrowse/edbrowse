@@ -1425,72 +1425,6 @@ return null;
 }
 }
 
-function append() {
-var d = my$doc();
-var i, l = arguments.length;
-for(i=0; i<l; ++i) {
-var c = arguments[i];
-if(typeof c == "string") c = d.createTextNode(c);
-// should now be a valid node
-if(c.nodeType > 0) this.appendChild(c);
-}
-}
-
-function prepend() {
-var d = my$doc();
-var i, l = arguments.length;
-for(i=l-1; i>=0; --i) {
-var c = arguments[i];
-if(typeof c == "string") c = d.createTextNode(c);
-// should now be a valid node
-if(c.nodeType > 0) this.prependChild(c);
-}
-}
-
-function after() {
-var d = my$doc();
-var p = this.parentNode;
-if(!p) return;
-var i, l = arguments.length;
-var n = this.nextSibling;
-for(i=0; i<l; ++i) {
-var c = arguments[i];
-if(typeof c == "string") c = d.createTextNode(c);
-// should now be a valid node
-if(c.nodeType > 0)
-n ? p.insertBefore(c,n) : p.appendChild(c);
-}
-}
-
-function before() {
-var d = my$doc();
-var p = this.parentNode;
-if(!p) return;
-var i, l = arguments.length;
-for(i=0; i<l; ++i) {
-var c = arguments[i];
-if(typeof c == "string") c = d.createTextNode(c);
-// should now be a valid node
-if(c.nodeType > 0) p.insertBefore(c, this);
-}
-}
-
-function replaceWith() {
-var d = my$doc();
-var p = this.parentNode;
-if(!p) return;
-var i, l = arguments.length;
-var n = this.nextSibling;
-for(i=0; i<l; ++i) {
-var c = arguments[i];
-if(typeof c == "string") c = d.createTextNode(c);
-// should now be a valid node
-if(c.nodeType > 0)
-n ? p.insertBefore(c,n) : p.appendChild(c);
-}
-p.removeChild(this);
-}
-
 /*********************************************************************
 This is a workaround, when setAttribute is doing something it shouldn't,
 like form.setAttribute("elements") or some such.
@@ -3746,11 +3680,53 @@ nodep.appendChild = appendChild;
 nodep.prependChild = prependChild;
 nodep.insertBefore = insertBefore;
 nodep.insertAdjacentElement = insertAdjacentElement;
-nodep.append = append;
-nodep.prepend = prepend;
-nodep.before = before;
-nodep.after = after;
-nodep.replaceWith = replaceWith;
+nodep.append = function() {
+let l = arguments.length;
+for(let i=0; i<l; ++i) {
+let c = arguments[i];
+if(typeof c == "string") c = d.createTextNode(c); // convert to node
+if(c.nodeType > 0) this.appendChild(c);
+}}
+nodep.prepend = function() {
+let l = arguments.length;
+for(let i=l-1; i>=0; --i) {
+let c = arguments[i];
+if(typeof c == "string") c = d.createTextNode(c); // convert to node
+if(c.nodeType > 0) this.prependChild(c);
+}}
+nodep.before = function() {
+let p = this.parentNode;
+if(!p) return;
+let l = arguments.length;
+for(let i=0; i<l; ++i) {
+let c = arguments[i];
+if(typeof c == "string") c = d.createTextNode(c);
+if(c.nodeType > 0) p.insertBefore(c, this);
+}}
+nodep.after = function() {
+let p = this.parentNode;
+if(!p) return;
+let l = arguments.length;
+let n = this.nextSibling;
+for(let i=0; i<l; ++i) {
+let c = arguments[i];
+if(typeof c == "string") c = d.createTextNode(c);
+if(c.nodeType > 0)
+n ? p.insertBefore(c,n) : p.appendChild(c);
+}}
+nodep.replaceWith = function() {
+let p = this.parentNode;
+if(!p) return;
+let l = arguments.length;
+let n = this.nextSibling;
+for(let i=0; i<l; ++i) {
+let c = arguments[i];
+if(typeof c == "string") c = d.createTextNode(c);
+if(c.nodeType > 0)
+n ? p.insertBefore(c,n) : p.appendChild(c);
+}
+p.removeChild(this);
+}
 nodep.replaceChild = replaceChild;
 // These are native, so it's ok to bounce off of document.
 nodep.eb$apch1 = d.eb$apch1;
@@ -8274,7 +8250,7 @@ dispatchEvent,
 NodeFilter,createNodeIterator,createTreeWalker,
 runScriptWhenAttached, traceBreakReplace,
 appendChild, prependChild, insertBefore, removeChild, replaceChild, hasChildNodes,
-insertAdjacentElement,append, prepend, before, after, replaceWith,
+insertAdjacentElement,
 getAttribute, getAttributeNames, getAttributeNS,
 hasAttribute, hasAttributeNS,
 setAttribute, setAttributeNS,
@@ -8312,7 +8288,6 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "runScriptWhenAttached", "traceBreakReplace",
 "appendChild", "prependChild", "insertBefore", "removeChild", "replaceChild", "hasChildNodes",
 "getSibling", "getElementSibling", "insertAdjacentElement",
-"append", "prepend", "before", "after", "replaceWith",
 "implicitMember", "spilldown","spilldownResolve","spilldownResolveURL","spilldownBool",
 "getAttribute", "getAttributeNames", "getAttributeNS",
 "hasAttribute", "hasAttributeNS",
