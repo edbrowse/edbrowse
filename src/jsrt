@@ -28,26 +28,39 @@ which is, by the way, not all the features of javascript by any means.
 Run this program after every software change,
 and certainly before each release.
 If a test fails, we give you the test number and abort.
+If javascript fails, I catch the error and print the stack.
 Fix the bug and rerun, until all tests pass.
 Warning: these tests are in no particular order, except if you rearrange
 them they will fail, because some depend on variables that were
 set by others.  Yeah, it's ugly. */
 
+// make the class Circle - which apparently doesn't work in a try block.
+function Circle()
+{
+this.r = 1;
+if(arguments.length == 1) this.r = arguments[0];
+this.c = function() { return this.r*Math.PI*2; }
+this.a = CircleArea;
+}
+function CircleArea() { return this.r*this.r*Math.PI; }
+
+try { // protect
+
 // breakspace is tolerated, and utf8 is understood
- var udef = "undefined";
+ let udef = "undefined";
 function fail(n) { alert("failed "+n); }
 
-var popwin = new Window("http://www.moreAndMoreCrap.com/BuyNow.html", "obnoxious_ad", "width=72");
+let popwin = new Window("http://www.moreAndMoreCrap.com/BuyNow.html", "obnoxious_ad", "width=72");
 
 var memhog = new Array();
 
-var n, j;
+let n, j;
 
 function memfill()
 {
 // allow a user specifyable amount of objects to create
 // use the document.getElementById and element interface here
-var amount = parseInt(document.getElementById("fill_amount").value, 10);
+let amount = parseInt(document.getElementById("fill_amount").value, 10);
 if (amount <= 0)
 {
 alert("You must provide a positive integer when specifying the number of objects to create");
@@ -111,8 +124,8 @@ case 777: j = 7; break;
 } /* switch */
 if(j != 3) fail(6);
 
-var bt = true; // a boolean value
-var f = 6.25; // a perfectly representable floating value
+let bt = true; // a boolean value
+let f = 6.25; // a perfectly representable floating value
 if("cat" + 15 + "dog" + f + bt != "cat15dog6.25true") fail(7);
 if(Math.sqrt(f) != 2.5) fail(8);
 
@@ -127,7 +140,7 @@ if(j != 27) fail(9);
 
 if(Math.pow(11,4) != 14641) fail(10);
 
-var alpha = "abc\144\x65fghijklmnopqrstuvwxyz\r\n";
+let alpha = "abc\144\x65fghijklmnopqrstuvwxyz\r\n";
 if(alpha.substring(2,7) != "cdefg") fail(11);
 if(alpha.length != 28) fail(12);
 if(alpha.charAt(10) != 'k') fail(13);
@@ -137,7 +150,7 @@ if(alpha.indexOf("def") != 3) fail(17);
 alpha += "ubcxyz";
 if(alpha.lastIndexOf("bc") != 29) fail(18);
 
-var a = alpha.split('b');
+let a = alpha.split('b');
 if(a.length != 3) fail(20);
 if(a[0] != 'a') fail(21);
 if(a[2] != "cxyz") fail(22);
@@ -171,21 +184,21 @@ if(mult$sv.counter != 2) fail(42);
 function factorial(n)
 {
 if(n <= 1) return 1;
-var y = 7+n;
+let y = 7+n;
 return n*factorial(n-1);
 }
 if(factorial(6) != 720) fail(44);
-var bang = factorial;
+let bang = factorial;
 if(bang(8) != 40320) fail(45);
 if(bang != factorial) fail(46);
 if(typeof factorial.n != udef || typeof factorial.y != udef) fail(47);
 
 // vararg function
-var domax = function() {
+let domax = function() {
 if(arguments.length != 7) fail(50);
-var max = -Number.MAX_VALUE;
-for(var j=0; j<arguments.length; ++j) {
-var k = arguments[j];
+let max = -Number.MAX_VALUE;
+for(let j=0; j<arguments.length; ++j) {
+let k = arguments[j];
 if(k > max) max = k;
 }
 return max;
@@ -205,7 +218,7 @@ if(fc1(8) != 84) fail(53);
 if(fc1.g(5) != 125) fail(54);
 *********************************************************************/
 
-var mysqrt = Math.sqrt;
+let mysqrt = Math.sqrt;
 if(mysqrt(1089) != 33) fail(55);
 
 // bits
@@ -218,16 +231,6 @@ if(10>>2 != 2) fail(66);
 if(-15 >> 2 != -4) fail(67);
 if(-1 >>> 16 != 65535) fail(68);
 
-// a little bit of oo stuff
-// Let's make methods both ways.
-function Circle()
-{
-this.r = 1;
-if(arguments.length == 1) this.r = arguments[0];
-this.c = function() { return this.r*Math.PI*2; }
-this.a = CircleArea;
-}
-function CircleArea() { return this.r*this.r*Math.PI; }
 var c1 = new Circle();
 var c2 = new Circle(23);
 // also test the with construct
@@ -248,7 +251,7 @@ if(a.join(':') != "blue:green:indigo:orange:red:violet:yellow") fail(74);
 if(a.length != 7) fail(75);
 if(a[5] != "violet") fail(76);
 
-var oo = new Object;
+let oo = new Object;
 if(typeof oo != "object") fail(77);
 oo.p = 61, oo.q = 67;
 n = "";
@@ -257,7 +260,7 @@ if(n != "p61q67") fail(78);
 if(c2.constructor != Circle || oo.constructor != Object) fail(79);
 
 // the date object
-var d = new Date(2003,11,25,17,55,9);
+let d = new Date(2003,11,25,17,55,9);
 if(d.getMonth() != 11 || d.getDate() != 25) fail(81);
 if(d.getHours() != 17 || d.getMinutes() != 55 || d.getSeconds() != 9) fail(82);
 if(d.constructor != Date || a.constructor != Array) fail(84);
@@ -270,7 +273,7 @@ if(topprop != 887) fail(88);
 // A couple functions, and the first couple lines of the input form.
 function calc(thisform)
     {
-var l = thisform.body.value.length;
+let l = thisform.body.value.length;
 thisform.result.value = l;
 if (l > 2000) {
 alert("You cant go over Limit of 2000 Characters!");
@@ -278,10 +281,14 @@ alert("You cant go over Limit of 2000 Characters!");
     }
 
 function newwords() {
-var b = document.forms[1].body;
+let b = document.forms[1].body;
 b.innerText = "Why don't you write me I'm out in the jungle I'm hungry to hear you.\nSend me a card I am waiting so hard to be near you.\n";
 }
 
+} catch(e) {
+alert(e);
+alert(e.stack);
+}
 </script>
 
 <noscript>
@@ -557,6 +564,8 @@ onclick="alert('rock and ½ roll')">
 </template>
 
 <script type=text/javascript language=JavaScript>
+try { // protect
+
 // set up for nested spans with onclick handlers
 // document.getElementById("spana").addEventListener("click", (e)=>{alert("a"); if(!confirm("do you really want to see b")) e.cancelled = true});
 document.getElementById("spana").addEventListener("click", ()=>{alert("a"); return confirm("do you really want to see b")});
@@ -795,6 +804,11 @@ if(!aa.href.match(/wikipedia.org/))
 fail(152);
 if(aa.style.color != "red")
 fail(153);
+
+} catch(e) {
+alert(e);
+alert(e.stack);
+}
 </script  	
 >
 
@@ -810,12 +824,12 @@ fail(147);
 </script>
 
 <script type=text/javascript language=JavaScript>
-/*
+try { // protect
+
 if(data_uri1_test != "set")
 fail(148);
 if(data_uri2_test != "set")
 fail(149);
-*/
 
 /* I wanted to test the initial cookie string as blank,
  * but if you unbrowse and then browse, this test will fail.
@@ -1134,6 +1148,10 @@ alert("relative");
 }
 relative();
 
+} catch(e) {
+alert(e);
+alert(e.stack);
+}
 </script>
 
 </body>
