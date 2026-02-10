@@ -102,7 +102,7 @@ Render the tree of html nodes into a text buffer.
 Rerender the tree after js has run, and report any changes to the user.
 
 src/css.c:
-Parse the css files and the <style> directives.
+Parse the css files and the style directives.
 Apply the css attributes to the nodes that match.
 
 src/sendmail.c:
@@ -165,7 +165,7 @@ src/endwindow.js:
 This is the close of shared.js, and it stands in if demin.js is not used.
 
 src/jsrt:
-This is the javascript regression test for edbrowse.
+This is the javascript [regression test](regression.md) for edbrowse.
 It exercises some of the javascript DOM interactions.
 It also presents frames and hyperlinks and forms and input fields,
 so you can play around.
@@ -269,7 +269,7 @@ even some sections that might not be relevant to your situation.
 Formerly invisible text might look like this.
 
 You are logged in as John Smith,
-if you are not John Smith please <log out>.
+if you are not John Smith please {log out}.
 
 This block might be invisible unless you are actually logged in.
 And of course the button won't work, unless you are actually logged in.
@@ -288,9 +288,9 @@ built into edbrowse.
 There is an in-built javascript dom debugger that you enter via the jdb command.
 bye to exit.
 Javascript expressions are evaluated, and the document objects are available.
-document.head is the head of your document <head>,
-document.body is the body <body>,
-document.body.firstChild is the first node under <body>, and so on.
+document.head is the head of your document &lt;head&gt;,
+document.body is the body &lt;body&gt;,
+document.body.firstChild is the first node under &lt;body&gt;, and so on.
 showscripts() shows all the javascripts, even those dynamically created.
 Such debugging is beyond the scope of this README file.
 Read the Debugging Javascript article in the edbrowse wiki.
@@ -312,7 +312,7 @@ I don't know if the headless interface allows for this.
 I don't want a new browser process running for every page in edbrowse.
 Hand the browser the url.
 Yeah we already have the page and in theory we could pass it the html directly,
-with a <base> tag, but it might be easier to just hand it the url and say go.
+with a base tag, but it might be easier to just hand it the url and say go.
 It is going to maintain cookies as it browses,
 and there is sometimes a transient cookie that indicates session, the "session cookie",
 so the cookie we got is no good, and the only way for the browser to get a proper cookie for its session is to fetch the url itself.
