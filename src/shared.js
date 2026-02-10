@@ -2680,29 +2680,6 @@ return;
 }
 }
 
-function injectSetup(which) {
-var w = my$win();
-var d = my$doc();
-var z = this;
-switch(which) {
-case 'a':
-if(!this.inj$after) {
-z = this.appendChild(d.createTextNode())
-Object.defineProperty(z, "inj$css", {value:true})
-Object.defineProperty(this, "inj$after", {value:true})
-} else z = this.lastChild;
-break;
-case 'b':
-if(!this.inj$before) {
-z = this.prependChild(d.createTextNode())
-Object.defineProperty(z, "inj$css", {value:true})
-Object.defineProperty(this, "inj$before", {value:true})
-} else z = this.firstChild;
-break;
-}
-w.soj$ = z.style;
-}
-
 // see the DIS_ values in eb.h
 function eb$visible(t) {
 var c, rc = 0;
@@ -3823,7 +3800,6 @@ nodep.insertAdjacentHTML = insertAdjacentHTML;
 // outerHTML is dynamic; should innerHTML be?
 odp(nodep, "outerHTML", { get: function() { return htmlString(this);},
 set: function(h) { outer$1(this,h); }});
-nodep.injectSetup = injectSetup;
 // constants
 nodep.ELEMENT_NODE = 1
 nodep.TEXT_NODE = 3
@@ -3858,6 +3834,32 @@ nodep.scrollLeft = 0;
 nodep.offsetHeight = 16;
 nodep.offsetWidth = 120;
 nodep.dir = "auto";
+
+// This is a manufactured method for css purposes,
+// to inject words or marks before or after a tag, marks that you don't see
+// unless you type showall, marks that nobody probably cares about anyways,
+// but I read about it in the spec and tried to make it happen.
+nodep.injectSetup = function(which) {
+let z = this;
+switch(which) {
+case 'a':
+if(!this.inj$after) {
+z = this.appendChild(d.createTextNode())
+odp(z, "inj$css", {value:true})
+odp(this, "inj$after", {value:true})
+} else z = this.lastChild;
+break;
+case 'b':
+if(!this.inj$before) {
+z = this.prependChild(d.createTextNode())
+odp(z, "inj$css", {value:true})
+odp(this, "inj$before", {value:true})
+} else z = this.firstChild;
+break;
+}
+// establish the style object, for the calling function in css.c
+w.soj$ = z.style;
+}
 
 // The html element, which is the head of the DOM nodes that you know and love.
 swp("HTMLElement", function(){})
@@ -8303,7 +8305,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "borderRadiusShort", "borderWidthShort", "borderColorShort", "borderStyleShort",
 "backgroundShort", "fontShort", "borderShort", "borderImageShort",
 "insetShort",
-"injectSetup", "eb$visible",
+"eb$visible",
 "insertAdjacentHTML", "htmlString", "outer$1", "textUnder", "newTextUnder",
 "EventTarget", "XMLHttpRequestEventTarget", "XMLHttpRequestUpload", "XMLHttpRequest",
 "URL", "File", "FileReader", "Blob", "FormData",
