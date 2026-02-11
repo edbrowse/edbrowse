@@ -858,9 +858,9 @@ swmp("Event", null)
 
 Event.prototype.preventDefault = function() { if(this.cancelable) this.defaultPrevented = true; }
 Event.prototype.stopPropagation = function() { this.stop$propagating = true; }
-Event.prototype.stopPropagation = function()
+Event.prototype.stopImmediatePropagation = function()
 {
-    this.stop$propagating$imediate = true;
+    this.stop$propagating$immediate = true;
 }
 // deprecated - I guess - but a lot of people still use it.
 Event.prototype.initEvent = function(t, bubbles, cancel) {
