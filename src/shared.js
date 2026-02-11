@@ -546,18 +546,19 @@ function dispatchEvent (e) {
         else if (typeof h.callback == "object") f = h.callback.handleEvent;
         if (!f) {
             dbg(`could not find callback for ${hd}`);
-            return; // null listeners appear to be allowed
+            return true; // null listeners appear to be allowed
         }
         if (!(inline || h.do$phases.has(e.eventPhase))) {
-            dbg(`Unsupported phase ${e.eventPhase} for ${hd}`);
-            dbg(`${hd} supported: ${JSON.stringify(Array.from(h.do$phases))}`);
-            return;
+            dbg(`Unsupported phase ${e.eventPhase} for ${hd}`, 4);
+            dbg(`${hd} supported: ${JSON.stringify(Array.from(h.do$phases))}`, 4);
+            return true;
         }
         dbg(`fires ${hd}`);
         let r = f.call(t, e);
         // Events added by listeners ignore return values these days
         if (inline) {
             const special = e.type === "error";
+            if (r === undefined) r = true;
             if ((!special && !r) || (special && r)) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
@@ -585,10 +586,11 @@ function dispatchEvent (e) {
     }
 
     if(db$flags(1))
-        dbg = (m) => {
+        dbg = (m, l=3) => {
             const phases = ["dispatch", "capture", "target", "bubble"];
-            const prefix = `dispatchEvent ${t.nodeName} event ${e.type}`
-            alert3(`${prefix} tag ${t.eb$seqno} phase ${phases[e.eventPhase]}: ${m}`);
+            const prefix = `dispatchEvent ${t.nodeName}.${e.type}`;
+            const phase = phases[e.eventPhase];
+            logputs(l, `${prefix} tag ${t.eb$seqno} phase ${phase}: ${m}`);
         };
 
     dbg("start");
@@ -630,10 +632,15 @@ function dispatchEvent (e) {
         t = pathway[l++];
         // Most event handlers including inline bubble and all run on target
         const ep = `on${e.type}`;
-        const inline_fn = t[ep];
-        if (typeof inline_fn == "function") runEventHandler(inline_fn, e, t);
+        const inline_handler = t[ep];
+        if (inline_handler && !runEventHandler(inline_handler, e, t)) break;
     } while (runHandlerArray() && l < pathway.length);
-    dbg(`end: ${!e.defaultPrevented}`);
+    /* We return the logical negation of defaultPrevented as per spec a false
+        return means to prevent the default action whereas the
+        defaultPrevented property is specified to be true if the default action
+        was, or is to be, prevented
+    */
+    dbg(`end (default prevented ${e.defaultPrevented})`);
     return !e.defaultPrevented;
 }
 
