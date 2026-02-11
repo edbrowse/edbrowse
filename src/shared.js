@@ -5051,6 +5051,10 @@ for(let k of list) {
 eval('odp(csdp, "' + k + '", {set: function(h) {' + k + 'Short(this, h)}})')
 }})();
 
+// acid test 45 says float magically turns into cssFloat - I guess.
+// And what's the point of that?
+odp(csdp, "float", {set:function(v) { this.cssFloat = v}})
+
 // These are default properties of a style declaration.
 // they should not be enumerable. They must however be writable,
 // so that the corresponding attributes placed on style objects are writable.
@@ -5077,7 +5081,9 @@ const list =[
 "direction","display","dominantBaseline",
 "emptyCells","fill","fillOpacity","fillRule","filter",
 "flex","flexBasis","flexDirection","flexFlow","flexGrow","flexShrink","flexWrap",
-"float","floodColor","floodOpacity",
+// need default for cssFloat, documentation says none, acid 45 says ""
+"cssFloat",
+"floodColor","floodOpacity",
 "fontFamily","fontFeatureSettings","fontKerning","fontLanguageOverride","fontSize","fontSizeAdjust","fontStretch","fontStyle","fontSynthesis","fontVariant","fontVariantAlternates","fontVariantCaps","fontVariantEastAsian","fontVariantLigatures","fontVariantNumeric","fontVariantPosition","fontWeight",
 "gap","grid","gridArea","gridAutoColumns","gridAutoFlow","gridAutoRows","gridColumn","gridColumnEnd","gridColumnGap","gridColumnStart",
 "gridGap","gridRow","gridRowEnd","gridRowGap","gridRowStart","gridTemplate","gridTemplateAreas","gridTemplateColumns","gridTemplateRows",

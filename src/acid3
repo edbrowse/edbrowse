@@ -1490,12 +1490,15 @@ if(div === null) { var e = new Error; e.code = 14; throw e; }
       });
       return 3;
     },
-//@` test 45 baffles me. element.setAttribute("style", v)
-// should, as suggested by this page, set style.cssText = v;
-// https://www.w3schools.com/jsref/met_element_setattribute.asp
-// But test 45 prepends a css, whence float becomes cssFloat.
-// I don't get it, so I pretty much skip this test.
-    function() { return 3; }, // test 45
+    function() {
+      // test 45: cssFloat and the style attribute
+      assert(!document.body.style.cssFloat, "body has floatation");
+      document.body.setAttribute("style", "float: right");
+      assertEquals(document.body.style.cssFloat, "right", "body doesn't have floatation");
+      document.body.setAttribute("style", "float: none");
+      assertEquals(document.body.style.cssFloat, "none", "body didn't lose floatation");
+return 3;
+},
     function () {
       // test 46: media queries
       var doc = getTestDocument();
@@ -2077,7 +2080,7 @@ frames[1].contentDocument;
       var elapsedTime = ((endTime - startTime) - (delay * tests.length)) / 1000;
       log += "Total elapsed time: " + elapsedTime.toFixed(2) + "s";
       if (errors == 0)
-        log += "\nNo JS errors and no timing issues, but 11 tests were skipped.\nWas the rendering pixel-for-pixel perfect too?";
+        log += "\nNo JS errors and no timing issues, but 10 tests were skipped.";
   alert(log);
     }
   }
