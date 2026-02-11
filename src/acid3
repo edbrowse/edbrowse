@@ -2123,7 +2123,14 @@ edbrowse should agree with that.
       assertEquals(obj1.getElementsByTagName('param').length, 1, "object is missing its only child");
       // non-existent attributes
       var test = document.createElement('p');
-// @` more to this test
+      assert(!('TWVvdywgbWV3Li4u' in test), "TWVvdywgbWV3Li4u unexpectedly found");
+      assertEquals(test.TWVvdywgbWV3Li4u, undefined, ".TWVvdywgbWV3Li4u wasn't undefined");
+      assertEquals(test['TWVvdywgbWV3Li4u'], undefined, "['TWVvdywgbWV3Li4u'] wasn't undefined");
+      test.setAttribute('TWVvdywgbWV3Li4u', 'woof');
+      assert(!('TWVvdywgbWV3Li4u' in test), "TWVvdywgbWV3Li4u unexpectedly found after setting");
+      assertEquals(test.TWVvdywgbWV3Li4u, undefined, ".TWVvdywgbWV3Li4u wasn't undefined after setting");
+      assertEquals(test['TWVvdywgbWV3Li4u'], undefined, "['TWVvdywgbWV3Li4u'] wasn't undefined after setting");
+      assertEquals(test.getAttribute('TWVvdywgbWV3Li4u'), 'woof', "TWVvdywgbWV3Li4u has wrong value after setting");
       return 4;
     },
 // other tests not yet folded in
