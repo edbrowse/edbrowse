@@ -1413,19 +1413,6 @@ return null;
 }
 }
 
-function insertAdjacentElement(pos, e) {
-var n, p = this.parentNode;
-if(!p || typeof pos != "string") return null;
-pos = pos.toLowerCase();
-switch(pos) {
-case "beforebegin": return p.insertBefore(e, this);
-case "afterend": n = this.nextSibling; return n ? p.insertBefore(e, n) : p.appendChild(e);
-case "beforeend": return this.appendChild(e);
-case "afterbegin": return this.prependChild(e);
-return null;
-}
-}
-
 /*********************************************************************
 This is a workaround, when setAttribute is doing something it shouldn't,
 like form.setAttribute("elements") or some such.
@@ -3569,6 +3556,13 @@ return !(this.valueMissing)}})
 // But we can set most of the instance methods here. These methods,
 // e.g. appendchild, are often functions within this file anyways.
 let nodep = w.Node.prototype;
+// These are native, so it's ok to bounce off of document.
+// They are our own helper functions, thus eb$
+nodep.eb$apch1 = d.eb$apch1;
+nodep.eb$apch2 = d.eb$apch2;
+nodep.eb$rmch2 = d.eb$rmch2;
+nodep.eb$insbf = d.eb$insbf;
+
 // These subordinate objects are on-demand.
 odp( nodep, "dataset", { get: function(){
 if(!this.dataset$2)
@@ -3583,7 +3577,8 @@ return this.attributes$2}})
 odp( nodep, "style", { get: function(){ if(!this.style$2) {
 odp(this,"style$2", {value:new w.CSSStyleDeclaration,configurable:true});
 this.style$2.element = this}
-return this.style$2;}});
+return this.style$2}})
+
 nodep.getRootNode = getRootNode;
 nodep.contains = nodeContains;
 nodep.matches = w.querySelector0;
@@ -3595,7 +3590,6 @@ nodep.hasChildNodes = hasChildNodes;
 nodep.appendChild = appendChild;
 nodep.prependChild = prependChild;
 nodep.insertBefore = insertBefore;
-nodep.insertAdjacentElement = insertAdjacentElement;
 nodep.append = function() {
 let l = arguments.length;
 for(let i=0; i<l; ++i) {
@@ -3644,11 +3638,17 @@ n ? p.insertBefore(c,n) : p.appendChild(c);
 p.removeChild(this);
 }
 nodep.replaceChild = replaceChild;
-// These are native, so it's ok to bounce off of document.
-nodep.eb$apch1 = d.eb$apch1;
-nodep.eb$apch2 = d.eb$apch2;
-nodep.eb$rmch2 = d.eb$rmch2;
-nodep.eb$insbf = d.eb$insbf;
+nodep.insertAdjacentElement = function(pos, e) {
+let n, p = this.parentNode;
+if(!p || typeof pos != "string") return null;
+pos = pos.toLowerCase();
+switch(pos) {
+case "beforebegin": return p.insertBefore(e, this);
+case "afterend": n = this.nextSibling; return n ? p.insertBefore(e, n) : p.appendChild(e);
+case "beforeend": return this.appendChild(e);
+case "afterbegin": return this.prependChild(e);
+return null;
+}}
 nodep.removeChild = removeChild;
 nodep.remove = function() {
 if(this.parentNode) this.parentNode.removeChild(this)}
@@ -8271,7 +8271,6 @@ dispatchEvent,
 NodeFilter,createNodeIterator,createTreeWalker,
 runScriptWhenAttached, traceBreakReplace,
 appendChild, prependChild, insertBefore, removeChild, replaceChild, hasChildNodes,
-insertAdjacentElement,
 getAttribute, getAttributeNames, getAttributeNS,
 hasAttribute, hasAttributeNS,
 setAttribute, setAttributeNS,
@@ -8307,7 +8306,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "isRooted", "frames$rebuild",
 "runScriptWhenAttached", "traceBreakReplace",
 "appendChild", "prependChild", "insertBefore", "removeChild", "replaceChild", "hasChildNodes",
-"getSibling", "getElementSibling", "insertAdjacentElement",
+"getSibling", "getElementSibling",
 "implicitMember", "spilldown","spilldownResolve","spilldownResolveURL","spilldownBool",
 "getAttribute", "getAttributeNames", "getAttributeNS",
 "hasAttribute", "hasAttributeNS",
