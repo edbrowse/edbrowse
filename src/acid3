@@ -224,8 +224,7 @@
   }
   var kungFuDeathGrip = null; // used to hold things from test to test
 // @` skipped: 7 8 9 10 11 12 13 27
-// I run test 16 but it's meaningless, has no semantics in edbrowse.
-// test 26 is unfinished because I don't understand the second part
+// I run 16 but it's meaningless, has no semantics in edbrowse.
   var tests = [ // start of tests
 
     // there are 6 buckets with 16 tests each, plus four special tests (0, 97, 98, and 99).
@@ -802,8 +801,30 @@ if(div === null) { var e = new Error; e.code = 14; throw e; }
       assert(e1.parentNode.ownerDocument, "e1 - document doesn't exist after dropping reference to document");
       assert(e2.parentNode, "e2 - parent element doesn't exist after dropping reference to document");
       assert(e2.parentNode.ownerDocument, "e2 - document doesn't exist after dropping reference to document");
-// @` There's more to 26, so it's only half done.
-// I don't understand the rest.
+      var loops = new Date().valueOf() * 2.813435e-9 - 2412; // increases linearly over time
+// @` loops is about 2500. Edbrowse isn't as fast as other browsers,
+// and I don't want to go over the timing threshhold.
+      loops = 250;
+// By the way, I don't understand any of what goes on inside this loop.
+      for (var i = 0; i < loops; i += 1) {
+        // we want to force a GC here, so we use up lots of memory
+        // we take the opportunity to sneak in a perf test to make DOM and JS stuff faster...
+        d = new Date();
+        d = new (function (x) { return { toString: function () { return x.toString() } } })(d.valueOf());
+        d = document.createTextNode("iteration " + i + " at " + d);
+        document.createElement('a').appendChild(d);
+        d = d.parentNode;
+        document.body.insertBefore(d, document.getElementById('bucket1').parentNode);
+        assert(document.getElementById('bucket2').nextSibling.parentNode.previousSibling.firstChild.data.match(/AT\W/i), "iteration " + i + " failed");
+        d.setAttribute('class', d.textContent);
+        document.body.removeChild(d);
+      }
+      assert(e1.parentNode, "e1 - parent element doesn't exist after looping");
+      assert(e1.parentNode.ownerDocument, "e1 - document doesn't exist after looping");
+      assertEquals(e1.parentNode.ownerDocument.nodeType, 9, "e1 - document node type has wrong node type");
+      assert(e2.parentNode, "e2 - parent element doesn't exist after looping");
+      assert(e2.parentNode.ownerDocument, "e2 - document doesn't exist after looping");
+      assertEquals(e2.parentNode.ownerDocument.nodeType, 9, "e2 - document node type has wrong node type");
       return 2;
     },
     function() { return 2; }, // test 27
