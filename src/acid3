@@ -795,6 +795,13 @@ if(div === null) { var e = new Error; e.code = 14; throw e; }
       d.createElement('root').appendChild(e2);
       assert(e2.parentNode, "e2 - parent element doesn't exist");
       assert(e2.parentNode.ownerDocument, "e2 - document doesn't exist");
+      // now try to decouple them
+      d = null;
+      kungFuDeathGrip = [e1, e2];
+      assert(e1.parentNode, "e1 - parent element doesn't exist after dropping reference to document");
+      assert(e1.parentNode.ownerDocument, "e1 - document doesn't exist after dropping reference to document");
+      assert(e2.parentNode, "e2 - parent element doesn't exist after dropping reference to document");
+      assert(e2.parentNode.ownerDocument, "e2 - document doesn't exist after dropping reference to document");
 // @` There's more to 26, so it's only half done.
 // I don't understand the rest.
       return 2;

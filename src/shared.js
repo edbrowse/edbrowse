@@ -3898,6 +3898,9 @@ elemp.nodeType = 1;
 swp("SVGElement", function(){})
 swpp("SVGElement", w.Element)
 
+// Document class is defined in startwindow, but we'll need its prototype.
+let docup = w.Document.prototype;
+
 swp("TextNode", function(){
 odp(this, "data$2", {value:"",writable:true})
 if(arguments.length > 0) {
@@ -3918,7 +3921,7 @@ set: function(s) { this.data$2 = s + ""; }})
 
 // Since we are createing all these classes here, does it make sense to
 // include the methods to properly instantiate those classes?  Perhaps.
-w.Document.prototype.createTextNode = function(t) {
+docup.createTextNode = function(t) {
 if(t == undefined) t = "";
 const c = new w.TextNode(t);
 /* A text node chould never have children, and does not need childNodes array,
@@ -3942,7 +3945,7 @@ cmtp.nodeName = cmtp.tagName = "#comment";
 cmtp.nodeType = 8;
 
 
-w.Document.prototype.createComment = function(t) {
+docup.createComment = function(t) {
 if(t == undefined) t = "";
 const c = new w.Comment(t);
     odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
@@ -3959,7 +3962,7 @@ fragp.nodeName = fragp.tagName = "#document-fragment";
 fragp.querySelector = w.querySelector
 fragp.querySelectorAll = function(c,s) { return new w.NodeList(w.querySelectorAll.call(this,c,s)) }
 
-w.Document.prototype.createDocumentFragment = function() {
+docup.createDocumentFragment = function() {
 const c = this.createElement("fragment");
 return c;
 }
@@ -5283,7 +5286,7 @@ xmlcp.nodeName = xmlcp.tagName = "#cdata-section";
 xmlcp.nodeType = 4;
 
 // We've defined the HTMLElement classes, now let's create instances of them.
-w.Document.prototype.createElement = function(s) {
+docup.createElement = function(s) {
 let c;
 if(!s) { // a null or missing argument
 alert3("bad createElement( type" + typeof s + ')');
