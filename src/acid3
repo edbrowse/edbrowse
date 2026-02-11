@@ -223,8 +223,9 @@
     });
   }
   var kungFuDeathGrip = null; // used to hold things from test to test
-// @` skipped: 7 8 9 10 11 12 13 26 27
+// @` skipped: 7 8 9 10 11 12 13 27
 // I run test 16 but it's meaningless, has no semantics in edbrowse.
+// test 26 is unfinished because I don't understand the second part
   var tests = [ // start of tests
 
     // there are 6 buckets with 16 tests each, plus four special tests (0, 97, 98, and 99).
@@ -778,7 +779,26 @@ if(div === null) { var e = new Error; e.code = 14; throw e; }
         fail(message);
       return 2;
     },
-    function() { return 2; }, // test 26
+    function() {
+      // test 26: check that document tree survives while still accessible
+      var d;
+      // e1 - an element that's in a document
+      d = document.implementation.createDocument(null, null, null);
+      var e1 = d.createElement('test');
+      d.appendChild(d.createElement('root'));
+      d.documentElement.appendChild(e1);
+      assert(e1.parentNode, "e1 - parent element doesn't exist");
+      assert(e1.parentNode.ownerDocument, "e1 - document doesn't exist");
+      // e2 - an element that's not in a document
+      d = document.implementation.createDocument(null, null, null);
+      var e2 = d.createElement('test');
+      d.createElement('root').appendChild(e2);
+      assert(e2.parentNode, "e2 - parent element doesn't exist");
+      assert(e2.parentNode.ownerDocument, "e2 - document doesn't exist");
+// @` There's more to 26, so it's only half done.
+// I don't understand the rest.
+      return 2;
+    },
     function() { return 2; }, // test 27
     function () {
       // test 28: getElementById()
@@ -2088,7 +2108,7 @@ frames[1].contentDocument;
       var elapsedTime = ((endTime - startTime) - (delay * tests.length)) / 1000;
       log += "Total elapsed time: " + elapsedTime.toFixed(2) + "s";
       if (errors == 0)
-        log += "\nNo JS errors and no timing issues, but 9 tests were skipped.";
+        log += "\nNo JS errors and no timing issues, but 8 tests were skipped.";
   alert(log);
     }
   }

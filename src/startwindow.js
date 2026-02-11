@@ -1126,10 +1126,11 @@ return d;
 },
 createDocument: function(uri, str, t) {
 // I don't know if this is right at all, but it's quick and easy
-var doc = document.createElementNS(uri, "newdocument");
+var doc = document.createElementNS(uri, "document");
+if(str) {
 var below = document.createElementNS(uri, str);
-if(!doc || !below) { alert3("createDocument unable to create document or " + str + " tag for namespace " + uri); return null; }
 doc.appendChild(below);
+}
 return doc;
 }
 })

@@ -3893,7 +3893,6 @@ odp(elemp, "hidden", {
 get:function(){ const t = this.getAttribute("hidden");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("hidden", v);}});
-elemp.ownerDocument = d;
 elemp.nodeType = 1;
 
 swp("SVGElement", function(){})
@@ -3919,7 +3918,7 @@ set: function(s) { this.data$2 = s + ""; }})
 
 // Since we are createing all these classes here, does it make sense to
 // include the methods to properly instantiate those classes?  Perhaps.
-sdpc("createTextNode", function(t) {
+w.Document.prototype.createTextNode = function(t) {
 if(t == undefined) t = "";
 const c = new w.TextNode(t);
 /* A text node chould never have children, and does not need childNodes array,
@@ -3932,7 +3931,7 @@ const c = new w.TextNode(t);
 if(this.eb$xml) c.eb$xml = true;
 eb$logElement(c, "text");
 return c;
-})
+}
 
 swp("Comment", function(t) {
 this.data = t;
@@ -3943,14 +3942,14 @@ cmtp.nodeName = cmtp.tagName = "#comment";
 cmtp.nodeType = 8;
 
 
-sdpc("createComment", function(t) {
+w.Document.prototype.createComment = function(t) {
 if(t == undefined) t = "";
 const c = new w.Comment(t);
     odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
     odp(c, "parentNode", {value:null,writable:true,configurable:true});
 eb$logElement(c, "comment");
 return c;
-})
+}
 
 swp("DocumentFragment", function(){})
 swpp("DocumentFragment", w.HTMLElement)
@@ -3960,10 +3959,10 @@ fragp.nodeName = fragp.tagName = "#document-fragment";
 fragp.querySelector = w.querySelector
 fragp.querySelectorAll = function(c,s) { return new w.NodeList(w.querySelectorAll.call(this,c,s)) }
 
-sdpc("createDocumentFragment", function() {
+w.Document.prototype.createDocumentFragment = function() {
 const c = this.createElement("fragment");
 return c;
-})
+}
 
 // tables, table sections, rows, cells.
 // First some helper functions to add and remove rows from a table or section,
@@ -5284,7 +5283,7 @@ xmlcp.nodeName = xmlcp.tagName = "#cdata-section";
 xmlcp.nodeType = 4;
 
 // We've defined the HTMLElement classes, now let's create instances of them.
-sdpc("createElement", function(s) {
+w.Document.prototype.createElement = function(s) {
 let c;
 if(!s) { // a null or missing argument
 alert3("bad createElement( type" + typeof s + ')');
@@ -5306,6 +5305,7 @@ s = s.toUpperCase()
     odp(c, "nodeName", {value:s,writable:true,configurable:true});
     odp(c, "tagName", {value:s,writable:true,configurable:true});
 }
+odp(c, "ownerDocument", {value:this,writable:true})
 eb$logElement(c, t);
 return c;
 }
@@ -5337,7 +5337,8 @@ case "style": c = new w.HTMLStyleElement; break;
 case "script": c = new w.HTMLScriptElement; break;
 case "template": c = new w.HTMLTemplateElement; break;
 // this isn't standard; it is mine
-case "newdocument": c = new w.Document; break;
+case "document": c = new w.Document; break;
+case "root": c = new w.z$HTML; s = "html"; break;
 case "div": c = new w.HTMLDivElement; break;
 case "span": c = new w.HTMLSpanElement; break;
 case "label": c = new w.HTMLLabelElement; break;
@@ -5366,6 +5367,7 @@ case "option":
 c = new w.Option;
     odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
     odp(c, "parentNode", {value:null,writable:true,configurable:true});
+odp(c, "ownerDocument", {value:this,writable:true})
 if(this.eb$xml) c.eb$xml = true;
 c.selected = true; // jquery says we should do this
 // we don't log options because rebuildSelectors() checks
@@ -5385,6 +5387,7 @@ c = new w.HTMLUnknownElement;
 
     odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
     odp(c, "parentNode", {value:null,writable:true,configurable:true});
+odp(c, "ownerDocument", {value:this,writable:true})
 if(this.eb$xml && !(c instanceof w.HTMLFrameElement) && !(c instanceof w.HTMLIFrameElement)) c.eb$xml = true;
 // Split on : if this comes from a name space
 let colon = t.split(':');
@@ -5402,7 +5405,7 @@ c.name = c.type = "";
 }
 eb$logElement(c, s);
 return c;
-} )
+} 
 
 }
 
