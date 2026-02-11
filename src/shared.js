@@ -1454,7 +1454,6 @@ if(name.match(/^on[a-zA-Z]*$/)) return true;
 return name == "value";
 }
 
-// This stuff has to agree with the tables in startwindow.js starting at "src"
 function spilldownResolveURL(t, name) {
 if(!t.nodeName) return false;
 var nn = t.nodeName.toLowerCase();
@@ -1466,6 +1465,7 @@ function spilldownResolve(t, name) {
 if(!t.nodeName) return false;
 var nn = t.nodeName.toLowerCase();
 return name == "action" && nn == "form" ||
+name == "data" && (nn == "object") ||
 name == "src" && (nn == "img" || nn == "script" || nn == "audio" || nn == "video") ||
 name == "href" && (nn == "link" || nn == "base");
 }
@@ -4833,6 +4833,9 @@ this.close = eb$voidfunction;
 })
 swpp("AudioContext", null)
 
+swp("HTMLObjectElement", function(){})
+swpp("HTMLObjectElement", w.HTMLElement)
+
 swp("HTMLTemplateElement", function(){})
 swpp("HTMLTemplateElement", w.HTMLElement)
 odp(w.HTMLTemplateElement.prototype, "content", {
@@ -4922,8 +4925,12 @@ everything else is a guess.
 *********************************************************************/
 
 ; (function() {
-const cnlist = ["HTMLFormElement", "HTMLImageElement", "HTMLScriptElement", "HTMLBaseElement", "HTMLLinkElement", "HTMLMediaElement"];
-const ulist = ["action", "src", "src", "href", "href", "src"];
+const cnlist = ["HTMLFormElement", "HTMLImageElement", "HTMLScriptElement",
+"HTMLBaseElement", "HTMLLinkElement", "HTMLMediaElement",
+"HTMLObjectElement"];
+const ulist = ["action", "src", "src",
+"href", "href", "src",
+"data"];
 for(let i=0; i<cnlist.length; ++i) {
 const cn = cnlist[i]; // class name
 const u = ulist[i]; // url name
@@ -5266,8 +5273,6 @@ list.splice(idx, 0, r);
 // stragglers
 swp("HTMLUnknownElement", function(){})
 swpp("HTMLUnknownElement", w.HTMLElement)
-swp("HTMLObjectElement", function(){})
-swpp("HTMLObjectElement", w.HTMLElement)
 swp("z$Timer", function(){this.nodeName = "TIMER"})
 swpp("z$Timer", null)
 swp("z$Datalist", function() {})

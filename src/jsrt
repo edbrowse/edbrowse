@@ -1051,6 +1051,10 @@ if(atemplate.nodeType != 11) fail(280);
 if(atemplate.firstChild.nodeName != "P") fail(281);
 if(atemplate.lastChild.nodeName != "HR") fail(282);
 
+let ob = document.createElement("object");
+ob.setAttribute("data", "./page.html")
+if(ob.data != "http://y.z.com/page.html") fail(283);
+
 function relative() {
 var el = document.createElement("DIV")
 el.innerHTML = "<img src=/foo snork=77 id=garage>";

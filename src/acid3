@@ -2110,6 +2110,18 @@ edbrowse should agree with that.
       assertEquals(area.getAttribute('alt'), '<\'>', "wrong value for alt=''");
       return 4;
     },
+    function () {
+      // test 64: more attribute tests
+      // attributes of the <object> element
+      var obj1 = document.createElement('object');
+      obj1.setAttribute('data', 'test.html');
+      var obj2 = document.createElement('object');
+      obj2.setAttribute('data', './test.html');
+      assertEquals(obj1.data, obj2.data, "object elements didn't resolve URIs correctly");
+      assert(obj1.data.match(/^http:/), "object.data isn't absolute");
+// @` more to this test
+      return 4;
+    },
 // other tests not yet folded in
   ]; // end of tests
   var log = '';
