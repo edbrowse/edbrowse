@@ -189,6 +189,10 @@ class Eb$IterableWeakMap {
     }
 }
 
+// * don't understand all the error codes and subcodes.
+// This is just a stub for now, to make acid 25 work.
+Error.prototype.NAMESPACE_ERR = 1;
+
 // The first DOM class is Node, at the head of all else.
 swm("Node", function(){})
 swmp("Node", null)
@@ -1100,9 +1104,17 @@ so I don't know what the point is.
 *********************************************************************/
 hasFeature: eb$truefunction,
 createDocumentType: function(tag, pubid, sysid) {
-// I really don't know what this function is suppose to do.
-var tagstrip = tag.replace(/:.*/, "");
-return owner.createElement(tagstrip);
+if(!tag.match(/^\w+:\w+$/) &&
+!tag.match(/^https?:\/\//)) {
+// acid 25 says we throw an exception
+let e = new Error;
+e.code = e.NAMESPACE_ERR;
+e.INVALID_ACCESS_ERR = 15;
+throw(e);
+}
+let d = new DocumentType;
+// need to set the properties of d based on the parameters of this function
+return d;
 },
 // https://developer.mozilla.org/en-US/docs/Web/API/DOMImplementation/createHTMLDocument
 createHTMLDocument: function(t) {

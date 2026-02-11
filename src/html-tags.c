@@ -3739,9 +3739,11 @@ when the pointers don't change out from under us.
 *********************************************************************/
 
 		next_child = child->sibling, child->sibling = 0;
+		if(next_child)
 		debugPrint(5, "%s lifts up %s", child->info->name, next_child ? next_child->info->name : "empty");
 		traverseNode(child, pc);
 		if(pc->abort) return;
+		if(next_child)
 		debugPrint(5, "after sibling %s %s above", child->sibling ? child->sibling->info->name : "empty",
 		next_child ? next_child->info->name : "empty");
 		if(next_child) {

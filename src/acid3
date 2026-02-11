@@ -223,7 +223,7 @@
     });
   }
   var kungFuDeathGrip = null; // used to hold things from test to test
-// @` skipped: 7 8 9 10 11 12 13 25 26 27
+// @` skipped: 7 8 9 10 11 12 13 26 27
 // I run test 16 but it's meaningless, has no semantics in edbrowse.
   var tests = [ // start of tests
 
@@ -761,7 +761,23 @@ if(div === null) { var e = new Error; e.code = 14; throw e; }
       assertEquals(document.body.getAttribute('onload'), "update()  /* this attribute's value is tested in one of the tests */ ", "onload value wrong");
       return 2;
     },
-    function() { return 2; }, // test 25
+    function() {
+      // test 25: test namespace checking in createDocumentType, and
+      // check that exceptions that are thrown are DOMException objects
+      var message = "";
+      try {
+        document.implementation.createDocumentType('a:', '', ''); /* doesn't contain an illegal character; is malformed */
+        message = "failed to raise exception";
+      } catch (e) {
+        if (e.code != e.NAMESPACE_ERR)
+          message = "wrong exception";
+        else if (e.INVALID_ACCESS_ERR != 15)
+          message = "exceptions don't have all the constants";
+      }
+      if (message)
+        fail(message);
+      return 2;
+    },
     function() { return 2; }, // test 26
     function() { return 2; }, // test 27
     function () {
@@ -1490,7 +1506,7 @@ if(div === null) { var e = new Error; e.code = 14; throw e; }
       document.body.setAttribute("style", "float: none");
       assertEquals(document.body.style.cssFloat, "none", "body didn't lose floatation");
 return 3;
-},
+    },
     function () {
       // test 46: media queries
       var doc = getTestDocument();
@@ -2072,7 +2088,7 @@ frames[1].contentDocument;
       var elapsedTime = ((endTime - startTime) - (delay * tests.length)) / 1000;
       log += "Total elapsed time: " + elapsedTime.toFixed(2) + "s";
       if (errors == 0)
-        log += "\nNo JS errors and no timing issues, but 10 tests were skipped.";
+        log += "\nNo JS errors and no timing issues, but 9 tests were skipped.";
   alert(log);
     }
   }

@@ -4753,10 +4753,11 @@ htmlp.scrollTop = 0;
 htmlp.scrollLeft = 0;
 
 // is there a difference between DocType ad DocumentType?
-swp("z$DocType", function(){ this.nodeType = 10, this.nodeName = "DOCTYPE"})
-swpp("z$DocType", w.HTMLElement)
-swp("DocumentType", function(){})
-swpp("DocumentType", w.HTMLElement)
+swp("DocType", function(){})
+swpp("DocType", w.HTMLElement)
+w.DocType.prototype.nodeType = 10;
+w.DocType.prototype.nodeName = "DOCTYPE";
+swp("DocumentType", w.DocType)
 
 // <div> <p> <span>
 swp("HTMLDivElement", function(){})
