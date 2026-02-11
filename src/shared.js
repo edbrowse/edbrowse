@@ -577,11 +577,11 @@ function dispatchEvent (e) {
         const prop = `on${e.type}$$array`;
         // Don't care if it's an actual array as long as it's iterable
         const handlers = t[prop];
-        if (!handlers) return;
-        // We want to log which handlers ran for debugging
-        for (const h of handlers) h.ran = false;
-        for (const h of handlers) if (!runEventHandler(h)) return false;
-        // If we've stopped immediate propagation we can't be here
+        if (handlers) {
+            // We want to log which handlers ran for debugging
+            for (const h of handlers) h.ran = false;
+            for (const h of handlers) if (!runEventHandler(h)) break;
+        }
         return !e.stop$propagating;
     }
 
