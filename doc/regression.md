@@ -6,7 +6,7 @@ Please run these tests before committing a significant software change.
 Note however that they don't test everything.
 It is possible to pass both of these tests and still break something.
 
-The first test is acid3, which is a snapshot of www.acid3.org.
+The first test is acid3, which is a snapshot of http://acid3.acidtests.org.acid3.org.
 It has been much modified.
 It consists of 100 tests, but I only run the first 62.
 The latter tests seemed to have little relevance to websites in the real world,
@@ -142,10 +142,13 @@ It depends on where you are in the file.
 Type jdb from line 1 and you are in the first context, the first web page.
 It even introduces itself with cx1.
 You can confirm by looking at the variable eb$ctx, which is an edbrowse variable of our own making.
-type jdb from the line that says Spaced Out, and you are in the second frame, the second context.
-Go farther down, into the math of the Rubix cube, and type jdb, and you are in the third context.
+type jdb from the line that says Spaced Out, and you are in the second frame,
+which you might think is the second context.
+It is actually the fourth context, because the jsrt tests create two contexts internally.
+So jdb introduces itself as cx4.
+Go farther down, into the math of the Rubix cube, and type jdb, and you are in the fifth context.
 The tree of objects is different in each context, because it reflects the web page of that frame.
-for example, there are no forms in this third context.
+for example, there are no forms in this innermost context.
 document.forms[0] produces an error.
 However, top.document.forms[0] gives you the form with all the buttons, as before,
 because top is a variable that takes us up to the top frame.
