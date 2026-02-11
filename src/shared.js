@@ -217,8 +217,8 @@ alert("bye   ub   ci+   /<head/r from   w base   q");
 
 function set_location_hash(h)
 {
-    h = '#'+h;
-    constt w = my$win();
+    h = `#${h}`;
+    const w = my$win();
     const d = my$doc();
     const body = d.body;
     let loc = w.location$2;
@@ -230,7 +230,7 @@ function set_location_hash(h)
     loc = d.location$2;
     loc.hash$val = h;
     loc.href$val = loc.href$val.replace(/#.*/, "") + h;
-    let e = new (w.HashChangeEvent);
+    let e = new w.HashChangeEvent;
     e.oldURL = oldURL;
     e.newURL = newURL;
     w.dispatchEvent(e);
@@ -535,9 +535,22 @@ function dispatchEvent (e) {
     const runEventHandler = (h) => {
         e.currentTarget = t;
         const inline = typeof h == "function";
-        const f = inline ? h : h.func;
-        if (!(inline || e.do$phases.has(e.eventPhase))) return;
-        dbg(`fires ${inline ? "assigned" : `handler ${h.ehsn}`}`);
+        // handler info for debug
+        const hd = inline ? "inline handler" : `handler ${h.ehsn}`;
+        let f;
+        if (inline) f = h;
+        else if (typeof h.callback == "function") f = h.callback;
+        else if (typeof h.callback == "object") f = h.callback.handleEvent;
+        if (!f) {
+            dbg(`could not find callback for ${hd}`);
+            return; // null listeners appear to be allowed
+        }
+        if (!(inline || h.do$phases.has(e.eventPhase))) {
+            dbg(`Unsupported phase ${e.eventPhase} for ${hd}`);
+            dbg(`${hd} supported: ${JSON.stringify(Array.from(h.do$phases))}`);
+            return;
+        }
+        dbg(`fires ${hd}`);
         let r = f.call(t, e);
         // Events added by listeners ignore return values these days
         if (inline) {
@@ -550,7 +563,7 @@ function dispatchEvent (e) {
         }
         h.ran = true;
         if (h.do$once) {
-            dbg("Remove one-shot listener");
+            dbg(`Remove one-shot ${hd}`);
             t.removeEventListener(e.type, f, h.do$phases.has(1));
         }
         return !e.stop$propagating$immediate;
@@ -562,21 +575,20 @@ function dispatchEvent (e) {
         const handlers = t[prop];
         if (!handlers) return;
         // We want to log which handlers ran for debugging
-        for (h of handlers) h.ran = false;
-        for (h of handlers) if (!runEventHandler(h)) return false;
+        for (const h of handlers) h.ran = false;
+        for (const h of handlers) if (!runEventHandler(h)) return false;
         // If we've stopped immediate propagation we can't be here
         return !e.stop$propagating;
     }
 
     if(db$flags(1))
         dbg = (m) => {
-            const phases = ["dispatch", "capture", "current", "bubble"];
+            const phases = ["dispatch", "capture", "target", "bubble"];
             const prefix = `dispatchEvent ${t.nodeName} event ${e.type}`
             alert3(`${prefix} tag ${t.eb$seqno} phase ${phases[e.eventPhase]}: ${m}`);
         };
 
-
-    dbg(`tag ${(this.eb$seqno >= 0 ? this.eb$seqno : "?")}`);
+    dbg("start");
 
     e.target = this;
     const pathway = [];
@@ -603,22 +615,22 @@ function dispatchEvent (e) {
     let l = pathway.length - 1;
     do {
         t = pathway[l--];
-    } while (l > 0 && runHandlerArray() && !e.stop$propagating);
-
+    } while (l > 0 && runHandlerArray());
     // Bubble phase, inner to outer. Also includes target phase.
     l = 0;
     do {
-        t = pathway[l++];
         e.eventPhase = l ? 3 : 2;
         if (l && !e.bubbles) {
             dbg("not bubbling");
             break;
         }
+        t = pathway[l++];
         // Most event handlers including inline bubble and all run on target
         const ep = `on${e.type}`;
         const inline_fn = t[ep];
         if (typeof inline_fn == "function") runEventHandler(inline_fn, e, t);
-    } while (runHandlerArray());
+    } while (runHandlerArray() && l < pathway.length);
+    dbg(`end: ${!e.defaultPrevented}`);
     return !e.defaultPrevented;
 }
 
@@ -626,31 +638,25 @@ function dispatchEvent (e) {
 This is our addEventListener function.
 It needs to be bound to window, document and to other nodes via
 class.prototype.addEventListener = addEventListener,
-to cover all the instantiated objects in one go.
-first arg is a string like click, second arg is a js handler,
-Third arg is not used cause I don't understand it.
-It calls a lower level function to do the work, which is also called by
-attachEvent, as these are almost exactly the same functions.
-A similar design applies for removeEventListener and detachEvent.
-However, attachEvent is deprecated, and not implemented here.
-This is frickin complicated, so set eventDebug to debug it.
+to cover all the instantiated objects in one go. A similar design applies for removeEventListener.
+This is frickin complicated, so use dbev+ to debug it.
 *********************************************************************/
 
 function addEventListener(ev, handler, iscapture) {
-    return eb$listen.call(this, ev, handler, iscapture, true);
+    return eb$listen.call(this, ev, handler, iscapture);
 }
 function removeEventListener(ev, handler, iscapture) {
     return eb$unlisten.call(this, ev, handler, iscapture, true);
 }
 
-function eb$listen(ev, handler, iscapture, addon)
+function eb$listen(evtype, handler, iscapture)
 {
-    const h = {
-        do$phases: new my$win().Set,
-        func: handler
-    };
-    if(addon) ev = `on${ev}`;
-    evarray = `${ev}$$array`; // array of handlers
+    const h = {};
+    h.do$phases = new Set;
+    h.callback = handler;
+    h.do$phases.add(2);
+    const ev = `on${evtype}`;
+    const evarray = `${ev}$$array`; // array of handlers
     // legacy, iscapture could be boolean, or object, or missing
     let captype = typeof iscapture;
     if (captype == "boolean" && iscapture) h.do$phases.add(1);
@@ -660,18 +666,14 @@ function eb$listen(ev, handler, iscapture, addon)
         if (iscapture.passive) h.do$passive = true; // don't know how to implement this yet
     }
     if (!h.do$phases.has(1)) h.do$phases.add(3);
-    h.do$phases.add(2);
-    if (!handler) {
-        alert3((addon ? "listen " : "attach ") + this.nodeName + "." + ev + " for " + (iscap?"capture":"bubble") + " with null handler");
-        return;
-    }
     // event handler serial number, for debugging
     if (!h.ehsn) h.ehsn = db$flags(4);
-    if (db$flags(1))  alert3((addon ? "listen " : "attach ") + this.nodeName + "." + ev + " tag " + (this.eb$seqno >= 0 ? this.eb$seqno : -1) + " handler " + handler.ehsn + " for " + (handler.do$capture?"capture":"bubble"));
+    if (db$flags(1))
+        alert3(`listen ${this.nodeName}.${ev} tag ${this.eb$seqno} handler ${h.ehsn} for ${(h.do$phases.has(1)?"capture":"bubble")}`);
 
-    if (!this[evarray]) {
-        Object.defineProperty(this, evarray, {value:[]})
-}
+    if (!this[evarray])
+        Object.defineProperty(this, evarray, {value: []})
+
     /* Duplicate handlers are allowed and are sometimes deliberately used although
     they're generally not recommended. It's also really hard to reliably deduplicate
     handlers these days with modern coding practices. As such I'm not sure what
@@ -682,13 +684,17 @@ function eb$listen(ev, handler, iscapture, addon)
 // here is unlisten, the opposite of listen.
 // what if every handler is removed and there is an empty array?
 // the assumption is that this is not a problem.
-function eb$unlisten(ev, handler, iscapture, addon)
+function eb$unlisten(evtype, handler, iscapture, addon)
 {
-    let ehsn = (handler.ehsn ? handler.ehsn : 0);
-    if(addon) ev = "on" + ev;
-    if(db$flags(1))  alert3((addon ? "unlisten " : "detach ") + this.nodeName + "." + ev + " tag " + (this.eb$seqno >= 0 ? this.eb$seqno : -1) + " handler " + ehsn);
+    let dbg = () => undefined;
+    const ev = `on${evtype}`;
+    if (db$flags(1))
+        dbg = (m) => alert3(
+            `unlisten ${this.nodeName}.${ev} tag ${this.eb$seqno}: ${m}`
+        );
     const evarray = ev + "$$array";
     if(this[ev] == handler) {
+        dbg("removing inline handler");
         delete this[ev];
         return;
     }
@@ -697,11 +703,11 @@ function eb$unlisten(ev, handler, iscapture, addon)
     if(this[evarray]) {
         const a = this[evarray];
         for(let i = 0; i < a.length; ++i) {
-            if(a[i].func == handler) {
-                if (a[i].do$phases.has(target_phase)) {
-                    a.splice(i, 1);
-                    return;
-                }
+            const h = a[i];
+            if(h.callback == handler && h.do$phases.has(target_phase)) {
+                dbg(`removing handler ${h.ehsn}`);
+                a.splice(i, 1);
+                return;
             }
         }
     }
