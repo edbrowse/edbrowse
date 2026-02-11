@@ -873,11 +873,12 @@ this.type = t, this.bubbles = bubbles, this.cancelable = cancel, this.detail = d
 
 sdm2("createEvent", function(unused) { return new Event; })
 
-swm("HashChangeEvent", function(){
+swm("HashChangeEvent", function() {
     this.currentTarget =     this.target = null;
     this.eventPhase = 0;
     this.timeStamp = new Date().getTime();
-this.type = "hashchange";
+    this.type = "hashchange";
+    this.bubbles = false;
 })
 HashChangeEvent.prototype = new Event;
 
