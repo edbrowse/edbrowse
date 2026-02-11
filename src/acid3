@@ -2146,6 +2146,86 @@ edbrowse should agree with that.
       assertEquals(document.localName, null, 'wrong localName for document node');
       return 5;
     },
+    function () {
+// COMMENTED OUT IN NOV 2013 BECAUSE DOM SPEC REMOVED THIS FEATURE
+//       // test 67: removedNamedItemNS on missing attributes, from Sylvain Pasche
+//       var p = document.createElement("p");
+//       var msg = 'wrong exception raised';
+//       try {
+//         p.attributes.removeNamedItemNS("http://www.example.com/", "absent");
+//         msg = 'no exception raised';
+//       } catch (e) {
+//         if ('code' in e) {
+//           if (e.code == 8)
+//             msg = '';
+//           else
+//             msg += '; code = ' + e.code;
+//         }
+//       }
+//       assert(msg == '', "when calling removeNamedItemNS in a non existent attribute: " + msg);
+      return 5;
+    },
+    function () {
+      // test 68: UTF-16 surrogate pairs, from David Chan
+      // 
+      // In The Unicode Standard 5.0, it is explicitly permitted to
+      // allow malformed UTF-16, that is, to leave the string alone.
+      // (http://www.unicode.org/versions/Unicode5.0.0):
+      // 
+      // section 2.7: "...strings in ... ECMAScript are Unicode 16-bit
+      // strings, but are not necessarily well-formed UTF-16
+      // sequences.  In normal processing, it can be far more
+      // efficient to allow such strings to contain code unit
+      // sequences that are not well-formed UTF-16 -- that is,
+      // isolated surrogates"
+      // 
+      // On the other hand, if the application wishes to ensure
+      // well-formed character sequences, it may not permit the
+      // malformed sequence and it must regard the first codepoint as
+      // an error:
+      // 
+      // Section 3.2: "C10. When a process interprets a code sequence
+      // which purports to be in a Unicode character encoding form, it
+      // shall treat ill-formed code unit sequences as an error
+      // condition and shall not interpret such sequences as
+      // characters.
+      // [...]
+      // For example, in UTF-8 every code unit of the form 110....2
+      // must be followed by a code unit of the form 10......2. A
+      // sequence such as 110.....2 0.......2 is ill-formed and must
+      // never be generated. When faced with this ill-formed code unit
+      // sequence while transforming or interpreting text, a
+      // conformant process must treat the first code unit 110.....2
+      // as an illegally terminated code unit sequence~Wfor example,
+      // by signaling an error, filtering the code unit out, or
+      // representing the code unit with a marker such as U+FFFD
+      // replacement character."
+      // 
+      // So it would be permitted to do any of the following:
+      // 1) Leave the string alone
+      // 2) Remove the unpaired surrogate
+      // 3) Replace the unpaired surrogate with U+FFFD
+      // 4) Throw an exception
+
+      try {
+        var unpaired = String.fromCharCode(0xd863); // half a surrogate pair
+        var before = unpaired + "text";
+        var elt = document.createElement("input");
+        elt.value = before;
+        var after = elt.value;
+      }
+      catch(ex) {
+        return 5; // Unpaired surrogate caused an exception - ok
+      }
+      if (after == before && before.length == 5)
+        return 5; // Unpaired surrogate kept - ok
+      if (after == "text")
+        return 5; // Unpaired surrogate removed - ok
+      var replacement = String.fromCharCode(0xfffd);
+      if (after == replacement + "text")
+        return 5; // Unpaired surrogate replaced - ok
+      fail("Unpaired surrogate handled wrongly (input was '" + before + "', output was '" + after + "')");
+    },
 // other tests not yet folded in
   ]; // end of tests
   var log = '';
