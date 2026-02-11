@@ -223,6 +223,8 @@
     });
   }
   var kungFuDeathGrip = null; // used to hold things from test to test
+// @` skipped: 7 8 9 10 11 12 13 25 26 27
+// I run test 16 but it's meaningless, has no semantics in edbrowse.
   var tests = [ // start of tests
 
     // there are 6 buckets with 16 tests each, plus four special tests (0, 97, 98, and 99).
@@ -238,7 +240,7 @@
       var last = document.getElementById('remove-last-child-test');
       var penultimate = last.previousSibling; // this should be the whitespace node
       penultimate = penultimate.previousSibling; // this should now be the actual penultimate element
-//@` tidy does not hand us whitespace nodes, so previousSibling
+//@` edbrowse does not hand us whitespace nodes, so previousSibling
 // does not hand us the whitespace between tags, as acid3 expects.
 // One call to previousSibling works in edbrowse, not two.
 // Better still, how bout the more portable
@@ -756,7 +758,6 @@ if(div === null) { var e = new Error; e.code = 14; throw e; }
     },
     function () {
       // test 24: event handler attributes
-//@` be sure to set TidyLiteralAttribs, or this test will fail.
       assertEquals(document.body.getAttribute('onload'), "update()  /* this attribute's value is tested in one of the tests */ ", "onload value wrong");
       return 2;
     },
@@ -766,15 +767,6 @@ if(div === null) { var e = new Error; e.code = 14; throw e; }
     function () {
       // test 28: getElementById()
       // ...and name=""
-//@` Here is a tidy collision. <form name=z> generates name=z and id=z
-// tidy adds the extra id=z unsolicited.
-// This doesn't happen with other tags such as span, just form,
-// and guess what, acid3 tests <form>.
-// I could check for both name and id being the same, and remove id=z, thinking
-// it was tidy generated, but what if the tag is <form name=z id=z>
-// I'd rather have a false positive than a false negative.
-// So this test was commented out.
-// I put it back in, now that I'm not using tidy.
       assert(document.getElementById('form') !== document.getElementsByTagName('form')[0], "getElementById() searched on 'name'");
       // ...and a space character as the ID
       var div = document.createElement('div');
@@ -790,9 +782,9 @@ if(div === null) { var e = new Error; e.code = 14; throw e; }
       var t2 = t1.cloneNode(true);
       assertEquals(t2.tBodies[0].rows[0].cells[0].firstChild.tagName, 'P', "<p> didn't clone right");
       assertEquals(t2.tBodies[0].rows[0].cells[0].firstChild.childNodes.length, 0, "<p> got child nodes after cloning");
-//@` Well here we are with the tidy whitespace nodes again.
+//@` Well here we are with the edbrowse whitespace nodes again.
 // There's a deliberate space before </table, and acid expects
-// a whitespace node to stand in, and tidy doesn't give us one.
+// a whitespace node to stand in, and edbrowse doesn't give us one.
 // Acid expects length to be 2; I changed it to 1.
       assertEquals(t2.childNodes.length, 1, "cloned table had wrong number of children");
 //@` and there's no text node so skip this
