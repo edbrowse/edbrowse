@@ -538,7 +538,10 @@ function dispatchEvent (e) {
         // handler info for debug
         const hd = inline ? "inline handler" : `handler ${h.ehsn}`;
         let f;
-        if (inline) f = h;
+        if (inline) {
+            if (typeof h == "function") f = h;
+            else if (typeof h == "string") f = function(e) { return eval(h); };
+        }
         else if (typeof h.callback == "function") f = h.callback;
         else if (typeof h.callback == "object") f = h.callback.handleEvent;
         if (!f) {
