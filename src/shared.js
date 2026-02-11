@@ -2637,32 +2637,6 @@ if(rc == 4 && s1.hov$col) rc = 5;
 return rc;
 }
 
-function insertAdjacentHTML(flavor, h) {
-// easiest implementation is just to use the power of innerHTML
-var d = my$doc();
-var p = d.createElement("p");
-p.innerHTML = h; // the magic
-var s, parent = this.parentNode;
-switch(flavor) {
-case "beforebegin":
-while(s = p.firstChild)
-parent.insertBefore(s, this);
-break;
-case "afterbegin":
-while(s = p.lastChild)
-this.insertBefore(s, this.firstChild);
-break;
-case "beforeend":
-while(s = p.firstChild)
-this.appendChild(s);
-break;
-case "afterend":
-while(s = p.lastChild)
-parent.insertBefore(s, this.nextSibling);
-break;
-}
-}
-
 function htmlString(t) {
 if(t.nodeType == 3) return t.data;
 if(t.dom$class == "XMLCdata") return "<![Cdata[" + t.text + "]]>";
@@ -2906,20 +2880,6 @@ function Event(etype){
     this.timeStamp = new Date().getTime();
 if(typeof etype == "string") this.type = etype;
 };
-
-// placeholder for URL class, we can't share the actual class here,
-// but this has to be here for the Blob code.
-// See startwindow for an explanation of why this class can't be shared.
-this.URL = {};
-
-/*********************************************************************
-Some URL methods we can define here however, and reuse elsewhere,
-like the table methods etc.
-The first is the rebuild method, to build the url string
-when any of its components is updated.
-All components are strings, except for port,
-and all should be defined, even if they are empty.
-*********************************************************************/
 
 // sort some objects based on timestamp.
 // There should only be a few, thus a bubble sort.
@@ -3638,17 +3598,6 @@ n ? p.insertBefore(c,n) : p.appendChild(c);
 p.removeChild(this);
 }
 nodep.replaceChild = replaceChild;
-nodep.insertAdjacentElement = function(pos, e) {
-let n, p = this.parentNode;
-if(!p || typeof pos != "string") return null;
-pos = pos.toLowerCase();
-switch(pos) {
-case "beforebegin": return p.insertBefore(e, this);
-case "afterend": n = this.nextSibling; return n ? p.insertBefore(e, n) : p.appendChild(e);
-case "beforeend": return this.appendChild(e);
-case "afterbegin": return this.prependChild(e);
-return null;
-}}
 nodep.removeChild = removeChild;
 nodep.remove = function() {
 if(this.parentNode) this.parentNode.removeChild(this)}
@@ -3734,7 +3683,6 @@ nodep.getBoundingClientRect = d.getBoundingClientRect;
 nodep.addEventListener = addEventListener;
 nodep.removeEventListener = removeEventListener;
 nodep.dispatchEvent = dispatchEvent;
-nodep.insertAdjacentHTML = insertAdjacentHTML;
 // outerHTML is dynamic; should innerHTML be?
 odp(nodep, "outerHTML", { get: function() { return htmlString(this);},
 set: function(h) { outer$1(this,h); }});
@@ -3763,6 +3711,45 @@ this.data : this.nodeType == 4 ? this.text : null;},
 set: function(h) {
 if(this.nodeType == 3) this.data = h;
 if (this.nodeType == 4) this.text = h }})
+
+nodep.insertAdjacentElement = function(pos, e) {
+let n, p = this.parentNode;
+if(!p || typeof pos != "string") return null;
+pos = pos.toLowerCase();
+switch(pos) {
+case "beforebegin": return p.insertBefore(e, this);
+case "afterend": n = this.nextSibling; return n ? p.insertBefore(e, n) : p.appendChild(e);
+case "beforeend": return this.appendChild(e);
+case "afterbegin": return this.prependChild(e);
+return null;
+}
+}
+
+nodep.insertAdjacentHTML = function(flavor, h) {
+// easiest implementation is just to use the power of innerHTML
+let p = d.createElement("p");
+p.innerHTML = h; // the magic
+let s, parent = this.parentNode;
+switch(flavor) {
+case "beforebegin":
+while(s = p.firstChild)
+parent.insertBefore(s, this);
+break;
+case "afterbegin":
+while(s = p.lastChild)
+this.insertBefore(s, this.firstChild);
+break;
+case "beforeend":
+while(s = p.firstChild)
+this.appendChild(s);
+break;
+case "afterend":
+while(s = p.lastChild)
+parent.insertBefore(s, this.nextSibling);
+break;
+}
+}
+
 nodep.clientHeight = 16;
 nodep.clientWidth = 120;
 nodep.scrollHeight = 16;
@@ -5410,7 +5397,10 @@ return c;
 
 }
 
-// Code beyond this point is third party, but necessary for the operation of the browser.
+// placeholder for URL class. This has to be here for the Blob code.
+this.URL = {};
+
+// Code beyond this point is third party - necessary for the operation of the browser.
 
 // NextSection
 // TextDecoder TextEncoder   https://github.com/anonyco/FastestSmallestTextEncoderDecoder
@@ -8277,7 +8267,7 @@ setAttribute, setAttributeNS,
 removeAttribute, removeAttributeNS,
 getAttributeNode, setAttributeNode, removeAttributeNode,
 getComputedStyle,
-insertAdjacentHTML,URL,
+URL,
 TextEncoder, TextDecoder,
 ];
 for(var i=0; i<flist.length; ++i)
