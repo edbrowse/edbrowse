@@ -4149,7 +4149,6 @@ void domLink(Tag *t, const char *classname,	/* instantiate this class */
 	const char *symname = t->name;
 	const char *idname = t->id;
 	const char *membername = 0;	/* usually symname */
-	const char *tcn = t->jclass;
 	const char *stylestring = attribVal(t, "style");
 	JSValue cn; // child nodes
 	char classtweak[MAXTAGNAME + 4];
@@ -4262,10 +4261,6 @@ Don't do any of this if the tag is itself <style>. */
 			processStyles(so, stylestring);
 			JS_Release(cx, so);
 		}
-
-		if (!tcn)
-			tcn = emptyString;
-		set_property_string(cx, io, "class", tcn);
 
 // only anchors with href go into links[]
 		if (list && stringEqual(list, "links") &&

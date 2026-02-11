@@ -98,7 +98,8 @@ function uptrace(t) {
 var r = "";
 while(t) {
 var msg = t.nodeName;
-if(t.class) msg += "." + t.class;
+let tc = t.getAttribute("class")
+if(tc) msg += "." + tc;
 if(t.id) msg += "#" + t.id;
 r += msg + '\n'
 t = t.parentNode;
@@ -1448,11 +1449,8 @@ function spilldown(name) {
 // Ideally I should have a list of all the on functions, but I'm gonna say
 // any word that starts with on spills down.
 if(name.match(/^on[a-zA-Z]*$/)) return true;
-// I'm not sure value should spill down, setAttribute("value","blah")
-return name == "value" ||
-// class shouldn't spill down. But if we don't, then I don't think my
-// getElementsByClassName or querySelector(".class") work properly.
-name == "class";
+// I'm not sure if value should spill down, setAttribute("value","blah")
+return name == "value";
 }
 
 // This stuff has to agree with the tables in startwindow.js starting at "src"
@@ -1768,7 +1766,7 @@ var a2 = node2[item];
 if(debug) alert3("linking form.radio " + item + " with " + a1.length + " buttons");
 a2.type = a1.type;
 a2.nodeName = a1.nodeName;
-if(a1.class) a2.setAttribute("class", a1.class);
+if(a1.hasAttribute("class")) a2.setAttribute("class", a1.getAttribute("class"));
 for(i = 0; i < a1.length; ++i) {
 var p = findObject(a1[i]);
 if(p.length) {
@@ -2723,10 +2721,6 @@ if(t.nodeType == 3) return t.data;
 if(t.dom$class == "XMLCdata") return "<![Cdata[" + t.text + "]]>";
 if(t.nodeType != 1) return "";
 var s = "<" + (t.nodeName ? t.nodeName : "x");
-/* defer to the setAttribute system
-if(t.class) s += ' class="' + t.class + '"';
-if(t.id) s += ' id="' + t.id + '"';
-*/
 if(t.attributes$2) {
 for(var l = 0; l < t.attributes$2.length; ++l) {
 var a = t.attributes$2[l];

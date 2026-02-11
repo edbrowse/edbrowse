@@ -3725,11 +3725,12 @@ void cssApply(int frameNumber, Tag *t, int pe)
 
 // it's a getComputedStyle match
 	gcsmatch = true, matchtype = pe;
-// defer to the js
+// defer to the js here;
+// then I don't have to get these attributes on every css rule.
 	nzFree(t->jclass);
-	t->jclass = get_property_string_t(t, "class");
+	t->jclass = run_function_onestring1_t(t, "getAttribute", "class");
 	nzFree(t->id);
-	t->id = get_property_string_t(t, "id");
+	t->id = run_function_onestring1_t(t, "getAttribute", "id");
 
 // this is cheeky- but do_rules checks bulkmatch then visibility,
 // so set bulkmatch temporarily.

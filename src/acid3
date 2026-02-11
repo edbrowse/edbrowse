@@ -2055,6 +2055,30 @@ edbrowse should agree with that.
       assertEquals(p.className, '', "className was wrong after being emptied");
       return 4;
     },
+    function () {
+      // test 62: check that DOM attributes and content attributes aren't equivalent
+      var test;
+      // <div class="">
+      test = document.getElementsByTagName('div')[0];
+      assertEquals(test.className, 'buckets', "buckets: className wrong");
+      assertEquals(test.getAttribute('class'), 'buckets', "buckets: class wrong");
+      assert(!test.hasAttribute('className'), "buckets: element has className attribute");
+      assert(test.className != test.getAttribute('className'), "buckets: className attribute equals className property");
+      assert(!('class' in test), "buckets: element has class property")
+      test['class'] = "oil";
+      assert(test.className != "oil", "buckets: class property affected className");
+// @` rest not implemented
+      return 4;
+    },
+    function () {
+      // test 63: attributes of the <area> element
+      var area = document.getElementsByTagName('area')[0];
+      assertEquals(area.getAttribute('href'), '', "wrong value for href=''");
+      assertEquals(area.getAttribute('shape'), 'rect', "wrong value for shape=''");
+      assertEquals(area.getAttribute('coords'), '2,2,4,4', "wrong value for coords=''");
+      assertEquals(area.getAttribute('alt'), '<\'>', "wrong value for alt=''");
+      return 4;
+    },
 // other tests not yet folded in
   ]; // end of tests
   var log = '';
