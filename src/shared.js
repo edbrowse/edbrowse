@@ -2253,8 +2253,20 @@ delete w.soj$;
 return s;
 }
 
-// various css shorthand properties
-function marginShort(s, h) {
+/*********************************************************************
+There are a lot of css shorthand propertie.
+Example: set margin to 10px and you are really setting
+maringTop = marginRight = marginBottom = marginLeft = 10px.
+You can set them individaully of course, but this is a shorthand.
+There are a lot of these and they don't all work the same way.
+I could put all these into setupClasses, as private style methods, but there's
+a lot of code here, and I feel it would disrupt the flow of that function.
+I'll keep it here, but all insode one object.
+*********************************************************************/
+
+this.cssShort = {
+
+marginShort: function(s, h) {
 // don't want to blow up if it's not a string
 if(h === null || h === undefined) return;
 // this should already be a string, but...
@@ -2283,9 +2295,9 @@ s.marginBottom = h[2];
 s.marginLeft = h[3];
 return;
 }
-}
+},
 
-function scrollMarginShort(s, h) {
+scrollMarginShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2312,9 +2324,9 @@ s.scrollMarginBottom = h[2];
 s.scrollMarginLeft = h[3];
 return;
 }
-}
+},
 
-function paddingShort(s, h) {
+paddingShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2341,9 +2353,9 @@ s.paddingBottom = h[2];
 s.paddingLeft = h[3];
 return;
 }
-}
+},
 
-function scrollPaddingShort(s, h) {
+scrollPaddingShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2370,9 +2382,9 @@ s.scrollPaddingBottom = h[2];
 s.scrollPaddingLeft = h[3];
 return;
 }
-}
+},
 
-function borderRadiusShort(s, h) {
+borderRadiusShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2399,9 +2411,9 @@ s.borderBottomRightRadius = h[2];
 s.borderBottomLeftRadius = h[3];
 return;
 }
-}
+},
 
-function borderWidthShort(s, h) {
+borderWidthShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2428,9 +2440,9 @@ s.borderBottomWidth = h[2];
 s.borderLeftWidth = h[3];
 return;
 }
-}
+},
 
-function borderColorShort(s, h) {
+borderColorShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2457,9 +2469,9 @@ s.borderBottomColor = h[2];
 s.borderLeftColor = h[3];
 return;
 }
-}
+},
 
-function borderStyleShort(s, h) {
+borderStyleShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2486,9 +2498,9 @@ s.borderBottomStyle = h[2];
 s.borderLeftStyle = h[3];
 return;
 }
-}
+},
 
-function backgroundShort(s, h) {
+backgroundShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2505,9 +2517,9 @@ if(l >= 3)
 s.backgroundRepeat = h[2];
 if(l >= 4)
 s.backgroundPosition = h[3];
-}
+},
 
-function fontShort(s, h) {
+fontShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2538,9 +2550,9 @@ if(l >= 6)
 s.fontSizeAdjust = h[5];
 if(l >= 7)
 s.fontStretch = h[6];
-}
+},
 
-function borderShort(s, h) {
+borderShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2557,9 +2569,9 @@ if(l >= 3)
 s.borderColor =  h[2];
 if(l >= 4)
 s.borderImage =  h[3];
-}
+},
 
-function borderImageShort(s, h) {
+borderImageShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2579,9 +2591,9 @@ if(l >= 4)
 s.borderImageOutset =  h[3];
 if(l >= 5)
 s.borderImageRepeat =  h[4];
-}
+},
 
-function insetShort(s, h) {
+insetShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2608,6 +2620,8 @@ s.bottom = h[2];
 s.left = h[3];
 return;
 }
+},
+
 }
 
 // see the DIS_ values in eb.h
@@ -5023,7 +5037,7 @@ const list = ["margin", "scrollMargin", "padding", "scrollPadding",
 "borderWidth", "borderColor", "borderStyle", "borderImage",
 "background", "font", "inset",];
 for(let k of list) {
-eval('odp(csdp, "' + k + '", {set: function(h) {' + k + 'Short(this, h)}})')
+eval('odp(csdp, "' + k + '", {set: function(h) {cssShort.' + k + 'Short(this, h)}})')
 }})();
 
 // acid test 45 says float magically turns into cssFloat - I guess.
@@ -8308,10 +8322,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "Intl", "Intl_dt", "Intl_num",
 "cssGather",
 "makeSheets", "getComputedStyle", "computeStyleInline",
-"marginShort", "scrollMarginShort", "paddingShort", "scrollPaddingShort",
-"borderRadiusShort", "borderWidthShort", "borderColorShort", "borderStyleShort",
-"backgroundShort", "fontShort", "borderShort", "borderImageShort",
-"insetShort",
+"cssShort",
 "eb$visible",
 "insertAdjacentHTML", "htmlString", "outer$1", "textUnder", "newTextUnder",
 "EventTarget", "XMLHttpRequestEventTarget", "XMLHttpRequestUpload", "XMLHttpRequest",

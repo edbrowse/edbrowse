@@ -781,7 +781,8 @@ document.dispatchEvent(e);
 // before after unless we set showall+, so one wonders if it's even worth it.
 if(document.getElementsByClassName("inject")[0].firstChild.data != "My ") fail(173);
 if(document.spans[0].lastChild.data != " zip") fail(174);
-if(document.body.style.hasOwnProperty("animation")) fail(176);
+let dbs = document.body.style; // shorthand
+if(dbs.hasOwnProperty("animation")) fail(176);
 if(document.styleSheets[0].cssRules[0].cssText.substr(0,4) != "body") fail(180);
 }
 function bodyUnload() {
@@ -969,7 +970,8 @@ fail(163);
 if(document.defaultView.getComputedStyle(document.getElementById("almond"),'').whiteSpace != 'snork "')
 fail(164);
 
-if(document.body.style.fontSize != "1.0em") fail(169);
+let dbs = document.body.style;
+if(dbs.fontSize != "1.0em") fail(169);
 style2 = getComputedStyle(document.body,'')
 if(style2.color != "rgb(0,0,0)") fail(165);
 // I don't know which way this is suppose to go
@@ -978,8 +980,8 @@ if(querySelector(".filbert #pecan").nodeName != "TR")
 fail(170);
 if(querySelector("text + #bird").nodeName != "INPUT")
 fail(171);
-document.body.style.cssText = "border-block-start:ger' a'ld";
-if(document.body.style.borderBlockStart != "ger ald")
+dbs.cssText = "border-block-start:ger' a'ld";
+if(dbs.borderBlockStart != "ger ald")
 fail(172);
 
 // Create a frame and access something from its window.
@@ -1054,6 +1056,11 @@ if(atemplate.lastChild.nodeName != "HR") fail(282);
 let ob = document.createElement("object");
 ob.setAttribute("data", "./page.html")
 if(ob.data != "http://y.z.com/page.html") fail(283);
+
+// test css shorthand
+dbs.margin = "20px 10px";
+if(dbs.marginTop != '20px' || dbs.marginBottom != '20px') fail(284);
+if(dbs.marginRight != '10px' || dbs.marginLeft != '10px') fail(285);
 
 function relative() {
 var el = document.createElement("DIV")
