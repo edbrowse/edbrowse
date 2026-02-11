@@ -2308,21 +2308,6 @@ delete w.soj$;
 return s;
 }
 
-function cssTextGet() {
-var s = "";
-for(var k in this) {
-var k2 = k + "$$scy"
-if(!s[k2]) continue;
-var l = this[k];
-if(l.match(/[ \t;"'{}]/)) {
-if(l.match(/"/)) l = "'" + l + "'";
-else l = '"' + l + '"';
-}
-s=s+ k + ':' + l + '; ';
-}
-return s;
-}
-
 // various css shorthand properties
 function marginShort(s, h) {
 // don't want to blow up if it's not a string
@@ -5225,6 +5210,29 @@ delete this[p]
 delete this[p+"$$scy"]
 delete this[p+"$$pri"]
 }
+
+odp(csdp, "cssText", { get:  function(){
+let s = "";
+for(let k in this) {
+if(!this.hasOwnProperty(k)) continue;
+let l = this[k];
+// weirdness from acid 45
+if(k === "cssFloat") k = "float";
+if(l.match(/[ \t;"'{}]/)) {
+if(!l.match(/"/)) l = '"' + l + '"';
+else if(!l.match(/'/)) l = "'" + l + "'";
+else {
+alert3(`cssText unrepresentable ${k}: ${l}`);
+l = "none";
+}
+}
+if(s.length) s += ' ';
+s=s+ k + ': ' + l + ';';
+}
+return s;
+},
+set: function(h) {
+w.soj$ = this; eb$cssText.call(this,h); delete w.soj$; } });
 
 swp("CSSRule", function(){this.cssText=""})
 w. CSSRule.prototype = new w.Object;
@@ -8306,7 +8314,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "compareDocumentPosition", "generalbar", "CSS",
 "Intl", "Intl_dt", "Intl_num",
 "cssGather",
-"makeSheets", "getComputedStyle", "computeStyleInline", "cssTextGet",
+"makeSheets", "getComputedStyle", "computeStyleInline",
 "marginShort", "scrollMarginShort", "paddingShort", "scrollPaddingShort",
 "borderRadiusShort", "borderWidthShort", "borderColorShort", "borderStyleShort",
 "backgroundShort", "fontShort", "borderShort", "borderImageShort",

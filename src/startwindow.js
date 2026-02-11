@@ -54,7 +54,6 @@ this.my$doc = function() { return document}
 this.querySelectorAll = function() { return [] }
 this.querySelector = function() { return {} }
 this.querySelector0 = function() { return false}
-this.eb$cssText = function(){}
 }
 
 // the third party deminimization stuff is in mw$, the master window.
@@ -1321,10 +1320,6 @@ return Window.apply(this, arguments);
 // That is, Window should be the constructor of window.
 // The constructor is Object by default.
 swm("constructor", Window)
-
-// Apply rules to a given style object, which is this.
-odp(CSSStyleDeclaration.prototype, "cssText", { get: mw$.cssTextGet,
-set: function(h) { var w = my$win(); w.soj$ = this; eb$cssText.call(this,h); delete w.soj$; } });
 
 swm("eb$qs$start", function() { mw$.cssGather(true); mw$.frames$rebuild(window);})
 swm("frames$rebuild", function() {mw$.frames$rebuild(window);})

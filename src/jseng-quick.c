@@ -3673,6 +3673,8 @@ JS_NewCFunction(mwc, nat_setInterval, "setInterval", 2), 0);
 JS_NewCFunction(mwc, nat_clearTimeout, "clearInterval", 1), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "cssDocLoad",
 JS_NewCFunction(mwc, nat_css_start, "css_start", 3), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$cssText",
+JS_NewCFunction(mwc, nat_cssText, "cssText", 1), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "cssApply",
 JS_NewCFunction(mwc, nat_cssApply, "cssApply", 3), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$formSubmit",
@@ -3844,8 +3846,6 @@ JS_NewCFunction(cx, nat_qsa, "qsa", 2), 0);
 JS_NewCFunction(cx, nat_qs, "qs", 2), 0);
     JS_DefinePropertyValueStr(cx, g, "querySelector0",
 JS_NewCFunction(cx, nat_qs0, "qs0", 1), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$cssText",
-JS_NewCFunction(cx, nat_cssText, "cssText", 1), 0);
 
 // these really belong in document, but I'm putting them in
 // window and we can copy them to document later.
