@@ -617,10 +617,14 @@ function dispatchEvent (e) {
 
     // Capture phase: outer to inner elements
     e.eventPhase = 1;
-    let l = pathway.length - 1;
-    do {
-        t = pathway[l--];
-    } while (l > 0 && runHandlerArray());
+    let l;
+    if (e.eb$captures) {
+        l = pathway.length - 1;
+        do {
+            t = pathway[l--];
+        } while (l > 0 && runHandlerArray());
+    }
+    else dbg("not capturing");
     // Bubble phase, inner to outer. Also includes target phase.
     l = 0;
     do {
@@ -6570,32 +6574,36 @@ var ENCODEINTO_BUILD = false;
 
 // NextSection
 // Ok this is my function, but it blends with the message port functions below.
-function onmessage$$running() { 
-let rc = false;
-if(this.eb$pause && !this.onmessage) return rc;
-if(this.onmessage || (this.onmessage$$array && this.onmessage$$array.length)) { // handlers are ready
-while(this.onmessage$$queue.length) {
-// better run messages fifo
-var me = this.onmessage$$queue[0];
-this.onmessage$$queue.splice(0, 1);
-// if you then add another handler, it won't run on this message.
-// I assume you add all the handlers you wish in one go,
-// then they process each message in the queue, and each message going forward.
-var datashow = me.data;
-var datalength = 0;
-if(typeof me.data == "string") datalength = me.data.length;
-if(datalength >= 200) datashow = "long";
-alert3(this.nodeName + " context " + this.eb$ctx + " processes message of length " + datalength + " ↑" +
-datashow + "↑");
-rc = true;
-if(this.onmessage)
-this.onmessage(me);
-else
-this.onmessage$$fn(me);
-alert3("process message complete");
-}
-}
-return rc;
+function onmessage$$running() {
+    let rc = false;
+    if (this.eb$pause) return rc;
+    if (!(this.onmessage || (this.onmessage$$array && this.onmessage$$array.length))) return rc;
+    // We have handlers
+    while (this.onmessage$$queue.length) {
+        // better run messages fifo
+        const me = this.onmessage$$queue[0];
+        this.onmessage$$queue.splice(0, 1);
+        // if you add another handler, it won't run on this message.
+        let datashow = me.data;
+        let datalength = 0;
+        if (typeof me.data == "string") datalength = me.data.length;
+        if (datalength >= 200) datashow = "long";
+        alert3(`${this.nodeName} context ${this.eb$ctx} processes message of length ${datalength} ↑${datashow}↑`);
+        rc = true;
+        const e = new (my$win().Event)("message");
+        for (const p of ["origin", "ports", "source"]) e[p] = me[p];
+        e.data = my$win().structuredClone(me.data);
+        // Correct per mdn
+        e.bubbles = false;
+        e.cancelable = false;
+        // non-standard but our previous version didn't capture
+        e.eb$captures = false;
+        // What does this do, I can't find a reference but we had it before
+        e.name = "message";
+        this.dispatchEvent(e);
+        alert3("process message complete");
+    }
+    return rc;
 }
 
 function lastModifiedByHead(url) {
@@ -6670,21 +6678,21 @@ These are considerably modified for our purposes.
 
 this.MessagePort = /** @class */ (function () {
 function MessagePort() {
-var w = my$win();
-this.onmessage = null;
-this.onmessageerror = null;
-this.otherPort = null;
-this.onmessage$$queue = [];
-this.eb$ctx = w.eb$ctx;
-this.eb$pause = true;
-w.mp$registry.push(this);
+    const w = my$win();
+    this.onmessage = null;
+    this.onmessageerror = null;
+    this.otherPort = null;
+    this.onmessage$$queue = [];
+    this.eb$ctx = w.eb$ctx;
+    this.eb$pause = true;
+    w.mp$registry.push(this);
 }
-var p = MessagePort.prototype;
+const p = MessagePort.prototype;
 p.nodeName = "PORT";
 p.onmessage$$running = onmessage$$running;
-p.dispatchEvent = function (me) {
-me.name = me.type = "message";
-// me.data is already set
+p.receive$message = function (msg) {
+    // structured clone when posting messages to avoid reference issues
+    const me = { data: my$win().structuredClone(msg.data) };
 this.onmessage$$queue.push(me);
 var datashow = me.data;
 var datalength = 0;
@@ -6695,10 +6703,11 @@ datashow + "↑");
 return true;
 };
 p.postMessage = function (message) {
-if (this.otherPort) this.otherPort.dispatchEvent({ data: message });
+if (this.otherPort) this.otherPort.receive$message({ data: message });
 };
 p.addEventListener = addEventListener;
 p.removeEventListener = removeEventListener;
+p.dispatchEvent = dispatchEvent;
 p.start = function () {
 this.eb$pause = false;
 alert3("MessagePort start for context " + this.eb$ctx);

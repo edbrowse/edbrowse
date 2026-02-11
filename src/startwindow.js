@@ -777,8 +777,7 @@ swm1("postMessage", function (message,target_origin, transfer) {
         target_origin += ":" + standard_port;
     }
     if (target_origin == locstring || target_origin == "*") {
-        const me = new Event;
-        me.name = me.type = "message";
+        const me = {};
         let w = my$win();
         let l = w.location;
         me.origin = l.protocol + "//" + l.hostname;
@@ -844,6 +843,8 @@ swm1("Event", function(etype){
     // have to decide if we simply dont adhere to
     // the read-only restriction of the specification
     this.bubbles = true;
+    // non-standard but needed for target-only events
+    this.eb$captures = true;
     this.cancelable = true;
     this.stop$propagating = false;
     this.stop$propagating$immediate = false;
@@ -879,6 +880,7 @@ swm("HashChangeEvent", function() {
     this.timeStamp = new Date().getTime();
     this.type = "hashchange";
     this.bubbles = false;
+    this.eb$captures = false;
 })
 HashChangeEvent.prototype = new Event;
 
