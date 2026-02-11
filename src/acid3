@@ -223,7 +223,7 @@
     });
   }
   var kungFuDeathGrip = null; // used to hold things from test to test
-// @` skipped: 7 8 9 10 11 12 13 27
+// @` skipped: 7 8 9 10 11 12 13 27 65
 // I run 16 but it's meaningless, has no semantics in edbrowse.
   var tests = [ // start of tests
 
@@ -2133,6 +2133,19 @@ edbrowse should agree with that.
       assertEquals(test.getAttribute('TWVvdywgbWV3Li4u'), 'woof', "TWVvdywgbWV3Li4u has wrong value after setting");
       return 4;
     },
+    function () {
+// test 65 skip
+      return 5;
+    },
+    function () {
+      // test 66: localName on text nodes (and now other things), from Sylvain Pasche
+// @` this works because we use == instead of === 
+// localName is undefined out of the box
+      assertEquals(document.createTextNode("test").localName, null, 'wrong localName for text node');
+      assertEquals(document.createComment("test").localName, null, 'wrong localName for comment node');
+      assertEquals(document.localName, null, 'wrong localName for document node');
+      return 5;
+    },
 // other tests not yet folded in
   ]; // end of tests
   var log = '';
@@ -2214,7 +2227,7 @@ frames[1].contentDocument;
       var elapsedTime = ((endTime - startTime) - (delay * tests.length)) / 1000;
       log += "Total elapsed time: " + elapsedTime.toFixed(2) + "s";
       if (errors == 0)
-        log += "\nNo JS errors and no timing issues, but 8 tests were skipped.";
+        log += "\nNo JS errors and no timing issues, but 9 tests were skipped.";
   alert(log);
     }
   }

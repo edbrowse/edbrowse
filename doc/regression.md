@@ -8,13 +8,13 @@ It is possible to pass both of these tests and still break something.
 
 The first test is acid3, which is a snapshot of http://acid3.acidtests.org.acid3.org.
 It has been much modified.
-It consists of 100 tests, but I only run the first 65.
+It consists of 100 tests, but I only run the first 67.
 The latter tests seemed to have little relevance to websites in the real world,
 and quite frankly, I ran out of steam.
-8 of the earlier tests also didn't seem that relevant, and are skipped.
-Even if acid3 passes, it will remind you, "8 tests were skipped."
-So 57 tests in practice.
-I'd like to go back to these some day, the 8 that were skipped and the latter 35.
+9 of the earlier tests also didn't seem that relevant, and are skipped.
+Even if acid3 passes, it will remind you, "9 tests were skipped."
+So 58 tests in practice.
+I'd like to go back to these some day, the 9 that were skipped and the latter 33.
 I'm sure they would be valuable as part of the regression test.
 
 My modifications are indicated by the characters @`.
@@ -22,8 +22,8 @@ Look for comments containing @`; they explain how and why I modified the file.
 
 acid3 is entirely passive. There are no interactive features.
 Simply edit and browse, and watch what happens.
-If, after a few seconds, line 3 says 65/65, you're good.
-If the first number, the number of tests passed, is less than 65,
+If, after a few seconds, line 3 says 67/67, you're good.
+If the first number, the number of tests passed, is less than 67,
 then there is a problem.
 Those failures are displayed: the tests that failed, and why.
 If the failure is caused by a javascript error, it is caught, and printed.
