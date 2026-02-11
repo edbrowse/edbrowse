@@ -1441,6 +1441,7 @@ name === "className" ||
 // no clue what getAttribute("style") is suppose to do
 name === "style" ||
 name === "htmlFor" && o.dom$class == "HTMLLabelElement" ||
+name === "httpEquiv" && o.dom$class == "HTMLMetaElement" ||
 name === "options" && o.dom$class == "HTMLSelectElement" ||
 name === "selectedOptions" && o.dom$class == "HTMLSelectElement";
 }
@@ -4697,6 +4698,8 @@ swp("HTMLHeadElement", function(){})
 swpp("HTMLHeadElement", w.HTMLElement)
 swp("HTMLMetaElement", function(){})
 swpp("HTMLMetaElement", w.HTMLElement)
+let metap = w.HTMLMetaElement.prototype;
+odp(metap, "httpEquiv", { get: function() { return this.getAttribute("http-equiv"); }, set: function(h) { this.setAttribute("http-equiv", h); }})
 swp("HTMLBaseElement", function(){})
 swpp("HTMLBaseElement", w.HTMLElement)
 swp("z$Title", function(){})

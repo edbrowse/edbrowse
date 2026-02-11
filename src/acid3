@@ -2067,7 +2067,38 @@ edbrowse should agree with that.
       assert(!('class' in test), "buckets: element has class property")
       test['class'] = "oil";
       assert(test.className != "oil", "buckets: class property affected className");
-// @` rest not implemented
+      // <label for="">
+      test = document.createElement('label');
+      test.htmlFor = 'jars';
+      assertEquals(test.htmlFor, 'jars', "jars: htmlFor wrong");
+      assertEquals(test.getAttribute('for'), 'jars', "jars: for wrong");
+      assert(!test.hasAttribute('htmlFor'), "jars: element has htmlFor attribute");
+      assert(test.htmlFor != test.getAttribute('htmlFor'), "jars: htmlFor attribute equals htmlFor property");
+      test = document.createElement('label');
+      test.setAttribute('for', 'pots');
+      assertEquals(test.htmlFor, 'pots', "pots: htmlFor wrong");
+      assertEquals(test.getAttribute('for'), 'pots', "pots: for wrong");
+      assert(!test.hasAttribute('htmlFor'), "pots: element has htmlFor attribute");
+      assert(test.htmlFor != test.getAttribute('htmlFor'), "pots: htmlFor attribute equals htmlFor property");
+      assert(!('for' in test), "pots: element has for property");
+      test['for'] = "oil";
+      assert(test.htmlFor != "oil", "pots: for property affected htmlFor");
+      // <meta http-equiv="">
+      test = document.createElement('meta');
+      test.setAttribute('http-equiv', 'boxes');
+      assertEquals(test.httpEquiv, 'boxes', "boxes: httpEquiv wrong");
+      assertEquals(test.getAttribute('http-equiv'), 'boxes', "boxes: http-equiv wrong");
+      assert(!test.hasAttribute('httpEquiv'), "boxes: element has httpEquiv attribute");
+      assert(test.httpEquiv != test.getAttribute('httpEquiv'), "boxes: httpEquiv attribute equals httpEquiv property");
+      test = document.createElement('meta');
+      test.httpEquiv = 'cans';
+      assertEquals(test.httpEquiv, 'cans', "cans: httpEquiv wrong");
+      assertEquals(test.getAttribute('http-equiv'), 'cans', "cans: http-equiv wrong");
+      assert(!test.hasAttribute('httpEquiv'), "cans: element has httpEquiv attribute");
+      assert(test.httpEquiv != test.getAttribute('httpEquiv'), "cans: httpEquiv attribute equals httpEquiv property");
+      assert(!('http-equiv' in test), "cans: element has http-equiv property");
+      test['http-equiv'] = "oil";
+      assert(test.httpEquiv != "oil", "cans: http-equiv property affected httpEquiv");
       return 4;
     },
     function () {
