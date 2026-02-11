@@ -2088,47 +2088,6 @@ a.name = this.name, a.value = this.value;
 return a
 }
 
-// symbolic constants for compareDocumentPosition
-Object.defineProperty(this,"DOCUMENT_POSITION_DISCONNECTED",{value:1});
-Object.defineProperty(this,"DOCUMENT_POSITION_PRECEDING",{value:2});
-Object.defineProperty(this,"DOCUMENT_POSITION_FOLLOWING",{value:4});
-Object.defineProperty(this,"DOCUMENT_POSITION_CONTAINS",{value:8});
-Object.defineProperty(this,"DOCUMENT_POSITION_CONTAINED_BY",{value:16});
-
-/*********************************************************************
-compareDocumentPosition:
-The documentation I found was entirely unclear as to the meaning
-of preceding and following.
-Does A precede B if it appears first in a depth first search of the tree,
-or if it appears first wherein they have the same parent,
-or if they are siblings?
-I have no clue, so I'm going for the latter, partly because it's easy.
-That means the relationships are disjoint.
-A can't contain B and precede B simultaneously.
-So I don't know why they say these are bits in a bitmask.
-Also not clear if "contains" can descend into a subframe. I don't check for this.
-*********************************************************************/
-
-function compareDocumentPosition(w) {
-if(this === w) return DOCUMENT_POSITION_DISCONNECTED;
-if(this.parentNode === w.parentNode) {
-if(this.nextSibling === w) return DOCUMENT_POSITION_FOLLOWING;
-if(this.previousSibling === w) return DOCUMENT_POSITION_PRECEDING;
-return DOCUMENT_POSITION_DISCONNECTED;
-}
-var t = this;
-while(t.parentNode) {
-t = t.parentNode;
-if(t === w) return DOCUMENT_POSITION_CONTAINED_BY;
-}
-var t = w;
-while(t.parentNode) {
-t = t.parentNode;
-if(t === this) return DOCUMENT_POSITION_CONTAINS;
-}
-return DOCUMENT_POSITION_DISCONNECTED;
-}
-
 // for toolbar menubar etc
 this.generalbar = {}
 Object.defineProperty(generalbar, "visible", {value:true})
@@ -3768,7 +3727,6 @@ nodep.getClientRects = function(){ return new w.Array; }
 nodep.cloneNode = d.cloneNode;
 // I don't see anywhere in spec that this is an Element method
 //nodep.importNode = d.importNode;
-nodep.compareDocumentPosition = compareDocumentPosition;
 // visual
 nodep.focus = function(){d.activeElement=this}
 nodep.blur = function(){d.activeElement=null}
@@ -3839,6 +3797,44 @@ break;
 }
 // establish the style object, for the calling function in css.c
 w.soj$ = z.style;
+}
+
+/*********************************************************************
+compareDocumentPosition:
+The documentation I found was unclear as to the meaning
+of preceding and following.
+Does A precede B if it appears first in a depth first search of the tree,
+or if it appears first wherein they have the same parent,
+or if they are siblings?
+I have no clue, so I'm going for the latter, partly because it's easy.
+That means the relationships are disjoint.
+A can't contain B and precede B simultaneously.
+So I don't know why they say these are bits in a bitmask.
+Also not clear if "contains" can descend into a subframe. I don't check for this.
+*********************************************************************/
+odp(nodep,"DOCUMENT_POSITION_DISCONNECTED",{value:1});
+odp(nodep,"DOCUMENT_POSITION_PRECEDING",{value:2});
+odp(nodep,"DOCUMENT_POSITION_FOLLOWING",{value:4});
+odp(nodep,"DOCUMENT_POSITION_CONTAINS",{value:8});
+odp(nodep,"DOCUMENT_POSITION_CONTAINED_BY",{value:16});
+nodep.compareDocumentPosition = function(z) {
+if(this === z) return DOCUMENT_POSITION_DISCONNECTED;
+if(this.parentNode === z.parentNode) {
+if(this.nextSibling === z) return DOCUMENT_POSITION_FOLLOWING;
+if(this.previousSibling === z) return DOCUMENT_POSITION_PRECEDING;
+return DOCUMENT_POSITION_DISCONNECTED;
+}
+let t = this;
+while(t.parentNode) {
+t = t.parentNode;
+if(t === z) return DOCUMENT_POSITION_CONTAINED_BY;
+}
+t = z;
+while(t.parentNode) {
+t = t.parentNode;
+if(t === this) return DOCUMENT_POSITION_CONTAINS;
+}
+return DOCUMENT_POSITION_DISCONNECTED;
 }
 
 // The html element, which is the head of the DOM nodes that you know and love.
@@ -8281,7 +8277,6 @@ hasAttribute, hasAttributeNS,
 setAttribute, setAttributeNS,
 removeAttribute, removeAttributeNS,
 getAttributeNode, setAttributeNode, removeAttributeNode,
-compareDocumentPosition,
 getComputedStyle,
 insertAdjacentHTML,URL,
 TextEncoder, TextDecoder,
@@ -8320,7 +8315,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "removeAttribute", "removeAttributeNS",
 "getAttributeNode", "setAttributeNode", "removeAttributeNode",
 "clone1", "findObject", "correspondingObject", "cloneAttr",
-"compareDocumentPosition", "generalbar", "CSS",
+"generalbar", "CSS",
 "Intl", "Intl_dt", "Intl_num",
 "cssGather",
 "makeSheets", "getComputedStyle", "computeStyleInline",

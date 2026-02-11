@@ -2119,6 +2119,10 @@ edbrowse should agree with that.
       obj2.setAttribute('data', './test.html');
       assertEquals(obj1.data, obj2.data, "object elements didn't resolve URIs correctly");
       assert(obj1.data.match(/^http:/), "object.data isn't absolute");
+      obj1.appendChild(document.createElement('param'));
+      assertEquals(obj1.getElementsByTagName('param').length, 1, "object is missing its only child");
+      // non-existent attributes
+      var test = document.createElement('p');
 // @` more to this test
       return 4;
     },

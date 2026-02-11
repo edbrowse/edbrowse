@@ -557,27 +557,6 @@ odp(window, "length", {get:function(){return frames$2.length},enumerable:true})
 // pending jobs, mostly to debug promise functions.
 swm("$pjobs", [])
 
-// symbolic constants for compareDocumentPosition
-swm("DOCUMENT_POSITION_DISCONNECTED", 1)
-swm("DOCUMENT_POSITION_PRECEDING", 2)
-swm("DOCUMENT_POSITION_FOLLOWING", 4)
-swm("DOCUMENT_POSITION_CONTAINS", 8)
-swm("DOCUMENT_POSITION_CONTAINED_BY", 16)
-sdm("compareDocumentPosition", mw$.compareDocumentPosition)
-
-sdm("getAttribute", mw$.getAttribute)
-sdm("hasAttribute", mw$.hasAttribute)
-sdm("getAttributeNames", mw$.getAttributeNames)
-sdm("getAttributeNS", mw$.getAttributeNS)
-sdm("hasAttributeNS", mw$.hasAttributeNS)
-sdm("setAttribute", mw$.setAttribute)
-sdm("setAttributeNS", mw$.setAttributeNS)
-sdm("removeAttribute", mw$.removeAttribute)
-sdm("removeAttributeNS", mw$.removeAttributeNS)
-sdm("getAttributeNode", mw$.getAttributeNode)
-sdm("setAttributeNode", mw$.setAttributeNode)
-sdm("removeAttributeNode", mw$.removeAttributeNode)
-
 sdm("cloneNode", function(deep) {
     window.cloneRoot1 = this;
     return mw$.clone1 (this,deep, false);
