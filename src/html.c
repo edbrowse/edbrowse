@@ -5675,6 +5675,12 @@ unparen:
 			deltag = t;
 		break;
 
+	case TAGACT_DET:
+// defer to the javascript, they may have opened the details for us.
+		if(t->jslink)
+			t->contracted = !get_property_bool_t(t, "open");
+		goto nop;
+
 	case TAGACT_MUSIC:
 		if(!opentag) break;
 		if (!retainTag) break;

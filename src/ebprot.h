@@ -42,7 +42,7 @@ bool writeFile(const char *name, int mode);
 void addToFilename(const char *s);
 void debrowseFilename(char *s, bool strip2);
 void eb_variables(void);
-Tag *line2frame(int ln);
+Tag *line2frame(int ln, bool frameonly);
 bool jump2anchor(const Tag *jumptag, const char *newhash);
 bool runCommand(const char *line);
 bool edbrowseCommand(const char *line, bool script) ;

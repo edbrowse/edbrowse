@@ -3201,9 +3201,9 @@ int frameExpandLine(int ln, Tag *t)
 
 	if(!t) {
 		line = fetchLine(ln, -1);
-		s = stringInBufLine((char *)line, "Frame ");
-		if (!s)
-			return 1;
+		s = stringInBufLine((char *)line, "Details ");
+		if(!s) s = stringInBufLine((char *)line, "Frame ");
+		if (!s) return 1;
 		if ((s = charInBufLine(s, InternalCodeChar)) == NULL)
 			return 2;
 		tagno = strtol(s + 1, (char **)&s, 10);
@@ -3212,10 +3212,14 @@ int frameExpandLine(int ln, Tag *t)
 		t = tagList[tagno];
 	}
 
-	if (t->action != TAGACT_FRAME)
-		return 1;
+	if (t->action == TAGACT_DET) {
+		t->contracted = false;
+		return 0;
+	}
 
-/* the easy case is if it's already been expanded before, we just unhide it. */
+	if (t->action != TAGACT_FRAME) return 1;
+
+// the easy case is if it's already been expanded before, we just unhide it.
 	if (t->f1) {
 // If js is accessing objects in this frame, that doesn't mean we unhide it.
 		if (!fromget)
@@ -3381,7 +3385,7 @@ cdt doesn't have or need an object; it's a place holder.
 
 static int frameContractLine(int ln)
 {
-	Tag *t = line2frame(ln);
+	Tag *t = line2frame(ln, false);
 	if (!t)
 		return 1;
 	t->contracted = true;
