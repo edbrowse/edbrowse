@@ -3213,9 +3213,11 @@ int frameExpandLine(int ln, Tag *t)
 	}
 
 	if (t->action == TAGACT_DET) {
-		t->contracted = false;
-		if(t->jslink)
-			set_property_bool_t(t, "open", true);
+		if(t->contracted) {
+			t->contracted = false;
+			if(t->jslink)
+				set_property_bool_t(t, "open", true);
+		}
 		return 0;
 	}
 
@@ -3390,9 +3392,11 @@ static int frameContractLine(int ln)
 	Tag *t = line2frame(ln, false);
 	if (!t)
 		return 1;
-	t->contracted = true;
-	if(t->action == TAGACT_DET && t->jslink)
-		set_property_bool_t(t, "open", false);
+	if(!t->contracted) {
+		t->contracted = true;
+		if(t->action == TAGACT_DET && t->jslink)
+			set_property_bool_t(t, "open", false);
+	}
 	return 0;
 }
 
