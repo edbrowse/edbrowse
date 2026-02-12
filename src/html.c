@@ -4748,16 +4748,26 @@ static int ahref_under(const Tag *t)
 	return 0;
 }
 
-static void emphasize(bool opentag, char d)
+static void emphasize(Tag *t, bool opentag, char d)
 {
 	char mark[4];
 	sprintf(mark, "%c@%c", (opentag ? '`' : '\''), d);
+
+// I don't see the point of injecting these marks if we are
+// inside a hyperlink or button.
+	Tag *t2 = findOpenTag(t, TAGACT_A);
+	if(t2 && t2->href) return;
+	t2 = findOpenTag(t, TAGACT_INPUT);
+	if(t2) return;
+	t2 = findOpenTag(t, TAGACT_OPTION);
+	if(t2) return;
+
 	if(opentag) {
 // see if we can compress adjacent blocks of emphasized text
-		char *t = ns + ns_l;
-		while(t > ns && isspaceByte(t[-1])) --t;
-		if(t - ns >= 3 && t[-1] == d && t[-2] == '@' && t[-3] == '\'') {
-			memmove(t - 3, t, ns + ns_l - t);
+		char *u = ns + ns_l;
+		while(u > ns && isspaceByte(u[-1])) --u;
+		if(u - ns >= 3 && u[-1] == d && u[-2] == '@' && u[-3] == '\'') {
+			memmove(u - 3, u, ns + ns_l - u);
 			ns_l -= 3;
 			return;
 		}
@@ -5162,24 +5172,24 @@ Eventually the `@ and '@ are crunched away.
 	case TAGACT_STRONG:
 	case TAGACT_EM:
 		if (invisible) break;
-		emphasize(opentag, '*');
+		emphasize(t, opentag, '*');
 		break;
 
 	case TAGACT_DEL:
 	case TAGACT_S:
 		if (invisible) break;
-		emphasize(opentag, '~');
+		emphasize(t, opentag, '~');
 		break;
 
 	case TAGACT_I:
 		if (invisible) break;
-		emphasize(opentag, '^');
+		emphasize(t, opentag, '^');
 		break;
 
 	case TAGACT_INS:
 	case TAGACT_U:
 		if (invisible) break;
-		emphasize(opentag, '_');
+		emphasize(t, opentag, '_');
 		break;
 
 	case TAGACT_SVG:
