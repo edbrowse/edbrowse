@@ -490,6 +490,10 @@ top2:
 
 // compress <em><em>text</em></em>
 // more likely to be <em><b>text</b></em>, if it ever happens at all.
+// We don't need this code in the html world, because I check for nested tags
+// by findOpenTag(); but if we ever infor emphasis from css, we might
+// need this code or something like it, so I'll just def it out for now.
+#if 0
 top3:
 	change = false;
 	for(s = a = buf; (c = *s); ++s) {
@@ -511,6 +515,7 @@ top3:
 	}
 	*a = 0;
 	if(change) goto top3;
+#endif
 
 // and now let's crunch the marks down to single characters.
 	for(s = a = buf; (c = *s); ++s) {
