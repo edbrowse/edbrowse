@@ -5625,7 +5625,7 @@ unparen:
 	case TAGACT_FRAME:
 		if (!retainTag) break;
 		if (t->f1 && !t->contracted) {	/* expanded frame */
-			sprintf(hnum, "\r%c%d*%s\r", InternalCodeChar, tagno,
+			sprintf(hnum, "\f%c%d*%s\f", InternalCodeChar, tagno,
 				(opentag ? "`--" : "--`"));
 			ns_hnum();
 			break;
@@ -5679,7 +5679,28 @@ unparen:
 // defer to the javascript, they may have opened the details for us.
 		if(t->jslink)
 			t->contracted = !get_property_bool_t(t, "open");
-		goto nop;
+		if (!t->contracted) {	/* expanded frame */
+			sprintf(hnum, "\f%c%d*%s\f", InternalCodeChar, tagno,
+				(opentag ? "`--" : "--`"));
+			ns_hnum();
+			break;
+		}
+		if (!opentag) break;
+		stringAndString(&ns, &ns_l, "\rDetails ");
+		sprintf(hnum, "%c%d{", InternalCodeChar, tagno);
+		ns_hnum();
+		a = 0;
+		for(ltag = t->firstchild; ltag; ltag = ltag->sibling)
+			if(ltag->action == TAGACT_SUMMARY) break;
+		if(ltag &&
+		(ltag = ltag->firstchild) &&
+		ltag->action == TAGACT_TEXT)
+			a = ltag->textval;
+		if(a) stringAndString(&ns, &ns_l, a);
+		ns_ic();
+		stringAndString(&ns, &ns_l, "0}\r");
+		deltag = t;
+		break;
 
 	case TAGACT_MUSIC:
 		if(!opentag) break;

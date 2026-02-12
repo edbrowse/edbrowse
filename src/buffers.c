@@ -8463,7 +8463,7 @@ past_g_file:
 				goto success;
 			}
 
-			if (tag && tag->action == TAGACT_FRAME) {
+			if (tag && (tag->action == TAGACT_FRAME || tag->action == TAGACT_DET)) {
 				nzFree(h);
 				line = "exp";
 				goto expctr;

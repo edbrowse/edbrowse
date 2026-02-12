@@ -37,6 +37,8 @@ Implement some of the css shorthand properties, such as margin.
 Transliterate <em>, and other tags, into concise punctuation
 that indicates the meaning of the tag.
 
+Implement <details> open and close.
+
 3.8.15
 
 The lsr (imap) and lsc (irc) commands.

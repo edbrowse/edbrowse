@@ -568,6 +568,7 @@ const struct tagInfo availableTags[] = {
 	{"br", "a line break", TAGACT_BR, 1, 4},
 	{"p", "a paragraph", TAGACT_P, 10, 1},
 	{"details", "details", TAGACT_DET, 10, 1},
+	{"summary", "summary of details", TAGACT_SUMMARY, 10, 1},
 	{"fieldset", "a paragraph", TAGACT_NOP, 10, 1},
 	{"blockquote", "a quoted section", TAGACT_BQ, 0, 1},
 	{"header", "a header", TAGACT_HEADER, 2, 5},
@@ -4418,6 +4419,12 @@ Are there other situations where we need to supress meta processing?
 // but subframe runs javascript and tries to access javascript objects
 // from the top frame. So this could be a doorway into js.
 		t->doorway = true;
+		break;
+
+	case TAGACT_DET:
+		t->contracted = true;
+		a = attribVal(t, "open");
+		if(a && !stringEqual(a, "false")) t->contracted = false;
 		break;
 
 	case TAGACT_MUSIC:
