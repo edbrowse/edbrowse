@@ -5222,9 +5222,13 @@ Eventually the `@ and '@ are crunched away.
 // falling through is just fine, but sometimes generates a cc warning, so...
 		goto nop;
 
+	case TAGACT_DD:
+		stringAndString(&ns, &ns_l,
+		opentag ? " \r: " : "\r");
+		goto check_id;
+
 	case TAGACT_DL:
 	case TAGACT_DT:
-	case TAGACT_DD:
 	case TAGACT_OBJECT:
 	case TAGACT_BR:
 	case TAGACT_P:
@@ -5714,6 +5718,7 @@ unparen:
 // This is for <unrecognized id=foo> and somewhere else <a href=#foo>
 // We have to have this unknown tag in the stream or we can't jump to it.
 	default:
+check_id:
 		if(opentag && t->id)
 			tagInStream(tagno);
 		break;
