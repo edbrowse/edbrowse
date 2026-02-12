@@ -1414,12 +1414,25 @@ return null;
 }
 
 /*********************************************************************
-This is a workaround, when setAttribute is doing something it shouldn't,
-like form.setAttribute("elements") or some such.
-I call these implicit members, we shouldn't mess with them.
+The attribute system is complex, with many functions
+and many surprising side effects.
+Most of these functions could be private node methods in setupClasses(),.
+but it's a lof ot code, and would disrupt the flow.
+So instead I gather them all here in one attr object.
+along with some helper functions to manage spillup and spilldown.
+Spill up means we set the property and it sets the attribute.
+This is usually done by setters; not here.
+Spilldown means we set the attribute and it spills down to the property.
+This is done in different ways.
+But first, implicitMember(), is a workaround,
+when setAttribute is doing something it shouldn't,
+like form.setAttribute("elements", "xx") or some such.
+I call these implicit members, we shouldn't overwrite them.
 *********************************************************************/
 
-function implicitMember(o, name) {
+this.attr = {
+
+implicitMember: function(o, name) {
 return name === "elements" && o.dom$class == "HTMLFormElement" ||
 name === "rows" && (o.dom$class == "HTMLTableElement" || o.dom$class == "tBody" || o.dom$class == "tHead" || o.dom$class == "tFoot") ||
 name === "tBodies" && o.dom$class == "HTMLTableElement" ||
@@ -1431,50 +1444,44 @@ name === "htmlFor" && o.dom$class == "HTMLLabelElement" ||
 name === "httpEquiv" && o.dom$class == "HTMLMetaElement" ||
 name === "options" && o.dom$class == "HTMLSelectElement" ||
 name === "selectedOptions" && o.dom$class == "HTMLSelectElement";
-}
+},
 
-function spilldown(name) {
+spilldown: function(name) {
 // Ideally I should have a list of all the on functions, but I'm gonna say
 // any word that starts with on spills down.
 if(name.match(/^on[a-zA-Z]*$/)) return true;
 // I'm not sure if value should spill down, setAttribute("value","blah")
 return name == "value";
-}
+},
 
-function spilldownResolveURL(t, name) {
+spilldownResolveURL: function(t, name) {
 if(!t.nodeName) return false;
 var nn = t.nodeName.toLowerCase();
 return name == "src" && (nn == "frame" || nn == "iframe") ||
 name == "href" && (nn == "a" || nn == "area");
-}
+},
 
-function spilldownResolve(t, name) {
+spilldownResolve: function(t, name) {
 if(!t.nodeName) return false;
 var nn = t.nodeName.toLowerCase();
 return name == "action" && nn == "form" ||
 name == "data" && (nn == "object") ||
 name == "src" && (nn == "img" || nn == "script" || nn == "audio" || nn == "video") ||
 name == "href" && (nn == "link" || nn == "base");
-}
+},
 
-function spilldownBool(t, name) {
+spilldownBool: function(t, name) {
 if(!t.nodeName) return false;
 var nn = t.nodeName.toLowerCase();
 return name == "aria-hidden" ||
 name == "selected" && nn == "option" ||
 name == "checked" && nn == "input";
-}
+},
 
-/*********************************************************************
-Set and clear attributes. This is done in 3 different ways,
-the third using attributes as a NamedNodeMap.
-This may be overkill - I don't know.
-*********************************************************************/
-
-function getAttribute(name) {
+getAttribute: function(name) {
 var a, w = my$win();
 if(!this.eb$xml) name = name.toLowerCase();
-if(implicitMember(this, name)) return null;
+if(attr.implicitMember(this, name)) return null;
 // has to be a real attribute
 if(!this.attributes$2) return null;
 if(name === "length") {
@@ -1489,10 +1496,11 @@ if(t == "undefined" || v == null) return null;
 // I stringify URL objects, should we do that to other objects?
 if(t == 'object' && (v.dom$class == "URL" || v instanceof w.URL)) return v.toString();
 // number, boolean, object; it goes back as it was put in.
-return v; }
-function hasAttribute(name) { return this.getAttribute(name) !== null; }
+return v; },
 
-function getAttributeNames(name) {
+hasAttribute: function(name) { return this.getAttribute(name) !== null; },
+
+getAttributeNames: function(name) {
 var w = my$win();
 var a = new w.Array;
 if(!this.attributes$2) return a;
@@ -1501,15 +1509,16 @@ var z = this.attributes$2[l].name;
 a.push(z);
 }
 return a;
-}
+},
 
-function getAttributeNS(space, name) {
+getAttributeNS: function(space, name) {
 if(space && !name.match(/:/)) name = space + ":" + name;
 return this.getAttribute(name);
-}
-function hasAttributeNS(space, name) { return this.getAttributeNS(space, name) !== null;}
+},
 
-function setAttribute(name, v) {
+hasAttributeNS: function(space, name) { return this.getAttributeNS(space, name) !== null;},
+
+setAttribute: function(name, v) {
 var a, w = my$win();
 if(!this.eb$xml) name = name.toLowerCase();
 // special code for style
@@ -1517,7 +1526,7 @@ if(name == "style" && this.style.dom$class == "CSSStyleDeclaration") {
 this.style.cssText = v;
 return;
 }
-if(implicitMember(this, name)) return;
+if(attr.implicitMember(this, name)) return;
 var oldv = null;
 if(name === "length") {
 a = null
@@ -1539,15 +1548,15 @@ this.dataset[dataCamel(name)] = v;
 }
 // names that spill down into the actual property
 // should we be doing any of this for xml nodes?
-if(spilldown(name)) this[name] = v;
+if(attr.spilldown(name)) this[name] = v;
 // href$2 not enumerable. cloneNode still works because it finds
 // href in the attributes and copies it there,
 // whence spilldown puts href$2 in node2.
-if(spilldownResolve(this, name))
+if(attr.spilldownResolve(this, name))
 Object.defineProperty(this, "href$2", {value:resolveURL(w.eb$base, v),configurable:true,writable:true})
-if(spilldownResolveURL(this, name))
+if(attr.spilldownResolveURL(this, name))
 Object.defineProperty(this, "href$2", {value:new (w.URL)(resolveURL(w.eb$base, v)),configurable:true,writable:true})
-if(spilldownBool(this, name)) {
+if(attr.spilldownBool(this, name)) {
 // This one is required by acid test 43, I don't understand it at all.
 if(name == "checked" && v == "checked")
 this.defaultChecked = true;
@@ -1559,13 +1568,14 @@ this[name] = v;
 }
 }
 mutFixup(this, true, name, oldv);
-}
-function setAttributeNS(space, name, v) {
+},
+
+setAttributeNS: function(space, name, v) {
 if(space && !name.match(/:/)) name = space + ":" + name;
 this.setAttribute(name, v);
-}
+},
 
-function removeAttribute(name) {
+removeAttribute: function(name) {
 if(!this.eb$xml)     name = name.toLowerCase();
 // special code for style
 if(name == "style") {
@@ -1578,10 +1588,10 @@ var n = dataCamel(name);
 if(this.dataset$2 && this.dataset$2[n]) delete this.dataset$2[n];
 }
 // should we be doing any of this for xml nodes?
-if(spilldown(name)) delete this[name];
-if(spilldownResolve(this, name)) delete this[name];
-if(spilldownResolveURL(this, name)) delete this[name];
-if(spilldownBool(this, name)) delete this[name];
+if(attr.spilldown(name)) delete this[name];
+if(attr.spilldownResolve(this, name)) delete this[name];
+if(attr.spilldownResolveURL(this, name)) delete this[name];
+if(attr.spilldownBool(this, name)) delete this[name];
 var a;
 if(name === "length") {
 a = null
@@ -1599,14 +1609,15 @@ this.attributes.length = i;
 delete this.attributes[i];
 if(name !== "length") delete this.attributes[name]
 mutFixup(this, true, name, a.value);
-}
-function removeAttributeNS(space, name) {
+},
+
+removeAttributeNS: function(space, name) {
 if(space && !name.match(/:/)) name = space + ":" + name;
 this.removeAttribute(name);
-}
+},
 
 // this returns null if no such attribute.
-function getAttributeNode(name) {
+getAttributeNode: function(name) {
 if(!this.attributes$2) return null;
     name = name.toLowerCase();
 var a;
@@ -1617,10 +1628,10 @@ if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
 } else a = this.attributes[name]
 if(!a) return null;
 return a;
-}
+},
 
 // b replaces a if a is present
-function setAttributeNode(b) {
+setAttributeNode: function(b) {
 if(typeof b != "object" || typeof b.name != "string") return null;
 var     a, name = b.name.toLowerCase();
 if(name === "length") {
@@ -1636,9 +1647,9 @@ if(name !== "length") this.attributes[name] = b
 // like dataset and mutFixup and so on, so just invoke
 this.setAttribute(name, b.value)
 return a
-}
+},
 
-function removeAttributeNode(b) {
+removeAttributeNode: function(b) {
 if(typeof b != "object" || typeof b.name != "string") return null;
 var     name = b.name.toLowerCase();
 if(name === "length") {
@@ -1651,6 +1662,8 @@ if(this.attributes[name] != b) return null;
 }
 this.removeAttribute(b.name)
 return b
+},
+
 }
 
 /*********************************************************************
@@ -1709,7 +1722,7 @@ if(!node1.hasOwnProperty(item)) continue;
 // children already handled
 if(item === "childNodes" || item === "parentNode") continue;
 
-if(implicitMember(node1, item)) continue;
+if(attr.implicitMember(node1, item)) continue;
 
 if (typeof node1[item] === 'function') {
 // event handlers shouldn't carry across.
@@ -3661,16 +3674,21 @@ if (node.nodeType === 1)  children.push(node);
 }
 return children;
 }})
-// attributes
-nodep.hasAttribute = hasAttribute;
-nodep.hasAttributeNS = hasAttributeNS;
-nodep.getAttribute = getAttribute;
-nodep.getAttributeNS = getAttributeNS;
-nodep.getAttributeNames = getAttributeNames;
-nodep.setAttribute = setAttribute;
-nodep.setAttributeNS = setAttributeNS;
-nodep.removeAttribute = removeAttribute;
-nodep.removeAttributeNS = removeAttributeNS;
+
+// attributes, functions are in the attr object
+nodep.hasAttribute = attr.hasAttribute;
+nodep.hasAttributeNS = attr.hasAttributeNS;
+nodep.getAttribute = attr.getAttribute;
+nodep.getAttributeNS = attr.getAttributeNS;
+nodep.getAttributeNames = attr.getAttributeNames;
+nodep.setAttribute = attr.setAttribute;
+nodep.setAttributeNS = attr.setAttributeNS;
+nodep.removeAttribute = attr.removeAttribute;
+nodep.removeAttributeNS = attr.removeAttributeNS;
+nodep.getAttributeNode = attr.getAttributeNode;
+nodep.setAttributeNode = attr.setAttributeNode;
+nodep.removeAttributeNode = attr.removeAttributeNode;
+
 odp(nodep, "className", {
 get: function() {
 let c = this.getAttribute("class");
@@ -3682,9 +3700,6 @@ odp(nodep, "parentElement", {
 get: function() {
 return this.parentNode && this.parentNode.nodeType == 1 ?
 this.parentNode : null}})
-nodep.getAttributeNode = getAttributeNode;
-nodep.setAttributeNode = setAttributeNode;
-nodep.removeAttributeNode = removeAttributeNode;
 nodep.getClientRects = function(){ return new w.Array; }
 // clone
 nodep.cloneNode = d.cloneNode;
@@ -8283,11 +8298,6 @@ dispatchEvent,
 NodeFilter,createNodeIterator,createTreeWalker,
 runScriptWhenAttached, traceBreakReplace,
 appendChild, prependChild, insertBefore, removeChild, replaceChild, hasChildNodes,
-getAttribute, getAttributeNames, getAttributeNS,
-hasAttribute, hasAttributeNS,
-setAttribute, setAttributeNS,
-removeAttribute, removeAttributeNS,
-getAttributeNode, setAttributeNode, removeAttributeNode,
 getComputedStyle,
 URL,
 TextEncoder, TextDecoder,
@@ -8319,12 +8329,7 @@ flist = ["Math", "Date", "Promise", "eval", "Array", "Uint8Array",
 "runScriptWhenAttached", "traceBreakReplace",
 "appendChild", "prependChild", "insertBefore", "removeChild", "replaceChild", "hasChildNodes",
 "getSibling", "getElementSibling",
-"implicitMember", "spilldown","spilldownResolve","spilldownResolveURL","spilldownBool",
-"getAttribute", "getAttributeNames", "getAttributeNS",
-"hasAttribute", "hasAttributeNS",
-"setAttribute",  "setAttributeNS",
-"removeAttribute", "removeAttributeNS",
-"getAttributeNode", "setAttributeNode", "removeAttributeNode",
+"attr",
 "clone1", "findObject", "correspondingObject", "cloneAttr",
 "generalbar", "CSS",
 "Intl", "Intl_dt", "Intl_num",

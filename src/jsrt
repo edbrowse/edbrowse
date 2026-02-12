@@ -542,7 +542,7 @@ http://www.w3schools.com/html/html_form_input_types.asp -->
 <input type=number maxlength=5 name="zip code" readonly value="&#56;8888">
 <span id=almond class="nut rose"></span>
 <table class=filbert><tr><td></td></tr><tr id=pecan><td></td></tr></table>
-Colors will change with the state, A through M or N through Z.
+Colors will <u>change</u> with the state, A through M or N through Z.
 <br>My favorite colors are:
 <select name=colors multiple>
 <option value=r> red

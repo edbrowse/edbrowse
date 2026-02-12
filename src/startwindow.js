@@ -1241,9 +1241,9 @@ this.attributes$2.ownerDocument = my$doc()
 }
 return this.attributes$2}})
 // tell me we don't have to do NS versions of all these.
-cn.getAttribute = cn.getItem = mw$.getAttribute;
-cn.setAttribute = cn.setItem = mw$.setAttribute;
-cn.removeAttribute = cn.removeItem = mw$.removeAttribute;
+cn.getAttribute = cn.getItem = mw$.attr.getAttribute;
+cn.setAttribute = cn.setItem = mw$.attr.setAttribute;
+cn.removeAttribute = cn.removeItem = mw$.attr.removeAttribute;
 cn.clear = function() {
 var l;
 while(l = this.attributes.length)
