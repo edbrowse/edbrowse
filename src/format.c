@@ -425,7 +425,7 @@ static void emphasizeSwap(char *buf)
 	bool change = true;		// made a swap somewhere
 	int cnt = 0;
 	char mark[4];
-	static const char markchars[] = "*~_^";
+	static const char markchars[] = "*~_@";
 
 top:
 	change = false;

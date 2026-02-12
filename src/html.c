@@ -5183,7 +5183,7 @@ Eventually the `@ and '@ are crunched away.
 
 	case TAGACT_I:
 		if (invisible) break;
-		emphasize(t, opentag, '^');
+		emphasize(t, opentag, '@');
 		break;
 
 	case TAGACT_INS:
