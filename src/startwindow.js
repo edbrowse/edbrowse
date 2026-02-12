@@ -63,12 +63,12 @@ if(!window.mw$) {
 // mw$.share = 0 means I made up that window out of thin air
     this.mw$ = {share:0, URL:{}};
 this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
-    this.mw$.url_hrefset = () => undefined;
     this.mw$.dispatchEvent = () => undefined;
     this.mw$.addEventListener = () => undefined;
     this.mw$.removeEventListener = () => undefined;
     this.mw$.getComputedStyle = () => {};
     this.mw$.structuredClone = () => {};
+    this.mw$.attr = {};
     this.mw$.setupClasses = () => {};
 // classes that setupClasses would have built, but didn't.
     this.URL = function(){}

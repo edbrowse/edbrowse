@@ -1421,10 +1421,13 @@ but it's a lof ot code, and would disrupt the flow.
 So instead I gather them all here in one attr object.
 along with some helper functions to manage spillup and spilldown.
 Spill up means we set the property and it sets the attribute.
-This is usually done by setters; not here.
+This has to be done by setters, it is not done here.
 Spilldown means we set the attribute and it spills down to the property.
-This is done in different ways.
-But first, implicitMember(), is a workaround,
+This has to be done by setAttribute, and sometimes additional processing
+is involved. Example: script.setAttribute("src", "file.html")
+is resolved against the base url as it spills down to the property.
+getATtribute still gets "file.html".
+But before we get to that, implicitMember() is a workaround,
 when setAttribute is doing something it shouldn't,
 like form.setAttribute("elements", "xx") or some such.
 I call these implicit members, we shouldn't overwrite them.
