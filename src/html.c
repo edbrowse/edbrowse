@@ -4748,6 +4748,23 @@ static int ahref_under(const Tag *t)
 	return 0;
 }
 
+static void emphasize(bool opentag, char d)
+{
+	char mark[4];
+	sprintf(mark, "%c@%c", (opentag ? '`' : '\''), d);
+	if(opentag) {
+// see if we can compress adjacent blocks of emphasized text
+		char *t = ns + ns_l;
+		while(t > ns && isspaceByte(t[-1])) --t;
+		if(t - ns >= 3 && t[-1] == d && t[-2] == '@' && t[-3] == '\'') {
+			memmove(t - 3, t, ns + ns_l - t);
+			ns_l -= 3;
+			return;
+		}
+	}
+	stringAndString(&ns, &ns_l, mark);
+}
+
 static Tag *deltag;
 
 static void renderNode(Tag *t, bool opentag, struct parseContext *pc)
@@ -5122,6 +5139,47 @@ nocolor:
 		}
 		stringAndString(&ns, &ns_l,
 		(opentag ? "\f``" : "''\f"));
+		break;
+
+/*********************************************************************
+Here are some tags that change the appearance of the text, in order
+to provide semantic meaning. e.g. <em>emphasized text</em>
+We aren't going to distinguish between all such possible tags.
+Bold, strong, emphasized, all mean essentially the same thing.
+We don't want to overwhelm the user with a flurry of punctuations.
+We inject the text mark, but no tag. That means <em id=hello> won't work.
+Tags in the stream would make it much harder to swap marks and whitespace.
+I don't believe it is correct html or javascript to put attributes on these tags.
+If somebody does, and it is essential to the operation of the website,
+we'll have to rethink the matter.
+Marks are `@*  text  '@*, or other characters in place of *.
+This makes them unambiguous in the stream.
+No false positives, as you would surely encounter with a single *.
+Eventually the `@ and '@ are crunched away.
+*********************************************************************/
+
+	case TAGACT_B:
+	case TAGACT_STRONG:
+	case TAGACT_EM:
+		if (invisible) break;
+		emphasize(opentag, '*');
+		break;
+
+	case TAGACT_DEL:
+	case TAGACT_S:
+		if (invisible) break;
+		emphasize(opentag, '~');
+		break;
+
+	case TAGACT_I:
+		if (invisible) break;
+		emphasize(opentag, '^');
+		break;
+
+	case TAGACT_INS:
+	case TAGACT_U:
+		if (invisible) break;
+		emphasize(opentag, '_');
 		break;
 
 	case TAGACT_SVG:

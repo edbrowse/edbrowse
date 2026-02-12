@@ -34,6 +34,9 @@ Run html scripts (not deferred or async) when you see them, not after browse.
 
 Implement some of the css shorthand properties, such as margin.
 
+Transliterate <em>, and other tags, into concise punctuation
+that indicates the meaning of the tag.
+
 3.8.15
 
 The lsr (imap) and lsc (irc) commands.

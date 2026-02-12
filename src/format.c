@@ -319,104 +319,167 @@ static void anchorSwap(char *buf)
 	int n = 0, cnt = 0, tagno = 0;
 	char tag[20];
 
-	while (change) {
-		change = false;
-		++cnt;
-		premode = false;
+top:
+	change = false;
+	++cnt;
+	premode = false;
 // w represents the state of whitespace
-		w = NULL;
+	w = NULL;
 // a points to the prior anchor, which is swappable with following whitespace
-		a = NULL;
+	a = NULL;
 
-		for (s = buf; (c = *s); ++s) {
-			if (isspaceByte(c) || (c == '|' && !premode)) {
+	for (s = buf; (c = *s); ++s) {
+		if (isspaceByte(c) || (c == '|' && !premode)) {
 #if 0
-				if (c == '\t' && !premode)
-					*s = ' ';
+			if (c == '\t' && !premode)
+				*s = ' ';
 #endif
-				if (!w) w = s;
-				continue;
-			}
+			if (!w) w = s;
+			continue;
+		}
 
 // end of white space, should we swap it with prior tag?
-			if (w && a) {
-				const Tag *t = tagList[tagno];
-				const char *q;
+		if (w && a) {
+			const Tag *t = tagList[tagno];
+			const char *q;
 // don't move td past newline; it screws things up.
-				if(t->action != TAGACT_TD) {
+			if(t->action != TAGACT_TD) {
 tagforward:
-					memmove(a, w, s - w);
-					memmove(a + (s - w), tag, n);
-					change = true;
-					w = NULL;
-					goto afterforward;
-				}
-// It's ok to move things around, unless it's a data table.
-				if(tableType(t) != 1) goto tagforward;
-				for(q = w; q < s; ++q)
-					if(*q != ' ') goto afterforward;
-				goto tagforward;
+				memmove(a, w, s - w);
+				memmove(a + (s - w), tag, n);
+				change = true;
+				w = NULL;
+				goto afterforward;
 			}
+// It's ok to move things around, unless it's a data table.
+			if(tableType(t) != 1) goto tagforward;
+			for(q = w; q < s; ++q)
+				if(*q != ' ') goto afterforward;
+			goto tagforward;
+		}
 afterforward:
 
 // prior anchor has no significance
-			a = NULL;
+		a = NULL;
 
-			if (c != InternalCodeChar)
-				goto normalChar;
+		if (c != InternalCodeChar) goto normalChar;
 // some conditions that should never happen
-			if (!isdigitByte(s[1]))
-				goto normalChar;
-			tagno = strtol(s + 1, &ss, 10);
-			preFormatCheck(tagno, &pretag, &slash);
-			d = *ss;
-			if (!strchr("{}<>*", d))
-				goto normalChar;
-			n = ss + 1 - s;
-			memcpy(tag, s, n);
-			tag[n] = 0;
+		if (!isdigitByte(s[1])) goto normalChar;
+		tagno = strtol(s + 1, &ss, 10);
+		preFormatCheck(tagno, &pretag, &slash);
+		d = *ss;
+		if (!strchr("{}<>*", d)) goto normalChar;
+		n = ss + 1 - s;
+		memcpy(tag, s, n);
+		tag[n] = 0;
 
-			if (pretag) {
-				w = 0;
-				premode = !slash;
-				s = ss;
-				continue;
-			}
-
-/* We have a tag, should we swap it with prior whitespace? */
-			if (w && !premode && d == '}') {
-				memmove(w + n, w, s - w);
-				memcpy(w, tag, n);
-				change = true;
-				w += n;
-				s = ss;
-				continue;
-			}
-
-			if ((d == '*' || d == '{') && !premode)
-				a = s;
-			if(d == '*' &&
-			tagList[tagno]->action == TAGACT_LI) {
-				char *v = ss;
-				for(++v; *v == '*' || *v == '.' ||
-				isdigitByte(*v); ++v) ;
-// *v should always be space at this point
-				if(*v == ' ') {
-					ss = v;
-					n = ss + 1 - s;
-					memcpy(tag, s, n);
-					tag[n] = 0;
-				}
-			}
-			if(d == '<' && stringEqual(tagList[tagno]->info->name, "button"))
-				a = s;
+		if (pretag) {
+			w = 0;
+			premode = !slash;
 			s = ss;
+			continue;
+		}
+
+// We have a tag, should we swap it with prior whitespace?
+		if (w && !premode && d == '}') {
+			memmove(w + n, w, s - w);
+			memcpy(w, tag, n);
+			change = true;
+			w += n;
+			s = ss;
+			continue;
+		}
+
+		if ((d == '*' || d == '{') && !premode)
+			a = s;
+		if(d == '*' &&
+		tagList[tagno]->action == TAGACT_LI) {
+			char *v = ss;
+			for(++v; *v == '*' || *v == '.' ||
+			isdigitByte(*v); ++v) ;
+// *v should always be space at this point
+			if(*v == ' ') {
+				ss = v;
+				n = ss + 1 - s;
+				memcpy(tag, s, n);
+				tag[n] = 0;
+			}
+		}
+		if(d == '<' && stringEqual(tagList[tagno]->info->name, "button"))
+			a = s;
+		s = ss;
 
 normalChar:
-			w = 0;	/* no more whitespace */
-		}
+		w = 0;
 	}
+	if(change) goto top;
 	debugPrint(4, "anchorSwap %d", cnt);
+}
+
+// Like the above but this time we push whitespace past emphasize marks.
+// Simpler, no tags, no pipes, just 3-character marks.
+// It's important to run this one first, before anchorSwap.
+static void emphasizeSwap(char *buf)
+{
+	char c, *s, *w, *a;
+	bool change = true;		// made a swap somewhere
+	int cnt = 0;
+	char mark[4];
+	static const char markchars[] = "*~_^";
+
+top:
+	change = false;
+	++cnt;
+// w represents the state of whitespace
+	w = NULL;
+// a points to the prior mark, which is swappable with following whitespace
+	a = NULL;
+
+	for (s = buf; (c = *s); ++s) {
+		if (isspaceByte(c)) {
+			if (!w) w = s;
+			continue;
+		}
+
+// end of white space, should we swap it with prior mark?
+		if (w && a) {
+			memmove(a, w, s - w);
+			memmove(a + (s - w), mark, 3);
+			change = true;
+			w = NULL;
+		}
+
+		a = NULL;
+		if (c != '`' && c != '\'') goto normalChar;
+		if(s[1] != '@') goto normalChar;
+		if(!s[2] || !strchr(markchars, s[2])) goto normalChar;
+		memcpy(mark, s, 3);
+// We have a mark, should we swap it with prior whitespace?
+		if(w && c == '\'') {
+			memmove(w + 3, w, s - w);
+			memcpy(w, mark, 3);
+			change = true;
+			w += 3;
+			s += 2;
+			continue;
+		}
+
+		if(c == '`') a = s;
+		s += 2;
+normalChar:
+		w = 0;
+	}
+if(change) goto top;
+	debugPrint(4, "emphasizeSwap %d", cnt);
+
+// and now let's crunch the marks down to single characters.
+	for(s = a = buf; (c = *s); ++s) {
+		if((c == '`' || c == '\'') &&
+		s[1] == '@' && s[2] && strchr(markchars, s[2]))
+			s += 2;
+		*a++ = *s;
+	}
+	*a = 0;
 }
 
 /* Framing characters like [] around an anchor are unnecessary here,
@@ -1144,6 +1207,8 @@ char *htmlReformat(char *buf)
 	if(debugLayout) printf("cells<%s>\n", buf);
 	html_tr(buf);
 	if(debugLayout) printf("translate<%s>\n", buf);
+	emphasizeSwap(buf);
+	if(debugLayout) printf("emphasize<%s>\n", buf);
 	anchorSwap(buf);
 	if(debugLayout) printf("swap<%s>\n", buf);
 	h3div(buf);
