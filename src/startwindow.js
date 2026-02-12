@@ -865,12 +865,12 @@ Event.prototype.stopImmediatePropagation = function()
 }
 // deprecated - I guess - but a lot of people still use it.
 Event.prototype.initEvent = function(t, bubbles, cancel) {
-this.type = t, this.bubbles = bubbles, this.cancelable = cancel; this.defaultPrevented = false; }
+this.type = t, this.bubbles = bubbles, this.cancelable = cancel; this.eb$captures = true; this.defaultPrevented = false; }
 
 Event.prototype.initUIEvent = function(t, bubbles, cancel, unused, detail) {
-this.type = t, this.bubbles = bubbles, this.cancelable = cancel, this.detail = detail; this.defaultPrevented = false; }
+this.type = t, this.bubbles = bubbles, this.cancelable = cancel, this.detail = detail; this.eb$captures = true; this.defaultPrevented = false; }
 Event.prototype.initCustomEvent = function(t, bubbles, cancel, detail) {
-this.type = t, this.bubbles = bubbles, this.cancelable = cancel, this.detail = detail; }
+this.type = t, this.bubbles = bubbles, this.cancelable = cancel, this.detail = detail, this.eb$captures = true; }
 
 sdm2("createEvent", function(unused) { return new Event; })
 

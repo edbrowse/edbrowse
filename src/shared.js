@@ -530,10 +530,8 @@ return false;
 
 function dispatchEvent (e) {
     let dbg = () => undefined;
-    let t = this;
-    e.eventPhase = 0;
-    const runEventHandler = (h) => {
-        e.currentTarget = t;
+    const runEventHandler = (n, h) => {
+        e.currentTarget = n;
         const inline = typeof h == "function";
         // handler info for debug
         const hd = inline ? "inline handler" : `handler ${h.ehsn}`;
@@ -545,16 +543,18 @@ function dispatchEvent (e) {
         else if (typeof h.callback == "function") f = h.callback;
         else if (typeof h.callback == "object") f = h.callback.handleEvent;
         if (!f) {
-            dbg(`could not find callback for ${hd}`);
+            dbg(`could not find callback for ${hd}`, n);
             return true; // null listeners appear to be allowed
         }
         if (!(inline || h.do$phases.has(e.eventPhase))) {
-            dbg(`Unsupported phase ${e.eventPhase} for ${hd}`, 4);
-            dbg(`${hd} supported: ${JSON.stringify(Array.from(h.do$phases))}`, 4);
+            dbg(`Unsupported phase ${e.eventPhase} for ${hd}`, n, 4);
+            dbg(
+                `${hd} supported: ${JSON.stringify(Array.from(h.do$phases))}`,
+                n, 4);
             return true;
         }
-        dbg(`fires ${hd}`);
-        let r = f.call(t, e);
+        dbg(`fires ${hd}`, n);
+        let r = f.call(n, e);
         // Events added by listeners ignore return values these days
         if (inline) {
             const special = e.type === "error";
@@ -567,42 +567,47 @@ function dispatchEvent (e) {
         }
         h.ran = true;
         if (h.do$once) {
-            dbg(`Remove one-shot ${hd}`);
-            t.removeEventListener(e.type, f, h.do$phases.has(1));
+            dbg(`Remove one-shot ${hd}`, n);
+            n.removeEventListener(e.type, f, h.do$phases.has(1));
         }
         return !e.stop$propagating$immediate;
     }
 
-    const runHandlerArray = () => {
+    const runHandlerArray = (n) => {
         const prop = `on${e.type}$$array`;
-        // Don't care if it's an actual array as long as it's iterable
-        const handlers = t[prop];
+        const handlers = n[prop];
         if (handlers) {
             // We want to log which handlers ran for debugging
-            for (const h of handlers) h.ran = false;
-            for (const h of handlers) if (!runEventHandler(h)) break;
+            handlers.forEach((h) => h.ran = false);
+            handlers.every((h) => runEventHandler(n, h));
         }
         return !e.stop$propagating;
     }
 
+const runAllHandlers = (n) => {
+        const ep = `on${e.type}`;
+        const hi = n[ep];
+        return ((hi && runEventHandler(hi, n)) || !hi) && runHandlerArray(n);
+    }
+
     if(db$flags(1))
-        dbg = (m, l=3) => {
+        dbg = (m, n=this, l=3) => {
             const phases = ["dispatch", "capture", "target", "bubble"];
-            const prefix = `dispatchEvent ${t.nodeName}.${e.type}`;
+            const prefix = `dispatchEvent ${n.nodeName}.${e.type}`;
             const phase = phases[e.eventPhase];
             logputs(l, `${prefix} tag ${t.eb$seqno} phase ${phase}: ${m}`);
         };
-
+    e.eventPhase = 0;
     dbg("start");
 
     e.target = this;
     const pathway = [];
     if (this.nodeType !== undefined) {
-        while(t) {
+        let t;
+        for (t = this; t; t = t.parentNode) {
             pathway.push(t);
             // don't go past document up to a higher frame
             if(t.nodeType == 9) break;
-            t = t.parentNode;
         }
         /* Allow events to bubble up to the window. We need to use defaultView
         from the document object (which we should be looking at) because we may
@@ -614,31 +619,35 @@ function dispatchEvent (e) {
         // no node type so assume it's a window or similar, just a target
         pathway.push(this);
     }
-
-    // Capture phase: outer to inner elements
-    e.eventPhase = 1;
-    let l;
-    if (e.eb$captures) {
-        l = pathway.length - 1;
-        do {
-            t = pathway[l--];
-        } while (l > 0 && runHandlerArray());
-    }
-    else dbg("not capturing");
-    // Bubble phase, inner to outer. Also includes target phase.
-    l = 0;
-    do {
-        e.eventPhase = l ? 3 : 2;
-        if (l && !e.bubbles) {
-            dbg("not bubbling");
-            break;
+    const states = [
+        // Initial phase, nothing to do here
+        () => true,
+        // Capture phase: outer to inner elements
+        () => {
+            if (e.eb$captures)
+               return pathway.slice(1).reverse().every(runHandlerArray);
+            else {
+                dbg("not capturing");
+                return true;
+            }
+        },
+        // target phase
+        () => runAllHandlers(pathway[0]),
+        // Bubble phase, inner to outer
+        () => {
+            if (e.bubbles)
+                return pathway.slice(1).every(runAllHandlers)
+            else {
+                dbg("not bubbling");
+                return true;
+            }
         }
-        t = pathway[l++];
-        // Most event handlers including inline bubble and all run on target
-        const ep = `on${e.type}`;
-        const inline_handler = t[ep];
-        if (inline_handler && !runEventHandler(inline_handler, e, t)) break;
-    } while (runHandlerArray() && l < pathway.length);
+    ];
+    states.every((cb, i) => {
+        e.eventPhase = i;
+        return cb();
+    });
+
     /* We return the logical negation of defaultPrevented as per spec a false
         return means to prevent the default action whereas the
         defaultPrevented property is specified to be true if the default action
