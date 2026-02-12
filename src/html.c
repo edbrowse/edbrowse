@@ -4765,7 +4765,7 @@ static void emphasize(Tag *t, bool opentag, char d)
 	if(opentag) {
 // see if we can compress adjacent blocks of emphasized text
 		char *u = ns + ns_l;
-		while(u > ns && isspaceByte(u[-1])) --u;
+		while(u > ns && u[-1] == ' ') --u;
 		if(u - ns >= 3 && u[-1] == d && u[-2] == '@' && u[-3] == '\'') {
 			memmove(u - 3, u, ns + ns_l - u);
 			ns_l -= 3;

@@ -421,13 +421,13 @@ normalChar:
 // It's important to run this one first, before anchorSwap.
 static void emphasizeSwap(char *buf)
 {
-	char c, *s, *w, *a;
-	bool change = true;		// made a swap somewhere
+	char c, d, *s, *w, *a;
+	bool change;		// made a swap somewhere
 	int cnt = 0;
 	char mark[4];
 	static const char markchars[] = "*~_@";
 
-top:
+top1:
 	change = false;
 	++cnt;
 // w represents the state of whitespace
@@ -469,8 +469,47 @@ top:
 normalChar:
 		w = 0;
 	}
-if(change) goto top;
+if(change) goto top1;
 	debugPrint(4, "emphasizeSwap %d", cnt);
+
+// compress <em></em>. you can see we couldn't do this with individual stars,
+// too many false positives; we need multicharacter markers.
+top2:
+	change = false;
+	for(s = a = buf; (c = *s); ++s) {
+		if(c == '`' && s[1] == '@' && (d = s[2]) &&
+		s[3] == '\'' && s[4] == '@' && s[5] == d) {
+			s += 5;
+			change = true;
+			continue;
+		}
+		*a++ = c;
+	}
+	*a = 0;
+	if(change) goto top2;
+
+// compress <em><em>text</em></em>
+// more likely to be <em><b>text</b></em>, if it ever happens at all.
+top3:
+	change = false;
+	for(s = a = buf; (c = *s); ++s) {
+		if(c == '`' && s[1] == '@' && (d = s[2]) &&
+		s[3] == '`' && s[4] == '@' && s[5] == d) {
+			char * u1 = strstr(s+6, "`@");
+			char * u2 = strstr(s+6, "'@");
+			if(u1 && u2 && u2 < u1) u1 = u2;
+			if(u1 && u1[0] == '\'' && u1[2] == d &&
+			u1[3] == '\'' && u1[4] == '@' && u1[5] == d) {
+				s += 2;
+				strmove(u1, u1 + 3);
+				change = true;
+				continue;
+			}
+		}
+		*a++ = c;
+	}
+	*a = 0;
+	if(change) goto top3;
 
 // and now let's crunch the marks down to single characters.
 	for(s = a = buf; (c = *s); ++s) {
