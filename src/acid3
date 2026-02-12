@@ -223,7 +223,7 @@
     });
   }
   var kungFuDeathGrip = null; // used to hold things from test to test
-// @` skipped: 7 8 9 10 11 12 13 27 65
+// @` skipped: 7 8 9 10 11 12 13 65
 // I run 16 but it's meaningless, has no semantics in edbrowse.
   var tests = [ // start of tests
 
@@ -827,7 +827,21 @@ if(div === null) { var e = new Error; e.code = 14; throw e; }
       assertEquals(e2.parentNode.ownerDocument.nodeType, 9, "e2 - document node type has wrong node type");
       return 2;
     },
-    function() { return 2; }, // test 27
+    function () {
+      // test 27: a continuation of the previous test
+      var e1 = kungFuDeathGrip[0];
+      var e2 = kungFuDeathGrip[1];
+      kungFuDeathGrip = null;
+      assert(e1, "e1 - element itself didn't survive across tests");
+      assert(e1.parentNode, "e1 - parent element doesn't exist after waiting");
+      assert(e1.parentNode.ownerDocument, "e1 - document doesn't exist after waiting");
+      assertEquals(e1.parentNode.ownerDocument.nodeType, 9, "e1 - document node type has wrong node type after waiting");
+      assert(e2, "e2 - element itself didn't survive across tests");
+      assert(e2.parentNode, "e2 - parent element doesn't exist after waiting");
+      assert(e2.parentNode.ownerDocument, "e2 - document doesn't exist after waiting");
+      assertEquals(e2.parentNode.ownerDocument.nodeType, 9, "e2 - document node type has wrong node type after waiting");
+      return 2;
+    },
     function () {
       // test 28: getElementById()
       // ...and name=""
@@ -2307,7 +2321,7 @@ frames[1].contentDocument;
       var elapsedTime = ((endTime - startTime) - (delay * tests.length)) / 1000;
       log += "Total elapsed time: " + elapsedTime.toFixed(2) + "s";
       if (errors == 0)
-        log += "\nNo JS errors and no timing issues, but 9 tests were skipped.";
+        log += "\nNo JS errors and no timing issues, but 8 tests were skipped.";
   alert(log);
     }
   }
