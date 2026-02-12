@@ -4504,7 +4504,7 @@ get:function(){ var t = this.getAttribute("required");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("required", v);}});
 odp(inputp, "readOnly", {
-get:function(){ var t = this.getAttribute("readonly");
+get:function(){ let t = this.getAttribute("readonly");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("readonly", v);}});
 odp(inputp, "step", {
@@ -4848,6 +4848,14 @@ frag.appendChild(c)
 odp(this, "content$2", {value:frag})
 return frag
 }})
+
+swp("HTMLDetailsElement", function(){})
+swpp("HTMLDetailsElement", w.HTMLElement)
+let detp = w.HTMLDetailsElement.prototype;
+odp(detp, "open", {
+get:function(){ let t = this.getAttribute("open");
+return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
+set:function(v) { this.setAttribute("open", v);}});
 
 swp("HTMLAreaElement", function(){})
 swpp("HTMLAreaElement", w.HTMLElement)

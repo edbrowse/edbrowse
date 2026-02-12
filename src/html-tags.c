@@ -567,7 +567,7 @@ const struct tagInfo availableTags[] = {
 	{"image", "an image", TAGACT_IMAGE, 0, 4},
 	{"br", "a line break", TAGACT_BR, 1, 4},
 	{"p", "a paragraph", TAGACT_P, 10, 1},
-	{"details", "details", TAGACT_NOP, 10, 1},
+	{"details", "details", TAGACT_DET, 10, 1},
 	{"fieldset", "a paragraph", TAGACT_NOP, 10, 1},
 	{"blockquote", "a quoted section", TAGACT_BQ, 0, 1},
 	{"header", "a header", TAGACT_HEADER, 2, 5},
@@ -4873,6 +4873,12 @@ Needless to say that's not good!
 	case TAGACT_TEMPLATE:
 		if(opentag) {
 			domLink(t, "HTMLTemplateElement", 0, 0, 4);
+		}
+		break;
+
+	case TAGACT_DET:
+		if(opentag) {
+			domLink(t, "HTMLDetailsElement", 0, 0, 4);
 		}
 		break;
 
