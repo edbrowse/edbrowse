@@ -602,8 +602,7 @@ onclick="alert('rock and ½ roll')">
 try { // protect
 
 // set up for nested spans with onclick handlers
-// document.getElementById("spana").addEventListener("click", (e)=>{alert("a"); if(!confirm("do you really want to see b")) e.cancelled = true});
-document.getElementById("spana").addEventListener("click", ()=>{alert("a"); return confirm("do you really want to see b")});
+document.getElementById("spana").addEventListener("click", (e)=>{alert("a"); if(!confirm("do you really want to see b")) e.stopPropagation();});
 document.getElementById("spanb").addEventListener("click", ()=>alert("b"));
 document.getElementById("spanc").addEventListener("click", ()=>alert("first click"), {capture:true,once:true});
 document.getElementById("spanc").addEventListener("click", ()=>alert("c"), {capture:true});
