@@ -542,8 +542,8 @@ function dispatchEvent (e) {
             // Ensure the binding is correct
             else if (typeof h == "string") f = () => eval.call(n, h);
         }
-        // Bound as part of adding the listener
-        else if (typeof h.callback == "function") f = h.callback;
+        // Should be bound to the node
+        else if (typeof h.callback == "function") f = h.callback.bind(n);
         // An object method, don't muck with the binding
         else if (typeof h.callback == "object") f = h.callback.handleEvent;
         if (!f) {
@@ -682,7 +682,7 @@ function eb$listen(evtype, handler, iscapture)
 {
     const h = {};
     h.do$phases = new Set;
-    if (typeof handler == "function") h.callback = handler.bind(this);
+    if (typeof handler == "function") h.callback = handler;
     else if (typeof handler == "object" && typeof h.handleEvent == "function")
         h.callback = handler;
     else throw TypeError("Invalid event handler");
