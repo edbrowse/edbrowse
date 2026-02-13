@@ -583,7 +583,7 @@ function dispatchEvent (e) {
         if (handlers) {
             // We want to log which handlers ran for debugging
             handlers.forEach((h) => h.ran = false);
-            handlers.every((h) => runEventHandler(n, h));
+            handlers.slice().every((h) => runEventHandler(n, h));
         }
         return !e.stop$propagating;
     }
