@@ -886,7 +886,7 @@ HashChangeEvent.prototype = new Event;
 
 swm("MouseEvent", function(etype){
     this.bubbles =     this.cancelable = true;
-    this.cancelled = this.defaultPrevented = false;
+    this.defaultPrevented = false;
     this.currentTarget =     this.target = null;
     this.eventPhase = 0;
     this.timeStamp = new Date().getTime();
@@ -901,7 +901,7 @@ MouseEvent.prototype.initMouseEvent = function() { this.initEvent.apply(this, ar
 
 swm("PromiseRejectionEvent", function(etype){
     this.bubbles =     this.cancelable = true;
-    this.cancelled = this.defaultPrevented = false;
+    this.defaultPrevented = false;
     this.currentTarget =     this.target = null;
     this.eventPhase = 0;
     this.timeStamp = new Date().getTime();
@@ -912,7 +912,7 @@ PromiseRejectionEvent.prototype = new Event;
 swm("CustomEvent", function(etype, o){
 alert3("customEvent " + etype + " " + typeof o);
     this.bubbles =     this.cancelable = true;
-    this.cancelled = this.defaultPrevented = false;
+    this.defaultPrevented = false;
     this.currentTarget =     this.target = null;
     this.eventPhase = 0;
     this.timeStamp = new Date().getTime();

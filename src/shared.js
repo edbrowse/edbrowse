@@ -2908,7 +2908,7 @@ function Event(etype){
     // have to decide if we simply dont adhere to
     // the read-only restriction of the specification
     this.bubbles =     this.cancelable = true;
-    this.cancelled = this.defaultPrevented = false;
+    this.defaultPrevented = false;
     this.currentTarget =     this.target = null;
     this.eventPhase = 0;
     this.timeStamp = new Date().getTime();
