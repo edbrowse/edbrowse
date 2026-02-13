@@ -470,14 +470,14 @@ p : affiche la ligne courante
 <br>lna : affiche les caractères nonascii en hexadécimal quand une ligne est listée (bascule)
 <br>n : affiche la ligne courante avec son numéro de ligne
 <br>ll=1000 : longueur de ligne 1000, affiche les 1000 premiers caractères de chaque ligne
-<br> ll : affiche la longueur de ligne actuelle
+<br>ll : affiche la longueur de ligne actuelle
 <br>fll=80 : format line length 80, coupe les lignes à 80 caractères, peut-être pour correspondre au terminal
 <br>fll 80+ : coupe les lignes à 80 caractères, mais autorise un dépassement d'un ou deux mots. 
 <br>fll : affiche le format de la ligne (la largeur)
 <br>z22 : affiche les 22 prochaines lignes
 <br>z : affiche encore 22 lignes
 <br>= : affiche le nombre de lignes du fichier en cours
-<br>. = : affiche le numéro de ligne courante
+<br>.= : affiche le numéro de ligne courante
 <br>B : trouve la ligne contenant l'accolade ouvrante ou fermante correspondante
 <br>B[ : trouve la ligne contenant le crochet fermant correspondant
 <br>B( : trouve la ligne contenant la parenthèse fermante correspondante
@@ -618,7 +618,7 @@ Edition de texte, très semblable à ed
 <p>
 u : annuler la dernière commande
 <br>d : supprimer la ligne courante
-<br>1, $d : supprimer toutes les lignes, de 1 à la fin du fichier
+<br>1,$d : supprimer toutes les lignes, de 1 à la fin du fichier
 <br>D : supprimer la ligne courante et afficher la prochaine ligne
 <br>j : fusionne cette ligne avec la suivante
 <br>2,5j : fusionne les lignes 2 à 5
@@ -949,6 +949,7 @@ des opérations multiples peuvent être scriptées, une importante fonctionnalit
 
 <h2 id="mlist"> Liste de discussion </h2>
 
+<p>
 Il existe une liste de diffusion pour les utilisateurs d'Edbrowse et d'autres utilitaires 
 en ligne de commande. 
 Vous pouvez vous y abonner en envoyant un courrier à
@@ -957,8 +958,7 @@ Vous pouvez vous y abonner en envoyant un courrier à
 <h2 id="wiki"> Wiki Edbrowse </h2>
 
 Il existe un wiki dévolu à Edbrowse, 
-incluant des trucs et astuces, et des exemples de fichiers 
-de configuration. 
+incluant des trucs et astuces, et des exemples de fonctions edbrowse pour accomplir certaines tâches.
 Voyez <a href=http://edbrowse.org>edbrowse.org</a> pour plus d'informations. 
 
 <p><hr>
@@ -1954,9 +1954,12 @@ Heureusement, edbrowse propose une approche plus rationnelle.
 
 <p>
 Il démarre avec une bibliothèque d'emojis, dans un format texte simple. 
-Un fichier d'emojis courants est disponible sur le wiki edbrowse, sous Emojis.txt. 
+Un fichier d'emojis 
+<a href=../src/emojis.txt>
+courants</a> 
+est disponible dans le projet edbrowse. 
 Commencez par ce fichier si vous le souhaitez, puis modifiez-le pour le personnaliser. 
-Ce fichier est ensuite référencé dans le fichier de configuration edbrowse .ebrc, 
+Ce fichier est ensuite référencé dans votre fichier de configuration edbrowse .ebrc, 
 comme votre carnet d'adresses, votre boîte à cookies, et vos certificats ssl. 
 
 <p>
@@ -2066,7 +2069,7 @@ Le ^ indique l'opérateur de jonction, les emojis ne sont pas simplement l'un à
 26be^1f9e4 gant de baseball
 
 <p>
-Reportez-vous au fichier d'exemple dans le wiki pour plus d'exemples de ces combinaisons. 
+Reportez-vous au fichier d'exemple Emojis.txt dans le wiki pour plus d'exemples de ces combinaisons. 
 
 <h2 id="bfile"> fichiers binaires  </h2>
 
@@ -2608,6 +2611,7 @@ Ce dispositif n'est pas très demandé.
 <li><a href=#hist> Historique de navigation </a></li>
 <li><a href=#music> Musique de fond </a></li>
 <li><a href=#heading> Titres </a></li>
+<li><A HREF=#emph> Texte mis en relief</A>
 <li><a href=#input> Zones de saisie </a></li>
 <li><a href=#entry> Saisie de données </a></li>
 <li><a href=#textarea> Zones de texte </a></li>
@@ -2621,6 +2625,7 @@ Ce dispositif n'est pas très demandé.
 <li><a href=#gopher> Support de Gopher </a></li>
 <li><a href=#proxy> Serveurs proxy </a></li>
 <li><a href=#frame> Cadres </a></li>
+<li><A HREF=#det> Détails </A>
 </ul>
 
 <h2 id="url"> Accès à une URL </h2>
@@ -3477,12 +3482,41 @@ C'est conforme à d'autres navigateurs, qui emploient des extensions pour jouer 
 <h2 id=heading> Titres </h2>
 
 <p>
-Certaines pages contiennent des titres, du niveau 1 au niveau 6. 
+La plupart des pages contiennent des titres, du niveau 1 au niveau 6. 
 Ces titres sont référencés de h1 à h6. 
 Comme les accolades indiquent un lien, h2 indique un titre de second niveau. 
 H2 ne fait pas partie du texte; c'est une balise. 
 Vous pouvez sauter à un titre différent en utilisant les commandes ed classiques : 
 /h2 pour le titre de niveau 2 suivant, ?h1 pour le titre de niveau 1 précédent et /h\d pour le titre suivant de n'importe quel niveau. 
+
+<h2 id="emph">Texte mis en relief</h2>
+
+<p> Certains sites web utilisent des balises pour mettre l'accent sur certains mots ou phrases. 
+Par exemple, &lt;em&gt; indique un texte mis en relief. 
+À l'écran, ceci est présenté dans une police différente, mais cela ne nous aide pas. 
+Edbrowse met une * avant et après le texte. 
+Ainsi &lt;em&gt;critique&lt;/em&gt; devient *critique*. 
+
+<p>
+Comme les marqueurs h1 ci-dessus, les étoiles ne font pas partie du texte.
+Elles fournissent des informations de présentation, qui sont aussi sémantiques.
+
+<p>
+Les marqueurs à caractère unique sont :
+<br>
+* emphase
+<br>
+@ italique, parfois utilisé pour un titre ou un nom
+<br>
+~ supprimé, comme le système ~attachEvent~ en javascript qui est obsolète
+<br>
+_ souligné, ce mot littéral est important
+
+<p>
+Une citation bloc, &lt;blockquote&gt;, est indiquée par les marques d'ouverture et de fermeture `` et ''. 
+Elle est placée dans son propre paragraphe, ce qui correspond généralement à l'intention de l'auteur. 
+Certains serveurs de messagerie placent l'email original en blockquote, en bas, lors de la formulation d'une réponse. 
+Quand votre ami répond à votre email, vous pourrez voir votre texte d'email original en bas, encadré par `` et ''. 
 
 <h2 id="input"> Zones de saisie </h2>
 
@@ -4249,6 +4283,20 @@ Nous avons les prix les plus bas.
 <br>
 Frame {bottom}
 
+<h2 id="det">Détails</h2>
+
+<p>
+Certaines pages web présentent un résumé d'informations, juste une phrase, puis vous permettent de cliquer dessus si vous voulez plus de détails. 
+
+<p>
+Détails {L'interprétation des mondes multiples de la mécanique quantique} 
+
+<p>
+Ceci est similaire à un cadre. 
+Tapez exp, ou g, pour l'étendre ; tapez ctr pour le contracter. 
+Tapez ,exp pour étendre tous les détails de la page, et ,ctr pour contracter toute la page. 
+Les détails sont enclos dans `-- et --`, comme un cadre. 
+
 <hr>
 <h1 id=jsc> Chapitre 5, Javascript </h1>
 
@@ -4515,7 +4563,7 @@ Le fichier de configuration est vérifié dans les emplacements suivants, dans l
 <p>
 Le premier fichier de configuration trouvé est utilisé, sauf si le fichier 
 spécifié avec -c n'existe pas, aucun autre emplacement n'est vérifié et donc 
-pas de configuration chargée. De plus, si -c n'est pas fourni et qu'aucune configuration n'est trouvée, alors un fichier d'exemple sera créé dans $HOME/.ebrc pour que vous puissiez l'éditer.
+pas de configuration chargée. De plus, si -c n'est pas fourni et qu'aucune configuration n'est trouvée, alors un fichier par défaut sera créé dans $HOME/.ebrc pour que vous puissiez l'éditer.
 Le "eb" est l'abréviation d'edbrowse.
 La commande config, émise depuis edbrowse,
 accédera au fichier qui a été lu.
@@ -4986,7 +5034,7 @@ optinclude = plugins.d
 <p>	
 Inclure un répertoire de fichiers.
 Dans ce cas, il pourrait s'agir de plugins dans le répertoire plugins.d.
-Les fichiers sont inclus sans ordre particulier.	
+Les fichiers sont inclus par ordre alphabétique (ascii).	
 		
 <h2 id="agent"> Agent utilisateur </h2>
 
@@ -5405,10 +5453,7 @@ en tant qu'élément du client «fetchmail».
 Les plugins sont déterminés par l'extension dans le nom de fichier, ou dans certains cas par le protocole. 
 Ils peuvent indiquer à Edbrowse d'utiliser /usr/bin/play pour jouer fichier.wav ou fichier. voc, 
 et /usr/bin/mpg123 pour jouer fichier.mp3, et ainsi de suite. 
-Plutôt que de tout répéter ici, 
-je vous suggère de jeter un oeil à la section plugin {…} du fichier de configuration exemple fourni. 
-Les utilisateurs de Linux pourront probablement copier cette section dans leur propre fichier de configuration. 
-Elle fait généralement ce qu'il faut. 
+Regardez svp les fichiers dans le répertoire des plugins de ce projet.
 Voici un exemple :
 
 <pre class=item>
@@ -5516,14 +5561,11 @@ outtype = H
 
 <h2 id="sampcfg"> Un exemple de fichier de configuration </h2>
 
+<p>
 La meilleure documentation étant un exemple, 
-je vous propose un fichier de configuration exemple avec de fausses données; 
-Il est bien commenté. 
-Vous pouvez le télécharger <a href=http://Edbrowse.org/sample.ebrc>exemple de fichier de configuration</a>. 
-Egalement disponible en
-<a href=sample_fr.ebrc>Français</a>
-and
-<a href=sample_it.ebrc>Italien</a>. 
+donc vous pouvez vouloir lire le
+<a href=../lang/ebrc-fr>fichier de configuration par défaut</a>,
+qui est créé pour vous si vous lancez edbrowse sans fichier de configuration.
 
 <hr>
 <h1 id=mailc> Chapitre 7, Client de courrier</h1>
