@@ -548,14 +548,14 @@ function dispatchEvent (e) {
         else if (typeof h.callback == "object") f = h.callback.handleEvent;
         if (!f) {
             dbg(`could not find callback for ${hd}`, n);
-            return true; // null listeners appear to be allowed
+            return !e.stop$propagating$immediate; // null listeners are allowed
         }
         if (!(inline || h.do$phases.has(e.eventPhase))) {
             dbg(`Unsupported phase ${e.eventPhase} for ${hd}`, n, 4);
             dbg(
                 `${hd} supported: ${JSON.stringify(Array.from(h.do$phases))}`,
                 n, 4);
-            return true;
+            return !e.stop$propagating$immediate;
         }
         dbg(`fires ${hd}`, n);
         let r = f(e);
@@ -572,7 +572,7 @@ function dispatchEvent (e) {
         h.ran = true;
         if (h.do$once) {
             dbg(`Remove one-shot ${hd}`, n);
-            n.removeEventListener(e.type, f, h.do$phases.has(1));
+            n.removeEventListener(e.type, h.callback, h.do$phases.has(1));
         }
         return !e.stop$propagating$immediate;
     }
@@ -591,7 +591,7 @@ function dispatchEvent (e) {
 const runAllHandlers = (n) => {
         const ep = `on${e.type}`;
         const hi = n[ep];
-        if (hi && !runEventHandler(hi, n)) return false;
+        if (hi && !runEventHandler(n, hi)) return false;
         return runHandlerArray(n);
     }
 
@@ -603,8 +603,6 @@ const runAllHandlers = (n) => {
             logputs(l, `${prefix} tag ${n.eb$seqno} phase ${phase}: ${m}`);
         };
     e.eventPhase = 0;
-    dbg("start");
-
     e.target = this;
     const pathway = [];
     if (this.nodeType !== undefined) {
@@ -630,7 +628,7 @@ const runAllHandlers = (n) => {
         // Capture phase: outer to inner elements
         () => {
             if (e.eb$captures)
-               return pathway.slice(1).reverse().every(runHandlerArray);
+                return pathway.slice(1).reverse().every(runHandlerArray);
             else {
                 dbg("not capturing");
                 return true;
@@ -650,7 +648,10 @@ const runAllHandlers = (n) => {
     ];
     states.every((cb, i) => {
         e.eventPhase = i;
-        return cb();
+        dbg("start");
+        const rc = cb();
+        dbg(`end (${rc})`);
+        return rc;
     });
 
     /* We return the logical negation of defaultPrevented as per spec a false
@@ -658,7 +659,7 @@ const runAllHandlers = (n) => {
         defaultPrevented property is specified to be true if the default action
         was, or is to be, prevented
     */
-    dbg(`end (default prevented ${e.defaultPrevented})`);
+    dbg(`default prevented ${e.defaultPrevented}`);
     return !e.defaultPrevented;
 }
 
