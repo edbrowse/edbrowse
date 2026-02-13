@@ -5301,7 +5301,7 @@ list.splice(idx, 0, r);
 swp("HTMLUnknownElement", function(){})
 swpp("HTMLUnknownElement", w.HTMLElement)
 swp("z$Timer", function(){this.nodeName = "TIMER"})
-swpp("z$Timer", null)
+swpp("z$Timer", w.EventTarget)
 swp("z$Datalist", function() {})
 swpp("z$Datalist", w.HTMLElement)
 odp(w.z$Datalist.prototype, "multiple", {

@@ -32,9 +32,10 @@ void dwStart(void)
 
 bool handlerPresent(const Tag *t, const char *name)
 {
-	const char *name2 = tack_fn(name);
+	const char *name2 = tack_array(name);
 	return (typeof_property_t(t, name) == EJ_PROP_FUNCTION ||
-	(name2 && typeof_property_t(t, name2) == EJ_PROP_FUNCTION));
+            typeof_property_t(t, name) == EJ_PROP_STRING ||
+            (name2 && typeof_property_t(t, name2) == EJ_PROP_ARRAY));
 }
 
 // called with click, dblclick, reset, or submit
@@ -3880,19 +3881,19 @@ run_event_doc(cf, "document", "onDOMContentLoaded");
 	}
 }
 
-// In one place, tack on the $$fn to turn onfoo into onfoo$$fn
-const char *tack_fn(const char *e)
+// In one place, tack on the $$Aarray to turn onfoo into onfoo$$array
+const char *tack_array(const char *e)
 {
 	static char buf[64];
 	int l = strlen(e);
-	if((unsigned)l + 4 >= sizeof(buf)) {
+	if((unsigned)l + 7 >= sizeof(buf)) {
 		debugPrint(3, "%s$$fn too long", e);
 		return 0;
 	}
 // ontimer is our simulated event handler.
 	if(stringEqual(e, "ontimer"))
 		return 0;
-	sprintf(buf, "%s$$fn", e);
+	sprintf(buf, "%s$$array", e);
 	return buf;
 }
 

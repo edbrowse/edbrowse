@@ -1274,40 +1274,18 @@ static void unlink_event(JSContext *cx, JSValueConst parent)
 {
 	delete_property(cx, parent, "gc$event");
 }
-
+// Run a non-capturing, non-bubbling event
 static bool run_event(JSContext *cx, JSValueConst obj, const char *pname, const char *evname)
 {
-	int rc;
-	JSValue eo;	// created event object
-	const char *evname2 = tack_fn(evname);
-// evname2 is the addEventListener system; try that first.
-	if(!evname2 || typeof_property(cx, obj, evname2) != EJ_PROP_FUNCTION) {
-		if(typeof_property(cx, obj, evname) != EJ_PROP_FUNCTION)
-			return true;
-		evname2 = evname;
-	}
-	if (debugLevel >= 3) {
-		if (debugEvent) {
-			if(stringEqual(evname, "ontimer")) {
-				int seqno = get_property_number(cx, obj, "tsn");
-				debugPrint(3, "trigger %s %d %s", pname, seqno, evname);
-			} else {
-				int seqno = get_property_number(cx, obj, "eb$seqno");
-				debugPrint(3, "trigger %s tag %d %s", pname, seqno, evname);
-			}
-		}
-	}
-	eo = create_event(cx, obj, evname);
-	set_property_object(cx, eo, "target", obj);
-	set_property_object(cx, eo, "currentTarget", obj);
-	set_property_number(cx, eo, "eventPhase", 2);
-	rc = run_function_onearg(cx, obj, evname2, eo);
-	unlink_event(cx, obj);
-	JS_Release(cx, eo);
-// no return or some other return is treated as true in this case
-	if (rc < 0)
-		rc = true;
-	return rc;
+    int rc;
+    JSValue eo;	// created event object
+    eo = create_event(cx, obj, evname);
+    set_property_bool(cx, eo, "eb$captures", false);
+    set_property_bool(cx, eo, "bubbles", false);
+    rc = run_function_onearg(cx, obj, "dispatchEvent", eo);
+    unlink_event(cx, obj);
+    JS_Release(cx, eo);
+    return rc;
 }
 
 bool run_event_t(const Tag *t, const char *pname, const char *evname)
@@ -1331,6 +1309,7 @@ bool run_event_doc(const Frame *f, const char *pname, const char *evname)
 	return run_event(f->cx, *((JSValue*)f->docobj), pname, evname);
 }
 
+// Allow event propagation
 bool bubble_event_t(const Tag *t, const char *name)
 {
 	JSContext *cx;
@@ -1341,8 +1320,6 @@ bool bubble_event_t(const Tag *t, const char *name)
 	cx = t->f0->cx;
 	e = create_event(cx, *((JSValue*)t->jv), name);
 	rc = run_function_onearg(cx, *((JSValue*)t->jv), "dispatchEvent", e);
-	if (rc && get_property_bool(cx, e, "prev$default"))
-		rc = false;
 /*********************************************************************
 Why would we need to test whether t is connected to its object?
 We already know it is.
