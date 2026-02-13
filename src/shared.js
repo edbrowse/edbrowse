@@ -537,10 +537,14 @@ function dispatchEvent (e) {
         const hd = inline ? "inline handler" : `handler ${h.ehsn}`;
         let f;
         if (inline) {
+            // already bound or caller doesn't want it to be
             if (typeof h == "function") f = h;
-            else if (typeof h == "string") f = function(e) { return eval(h); };
+            // Ensure the binding is correct
+            else if (typeof h == "string") f = () => eval.call(n, h);
         }
+        // Bound as part of adding the listener
         else if (typeof h.callback == "function") f = h.callback;
+        // An object method, don't muck with the binding
         else if (typeof h.callback == "object") f = h.callback.handleEvent;
         if (!f) {
             dbg(`could not find callback for ${hd}`, n);
@@ -554,7 +558,7 @@ function dispatchEvent (e) {
             return true;
         }
         dbg(`fires ${hd}`, n);
-        let r = f.call(n, e);
+        let r = f(e);
         // Events added by listeners ignore return values these days
         if (inline) {
             const special = e.type === "error";
@@ -676,7 +680,10 @@ function eb$listen(evtype, handler, iscapture)
 {
     const h = {};
     h.do$phases = new Set;
-    h.callback = handler;
+    if (typeof handler == "function") h.callback = handler.bind(this);
+    else if (typeof handler == "object" && typeof h.handleEvent == "function")
+        h.callback = handler;
+    else throw TypeError("Invalid event handler");
     h.do$phases.add(2);
     const ev = `on${evtype}`;
     const evarray = `${ev}$$array`; // array of handlers
