@@ -591,7 +591,7 @@ function dispatchEvent (e) {
 const runAllHandlers = (n) => {
         const ep = `on${e.type}`;
         const hi = n[ep];
-        return ((hi && runEventHandler(hi, n)) || !hi) && runHandlerArray(n);
+        return (hi && runEventHandler(hi, n)) && runHandlerArray(n);
     }
 
     if(db$flags(1))
@@ -599,7 +599,7 @@ const runAllHandlers = (n) => {
             const phases = ["dispatch", "capture", "target", "bubble"];
             const prefix = `dispatchEvent ${n.nodeName}.${e.type}`;
             const phase = phases[e.eventPhase];
-            logputs(l, `${prefix} tag ${t.eb$seqno} phase ${phase}: ${m}`);
+            logputs(l, `${prefix} tag ${n.eb$seqno} phase ${phase}: ${m}`);
         };
     e.eventPhase = 0;
     dbg("start");
@@ -640,7 +640,7 @@ const runAllHandlers = (n) => {
         // Bubble phase, inner to outer
         () => {
             if (e.bubbles)
-                return pathway.slice(1).every(runAllHandlers)
+                return pathway.slice(1).every(runAllHandlers);
             else {
                 dbg("not bubbling");
                 return true;
