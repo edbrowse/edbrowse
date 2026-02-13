@@ -591,7 +591,8 @@ function dispatchEvent (e) {
 const runAllHandlers = (n) => {
         const ep = `on${e.type}`;
         const hi = n[ep];
-        return (hi && runEventHandler(hi, n)) && runHandlerArray(n);
+        if (hi && !runEventHandler(hi, n)) return false;
+        return runHandlerArray(n);
     }
 
     if(db$flags(1))
