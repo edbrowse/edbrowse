@@ -2292,7 +2292,7 @@ if(h === null || h === undefined) return;
 // this should already be a string, but...
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
-var l = h.length;
+const l = h.length;
 if(l == 1) {
 s.marginLeft = s.marginBottom = s.marginRight = s.marginTop = h[0];
 return;
@@ -2321,7 +2321,7 @@ scrollMarginShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
-var l = h.length;
+const l = h.length;
 if(l == 1) {
 s.scrollMarginLeft = s.scrollMarginBottom = s.scrollMarginRight = s.scrollMarginTop = h[0];
 return;
@@ -2350,7 +2350,7 @@ paddingShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
-var l = h.length;
+const l = h.length;
 if(l == 1) {
 s.paddingLeft = s.paddingBottom = s.paddingRight = s.paddingTop = h[0];
 return;
@@ -2379,7 +2379,7 @@ scrollPaddingShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
-var l = h.length;
+const l = h.length;
 if(l == 1) {
 s.scrollPaddingLeft = s.scrollPaddingBottom = s.scrollPaddingRight = s.scrollPaddingTop = h[0];
 return;
@@ -2408,7 +2408,7 @@ borderRadiusShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
-var l = h.length;
+const l = h.length;
 if(l == 1) {
 s.borderBottomLeftRadius = s.borderBottomRightRadius = s.borderTopRightRadius = s.borderTopLeftRadius = h[0];
 return;
@@ -2437,7 +2437,7 @@ borderWidthShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
-var l = h.length;
+const l = h.length;
 if(l == 1) {
 s.borderLeftWidth = s.borderBottomWidth = s.borderRightWidth = s.borderTopWidth = h[0];
 return;
@@ -2466,7 +2466,7 @@ borderColorShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
-var l = h.length;
+const l = h.length;
 if(l == 1) {
 s.borderLeftColor = s.borderBottomColor = s.borderRightColor = s.borderTopColor = h[0];
 return;
@@ -2495,7 +2495,7 @@ borderStyleShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
-var l = h.length;
+const l = h.length;
 if(l == 1) {
 s.borderLeftStyle = s.borderBottomStyle = s.borderRightStyle = s.borderTopStyle = h[0];
 return;
@@ -2524,7 +2524,7 @@ backgroundShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
-var l = h.length;
+const l = h.length;
 delete s.backgroundColor;
 delete s.backgroundImage;
 delete s.backgroundRepeat;
@@ -2543,7 +2543,7 @@ fontShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
-var l = h.length;
+const l = h.length;
 delete s.fontStyle;
 delete s.fontWeight;
 delete s.fontSize;
@@ -2557,7 +2557,7 @@ s.fontStyle = h[0];
 if(l >= 2)
 s.fontWeight = h[1];
 if(l >= 3) {
-var parts = h[2].split('/');
+let parts = h[2].split('/');
 s.fontSize = parts[0];
 if(parts.length >= 2)
 s.lineHeight = parts[1];
@@ -2576,7 +2576,7 @@ borderShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
-var l = h.length;
+const l = h.length;
 delete s.borderWidth;
 delete s.borderStyle;
 delete s.borderColor;
@@ -2595,7 +2595,7 @@ borderImageShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
-var l = h.length;
+const l = h.length;
 delete s.borderImageSource;
 delete s.borderImageSlice;
 delete s.borderImageWidth;
@@ -2617,7 +2617,7 @@ insetShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
-var l = h.length;
+const l = h.length;
 if(l == 1) {
 s.left = s.bottom = s.right = s.top = h[0];
 return;
@@ -2640,6 +2640,25 @@ s.bottom = h[2];
 s.left = h[3];
 return;
 }
+},
+
+textDecorationShort: function(s, h) {
+if(h === null || h === undefined) return;
+if(typeof h !== "string") h = String(h)
+h = h.split(/\s+/);
+const l = h.length;
+delete s.textDecorationLine;
+delete s.textDecorationColor;
+delete s.textDecorationStyle;
+delete s.textDecorationThickness;
+if(l >= 1)
+s.textDecorationLine = h[0];
+if(l >= 2)
+s.textDecorationColor = h[1];
+if(l >= 3)
+s.textDecorationStyle =  h[2];
+if(l >= 4)
+s.textDecorationThickness =  h[3];
 },
 
 }
@@ -5065,7 +5084,7 @@ odp(csdp, "sheet", { get: function(){ if(!this.sheet$2) this.sheet$2 = new w.CSS
 const list = ["margin", "scrollMargin", "padding", "scrollPadding",
 "borderRadius", "border",
 "borderWidth", "borderColor", "borderStyle", "borderImage",
-"background", "font", "inset",];
+"background", "font", "inset", "textDecoration"];
 for(let k of list) {
 eval('odp(csdp, "' + k + '", {set: function(h) {cssShort.' + k + 'Short(this, h)}})')
 }})();
@@ -5141,7 +5160,7 @@ const list =[
 "stopColor","stopOpacity",
 "stroke","strokeDasharray","strokeDashoffset","strokeLinecap","strokeLinejoin","strokeMiterlimit","strokeOpacity","strokeWidth",
 "tableLayout","tabSize","textAlign","textAlignLast","textAnchor","textCombineUpright",
-"textDecoration","textDecorationColor","textDecorationLine","textDecorationSkipInk","textDecorationStyle","textDecorationThickness",
+"textDecorationColor","textDecorationLine","textDecorationSkipInk","textDecorationStyle","textDecorationThickness",
 "textEmphasis","textEmphasisColor","textEmphasisPosition","textEmphasisStyle","textIndent","textJustify",
 "textOrientation","textOverflow","textRendering","textShadow","textUnderlineOffset","textUnderlinePosition",
 "top","touchAction","transform","transformBox","transformOrigin","transformStyle",

@@ -434,7 +434,6 @@ const char * const allowableStyleElements[] = {
 "textAlignLast",
 "textAnchor",
 "textCombineUpright",
-"textDecoration",
 "textDecorationColor",
 "textDecorationLine",
 "textDecorationSkipInk",
@@ -644,6 +643,7 @@ const char * const allowableStyleElements[] = {
 "borderImage",
 "border",
 "inset",
+"textDecoration",
 0};
 
 static const char * const displayableStyleElements[] = {
