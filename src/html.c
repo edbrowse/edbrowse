@@ -4759,7 +4759,7 @@ static void emphasize(Tag *t, bool opentag, char d)
 	Tag *t2 = findOpenTag(t, TAGACT_A);
 	if(t2 && t2->href) return;
 	t2 = findOpenTag(t, TAGACT_INPUT);
-	if(t2) return;
+	if(t2 && t2->info->name[0] != 'b') return;
 	t2 = findOpenTag(t, TAGACT_OPTION);
 	if(t2) return;
 
