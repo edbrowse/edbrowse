@@ -611,13 +611,26 @@ const runAllHandlers = (n) => {
             pathway.push(t);
             // don't go past document up to a higher frame
             if(t.nodeType == 9) break;
+            // or through a frame and up into a higher frame
+            if(t.nodeType == 1 && (
+            t.dom$class == "HTMLIFrameElement" ||
+            // don't know if it could ever be a frame
+            t.dom$class == "HTMLFrameElement")) break;
         }
         /* Allow events to bubble up to the window. We need to use defaultView
         from the document object (which we should be looking at) because we may
         be in a frame but dispatchEvent is running in the main window and we
         want to stop bubbling at the frame boundary not the window returned by
-        my$win(). */
-        pathway.push(t.defaultView);
+        my$win(). There is a corner case however.
+        iframe.onload, run when the frame is loaded.
+        The frame tag is passed to dispatch, that's where the onload
+        handler is or might be. There is no parent so we stop here.
+        Even if there was a parent we should still stop here, as above.
+        In this case it is not document and there is no defaultView. */
+        if(t.nodeType == 1) // must be a frame
+            pathway.push(t);
+        else // must be the document
+            pathway.push(t.defaultView);
     } else {
         // no node type so assume it's a window or similar, just a target
         pathway.push(this);
