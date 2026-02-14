@@ -3721,18 +3721,13 @@ return children;
 }})
 
 // attributes, functions are in the attr object
-nodep.hasAttribute = attr.hasAttribute;
-nodep.hasAttributeNS = attr.hasAttributeNS;
-nodep.getAttribute = attr.getAttribute;
-nodep.getAttributeNS = attr.getAttributeNS;
-nodep.getAttributeNames = attr.getAttributeNames;
-nodep.setAttribute = attr.setAttribute;
-nodep.setAttributeNS = attr.setAttributeNS;
-nodep.removeAttribute = attr.removeAttribute;
-nodep.removeAttributeNS = attr.removeAttributeNS;
-nodep.getAttributeNode = attr.getAttributeNode;
-nodep.setAttributeNode = attr.setAttributeNode;
-nodep.removeAttributeNode = attr.removeAttributeNode;
+; (function(){ const list = [
+"hasAttribute", "hasAttributeNS", "getAttributeNames",
+"getAttribute", "getAttributeNS", "getAttributeNode",
+"setAttribute", "setAttributeNS", "setAttributeNode",
+"removeAttribute", "removeAttributeNS", "removeAttributeNode"];
+for(var k of list)
+eval('nodep.'+k+' = attr.'+k)})();
 
 odp(nodep, "className", {
 get: function() {

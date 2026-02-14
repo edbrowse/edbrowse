@@ -1008,7 +1008,7 @@ eval('odp(' + cn + ', "' + evname + '", { \
 get: function() { return this.' + evname + '$2}, \
 set: function(f) { if(db$flags(1)) alert3((this.'+evname+'?"clobber ":"create ") + (this.nodeName ? this.nodeName : "+"+this.dom$class) + ".' + evname + '"); \
 if(typeof f == "string") f = my$win().handle$cc(f, this); \
-if(typeof f == "function") { Object.defineProperty(this, "' + evname + '$2", {value:f}); \
+if(typeof f == "function") { Object.defineProperty(this, "' + evname + '$2", {value:f,writable:true,configurable:true}); \
 }}})')
 }}})();
 
