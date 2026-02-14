@@ -2787,7 +2787,8 @@ bool infPush(int tagno, char **post_string)
 				runningError(itype ==
 					     INP_BUTTON ? MSG_NJNoAction :
 					     MSG_NJNoOnclick);
-			bubble_event_t(t, "onclick");
+			rc = bubble_event_t(t, "onclick");
+			if(!rc) return true;
 			if (js_redirects)
 				return true;
 // At this point onclick has run, be it button or submit or reset
@@ -2854,8 +2855,7 @@ bool infPush(int tagno, char **post_string)
 				rc = true;
 				if (form->jslink)
 					rc = bubble_event_t(form, "onsubmit");
-				if (!rc)
-					return true;
+				if (!rc) return true;
 				if (js_redirects)
 					return true;
 			}
