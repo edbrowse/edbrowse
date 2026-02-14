@@ -42,11 +42,9 @@ this.eb$top = function() { return this}
 this.eb$frameElement = function() { return this}
 this.eb$getter_cd = function() { return null}
 this.eb$getter_cw = function() { return null}
-this.eb$formSubmit = function() { print("submit")}
-this.eb$formReset = function() { print("reset")}
 ;(function() { let void_functions = ["addEventListener",
     "removeEventListener", "eb$apch1", "eb$apch2", "eb$rmch2", "eb$insbf",
-    "eb$hasFocus", "eb$write", "eb$writeln", "eb$playAudio"];
+    "eb$hasFocus", "eb$write", "eb$writeln"];
 for (let i in void_functions) window[void_functions[i]] = eb$voidfunction; })();
 this.my$win = function() { return window}
 this.my$doc = function() { return document}
@@ -56,7 +54,6 @@ this.my$doc = function() { return document}
 this.querySelectorAll = function() { return [] }
 this.querySelector = function() { return {} }
 this.querySelector0 = function() { return false}
-this.eb$cssText = function(){}
 }
 
 // the third party deminimization stuff is in mw$, the master window.
@@ -66,29 +63,50 @@ if(!window.mw$) {
 // mw$.share = 0 means I made up that window out of thin air
     this.mw$ = {share:0, URL:{}};
 this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
-    this.mw$.url_hrefset = () => undefined;
     this.mw$.dispatchEvent = () => undefined;
     this.mw$.addEventListener = () => undefined;
     this.mw$.removeEventListener = () => undefined;
     this.mw$.getComputedStyle = () => {};
     this.mw$.structuredClone = () => {};
+    this.mw$.attr = {};
+    this.mw$.setupClasses = () => {};
+// classes that setupClasses would have built, but didn't.
+    this.URL = function(){}
+    this.HTMLElement = function(){}
+    this.SVGElement = function(){}
+    this.HTMLBodyElement = function(){}
+    this.CSSStyleDeclaration = function(){}
 }
-// set window member, unseen, unchanging
-this.swm = function(k, v) { Object.defineProperty(window, k, {value:v})}
-// visible, but still protected
-this.swm1 = function(k, v) { Object.defineProperty(window, k, {value:v,enumerable:true})}
-// unseen, but changeable
-this.swm2 = function(k, v) { Object.defineProperty(window, k, {value:v, writable:true, configurable:true})}
 
-// this is called as each html element is built
+// We need some shorthand for this rather large file.
+// Think of these as macros; they are deleted at the end so they don't persist.
+this.odp = Object.defineProperty;
+// remember, we can't use odp inside function that run later:
+// constructors, setters, methods, etc.
+
+// set a window member, unseen, unchanging
+this.swm = function(k, v) { odp(window, k, {value:v})}
+// visible (enumerable), but still protected
+this.swm1 = function(k, v) { odp(window, k, {value:v,enumerable:true})}
+// unseen, but changeable
+this.swm2 = function(k, v) { odp(window, k, {value:v, writable:true, configurable:true})}
+
 // establish the prototype for inheritance, then set dom$class
+// this is called as each html element is built
 // If our made-up class is z$Foo, dom$class becomes Foo
-this.spdc = function(c, inherit) {
+// Letters mean set window member prototype
+this.swmp = function(c, inherit) {
     const v = c.replace(/^z\$/, "");
     if(inherit)
-        Object.defineProperty(window[c], "prototype", {value:new inherit})
-    Object.defineProperty(window[c].prototype, "dom$class", {value:v})
+        odp(window[c], "prototype", {value:new inherit})
+    odp(window[c].prototype, "dom$class", {value:v})
 }
+
+// set document member, analogs of the set window member functions
+this.sdm = function(k, v) { odp(document, k, {value:v})}
+this.sdm1 = function(k, v) { odp(document, k, {value:v,enumerable:true})}
+this.sdm2 = function(k, v) { odp(document, k, {value:v, writable:true, configurable:true})}
+
 /* Extremely useful even if non-standard hence the Eb$ prefix but use a named
     class as if people see it it really doesn't matter and makes the definition
     work better.
@@ -171,9 +189,13 @@ class Eb$IterableWeakMap {
     }
 }
 
+// * don't understand all the error codes and subcodes.
+// This is just a stub for now, to make acid 25 work.
+Error.prototype.NAMESPACE_ERR = 1;
+
 // The first DOM class is Node, at the head of all else.
 swm("Node", function(){})
-spdc("Node", null)
+swmp("Node", null)
 
 /*********************************************************************
 a node list is and isn't an array; I don't really understand it.
@@ -187,14 +209,14 @@ if(Array.isArray(v))
 for(var i=0; i<v.length; ++i)
 this.push(v[i])
 })
-spdc("NodeList", Array)
+swmp("NodeList", Array)
 NodeList.prototype.toString = function(){return "[object NodeList]"}
 swm("HTMLCollection", function(v){
 if(Array.isArray(v))
 for(var i=0; i<v.length; ++i)
 this.push(v[i])
 })
-spdc("HTMLCollection", Array)
+swmp("HTMLCollection", Array)
 HTMLCollection.prototype.toString = function(){return "[object HTMLCollection]"}
 
 // make sure to wrap global dispatchEvent, so this becomes this window,
@@ -204,7 +226,7 @@ swm("addEventListener", mw$.addEventListener.bind(window))
 swm("removeEventListener", mw$.removeEventListener.bind(window))
 
 swm("EventTarget", function() {})
-spdc("EventTarget", Node)
+swmp("EventTarget", Node)
 EventTarget.prototype.addEventListener = mw$.addEventListener;
 EventTarget.prototype.removeEventListener = mw$.removeEventListener;
 EventTarget.prototype.dispatchEvent = mw$.dispatchEvent;
@@ -219,37 +241,37 @@ swm("Document", function() {
         }
     )});
 });
-spdc("Document", EventTarget)
-Document.prototype.activeElement = null;
-Object.defineProperty(Document.prototype, "children", {get:function(){return this.childNodes}})
-Object.defineProperty(Document.prototype, "childElementCount", {get:function(){return this.children.length}})
-Document.prototype.querySelector = querySelector
-Document.prototype.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
-Object.defineProperty(Document.prototype, "documentElement", {get: mw$.getElement});
-Object.defineProperty(Document.prototype, "head", {get: mw$.getHead,set:mw$.setHead});
-Object.defineProperty(Document.prototype, "body", {get: mw$.getBody,set:mw$.setBody});
+swmp("Document", EventTarget)
+this.docp = Document.prototype; // shorthand
+// We may abbreviate prototypes for the various classes when building them,
+// but we'll always delete it once the class is built.
+docp.activeElement = null;
+odp(docp, "children", {get:function(){return this.childNodes}})
+odp(docp, "childElementCount", {get:function(){return this.children.length}})
+docp.querySelector = querySelector
+docp.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
+odp(docp, "documentElement", {get: mw$.getElement});
+odp(docp, "head", {get: mw$.getHead,set:mw$.setHead});
+odp(docp, "body", {get: mw$.getBody,set:mw$.setBody});
 // scrollingElement makes no sense in edbrowse, I think body is our best bet
-Object.defineProperty(Document.prototype, "scrollingElement", {get: mw$.getBody});
-Object.defineProperty(Document.prototype, "URL", {get: function(){return this.location ? this.location.toString() : null}})
-Object.defineProperty(Document.prototype, "documentURI", {get: function(){return this.URL}})
-Object.defineProperty(Document.prototype, "cookie", {
+odp(docp, "scrollingElement", {get: mw$.getBody});
+odp(docp, "URL", {get: function(){return this.location ? this.location.toString() : null}})
+odp(docp, "documentURI", {get: function(){return this.URL}})
+odp(docp, "cookie", {
 get: eb$getcook, set: eb$setcook});
-Document.prototype.defaultView = window
-Document.prototype.readyState = "interactive"
-Document.prototype.visibilityState = "visible"
-Document.prototype.getElementById = mw$.getElementById
+docp.defaultView = window
+docp.readyState = "interactive"
+docp.visibilityState = "visible"
+docp.getElementById = mw$.getElementById
 // the other getElementsBy we inherit from Node
-Document.prototype.nodeName = "#document"
-Document.prototype.tagName = "document"
-Document.prototype.nodeType = 9
+docp.nodeName = "#document"
+docp.tagName = "document"
+docp.nodeType = 9
+delete window.docp;
 
 // the most important line is right here
 swm1("document", new Document)
 
-// set document member, analogs of the set window member functions
-this.sdm = function(k, v) { Object.defineProperty(document, k, {value:v})}
-this.sdm1 = function(k, v) { Object.defineProperty(document, k, {value:v,enumerable:true})}
-this.sdm2 = function(k, v) { Object.defineProperty(document, k, {value:v, writable:true, configurable:true})}
 /* Apparently people want to muck with DOMException so can't be shared as
 otherwise we end up with read-only prototype chain issues */
 this.DOMException = function(message, name) {
@@ -324,7 +346,7 @@ this.toString = Object.prototype.toString = function() {
         this.dom$class ? "[object "+this.dom$class+"]" : toString$nat.call(this)
     ) : toString$nat.call(this);
 }
-Object.defineProperty(window, "toString", {enumerable:false})
+odp(window, "toString", {enumerable:false})
 
 swm1("scroll", eb$voidfunction)
 swm1("scrollTo", eb$voidfunction)
@@ -338,9 +360,9 @@ swm1("blur", document.blur)
 swm1("focus", document.focus)
 
 swm1("self", window)
-Object.defineProperty(window, "parent", {get: eb$parent,enumerable:true});
-Object.defineProperty(window, "top", {get: eb$top,enumerable:true});
-Object.defineProperty(window, "frameElement", {get: eb$frameElement,enumerable:true});
+odp(window, "parent", {get: eb$parent,enumerable:true});
+odp(window, "top", {get: eb$top,enumerable:true});
+odp(window, "frameElement", {get: eb$frameElement,enumerable:true});
 
 sdm("write", eb$write)
 sdm("writeln", eb$writeln)
@@ -384,8 +406,8 @@ swm2("step$go", "")
 } else {
 // step$l should control the entire session, all frames.
 // This is a trick to have a global variable across all frames.
-Object.defineProperty(window, "step$l", {get:function(){return top.step$l}, set:function(x){top.step$l=x}});
-Object.defineProperty(window, "step$go", {get:function(){return top.step$go}, set:function(x){top.step$go=x}});
+odp(window, "step$l", {get:function(){return top.step$l}, set:function(x){top.step$l=x}});
+odp(window, "step$go", {get:function(){return top.step$go}, set:function(x){top.step$go=x}});
 // I don't use this trick on step$exp, because an expression should really live within its frame
 }
 
@@ -424,7 +446,7 @@ swm("directories", false)
 if(window == top) {
 swm1("name", "unspecifiedFrame")
 } else {
-Object.defineProperty(window, "name", {get:function(){return frameElement.name}});
+odp(window, "name", {get:function(){return frameElement.name}});
 // there is no setter here, should there be? Can we set name to something?
 // Should it propagate back up to the frame element name?
 }
@@ -529,22 +551,16 @@ sdm("styleSheets", [])
 
 swm2("frames$2", []);
 swm1("frames", {})
-Object.defineProperty(frames, "length", {get:function(){return frames$2.length}})
-Object.defineProperty(window, "length", {get:function(){return frames$2.length},enumerable:true})
+odp(frames, "length", {get:function(){return frames$2.length}})
+odp(window, "length", {get:function(){return frames$2.length},enumerable:true})
 
-// to debug a.href = object or other weird things.
-swm("hrefset$p", [])
-swm("hrefset$a", [])
 // pending jobs, mostly to debug promise functions.
 swm("$pjobs", [])
 
-// symbolic constants for compareDocumentPosition
-swm("DOCUMENT_POSITION_DISCONNECTED", 1)
-swm("DOCUMENT_POSITION_PRECEDING", 2)
-swm("DOCUMENT_POSITION_FOLLOWING", 4)
-swm("DOCUMENT_POSITION_CONTAINS", 8)
-swm("DOCUMENT_POSITION_CONTAINED_BY", 16)
-sdm("compareDocumentPosition", mw$.compareDocumentPosition)
+sdm("cloneNode", function(deep) {
+    window.cloneRoot1 = this;
+    return mw$.clone1 (this,deep, false);
+})
 
 // This should be in the native string class
 String.prototype.at = function(n) {
@@ -560,191 +576,37 @@ return this.charAt(l-n);
 }
 
 /*********************************************************************
-The URL class is head-spinning in its complexity and its side effects.
-Almost all of these can be handled in JS,
-except for setting window.location or document.location to a new url,
-which replaces the web page you are looking at.
-You'll see me call the native method eb$newLocation to do that.
-Now, here's one reason, perhaps not the only reason, we can't share the
-URL class. Why it has to stay here in startwindow.js.
-This may apply to every other DOM class as well.
+    Originally I developed the shared window for efficiency.
+    There's no point in "compiling" the entire dom every time we bring up a new web page. Other browsers don't do that!
+    That still holds but now there is another consideration: the context that holds startwindow.js never goes away, even if we free it.
+    So the less in startwindow, the better.
+    To this end I will try to move more stuff to the shared window.
+This includes the definition of most of the DOM classes.
+They still have to be "built" at runtime however; it's not a true compile.
+Here's why - using URL as an example.
 There are websites that replace URL.prototype.toString with their own function.
 They want to change the way URLs stringify, or whatever. I can't
 prevent sites from doing that, things might not work properly without it!
 So, if site A does that in the shared window, and site B invokes
 a.href.toString, directly or indirectly, B is calling a function from
 the unrelated website A.
-This could really screw things up, or worse, site A could use it to hack into
+This could screw things up, or worse, site A could use it to hack into
 site B, hoping site B is your banking site or something important.
 So I can't define URL over there and say URL = mw$.url over here.
-Ok, but what if I say URL = function(){}; URL.prototype = new mw$.URL;
-That puts all those methods and getters and setters,
-and there are a lot of them, in the prototype chain.
-Course I have to lock them down in the shared window, as described above.
-They all have to be readonly.
-Well, If this window wants to create its own URL.prototype.toString function,
-it can't, because the toString that is next in the prototype chain is readonly.
-I don't know if this is javascript standard or quick js.
-It sort of makes sense if you think about it, but it means
-I don't have any practical way to share this class. So here we go.
-Note the use of swm2, people will replace with their own URL class.
-If they do, I remember this URL class and all its methods with z$URL.
-I don't know if that's a good idea or not.
+However, the shared window can "build" the URL class over here,
+when asked to do so, and then the user is free to muck with the class
+or its prototype methods or anything else.
+So here is the line that does a lot!
 *********************************************************************/
 
-swm2("URL", function() {
-let h = "";
-if(arguments.length == 1) h= arguments[0];
-if(arguments.length == 2) h= mw$.resolveURL(arguments[1], arguments[0]);
-this.href = h;
-})
-swm("z$URL", URL)
-spdc("URL", null)
-Object.defineProperty(URL.prototype, "rebuild", {value:mw$.url_rebuild})
+mw$.setupClasses(window);
 
-Object.defineProperty(URL.prototype, "protocol", {
-  get: function() {return this.protocol$val; },
-  set: function(v) { this.protocol$val = v; this.rebuild(); },
-enumerable:true});
-Object.defineProperty(URL.prototype, "pathname", {
-  get: function() {return this.pathname$val; },
-  set: function(v) { this.pathname$val = v; this.rebuild(); },
-enumerable:true});
-Object.defineProperty(URL.prototype, "search", {
-  get: function() {return this.search$val; },
-  set: function(v) { this.search$val = v; this.rebuild(); },
-enumerable:true});
-Object.defineProperty(URL.prototype, "searchParams", {
-  get: function() {return new URLSearchParams(this.search$val); },
-// is there a setter?
-enumerable:true});
-Object.defineProperty(URL.prototype, "hash", {
-  get: function() {return this.hash$val; },
-  set: function(v) { if(typeof v != "string") return; if(!v.match(/^#/)) v = '#'+v; this.hash$val = v; this.rebuild(); },
-enumerable:true});
-Object.defineProperty(URL.prototype, "port", {
-  get: function() {return this.port$val; },
-  set: function(v) { this.port$val = v;
-if(this.hostname$val.length)
-this.host$val = this.hostname$val + ":" + v;
-this.rebuild(); },
-enumerable:true});
-Object.defineProperty(URL.prototype, "hostname", {
-  get: function() {return this.hostname$val; },
-  set: function(v) { this.hostname$val = v;
-if(this.port$val)
-this.host$val = v + ":" +  this.port$val;
-this.rebuild(); },
-enumerable:true});
-Object.defineProperty(URL.prototype, "host", {
-  get: function() {return this.host$val; },
-  set: function(v) { this.host$val = v;
-if(v.match(/:/)) {
-this.hostname$val = v.replace(/:.*/, "");
-this.port$val = v.replace(/^.*:/, "");
-} else {
-this.hostname$val = v;
-this.port$val = "";
-}
-this.rebuild(); },
-enumerable:true});
-Object.defineProperty(URL.prototype, "href", {
-  get: function() {return this.href$val; },
-  set: mw$.url_hrefset,
-enumerable:true});
+swm("ShadowRoot", function(){})
+swmp("ShadowRoot", HTMLElement)
 
-URL.prototype.toString = function() {  return this.href$val; }
-Object.defineProperty(URL.prototype, "toString", {enumerable:false});
-// use toString in the following - in case they replace toString with their own function.
-// Don't just grab href$val, tempting as that is.
-Object.defineProperty(URL.prototype, "length", { get: function() { return this.toString().length; }});
-URL.prototype.concat = function(s) {  return this.toString().concat(s); }
-Object.defineProperty(URL.prototype, "concat", {enumerable:false});
-URL.prototype.startsWith = function(s) {  return this.toString().startsWith(s); }
-Object.defineProperty(URL.prototype, "startsWith", {enumerable:false});
-URL.prototype.endsWith = function(s) {  return this.toString().endsWith(s); }
-Object.defineProperty(URL.prototype, "endsWith", {enumerable:false});
-URL.prototype.includes = function(s) {  return this.toString().includes(s); }
-Object.defineProperty(URL.prototype, "includes", {enumerable:false});
-/*
-Can't turn URL.search into String.search, because search is already a
-property of URL, that is, the search portion of the URL.
-URL.prototype.search = function(s) { return this.toString().search(s); }
-*/
-
-URL.prototype.indexOf = function(s) {  return this.toString().indexOf(s); }
-Object.defineProperty(URL.prototype, "indexOf", {enumerable:false});
-URL.prototype.lastIndexOf = function(s) {  return this.toString().lastIndexOf(s); }
-Object.defineProperty(URL.prototype, "lastIndexOf", {enumerable:false});
-URL.prototype.substring = function(from, to) {  return this.toString().substring(from, to); }
-Object.defineProperty(URL.prototype, "substring", {enumerable:false});
-URL.prototype.substr = function(from, to) {return this.toString().substr(from, to);}
-Object.defineProperty(URL.prototype, "substr", {enumerable:false});
-URL.prototype.toLowerCase = function() {  return this.toString().toLowerCase(); }
-Object.defineProperty(URL.prototype, "toLowerCase", {enumerable:false});
-URL.prototype.toUpperCase = function() {  return this.toString().toUpperCase(); }
-Object.defineProperty(URL.prototype, "toUpperCase", {enumerable:false});
-URL.prototype.match = function(s) {  return this.toString().match(s); }
-Object.defineProperty(URL.prototype, "match", {enumerable:false});
-URL.prototype.replace = function(s, t) {  return this.toString().replace(s, t); }
-Object.defineProperty(URL.prototype, "replace", {enumerable:false});
-URL.prototype.split = function(s) { return this.toString().split(s); }
-Object.defineProperty(URL.prototype, "split", {enumerable:false});
-URL.prototype.slice = function(from, to) { return this.toString().slice(from, to); }
-Object.defineProperty(URL.prototype, "slice", {enumerable:false});
-URL.prototype.charAt = function(n) { return this.toString().charAt(n); }
-Object.defineProperty(URL.prototype, "charAt", {enumerable:false});
-URL.prototype.charCodeAt = function(n) { return this.toString().charCodeAt(n); }
-Object.defineProperty(URL.prototype, "charCodeAt", {enumerable:false});
-URL.prototype.trim = function() { return this.toString().trim(); }
-Object.defineProperty(URL.prototype, "trim", {enumerable:false});
-
-/* According to MDN Element isn't a synonym for HTMLElement as SVGElement
-should also inherit from it but leave as is until we get there */
-swm2("HTMLElement", function(){})
-swm2("Element", HTMLElement)
-spdc("HTMLElement", Node)
-Object.defineProperty(HTMLElement.prototype, "name", {
-get: function() {
-var isinput = (this.dom$class == "HTMLInputElement" || this.dom$class == "HTMLButtonElement" || this.dom$class == "HTMLSelectElement");
-if(!isinput) return this.name$2 ;
-// name property is automatically in the getAttribute system, acid test 53
-var t = this.getAttribute("name");
-return typeof t == "string" ? t : undefined}, 
-set: function(n) {
-var isinput = (this.dom$class == "HTMLInputElement" || this.dom$class == "HTMLButtonElement" || this.dom$class == "HTMLSelectElement");
-if(!isinput) { Object.defineProperty(this, "name$2", {value:n,writable:true,configurable:true}); return}
-var f = this.form;
-if(f && f.dom$class == "HTMLFormElement") {
-var oldname = this.getAttribute("name");
-if(oldname && f[oldname] == this) delete f[oldname];
-if(oldname && f.elements[oldname] == this) delete f.elements[oldname];
-if(!f[n]) f[n] = this;
-if(!f.elements[n]) f.elements[n] = this;
-}
-this.setAttribute("name", n);
-}});
-Object.defineProperty(HTMLElement.prototype, "id", {
-get:function(){ var t = this.getAttribute("id");
-return typeof t == "string" ? t : undefined; },
-set:function(v) { this.setAttribute("id", v)}});
-Object.defineProperty(HTMLElement.prototype, "title", {
-get:function(){ var t = this.getAttribute("title");
-// in the real world this is always a string, but acid test 3 has numbers for titles
-var y = typeof t;
-return y == "string" || y == "number" ? t : undefined; },
-set:function(v) { this.setAttribute("title", v);}});
-// almost anything can be disabled, an entire div section, etc
-Object.defineProperty(HTMLElement.prototype, "disabled", {
-get:function(){ var t = this.getAttribute("disabled");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("disabled", v);}});
-Object.defineProperty(HTMLElement.prototype, "hidden", {
-get:function(){ var t = this.getAttribute("hidden");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("hidden", v);}});
-HTMLElement.prototype.ownerDocument = document;
-HTMLElement.prototype.nodeType = 1;
+// setupClasses doesn't establish the shadow root properties,
+// mostly cause I don't understand them.
+// Let's approximate them here.
 HTMLElement.prototype.attachShadow = function(o){
 // I should have a list of allowed tags here, but custom tags are allowed,
 // and I don't know how to determine that,
@@ -766,112 +628,12 @@ if(o.slotAssignment) r.slotAssignment = o.slotAssignment;
 }
 return r;
 }
-Object.defineProperty(HTMLElement.prototype, "shadowRoot", {
+odp(HTMLElement.prototype, "shadowRoot", {
 get:function(){
 var r = this.firstChild;
 if(r && r.nodeName == "SHADOWROOT" && r.mode == "open") return r;
 return null;
 }});
-
-swm2("SVGElement", function(){})
-// Use the correct name for the prototype even if it's an incorrect synonym
-spdc("SVGElement", Element)
-
-swm("z$HTML", function(){})
-spdc("z$HTML", HTMLElement)
-Object.defineProperty(z$HTML.prototype, "eb$win", {get: function(){return this.parentNode ? this.parentNode.defaultView : undefined}});
-// Some screen attributes that are suppose to be there.
-z$HTML.prototype.doScroll = eb$voidfunction;
-z$HTML.prototype.clientHeight = 768;
-z$HTML.prototype.clientWidth = 1024;
-z$HTML.prototype.offsetHeight = 768;
-z$HTML.prototype.offsetWidth = 1024;
-z$HTML.prototype.scrollHeight = 768;
-z$HTML.prototype.scrollWidth = 1024;
-z$HTML.prototype.scrollTop = 0;
-z$HTML.prototype.scrollLeft = 0;
-
-// is there a difference between DocType ad DocumentType?
-swm("z$DocType", function(){ this.nodeType = 10, this.nodeName = "DOCTYPE"})
-spdc("z$DocType", HTMLElement)
-swm("DocumentType", function(){})
-spdc("DocumentType", HTMLElement)
-swm("CharacterData", function(){})
-spdc("CharacterData", null)
-swm("HTMLHeadElement", function(){})
-spdc("HTMLHeadElement", HTMLElement)
-swm("HTMLMetaElement", function(){})
-spdc("HTMLMetaElement", HTMLElement)
-swm("z$Title", function(){})
-spdc("z$Title", HTMLElement)
-Object.defineProperty(z$Title.prototype, "text", {
-get: function(){ return this.firstChild && this.firstChild.nodeName == "#text" && this.firstChild.data || "";}
-// setter should change the title of the document, not yet implemented
-});
-swm("HTMLLinkElement", function(){})
-spdc("HTMLLinkElement", HTMLElement)
-// It's a list but why would it ever be more than one?
-Object.defineProperty(HTMLLinkElement.prototype, "relList", {
-get: function() { var a = this.rel ? [this.rel] : [];
-// edbrowse only supports stylesheet
-a.supports = function(s) { return s === "stylesheet"; }
-return a;
-}});
-
-swm("HTMLBodyElement", function(){})
-spdc("HTMLBodyElement", HTMLElement)
-HTMLBodyElement.prototype.doScroll = eb$voidfunction;
-HTMLBodyElement.prototype.clientHeight = 768;
-HTMLBodyElement.prototype.clientWidth = 1024;
-HTMLBodyElement.prototype.offsetHeight = 768;
-HTMLBodyElement.prototype.offsetWidth = 1024;
-HTMLBodyElement.prototype.scrollHeight = 768;
-HTMLBodyElement.prototype.scrollWidth = 1024;
-HTMLBodyElement.prototype.scrollTop = 0;
-HTMLBodyElement.prototype.scrollLeft = 0;
-// document.body.innerHTML =
-HTMLBodyElement.prototype.eb$dbih = function(s){this.innerHTML = s}
-
-swm("ShadowRoot", function(){})
-spdc("ShadowRoot", HTMLElement)
-
-swm("HTMLBaseElement", function(){})
-spdc("HTMLBaseElement", HTMLElement)
-
-swm("HTMLFormElement", function(){this.elements = []})
-spdc("HTMLFormElement", HTMLElement)
-HTMLFormElement.prototype.submit = eb$formSubmit;
-HTMLFormElement.prototype.reset = eb$formReset;
-Object.defineProperty(HTMLFormElement.prototype, "length", { get: function() { return this.elements.length;}});
-
-swm("Validity", function(){})
-spdc("Validity", null)
-/*********************************************************************
-All these should be getters, or should they?
-Consider the tooLong attribute.
-tooLong could compare the length of the input with the maxLength attribute,
-that's what the gettter would do, but edbrowse already does that at entry time.
-In general, shouldn't edbrowse check for most r all of these on entry,
-so then most of these wouldn't have to be getters?
-patternMismatch on email and url, etc.
-One thing that always has to be a getter is valueMissing,
-cause it starts out empty of course, and is a required field.
-And valid is a getter, true if everything else is false.
-*********************************************************************/
-Validity.prototype.badInput =
-Validity.prototype.customError =
-Validity.prototype.patternMismatch =
-Validity.prototype.rangeOverflow =
-Validity.prototype.rangeUnderflow =
-Validity.prototype.stepMismatch =
-Validity.prototype.tooLong =
-Validity.prototype.tooShort =
-Validity.prototype.typeMismatch = false;
-Object.defineProperty(Validity.prototype, "valueMissing", {
-get: function() {let o = this.owner;  return o.required && o.value == ""; }});
-Object.defineProperty(Validity.prototype, "valid", {
-get: function() { // only need to check items with getters
-return !(this.valueMissing)}});
 
 /*********************************************************************
 This is a special routine for textarea.innerHTML = "some html text";
@@ -908,323 +670,9 @@ return;
 alert3("textarea.innerHTML is too complicated for me to render");
 })
 
-swm("HTMLSelectElement", function() {
-    this.selectedIndex = -1;
-    this.options = [];
-    this.selectedOptions = [];
-    this.validity = new Validity;
-    this.validity.owner = this;
-})
-spdc("HTMLSelectElement", HTMLElement)
-Object.defineProperty(HTMLSelectElement.prototype, "value", {
-    get: function() {
-        const a = this.options;
-        const n = this.selectedIndex;
-        return (this.multiple || n < 0 || n >= a.length) ? "" : a[n].value;
-    }
-});
-Object.defineProperty(HTMLSelectElement.prototype, "type", {
-    get:function(){ return this.multiple ? "select-multiple" : "select-one"}
-});
-Object.defineProperty(HTMLSelectElement.prototype, "multiple", {
-    get: function() {
-        const t = this.getAttribute("multiple");
-        return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true
-    },
-    set:function(v) { this.setAttribute("multiple", v);}
-});
-Object.defineProperty(HTMLSelectElement.prototype, "size", {
-    get: function() {
-        const t = this.getAttribute("size");
-        if(typeof t == "number") return t;
-        if(typeof t == "string" && t.match(/^\d+$/)) return parseInt(t);
-        return 0;
-    },
-    set: function(v) { this.setAttribute("size", v);}
-});
-Object.defineProperty(HTMLSelectElement.prototype, "required", {
-    get:function() {
-        const t = this.getAttribute("required");
-        return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true
-    },
-    set: function(v) { this.setAttribute("required", v);}
-});
-
-HTMLSelectElement.prototype.eb$bso = function() { // build selected options array
-    // do not replace the array with a new one, this is suppose to be a live array
-    const a = this.selectedOptions;
-    const o = this.options;
-    a.length = 0;
-    o.length = 0;
-    const cn = this.childNodes;
-    for(let i=0; i<cn.length; ++i) {
-        if (cn[i].nodeName == "OPTION") {
-            o.push(cn[i]);
-            if(cn[i].selected) a.push(cn[i]);
-        }
-        if(cn[i].nodeName != "OPTGROUP") continue;
-        const og = cn[i];
-        const cn2 = og.childNodes;
-        for(let j=0; j<cn2.length; ++j)
-            if(cn2[j].nodeName == "OPTION") {
-                o.push(cn2[j]);
-                if(cn2[j].selected) a.push(cn2[j]);
-            }
-    }
-}
-
-swm("HTMLInputElement", function(){this.validity = new Validity, this.validity.owner = this})
-spdc("HTMLInputElement", HTMLElement)
-HTMLInputElement.prototype.selectionStart = 0;
-HTMLInputElement.prototype.selectionEnd = -1;
-HTMLInputElement.prototype.selectionDirection = "none";
-// I really don't know what this function does, something visual I think.
-HTMLInputElement.prototype.setSelectionRange = function(s, e, dir) {
-if(typeof s == "number") this.selectionStart = s;
-if(typeof e == "number") this.selectionEnd = e;
-if(typeof dir == "string") this.selectionDirection = dir;
-}
-HTMLInputElement.prototype.select = eb$voidfunction;
-HTMLInputElement.prototype.click = mw$.clickfn;
-// We only need this in the rare case of setting click and clearing
-// the other radio buttons. acid test 43
-Object.defineProperty(HTMLInputElement.prototype, "checked", {
-get: function() { return this.checked$2 ? true : false; },
-set: mw$.checkset});
-// type property is automatically in the getAttribute system, acid test 53
-Object.defineProperty(HTMLInputElement.prototype, "type", {
-get:function(){ var t = this.getAttribute("type");
-// input type is special, tidy converts it to lower case, so I will too.
-// Also acid test 54 requires it.
-return typeof t == "string" ? this.eb$xml ? t : t.toLowerCase() : undefined; },
-set:function(v) { this.setAttribute("type", v);
-if(v.toLowerCase() == "checkbox" && !this.value) this.value = "on";
-}});
-Object.defineProperty(HTMLInputElement.prototype, "placeholder", {
-get:function(){ var t = this.getAttribute("placeholder");
-var y = typeof t;
-return y == "string" || y == "number" ? t : ""; },
-set:function(v) { this.setAttribute("placeholder", v);}});
-Object.defineProperty(HTMLInputElement.prototype, "multiple", {
-get:function(){ var t = this.getAttribute("multiple");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("multiple", v);}});
-Object.defineProperty(HTMLInputElement.prototype, "required", {
-get:function(){ var t = this.getAttribute("required");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("required", v);}});
-Object.defineProperty(HTMLInputElement.prototype, "readOnly", {
-get:function(){ var t = this.getAttribute("readonly");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("readonly", v);}});
-Object.defineProperty(HTMLInputElement.prototype, "step", {
-get:function(){ var t = this.getAttribute("step");
-var y = typeof t;
-return y == "number" || y == "string" ? t : undefined},
-set:function(v) { this.setAttribute("step", v);}});
-Object.defineProperty(HTMLInputElement.prototype, "minLength", {
-get:function(){ var t = this.getAttribute("minlength");
-var y = typeof t;
-return y == "number" || y == "string" ? t : undefined},
-set:function(v) { this.setAttribute("minlength", v);}});
-Object.defineProperty(HTMLInputElement.prototype, "maxLength", {
-get:function(){ var t = this.getAttribute("maxlength");
-var y = typeof t;
-return y == "number" || y == "string" ? t : undefined},
-set:function(v) { this.setAttribute("maxlength", v);}});
-Object.defineProperty(HTMLInputElement.prototype, "size", {
-get:function(){ var t = this.getAttribute("size");
-var y = typeof t;
-return y == "number" || y == "string" ? t : undefined},
-set:function(v) { this.setAttribute("size", v);}});
-
-swm("HTMLButtonElement", function(){})
-spdc("HTMLButtonElement", HTMLElement)
-HTMLButtonElement.prototype.click = mw$.clickfn;
-// type property is automatically in the getAttribute system, acid test 59
-Object.defineProperty(HTMLButtonElement.prototype, "type", {
-get:function(){ var t = this.getAttribute("type");
-// default is submit, acid test 59
-return typeof t == "string" ? t.toLowerCase() : "submit"; },
-set:function(v) { this.setAttribute("type", v);}});
-
-swm("HTMLTextAreaElement", function(){})
-spdc("HTMLTextAreaElement", HTMLElement)
-Object.defineProperty(HTMLTextAreaElement.prototype, "innerText", {
-get: function() { return this.value},
-set: function(t) { this.value = t }});
-Object.defineProperty(HTMLTextAreaElement.prototype, "type", {
-get: function() { return "textarea"}});
-Object.defineProperty(HTMLTextAreaElement.prototype, "placeholder", {
-get:function(){ var t = this.getAttribute("placeholder");
-var y = typeof t;
-return y == "string" || y == "number" ? t : ""; },
-set:function(v) { this.setAttribute("placeholder", v);}});
-Object.defineProperty(HTMLTextAreaElement.prototype, "required", {
-get:function(){ var t = this.getAttribute("required");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("required", v);}});
-Object.defineProperty(HTMLTextAreaElement.prototype, "readOnly", {
-get:function(){ var t = this.getAttribute("readonly");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("readonly", v);}});
-
-swm("z$Datalist", function() {})
-spdc("z$Datalist", HTMLElement)
-Object.defineProperty(z$Datalist.prototype, "multiple", {
-get:function(){ var t = this.getAttribute("multiple");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("multiple", v);}});
-
-swm("HTMLImageElement", function(){})
-swm2("Image", HTMLImageElement)
-spdc("HTMLImageElement", HTMLElement)
-Object.defineProperty(HTMLImageElement.prototype, "alt", {
-get:function(){ var t = this.getAttribute("alt");
-return typeof t == "string" ? t : undefined},
-set:function(v) { this.setAttribute("alt", v);
-}});
-
-swm("HTMLFrameElement", function(){})
-spdc("HTMLFrameElement", HTMLElement)
-HTMLFrameElement.prototype.is$frame = true;
-Object.defineProperty(HTMLFrameElement.prototype, "contentDocument", { get: eb$getter_cd});
-Object.defineProperty(HTMLFrameElement.prototype, "contentWindow", { get: eb$getter_cw});
-// These may be different but for now I'm calling them the same.
-swm("HTMLIFrameElement", function(){})
-spdc("HTMLIFrameElement", HTMLFrameElement)
-
-swm("HTMLAnchorElement", function(){})
-spdc("HTMLAnchorElement", HTMLElement)
-swm("HTMLOListElement", function(){})
-spdc("HTMLOListElement", HTMLElement)
-swm("HTMLUListElement", function(){})
-spdc("HTMLUListElement", HTMLElement)
-swm("HTMLDListElement", function(){})
-spdc("HTMLDListElement", HTMLElement)
-swm("HTMLLIElement", function(){})
-spdc("HTMLLIElement", HTMLElement)
-
-swm("HTMLTableSectionElement", function(){})
-spdc("HTMLTableSectionElement", HTMLElement)
-swm("z$tBody", function(){ this.rows = []})
-spdc("z$tBody", HTMLTableSectionElement)
-swm("z$tHead", function(){ this.rows = []})
-spdc("z$tHead", HTMLTableSectionElement)
-swm("z$tFoot", function(){ this.rows = []})
-spdc("z$tFoot", HTMLTableSectionElement)
-
-swm("z$tCap", function(){})
-spdc("z$tCap", HTMLElement)
-swm("HTMLTableElement", function(){ this.rows = []; this.tBodies = []})
-spdc("HTMLTableElement", HTMLElement)
-swm("HTMLTableRowElement", function(){ this.cells = []})
-spdc("HTMLTableRowElement", HTMLElement)
-swm("HTMLTableCellElement", function(){})
-spdc("HTMLTableCellElement", HTMLElement)
-swm("HTMLDivElement", function(){})
-spdc("HTMLDivElement", HTMLElement)
-HTMLDivElement.prototype.doScroll = eb$voidfunction;
-HTMLDivElement.prototype.align = "left";
-HTMLDivElement.prototype.click = function() {
-// as though the user had clicked on this
-var e = new Event;
-e.initEvent("click", true, true);
-this.dispatchEvent(e);
-}
-
-swm("HTMLLabelElement", function(){})
-spdc("HTMLLabelElement", HTMLElement)
-Object.defineProperty(HTMLLabelElement.prototype, "htmlFor", { get: function() { return this.getAttribute("for"); }, set: function(h) { this.setAttribute("for", h); }});
-swm("HTMLUnknownElement", function(){})
-spdc("HTMLUnknownElement", HTMLElement)
-swm("HTMLObjectElement", function(){})
-spdc("HTMLObjectElement", HTMLElement)
-swm("HTMLAreaElement", function(){})
-spdc("HTMLAreaElement", HTMLElement)
-
-swm("HTMLSpanElement", function(){})
-spdc("HTMLSpanElement", HTMLElement)
-HTMLSpanElement.prototype.doScroll = eb$voidfunction;
-// should this click be on HTMLElement?
-HTMLSpanElement.prototype.click = HTMLDivElement.prototype.click;
-
-swm("HTMLParagraphElement", function(){})
-spdc("HTMLParagraphElement", HTMLElement)
-
-swm("HTMLHeadingElement", function(){})
-spdc("HTMLHeadingElement", HTMLElement)
-swm("z$Header", function(){})
-spdc("z$Header", HTMLElement)
-swm("z$Footer", function(){})
-spdc("z$Footer", HTMLElement)
-swm("HTMLScriptElement", function(){})
-spdc("HTMLScriptElement", HTMLElement)
-HTMLScriptElement.supports = function(t) {
-if(typeof t != "string") return false;
-t = t.toLowerCase();
-if(t.match(/\bjavascript\b/)) return true;
-if(t.match(/\bjson\b/)) return true;
-return false}
-Object.defineProperty(HTMLScriptElement.prototype, "async", {
-get:function(){ var t = this.getAttribute("async");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("async", v);}});
-Object.defineProperty(HTMLScriptElement.prototype, "defer", {
-get:function(){ var t = this.getAttribute("defer");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("defer", v);}});
-Object.defineProperty(HTMLScriptElement.prototype, "type", {
-get:function(){ var t = this.getAttribute("type"); if(!t) t = ""; return t;},
-set:function(v) { this.setAttribute("type", v)}});
-HTMLScriptElement.prototype.eb$step = 0;
-HTMLScriptElement.prototype.text = "";
-
-swm("z$Timer", function(){this.nodeName = "TIMER"})
-spdc("z$Timer", null)
-swm("HTMLMediaElement", function(){})
-spdc("HTMLMediaElement", HTMLElement)
-HTMLMediaElement.prototype.autoplay = false;
-HTMLMediaElement.prototype.muted = false;
-HTMLMediaElement.prototype.defaultMuted = false;
-HTMLMediaElement.prototype.paused = false;
-HTMLMediaElement.prototype.audioTracks = [];
-HTMLMediaElement.prototype.videoTracks = [];
-HTMLMediaElement.prototype.textTracks = [];
-HTMLMediaElement.prototype.controls = false;
-HTMLMediaElement.prototype.controller = null;
-HTMLMediaElement.prototype.volume = 1.0;
-HTMLMediaElement.prototype.play = eb$playAudio;
-HTMLMediaElement.prototype.load = eb$voidfunction;
-HTMLMediaElement.prototype.pause = eb$voidfunction;
-swm("HTMLAudioElement", function(t){
-// arg to constructor is the url of the audio
-if(typeof t == "string") this.src = t;
-if(typeof t == "object") this.src = t.toString();
-})
-swm("Audio", HTMLAudioElement)
-spdc("HTMLAudioElement", HTMLMediaElement)
-HTMLAudioElement.prototype.nodeName = "AUDIO"
-
-swm("HTMLTemplateElement", function(){})
-spdc("HTMLTemplateElement", HTMLElement)
-Object.defineProperty(HTMLTemplateElement.prototype, "content", {
-get: function() {
-if(this.content$2) return this.content$2;
-var c, frag = document.createDocumentFragment();
-frag.ownerDocument = new Document;
-// need to set its location to "about:blank" but I don't know how to do that.
-// Lots of setters and getters involved in location, and the current window
-// and document, and new documents created, and we need to sort all this out.
-while(c = this.firstChild)
-frag.appendChild(c)
-Object.defineProperty(this, "content$2", {value:frag})
-return frag
-}})
-
 // the performance registry
 swm("pf$registry", {mark:{},measure:{},measure0:{},resourceTiming:{}})
-Object.defineProperty(pf$registry, "measure0", {enumerable:false});
+odp(pf$registry, "measure0", {enumerable:false});
 swm1("Performance", function(){})
 Performance.prototype = {
 // timeOrigin is the start time of this window, I guess
@@ -1269,7 +717,7 @@ return list;
 // at least have the object, even if it doesn't have any timestamps in it
 timing:{navigationStart:0},
 }
-Object.defineProperty(window, "performance", {get: function(){return new Performance}});
+odp(window, "performance", {get: function(){return new Performance}});
 
 // this is a stub, I hope I don't have to implement this stuff.
 swm("PerformanceObserver", {
@@ -1280,104 +728,10 @@ includes: eb$falsefunction
 })
 
 swm("cel$registry", new Map) // custom elements registry
-Object.defineProperty(window, "customElements", {get:function(){ return {
+odp(window, "customElements", {get:function(){ return {
 define:mw$.cel_define,
 get:mw$.cel_get,
 }},enumerable:true});
-
-/*********************************************************************
-If foo is an anchor, then foo.href = blah
-builds the url object; there are a lot of side effects here.
-Same for form.action, script.src, etc.
-I believe that a new URL should be resolved against the base, that is,
-/foobar becomes www.xyz.com/foobar, though I'm not sure.
-We ought not do this in the generic URL class, but for these assignments, I think yes.
-The URL class already resolves when updating a URL,
-so this is just for a new url A.href = "/foobar";
-There is no base when html is first processed, so start with an empty string,
-so we don't seg fault. resolveURL does nothing in this case.
-This is seen by eb$base = "" above.
-When base is set, and more html is generated and parsed, the url is resolved
-in html, and then again here in js.
-The first time it becomes its own url, then remains so,
-I don't think this is a problem, but not entirely sure.
-There may be shortcuts associated with these url members.
-Some websites refer to A.protocol, which has not explicitly been set.
-I assume they mean A.href.protocol, the protocol of the url object.
-Do we have to do this for every component of the URL object,
-and for every class that has such an object?
-I don't know, but here we go.
-This is a loop over classes, then a loop over url components.
-The leading ; averts a javascript parsing ambiguity.
-don't take it out!
-*********************************************************************/
-
-; (function() {
-var cnlist = ["HTMLAnchorElement", "HTMLAreaElement", "HTMLFrameElement"];
-var ulist = ["href", "href", "src"];
-for(var i=0; i<cnlist.length; ++i) {
-var cn = cnlist[i]; // class name
-var u = ulist[i]; // url name
-eval('Object.defineProperty(' + cn + '.prototype, "' + u + '", { ' +
-'get: function() { return this.href$2 ? this.href$2 : ""}, ' +
-'set: function(h) { if(h === null || h === undefined) h = ""; ' +
-'if(h instanceof URL || h.dom$class == "URL") h = h.toString(); ' +
-'var w = my$win(); ' +
-'if(typeof h != "string") { alert3("hrefset " + typeof h); ' +
-'w.hrefset$p.push("' + cn + '"); ' +
-'w.hrefset$a.push(h); ' +
-'return; } ' +
-'/* h is a string version of the url. Dont know what to do if h is empty. */ ' +
-'if(!h) return; ' +
-'var last_href = (this.href$2 ? this.href$2.toString() : null); ' +
-'this.setAttribute("' + u +'",h); ' +
-'/* special code for setting frame.src, redirect to a new page. */ ' +
-'h = this.href$2.href$val; ' +
-'if(this.is$frame && this.eb$expf && last_href != h) { ' +
-'/* There is a nasty corner case here, dont know if it ever happens. What if we are replacing the running frame? window.parent.src = new_url; See if we can get around it this way. */ ' +
-'if(w == this.contentWindow) { w.location = h; return; } ' +
-'delete this.eb$expf; ' +
-'eb$unframe(this); /* fix links on the edbrowse side */ ' +
-'/* I can force the opening of this new frame, but should I? */ ' +
-'this.contentDocument; eb$unframe2(this); ' +
-'} }});');
-var piecelist = ["protocol", "pathname", "host", "search", "hostname", "port", "hash"];
-for(var j=0; j<piecelist.length; ++j) {
-var piece = piecelist[j];
-eval('Object.defineProperty(' + cn + '.prototype, "' + piece + '", {get: function() { return this.href$2 ? this.href$2.' + piece + ' : null},set: function(x) { if(this.href$2) this.href$2.' + piece + ' = x; }});');
-}
-}
-})();
-
-/*********************************************************************
-Ok - a.href is a url object, but script.src is a string.
-You won't find that anywhere in the documentation, w3 schools etc, nope, I just
-respond to the javascript in the wild, and that's what it seems to expect.
-I only know for sure a.href is URL, and script.src is string,
-everything else is a guess.
-*********************************************************************/
-
-; (function() {
-var cnlist = ["HTMLFormElement", "HTMLImageElement", "HTMLScriptElement", "HTMLBaseElement", "HTMLLinkElement", "HTMLMediaElement"];
-var ulist = ["action", "src", "src", "href", "href", "src"];
-for(var i=0; i<cnlist.length; ++i) {
-var cn = cnlist[i]; // class name
-var u = ulist[i]; // url name
-eval('Object.defineProperty(' + cn + '.prototype, "' + u + '", { ' +
-'get: function() { return this.href$2 ? this.href$2 : ""}, ' +
-'set: function(h) { if(h instanceof URL || h.dom$class == "URL") h = h.toString(); ' +
-'if(h === null || h === undefined) h = ""; ' +
-'var w = my$win(); ' +
-'if(typeof h != "string") { alert3("hrefset " + typeof h); ' +
-'w.hrefset$p.push("' + cn + '"); ' +
-'w.hrefset$a.push(h); ' +
-'return; } ' +
-'if(!h) return; ' +
-'var last_href = (this.href$2 ? this.href$2 : null); ' +
-'this.setAttribute("' + u +'",h) ' +
-' }});');
-}
-})();
 
 /*********************************************************************
 When a script runs it may call document.write. But where to put those nodes?
@@ -1405,69 +759,6 @@ c = hold;
 }
 })
 
-// Canvas method draws a picture. That's meaningless for us,
-// but it still has to be there.
-// Because of the canvas element, I can't but the monster getContext function
-// into the prototype, I have to set it in the constructor.
-swm("HTMLCanvasElement", function() {
-this.getContext = function(x) { return {
-canvas: this,
- addHitRegion: eb$nullfunction,
-arc: eb$nullfunction,
-arcTo: eb$nullfunction,
-beginPath: eb$nullfunction,
-bezierCurveTo: eb$nullfunction,
-clearHitRegions: eb$nullfunction,
-clearRect: eb$nullfunction,
-clip: eb$nullfunction,
-closePath: eb$nullfunction,
-createImageData: eb$nullfunction,
-createLinearGradient: eb$nullfunction,
-createPattern: eb$nullfunction,
-createRadialGradient: eb$nullfunction,
-drawFocusIfNeeded: eb$nullfunction,
-drawImage: eb$nullfunction,
-drawWidgetAsOnScreen: eb$nullfunction,
-drawWindow: eb$nullfunction,
-ellipse: eb$nullfunction,
-fill: eb$nullfunction,
-fillRect: eb$nullfunction,
-fillText: eb$nullfunction,
-getImageData: eb$nullfunction,
-getLineDash: eb$nullfunction,
-isPointInPath: eb$nullfunction,
-isPointInStroke: eb$nullfunction,
-lineTo: eb$nullfunction,
-measureText: function(s) {
-// returns a TextMetrics object, whatever that is.
-// Height and width will depend on the font, but this is just a stub.
-return {height: 12, width: s.length * 7};
-},
-moveTo: eb$nullfunction,
-putImageData: eb$nullfunction,
-quadraticCurveTo: eb$nullfunction,
-rect: eb$nullfunction,
-removeHitRegion: eb$nullfunction,
-resetTransform: eb$nullfunction,
-restore: eb$nullfunction,
-rotate: eb$nullfunction,
-save: eb$nullfunction,
-scale: eb$nullfunction,
-scrollPathIntoView: eb$nullfunction,
-setLineDash: eb$nullfunction,
-setTransform: eb$nullfunction,
-stroke: eb$nullfunction,
-strokeRect: eb$nullfunction,
-strokeText: eb$nullfunction,
-transform: eb$nullfunction,
-translate: eb$nullfunction }}})
-spdc("HTMLCanvasElement", HTMLElement)
-HTMLCanvasElement.prototype.toDataURL = function() {
-if(this.height === 0  || this.width === 0) return "data:,";
-// this is just a stub
-return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAADElEQVQImWNgoBMAAABpAAFEI8ARAAAAAElFTkSuQmCC";
-}
-
 swm("onmessage$$queue", []);
 swm1("postMessage", function (message,target_origin, transfer) {
     let locstring = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
@@ -1486,8 +777,7 @@ swm1("postMessage", function (message,target_origin, transfer) {
         target_origin += ":" + standard_port;
     }
     if (target_origin == locstring || target_origin == "*") {
-        const me = new Event;
-        me.name = me.type = "message";
+        const me = {};
         let w = my$win();
         let l = w.location;
         me.origin = l.protocol + "//" + l.hostname;
@@ -1511,409 +801,6 @@ swm1("postMessage", function (message,target_origin, transfer) {
 })
 swm("onmessage$$running", mw$.onmessage$$running)
 
-/*********************************************************************
-AudioContext, for playing music etc.
-This one we could implement, but I'm not sure if we should.
-If speech comes out of the same speakers as music, as it often does,
-you might not want to hear it, you might rather see the url, or have a button
-to push, and then you call up the music only if / when you want it.
-Not sure what to do, so it's pretty much stubs for now.
-*********************************************************************/
-swm("AudioContext", function() {
-this.outputLatency = 1.0;
-this.createMediaElementSource = eb$voidfunction;
-this.createMediaStreamSource = eb$voidfunction;
-this.createMediaStreamDestination = eb$voidfunction;
-this.createMediaStreamTrackSource = eb$voidfunction;
-this.suspend = eb$voidfunction;
-this.close = eb$voidfunction;
-})
-spdc("AudioContext", null)
-
-swm("DocumentFragment", function(){})
-spdc("DocumentFragment", HTMLElement)
-DocumentFragment.prototype.nodeType = 11;
-DocumentFragment.prototype.nodeName = DocumentFragment.prototype.tagName = "#document-fragment";
-DocumentFragment.prototype.querySelector = querySelector
-DocumentFragment.prototype.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
-
-swm("CSSRule", function(){this.cssText=""})
-CSSRule.prototype.toString = function(){return this.cssText}
-
-swm("CSSRuleList", function(){})
-// This isn't really right, but it's easy
-CSSRuleList.prototype = new Array;
-
-swm("CSSStyleSheet", function() { this.cssRules = new CSSRuleList})
-spdc("CSSStyleSheet", null)
-CSSStyleSheet.prototype.insertRule = function(r, idx) {
-var list = this.cssRules;
-(typeof idx == "number" && idx >= 0 && idx <= list.length || (idx = 0));
-if(idx == list.length)
-list.push(r);
-else
-list.splice(idx, 0, r);
-// There may be side effects here, I don't know.
-// For now I just want the method to exist so js will march on.
-}
-CSSStyleSheet.prototype.addRule = function(sel, r, idx) {
-var list = this.cssRules;
-(typeof idx == "number" && idx >= 0 && idx <= list.length || (idx = list.length));
-r = sel + "{" + r + "}";
-if(idx == list.length)
-list.push(r);
-else
-list.splice(idx, 0, r);
-}
-
-swm("CSSStyleDeclaration", function(){
-Object.defineProperty(this, "style$2", {value:this})
-Object.defineProperty(this, "element", {value:null, writable:true})
-})
-spdc("CSSStyleDeclaration", HTMLElement)
-// sheet on demand
-Object.defineProperty(CSSStyleDeclaration.prototype, "sheet", { get: function(){ if(!this.sheet$2) this.sheet$2 = new CSSStyleSheet; return this.sheet$2; }});
-
-// when one property is shorthand for several others.
-// margin implies top right bottom left
-// How many of these are there that I don't know about?
-// Not clear how this meshes with the $$scy specificity system.
-;(function(){
-var list = ["margin", "scrollMargin", "padding", "scrollPadding",
-"borderRadius", "border",
-"borderWidth", "borderColor", "borderStyle", "borderImage",
-"background", "font", "inset",];
-for(var k of list) {
-eval('Object.defineProperty(CSSStyleDeclaration.prototype, "' + k + '", {set: function(h) {mw$.' + k + 'Short(this, h)}})');
-}})();
-
-// These are default properties of a style object.
-// they should not be enumerable. They must however be writable,
-// so that the corresponding attributes placed on style objects are writable.
-;(function(){
-var list =[
-"accentColor","alignContent","alignItems","alignSelf","all",
-"animation","animationDelay","animationDuration","animationFillMode","animationIterationCount","animationName","animationPlayState","animationTimingFunction",
-"appearance","aspectRatio",
-"backfaceVisibility","backgroundAttachment","backgroundBlendMode","backgroundClip","backgroundColor","backgroundImage",
-"backgroundOrigin","backgroundPosition","backgroundPositionX","backgroundPositionY","backgroundRepeat","backgroundSize",
-"blockSize","borderBlock","borderBlockColor","borderBlockEnd","borderBlockEndColor","borderBlockEndStyle","borderBlockEndWidth",
-"borderBlockStart","borderBlockStartColor","borderBlockStartStyle","borderBlockStartWidth","borderBlockStyle","borderBlockWidth",
-"borderBottomLeftRadius","borderBottomRightRadius","borderCollapse",
-"borderEndEndRadius","borderEndStartRadius","borderInline","borderInlineColor","borderInlineEnd","borderInlineEndColor","borderInlineEndStyle","borderInlineEndWidth","borderInlineStart","borderInlineStartColor","borderInlineStartStyle","borderInlineStartWidth","borderInlineStyle","borderInlineWidth",
-"borderSpacing","borderStartEndRadius","borderStartStartRadius","borderTopLeftRadius","borderTopRightRadius",
-"bottom","boxDecorationBreak","boxShadow","boxSizing",
-"breakAfter","breakBefore","breakInside",
-"captionSide","caretColor","clear","clip","clipPath","clipRule",
-"color","colorAdjust","colorInterpolation","colorInterpolationFilters",
-"columnCount","columnFill","columnGap","columnRule","columnRuleColor","columnRuleStyle","columnRuleWidth","columns","columnSpan","columnWidth",
-"contain","content","counterIncrement","counterReset","counterSet",
-"cssFloat","cursor","cx","cy",
-"direction","display","dominantBaseline",
-"emptyCells","fill","fillOpacity","fillRule","filter",
-"flex","flexBasis","flexDirection","flexFlow","flexGrow","flexShrink","flexWrap",
-"float","floodColor","floodOpacity",
-"fontFamily","fontFeatureSettings","fontKerning","fontLanguageOverride","fontSize","fontSizeAdjust","fontStretch","fontStyle","fontSynthesis","fontVariant","fontVariantAlternates","fontVariantCaps","fontVariantEastAsian","fontVariantLigatures","fontVariantNumeric","fontVariantPosition","fontWeight",
-"gap","grid","gridArea","gridAutoColumns","gridAutoFlow","gridAutoRows","gridColumn","gridColumnEnd","gridColumnGap","gridColumnStart",
-"gridGap","gridRow","gridRowEnd","gridRowGap","gridRowStart","gridTemplate","gridTemplateAreas","gridTemplateColumns","gridTemplateRows",
-"hyphens","imageOrientation","imageRendering","imeMode","inlineSize",
-"insetBlock","insetBlockEnd","insetBlockStart","insetInline","insetInlineEnd","insetInlineStart","isolation",
-"justifyContent","justifyItems","justifySelf",
-"left","letterSpacing","lightingColor","lineBreak","lineHeight","listStyle","listStyleImage","listStylePosition","listStyleType",
-"marginBlock","marginBlockEnd","marginBlockStart","marginBottom","marginInline","marginInlineEnd","marginInlineStart","marginLeft","marginRight","marginTop",
-"marker","markerEnd","markerMid","markerStart",
-"mask","maskClip","maskComposite","maskImage","maskMode","maskOrigin","maskPosition","maskPositionX","maskPositionY","maskRepeat","maskSize","maskType",
-"maxBlockSize","maxHeight","maxInlineSize","maxWidth",
-"minBlockSize","minHeight","minInlineSize","minWidth","mixBlendMode",
-"MozAnimation","MozAnimationDelay","MozAnimationDirection","MozAnimationDuration","MozAnimationFillMode","MozAnimationIterationCount","MozAnimationName","MozAnimationPlayState","MozAnimationTimingFunction",
-"MozAppearance",
-"MozBackfaceVisibility","MozBorderEnd","MozBorderEndColor","MozBorderEndStyle","MozBorderEndWidth","MozBorderStart","MozBorderStartColor","MozBorderStartStyle","MozBorderStartWidth",
-"MozBoxAlign","MozBoxDirection","MozBoxFlex","MozBoxOrdinalGroup","MozBoxOrient","MozBoxPack","MozBoxSizing",
-"MozFloatEdge","MozFontFeatureSettings","MozFontLanguageOverride","MozForceBrokenImageIcon",
-"MozHyphens","MozImageRegion","MozMarginEnd","MozMarginStart","MozOrient",
-"MozPaddingEnd","MozPaddingStart","MozPerspective","MozPerspectiveOrigin",
-"MozTabSize","MozTextSizeAdjust","MozTransform","MozTransformOrigin","MozTransformStyle","MozTransition","MozTransitionDelay","MozTransitionDuration","MozTransitionProperty","MozTransitionTimingFunction",
-"MozUserFocus","MozUserInput","MozUserModify","MozUserSelect","MozWindowDragging",
-"objectFit","objectPosition",
-"offset","offsetAnchor","offsetDistance","offsetPath","offsetRotate",
-"opacity","order","outline","outlineColor","outlineOffset","outlineStyle","outlineWidth",
-"overflow","overflowAnchor","overflowBlock","overflowInline","overflowWrap","overflowX","overflowY",
-"overscrollBehavior","overscrollBehaviorBlock","overscrollBehaviorInline","overscrollBehaviorX","overscrollBehaviorY",
-"paddingBlock","paddingBlockEnd","paddingBlockStart","paddingBottom","paddingInline","paddingInlineEnd","paddingInlineStart","paddingLeft","paddingRight","paddingTop",
-"pageBreakAfter","pageBreakBefore","pageBreakInside","paintOrder","perspective","perspectiveOrigin",
-"placeContent","placeItems","placeSelf","pointerEvents","position",
-"quotes",
-"r","resize","right","rotate","rowGap","rubyAlign","rubyPosition","rx","ry",
-"scale","scrollbarColor","scrollbarWidth","scrollBehavior","scrollMarginBlock","scrollMarginBlockEnd","scrollMarginBlockStart","scrollMarginBottom","scrollMarginInline","scrollMarginInlineEnd","scrollMarginInlineStart","scrollMarginLeft","scrollMarginRight","scrollMarginTop",
-"scrollPaddingBlock","scrollPaddingBlockEnd","scrollPaddingBlockStart","scrollPaddingBottom","scrollPaddingInline","scrollPaddingInlineEnd","scrollPaddingInlineStart","scrollPaddingLeft","scrollPaddingRight","scrollPaddingTop",
-"scrollSnapAlign","scrollSnapType",
-"shapeImageThreshold","shapeMargin","shapeOutside","shapeRendering",
-"stopColor","stopOpacity",
-"stroke","strokeDasharray","strokeDashoffset","strokeLinecap","strokeLinejoin","strokeMiterlimit","strokeOpacity","strokeWidth",
-"tableLayout","tabSize","textAlign","textAlignLast","textAnchor","textCombineUpright",
-"textDecoration","textDecorationColor","textDecorationLine","textDecorationSkipInk","textDecorationStyle","textDecorationThickness",
-"textEmphasis","textEmphasisColor","textEmphasisPosition","textEmphasisStyle","textIndent","textJustify",
-"textOrientation","textOverflow","textRendering","textShadow","textUnderlineOffset","textUnderlinePosition",
-"top","touchAction","transform","transformBox","transformOrigin","transformStyle",
-"transition","transitionDelay","transitionDuration","transitionProperty","transitionTimingFunction","translate",
-"unicodeBidi","userSelect","vectorEffect","verticalAlign","visibility",
-"webkitAlignContent","WebkitAlignContent","webkitAlignItems","WebkitAlignItems","webkitAlignSelf","WebkitAlignSelf",
-"webkitAnimation","WebkitAnimation","webkitAnimationDelay","WebkitAnimationDelay","webkitAnimationDirection","WebkitAnimationDirection","webkitAnimationDuration","WebkitAnimationDuration","webkitAnimationFillMode","WebkitAnimationFillMode","webkitAnimationIterationCount","WebkitAnimationIterationCount",
-"webkitAnimationName","WebkitAnimationName","webkitAnimationPlayState","WebkitAnimationPlayState","webkitAnimationTimingFunction","WebkitAnimationTimingFunction",
-"webkitAppearance","WebkitAppearance",
-"webkitBackfaceVisibility","WebkitBackfaceVisibility","webkitBackgroundClip","WebkitBackgroundClip","webkitBackgroundOrigin","WebkitBackgroundOrigin","webkitBackgroundSize","WebkitBackgroundSize",
-"webkitBoxAlign","WebkitBoxAlign","webkitBoxDirection","WebkitBoxDirection","webkitBoxFlex","WebkitBoxFlex","webkitBoxOrdinalGroup","WebkitBoxOrdinalGroup","webkitBoxOrient","WebkitBoxOrient",
-"webkitBoxPack","WebkitBoxPack","webkitBoxShadow","WebkitBoxShadow","webkitBoxSizing","WebkitBoxSizing",
-"webkitFilter","WebkitFilter","webkitFlex","WebkitFlex","webkitFlexBasis","WebkitFlexBasis","webkitFlexDirection","WebkitFlexDirection","webkitFlexFlow","WebkitFlexFlow","webkitFlexGrow","WebkitFlexGrow",
-"webkitFlexShrink","WebkitFlexShrink","webkitFlexWrap","WebkitFlexWrap",
-"webkitJustifyContent","WebkitJustifyContent","webkitLineClamp","WebkitLineClamp",
-"webkitMask","WebkitMask","webkitMaskClip","WebkitMaskClip","webkitMaskComposite","WebkitMaskComposite","webkitMaskImage","WebkitMaskImage","webkitMaskOrigin","WebkitMaskOrigin",
-"webkitMaskPosition","WebkitMaskPosition","webkitMaskPositionX","WebkitMaskPositionX","webkitMaskPositionY","WebkitMaskPositionY","webkitMaskRepeat","WebkitMaskRepeat","webkitMaskSize","WebkitMaskSize",
-"webkitOrder","WebkitOrder","webkitPerspective","WebkitPerspective","webkitPerspectiveOrigin","WebkitPerspectiveOrigin",
-"webkitTextFillColor","WebkitTextFillColor","webkitTextSizeAdjust","WebkitTextSizeAdjust","webkitTextStroke","WebkitTextStroke","webkitTextStrokeColor","WebkitTextStrokeColor","webkitTextStrokeWidth","WebkitTextStrokeWidth",
-"webkitTransform","WebkitTransform","webkitTransformOrigin","WebkitTransformOrigin","webkitTransformStyle","WebkitTransformStyle",
-"webkitTransition","WebkitTransition","webkitTransitionDelay","WebkitTransitionDelay","webkitTransitionDuration","WebkitTransitionDuration","webkitTransitionProperty","WebkitTransitionProperty","webkitTransitionTimingFunction","WebkitTransitionTimingFunction",
-"webkitUserSelect","WebkitUserSelect",
-"whiteSpace","willChange","wordBreak","wordSpacing","wordWrap","writingMode",
-"x",
-"y",
-"zIndex",];
-for(var i = 0; i < list.length; ++i)
-Object.defineProperty(
-CSSStyleDeclaration.prototype, list[i], {value:"",writable:true})
-})();
-;(function(){
-var list =[
-// first attribute is per acid test 46
-"textTransform",
-"borderImageSource","borderImageOutset","borderImageWidth","borderImageSlice",
-"borderBottom","borderLeft","borderRight","borderTop",
-"borderBottomWidth","borderLeftWidth","borderRightWidth","borderTopWidth",
-"width",
-"height",
-"MozBorderImage","webkitBorderImage","WebkitBorderImage",
-"borderBottomColor","borderLeftColor","borderRightColor","borderTopColor",
-"borderBottomStyle","borderLeftStyle","borderRightStyle","borderTopStyle",
-"borderImageRepeat",
-"parentRule",];
-var v = [
-"none",
-"none","0","1","100%",
-"1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)",
-"1px","1px","1px","1px",
-"250px",
-"40px",
-"none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch",
-"rgb(193, 193, 193)","rgb(193, 193, 193)","rgb(193, 193, 193)","rgb(193, 193, 193)",
-"solid","solid","solid","solid",
-"stretch",
-null,];
-for(var i = 0; i < list.length; ++i)
-Object.defineProperty(
-CSSStyleDeclaration.prototype, list[i], {value:v[i],writable:true})
-})();
-
-CSSStyleDeclaration.prototype.toString = function() { return "style object" };
-Object.defineProperty(CSSStyleDeclaration.prototype, "length", {get: function() {
-var cnt = 0;
-for(var i in this) if(this.hasOwnProperty(i)) ++cnt;
-return cnt;
-}})
-CSSStyleDeclaration.prototype.item = function(n) {
-if(typeof n !== "number") return "";
-var cnt = 0;
-for(var i in this) {
-if(!this.hasOwnProperty(i)) continue;
-if(cnt == n) return mw$.uncamelCase(i);
-++cnt;
-}
-return ""
-}
-CSSStyleDeclaration.prototype.getPropertyValue = function(p) {
-p = mw$.camelCase(p);
-                if (this[p] == undefined)                
-                        this[p] = "";
-                        return this[p];
-};
-CSSStyleDeclaration.prototype.getProperty = function(p) {
-p = mw$.camelCase(p);
-return this[p] ? this[p] : "";
-};
-CSSStyleDeclaration.prototype.setProperty = function(p, v, prv) {
-p = mw$.camelCase(p);
-this[p] = v;
-var pri = p + "$pri";
-Object.defineProperty(this, pri, {value:(prv === "important"),writable:true,configurable:true})
-};
-CSSStyleDeclaration.prototype.getPropertyPriority = function(p) {
-p = mw$.camelCase(p);
-var pri = p + "$pri";
-return this[pri] ? "important" : "";
-};
-CSSStyleDeclaration.prototype.removeProperty = function(p) {
-p = mw$.camelCase(p);
-delete this[p]
-delete this[p+"$$scy"]
-delete this[p+"$$pri"]
-}
-
-swm("HTMLStyleElement", function(){})
-spdc("HTMLStyleElement", HTMLElement)
-// Kind of a hack to make this like the link element
-Object.defineProperty(HTMLStyleElement.prototype, "css$data", {
-get: function() { var s = ""; for(var i=0; i<this.childNodes.length; ++i) if(this.childNodes[i].nodeName == "#text") s += this.childNodes[i].data; return s; }});
-Object.defineProperty(HTMLStyleElement.prototype, "sheet", { get: function(){ if(!this.sheet$2) this.sheet$2 = new CSSStyleSheet; return this.sheet$2; }});
-
-HTMLTableElement.prototype.insertRow = mw$.insertRow;
-HTMLTableSectionElement.prototype.insertRow = mw$.insertRow;
-HTMLTableElement.prototype.deleteRow = mw$.deleteRow;
-HTMLTableSectionElement.prototype.deleteRow = mw$.deleteRow;
-HTMLTableRowElement.prototype.insertCell = mw$.insertCell;
-HTMLTableRowElement.prototype.deleteCell = mw$.deleteCell;
-
-// rows under a table section
-HTMLTableSectionElement.prototype.appendChildNative = mw$.appendChild;
-HTMLTableSectionElement.prototype.appendChild = function(newobj) {
-if(!newobj) return null;
-if(newobj.nodeType == 11) return mw$.appendFragment(this, newobj);
-this.appendChildNative(newobj);
-if(newobj.dom$class == "HTMLTableRowElement") // shouldn't be anything other than TR
-this.rows.push(newobj), rowReindex(this);
-return newobj;
-}
-HTMLTableSectionElement.prototype.insertBeforeNative = mw$.insertBefore;
-HTMLTableSectionElement.prototype.insertBefore = function(newobj, item) {
-if(!newobj) return null;
-if(!item) return this.appendChild(newobj);
-if(newobj.nodeType == 11) return mw$.insertFragment(this, newobj, item);
-var r = this.insertBeforeNative(newobj, item);
-if(!r) return null;
-if(newobj.dom$class == "HTMLTableRowElement")
-for(var i=0; i<this.rows.length; ++i)
-if(this.rows[i] == item) {
-this.rows.splice(i, 0, newobj);
-rowReindex(this);
-break;
-}
-return newobj;
-}
-HTMLTableSectionElement.prototype.removeChildNative = mw$.removeChild;
-HTMLTableSectionElement.prototype.removeChild = function(item) {
-if(!item) return null;
-if(!this.removeChildNative(item))
-return null;
-if(item.dom$class == "HTMLTableRowElement")
-for(var i=0; i<this.rows.length; ++i)
-if(this.rows[i] == item) {
-this.rows.splice(i, 1);
-rowReindex(this);
-break;
-}
-return item;
-}
-
-HTMLTableElement.prototype.createCaption = function() {
-if(this.caption) return this.caption;
-var c = my$doc().createElement("caption");
-this.appendChild(c);
-return c;
-}
-HTMLTableElement.prototype.deleteCaption = function() {
-if(this.caption) this.removeChild(this.caption);
-}
-
-HTMLTableElement.prototype.createTHead = function() {
-if(this.tHead) return this.tHead;
-var c = my$doc().createElement("thead");
-this.prependChild(c);
-return c;
-}
-HTMLTableElement.prototype.deleteTHead = function() {
-if(this.tHead) this.removeChild(this.tHead);
-}
-
-HTMLTableElement.prototype.createTFoot = function() {
-if(this.tFoot) return this.tFoot;
-var c = my$doc().createElement("tfoot");
-this.insertBefore(c, this.caption);
-return c;
-}
-HTMLTableElement.prototype.deleteTFoot = function() {
-if(this.tFoot) this.removeChild(this.tFoot);
-}
-
-swm("TextNode", function(){
-Object.defineProperty(this, "data$2", {value:"",writable:true});
-if(arguments.length > 0) {
-// data always has to be a string
-this.data$2 += arguments[0];
-}
-})
-spdc("TextNode", HTMLElement)
-TextNode.prototype.nodeName = TextNode.prototype.tagName = "#text";
-TextNode.prototype.nodeType = 3;
-
-// setter insures data is always a string, because roving javascript might
-// node.data = 7;  ...  if(node.data.match(/x/) ...
-// and boom! It blows up because Number doesn't have a match function.
-Object.defineProperty(TextNode.prototype, "data", {
-get: function() { return this.data$2; },
-set: function(s) { this.data$2 = s + ""; }});
-
-sdm2("createTextNode", function(t) {
-if(t == undefined) t = "";
-var c = new TextNode(t);
-/* A text node chould never have children, and does not need childNodes array,
- * but there is improper html out there <text> <stuff> </text>
- * which has to put stuff under the text node, so against this
- * unlikely occurence, I have to create the array.
- * I have to treat a text node like an html node. */
-    Object.defineProperty(c, "childNodes", {value:[],writable:true,configurable:true});
-    Object.defineProperty(c, "parentNode", {value:null,writable:true,configurable:true});
-if(this.eb$xml) c.eb$xml = true;
-eb$logElement(c, "text");
-return c;
-})
-
-swm("Comment", function(t) {
-this.data = t;
-})
-spdc("Comment", HTMLElement)
-Comment.prototype.nodeName = Comment.prototype.tagName = "#comment";
-Comment.prototype.nodeType = 8;
-
-swm("XMLCdata", function(t) {})
-spdc("XMLCdata", HTMLElement)
-XMLCdata.prototype.nodeName = XMLCdata.prototype.tagName = "#cdata-section";
-XMLCdata.prototype.nodeType = 4;
-
-sdm2("createComment", function(t) {
-if(t == undefined) t = "";
-var c = new Comment(t);
-    Object.defineProperty(c, "childNodes", {value:[],writable:true,configurable:true});
-    Object.defineProperty(c, "parentNode", {value:null,writable:true,configurable:true});
-eb$logElement(c, "comment");
-return c;
-})
-
-// The Option class, these are choices in a dropdown list.
-swm("HTMLOptionElement", function() {
-if(arguments.length > 0)
-this.text = arguments[0];
-if(arguments.length > 1)
-this.value = arguments[1];
-})
-spdc("HTMLOptionElement", HTMLElement)
-swm2("Option", HTMLOptionElement)
-Option.prototype.selected = false;
-Option.prototype.defaultSelected = false;
-Option.prototype.nodeName = Option.prototype.tagName = "OPTION";
-Option.prototype.text = Option.prototype.value = "";
-
-swm("HTMLOptGroupElement", function() {})
-spdc("HTMLOptGroupElement", HTMLElement)
-HTMLOptGroupElement.prototype.nodeName = HTMLOptGroupElement.prototype.tagName = "OPTGROUP";
-
 sdm("getBoundingClientRect", function(){
 return {
 top: 0, bottom: 0, left: 0, right: 0,
@@ -1924,37 +811,19 @@ width: 0, height: 0
 
 // The Attr class and getAttributeNode().
 swm("Attr", function(){ this.owner = null; this.name = ""})
-spdc("Attr", null)
+swmp("Attr", null)
 Attr.prototype.isId = function() { return this.name === "id"; }
 Attr.prototype.cloneNode = mw$.cloneAttr
 
 // this is sort of an array and sort of not.
 // For one thing, you can call setAttribute("length", "snork"), so I can't use length.
 swm("NamedNodeMap", function() { this.length = 0})
-spdc("NamedNodeMap", null)
+swmp("NamedNodeMap", null)
 NamedNodeMap.prototype.push = function(s) { this[this.length++] = s; }
 NamedNodeMap.prototype.item = function(n) { return this[n]; }
 NamedNodeMap.prototype.getNamedItem = function(name) { return this[name.toLowerCase()]; }
 NamedNodeMap.prototype.setNamedItem = function(name, v) { this.owner.setAttribute(name, v);}
 NamedNodeMap.prototype.removeNamedItem = function(name) { this.owner.removeAttribute(name);}
-
-sdm("getAttribute", mw$.getAttribute)
-sdm("hasAttribute", mw$.hasAttribute)
-sdm("getAttributeNames", mw$.getAttributeNames)
-sdm("getAttributeNS", mw$.getAttributeNS)
-sdm("hasAttributeNS", mw$.hasAttributeNS)
-sdm("setAttribute", mw$.setAttribute)
-sdm("setAttributeNS", mw$.setAttributeNS)
-sdm("removeAttribute", mw$.removeAttribute)
-sdm("removeAttributeNS", mw$.removeAttributeNS)
-sdm("getAttributeNode", mw$.getAttributeNode)
-sdm("setAttributeNode", mw$.setAttributeNode)
-sdm("removeAttributeNode", mw$.removeAttributeNode)
-
-sdm("cloneNode", function(deep) {
-    window.cloneRoot1 = this;
-    return mw$.clone1 (this,deep, false);
-})
 
 /*********************************************************************
 importNode is the same as cloneNode, except it is copying a tree
@@ -1973,41 +842,51 @@ swm1("Event", function(etype){
     // be appropriate in the long run and we'll
     // have to decide if we simply dont adhere to
     // the read-only restriction of the specification
-    this.bubbles =     this.cancelable = true;
-    this.cancelled = this.defaultPrevented = false;
-    this.currentTarget =     this.target = null;
+    this.bubbles = true;
+    // non-standard but needed for target-only events
+    this.eb$captures = true;
+    this.cancelable = true;
+    this.stop$propagating = false;
+    this.stop$propagating$immediate = false;
+    this.defaultPrevented = false;
+    this.currentTarget = null;
+    this.target = null;
     this.eventPhase = 0;
     this.timeStamp = new Date().getTime();
 if(typeof etype == "string") this.type = etype;
 })
-spdc("Event", null)
+swmp("Event", null)
 
-Event.prototype.preventDefault = function(){ this.defaultPrevented = true; }
-
-Event.prototype.stopPropagation = function(){ if(this.cancelable)this.cancelled = true; }
-
+Event.prototype.preventDefault = function() { if(this.cancelable) this.defaultPrevented = true; }
+Event.prototype.stopPropagation = function() { this.stop$propagating = true; }
+Event.prototype.stopImmediatePropagation = function()
+{
+    this.stop$propagating$immediate = true;
+}
 // deprecated - I guess - but a lot of people still use it.
 Event.prototype.initEvent = function(t, bubbles, cancel) {
-this.type = t, this.bubbles = bubbles, this.cancelable = cancel; this.defaultPrevented = false; }
+this.type = t, this.bubbles = bubbles, this.cancelable = cancel; this.eb$captures = true; this.defaultPrevented = false; }
 
 Event.prototype.initUIEvent = function(t, bubbles, cancel, unused, detail) {
-this.type = t, this.bubbles = bubbles, this.cancelable = cancel, this.detail = detail; this.defaultPrevented = false; }
+this.type = t, this.bubbles = bubbles, this.cancelable = cancel, this.detail = detail; this.eb$captures = true; this.defaultPrevented = false; }
 Event.prototype.initCustomEvent = function(t, bubbles, cancel, detail) {
-this.type = t, this.bubbles = bubbles, this.cancelable = cancel, this.detail = detail; }
+this.type = t, this.bubbles = bubbles, this.cancelable = cancel, this.detail = detail, this.eb$captures = true; }
 
 sdm2("createEvent", function(unused) { return new Event; })
 
-swm("HashChangeEvent", function(){
+swm("HashChangeEvent", function() {
     this.currentTarget =     this.target = null;
     this.eventPhase = 0;
     this.timeStamp = new Date().getTime();
-this.type = "hashchange";
+    this.type = "hashchange";
+    this.bubbles = false;
+    this.eb$captures = false;
 })
 HashChangeEvent.prototype = new Event;
 
 swm("MouseEvent", function(etype){
     this.bubbles =     this.cancelable = true;
-    this.cancelled = this.defaultPrevented = false;
+    this.defaultPrevented = false;
     this.currentTarget =     this.target = null;
     this.eventPhase = 0;
     this.timeStamp = new Date().getTime();
@@ -2022,7 +901,7 @@ MouseEvent.prototype.initMouseEvent = function() { this.initEvent.apply(this, ar
 
 swm("PromiseRejectionEvent", function(etype){
     this.bubbles =     this.cancelable = true;
-    this.cancelled = this.defaultPrevented = false;
+    this.defaultPrevented = false;
     this.currentTarget =     this.target = null;
     this.eventPhase = 0;
     this.timeStamp = new Date().getTime();
@@ -2033,7 +912,7 @@ PromiseRejectionEvent.prototype = new Event;
 swm("CustomEvent", function(etype, o){
 alert3("customEvent " + etype + " " + typeof o);
     this.bubbles =     this.cancelable = true;
-    this.cancelled = this.defaultPrevented = false;
+    this.defaultPrevented = false;
     this.currentTarget =     this.target = null;
     this.eventPhase = 0;
     this.timeStamp = new Date().getTime();
@@ -2049,7 +928,7 @@ swm("MediaQueryList", function() {
     this.matches = false;
     this.media = "";
 });
-spdc("MediaQueryList", null)
+swmp("MediaQueryList", null)
 MediaQueryList.prototype.addEventListener = mw$.addEventListener;
 MediaQueryList.prototype.removeEventListener = mw$.removeEventListener;
 MediaQueryList.prototype.nodeName = "MediaQueryList";
@@ -2065,36 +944,10 @@ return q;
 
 sdm("insertAdjacentHTML", mw$.insertAdjacentHTML)
 
-/*********************************************************************
-Add prototype methods to the standard nodes, nodes that have children,
-and the normal set of methods to go with those children.
-Form has children for sure, but if we add <input> to Form,
-we also have to add it to the array Form.elements.
-So there are some nodes that we have to do outside this loop.
-Again, leading ; to avert a parsing ambiguity.
-*********************************************************************/
+// Most of the instance method for the Node class are defined
+// in the shared window. These are here because they reference
+// NodeList or HTMLCollection.
 
-; (function() {
-var c = window.Node;
-var p = c.prototype;
-// These subordinate objects are on-demand.
-Object.defineProperty( p, "dataset", { get: function(){
-if(!this.dataset$2)
-Object.defineProperty(this, "dataset$2", {value:{}})
-return this.dataset$2}})
-Object.defineProperty( p, "attributes", { get: function(){ if(!this.attributes$2) {
-Object.defineProperty(this, "attributes$2", {value:new NamedNodeMap})
-this.attributes$2.owner = this
-this.attributes$2.ownerDocument = this.ownerDocument ? this.ownerDocument : my$doc()
-}
-return this.attributes$2}})
-Object.defineProperty( p, "style", { get: function(){ if(!this.style$2) {
-Object.defineProperty(this,"style$2", {value:new CSSStyleDeclaration,configurable:true});
-this.style$2.element = this}
-return this.style$2;}});
-// get elements below
-p.getRootNode = mw$.getRootNode;
-// An HTMLCollection around the getElements functions
 swm("live$wrapper", function(f, start, arg) {
 // get the result as an array
 var a = f.call(start, arg)
@@ -2104,309 +957,14 @@ var c = new HTMLCollection(a)
 // This is called a live array.
 // It is not yet implemented.
 return c})
-p.getElementsByTagName = function(t) { return live$wrapper(mw$.getElementsByTagName, this, t)}
-p.getElementsByName = function(t) { return live$wrapper(mw$.getElementsByName, this, t)}
-p.getElementsByClassName = function(t) { return live$wrapper(mw$.getElementsByClassName, this, t)}
-p.contains = mw$.nodeContains
-p.querySelector = querySelector
-p.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
-p.matches = querySelector0;
-p.closest = function(s) { var u = this; while(u.nodeType == 1) { if(u.matches(s)) return u; u = u.parentNode; } return null; }
-// children
-p.hasChildNodes = mw$.hasChildNodes;
-p.appendChild = mw$.appendChild;
-p.prependChild = mw$.prependChild;
-p.insertBefore = mw$.insertBefore;
-p.insertAdjacentElement = mw$.insertAdjacentElement;
-p.append = mw$.append;
-p.prepend = mw$.prepend;
-p.before = mw$.before;
-p.after = mw$.after;
-p.replaceWith = mw$.replaceWith;
-p.replaceChild = mw$.replaceChild;
-// These are native, so it's ok to bounce off of document.
-p.eb$apch1 = document.eb$apch1;
-p.eb$apch2 = document.eb$apch2;
-p.eb$rmch2 = document.eb$rmch2;
-p.eb$insbf = document.eb$insbf;
-p.removeChild = mw$.removeChild;
-p.remove = function() { if(this.parentNode) this.parentNode.removeChild(this);}
-Object.defineProperty(p, "firstChild", { get: function() { return (this.childNodes && this.childNodes.length) ? this.childNodes[0] : null; } });
-Object.defineProperty(p, "firstElementChild", { get: function() { var u = this.childNodes; if(!u) return null; for(var i=0; i<u.length; ++i) if(u[i].nodeType == 1) return u[i]; return null; }});
-Object.defineProperty(p, "lastChild", { get: function() { return (this.childNodes && this.childNodes.length) ? this.childNodes[this.childNodes.length-1] : null; } });
-Object.defineProperty(p, "lastElementChild", { get: function() { var u = this.childNodes; if(!u) return null; for(var i=u.length-1; i>=0; --i) if(u[i].nodeType == 1) return u[i]; return null; }});
-Object.defineProperty(p, "childElementCount", { get: function() { var z=0, u = this.childNodes; if(!u) return z; for(var i=0; i<u.length; ++i) if(u[i].nodeType == 1) ++z; return z; }});
-Object.defineProperty(p, "nextSibling", { get: function() { return mw$.getSibling(this,"next"); } });
-Object.defineProperty(p, "nextElementSibling", { get: function() { return mw$.getElementSibling(this,"next"); } });
-Object.defineProperty(p, "previousSibling", { get: function() { return mw$.getSibling(this,"previous"); } });
-Object.defineProperty(p, "previousElementSibling", { get: function() { return mw$.getElementSibling(this,"previous"); } });
-// children is subtly different from childnodes; this code taken from
-// https://developer.mozilla.org/en-US/docs/Web/API/ParentNode/children
-Object.defineProperty(p, 'children', {
-get: function() {
-var i = 0, node, nodes = this.childNodes, children = [];
-if(!nodes) return children;
-while(i<nodes.length) {
-node = nodes[i++];
-if (node.nodeType === 1)  children.push(node);
-}
-return children;
-}});
-// attributes
-p.hasAttribute = mw$.hasAttribute;
-p.hasAttributeNS = mw$.hasAttributeNS;
-p.getAttribute = mw$.getAttribute;
-p.getAttributeNS = mw$.getAttributeNS;
-p.getAttributeNames = mw$.getAttributeNames;
-p.setAttribute = mw$.setAttribute;
-p.setAttributeNS = mw$.setAttributeNS;
-p.removeAttribute = mw$.removeAttribute;
-p.removeAttributeNS = mw$.removeAttributeNS;
-Object.defineProperty(p, "className", { get: function() { var c = this.getAttribute("class"); if(c === null) return ""; return c; }, set: function(h) { this.setAttribute("class", h); }});
-Object.defineProperty(p, "parentElement", { get: function() { return this.parentNode && this.parentNode.nodeType == 1 ? this.parentNode : null; }});
-p.getAttributeNode = mw$.getAttributeNode;
-p.setAttributeNode = mw$.setAttributeNode;
-p.removeAttributeNode = mw$.removeAttributeNode;
-p.getClientRects = function(){ return []; }
-// clone
-p.cloneNode = document.cloneNode;
-// I don't see anywhere in spec that this is an Element method
-//p.importNode = document.importNode;
-p.compareDocumentPosition = mw$.compareDocumentPosition;
-// visual
-p.focus = function(){document.activeElement=this}
-p.blur = blur;
-p.getBoundingClientRect = document.getBoundingClientRect;
-p.addEventListener = mw$.addEventListener;
-p.removeEventListener = mw$.removeEventListener;
-p.dispatchEvent = mw$.dispatchEvent;
-p.insertAdjacentHTML = mw$.insertAdjacentHTML;
-// outerHTML is dynamic; should innerHTML be?
-Object.defineProperty(p, "outerHTML", { get: function() { return mw$.htmlString(this);},
-set: function(h) { mw$.outer$1(this,h); }});
-p.injectSetup = mw$.injectSetup;
-// constants
-p.ELEMENT_NODE = 1, p.TEXT_NODE = 3, p.COMMENT_NODE = 8, p.DOCUMENT_NODE = 9, p.DOCUMENT_TYPE_NODE = 10, p.DOCUMENT_FRAGMENT_NODE = 11;
-// default tabIndex is 0 but running js can override this.
-p.tabIndex = 0;
-// class and text methods
-Object.defineProperty(p, "classList", { get : function() { return mw$.classList(this);}});
-p.cl$present = true;
-Object.defineProperty(p, "textContent", {
-get: function() { return mw$.textUnder(this, 0); },
-set: function(s) { return mw$.newTextUnder(this, s, 0); }});
-Object.defineProperty(p, "contentText", {
-get: function() { return mw$.textUnder(this, 1); },
-set: function(s) { return mw$.newTextUnder(this, s, 1); }});
-Object.defineProperty(p, "nodeValue", {
-get: function() { return this.nodeType == 3 ? this.data : this.nodeType == 4 ? this.text : null;},
-set: function(h) { if(this.nodeType == 3) this.data = h; if (this.nodeType == 4) this.text = h }});
-p.clientHeight = 16;
-p.clientWidth = 120;
-p.scrollHeight = 16;
-p.scrollWidth = 120;
-p.scrollTop = 0;
-p.scrollLeft = 0;
-p.offsetHeight = 16;
-p.offsetWidth = 120;
-p.dir = "auto";
-})();
 
-HTMLFormElement.prototype.appendChildNative = mw$.appendChild;
-HTMLFormElement.prototype.appendChild = mw$.formAppendChild;
-HTMLFormElement.prototype.insertBeforeNative = mw$.insertBefore;
-HTMLFormElement.prototype.insertBefore = mw$.formInsertBefore;
-HTMLFormElement.prototype.removeChildNative = mw$.removeChild;
-HTMLFormElement.prototype.removeChild = mw$.formRemoveChild;
+this.nodep = Node.prototype;
+nodep.getElementsByTagName = function(t) { return live$wrapper(mw$.getElementsByTagName, this, t)}
+nodep.getElementsByName = function(t) { return live$wrapper(mw$.getElementsByName, this, t)}
+nodep.getElementsByClassName = function(t) { return live$wrapper(mw$.getElementsByClassName, this, t)}
 
-/*********************************************************************
-Look out! Select class maintains an array of options beneath,
-just as Form maintains an array of elements beneath, so you'd
-think we could copy the above code and tweak a few things, but no.
-Options under select lists are maintained by rebuildSelectors in ebjs.c.
-That is how we synchronize option lists.
-So we don't want to synchronize by side-effects.
-In other words, we don't want to pass the actions back to edbrowse,
-as appendChild does. So I kinda have to reproduce what they do
-here, with just js, and no action in C.
-Actually we shouldn't be calling this routine at all; should be calling add(),
-so I don't even know if this makes sense.
-*********************************************************************/
-
-HTMLSelectElement.prototype.appendChild = function(newobj) {
-    if(!newobj) return null;
-    // should only be options!
-    if(!(newobj.dom$class == "HTMLOptionElement")) return newobj;
-    mw$.isabove(newobj, this);
-    if(newobj.parentNode) newobj.parentNode.removeChild(newobj);
-    const l = this.childNodes.length;
-    if(newobj.defaultSelected) newobj.selected = true, this.selectedIndex = l;
-    this.childNodes.push(newobj); newobj.parentNode = this;
-    this.eb$bso();
-    mutFixup(this, false, newobj, null);
-    return newobj;
-}
-HTMLSelectElement.prototype.insertBefore = function(newobj, item) {
-    let i;
-    if(!newobj) return null;
-    if(!item) return this.appendChild(newobj);
-    if(!(newobj.dom$class == "HTMLOptionElement")) return newobj;
-    mw$.isabove(newobj, this);
-    if(newobj.parentNode) newobj.parentNode.removeChild(newobj);
-    for(i=0; i<this.childNodes.length; ++i)
-        if(this.childNodes[i] == item) {
-            this.childNodes.splice(i, 0, newobj);
-            newobj.parentNode = this;
-            if(newobj.defaultSelected) {
-                newobj.selected = true;
-                this.selectedIndex = i;
-            }
-            break;
-        }
-    if(i == this.childNodes.length) {
-        // side effect, object is freeed from wherever it was.
-        return null;
-    }
-    this.eb$bso();
-    mutFixup(this, false, newobj, null);
-    return newobj;
-}
-HTMLSelectElement.prototype.removeChild = function(item) {
-    let i;
-    if(!item) return null;
-    for(i=0; i<this.childNodes.length; ++i)
-        if(this.childNodes[i] == item) break;
-    if(i == this.childNodes.length) return null;
-    this.childNodes.splice(i, 1);
-    item.parentNode = null;
-    this.eb$bso();
-    mutFixup(this, false, i, item);
-    return item;
-}
-
-// these routines do not account for optgroups
-HTMLSelectElement.prototype.add = function(o, idx) {
-    const n = this.options.length;
-    if(typeof idx != "number" || idx < 0 || idx > n) idx = n;
-    if(idx == n) this.appendChild(o);
-    else this.insertBefore(o, this.childNodes[idx]);
-}
-HTMLSelectElement.prototype.remove = function(idx) {
-    const n = this.options.length;
-    if(typeof idx == "number" && idx >= 0 && idx < n)
-    this.removeChild(this.options[idx]);
-}
-
-// rows or bodies under a table
-HTMLTableElement.prototype.appendChildNative = mw$.appendChild;
-HTMLTableElement.prototype.appendChild = function(newobj) {
-if(!newobj) return null;
-if(newobj.nodeType == 11) return mw$.appendFragment(this, newobj);
-this.appendChildNative(newobj);
-if(newobj.dom$class == "HTMLTableRowElement") rowReindex(this);
-if(newobj.dom$class == "tBody") {
-this.tBodies.push(newobj);
-if(newobj.rows.length) rowReindex(this);
-}
-if(newobj.dom$class == "tCap") this.caption = newobj;
-if(newobj.dom$class == "tHead") {
-this.tHead = newobj;
-if(newobj.rows.length) rowReindex(this);
-}
-if(newobj.dom$class == "tFoot") {
-this.tFoot = newobj;
-if(newobj.rows.length) rowReindex(this);
-}
-return newobj;
-}
-HTMLTableElement.prototype.insertBeforeNative = mw$.insertBefore;
-HTMLTableElement.prototype.insertBefore = function(newobj, item) {
-if(!newobj) return null;
-if(!item) return this.appendChild(newobj);
-if(newobj.nodeType == 11) return mw$.insertFragment(this, newobj, item);
-var r = this.insertBeforeNative(newobj, item);
-if(!r) return null;
-if(newobj.dom$class == "HTMLTableRowElement") rowReindex(this);
-if(newobj.dom$class == "tBody")
-for(var i=0; i<this.tBodies.length; ++i)
-if(this.tBodies[i] == item) {
-this.tBodies.splice(i, 0, newobj);
-if(newobj.rows.length) rowReindex(this);
-break;
-}
-if(newobj.dom$class == "tCap") this.caption = newobj;
-if(newobj.dom$class == "tHead") {
-this.tHead = newobj;
-if(newobj.rows.length) rowReindex(this);
-}
-if(newobj.dom$class == "tFoot") {
-this.tFoot = newobj;
-if(newobj.rows.length) rowReindex(this);
-}
-return newobj;
-}
-HTMLTableElement.prototype.removeChildNative = mw$.removeChild;
-HTMLTableElement.prototype.removeChild = function(item) {
-if(!item) return null;
-if(!this.removeChildNative(item))
-return null;
-if(item.dom$class == "HTMLTableRowElement") rowReindex(this);
-if(item.dom$class == "tBody")
-for(var i=0; i<this.tBodies.length; ++i)
-if(this.tBodies[i] == item) {
-this.tBodies.splice(i, 1);
-if(item.rows.length) rowReindex(this);
-break;
-}
-if(item == this.caption) delete this.caption;
-if(item.dom$class == "tHead") {
-if(item == this.tHead) delete this.tHead;
-if(item.rows.length) rowReindex(this);
-}
-if(item.dom$class == "tFoot") {
-if(item == this.tFoot) delete this.tFoot;
-if(item.rows.length) rowReindex(this);
-}
-return item;
-}
-
-HTMLTableRowElement.prototype.appendChildNative = mw$.appendChild;
-HTMLTableRowElement.prototype.appendChild = function(newobj) {
-if(!newobj) return null;
-if(newobj.nodeType == 11) return mw$.appendFragment(this, newobj);
-this.appendChildNative(newobj);
-if(newobj.nodeName === "TD") // shouldn't be anything other than TD
-this.cells.push(newobj);
-return newobj;
-}
-HTMLTableRowElement.prototype.insertBeforeNative = mw$.insertBefore;
-HTMLTableRowElement.prototype.insertBefore = function(newobj, item) {
-if(!newobj) return null;
-if(!item) return this.appendChild(newobj);
-if(newobj.nodeType == 11) return mw$.insertFragment(this, newobj, item);
-var r = this.insertBeforeNative(newobj, item);
-if(!r) return null;
-if(newobj.nodeName === "TD")
-for(var i=0; i<this.cells.length; ++i)
-if(this.cells[i] == item) {
-this.cells.splice(i, 0, newobj);
-break;
-}
-return newobj;
-}
-HTMLTableRowElement.prototype.removeChildNative = mw$.removeChild;
-HTMLTableRowElement.prototype.removeChild = function(item) {
-if(!item) return null;
-if(!this.removeChildNative(item))
-return null;
-if(item.nodeName === "TD")
-for(var i=0; i<this.cells.length; ++i)
-if(this.cells[i] == item) {
-this.cells.splice(i, 1);
-break;
-}
-return item;
-}
+nodep.querySelector = querySelector
+nodep.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
 
 /*********************************************************************
 acid test 48 sets frame.onclick to a string, then expects that function to run
@@ -2445,12 +1003,8 @@ var evs = ["onload", "onunload", "onclick", "onchange", "oninput",
 "onsubmit", "onreset", "onmessage"];
 for(var j=0; j<evs.length; ++j) {
 var evname = evs[j];
-eval('Object.defineProperty(' + cn + ', "' + evname + '$$watch", {value:true})');
-// I tried to make this property enumerable within its own set method,
-// you assign body.onload and then you should see body.onload, but I couldn't make that work.
-// So you don't see body.oonload even if you set it,
-// but at least you don't see my mythical body.onload$2
-eval('Object.defineProperty(' + cn + ', "' + evname + '", { \
+eval('odp(' + cn + ', "' + evname + '$$watch", {value:true})');
+eval('odp(' + cn + ', "' + evname + '", { \
 get: function() { return this.' + evname + '$2}, \
 set: function(f) { if(db$flags(1)) alert3((this.'+evname+'?"clobber ":"create ") + (this.nodeName ? this.nodeName : "+"+this.dom$class) + ".' + evname + '"); \
 if(typeof f == "string") f = my$win().handle$cc(f, this); \
@@ -2464,8 +1018,8 @@ if(typeof f == "function") { Object.defineProperty(this, "' + evname + '$2", {va
 var cnlist = ["HTMLBodyElement.prototype", "SVGElement", "window"];
 for(var i=0; i<cnlist.length; ++i) {
 var cn = cnlist[i];
-eval('Object.defineProperty(' + cn + ', "onhashchange$$watch", {value:true})');
-eval('Object.defineProperty(' + cn + ', "onhashchange", { \
+eval('odp(' + cn + ', "onhashchange$$watch", {value:true})');
+eval('odp(' + cn + ', "onhashchange", { \
 get: function() { return this.onhashchange$2; }, \
 set: function(f) { if(db$flags(1)) alert3((this.onhashchange?"clobber ":"create ") + (this.nodeName ? this.nodeName : "+"+this.dom$class) + ".onhashchange"); \
 if(typeof f == "string") f = my$win().handle$cc(f, this); \
@@ -2517,131 +1071,6 @@ return null;
 return u;
 })
 
-sdm2("createElement", function(s) {
-var c;
-if(!s) { // a null or missing argument
-alert3("bad createElement( type" + typeof s + ')');
-return null;
-}
-var t = s.toLowerCase();
-
-// check for custom elements first
-var x = cel$registry[s];
-if(x) { // here we go
-c = new x.construct;
-if(c instanceof HTMLElement) {
-    Object.defineProperty(c, "childNodes", {value:[],writable:true,configurable:true});
-    Object.defineProperty(c, "parentNode", {value:null,writable:true,configurable:true});
-if(this.eb$xml)
-c.eb$xml = true;
-else
-s = s.toUpperCase()
-    Object.defineProperty(c, "nodeName", {value:s,writable:true,configurable:true});
-    Object.defineProperty(c, "tagName", {value:s,writable:true,configurable:true});
-}
-eb$logElement(c, t);
-return c;
-}
-
-if(!t.match(/^[a-z:\d_-]+$/) || t.match(/^[\d_-]/)) {
-alert3("bad createElement(" + t + ')');
-// acid3 says we should throw an exception here.
-// But we get these kinds of strings from www.oranges.com all the time.
-// I'll just return null and tweak acid3 accordingly.
-// throw error code 5
-return null;
-}
-
-var unknown = false;
-switch(t) {
-case "shadowroot": c = new ShadowRoot; break;
-case "body": c = new HTMLBodyElement; break;
-// is it ok that head isn't here?
-case "object": c = new HTMLObjectElement; break;
-case "a": c = new HTMLAnchorElement; break;
-case "area": c = new HTMLAreaElement; break;
-case "image": t = "img";
-case "img": c = new HTMLImageElement; break;
-case "link": c = new HTMLLinkElement; break;
-case "meta": c = new HTMLMetaElement; break;
-case "cssstyledeclaration":
-c = new CSSStyleDeclaration; c.element = null; break;
-case "style": c = new HTMLStyleElement; break;
-case "script": c = new HTMLScriptElement; break;
-case "template": c = new HTMLTemplateElement; break;
-// this isn't standard; it is mine
-case "newdocument": c = new Document; break;
-case "div": c = new HTMLDivElement; break;
-case "span": c = new HTMLSpanElement; break;
-case "label": c = new HTMLLabelElement; break;
-case "p": c = new HTMLParagraphElement; break;
-case "ol": c = new HTMLOListElement; break;
-case "ul": c = new HTMLUListElement; break;
-case "dl": c = new HTMLDListElement; break;
-case "li": c = new HTMLLIElement; break;
-case "h1": case "h2": case "h3": case "h4": case "h5": case "H6": c = new HTMLHeadingElement; break;
-case "header": c = new z$Header; break;
-case "footer": c = new z$Footer; break;
-case "table": c = new HTMLTableElement; break;
-case "tbody": c = new z$tBody; break;
-case "tr": c = new HTMLTableRowElement; break;
-case "td": c = new HTMLTableCellElement; break;
-case "caption": c = new z$tCap; break;
-case "thead": c = new z$tHead; break;
-case "tfoot": c = new z$tFoot; break;
-case "canvas": c = new HTMLCanvasElement; break;
-case "audio": case "video": c = new HTMLAudioElement; break;
-case "fragment": c = new DocumentFragment; break;
-case "frame": c = new HTMLFrameElement; break;
-case "iframe": c = new HTMLIFrameElement; break;
-case "select": c = new HTMLSelectElement; break;
-case "option":
-c = new Option;
-    Object.defineProperty(c, "childNodes", {value:[],writable:true,configurable:true});
-    Object.defineProperty(c, "parentNode", {value:null,writable:true,configurable:true});
-if(this.eb$xml) c.eb$xml = true;
-c.selected = true; // jquery says we should do this
-// we don't log options because rebuildSelectors() checks
-// the dropdown lists after every js run.
-return c;
-case "form": c = new HTMLFormElement; break;
-case "input": c = new HTMLInputElement; break;
-case "textarea": c = new HTMLTextAreaElement; break;
-case "element": c = new HTMLElement; break;
-case "button": c = new HTMLButtonElement; break;
-case "svg": c = new SVGElement; break;
-default:
-unknown = true;
-// alert("createElement default " + s);
-c = new HTMLUnknownElement;
-}
-
-    Object.defineProperty(c, "childNodes", {value:[],writable:true,configurable:true});
-    Object.defineProperty(c, "parentNode", {value:null,writable:true,configurable:true});
-if(this.eb$xml && !(c instanceof HTMLFrameElement) && !(c instanceof HTMLIFrameElement)) c.eb$xml = true;
-// Split on : if this comes from a name space
-var colon = t.split(':');
-if(colon.length == 2) {
-    Object.defineProperty(c, "nodeName", {value:t,writable:true,configurable:true});
-    Object.defineProperty(c, "tagName", {value:t,writable:true,configurable:true});
-    c.prefix = colon[0], c.localName = colon[1];
-} else if(c.nodeType == 1) {
-    var s2 = (unknown || this.eb$xml) ? s : s.toUpperCase();
-    Object.defineProperty(c, "nodeName", {value:s2,writable:true,configurable:true});
-    Object.defineProperty(c, "tagName", {value:s2,writable:true,configurable:true});
-}
-if(t == "input") { // name and type are automatic attributes acid test 53
-c.name = c.type = "";
-}
-eb$logElement(c, s);
-return c;
-} )
-
-sdm2("createDocumentFragment", function() {
-var c = this.createElement("fragment");
-return c;
-})
-
 sdm("implementation", {
 owner: document,
 /*********************************************************************
@@ -2659,9 +1088,17 @@ so I don't know what the point is.
 *********************************************************************/
 hasFeature: eb$truefunction,
 createDocumentType: function(tag, pubid, sysid) {
-// I really don't know what this function is suppose to do.
-var tagstrip = tag.replace(/:.*/, "");
-return owner.createElement(tagstrip);
+if(!tag.match(/^\w+:\w+$/) &&
+!tag.match(/^https?:\/\//)) {
+// acid 25 says we throw an exception
+let e = new Error;
+e.code = e.NAMESPACE_ERR;
+e.INVALID_ACCESS_ERR = 15;
+throw(e);
+}
+let d = new DocumentType;
+// need to set the properties of d based on the parameters of this function
+return d;
 },
 // https://developer.mozilla.org/en-US/docs/Web/API/DOMImplementation/createHTMLDocument
 createHTMLDocument: function(t) {
@@ -2673,10 +1110,11 @@ return d;
 },
 createDocument: function(uri, str, t) {
 // I don't know if this is right at all, but it's quick and easy
-var doc = document.createElementNS(uri, "newdocument");
+var doc = document.createElementNS(uri, "document");
+if(str) {
 var below = document.createElementNS(uri, str);
-if(!doc || !below) { alert3("createDocument unable to create document or " + str + " tag for namespace " + uri); return null; }
 doc.appendChild(below);
+}
 return doc;
 }
 })
@@ -2727,7 +1165,7 @@ Meantime, this should serve.
 We may want to put it on Document.prototype, not just the primary document,
 I don't know if that makes sense.
 *********************************************************************/
-Object.defineProperty(document, "lastModified", {
+odp(document, "lastModified", {
 get: function() {
 return mw$.lastModifiedByHead(this.location);
 }});
@@ -2744,21 +1182,21 @@ swm2("$jt$sn", 0)
 sdm("childNodes", [])
 // We'll make another childNodes array belowe every node in the tree.
 // document should always and only have two children: DOCTYPE and HTML
-Object.defineProperty(document, "firstChild", {
+odp(document, "firstChild", {
 get: function() { return this.childNodes[0]; }});
-Object.defineProperty(document, "firstElementChild", {
+odp(document, "firstElementChild", {
 get: function() { return this.childNodes[1]; }});
-Object.defineProperty(document, "lastChild", {
+odp(document, "lastChild", {
 get: function() { return this.childNodes[document.childNodes.length-1]; }});
-Object.defineProperty(document, "lastElementChild", {
+odp(document, "lastElementChild", {
 get: function() { return this.childNodes[document.childNodes.length-1]; }});
-Object.defineProperty(document, "nextSibling", {
+odp(document, "nextSibling", {
 get: function() { return mw$.getSibling(this,"next"); }});
-Object.defineProperty(document, "nextElementSibling", {
+odp(document, "nextElementSibling", {
 get: function() { return mw$.getElementSibling(this,"next"); }});
-Object.defineProperty(document, "previousSibling", {
+odp(document, "previousSibling", {
 get: function() { return mw$.getSibling(this,"previous"); }});
-Object.defineProperty(document, "previousElementSibling", {
+odp(document, "previousElementSibling", {
 get: function() { return mw$.getElementSibling(this,"previous"); }});
 
 /*********************************************************************
@@ -2801,16 +1239,16 @@ swm("sessionStorage", {})
 var cnlist = [localStorage, sessionStorage];
 for(var i=0; i<cnlist.length; ++i) {
 var cn = cnlist[i];
-Object.defineProperty( cn, "attributes", { get: function(){ if(!this.attributes$2) {
+odp( cn, "attributes", { get: function(){ if(!this.attributes$2) {
 Object.defineProperty(this, "attributes$2", {value:new NamedNodeMap})
 this.attributes$2.owner = this
 this.attributes$2.ownerDocument = my$doc()
 }
 return this.attributes$2}})
 // tell me we don't have to do NS versions of all these.
-cn.getAttribute = cn.getItem = mw$.getAttribute;
-cn.setAttribute = cn.setItem = mw$.setAttribute;
-cn.removeAttribute = cn.removeItem = mw$.removeAttribute;
+cn.getAttribute = cn.getItem = mw$.attr.getAttribute;
+cn.setAttribute = cn.setItem = mw$.attr.setAttribute;
+cn.removeAttribute = cn.removeItem = mw$.attr.removeAttribute;
 cn.clear = function() {
 var l;
 while(l = this.attributes.length)
@@ -2821,12 +1259,12 @@ this.removeItem(this.attributes[l-1].name);
 
 // we seem to be missing Array.item
 Array.prototype.item = function(x) { return this[x] };
-Object.defineProperty(Array.prototype, "item", { enumerable: false});
+odp(Array.prototype, "item", { enumerable: false});
 
 // On the first call this setter just creates the url, the location of the
 // current web page, But on the next call it has the side effect of replacing
 // the web page with the new url.
-Object.defineProperty(window, "location", {
+odp(window, "location", {
 get: function() { return window.location$2; },
 set: function(h) {
 if(!window.location$2) {
@@ -2837,11 +1275,11 @@ window.location$2.href = h;
 }, enumerable:true});
 // We need location$2 so we can define origin and replace etc
 swm2("location$2", new URL)
-Object.defineProperty(location$2, "origin", {get:function(){
+odp(location$2, "origin", {get:function(){
 return this.protocol ? this.protocol + "//" + this.host : null}});
-Object.defineProperty(window, "origin", {get: function(){return location.origin}});
+odp(window, "origin", {get: function(){return location.origin}});
 sdm("location$2", new URL)
-Object.defineProperty(document, "location", {
+odp(document, "location", {
 get: function() { return this.location$2; },
 set: function(h) {
 if(!this.location$2) {
@@ -2851,10 +1289,10 @@ this.location$2.href = h;
 }
 }, enumerable:true});
     location.replace = document.location.replace = function(s) { this.href = s};
-Object.defineProperty(window.location,'replace',{enumerable:false});
-Object.defineProperty(document.location,'replace',{enumerable:false});
-Object.defineProperty(window.location,'eb$ctx',{value:eb$ctx});
-Object.defineProperty(document.location,'eb$ctx',{value:eb$ctx});
+odp(window.location,'replace',{enumerable:false});
+odp(document.location,'replace',{enumerable:false});
+odp(window.location,'eb$ctx',{value:eb$ctx});
+odp(document.location,'eb$ctx',{value:eb$ctx});
 
 // Window constructor, passes the url back to edbrowse
 // so it can open a new web page.
@@ -2879,10 +1317,6 @@ return Window.apply(this, arguments);
 // That is, Window should be the constructor of window.
 // The constructor is Object by default.
 swm("constructor", Window)
-
-// Apply rules to a given style object, which is this.
-Object.defineProperty(CSSStyleDeclaration.prototype, "cssText", { get: mw$.cssTextGet,
-set: function(h) { var w = my$win(); w.soj$ = this; eb$cssText.call(this,h); delete w.soj$; } });
 
 swm("eb$qs$start", function() { mw$.cssGather(true); mw$.frames$rebuild(window);})
 swm("frames$rebuild", function() {mw$.frames$rebuild(window);})
@@ -2910,7 +1344,7 @@ swm("MutationObserver", function(f) {
     this.async = true; // run as microtask by default
     this.notification$queue = [];
 })
-spdc("MutationObserver", null)
+swmp("MutationObserver", null)
 MutationObserver.prototype.disconnect = function() {
     const ts = this.targets.size;
     const nl = this.notification$queue.length;
@@ -2974,7 +1408,7 @@ MutationObserver.prototype.takeRecords = function() {
 }
 
 swm("MutationRecord", function(){})
-spdc("MutationRecord", null)
+swmp("MutationRecord", null)
 swm1("crypto", {})
 crypto.getRandomValues = function(a) {
 if(typeof a != "object") return NULL;
@@ -3023,7 +1457,7 @@ if(typeof ms == "number") alert3("abort after " + ms + "ms not implemented");
 return c; }
 
 swm("AbortController", function(){})
-Object.defineProperty(AbortController.prototype, "signal",
+odp(AbortController.prototype, "signal",
 {get:function(){return new AbortSignal}});
 AbortController.prototype.abort = function(){
 alert3("abort dom request not implemented"); }
@@ -3108,6 +1542,8 @@ ResizeObserver.prototype.unobserve = eb$voidfunction;
 
 // don't need these any more
 ;(function() {
-    let names_to_delete = ["swm", "sdm", "swm1", "sdm1", "swm2", "sdm2", "spdc"];
+    let names_to_delete = ["odp",
+    "swm", "swm1", "swm2", "swmp",
+    "sdm", "sdm1", "sdm2", "nodep"];
     for (let i in names_to_delete) delete window[names_to_delete[i]];
 })();

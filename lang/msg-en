@@ -478,8 +478,8 @@ warning: garbled refresh directive, %s\n
 new window
 warning: http redirection %ld, but a new url is not specified\n
 warning: http error %ld, %s\n
-no frames to expand
-no frames to contract
+no frames or details to expand
+no frames or details to contract
 help messages on
 ftp download: 
 aborted

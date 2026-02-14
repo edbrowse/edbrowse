@@ -28,26 +28,39 @@ which is, by the way, not all the features of javascript by any means.
 Run this program after every software change,
 and certainly before each release.
 If a test fails, we give you the test number and abort.
+If javascript fails, I catch the error and print the stack.
 Fix the bug and rerun, until all tests pass.
 Warning: these tests are in no particular order, except if you rearrange
 them they will fail, because some depend on variables that were
 set by others.  Yeah, it's ugly. */
 
+// make the class Circle - which apparently doesn't work in a try block.
+function Circle()
+{
+this.r = 1;
+if(arguments.length == 1) this.r = arguments[0];
+this.c = function() { return this.r*Math.PI*2; }
+this.a = CircleArea;
+}
+function CircleArea() { return this.r*this.r*Math.PI; }
+
+try { // protect
+
 // breakspace is tolerated, and utf8 is understood
- var udef = "undefined";
+ let udef = "undefined";
 function fail(n) { alert("failed "+n); }
 
-var popwin = new Window("http://www.moreAndMoreCrap.com/BuyNow.html", "obnoxious_ad", "width=72");
+let popwin = new Window("http://www.moreAndMoreCrap.com/BuyNow.html", "obnoxious_ad", "width=72");
 
 var memhog = new Array();
 
-var n, j;
+let n, j;
 
 function memfill()
 {
 // allow a user specifyable amount of objects to create
 // use the document.getElementById and element interface here
-var amount = parseInt(document.getElementById("fill_amount").value, 10);
+let amount = parseInt(document.getElementById("fill_amount").value, 10);
 if (amount <= 0)
 {
 alert("You must provide a positive integer when specifying the number of objects to create");
@@ -111,8 +124,8 @@ case 777: j = 7; break;
 } /* switch */
 if(j != 3) fail(6);
 
-var bt = true; // a boolean value
-var f = 6.25; // a perfectly representable floating value
+let bt = true; // a boolean value
+let f = 6.25; // a perfectly representable floating value
 if("cat" + 15 + "dog" + f + bt != "cat15dog6.25true") fail(7);
 if(Math.sqrt(f) != 2.5) fail(8);
 
@@ -127,7 +140,7 @@ if(j != 27) fail(9);
 
 if(Math.pow(11,4) != 14641) fail(10);
 
-var alpha = "abc\144\x65fghijklmnopqrstuvwxyz\r\n";
+let alpha = "abc\144\x65fghijklmnopqrstuvwxyz\r\n";
 if(alpha.substring(2,7) != "cdefg") fail(11);
 if(alpha.length != 28) fail(12);
 if(alpha.charAt(10) != 'k') fail(13);
@@ -137,7 +150,7 @@ if(alpha.indexOf("def") != 3) fail(17);
 alpha += "ubcxyz";
 if(alpha.lastIndexOf("bc") != 29) fail(18);
 
-var a = alpha.split('b');
+let a = alpha.split('b');
 if(a.length != 3) fail(20);
 if(a[0] != 'a') fail(21);
 if(a[2] != "cxyz") fail(22);
@@ -171,21 +184,21 @@ if(mult$sv.counter != 2) fail(42);
 function factorial(n)
 {
 if(n <= 1) return 1;
-var y = 7+n;
+let y = 7+n;
 return n*factorial(n-1);
 }
 if(factorial(6) != 720) fail(44);
-var bang = factorial;
+let bang = factorial;
 if(bang(8) != 40320) fail(45);
 if(bang != factorial) fail(46);
 if(typeof factorial.n != udef || typeof factorial.y != udef) fail(47);
 
 // vararg function
-var domax = function() {
+let domax = function() {
 if(arguments.length != 7) fail(50);
-var max = -Number.MAX_VALUE;
-for(var j=0; j<arguments.length; ++j) {
-var k = arguments[j];
+let max = -Number.MAX_VALUE;
+for(let j=0; j<arguments.length; ++j) {
+let k = arguments[j];
 if(k > max) max = k;
 }
 return max;
@@ -205,7 +218,7 @@ if(fc1(8) != 84) fail(53);
 if(fc1.g(5) != 125) fail(54);
 *********************************************************************/
 
-var mysqrt = Math.sqrt;
+let mysqrt = Math.sqrt;
 if(mysqrt(1089) != 33) fail(55);
 
 // bits
@@ -218,16 +231,6 @@ if(10>>2 != 2) fail(66);
 if(-15 >> 2 != -4) fail(67);
 if(-1 >>> 16 != 65535) fail(68);
 
-// a little bit of oo stuff
-// Let's make methods both ways.
-function Circle()
-{
-this.r = 1;
-if(arguments.length == 1) this.r = arguments[0];
-this.c = function() { return this.r*Math.PI*2; }
-this.a = CircleArea;
-}
-function CircleArea() { return this.r*this.r*Math.PI; }
 var c1 = new Circle();
 var c2 = new Circle(23);
 // also test the with construct
@@ -248,7 +251,7 @@ if(a.join(':') != "blue:green:indigo:orange:red:violet:yellow") fail(74);
 if(a.length != 7) fail(75);
 if(a[5] != "violet") fail(76);
 
-var oo = new Object;
+let oo = new Object;
 if(typeof oo != "object") fail(77);
 oo.p = 61, oo.q = 67;
 n = "";
@@ -257,7 +260,7 @@ if(n != "p61q67") fail(78);
 if(c2.constructor != Circle || oo.constructor != Object) fail(79);
 
 // the date object
-var d = new Date(2003,11,25,17,55,9);
+let d = new Date(2003,11,25,17,55,9);
 if(d.getMonth() != 11 || d.getDate() != 25) fail(81);
 if(d.getHours() != 17 || d.getMinutes() != 55 || d.getSeconds() != 9) fail(82);
 if(d.constructor != Date || a.constructor != Array) fail(84);
@@ -270,7 +273,7 @@ if(topprop != 887) fail(88);
 // A couple functions, and the first couple lines of the input form.
 function calc(thisform)
     {
-var l = thisform.body.value.length;
+let l = thisform.body.value.length;
 thisform.result.value = l;
 if (l > 2000) {
 alert("You cant go over Limit of 2000 Characters!");
@@ -278,10 +281,14 @@ alert("You cant go over Limit of 2000 Characters!");
     }
 
 function newwords() {
-var b = document.forms[1].body;
+let b = document.forms[1].body;
 b.innerText = "Why don't you write me I'm out in the jungle I'm hungry to hear you.\nSend me a card I am waiting so hard to be near you.\n";
 }
 
+} catch(e) {
+alert(e);
+alert(e.stack);
+}
 </script>
 
 <noscript>
@@ -295,10 +302,45 @@ b.innerText = "Why don't you write me I'm out in the jungle I'm hungry to hear y
 <a href="ftp://ftp.netbsd.org/">NetBsd FTP site</a>
 <form>
 <script>
+// these can't be in a try block
 function gopherJump()
 {
     alert("Jumping to gopherspace in 5 seconds");
     setTimeout(() => window.location.href = "gopher://gopher.floodgap.com/1/", 5000);
+}
+
+// xhrTest() succeeds even if allowXHR is off, which is weird.
+// Not that I want it to fail if allowXHR is off either. IDK
+function xhrTest()
+{
+var xhr = new XMLHttpRequest;
+xhr.onload = () => alert("base onload");
+xhr.addEventListener("load", function(e){
+ alert(`target ${e.target} phase ${e.eventPhase} response length ${this.responseText.length}`)
+if(this.responseText.indexOf("100% text based") > 0) alert("looks good"); else alert("search text not found");
+})
+xhr.open("get", "http://edbrowse.org", true);
+xhr.send("", 0);
+}
+
+async function awaitTest()
+{
+function resolveAfter5Seconds(x) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(x);
+    }, 5000);   });
+}
+function greeting() { alert("done waiting"); return ", Baby"}
+alert(await resolveAfter5Seconds("your 5 seconds are up") + greeting())
+} // returns the Promise object
+
+async function awaitFetchTest()
+{
+function showcamp(o) { alert("camp " + o.camp); }
+// p_json is the promise of the json object
+const p_json = (await fetch("http://www.edbrowse.org/jscamp.json")).json();
+p_json.then(showcamp);
 }
 </script>
 <button onclick="gopherJump()">Jump to gopherspace</button>
@@ -500,7 +542,7 @@ http://www.w3schools.com/html/html_form_input_types.asp -->
 <input type=number maxlength=5 name="zip code" readonly value="&#56;8888">
 <span id=almond class="nut rose"></span>
 <table class=filbert><tr><td></td></tr><tr id=pecan><td></td></tr></table>
-Colors will change with the state, A through M or N through Z.
+Colors will <u>change</u> with the state, A through M or N through Z.
 <br>My favorite colors are:
 <select name=colors multiple>
 <option value=r> red
@@ -534,7 +576,7 @@ onclick="alert('page is being replaced'); window.location.href='http://www.carte
 <br>Message Body:
 <textarea name=body rows=6 cols=50 required>
 Type your brilliant thoughts here.
-We'll get back to you if we like what you have to say.</textarea>
+<br>We'll get back to you if we like what you have to say.</textarea>
 
 <div id=album>
 </div
@@ -557,16 +599,17 @@ onclick="alert('rock and ½ roll')">
 </template>
 
 <script type=text/javascript language=JavaScript>
+try { // protect
+
 // set up for nested spans with onclick handlers
-// document.getElementById("spana").addEventListener("click", (e)=>{alert("a"); if(!confirm("do you really want to see b")) e.cancelled = true});
-document.getElementById("spana").addEventListener("click", ()=>{alert("a"); return confirm("do you really want to see b")});
+document.getElementById("spana").addEventListener("click", (e)=>{alert("a"); if(!confirm("do you really want to see b")) e.stopPropagation();});
 document.getElementById("spanb").addEventListener("click", ()=>alert("b"));
 document.getElementById("spanc").addEventListener("click", ()=>alert("first click"), {capture:true,once:true});
 document.getElementById("spanc").addEventListener("click", ()=>alert("c"), {capture:true});
 
 // I'll push the button for you
 document.forms[1].b.onclick();
-if(document.forms[1].result.value != 89) fail(85);
+if(document.forms[1].result.value != 93) fail(85);
 if(document.forms[1].who.value != "eklhad") fail(86);
 if(document.forms[1].elements[1].value != "secret") fail(87);
 
@@ -620,7 +663,7 @@ if(document.getElementById("hound").name != "dog") fail(110);
 if(document.getElementById("almond") != document.spans[0]) fail(111);
 // I'm not sure of any of this table row stuff
 if(document.getElementById("pecan") != document.tables[0].rows[1]) fail(112);
-if(document.getElementById("pecan").parentNode.parentNode.class != "filbert") fail(115);
+if(document.getElementById("pecan").parentNode.parentNode.getAttribute("class") != "filbert") fail(115);
 if(document.all.tags("FORM")[1] != document.forms[1]) fail(113);
 if(document.all.tags("span").length != 5) fail(114);
 
@@ -737,7 +780,8 @@ document.dispatchEvent(e);
 // before after unless we set showall+, so one wonders if it's even worth it.
 if(document.getElementsByClassName("inject")[0].firstChild.data != "My ") fail(173);
 if(document.spans[0].lastChild.data != " zip") fail(174);
-if(document.body.style.hasOwnProperty("animation")) fail(176);
+let dbs = document.body.style; // shorthand
+if(dbs.hasOwnProperty("animation")) fail(176);
 if(document.styleSheets[0].cssRules[0].cssText.substr(0,4) != "body") fail(180);
 }
 function bodyUnload() {
@@ -776,9 +820,9 @@ document.writeln(" Last Script");
 if(onlv != 93) fail(1000);
 }
 
-setTimeout("joker()", 30000);
+setTimeout("joker()", 10000);
 function joker() {
-alert("30 seconds have passed!");
+alert("10 seconds have passed!");
 var j = document.createTextNode(" And the timer text");
 document.body.appendChild(j);
 }
@@ -795,6 +839,11 @@ if(!aa.href.match(/wikipedia.org/))
 fail(152);
 if(aa.style.color != "red")
 fail(153);
+
+} catch(e) {
+alert(e);
+alert(e.stack);
+}
 </script  	
 >
 
@@ -810,12 +859,12 @@ fail(147);
 </script>
 
 <script type=text/javascript language=JavaScript>
-/*
+try { // protect
+
 if(data_uri1_test != "set")
 fail(148);
 if(data_uri2_test != "set")
 fail(149);
-*/
 
 /* I wanted to test the initial cookie string as blank,
  * but if you unbrowse and then browse, this test will fail.
@@ -876,7 +925,7 @@ function test_removeListener() {
 var x1 = document.createElement("a");
 var x1click = function(){ alert('ok') };
 x1.addEventListener("click",x1click,0);
-if(typeof x1.onclick$$array[0] != "function")
+if(typeof x1.onclick$$array[0] != "object")
 fail(159);
 x1.removeEventListener("click",x1click);
 if(x1.onclick$$array.length)
@@ -886,38 +935,6 @@ test_removeListener();
 
 // This comes after the original onsubmit function
 document.forms[1].addEventListener("submit", function(e) { alert("submit phase "+e.eventPhase);});
-
-// xhrTest() succeeds even if allowXHR is off, which is weird.
-// Not that I want it to fail if allowXHR is off either. IDK
-// and not sure I want to run this internet test every time.
-function xhrTest() {
-var xhr = new XMLHttpRequest;
-xhr.onload = () => alert("base onload");
-xhr.addEventListener("load", function(e){
- alert(`target ${e.target} phase ${e.eventPhase} response length ${this.responseText.length}`)
-if(this.responseText.indexOf("100% text based") > 0) alert("looks good"); else alert("search text not found");
-})
-xhr.open("get", "http://edbrowse.org", true);
-xhr.send("", 0);
-}
-
-async function awaitTest() {
-function resolveAfter5Seconds(x) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(x);
-    }, 5000);   });
-}
-function greeting() { alert("done waiting"); return ", Baby"}
-alert(await resolveAfter5Seconds("your 5 seconds are up") + greeting())
-} // returns the Promise object
-
-async function awaitFetchTest() {
-function showcamp(o) { alert("camp " + o.camp); }
-// p_json is the promise of the json object
-const p_json = (await fetch("http://www.edbrowse.org/jscamp.json")).json();
-p_json.then(showcamp);
-}
 
 function test_siblings() {
 var x1 = document.createElement("div");
@@ -952,7 +969,8 @@ fail(163);
 if(document.defaultView.getComputedStyle(document.getElementById("almond"),'').whiteSpace != 'snork "')
 fail(164);
 
-if(document.body.style.fontSize != "1.0em") fail(169);
+let dbs = document.body.style;
+if(dbs.fontSize != "1.0em") fail(169);
 style2 = getComputedStyle(document.body,'')
 if(style2.color != "rgb(0,0,0)") fail(165);
 // I don't know which way this is suppose to go
@@ -961,8 +979,8 @@ if(querySelector(".filbert #pecan").nodeName != "TR")
 fail(170);
 if(querySelector("text + #bird").nodeName != "INPUT")
 fail(171);
-document.body.style.cssText = "border-block-start:ger' a'ld";
-if(document.body.style.borderBlockStart != "ger ald")
+dbs.cssText = "border-block-start:ger' a'ld";
+if(dbs.borderBlockStart != "ger ald")
 fail(172);
 
 // Create a frame and access something from its window.
@@ -1033,6 +1051,15 @@ atemplate = document.getElementById("animals").content;
 if(atemplate.nodeType != 11) fail(280);
 if(atemplate.firstChild.nodeName != "P") fail(281);
 if(atemplate.lastChild.nodeName != "HR") fail(282);
+
+let ob = document.createElement("object");
+ob.setAttribute("data", "./page.html")
+if(ob.data != "http://y.z.com/page.html") fail(283);
+
+// test css shorthand
+dbs.margin = "20px 10px";
+if(dbs.marginTop != '20px' || dbs.marginBottom != '20px') fail(284);
+if(dbs.marginRight != '10px' || dbs.marginLeft != '10px') fail(285);
 
 function relative() {
 var el = document.createElement("DIV")
@@ -1134,6 +1161,10 @@ alert("relative");
 }
 relative();
 
+} catch(e) {
+alert(e);
+alert(e.stack);
+}
 </script>
 
 </body>

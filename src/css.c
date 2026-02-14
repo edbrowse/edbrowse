@@ -434,7 +434,6 @@ const char * const allowableStyleElements[] = {
 "textAlignLast",
 "textAnchor",
 "textCombineUpright",
-"textDecoration",
 "textDecorationColor",
 "textDecorationLine",
 "textDecorationSkipInk",
@@ -644,6 +643,7 @@ const char * const allowableStyleElements[] = {
 "borderImage",
 "border",
 "inset",
+"textDecoration",
 0};
 
 static const char * const displayableStyleElements[] = {
@@ -2258,8 +2258,7 @@ void cssDocLoad(int frameNumber, char *start, bool pageload)
 	}
 // This could be run again and again, if the style nodes change.
 	if (cm->descriptors) {
-		debugPrint(3,
-			   "free and recompile css descriptors due to dom changes");
+		debugPrint(3, "free and recompile css descriptors");
 		cssPiecesFree(cm->descriptors);
 		recompile = true;
 	}
@@ -3726,11 +3725,12 @@ void cssApply(int frameNumber, Tag *t, int pe)
 
 // it's a getComputedStyle match
 	gcsmatch = true, matchtype = pe;
-// defer to the js
+// defer to the js here;
+// then I don't have to get these attributes on every css rule.
 	nzFree(t->jclass);
-	t->jclass = get_property_string_t(t, "class");
+	t->jclass = run_function_onestring1_t(t, "getAttribute", "class");
 	nzFree(t->id);
-	t->id = get_property_string_t(t, "id");
+	t->id = run_function_onestring1_t(t, "getAttribute", "id");
 
 // this is cheeky- but do_rules checks bulkmatch then visibility,
 // so set bulkmatch temporarily.

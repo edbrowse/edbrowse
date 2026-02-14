@@ -155,14 +155,14 @@ You should get something like this; if you do then all is well.
 relative
 body loading
 complete
-835
+837
 lines 36 through 41 have been added
 ```
 
-	[after a delay of 30 seconds]
+	[after a delay of 10 seconds]
 
 ```
-30 seconds have passed!
+10 seconds have passed!
 lines 42 through 43 have been added
 ```
 

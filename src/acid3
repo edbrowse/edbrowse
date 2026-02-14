@@ -223,6 +223,8 @@
     });
   }
   var kungFuDeathGrip = null; // used to hold things from test to test
+// @` skipped: 7 8 9 10 11 12 13 65
+// I run 16 but it's meaningless, has no semantics in edbrowse.
   var tests = [ // start of tests
 
     // there are 6 buckets with 16 tests each, plus four special tests (0, 97, 98, and 99).
@@ -238,7 +240,7 @@
       var last = document.getElementById('remove-last-child-test');
       var penultimate = last.previousSibling; // this should be the whitespace node
       penultimate = penultimate.previousSibling; // this should now be the actual penultimate element
-//@` tidy does not hand us whitespace nodes, so previousSibling
+//@` edbrowse does not hand us whitespace nodes, so previousSibling
 // does not hand us the whitespace between tags, as acid3 expects.
 // One call to previousSibling works in edbrowse, not two.
 // Better still, how bout the more portable
@@ -756,25 +758,93 @@ if(div === null) { var e = new Error; e.code = 14; throw e; }
     },
     function () {
       // test 24: event handler attributes
-//@` be sure to set TidyLiteralAttribs, or this test will fail.
       assertEquals(document.body.getAttribute('onload'), "update()  /* this attribute's value is tested in one of the tests */ ", "onload value wrong");
       return 2;
     },
-    function() { return 2; }, // test 25
-    function() { return 2; }, // test 26
-    function() { return 2; }, // test 27
+    function() {
+      // test 25: test namespace checking in createDocumentType, and
+      // check that exceptions that are thrown are DOMException objects
+      var message = "";
+      try {
+        document.implementation.createDocumentType('a:', '', ''); /* doesn't contain an illegal character; is malformed */
+        message = "failed to raise exception";
+      } catch (e) {
+        if (e.code != e.NAMESPACE_ERR)
+          message = "wrong exception";
+        else if (e.INVALID_ACCESS_ERR != 15)
+          message = "exceptions don't have all the constants";
+      }
+      if (message)
+        fail(message);
+      return 2;
+    },
+    function() {
+      // test 26: check that document tree survives while still accessible
+      var d;
+      // e1 - an element that's in a document
+      d = document.implementation.createDocument(null, null, null);
+      var e1 = d.createElement('test');
+      d.appendChild(d.createElement('root'));
+      d.documentElement.appendChild(e1);
+      assert(e1.parentNode, "e1 - parent element doesn't exist");
+      assert(e1.parentNode.ownerDocument, "e1 - document doesn't exist");
+      // e2 - an element that's not in a document
+      d = document.implementation.createDocument(null, null, null);
+      var e2 = d.createElement('test');
+      d.createElement('root').appendChild(e2);
+      assert(e2.parentNode, "e2 - parent element doesn't exist");
+      assert(e2.parentNode.ownerDocument, "e2 - document doesn't exist");
+      // now try to decouple them
+      d = null;
+      kungFuDeathGrip = [e1, e2];
+      assert(e1.parentNode, "e1 - parent element doesn't exist after dropping reference to document");
+      assert(e1.parentNode.ownerDocument, "e1 - document doesn't exist after dropping reference to document");
+      assert(e2.parentNode, "e2 - parent element doesn't exist after dropping reference to document");
+      assert(e2.parentNode.ownerDocument, "e2 - document doesn't exist after dropping reference to document");
+      var loops = new Date().valueOf() * 2.813435e-9 - 2412; // increases linearly over time
+// @` loops is about 2500. Edbrowse isn't as fast as other browsers,
+// and I don't want to go over the timing threshhold.
+      loops = 250;
+// By the way, I don't understand any of what goes on inside this loop.
+      for (var i = 0; i < loops; i += 1) {
+        // we want to force a GC here, so we use up lots of memory
+        // we take the opportunity to sneak in a perf test to make DOM and JS stuff faster...
+        d = new Date();
+        d = new (function (x) { return { toString: function () { return x.toString() } } })(d.valueOf());
+        d = document.createTextNode("iteration " + i + " at " + d);
+        document.createElement('a').appendChild(d);
+        d = d.parentNode;
+        document.body.insertBefore(d, document.getElementById('bucket1').parentNode);
+        assert(document.getElementById('bucket2').nextSibling.parentNode.previousSibling.firstChild.data.match(/AT\W/i), "iteration " + i + " failed");
+        d.setAttribute('class', d.textContent);
+        document.body.removeChild(d);
+      }
+      assert(e1.parentNode, "e1 - parent element doesn't exist after looping");
+      assert(e1.parentNode.ownerDocument, "e1 - document doesn't exist after looping");
+      assertEquals(e1.parentNode.ownerDocument.nodeType, 9, "e1 - document node type has wrong node type");
+      assert(e2.parentNode, "e2 - parent element doesn't exist after looping");
+      assert(e2.parentNode.ownerDocument, "e2 - document doesn't exist after looping");
+      assertEquals(e2.parentNode.ownerDocument.nodeType, 9, "e2 - document node type has wrong node type");
+      return 2;
+    },
+    function () {
+      // test 27: a continuation of the previous test
+      var e1 = kungFuDeathGrip[0];
+      var e2 = kungFuDeathGrip[1];
+      kungFuDeathGrip = null;
+      assert(e1, "e1 - element itself didn't survive across tests");
+      assert(e1.parentNode, "e1 - parent element doesn't exist after waiting");
+      assert(e1.parentNode.ownerDocument, "e1 - document doesn't exist after waiting");
+      assertEquals(e1.parentNode.ownerDocument.nodeType, 9, "e1 - document node type has wrong node type after waiting");
+      assert(e2, "e2 - element itself didn't survive across tests");
+      assert(e2.parentNode, "e2 - parent element doesn't exist after waiting");
+      assert(e2.parentNode.ownerDocument, "e2 - document doesn't exist after waiting");
+      assertEquals(e2.parentNode.ownerDocument.nodeType, 9, "e2 - document node type has wrong node type after waiting");
+      return 2;
+    },
     function () {
       // test 28: getElementById()
       // ...and name=""
-//@` Here is a tidy collision. <form name=z> generates name=z and id=z
-// tidy adds the extra id=z unsolicited.
-// This doesn't happen with other tags such as span, just form,
-// and guess what, acid3 tests <form>.
-// I could check for both name and id being the same, and remove id=z, thinking
-// it was tidy generated, but what if the tag is <form name=z id=z>
-// I'd rather have a false positive than a false negative.
-// So this test was commented out.
-// I put it back in, now that I'm not using tidy.
       assert(document.getElementById('form') !== document.getElementsByTagName('form')[0], "getElementById() searched on 'name'");
       // ...and a space character as the ID
       var div = document.createElement('div');
@@ -790,9 +860,9 @@ if(div === null) { var e = new Error; e.code = 14; throw e; }
       var t2 = t1.cloneNode(true);
       assertEquals(t2.tBodies[0].rows[0].cells[0].firstChild.tagName, 'P', "<p> didn't clone right");
       assertEquals(t2.tBodies[0].rows[0].cells[0].firstChild.childNodes.length, 0, "<p> got child nodes after cloning");
-//@` Well here we are with the tidy whitespace nodes again.
+//@` Well here we are with the edbrowse whitespace nodes again.
 // There's a deliberate space before </table, and acid expects
-// a whitespace node to stand in, and tidy doesn't give us one.
+// a whitespace node to stand in, and edbrowse doesn't give us one.
 // Acid expects length to be 2; I changed it to 1.
       assertEquals(t2.childNodes.length, 1, "cloned table had wrong number of children");
 //@` and there's no text node so skip this
@@ -1490,12 +1560,15 @@ if(div === null) { var e = new Error; e.code = 14; throw e; }
       });
       return 3;
     },
-//@` test 45 baffles me. element.setAttribute("style", v)
-// should, as suggested by this page, set style.cssText = v;
-// https://www.w3schools.com/jsref/met_element_setattribute.asp
-// But test 45 prepends a css, whence float becomes cssFloat.
-// I don't get it, so I pretty much skip this test.
-    function() { return 3; }, // test 45
+    function() {
+      // test 45: cssFloat and the style attribute
+      assert(!document.body.style.cssFloat, "body has floatation");
+      document.body.setAttribute("style", "float: right");
+      assertEquals(document.body.style.cssFloat, "right", "body doesn't have floatation");
+      document.body.setAttribute("style", "float: none");
+      assertEquals(document.body.style.cssFloat, "none", "body didn't lose floatation");
+return 3;
+    },
     function () {
       // test 46: media queries
       var doc = getTestDocument();
@@ -1996,6 +2069,177 @@ edbrowse should agree with that.
       assertEquals(p.className, '', "className was wrong after being emptied");
       return 4;
     },
+    function () {
+      // test 62: check that DOM attributes and content attributes aren't equivalent
+      var test;
+      // <div class="">
+      test = document.getElementsByTagName('div')[0];
+      assertEquals(test.className, 'buckets', "buckets: className wrong");
+      assertEquals(test.getAttribute('class'), 'buckets', "buckets: class wrong");
+      assert(!test.hasAttribute('className'), "buckets: element has className attribute");
+      assert(test.className != test.getAttribute('className'), "buckets: className attribute equals className property");
+      assert(!('class' in test), "buckets: element has class property")
+      test['class'] = "oil";
+      assert(test.className != "oil", "buckets: class property affected className");
+      // <label for="">
+      test = document.createElement('label');
+      test.htmlFor = 'jars';
+      assertEquals(test.htmlFor, 'jars', "jars: htmlFor wrong");
+      assertEquals(test.getAttribute('for'), 'jars', "jars: for wrong");
+      assert(!test.hasAttribute('htmlFor'), "jars: element has htmlFor attribute");
+      assert(test.htmlFor != test.getAttribute('htmlFor'), "jars: htmlFor attribute equals htmlFor property");
+      test = document.createElement('label');
+      test.setAttribute('for', 'pots');
+      assertEquals(test.htmlFor, 'pots', "pots: htmlFor wrong");
+      assertEquals(test.getAttribute('for'), 'pots', "pots: for wrong");
+      assert(!test.hasAttribute('htmlFor'), "pots: element has htmlFor attribute");
+      assert(test.htmlFor != test.getAttribute('htmlFor'), "pots: htmlFor attribute equals htmlFor property");
+      assert(!('for' in test), "pots: element has for property");
+      test['for'] = "oil";
+      assert(test.htmlFor != "oil", "pots: for property affected htmlFor");
+      // <meta http-equiv="">
+      test = document.createElement('meta');
+      test.setAttribute('http-equiv', 'boxes');
+      assertEquals(test.httpEquiv, 'boxes', "boxes: httpEquiv wrong");
+      assertEquals(test.getAttribute('http-equiv'), 'boxes', "boxes: http-equiv wrong");
+      assert(!test.hasAttribute('httpEquiv'), "boxes: element has httpEquiv attribute");
+      assert(test.httpEquiv != test.getAttribute('httpEquiv'), "boxes: httpEquiv attribute equals httpEquiv property");
+      test = document.createElement('meta');
+      test.httpEquiv = 'cans';
+      assertEquals(test.httpEquiv, 'cans', "cans: httpEquiv wrong");
+      assertEquals(test.getAttribute('http-equiv'), 'cans', "cans: http-equiv wrong");
+      assert(!test.hasAttribute('httpEquiv'), "cans: element has httpEquiv attribute");
+      assert(test.httpEquiv != test.getAttribute('httpEquiv'), "cans: httpEquiv attribute equals httpEquiv property");
+      assert(!('http-equiv' in test), "cans: element has http-equiv property");
+      test['http-equiv'] = "oil";
+      assert(test.httpEquiv != "oil", "cans: http-equiv property affected httpEquiv");
+      return 4;
+    },
+    function () {
+      // test 63: attributes of the <area> element
+      var area = document.getElementsByTagName('area')[0];
+      assertEquals(area.getAttribute('href'), '', "wrong value for href=''");
+      assertEquals(area.getAttribute('shape'), 'rect', "wrong value for shape=''");
+      assertEquals(area.getAttribute('coords'), '2,2,4,4', "wrong value for coords=''");
+      assertEquals(area.getAttribute('alt'), '<\'>', "wrong value for alt=''");
+      return 4;
+    },
+    function () {
+      // test 64: more attribute tests
+      // attributes of the <object> element
+      var obj1 = document.createElement('object');
+      obj1.setAttribute('data', 'test.html');
+      var obj2 = document.createElement('object');
+      obj2.setAttribute('data', './test.html');
+      assertEquals(obj1.data, obj2.data, "object elements didn't resolve URIs correctly");
+      assert(obj1.data.match(/^http:/), "object.data isn't absolute");
+      obj1.appendChild(document.createElement('param'));
+      assertEquals(obj1.getElementsByTagName('param').length, 1, "object is missing its only child");
+      // non-existent attributes
+      var test = document.createElement('p');
+      assert(!('TWVvdywgbWV3Li4u' in test), "TWVvdywgbWV3Li4u unexpectedly found");
+      assertEquals(test.TWVvdywgbWV3Li4u, undefined, ".TWVvdywgbWV3Li4u wasn't undefined");
+      assertEquals(test['TWVvdywgbWV3Li4u'], undefined, "['TWVvdywgbWV3Li4u'] wasn't undefined");
+      test.setAttribute('TWVvdywgbWV3Li4u', 'woof');
+      assert(!('TWVvdywgbWV3Li4u' in test), "TWVvdywgbWV3Li4u unexpectedly found after setting");
+      assertEquals(test.TWVvdywgbWV3Li4u, undefined, ".TWVvdywgbWV3Li4u wasn't undefined after setting");
+      assertEquals(test['TWVvdywgbWV3Li4u'], undefined, "['TWVvdywgbWV3Li4u'] wasn't undefined after setting");
+      assertEquals(test.getAttribute('TWVvdywgbWV3Li4u'), 'woof', "TWVvdywgbWV3Li4u has wrong value after setting");
+      return 4;
+    },
+    function () {
+// test 65 skip
+      return 5;
+    },
+    function () {
+      // test 66: localName on text nodes (and now other things), from Sylvain Pasche
+// @` this works because we use == instead of === 
+// localName is undefined out of the box
+      assertEquals(document.createTextNode("test").localName, null, 'wrong localName for text node');
+      assertEquals(document.createComment("test").localName, null, 'wrong localName for comment node');
+      assertEquals(document.localName, null, 'wrong localName for document node');
+      return 5;
+    },
+    function () {
+// COMMENTED OUT IN NOV 2013 BECAUSE DOM SPEC REMOVED THIS FEATURE
+//       // test 67: removedNamedItemNS on missing attributes, from Sylvain Pasche
+//       var p = document.createElement("p");
+//       var msg = 'wrong exception raised';
+//       try {
+//         p.attributes.removeNamedItemNS("http://www.example.com/", "absent");
+//         msg = 'no exception raised';
+//       } catch (e) {
+//         if ('code' in e) {
+//           if (e.code == 8)
+//             msg = '';
+//           else
+//             msg += '; code = ' + e.code;
+//         }
+//       }
+//       assert(msg == '', "when calling removeNamedItemNS in a non existent attribute: " + msg);
+      return 5;
+    },
+    function () {
+      // test 68: UTF-16 surrogate pairs, from David Chan
+      // 
+      // In The Unicode Standard 5.0, it is explicitly permitted to
+      // allow malformed UTF-16, that is, to leave the string alone.
+      // (http://www.unicode.org/versions/Unicode5.0.0):
+      // 
+      // section 2.7: "...strings in ... ECMAScript are Unicode 16-bit
+      // strings, but are not necessarily well-formed UTF-16
+      // sequences.  In normal processing, it can be far more
+      // efficient to allow such strings to contain code unit
+      // sequences that are not well-formed UTF-16 -- that is,
+      // isolated surrogates"
+      // 
+      // On the other hand, if the application wishes to ensure
+      // well-formed character sequences, it may not permit the
+      // malformed sequence and it must regard the first codepoint as
+      // an error:
+      // 
+      // Section 3.2: "C10. When a process interprets a code sequence
+      // which purports to be in a Unicode character encoding form, it
+      // shall treat ill-formed code unit sequences as an error
+      // condition and shall not interpret such sequences as
+      // characters.
+      // [...]
+      // For example, in UTF-8 every code unit of the form 110....2
+      // must be followed by a code unit of the form 10......2. A
+      // sequence such as 110.....2 0.......2 is ill-formed and must
+      // never be generated. When faced with this ill-formed code unit
+      // sequence while transforming or interpreting text, a
+      // conformant process must treat the first code unit 110.....2
+      // as an illegally terminated code unit sequence~Wfor example,
+      // by signaling an error, filtering the code unit out, or
+      // representing the code unit with a marker such as U+FFFD
+      // replacement character."
+      // 
+      // So it would be permitted to do any of the following:
+      // 1) Leave the string alone
+      // 2) Remove the unpaired surrogate
+      // 3) Replace the unpaired surrogate with U+FFFD
+      // 4) Throw an exception
+
+      try {
+        var unpaired = String.fromCharCode(0xd863); // half a surrogate pair
+        var before = unpaired + "text";
+        var elt = document.createElement("input");
+        elt.value = before;
+        var after = elt.value;
+      }
+      catch(ex) {
+        return 5; // Unpaired surrogate caused an exception - ok
+      }
+      if (after == before && before.length == 5)
+        return 5; // Unpaired surrogate kept - ok
+      if (after == "text")
+        return 5; // Unpaired surrogate removed - ok
+      var replacement = String.fromCharCode(0xfffd);
+      if (after == replacement + "text")
+        return 5; // Unpaired surrogate replaced - ok
+      fail("Unpaired surrogate handled wrongly (input was '" + before + "', output was '" + after + "')");
+    },
 // other tests not yet folded in
   ]; // end of tests
   var log = '';
@@ -2077,7 +2321,7 @@ frames[1].contentDocument;
       var elapsedTime = ((endTime - startTime) - (delay * tests.length)) / 1000;
       log += "Total elapsed time: " + elapsedTime.toFixed(2) + "s";
       if (errors == 0)
-        log += "\nNo JS errors and no timing issues, but 11 tests were skipped.\nWas the rendering pixel-for-pixel perfect too?";
+        log += "\nNo JS errors and no timing issues, but 8 tests were skipped.";
   alert(log);
     }
   }

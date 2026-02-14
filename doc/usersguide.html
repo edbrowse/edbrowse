@@ -2611,6 +2611,7 @@ This feature is not in high demand.
 <li><A HREF=#hist> Browsing History </A>
 <li><A HREF=#music> Background Music </A>
 <li><A HREF=#heading> Headings </A>
+<li><A HREF=#emph> Emphasized Text </A>
 <li><A HREF=#input> Input Fields </A>
 <li><A HREF=#entry> Data Entry </A>
 <li><A HREF=#textarea> Text Areas </A>
@@ -2624,6 +2625,7 @@ This feature is not in high demand.
 <li><A HREF=#gopher> Gopher Support </A>
 <li><A HREF=#proxy> Proxy Servers </A>
 <li><A HREF=#frame> Frames </A>
+<li><A HREF=#det> Details </A>
 </ul>
 
 <h2 id="url">Accessing A URL</h2>
@@ -3480,12 +3482,41 @@ This is consistent with other browsers, which use plugins to play multimedia fil
 <h2 id="heading">Headings</h2>
 
 <p>
-Some web pages are written with headings, from level 1 to level 6.
+Most web pages are written with headings, from level 1 to level 6.
 These headings are indicated by h1 through h6 respectively.
 Just as braces indicate a hyperlink, h2 indicates a second level heading.
 Thus h2 is not part of the text; it is a markup character.
 You can jump to different headings using the familiar ed commands:
 /h2 for the next level 2 heading, ?h1 for the previous level 1 heading, and /h\d for the next heading at any level.
+
+<h2 id="emph">Emphasized Text</h2>
+
+<p> Some websites use tags to emphasize certain words or phrases.
+For example, &lt;em&gt; indicates emphasized text.
+On the screen, this is presented in a different font, but that doesn't help us.
+Edbrowse puts a * before and after the text.
+Thus &lt;em&gt;critical&lt;/em&gt; becomes *critical*.
+
+<p>
+Like the h1 markers above, the stars are not part of the text.
+They provide presentational information, that is also semantic.
+
+<p>
+The single character markers are:
+<br>
+* emphasis
+<br>
+@ italics, sometimes used for a title or name
+<br>
+~ deleted, like the ~attachEvent~ system in javascript is deprecated
+<br>
+_ underlined, this literal word is important
+
+<p>
+A block quote, &lt;blockquote&gt;, is indicated by the opening and closing marks `` and ''.
+It is placed in its own paragraph, which is usually the intent of the author.
+Some email servers place the original email in blockquote, at the bottom, when formulating a reply.
+When your friend replies to your email, you may see your original email text at the bottom, bracketed by `` and ''.
 
 <h2 id="input">Input Fields</h2>
 
@@ -4251,6 +4282,20 @@ We've got the lowest prices anywhere.
 --`
 <br>
 Frame {bottom}
+
+<h2 id="det">Details</h2>
+
+<p>
+Some web pages present a summary of information, just a sentence, and then allow you to click on that if you want more details.
+
+<p>
+Details {The many-worlds interpretation of quantum mechanics}
+
+<p>
+This is similar to a frame.
+Type exp, or g, to expand it; type ctr to contract.
+Type ,exp to expand all details on the page, and ,ctr to contract the entire page.
+Details are enclosed in `-- and --`, just like a frame.
 
 <hr>
 <h1 id=jsc>Chapter 5, Javascript</h1>

@@ -1274,40 +1274,18 @@ static void unlink_event(JSContext *cx, JSValueConst parent)
 {
 	delete_property(cx, parent, "gc$event");
 }
-
+// Run a non-capturing, non-bubbling event
 static bool run_event(JSContext *cx, JSValueConst obj, const char *pname, const char *evname)
 {
-	int rc;
-	JSValue eo;	// created event object
-	const char *evname2 = tack_fn(evname);
-// evname2 is the addEventListener system; try that first.
-	if(!evname2 || typeof_property(cx, obj, evname2) != EJ_PROP_FUNCTION) {
-		if(typeof_property(cx, obj, evname) != EJ_PROP_FUNCTION)
-			return true;
-		evname2 = evname;
-	}
-	if (debugLevel >= 3) {
-		if (debugEvent) {
-			if(stringEqual(evname, "ontimer")) {
-				int seqno = get_property_number(cx, obj, "tsn");
-				debugPrint(3, "trigger %s %d %s", pname, seqno, evname);
-			} else {
-				int seqno = get_property_number(cx, obj, "eb$seqno");
-				debugPrint(3, "trigger %s tag %d %s", pname, seqno, evname);
-			}
-		}
-	}
-	eo = create_event(cx, obj, evname);
-	set_property_object(cx, eo, "target", obj);
-	set_property_object(cx, eo, "currentTarget", obj);
-	set_property_number(cx, eo, "eventPhase", 2);
-	rc = run_function_onearg(cx, obj, evname2, eo);
-	unlink_event(cx, obj);
-	JS_Release(cx, eo);
-// no return or some other return is treated as true in this case
-	if (rc < 0)
-		rc = true;
-	return rc;
+    int rc;
+    JSValue eo;	// created event object
+    eo = create_event(cx, obj, evname);
+    set_property_bool(cx, eo, "eb$captures", false);
+    set_property_bool(cx, eo, "bubbles", false);
+    rc = run_function_onearg(cx, obj, "dispatchEvent", eo);
+    unlink_event(cx, obj);
+    JS_Release(cx, eo);
+    return rc;
 }
 
 bool run_event_t(const Tag *t, const char *pname, const char *evname)
@@ -1331,6 +1309,7 @@ bool run_event_doc(const Frame *f, const char *pname, const char *evname)
 	return run_event(f->cx, *((JSValue*)f->docobj), pname, evname);
 }
 
+// Allow event propagation
 bool bubble_event_t(const Tag *t, const char *name)
 {
 	JSContext *cx;
@@ -1341,8 +1320,6 @@ bool bubble_event_t(const Tag *t, const char *name)
 	cx = t->f0->cx;
 	e = create_event(cx, *((JSValue*)t->jv), name);
 	rc = run_function_onearg(cx, *((JSValue*)t->jv), "dispatchEvent", e);
-	if (rc && get_property_bool(cx, e, "prev$default"))
-		rc = false;
 /*********************************************************************
 Why would we need to test whether t is connected to its object?
 We already know it is.
@@ -1501,6 +1478,7 @@ static void processError(JSContext * cx)
 static void connectTagObject(Tag *t, JSValue p)
 {
 	JSContext *cx = t->f0->cx;
+	if(t->jslink) return;
 	t->jv = allocMem(sizeof(p));
 	*((JSValue*)t->jv) = p;
 	t->jslink = true;
@@ -3685,10 +3663,26 @@ JS_NewCFunction(mwc, nat_setInterval, "setInterval", 2), 0);
 JS_NewCFunction(mwc, nat_clearTimeout, "clearInterval", 1), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "cssDocLoad",
 JS_NewCFunction(mwc, nat_css_start, "css_start", 3), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$cssText",
+JS_NewCFunction(mwc, nat_cssText, "cssText", 1), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "cssApply",
 JS_NewCFunction(mwc, nat_cssApply, "cssApply", 3), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$formSubmit",
+JS_NewCFunction(mwc, nat_formSubmit, "formSubmit", 0), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$formReset",
+JS_NewCFunction(mwc, nat_formReset, "formReset", 0), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$fetchHTTP",
 JS_NewCFunction(mwc, nat_fetchHTTP, "fetchHTTP", 4), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$getter_cd",
+JS_NewCFunction(mwc, getter_cd, "getter_cd", 0), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$getter_cw",
+JS_NewCFunction(mwc, getter_cw, "getter_cw", 0), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$unframe",
+JS_NewCFunction(mwc, nat_unframe, "unframe", 1), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$unframe2",
+JS_NewCFunction(mwc, nat_unframe2, "unframe2", 1), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$playAudio",
+JS_NewCFunction(mwc, nat_playAudio, "play_audio", 0), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "jobsPending",
 JS_NewCFunction(mwc, nat_jobs, "jobspending", 0), JS_PROP_ENUMERABLE);
 
@@ -3783,7 +3777,7 @@ JS_NewCFunction(mwc, nat_jobs, "jobspending", 0), JS_PROP_ENUMERABLE);
 		JSContext *job_cx;
 			debugPrint(3, "pending jobs queue found at location %d", JSRuntimeJobIndex);
 // We can't run this job, because it isn't in a proper frame or window.
-// The error message mjight confuse, so let quick run the job.
+// The error message might confuse, so let quick run the job.
 		JS_ExecutePendingJob(jsrt, &job_cx);
 		domSetsTimeout(350, "@@pending", 0, true);
 	} else {
@@ -3813,10 +3807,6 @@ static void createJSContext_0(Frame *f)
 
     JS_DefinePropertyValueStr(cx, g, "eb$media",
 JS_NewCFunction(cx, nat_media, "media", 1), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$unframe",
-JS_NewCFunction(cx, nat_unframe, "unframe", 1), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$unframe2",
-JS_NewCFunction(cx, nat_unframe2, "unframe2", 1), 0);
 // Yes, there really are sites that overwrite setTimeout
     JS_DefinePropertyValueStr(cx, g, "setTimeout",
 JS_NewCFunction(cx, nat_setTimeout, "setTimeout", 2),
@@ -3836,28 +3826,16 @@ JS_NewCFunction(cx, nat_parent, "parent", 0), 0);
 JS_NewCFunction(cx, nat_top, "top", 0), 0);
     JS_DefinePropertyValueStr(cx, g, "eb$frameElement",
 JS_NewCFunction(cx, nat_fe, "fe", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$formSubmit",
-JS_NewCFunction(cx, nat_formSubmit, "formSubmit", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$formReset",
-JS_NewCFunction(cx, nat_formReset, "formReset", 0), 0);
     JS_DefinePropertyValueStr(cx, g, "eb$getcook",
 JS_NewCFunction(cx, nat_getcook, "getcook", 0), 0);
     JS_DefinePropertyValueStr(cx, g, "eb$setcook",
 JS_NewCFunction(cx, nat_setcook, "setcook", 1), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$getter_cd",
-JS_NewCFunction(cx, getter_cd, "getter_cd", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$getter_cw",
-JS_NewCFunction(cx, getter_cw, "getter_cw", 0), 0);
     JS_DefinePropertyValueStr(cx, g, "querySelectorAll",
 JS_NewCFunction(cx, nat_qsa, "qsa", 2), 0);
     JS_DefinePropertyValueStr(cx, g, "querySelector",
 JS_NewCFunction(cx, nat_qs, "qs", 2), 0);
     JS_DefinePropertyValueStr(cx, g, "querySelector0",
 JS_NewCFunction(cx, nat_qs0, "qs0", 1), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$cssText",
-JS_NewCFunction(cx, nat_cssText, "cssText", 1), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$playAudio",
-JS_NewCFunction(cx, nat_playAudio, "play_audio", 0), 0);
 
 // these really belong in document, but I'm putting them in
 // window and we can copy them to document later.
@@ -4185,7 +4163,6 @@ void domLink(Tag *t, const char *classname,	/* instantiate this class */
 	const char *symname = t->name;
 	const char *idname = t->id;
 	const char *membername = 0;	/* usually symname */
-	const char *tcn = t->jclass;
 	const char *stylestring = attribVal(t, "style");
 	JSValue cn; // child nodes
 	char classtweak[MAXTAGNAME + 4];
@@ -4197,6 +4174,8 @@ void domLink(Tag *t, const char *classname,	/* instantiate this class */
 // HTMLElement and its derivations
 	if((!strncmp(classname, "HTML", 4) && strlen(classname) >= 11)
 	|| (!strncmp(classname, "XML", 3) && strlen(classname) >= 8)
+	|| stringEqual(classname, "DocType")
+	|| stringEqual(classname, "DocumentType")
 	|| stringEqual(classname, "Comment"))
 		strcpy(classtweak, classname);
 	else
@@ -4297,10 +4276,6 @@ Don't do any of this if the tag is itself <style>. */
 			JS_Release(cx, so);
 		}
 
-		if (!tcn)
-			tcn = emptyString;
-		set_property_string(cx, io, "class", tcn);
-
 // only anchors with href go into links[]
 		if (list && stringEqual(list, "links") &&
 		    !attribPresent(t, "href"))
@@ -4345,7 +4320,6 @@ Don't do any of this if the tag is itself <style>. */
 		set_property_object(cx, io, "form", owner);
 	}
 
-// DocType has nodeType = 10, see startwindow.js
 	if(t->action != TAGACT_DOCTYPE) {
 		char *js_node = ((t->action == TAGACT_UNKNOWN || cf->xmlMode) ? t->nodeName : t->nodeNameU);
 		define_hidden_property_string(cx, io, "nodeName", js_node);

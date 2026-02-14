@@ -567,7 +567,8 @@ const struct tagInfo availableTags[] = {
 	{"image", "an image", TAGACT_IMAGE, 0, 4},
 	{"br", "a line break", TAGACT_BR, 1, 4},
 	{"p", "a paragraph", TAGACT_P, 10, 1},
-	{"details", "details", TAGACT_NOP, 10, 1},
+	{"details", "details", TAGACT_DET, 10, 1},
+	{"summary", "summary of details", TAGACT_SUMMARY, 10, 1},
 	{"fieldset", "a paragraph", TAGACT_NOP, 10, 1},
 	{"blockquote", "a quoted section", TAGACT_BQ, 0, 1},
 	{"header", "a header", TAGACT_HEADER, 2, 5},
@@ -614,7 +615,7 @@ const struct tagInfo availableTags[] = {
 	{"listing", "a listing", TAGACT_PRE, 1, 0},
 	{"xmp", "an example", TAGACT_PRE, 1, 0},
 	{"fixed", "a fixed presentation", TAGACT_NOP, 1, 0},
-	{"code", "a block of code", TAGACT_NOP, 0, 0},
+	{"code", "a block of code", TAGACT_CODE, 0, 0},
 	{"samp", "a block of sample text", TAGACT_NOP, 0, 0},
 	{"address", "an address block", TAGACT_NOP, 1, 0},
 	{"script", "a script", TAGACT_SCRIPT, 0, 3},
@@ -622,14 +623,14 @@ const struct tagInfo availableTags[] = {
 	{"noframes", "no frames section", TAGACT_NOP, 0, 2},
 	{"embed", "embedded html", TAGACT_MUSIC, 0, 0},
 	{"noembed", "no embed section", TAGACT_NOP, 0, 2},
-	{"em", "emphasized text", TAGACT_JS, 0, 0},
+	{"em", "emphasized text", TAGACT_EM, 0, 0},
 	{"label", "a label", TAGACT_LABEL, 0, 0},
 	{"strike", "emphasized text", TAGACT_JS, 0, 0},
-	{"s", "emphasized text", TAGACT_JS, 0, 0},
-	{"strong", "emphasized text", TAGACT_JS, 0, 0},
-	{"b", "bold text", TAGACT_JS, 0, 0},
-	{"i", "italicized text", TAGACT_JS, 0, 0},
-	{"u", "underlined text", TAGACT_JS, 0, 0},
+	{"s", "strikethrough text", TAGACT_S, 0, 0},
+	{"strong", "emphasized text", TAGACT_STRONG, 0, 0},
+	{"b", "bold text", TAGACT_B, 0, 0},
+	{"i", "italicized text", TAGACT_I, 0, 0},
+	{"u", "underlined text", TAGACT_U, 0, 0},
 	{"var", "variable text", TAGACT_JS, 0, 0},
 	{"kbd", "keyboard text", TAGACT_JS, 0, 0},
 	{"dfn", "definition text", TAGACT_JS, 0, 0},
@@ -640,6 +641,8 @@ const struct tagInfo availableTags[] = {
 	{"svg", "an svg image", TAGACT_SVG, 0, 1},
 	{"canvas", "a canvas", TAGACT_CANVAS, 0, 1},
 	{"frameset", "a frame set", TAGACT_JS, 0, 0},
+	{"del", "deleted text", TAGACT_DEL, 0, 0},
+	{"ins", "inserted text", TAGACT_INS, 0, 0},
 	{"", NULL, 0, 0, 0}
 };
 
@@ -3739,9 +3742,11 @@ when the pointers don't change out from under us.
 *********************************************************************/
 
 		next_child = child->sibling, child->sibling = 0;
+		if(next_child)
 		debugPrint(5, "%s lifts up %s", child->info->name, next_child ? next_child->info->name : "empty");
 		traverseNode(child, pc);
 		if(pc->abort) return;
+		if(next_child)
 		debugPrint(5, "after sibling %s %s above", child->sibling ? child->sibling->info->name : "empty",
 		next_child ? next_child->info->name : "empty");
 		if(next_child) {
@@ -4416,6 +4421,12 @@ Are there other situations where we need to supress meta processing?
 		t->doorway = true;
 		break;
 
+	case TAGACT_DET:
+		t->contracted = true;
+		a = attribVal(t, "open");
+		if(a && !stringEqual(a, "false")) t->contracted = false;
+		break;
+
 	case TAGACT_MUSIC:
 		if (opentag) {
 			currentAudio = t;
@@ -4869,6 +4880,12 @@ Needless to say that's not good!
 	case TAGACT_TEMPLATE:
 		if(opentag) {
 			domLink(t, "HTMLTemplateElement", 0, 0, 4);
+		}
+		break;
+
+	case TAGACT_DET:
+		if(opentag) {
+			domLink(t, "HTMLDetailsElement", 0, 0, 4);
 		}
 		break;
 

@@ -4827,8 +4827,8 @@ static char *lessFile(const char *line, bool tamode)
 
 // Find the frame for the current line.
 // jdb wants to debug in the frame of the current line.
-// Also used when frames are expanded and contracted.
-Tag *line2frame(int ln)
+// Also used when frames or details are expanded and contracted.
+Tag *line2frame(int ln, bool frameonly)
 {
 	const char *line;
 	int n, opentag = 0, ln1 = ln;
@@ -4846,11 +4846,16 @@ Tag *line2frame(int ln)
 		if (!s)
 			continue;
 		for (--s; s > line && *s != InternalCodeChar; --s) ;
-		if (*s != InternalCodeChar)
+		if (*s != InternalCodeChar) // should not happen
 			continue;
 		n = atoi(s + 1);
-		if (!opentag)
-			return tagList[n];
+		if (!opentag) {
+			Tag *u = tagList[n];
+			if(!frameonly || u->action != TAGACT_DET) return u;
+// We're looking for frame and this is details, so skip it,
+// just pretend like we didn't see it.
+			continue;
+		}
 		if (n == opentag)
 			opentag = 0;
 	}
@@ -5544,7 +5549,7 @@ pwd:
 			return false;
 		}
 /* debug the js context of the frame you are in */
-		t = line2frame(cw->dot);
+		t = line2frame(cw->dot, true);
 		if (t)
 			cf = t->f1;
 		else
@@ -8458,7 +8463,7 @@ past_g_file:
 				goto success;
 			}
 
-			if (tag && tag->action == TAGACT_FRAME) {
+			if (tag && (tag->action == TAGACT_FRAME || tag->action == TAGACT_DET)) {
 				nzFree(h);
 				line = "exp";
 				goto expctr;

@@ -32,9 +32,10 @@ void dwStart(void)
 
 bool handlerPresent(const Tag *t, const char *name)
 {
-	const char *name2 = tack_fn(name);
+	const char *name2 = tack_array(name);
 	return (typeof_property_t(t, name) == EJ_PROP_FUNCTION ||
-	(name2 && typeof_property_t(t, name2) == EJ_PROP_FUNCTION));
+            typeof_property_t(t, name) == EJ_PROP_STRING ||
+            (name2 && typeof_property_t(t, name2) == EJ_PROP_ARRAY));
 }
 
 // called with click, dblclick, reset, or submit
@@ -2786,7 +2787,8 @@ bool infPush(int tagno, char **post_string)
 				runningError(itype ==
 					     INP_BUTTON ? MSG_NJNoAction :
 					     MSG_NJNoOnclick);
-			bubble_event_t(t, "onclick");
+			rc = bubble_event_t(t, "onclick");
+			if(!rc) return true;
 			if (js_redirects)
 				return true;
 // At this point onclick has run, be it button or submit or reset
@@ -2853,8 +2855,7 @@ bool infPush(int tagno, char **post_string)
 				rc = true;
 				if (form->jslink)
 					rc = bubble_event_t(form, "onsubmit");
-				if (!rc)
-					return true;
+				if (!rc) return true;
 				if (js_redirects)
 					return true;
 			}
@@ -3880,19 +3881,19 @@ run_event_doc(cf, "document", "onDOMContentLoaded");
 	}
 }
 
-// In one place, tack on the $$fn to turn onfoo into onfoo$$fn
-const char *tack_fn(const char *e)
+// In one place, tack on the $$Aarray to turn onfoo into onfoo$$array
+const char *tack_array(const char *e)
 {
 	static char buf[64];
 	int l = strlen(e);
-	if((unsigned)l + 4 >= sizeof(buf)) {
+	if((unsigned)l + 7 >= sizeof(buf)) {
 		debugPrint(3, "%s$$fn too long", e);
 		return 0;
 	}
 // ontimer is our simulated event handler.
 	if(stringEqual(e, "ontimer"))
 		return 0;
-	sprintf(buf, "%s$$fn", e);
+	sprintf(buf, "%s$$array", e);
 	return buf;
 }
 
@@ -4746,6 +4747,33 @@ static int ahref_under(const Tag *t)
 	return 0;
 }
 
+static void emphasize(Tag *t, bool opentag, char d)
+{
+	char mark[4];
+	sprintf(mark, "%c@%c", (opentag ? '`' : '\''), d);
+
+// I don't see the point of injecting these marks if we are
+// inside a hyperlink or button.
+	Tag *t2 = findOpenTag(t, TAGACT_A);
+	if(t2 && t2->href) return;
+	t2 = findOpenTag(t, TAGACT_INPUT);
+	if(t2 && t2->info->name[0] != 'b') return;
+	t2 = findOpenTag(t, TAGACT_OPTION);
+	if(t2) return;
+
+	if(opentag) {
+// see if we can compress adjacent blocks of emphasized text
+		char *u = ns + ns_l;
+		while(u > ns && u[-1] == ' ') --u;
+		if(u - ns >= 3 && u[-1] == d && u[-2] == '@' && u[-3] == '\'') {
+			memmove(u - 3, u, ns + ns_l - u);
+			ns_l -= 3;
+			return;
+		}
+	}
+	stringAndString(&ns, &ns_l, mark);
+}
+
 static Tag *deltag;
 
 static void renderNode(Tag *t, bool opentag, struct parseContext *pc)
@@ -5122,6 +5150,56 @@ nocolor:
 		(opentag ? "\f``" : "''\f"));
 		break;
 
+/*********************************************************************
+Here are some tags that change the appearance of the text, in order
+to provide semantic meaning. e.g. <em>emphasized text</em>
+We aren't going to distinguish between all such possible tags.
+Bold, strong, emphasized, all mean essentially the same thing.
+We don't want to overwhelm the user with a flurry of punctuations.
+We inject the text mark, but no tag. That means <em id=hello> won't work.
+Tags in the stream would make it much harder to swap marks and whitespace.
+I don't believe it is correct html or javascript to put attributes on these tags.
+If somebody does, and it is essential to the operation of the website,
+we'll have to rethink the matter.
+Marks are `@*  text  '@*, or other characters in place of *.
+This makes them unambiguous in the stream.
+No false positives, as you would surely encounter with a single *.
+Eventually the `@ and '@ are crunched away.
+*********************************************************************/
+
+	case TAGACT_B:
+	case TAGACT_STRONG:
+	case TAGACT_EM:
+		if (invisible) break;
+// check for the tags that produce the same symbol
+		if(findOpenTag(t, TAGACT_EM)) break;
+		if(findOpenTag(t, TAGACT_B)) break;
+		if(findOpenTag(t, TAGACT_STRONG)) break;
+		emphasize(t, opentag, '*');
+		break;
+
+	case TAGACT_DEL:
+	case TAGACT_S:
+		if (invisible) break;
+		if(findOpenTag(t, TAGACT_DEL)) break;
+		if(findOpenTag(t, TAGACT_S)) break;
+		emphasize(t, opentag, '~');
+		break;
+
+	case TAGACT_I:
+		if (invisible) break;
+		if(findOpenTag(t, TAGACT_I)) break;
+		emphasize(t, opentag, '@');
+		break;
+
+	case TAGACT_INS:
+	case TAGACT_U:
+		if (invisible) break;
+		if(findOpenTag(t, TAGACT_U)) break;
+		if(findOpenTag(t, TAGACT_INS)) break;
+		emphasize(t, opentag, '_');
+		break;
+
 	case TAGACT_SVG:
 		if (!invisible && opentag) {
 // I use to print "graphics" here, but that conveys virtually no information.
@@ -5152,9 +5230,13 @@ nocolor:
 // falling through is just fine, but sometimes generates a cc warning, so...
 		goto nop;
 
+	case TAGACT_DD:
+		stringAndString(&ns, &ns_l,
+		opentag ? " \r: " : "\r");
+		goto check_id;
+
 	case TAGACT_DL:
 	case TAGACT_DT:
-	case TAGACT_DD:
 	case TAGACT_OBJECT:
 	case TAGACT_BR:
 	case TAGACT_P:
@@ -5551,7 +5633,7 @@ unparen:
 	case TAGACT_FRAME:
 		if (!retainTag) break;
 		if (t->f1 && !t->contracted) {	/* expanded frame */
-			sprintf(hnum, "\r%c%d*%s\r", InternalCodeChar, tagno,
+			sprintf(hnum, "\f%c%d*%s\f", InternalCodeChar, tagno,
 				(opentag ? "`--" : "--`"));
 			ns_hnum();
 			break;
@@ -5601,6 +5683,33 @@ unparen:
 			deltag = t;
 		break;
 
+	case TAGACT_DET:
+// defer to the javascript, they may have opened the details for us.
+		if(t->jslink)
+			t->contracted = !get_property_bool_t(t, "open");
+		if (!t->contracted) {	/* expanded frame */
+			sprintf(hnum, "\f%c%d*%s\f", InternalCodeChar, tagno,
+				(opentag ? "`--" : "--`"));
+			ns_hnum();
+			break;
+		}
+		if (!opentag) break;
+		stringAndString(&ns, &ns_l, "\rDetails ");
+		sprintf(hnum, "%c%d{", InternalCodeChar, tagno);
+		ns_hnum();
+		a = 0;
+		for(ltag = t->firstchild; ltag; ltag = ltag->sibling)
+			if(ltag->action == TAGACT_SUMMARY) break;
+		if(ltag &&
+		(ltag = ltag->firstchild) &&
+		ltag->action == TAGACT_TEXT)
+			a = ltag->textval;
+		if(a) stringAndString(&ns, &ns_l, a);
+		ns_ic();
+		stringAndString(&ns, &ns_l, "0}\r");
+		deltag = t;
+		break;
+
 	case TAGACT_MUSIC:
 		if(!opentag) break;
 		if (!retainTag) break;
@@ -5644,6 +5753,7 @@ unparen:
 // This is for <unrecognized id=foo> and somewhere else <a href=#foo>
 // We have to have this unknown tag in the stream or we can't jump to it.
 	default:
+check_id:
 		if(opentag && t->id)
 			tagInStream(tagno);
 		break;
