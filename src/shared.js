@@ -554,10 +554,10 @@ function dispatchEvent (e) {
             return !e.stop$propagating$immediate; // null listeners are allowed
         }
         if (!(inline || h.do$phases.has(e.eventPhase))) {
-            dbg3(`Unsupported phase ${e.eventPhase} for ${hd}`, n, 4);
+            dbg3(`Unsupported phase ${e.eventPhase} for ${hd}`, n);
             dbg3(
                 `${hd} supported: ${JSON.stringify(Array.from(h.do$phases))}`,
-                n, 4);
+                n);
             return !e.stop$propagating$immediate;
         }
         dbg3(`fires ${hd}`, n);
