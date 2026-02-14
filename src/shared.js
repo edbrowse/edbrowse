@@ -529,7 +529,10 @@ return false;
 }
 
 function dispatchEvent (e) {
-    let dbg = () => undefined;
+    // When handlers fire, or there are issues, print those at db3.
+// If we are simply tracking through the dispatch algorithm, then db4.
+    let dbg3 = () => undefined;
+    let dbg4 = () => undefined;
     const runEventHandler = (n, h) => {
         e.currentTarget = n;
         const inline = typeof h == "function";
@@ -547,17 +550,17 @@ function dispatchEvent (e) {
         // An object method, don't muck with the binding
         else if (typeof h.callback == "object") f = h.callback.handleEvent;
         if (!f) {
-            dbg(`could not find callback for ${hd}`, n);
+            dbg3(`could not find callback for ${hd}`, n);
             return !e.stop$propagating$immediate; // null listeners are allowed
         }
         if (!(inline || h.do$phases.has(e.eventPhase))) {
-            dbg(`Unsupported phase ${e.eventPhase} for ${hd}`, n, 4);
-            dbg(
+            dbg3(`Unsupported phase ${e.eventPhase} for ${hd}`, n, 4);
+            dbg3(
                 `${hd} supported: ${JSON.stringify(Array.from(h.do$phases))}`,
                 n, 4);
             return !e.stop$propagating$immediate;
         }
-        dbg(`fires ${hd}`, n);
+        dbg3(`fires ${hd}`, n);
         let r = f(e);
         // Events added by listeners ignore return values these days
         if (inline) {
@@ -571,7 +574,7 @@ function dispatchEvent (e) {
         }
         h.ran = true;
         if (h.do$once) {
-            dbg(`Remove one-shot ${hd}`, n);
+            dbg3(`Remove one-shot ${hd}`, n);
             n.removeEventListener(e.type, h.callback, h.do$phases.has(1));
         }
         return !e.stop$propagating$immediate;
@@ -595,13 +598,16 @@ const runAllHandlers = (n) => {
         return runHandlerArray(n);
     }
 
-    if(db$flags(1))
-        dbg = (m, n=this, l=3) => {
+    if(db$flags(1)) {
+        let dbg = (l, m, n=this) => {
             const phases = ["dispatch", "capture", "target", "bubble"];
             const prefix = `dispatchEvent ${n.nodeName}.${e.type}`;
             const phase = phases[e.eventPhase];
             logputs(l, `${prefix} tag ${n.eb$seqno} phase ${phase}: ${m}`);
         };
+        dbg3 = m=>dbg(3, m);
+        dbg4 = m=>dbg(4, m);
+    }
     e.eventPhase = 0;
     e.target = this;
     const pathway = [];
@@ -643,7 +649,7 @@ const runAllHandlers = (n) => {
             if (e.eb$captures)
                 return pathway.slice(1).reverse().every(runHandlerArray);
             else {
-                dbg("not capturing");
+                dbg4("not capturing");
                 return true;
             }
         },
@@ -654,16 +660,16 @@ const runAllHandlers = (n) => {
             if (e.bubbles)
                 return pathway.slice(1).every(runAllHandlers);
             else {
-                dbg("not bubbling");
+                dbg4("not bubbling");
                 return true;
             }
         }
     ];
     states.every((cb, i) => {
         e.eventPhase = i;
-        dbg("start");
+        dbg4("start");
         const rc = cb();
-        dbg(`end (${rc})`);
+        dbg4(`end (${rc})`);
         return rc;
     });
 
@@ -672,7 +678,7 @@ const runAllHandlers = (n) => {
         defaultPrevented property is specified to be true if the default action
         was, or is to be, prevented
     */
-    dbg(`default prevented ${e.defaultPrevented}`);
+    dbg4(`default prevented ${e.defaultPrevented}`);
     return !e.defaultPrevented;
 }
 
