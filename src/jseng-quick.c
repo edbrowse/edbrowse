@@ -3453,7 +3453,6 @@ void delPendings(const Frame *f)
 #undef list_for_each_safe
 #undef list_empty
 #undef list_entry
-#undef offsetof
 
 /*********************************************************************
 postMessage() puts a message on a queue, and the target window processes
