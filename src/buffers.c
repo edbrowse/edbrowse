@@ -6408,6 +6408,8 @@ et_go:
 		textd ^= 1;
 		if (helpMessagesOn || debugLevel >= 1)
 			i_puts(textd + MSG_TextDecOff);
+		if (cw->browseMode)
+			rerender(0);
 		return true;
 	}
 
@@ -6415,6 +6417,8 @@ et_go:
 		textd = (line[4] == '+');
 		if (helpMessagesOn)
 			i_puts(textd + MSG_TextDecOff);
+		if (cw->browseMode)
+			rerender(0);
 		return true;
 	}
 

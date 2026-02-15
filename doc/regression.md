@@ -52,7 +52,8 @@ The function (on the timer) tells you that 10 seconds have passed,
 and then it calls document.body.apendChild to add a TextNode to the tree of objects.
 The text simply says, "and the timer text".
 The alert tells you that the timer fired.
-Then, a periodic rerender should take place, (there could be a small delay), and edbrowse will detect a change in the buffer, something that is there that wasn't there before.
+Then, a periodic rerender should take place, (there could be a small delay), and edbrowse will detect a change in the buffer,
+something there that wasn't there before.
 (This is a diff between this rerender and the last one.)
 It notifies you by saying "lines 42 through 43 have been added"
 You may be somewhere else in the file, but you can go down to line 43 to see what is new.
