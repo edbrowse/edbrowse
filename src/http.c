@@ -3379,7 +3379,8 @@ cdt doesn't have or need an object; it's a place holder.
 		set_property_bool_t(t, "eb$expf", true);
 // run the frame onload function if it is there.
 // I assume it should run in the higher frame.
-		run_event_t(t, t->info->name, "onload");
+		if(isURL(t->href) && !isDataURI(t->href))
+			run_event_t(t, t->info->name, "onload");
 	}
 
 // success, frame is expanded

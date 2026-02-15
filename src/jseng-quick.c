@@ -1216,7 +1216,7 @@ void jsRunData(const Tag *t, const char *filename, int lineno)
 // onload handler? Should this run even if the script fails?
 // Right now it does.
 // The script could be removed, replaced by other nodes by innerHTML.
-	if (t->jslink && t->js_file && !isDataURI(t->href))
+	if (t->jslink && isURL(t->href) && !isDataURI(t->href))
 		run_event(cx, *((JSValue*)t->jv), "script", "onload");
 	debugPrint(5, "< ok");
 }
@@ -1921,7 +1921,8 @@ void forceFrameExpand(Tag *t)
 // technically this is loaded, even though could be error 404,
 // or incorect content type, etc.
 // The onload function didn't run after browse; run it now.
-		run_event_t(t, t->info->name, "onload");
+		if (isURL(t->href) && !isDataURI(t->href))
+			run_event_t(t, t->info->name, "onload");
 	}
 	cf = save_cf;
 	jsSourceFile = save_src;

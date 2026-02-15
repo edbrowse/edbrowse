@@ -600,7 +600,7 @@ const runAllHandlers = (n) => {
 
     if(db$flags(1)) {
         let dbg = (l, m, n=this) => {
-            const phases = ["dispatch", "capture", "target", "bubble"];
+            const phases = ["ready", "capture", "target", "bubble", "finished"];
             const prefix = `dispatchEvent ${n.nodeName}.${e.type}`;
             const phase = phases[e.eventPhase];
             logputs(l, `${prefix} tag ${n.eb$seqno} phase ${phase}: ${m}`);
@@ -667,9 +667,9 @@ const runAllHandlers = (n) => {
     ];
     states.every((cb, i) => {
         e.eventPhase = i;
-        dbg4("start");
+        (i ? dbg4 : dbg3)("start");
         const rc = cb();
-        dbg4(`end (${rc})`);
+        if(i) dbg4(`end (${rc})`);
         return rc;
     });
 
@@ -678,7 +678,9 @@ const runAllHandlers = (n) => {
         defaultPrevented property is specified to be true if the default action
         was, or is to be, prevented
     */
-    dbg4(`default prevented ${e.defaultPrevented}`);
+    e.eventPhase = 4;
+    dbg3(`default prevented ${e.defaultPrevented}`);
+    e.eventPhase = 3; // put it back in case it matters
     return !e.defaultPrevented;
 }
 
