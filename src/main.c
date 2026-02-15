@@ -910,7 +910,7 @@ static int *argl_ptr;
 static int *rb_ln, *rb_ln2, *rb_b;
 
 struct ebSettings {
-	bool rl, endm, lna, H, ci, sg, su8, ss, sw, ebre, bd, iu, hf, hr, vs, hlocal, sr, can, ftpa, bg, jsbg, js, showall, pg, fbc, ls_reverse, fllo, dno, displace, flow, attimg;
+	bool rl, endm, lna, H, ci, sg, su8, ss, sw, ebre, bd, iu, hf, hr, vs, hlocal, sr, can, ftpa, bg, jsbg, js, showall, textd, pg, fbc, ls_reverse, fllo, dno, displace, flow, attimg;
 	uchar dw, ls_sort;
 	char lsformat[12], showProgress;
 	char *currentAgent;
@@ -953,6 +953,7 @@ static void saveEbSettings(struct ebSettings *s)
 	s->pg = pluginsOn;
 	s->hf = showHiddenFiles;
 	s->showall = showall;
+	s->textd = textd;
 	s->endm = endMarks;
 	s->sg = searchStringsAll;
 	s->ci = caseInsensitive;
@@ -997,6 +998,7 @@ static void restoreEbSettings(struct ebSettings *s)
 	pluginsOn = s->pg;
 	showHiddenFiles = s->hf;
 	showall = s->showall;
+	textd = s->textd;
 	endMarks = s->endm;
 	searchStringsAll = s->sg;
 	caseInsensitive = s->ci;

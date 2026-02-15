@@ -768,6 +768,7 @@ g : go to the link on the current line
 <br>rr : rerender the screen, to reflect asynchronous Javascript changes
 <br>rr=75 : rerender the screen automatically every 75 seconds
 <br>showall : show all hover and invisible text (toggle)
+<br>textd : indicate text decoration and style (toggle)
 <br>colors : show the colors on the page
 <p>
 Mail Client
@@ -3503,14 +3504,18 @@ They provide presentational information, that is also semantic.
 
 <p>
 The single character markers are:
-<br>
-* emphasis
-<br>
-@ italics, sometimes used for a title or name
-<br>
-~ deleted, like the ~attachEvent~ system in javascript is deprecated
-<br>
-_ underlined, this literal word is important
+<br>* emphasis
+<br>@ italics
+<br>+ bold
+<br>_ underlined
+<br>~ deleted, like the ~attachEvent~ system in javascript is deprecated
+
+<p>
+These transliterations can be enabled or disabled by the textd command.
+textd is an abbreviation for text-decoration,
+the css property that controls some of these features.
+Others (such as bold) are controled by font-style.
+At present, edbrowse only responds to the html tags, not the css properties.
 
 <p>
 A block quote, &lt;blockquote&gt;, is indicated by the opening and closing marks `` and ''.

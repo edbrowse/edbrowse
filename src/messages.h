@@ -880,4 +880,6 @@ MSG_ImaskOn,
         MSG_CreateFormatStr,
         MSG_DoubleBrowse,
         MSG_NoTempDir,
+        MSG_TextDecOff,
+        MSG_TextDecOn,
 };

@@ -780,8 +780,8 @@ too many nested commands
 failed to create formatted string; %s
 already browsed in this manner
 Temporary directory does not exist %s
-0
-0
+don't show text decoration
+show text decoration
 0
 0
 0

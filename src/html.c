@@ -16,7 +16,7 @@ extern int gettimeofday(struct timeval *tp, void *tzp);
 #endif
 
 uchar browseLocal;
-bool showall, doColors;
+bool showall, textd = true, doColors;
 
 static Tag *js_reset, *js_submit;
 static const int asyncTimer = 700;
@@ -5169,34 +5169,38 @@ No false positives, as you would surely encounter with a single *.
 Eventually the `@ and '@ are crunched away.
 *********************************************************************/
 
-	case TAGACT_B:
 	case TAGACT_STRONG:
 	case TAGACT_EM:
-		if (invisible) break;
+		if (invisible || !textd) break;
 // check for the tags that produce the same symbol
 		if(findOpenTag(t, TAGACT_EM)) break;
-		if(findOpenTag(t, TAGACT_B)) break;
 		if(findOpenTag(t, TAGACT_STRONG)) break;
 		emphasize(t, opentag, '*');
 		break;
 
+	case TAGACT_B:
+		if (invisible || !textd) break;
+		if(findOpenTag(t, TAGACT_B)) break;
+		emphasize(t, opentag, '+');
+		break;
+
 	case TAGACT_DEL:
 	case TAGACT_S:
-		if (invisible) break;
+		if (invisible || !textd) break;
 		if(findOpenTag(t, TAGACT_DEL)) break;
 		if(findOpenTag(t, TAGACT_S)) break;
 		emphasize(t, opentag, '~');
 		break;
 
 	case TAGACT_I:
-		if (invisible) break;
+		if (invisible || !textd) break;
 		if(findOpenTag(t, TAGACT_I)) break;
 		emphasize(t, opentag, '@');
 		break;
 
 	case TAGACT_INS:
 	case TAGACT_U:
-		if (invisible) break;
+		if (invisible || !textd) break;
 		if(findOpenTag(t, TAGACT_U)) break;
 		if(findOpenTag(t, TAGACT_INS)) break;
 		emphasize(t, opentag, '_');

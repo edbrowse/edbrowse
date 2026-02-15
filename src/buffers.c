@@ -6404,6 +6404,20 @@ et_go:
 		return true;
 	}
 
+	if (stringEqual(line, "textd")) {
+		textd ^= 1;
+		if (helpMessagesOn || debugLevel >= 1)
+			i_puts(textd + MSG_TextDecOff);
+		return true;
+	}
+
+	if (stringEqual(line, "textd+") || stringEqual(line, "textd-")) {
+		textd = (line[4] == '+');
+		if (helpMessagesOn)
+			i_puts(textd + MSG_TextDecOff);
+		return true;
+	}
+
 	if (stringEqual(line, "colors")) {
 		doColors ^= 1;
 		if (helpMessagesOn || debugLevel >= 1)

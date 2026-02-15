@@ -346,7 +346,8 @@ extern bool ftpActive;
 extern bool helpMessagesOn;	/* no need to type h */
 extern bool pluginsOn;		/* plugins are active */
 extern bool showHiddenFiles;	/* during directory scan */
-extern bool showall; // show messages that are normally hidden, for various reasons
+extern bool showall; // show items that are normally hidden, for various reasons
+extern bool textd; // show text decoration
 extern bool doColors;
 extern int context;		// which session (buffer) are we in?
 extern int cx_previous;		// the number of the previous session
