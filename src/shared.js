@@ -3728,7 +3728,7 @@ return children;
 "getAttribute", "getAttributeNS", "getAttributeNode",
 "setAttribute", "setAttributeNS", "setAttributeNode",
 "removeAttribute", "removeAttributeNS", "removeAttributeNode"];
-for(var k of list)
+for(let k of list)
 eval('nodep.'+k+' = attr.'+k)})();
 
 odp(nodep, "className", {
@@ -4946,11 +4946,11 @@ Or you could end the last statement with a semicolon.
 *********************************************************************/
 
 ; (function() {
-const cnlist = ["HTMLAnchorElement", "HTMLAreaElement", "HTMLFrameElement"];
-const ulist = ["href", "href", "src"];
-for(let i=0; i<cnlist.length; ++i) {
-const cn = cnlist[i]; // class name
-const u = ulist[i]; // url name
+const cnlist = ["HTMLAnchorElement.href", "HTMLAreaElement.href", "HTMLFrameElement.src"];
+for(let k of cnlist) {
+const s = k.split('.');
+const cn = s[0]; // class name
+const u = s[1]; // url name
 eval('odp(w.' + cn + '.prototype, "' + u + '", { ' +
 'get: function() { return this.href$2 ? this.href$2 : ""}, ' +
 'set: function(h) { if(h === null || h === undefined) h = ""; ' +
@@ -4971,8 +4971,7 @@ eval('odp(w.' + cn + '.prototype, "' + u + '", { ' +
 'this.contentDocument; eb$unframe2(this); ' +
 '} }});');
 const piecelist = ["protocol", "pathname", "host", "search", "hostname", "port", "hash"];
-for(let j=0; j<piecelist.length; ++j) {
-let piece = piecelist[j];
+for(let piece of piecelist) {
 eval('odp(w.' + cn + '.prototype, "' + piece + '", {get: function() { return this.href$2 ? this.href$2.' + piece + ' : null},set: function(x) { if(this.href$2) this.href$2.' + piece + ' = x; }});');
 }
 }
@@ -4987,15 +4986,13 @@ everything else is a guess.
 *********************************************************************/
 
 ; (function() {
-const cnlist = ["HTMLFormElement", "HTMLImageElement", "HTMLScriptElement",
-"HTMLBaseElement", "HTMLLinkElement", "HTMLMediaElement",
-"HTMLObjectElement"];
-const ulist = ["action", "src", "src",
-"href", "href", "src",
-"data"];
-for(let i=0; i<cnlist.length; ++i) {
-const cn = cnlist[i]; // class name
-const u = ulist[i]; // url name
+const cnlist = ["HTMLFormElement.action", "HTMLImageElement.src", "HTMLScriptElement.src",
+"HTMLBaseElement.href", "HTMLLinkElement.href", "HTMLMediaElement.src",
+"HTMLObjectElement.data"];
+for(let k of cnlist) {
+const s = k.split('.');
+const cn = s[0]; // class name
+const u = s[1]; // url name
 eval('odp(w.' + cn + '.prototype, "' + u + '", { ' +
 'get: function() { return this.href$2 ? this.href$2 : ""}, ' +
 'set: function(h) { if(h instanceof w.URL || h.dom$class == "URL") h = h.toString(); ' +
@@ -5203,38 +5200,27 @@ const list =[
 "x",
 "y",
 "zIndex",];
-for(let i = 0; i < list.length; ++i)
-odp(csdp, list[i], {value:"",writable:true})
+for(let k of list)
+odp(csdp, k, {value:"",writable:true})
 })();
+
 ;(function(){
 const list =[
 // first attribute is per acid test 46
-"textTransform",
-"borderImageSource","borderImageOutset","borderImageWidth","borderImageSlice",
-"borderBottom","borderLeft","borderRight","borderTop",
-"borderBottomWidth","borderLeftWidth","borderRightWidth","borderTopWidth",
-"width",
-"height",
-"MozBorderImage","webkitBorderImage","WebkitBorderImage",
-"borderBottomColor","borderLeftColor","borderRightColor","borderTopColor",
-"borderBottomStyle","borderLeftStyle","borderRightStyle","borderTopStyle",
-"borderImageRepeat",
-"parentRule",];
-const v = [
-"none",
-"none","0","1","100%",
-"1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)","1px solid rgb(193, 193, 193)",
-"1px","1px","1px","1px",
-"250px",
-"40px",
-"none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch","none 100% / 1 / 0 stretch",
-"rgb(193, 193, 193)","rgb(193, 193, 193)","rgb(193, 193, 193)","rgb(193, 193, 193)",
-"solid","solid","solid","solid",
-"stretch",
-null,];
-for(let i = 0; i < list.length; ++i)
-odp(csdp, list[i], {value:v[i],writable:true})
-})();
+"textTransform.none",
+"borderImageSource.none","borderImageOutset.0","borderImageWidth.1","borderImageSlice.100%",
+"borderBottom.1px solid rgb(193, 193, 193)","borderLeft.1px solid rgb(193, 193, 193)","borderRight.1px solid rgb(193, 193, 193)","borderTop.1px solid rgb(193, 193, 193)",
+"borderBottomWidth.1px","borderLeftWidth.1px","borderRightWidth.1px","borderTopWidth.1px",
+"width.250px", "height.40px",
+"MozBorderImage.none 100% / 1 / 0 stretch","webkitBorderImage.none 100% / 1 / 0 stretch","WebkitBorderImage.none 100% / 1 / 0 stretch",
+"borderBottomColor.rgb(193, 193, 193)","borderLeftColor.rgb(193, 193, 193)","borderRightColor.rgb(193, 193, 193)","borderTopColor.rgb(193, 193, 193)",
+"borderBottomStyle.solid","borderLeftStyle.solid","borderRightStyle.solid","borderTopStyle.solid",
+"borderImageRepeat.stretch",
+"parentRule.null",];
+for(let k of list) {
+const s = k.split('.');
+odp(csdp, s[0], {value:s[1],writable:true})
+}})();
 
 csdp.toString = function() { return "style object" };
 odp(csdp, "length", {get: function() {

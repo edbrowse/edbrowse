@@ -42,10 +42,11 @@ this.eb$top = function() { return this}
 this.eb$frameElement = function() { return this}
 this.eb$getter_cd = function() { return null}
 this.eb$getter_cw = function() { return null}
-;(function() { let void_functions = ["addEventListener",
+;(function() { const void_functions = ["addEventListener",
     "removeEventListener", "eb$apch1", "eb$apch2", "eb$rmch2", "eb$insbf",
     "eb$hasFocus", "eb$write", "eb$writeln"];
-for (let i in void_functions) window[void_functions[i]] = eb$voidfunction; })();
+for(let k of void_functions)
+window[k] = eb$voidfunction; })();
 this.my$win = function() { return window}
 this.my$doc = function() { return document}
 
@@ -995,14 +996,12 @@ Again, look at handle$cc().
 
 ; (function() {
 var cnlist = ["HTMLElement.prototype", "document", "window"];
-for(var i=0; i<cnlist.length; ++i) {
-var cn = cnlist[i];
+for(let cn of cnlist) {
 // there are lots more events, onmouseout etc, that we don't responnd to,
 // should we watch for them anyways?
 var evs = ["onload", "onunload", "onclick", "onchange", "oninput",
 "onsubmit", "onreset", "onmessage"];
-for(var j=0; j<evs.length; ++j) {
-var evname = evs[j];
+for(let evname of evs) {
 eval('odp(' + cn + ', "' + evname + '$$watch", {value:true})');
 eval('odp(' + cn + ', "' + evname + '", { \
 get: function() { return this.' + evname + '$2}, \
@@ -1015,15 +1014,14 @@ if(typeof f == "function") { Object.defineProperty(this, "' + evname + '$2", {va
 // onhashchange from certain places
 ; (function() {
 // also HTMLFrameSetElement which we have not yet implemented
-var cnlist = ["HTMLBodyElement.prototype", "SVGElement", "window"];
-for(var i=0; i<cnlist.length; ++i) {
-var cn = cnlist[i];
-eval('odp(' + cn + ', "onhashchange$$watch", {value:true})');
-eval('odp(' + cn + ', "onhashchange", { \
-get: function() { return this.onhashchange$2; }, \
-set: function(f) { if(db$flags(1)) alert3((this.onhashchange?"clobber ":"create ") + (this.nodeName ? this.nodeName : "+"+this.dom$class) + ".onhashchange"); \
-if(typeof f == "string") f = my$win().handle$cc(f, this); \
-if(typeof f == "function") { this.onhashchange$2 = f}}})')
+var cnlist = [HTMLBodyElement.prototype, SVGElement, window];
+for(let cn of cnlist) {
+odp(cn, "onhashchange$$watch", {value:true});
+odp(cn, "onhashchange", {
+get: function() { return this.onhashchange$2; },
+set: function(f) { if(db$flags(1)) alert3((this.onhashchange?"clobber ":"create ") + (this.nodeName ? this.nodeName : "+"+this.dom$class) + ".onhashchange");
+if(typeof f == "string") f = my$win().handle$cc(f, this);
+if(typeof f == "function") { this.onhashchange$2 = f}}})
 }})();
 
 // Some website expected an onhashchange handler from the get-go.
@@ -1237,8 +1235,7 @@ swm("localStorage", {})
 swm("sessionStorage", {})
 ; (function() {
 var cnlist = [localStorage, sessionStorage];
-for(var i=0; i<cnlist.length; ++i) {
-var cn = cnlist[i];
+for(let cn of cnlist) {
 odp( cn, "attributes", { get: function(){ if(!this.attributes$2) {
 Object.defineProperty(this, "attributes$2", {value:new NamedNodeMap})
 this.attributes$2.owner = this
