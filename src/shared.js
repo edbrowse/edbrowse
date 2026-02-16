@@ -1280,28 +1280,6 @@ s.dispatchEvent(e)
 */
 }
 
-function replaceChild(newc, oldc) {
-var lastentry;
-var l = this.childNodes.length;
-var nextinline;
-for(var i=0; i<l; ++i) {
-if(this.childNodes[i] != oldc)
-continue;
-if(i == l-1)
-lastentry = true;
-else {
-lastentry = false;
-nextinline = this.childNodes[i+1];
-}
-this.removeChild(oldc);
-if(lastentry)
-this.appendChild(newc);
-else
-this.insertBefore(newc, nextinline);
-break;
-}
-}
-
 function getSibling (obj,direction) {
 var pn = obj.parentNode;
 if(!pn) return null;
@@ -3658,44 +3636,73 @@ n ? p.insertBefore(c,n) : p.appendChild(c);
 p.removeChild(this);
 }
 
-nodep.replaceChild = replaceChild;
+nodep.replaceChild = function(newc, oldc) {
+var lastentry;
+var l = this.childNodes.length;
+var nextinline;
+for(var i=0; i<l; ++i) {
+if(this.childNodes[i] != oldc)
+continue;
+if(i == l-1)
+lastentry = true;
+else {
+lastentry = false;
+nextinline = this.childNodes[i+1];
+}
+this.removeChild(oldc);
+if(lastentry)
+this.appendChild(newc);
+else
+this.insertBefore(newc, nextinline);
+break;
+}
+}
 
-nodep.remove = function() {
-if(this.parentNode) this.parentNode.removeChild(this)}
+nodep.remove = function() { if(this.parentNode) this.parentNode.removeChild(this)}
+
 odp(nodep, "firstChild", {
 get: function() {
 return (this.childNodes && this.childNodes.length) ?
 this.childNodes[0] : null; } })
+
 odp(nodep, "firstElementChild", {
 get: function() {
 let u = this.childNodes;
 if(!u) return null;
 for(let i=0; i<u.length; ++i) if(u[i].nodeType == 1) return u[i];
 return null}});
+
 odp(nodep, "lastChild", {
 get: function() {
 return (this.childNodes && this.childNodes.length) ?
 this.childNodes[this.childNodes.length-1] : null} })
+
 odp(nodep, "lastElementChild", {
 get: function() {
 let u = this.childNodes;
 if(!u) return null;
 for(let i=u.length-1; i>=0; --i) if(u[i].nodeType == 1) return u[i];
 return null}})
+
 odp(nodep, "childElementCount", {
 get: function() {
 let z=0, u = this.childNodes;
 if(!u) return z;
 for(let i=0; i<u.length; ++i) if(u[i].nodeType == 1) ++z;
 return z}})
+
 odp(nodep, "nextSibling", { get: function() {
 return getSibling(this,"next")} })
+
 odp(nodep, "nextElementSibling", { get: function() {
 return getElementSibling(this,"next")} })
+
 odp(nodep, "previousSibling", { get: function() {
 return getSibling(this,"previous")} })
+
 odp(nodep, "previousElementSibling", { get: function() {
 return getElementSibling(this,"previous")} })
+
 // children is subtly different from childnodes; this code taken from
 // https://developer.mozilla.org/en-US/docs/Web/API/ParentNode/children
 odp(nodep, 'children', {
@@ -3725,17 +3732,29 @@ if(c === null) return "";
 return c; },
 set: function(h) {
 this.setAttribute("class", h)}})
+
 odp(nodep, "parentElement", {
 get: function() {
 return this.parentNode && this.parentNode.nodeType == 1 ?
 this.parentNode : null}})
+
 nodep.getClientRects = function(){ return new w.Array; }
+
 nodep.cloneNode = function(deep) {
     w.cloneRoot1 = this;
     return clone1 (this,deep, false);
 }
 
 // visual
+nodep.clientHeight = 16;
+nodep.clientWidth = 120;
+nodep.scrollHeight = 16;
+nodep.scrollWidth = 120;
+nodep.scrollTop = 0;
+nodep.scrollLeft = 0;
+nodep.offsetHeight = 16;
+nodep.offsetWidth = 120;
+nodep.dir = "auto";
 nodep.focus = function(){d.activeElement=this}
 nodep.blur = function(){d.activeElement=null}
 nodep.getBoundingClientRect = function(){
@@ -3745,12 +3764,15 @@ x: 0, y: 0,
 width: 0, height: 0
 }
 }
+
 nodep.addEventListener = addEventListener;
 nodep.removeEventListener = removeEventListener;
 nodep.dispatchEvent = dispatchEvent;
+
 // outerHTML is dynamic; should innerHTML be?
 odp(nodep, "outerHTML", { get: function() { return htmlString(this);},
 set: function(h) { outer$1(this,h); }});
+
 // constants
 nodep.ELEMENT_NODE = 1
 nodep.TEXT_NODE = 3
@@ -3760,6 +3782,7 @@ nodep.DOCUMENT_TYPE_NODE = 10
 nodep.DOCUMENT_FRAGMENT_NODE = 11
 // default tabIndex is 0 but running js can override this.
 nodep.tabIndex = 0
+
 // class and text methods
 odp(nodep, "classList", { get : function() { return classList(this);}});
 nodep.cl$present = true;
@@ -3819,16 +3842,6 @@ parent.insertBefore(s, this.nextSibling);
 break;
 }
 }
-
-nodep.clientHeight = 16;
-nodep.clientWidth = 120;
-nodep.scrollHeight = 16;
-nodep.scrollWidth = 120;
-nodep.scrollTop = 0;
-nodep.scrollLeft = 0;
-nodep.offsetHeight = 16;
-nodep.offsetWidth = 120;
-nodep.dir = "auto";
 
 // This is a manufactured method for css purposes,
 // to inject words or marks before or after a tag, marks that you don't see
@@ -8423,7 +8436,6 @@ getElementsByTagName, getElementsByClassName, getElementsByName, getElementById,
 dispatchEvent,
 NodeFilter,createNodeIterator,createTreeWalker,
 runScriptWhenAttached, traceBreakReplace,
-replaceChild,
 getComputedStyle,
 URL, TextEncoder, TextDecoder];
 for(let k of flist)

@@ -978,13 +978,6 @@ sdm("style", new CSSStyleDeclaration)
 document.style.element = document;
 document.style.bgcolor = "white";
 
-sdm("ELEMENT_NODE", 1)
-sdm("TEXT_NODE", 3)
-sdm("COMMENT_NODE", 8)
-sdm("DOCUMENT_NODE", 9)
-sdm("DOCUMENT_TYPE_NODE", 10)
-sdm("DOCUMENT_FRAGMENT_NODE", 11)
-
 // originally ms extension pre-DOM, we don't fully support it
 //but offer the legacy document.all.tags method.
 sdm("all", {})
