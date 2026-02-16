@@ -361,14 +361,15 @@ function getRootNode(o) {
 var composed = false;
 if(typeof o == "object" && o.composed)
 composed = true;
-var t = this;
+let t = this;
+let t1 = this;
 while(t) {
+t1 = t;
 if(t.nodeName == "#document") return t;
 if(!composed && t.nodeName == "SHADOWROOT") return t;
 t = t.parentNode;
 }
-alert3("getRootNode no root found");
-return null;
+return t1;
 }
 
 // wrapper to turn function blah{ my js code } into function blah{ [native code] }
