@@ -43,14 +43,13 @@ this.eb$frameElement = function() { return this}
 this.eb$getter_cd = function() { return null}
 this.eb$getter_cw = function() { return null}
 ;(function() { const void_functions = ["addEventListener",
-    "removeEventListener", "eb$apch1", "eb$apch2", "eb$rmch2", "eb$insbf",
+    "removeEventListener",
     "eb$hasFocus", "eb$write", "eb$writeln"];
 for(let k of void_functions)
 window[k] = eb$voidfunction; })();
 this.my$win = function() { return window}
 this.my$doc = function() { return document}
 
-// document.eb$apch2 = function(c) { alert("append " + c.node<Name  + " to " + this.nodeName); this.childNodes.push(c); }
 // other browsers don't have querySelectorAll under window
 this.querySelectorAll = function() { return [] }
 this.querySelector = function() { return {} }
@@ -318,9 +317,7 @@ swm("aloop", mw$.aloop)
 swm("showarg", mw$.showarg)
 swm("showarglist", mw$.showarglist)
 swm("set_location_hash", mw$.set_location_hash)
-sdm("getRootNode", mw$.getRootNode)
 sdm("nodeContains", mw$.nodeContains)
-sdm("dispatchEvent", mw$.dispatchEvent)
 swm("NodeFilter", mw$.NodeFilter)
 sdm2("createNodeIterator", mw$.createNodeIterator)
 sdm2("createTreeWalker", mw$.createTreeWalker)
@@ -333,7 +330,6 @@ swm2("structuredClone", mw$.structuredClone.bind(window))
 swm("dom$class", "Window")
 // next two are overwritten if xml
 sdm2("eb$xml", false)
-sdm2("dom$class", "HTMLDocument")
 // use dom$class to make our own toString function, so that
 // document.createElement("div").toString() says "[object HTMLDiv?Element]" as it should
 // This is important to some websites!
@@ -355,10 +351,8 @@ swm1("scrollBy", eb$voidfunction)
 swm1("scrollByLines", eb$voidfunction)
 swm1("scrollByPages", eb$voidfunction)
 sdm("close", eb$voidfunction)
-sdm("blur", function(){document.activeElement=null})
-sdm("focus", function(){document.activeElement=document.body})
-swm1("blur", document.blur)
-swm1("focus", document.focus)
+swm1("blur", ()=>(document.activeElement = null))
+swm1("focus", ()=>(document.activeElement = document.body))
 
 swm1("self", window)
 odp(window, "parent", {get: eb$parent,enumerable:true});
@@ -368,10 +362,6 @@ odp(window, "frameElement", {get: eb$frameElement,enumerable:true});
 sdm("write", eb$write)
 sdm("writeln", eb$writeln)
 sdm("hasFocus", eb$hasFocus)
-sdm("eb$apch1", eb$apch1)
-sdm("eb$apch2", eb$apch2)
-sdm("eb$insbf", eb$insbf)
-sdm("eb$rmch2", eb$rmch2)
 sdm("eb$ctx", eb$ctx)
 sdm("eb$seqno", 0)
 
@@ -455,12 +445,11 @@ odp(window, "name", {get:function(){return frameElement.name}});
 sdm("bgcolor", "white")
 sdm("contentType", "text/html")
 function readyStateComplete() { document.readyState = "complete"; document.activeElement = document.body;
-if(document.onreadystatechange$$fn) {
-var e = new Event;
+if(document.onreadystatechange$$array) {
+let e = new Event;
 e.initEvent("readystatechange", true, true);
 e.target = e.currentTarget = document;
-e.eventPhase = 2;
-document.onreadystatechange$$fn(e);
+document.dispatchEvent(e);
 }
 }
 
@@ -479,7 +468,6 @@ timeStamp: function(label) { if(label === undefined) label = "x"; return label.t
 })
 
 // document should always have children, but...
-sdm("hasChildNodes", mw$.hasChildNodes)
 
 swm1("navigator", {})
 navigator.appName = "edbrowse";

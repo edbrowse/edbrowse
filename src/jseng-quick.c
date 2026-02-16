@@ -3605,6 +3605,14 @@ JS_NewCFunction(mwc, nat_ok, "nat_ok", 1), JS_PROP_ENUMERABLE);
 JS_NewCFunction(mwc, nat_mywin, "mywin", 0), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "my$doc",
 JS_NewCFunction(mwc, nat_mydoc, "mydoc", 0), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$apch1",
+JS_NewCFunction(mwc, nat_apch1, "apch1", 1), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$apch2",
+JS_NewCFunction(mwc, nat_apch2, "apch2", 1), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$insbf",
+JS_NewCFunction(mwc, nat_insbf, "insbf", 2), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$rmch2",
+JS_NewCFunction(mwc, nat_rmch2, "removeChild", 1), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "puts",
 JS_NewCFunction(mwc, nat_puts, "puts", 1), JS_PROP_ENUMERABLE);
     JS_DefinePropertyValueStr(mwc, mwo, "wlf",
@@ -3833,14 +3841,6 @@ JS_NewCFunction(cx, nat_hasFocus, "hasFocus", 0), 0);
 JS_NewCFunction(cx, nat_doc_write, "doc_write", 0), 0);
     JS_DefinePropertyValueStr(cx, g, "eb$writeln",
 JS_NewCFunction(cx, nat_doc_writeln, "doc_writeln", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$apch1",
-JS_NewCFunction(cx, nat_apch1, "apch1", 1), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$apch2",
-JS_NewCFunction(cx, nat_apch2, "apch2", 1), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$insbf",
-JS_NewCFunction(cx, nat_insbf, "insbf", 2), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$rmch2",
-JS_NewCFunction(cx, nat_rmch2, "removeChild", 1), 0);
 
 // The sequence is to set f->fileName, then createContext(), so for a short time,
 // we can rely on that variable.

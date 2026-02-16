@@ -3589,12 +3589,11 @@ return !(this.valueMissing)}})
 // But we can set most of the instance methods here. These methods,
 // e.g. appendchild, are often functions within this file anyways.
 let nodep = w.Node.prototype;
-// These are native, so it's ok to bounce off of document.
-// They are our own helper functions, thus eb$
-nodep.eb$apch1 = d.eb$apch1;
-nodep.eb$apch2 = d.eb$apch2;
-nodep.eb$rmch2 = d.eb$rmch2;
-nodep.eb$insbf = d.eb$insbf;
+// These are native helper functions
+nodep.eb$apch1 = eb$apch1;
+nodep.eb$apch2 = eb$apch2;
+nodep.eb$rmch2 = eb$rmch2;
+nodep.eb$insbf = eb$insbf;
 
 // These subordinate objects are on-demand.
 odp( nodep, "dataset", { get: function(){
