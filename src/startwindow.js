@@ -283,6 +283,14 @@ this.DOMException = function(message, name) {
 DOMException.prototype = Object.create(Error.prototype)
 DOMException.prototype.constructor = DOMException
 
+// importNode is the same as cloneNode, except it is copying a tree
+// of objects from another context into the current context.
+// Set the second parameter to true to indicate this.
+sdm("importNode", function(start,deep) {
+    window.cloneRoot1 = start;
+    return mw$.clone1 (start,deep, true);
+})
+
 // point to shared methods in the master window
 swm("UnsupportedError", mw$.UnsupportedError);
 swm("my$win", mw$.my$win)
@@ -546,12 +554,6 @@ odp(window, "length", {get:function(){return frames$2.length},enumerable:true})
 // pending jobs, mostly to debug promise functions.
 swm("$pjobs", [])
 
-sdm("cloneNode", function(deep) {
-    window.cloneRoot1 = this;
-    return mw$.clone1 (this,deep, false);
-})
-
-// This should be in the native string class
 String.prototype.at = function(n) {
 if(typeof n != "number") return undefined;
 var l = this.length;
@@ -790,14 +792,6 @@ swm1("postMessage", function (message,target_origin, transfer) {
 })
 swm("onmessage$$running", mw$.onmessage$$running)
 
-sdm("getBoundingClientRect", function(){
-return {
-top: 0, bottom: 0, left: 0, right: 0,
-x: 0, y: 0,
-width: 0, height: 0
-}
-})
-
 // The Attr class and getAttributeNode().
 swm("Attr", function(){ this.owner = null; this.name = ""})
 swmp("Attr", null)
@@ -813,17 +807,6 @@ NamedNodeMap.prototype.item = function(n) { return this[n]; }
 NamedNodeMap.prototype.getNamedItem = function(name) { return this[name.toLowerCase()]; }
 NamedNodeMap.prototype.setNamedItem = function(name, v) { this.owner.setAttribute(name, v);}
 NamedNodeMap.prototype.removeNamedItem = function(name) { this.owner.removeAttribute(name);}
-
-/*********************************************************************
-importNode is the same as cloneNode, except it is copying a tree
-of objects from another context into the current context.
-Set the second parameter to true to indicate this.
-*********************************************************************/
-
-sdm("importNode", function(start,deep) {
-    window.cloneRoot1 = start;
-    return mw$.clone1 (start,deep, true);
-})
 
 swm1("Event", function(etype){
     // event state is kept read-only by forcing
@@ -931,8 +914,6 @@ q.matches = eb$media(s);
 return q;
 })
 
-sdm("insertAdjacentHTML", mw$.insertAdjacentHTML)
-
 // Most of the instance method for the Node class are defined
 // in the shared window. These are here because they reference
 // NodeList or HTMLCollection.
@@ -990,7 +971,6 @@ for(let cn of cnlist) {
 var evs = ["onload", "onunload", "onclick", "onchange", "oninput",
 "onsubmit", "onreset", "onmessage"];
 for(let evname of evs) {
-eval('odp(' + cn + ', "' + evname + '$$watch", {value:true})');
 eval('odp(' + cn + ', "' + evname + '", { \
 get: function() { return this.' + evname + '$2}, \
 set: function(f) { if(db$flags(1)) alert3((this.'+evname+'?"clobber ":"create ") + (this.nodeName ? this.nodeName : "+"+this.dom$class) + ".' + evname + '"); \
@@ -1004,7 +984,6 @@ if(typeof f == "function") { Object.defineProperty(this, "' + evname + '$2", {va
 // also HTMLFrameSetElement which we have not yet implemented
 var cnlist = [HTMLBodyElement.prototype, SVGElement, window];
 for(let cn of cnlist) {
-odp(cn, "onhashchange$$watch", {value:true});
 odp(cn, "onhashchange", {
 get: function() { return this.onhashchange$2; },
 set: function(f) { if(db$flags(1)) alert3((this.onhashchange?"clobber ":"create ") + (this.nodeName ? this.nodeName : "+"+this.dom$class) + ".onhashchange");
@@ -1166,24 +1145,7 @@ swm2("$jt$c", 'z')
 swm2("$jt$sn", 0)
 
 sdm("childNodes", [])
-// We'll make another childNodes array belowe every node in the tree.
 // document should always and only have two children: DOCTYPE and HTML
-odp(document, "firstChild", {
-get: function() { return this.childNodes[0]; }});
-odp(document, "firstElementChild", {
-get: function() { return this.childNodes[1]; }});
-odp(document, "lastChild", {
-get: function() { return this.childNodes[document.childNodes.length-1]; }});
-odp(document, "lastElementChild", {
-get: function() { return this.childNodes[document.childNodes.length-1]; }});
-odp(document, "nextSibling", {
-get: function() { return mw$.getSibling(this,"next"); }});
-odp(document, "nextElementSibling", {
-get: function() { return mw$.getElementSibling(this,"next"); }});
-odp(document, "previousSibling", {
-get: function() { return mw$.getSibling(this,"previous"); }});
-odp(document, "previousElementSibling", {
-get: function() { return mw$.getElementSibling(this,"previous"); }});
 
 /*********************************************************************
 Compile a string for a handler such as onclick or onload.
@@ -1530,5 +1492,5 @@ ResizeObserver.prototype.unobserve = eb$voidfunction;
     let names_to_delete = ["odp",
     "swm", "swm1", "swm2", "swmp",
     "sdm", "sdm1", "sdm2", "nodep"];
-    for (let i in names_to_delete) delete window[names_to_delete[i]];
+    for (let k of names_to_delete) delete window[k]
 })();

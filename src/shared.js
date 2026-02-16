@@ -624,6 +624,12 @@ const runAllHandlers = (n) => {
             // don't know if it could ever be a frame
             t.dom$class == "HTMLFrameElement")) break;
         }
+
+        if(!t) { // pathological
+            dbg3("no root found, aborting with true");
+            return true;
+        }
+
         /* Allow events to bubble up to the window. We need to use defaultView
         from the document object (which we should be looking at) because we may
         be in a frame but dispatchEvent is running in the main window and we
@@ -3744,14 +3750,21 @@ get: function() {
 return this.parentNode && this.parentNode.nodeType == 1 ?
 this.parentNode : null}})
 nodep.getClientRects = function(){ return new w.Array; }
-// clone
-nodep.cloneNode = d.cloneNode;
-// I don't see anywhere in spec that this is an Element method
-//nodep.importNode = d.importNode;
+nodep.cloneNode = function(deep) {
+    w.cloneRoot1 = this;
+    return clone1 (this,deep, false);
+}
+
 // visual
 nodep.focus = function(){d.activeElement=this}
 nodep.blur = function(){d.activeElement=null}
-nodep.getBoundingClientRect = d.getBoundingClientRect;
+nodep.getBoundingClientRect = function(){
+return {
+top: 0, bottom: 0, left: 0, right: 0,
+x: 0, y: 0,
+width: 0, height: 0
+}
+}
 nodep.addEventListener = addEventListener;
 nodep.removeEventListener = removeEventListener;
 nodep.dispatchEvent = dispatchEvent;

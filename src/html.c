@@ -3859,6 +3859,7 @@ run_event_doc(cf, "document", "onDOMContentLoaded");
 		t = tagList[i];
 		if (t->f0 != cf)
 			continue;
+		if(!isRooted(t)) continue;
 		action = t->action;
 		if (action == TAGACT_FORM)
 			++fn;
