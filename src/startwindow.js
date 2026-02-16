@@ -592,40 +592,6 @@ So here is the line that does a lot!
 
 mw$.setupClasses(window);
 
-swm("ShadowRoot", function(){})
-swmp("ShadowRoot", HTMLElement)
-
-// setupClasses doesn't establish the shadow root properties,
-// mostly cause I don't understand them.
-// Let's approximate them here.
-HTMLElement.prototype.attachShadow = function(o){
-// I should have a list of allowed tags here, but custom tags are allowed,
-// and I don't know how to determine that,
-// so I'll just reject a few tags.
-var nn = this.nodeName;
-if(nn == "A" || nn == "FRAME" || nn == "IFRAME" | nn == "#document" || nn == "#text" || nn == "#comment" ||
-nn == "TABLE" || nn == "TH" || nn == "TD" || nn == "TR" || nn == "FORM" || nn == "INPUT" ||
-nn == "SHADOWROOT") // no shadow root within a shadow root
-return null;
-var r = document.createElement("ShadowRoot");
-this.appendChild(r); // are we suppose to do this?
-r.mode = "open";
-r.delegatesFocus = false;
-r.slotAssignment = "";
-if(typeof o == "object") {
-if(o.mode) r.mode = o.mode;
-if(o.delegatesFocus) r.delegatesFocus = o.delegatesFocus;
-if(o.slotAssignment) r.slotAssignment = o.slotAssignment;
-}
-return r;
-}
-odp(HTMLElement.prototype, "shadowRoot", {
-get:function(){
-var r = this.firstChild;
-if(r && r.nodeName == "SHADOWROOT" && r.mode == "open") return r;
-return null;
-}});
-
 /*********************************************************************
 This is a special routine for textarea.innerHTML = "some html text";
 I assume, with very little data to go on, that the html is rendered

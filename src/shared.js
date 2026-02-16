@@ -334,21 +334,6 @@ else e.insertBefore(b, e.childNodes[i]);
 }
 }
 
-function getRootNode(o) {
-var composed = false;
-if(typeof o == "object" && o.composed)
-composed = true;
-let t = this;
-let t1 = this;
-while(t) {
-t1 = t;
-if(t.nodeName == "#document") return t;
-if(!composed && t.nodeName == "SHADOWROOT") return t;
-t = t.parentNode;
-}
-return t1;
-}
-
 // wrapper to turn function blah{ my js code } into function blah{ [native code] }
 // This is required by sanity tests in jquery and other libraries.
 function wrapString() {
@@ -3598,7 +3583,19 @@ odp(this,"style$2", {value:new w.CSSStyleDeclaration,configurable:true});
 this.style$2.element = this}
 return this.style$2}})
 
-nodep.getRootNode = getRootNode;
+nodep.getRootNode = function(o) {
+let composed = false;
+if(typeof o == "object" && o.composed) composed = true;
+let t = this, t1 = this;
+while(t) {
+t1 = t;
+if(t.nodeName == "#document") return t;
+if(!composed && t.nodeName == "SHADOWROOT") return t;
+t = t.parentNode;
+}
+return t1;
+}
+
 nodep.contains = nodeContains;
 nodep.matches = w.querySelector0;
 nodep.closest = function(s) {
@@ -4909,6 +4906,36 @@ odp(detp, "open", {
 get:function(){ let t = this.getAttribute("open");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("open", v);}});
+
+swp("ShadowRoot", function(){})
+swpp("ShadowRoot", w.HTMLElement)
+elemp.attachShadow = function(o){
+// I should have a list of allowed tags here, but custom tags are allowed,
+// and I don't know how to determine that,
+// so I'll just reject a few tags.
+var nn = this.nodeName;
+if(nn == "A" || nn == "FRAME" || nn == "IFRAME" | nn == "#document" || nn == "#text" || nn == "#comment" ||
+nn == "TABLE" || nn == "TH" || nn == "TD" || nn == "TR" || nn == "FORM" || nn == "INPUT" ||
+nn == "SHADOWROOT") // no shadow root within a shadow root
+return null;
+var r = d.createElement("ShadowRoot");
+this.appendChild(r); // are we suppose to do this?
+r.mode = "open";
+r.delegatesFocus = false;
+r.slotAssignment = "";
+if(typeof o == "object") {
+if(o.mode) r.mode = o.mode;
+if(o.delegatesFocus) r.delegatesFocus = o.delegatesFocus;
+if(o.slotAssignment) r.slotAssignment = o.slotAssignment;
+}
+return r;
+}
+odp(elemp, "shadowRoot", {
+get:function(){
+var r = this.firstChild;
+if(r && r.nodeName == "SHADOWROOT" && r.mode == "open") return r;
+return null;
+}});
 
 swp("HTMLAreaElement", function(){})
 swpp("HTMLAreaElement", w.HTMLElement)
