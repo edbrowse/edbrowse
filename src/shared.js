@@ -1280,24 +1280,6 @@ s.dispatchEvent(e)
 */
 }
 
-function insertBefore(c, t) {
-if(!c) return null;
-if(!t) return this.appendChild(c);
-isabove(c, this);
-if(c.nodeType == 11) return insertFragment(this, c, t);
-if(c.parentNode) c.parentNode.removeChild(c);
-var r = this.eb$insbf(c, t);
-runScriptWhenAttached(r);
-if(r) mutFixup(this, false, r, null);
-return r;
-}
-
-function removeChild(c) {
-if(!c) return null;
-var r = this.eb$rmch2(c);
-return r;
-}
-
 function replaceChild(newc, oldc) {
 var lastentry;
 var l = this.childNodes.length;
@@ -3602,21 +3584,42 @@ else v = this.appendChild(c);
 return v;
 }
 
-nodep.insertBefore = insertBefore;
+nodep.insertBefore = function(c, t) {
+if(!c) return null;
+if(!t) return this.appendChild(c);
+isabove(c, this);
+if(c.nodeType == 11) return insertFragment(this, c, t);
+if(c.parentNode) c.parentNode.removeChild(c);
+var r = this.eb$insbf(c, t);
+runScriptWhenAttached(r);
+if(r) mutFixup(this, false, r, null);
+return r;
+}
+
+nodep.removeChild = function(c) {
+if(!c) return null;
+var r = this.eb$rmch2(c);
+return r;
+}
+
 nodep.append = function() {
 let l = arguments.length;
 for(let i=0; i<l; ++i) {
 let c = arguments[i];
 if(typeof c == "string") c = d.createTextNode(c); // convert to node
 if(c.nodeType > 0) this.appendChild(c);
-}}
+}
+}
+
 nodep.prepend = function() {
 let l = arguments.length;
 for(let i=l-1; i>=0; --i) {
 let c = arguments[i];
 if(typeof c == "string") c = d.createTextNode(c); // convert to node
 if(c.nodeType > 0) this.prependChild(c);
-}}
+}
+}
+
 nodep.before = function() {
 let p = this.parentNode;
 if(!p) return;
@@ -3625,7 +3628,9 @@ for(let i=0; i<l; ++i) {
 let c = arguments[i];
 if(typeof c == "string") c = d.createTextNode(c);
 if(c.nodeType > 0) p.insertBefore(c, this);
-}}
+}
+}
+
 nodep.after = function() {
 let p = this.parentNode;
 if(!p) return;
@@ -3636,7 +3641,9 @@ let c = arguments[i];
 if(typeof c == "string") c = d.createTextNode(c);
 if(c.nodeType > 0)
 n ? p.insertBefore(c,n) : p.appendChild(c);
-}}
+}
+}
+
 nodep.replaceWith = function() {
 let p = this.parentNode;
 if(!p) return;
@@ -3650,8 +3657,9 @@ n ? p.insertBefore(c,n) : p.appendChild(c);
 }
 p.removeChild(this);
 }
+
 nodep.replaceChild = replaceChild;
-nodep.removeChild = removeChild;
+
 nodep.remove = function() {
 if(this.parentNode) this.parentNode.removeChild(this)}
 odp(nodep, "firstChild", {
@@ -4111,7 +4119,7 @@ if(newobj.dom$class == "HTMLTableRowElement") // shouldn't be anything other tha
 this.rows.push(newobj), rowReindex(this);
 return newobj;
 }
-tablesecp.insertBeforeNative = insertBefore;
+tablesecp.insertBeforeNative = nodep.insertBefore;
 tablesecp.insertBefore = function(newobj, item) {
 if(!newobj) return null;
 if(!item) return this.appendChild(newobj);
@@ -4127,7 +4135,7 @@ break;
 }
 return newobj;
 }
-tablesecp.removeChildNative = removeChild;
+tablesecp.removeChildNative = nodep.removeChild;
 tablesecp.removeChild = function(item) {
 if(!item) return null;
 if(!this.removeChildNative(item))
@@ -4193,7 +4201,7 @@ if(newobj.rows.length) rowReindex(this);
 }
 return newobj;
 }
-tablep.insertBeforeNative = insertBefore;
+tablep.insertBeforeNative = nodep.insertBefore;
 tablep.insertBefore = function(newobj, item) {
 if(!newobj) return null;
 if(!item) return this.appendChild(newobj);
@@ -4219,7 +4227,7 @@ if(newobj.rows.length) rowReindex(this);
 }
 return newobj;
 }
-tablep.removeChildNative = removeChild;
+tablep.removeChildNative = nodep.removeChild;
 tablep.removeChild = function(item) {
 if(!item) return null;
 if(!this.removeChildNative(item))
@@ -4254,7 +4262,7 @@ if(newobj.nodeName === "TD") // shouldn't be anything other than TD
 this.cells.push(newobj);
 return newobj;
 }
-trp.insertBeforeNative = insertBefore;
+trp.insertBeforeNative = nodep.insertBefore;
 trp.insertBefore = function(newobj, item) {
 if(!newobj) return null;
 if(!item) return this.appendChild(newobj);
@@ -4269,7 +4277,7 @@ break;
 }
 return newobj;
 }
-trp.removeChildNative = removeChild;
+trp.removeChildNative = nodep.removeChild;
 trp.removeChild = function(item) {
 if(!item) return null;
 if(!this.removeChildNative(item))
@@ -4680,9 +4688,9 @@ formp.reset = eb$formReset;
 odp(formp, "length", { get: function() { return this.elements.length;}})
 formp.appendChildNative = nodep.appendChild;
 formp.appendChild = formAppendChild;
-formp.insertBeforeNative = insertBefore;
+formp.insertBeforeNative = nodep.insertBefore;
 formp.insertBefore = formInsertBefore;
-formp.removeChildNative = removeChild;
+formp.removeChildNative = nodep.removeChild;
 formp.removeChild = formRemoveChild;
 
 swp("HTMLImageElement", function(){})
@@ -8415,7 +8423,7 @@ getElementsByTagName, getElementsByClassName, getElementsByName, getElementById,
 dispatchEvent,
 NodeFilter,createNodeIterator,createTreeWalker,
 runScriptWhenAttached, traceBreakReplace,
-insertBefore, removeChild, replaceChild,
+replaceChild,
 getComputedStyle,
 URL, TextEncoder, TextDecoder];
 for(let k of flist)
