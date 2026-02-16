@@ -1694,6 +1694,8 @@ return b
 },
 
 }
+Object.freeze(attr)
+// eventually we want to freeze everything on this page
 
 /*********************************************************************
 cloneNode creates a copy of the node and its children recursively.
@@ -2684,6 +2686,7 @@ s.textDecorationThickness =  h[3];
 },
 
 }
+Object.freeze(cssShort)
 
 // see the DIS_ values in eb.h
 function eb$visible(t) {
