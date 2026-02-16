@@ -21,27 +21,6 @@ if(!this.puts) {
 
 Object.defineProperty(this, "self",{writable:false,configurable:false,value:this});
 
-Object.defineProperty(this, "Object",{writable:false,configurable:false});
-Object.defineProperty(Object, "prototype",{writable:false,configurable:false});
-// URLSearchParams displaces toString, so we can't nail down
-// Object.prototype.toString until that has run.
-// Object.defineProperty(Object.prototype, "toString",{enumerable:false,writable:false,configurable:false});
-Object.defineProperty(Object.prototype, "toLocaleString",{enumerable:false,writable:false,configurable:false});
-Object.defineProperty(Object.prototype, "constructor",{enumerable:false,writable:false,configurable:false});
-Object.defineProperty(Object.prototype, "valueOf",{enumerable:false,writable:false,configurable:false});
-Object.defineProperty(Object.prototype, "hasOwnProperty",{enumerable:false,writable:false,configurable:false});
-Object.defineProperty(Object.prototype, "isPrototypeOf",{enumerable:false,writable:false,configurable:false});
-Object.defineProperty(Object.prototype, "propertyIsEnumerable",{enumerable:false,writable:false,configurable:false});
-
-Object.defineProperty(this, "Function",{writable:false,configurable:false});
-Object.defineProperty(Function, "prototype",{writable:false,configurable:false});
-Object.defineProperty(Function.prototype, "call",{enumerable:false,writable:false,configurable:false});
-Object.defineProperty(Function.prototype, "apply",{enumerable:false,writable:false,configurable:false});
-Object.defineProperty(Function.prototype, "bind",{enumerable:false,writable:false,configurable:false});
-// I overwrite toString in some cases, so can't nail this down until later
-// Object.defineProperty(Function.prototype, "toString",{enumerable:false,writable:false,configurable:false});
-Object.defineProperty(Function.prototype, "constructor",{enumerable:false,writable:false,configurable:false});
-
 this.alert = puts;
 // print an error inline, at debug level 3 or higher.
 function alert3(s) { logputs(3, s); }
@@ -1699,7 +1678,6 @@ return b
 
 }
 Object.freeze(attr)
-// eventually we want to freeze everything on this page
 
 /*********************************************************************
 cloneNode creates a copy of the node and its children recursively.
@@ -8425,41 +8403,14 @@ TextEncoder, TextDecoder,
 for(var i=0; i<flist.length; ++i)
 Object.defineProperty(flist[i], "toString",{value:wrapString});
 
-// I told you I wouldn't forget these
-Object.defineProperty(Object.prototype, "toString",{enumerable:false,writable:false,configurable:false});
-Object.defineProperty(Function.prototype, "toString",{enumerable:false,writable:false,configurable:false});
-
-// some class prototypes
-flist = [Date, Promise, Array, Uint8Array, Error, String, URL, URLSearchParams,
+// objects and particularly classes have to be frozen,
+// so nobody replaces their prototype or the methods beneath
+flist = [Object, Function, Date, Math,
+Promise, Array, Uint8Array, Error, String, URL, URLSearchParams,
 Intl_dt, Intl_num,
 EventTarget, XMLHttpRequestEventTarget, XMLHttpRequestUpload, XMLHttpRequest,
 Blob, FormData, Request, Response, Headers, UnsupportedError];
-for(var i=0; i<flist.length; ++i)
-Object.defineProperty(flist[i], "prototype", {writable:false,configurable:false});
-
-flist = ["addEventListener", "removeEventListener", "dispatchEvent"];
-for(var i=0; i<flist.length; ++i)
-Object.defineProperty(EventTarget.prototype, flist[i], {writable:false,configurable:false});
-flist = ["toString", "open", "setRequestHeader", "getResponseHeader", "getAllResponseHeaders", "send", "parseResponse", "overrideMimeType"]
-for(var i=0; i<flist.length; ++i)
-Object.defineProperty(XMLHttpRequest.prototype, flist[i], {writable:false,configurable:false});
-Object.defineProperty(URL, "createObjectURL", {writable:false,configurable:false});
-Object.defineProperty(URL, "revokeObjectURL", {writable:false,configurable:false});
-flist = ["text", "slice", "stream", "arrayBuffer"];
-for(var i=0; i<flist.length; ++i)
-Object.defineProperty(Blob.prototype, flist[i], {writable:false,configurable:false});
-flist = ["append", "delete", "entries", "foreach", "get", "getAll", "has", "keys", "set", "values", "_asNative", "_blob", "toString"];
-for(var i=0; i<flist.length; ++i)
-Object.defineProperty(FormData.prototype, flist[i], {writable:false,configurable:false});
-flist = ["delete", "append", "get", "has", "set", "foreach", "keys", "values", "entries", "toString"];
-for(var i=0; i<flist.length; ++i)
-Object.defineProperty(Headers.prototype, flist[i], {writable:false,configurable:false});
-flist = ["_initBody", "blob", "arrayBuffer", "text", "formData", "json", "clone", "toString"];
-for(var i=0; i<flist.length; ++i) {
-Object.defineProperty(Request.prototype, flist[i], {writable:false,configurable:false});
-Object.defineProperty(Response.prototype, flist[i], {writable:false,configurable:false});
+for(let k of flist) {
+Object.freeze(k);
+Object.freeze(k.prototype);
 }
-Object.defineProperty(Math, "max", {writable:false,configurable:false});
-Object.defineProperty(Math, "random", {writable:false,configurable:false});
-Object.defineProperty(String, "prototype", {writable:false,configurable:false});
-Object.defineProperty(String, "fromCharCode", {writable:false,configurable:false});
