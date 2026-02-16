@@ -679,7 +679,7 @@ const runAllHandlers = (n) => {
         was, or is to be, prevented
     */
     e.eventPhase = 4;
-    dbg3(`default prevented ${e.defaultPrevented}`);
+    dbg3(`return ${!e.defaultPrevented}`);
     e.eventPhase = 3; // put it back in case it matters
     return !e.defaultPrevented;
 }
@@ -2743,16 +2743,14 @@ p.removeChild(t);
 
 // There are subtle differences between contentText and textContent, which I don't grok.
 function textUnder(top, flavor) {
-var nn = top.nodeName;
+const nn = top.nodeName;
 if(nn == "#text") return top.data.trim();
 if(nn == "SCRIPT" || nn == "#cdata-section") return top.text;
-var pre = (nn=="PRE");
-// we should be more general here; this doesn't handle
-// <pre>hello<i>multi lined text in italics</i>world</pre>
-var answer = "", part, delim = "";
-var t = top.querySelectorAll("cdata,text");
-for(var i=0; i<t.length; ++i) {
-var u = t[i];
+const pre = (nn=="PRE");
+let answer = "", part, delim = " ";
+if(pre) delim = '';
+const t = top.querySelectorAll("cdata,text");
+for(let u of t) {
 if(u.parentNode && u.parentNode.nodeName == "OPTION") continue;
 // any other texts we should skip?
 part = u.nodeName == "#text" ? u.data : u.text;
@@ -3770,6 +3768,11 @@ nodep.tabIndex = 0
 odp(nodep, "classList", { get : function() { return classList(this);}});
 nodep.cl$present = true;
 odp(nodep, "textContent", {
+get: function() { return textUnder(this, 0); },
+set: function(s) { return newTextUnder(this, s, 0); }});
+// spec says there is a difference between textContent and innerText,
+// but I don't think it's significant for edbrowse.
+odp(nodep, "innerText", {
 get: function() { return textUnder(this, 0); },
 set: function(s) { return newTextUnder(this, s, 0); }});
 odp(nodep, "contentText", {

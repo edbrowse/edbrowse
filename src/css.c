@@ -3377,13 +3377,8 @@ static void build_doclist(Tag *top)
 }
 
 // This is a bit like getElementsByTagName("*").  This function is recursive.
-// I cull texts and comments, not sure about documents and fragments.
-// But remember, the top node is often a document,
-// document.querySelectorAll, so we don't want to abort in that case.
 static void build1_doclist(Tag *t)
 {
-	if(t->action == TAGACT_TEXT || t->action == TAGACT_COMMENT)
-		return;
 // do we need to allocate more space?
 	if (doclist_n == doclist_a) {
 		doclist_a += 500;
