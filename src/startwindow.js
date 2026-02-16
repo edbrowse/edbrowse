@@ -193,6 +193,21 @@ class Eb$IterableWeakMap {
 // This is just a stub for now, to make acid 25 work.
 Error.prototype.NAMESPACE_ERR = 1;
 
+// use dom$class to make our own toString function, so that
+// document.createElement("div").toString() says "[object HTMLDiv?Element]" as it should
+// This is important to some websites!
+swm("toString$nat", toString);
+/* toString has to be replaceable by other websites, which happens more often
+than you think. Apparently sometimes people also want to grab the toString
+function directly from an object and expect to be able to call it without the
+lack of a this binding causing problems. */
+this.toString = Object.prototype.toString = function() {
+    return this ? (
+        this.dom$class ? "[object "+this.dom$class+"]" : toString$nat.call(this)
+    ) : toString$nat.call(this);
+}
+odp(window, "toString", {enumerable:false})
+
 // The first DOM class is Node, at the head of all else.
 swm("Node", function(){})
 swmp("Node", null)
@@ -338,21 +353,6 @@ swm2("structuredClone", mw$.structuredClone.bind(window))
 swm("dom$class", "Window")
 // next two are overwritten if xml
 sdm2("eb$xml", false)
-// use dom$class to make our own toString function, so that
-// document.createElement("div").toString() says "[object HTMLDiv?Element]" as it should
-// This is important to some websites!
-swm("toString$nat", toString);
-/* toString has to be replaceable by other websites, which happens more often
-than you think. Apparently sometimes people also want to grab the toString
-function directly from an object and expect to be able to call it without the
-lack of a this binding causing problems. */
-this.toString = Object.prototype.toString = function() {
-    return this ? (
-        this.dom$class ? "[object "+this.dom$class+"]" : toString$nat.call(this)
-    ) : toString$nat.call(this);
-}
-odp(window, "toString", {enumerable:false})
-
 swm1("scroll", eb$voidfunction)
 swm1("scrollTo", eb$voidfunction)
 swm1("scrollBy", eb$voidfunction)
@@ -807,94 +807,6 @@ NamedNodeMap.prototype.item = function(n) { return this[n]; }
 NamedNodeMap.prototype.getNamedItem = function(name) { return this[name.toLowerCase()]; }
 NamedNodeMap.prototype.setNamedItem = function(name, v) { this.owner.setAttribute(name, v);}
 NamedNodeMap.prototype.removeNamedItem = function(name) { this.owner.removeAttribute(name);}
-
-swm1("Event", function(etype){
-    // event state is kept read-only by forcing
-    // a new object for each event.  This may not
-    // be appropriate in the long run and we'll
-    // have to decide if we simply dont adhere to
-    // the read-only restriction of the specification
-    this.bubbles = true;
-    // non-standard but needed for target-only events
-    this.eb$captures = true;
-    this.cancelable = true;
-    this.stop$propagating = false;
-    this.stop$propagating$immediate = false;
-    this.defaultPrevented = false;
-    this.currentTarget = null;
-    this.target = null;
-    this.eventPhase = 0;
-    this.timeStamp = new Date().getTime();
-if(typeof etype == "string") this.type = etype;
-})
-swmp("Event", null)
-
-Event.prototype.preventDefault = function() { if(this.cancelable) this.defaultPrevented = true; }
-Event.prototype.stopPropagation = function() { this.stop$propagating = true; }
-Event.prototype.stopImmediatePropagation = function()
-{
-    this.stop$propagating$immediate = true;
-}
-// deprecated - I guess - but a lot of people still use it.
-Event.prototype.initEvent = function(t, bubbles, cancel) {
-this.type = t, this.bubbles = bubbles, this.cancelable = cancel; this.eb$captures = true; this.defaultPrevented = false; }
-
-Event.prototype.initUIEvent = function(t, bubbles, cancel, unused, detail) {
-this.type = t, this.bubbles = bubbles, this.cancelable = cancel, this.detail = detail; this.eb$captures = true; this.defaultPrevented = false; }
-Event.prototype.initCustomEvent = function(t, bubbles, cancel, detail) {
-this.type = t, this.bubbles = bubbles, this.cancelable = cancel, this.detail = detail, this.eb$captures = true; }
-
-sdm2("createEvent", function(unused) { return new Event; })
-
-swm("HashChangeEvent", function() {
-    this.currentTarget =     this.target = null;
-    this.eventPhase = 0;
-    this.timeStamp = new Date().getTime();
-    this.type = "hashchange";
-    this.bubbles = false;
-    this.eb$captures = false;
-})
-HashChangeEvent.prototype = new Event;
-
-swm("MouseEvent", function(etype){
-    this.bubbles =     this.cancelable = true;
-    this.defaultPrevented = false;
-    this.currentTarget =     this.target = null;
-    this.eventPhase = 0;
-    this.timeStamp = new Date().getTime();
-if(typeof etype == "string") this.type = etype;
-})
-MouseEvent.prototype = new Event;
-MouseEvent.prototype.altKey = false;
-MouseEvent.prototype.ctrlKey = false;
-MouseEvent.prototype.shiftKey = false;
-MouseEvent.prototype.metaKey = false;
-MouseEvent.prototype.initMouseEvent = function() { this.initEvent.apply(this, arguments)}
-
-swm("PromiseRejectionEvent", function(etype){
-    this.bubbles =     this.cancelable = true;
-    this.defaultPrevented = false;
-    this.currentTarget =     this.target = null;
-    this.eventPhase = 0;
-    this.timeStamp = new Date().getTime();
-if(typeof etype == "string") this.type = etype;
-})
-PromiseRejectionEvent.prototype = new Event;
-
-swm("CustomEvent", function(etype, o){
-alert3("customEvent " + etype + " " + typeof o);
-    this.bubbles =     this.cancelable = true;
-    this.defaultPrevented = false;
-    this.currentTarget =     this.target = null;
-    this.eventPhase = 0;
-    this.timeStamp = new Date().getTime();
-if(typeof etype == "string") this.type = etype;
-// This is nowhere documented.
-// I'm basing it on some js I saw in the wild.
-if(typeof o == "object")
-this.name = o.name, this.detail = o.detail;
-})
-CustomEvent.prototype = new Event;
 
 swm("MediaQueryList", function() {
     this.matches = false;

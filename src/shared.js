@@ -3339,6 +3339,8 @@ function swpp(c, inherit) {
     const v = c.replace(/^z\$/, "");
     if(inherit)
         odp(w[c], "prototype", {value:new inherit});
+    else
+        odp(w[c], "prototype", {value:new w.Object});
     odp(w[c].prototype, "dom$class", {value:v});
 }
 
@@ -4011,7 +4013,6 @@ swpp("Comment", w.HTMLElement)
 let cmtp = w.Comment.prototype;
 cmtp.nodeName = cmtp.tagName = "#comment";
 cmtp.nodeType = 8;
-
 
 docup.createComment = function(t) {
 if(t == undefined) t = "";
@@ -5478,6 +5479,75 @@ c.name = c.type = "";
 eb$logElement(c, s);
 return c;
 } 
+
+swpc("Event", function(etype){
+    this.timeStamp = new Date().getTime();
+if(typeof etype == "string") this.type = etype;
+})
+swpp("Event", null)
+let eventp = w.Event.prototype;
+eventp.bubbles = true;
+// non-standard but needed for target-only events
+eventp.eb$captures = true;
+eventp.cancelable = true;
+eventp.stop$propagating = false;
+eventp.stop$propagating$immediate = false;
+eventp.defaultPrevented = false;
+eventp.currentTarget = eventp.target = null;
+eventp.eventPhase = 0;
+eventp.preventDefault = function() { if(this.cancelable) this.defaultPrevented = true; }
+eventp.stopPropagation = function() { this.stop$propagating = true; }
+eventp.stopImmediatePropagation = function() { this.stop$propagating$immediate = true; }
+// deprecated - I guess - but a lot of people still use it.
+eventp.initEvent = function(t, bubbles, cancel) {
+this.type = t, this.bubbles = bubbles, this.cancelable = cancel;
+this.eb$captures = true; this.defaultPrevented = false; }
+eventp.initUIEvent = function(t, bubbles, cancel, unused, detail) {
+this.type = t, this.bubbles = bubbles, this.cancelable = cancel, this.detail = detail;
+this.eb$captures = true; this.defaultPrevented = false; }
+eventp.initCustomEvent = function(t, bubbles, cancel, detail) {
+this.type = t, this.bubbles = bubbles, this.cancelable = cancel,
+this.detail = detail, this.eb$captures = true; }
+
+docup.createEvent = function(unused) { return new w.Event; }
+
+// various flavors of events; I'm sure there are more than I have here.
+swp("HashChangeEvent", function() {
+    this.timeStamp = new Date().getTime();
+    this.type = "hashchange";
+    this.bubbles = false;
+    this.eb$captures = false;
+})
+swpp("HashChangeEvent", w.Event);
+
+swp("MouseEvent", function(etype){
+    this.timeStamp = new Date().getTime();
+if(typeof etype == "string") this.type = etype;
+})
+swpp("MouseEvent", w.Event);
+let meventp = w.MouseEvent.prototype;
+meventp.altKey = false;
+meventp.ctrlKey = false;
+meventp.shiftKey = false;
+meventp.metaKey = false;
+meventp.initMouseEvent = function() { this.initEvent.apply(this, arguments)}
+
+swp("PromiseRejectionEvent", function(etype){
+    this.timeStamp = new Date().getTime();
+if(typeof etype == "string") this.type = etype;
+})
+swpp("PromiseRejectionEvent", w.Event);
+
+swp("CustomEvent", function(etype, o){
+alert3("customEvent " + etype + " " + typeof o);
+    this.timeStamp = new Date().getTime();
+if(typeof etype == "string") this.type = etype;
+// This is nowhere documented.
+// I'm basing it on some js I saw in the wild.
+if(typeof o == "object")
+this.name = o.name, this.detail = o.detail;
+})
+swpp("CustomEvent", w.Event);
 
 }
 
