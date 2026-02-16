@@ -937,15 +937,6 @@ function uncamelCase(t) {
 return t.replace(/([a-z])([A-Z])/g, function(f,a,b){return a+'-'+b.toLowerCase()});
 }
 
-function isabove(a, b) {
-var j = 0;
-while(b) {
-if(b == a) { var e = new Error; e.HIERARCHY_REQUEST_ERR = e.code = 3; throw e; }
-if(++j == 1000) { alert3("isabove loop"); break; }
-b = b.parentNode;
-}
-}
-
 // Functions that support classList
 function classListRemove() {
 for(var i=0; i<arguments.length; ++i) {
@@ -3540,9 +3531,20 @@ before we put it somewhere else.
 This is a call to removeChild, also native, which unlinks in js,
 and passses the remove side effect back to edbrowse.
 The same reasoning holds for insertBefore.
-These functions also check for a hierarchy error using isabove(),
-which throws an exception.
+These functions also check for a hierarchy cycle using isabove().
+If such would appear, isabove throws an error.
+So let's start with the helper function isabove.
 *********************************************************************/
+
+function isabove(a, b) {
+let j = 0;
+while(b) {
+if(b == a) { let e = new Error; e.HIERARCHY_REQUEST_ERR = e.code = 3; throw e; }
+if(++j == 1000) { alert3("isabove loop"); break; }
+b = b.parentNode;
+}
+}
+
 nodep.appendChild = function(c) {
 if(!c) return null;
 if(c.nodeType == 11) return appendFragment(this, c);
