@@ -27,9 +27,7 @@ Object.defineProperty(Object, "prototype",{writable:false,configurable:false});
 // Object.prototype.toString until that has run.
 // Object.defineProperty(Object.prototype, "toString",{enumerable:false,writable:false,configurable:false});
 Object.defineProperty(Object.prototype, "toLocaleString",{enumerable:false,writable:false,configurable:false});
-// demin.js sets constructor to Object, which it was before, but that means,
-// I can't nail this down until demin.js has run its course.
-// Object.defineProperty(Object.prototype, "constructor",{enumerable:false,writable:false,configurable:false});
+Object.defineProperty(Object.prototype, "constructor",{enumerable:false,writable:false,configurable:false});
 Object.defineProperty(Object.prototype, "valueOf",{enumerable:false,writable:false,configurable:false});
 Object.defineProperty(Object.prototype, "hasOwnProperty",{enumerable:false,writable:false,configurable:false});
 Object.defineProperty(Object.prototype, "isPrototypeOf",{enumerable:false,writable:false,configurable:false});
