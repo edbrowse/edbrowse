@@ -12202,3 +12202,5 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   });
   require('/tools/entry-point.js');
 }.call(this, this));
+
+Object.freeze(this); // essential for security
