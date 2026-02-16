@@ -1280,43 +1280,6 @@ s.dispatchEvent(e)
 */
 }
 
-/*********************************************************************
-Here comes a bunch of stuff regarding the childNodes array,
-holding the children under a given html node.
-The functions eb$apch1 and eb$apch2 are native. They perform appendChild in js.
-The first has no side effects, because the linkage was already performed
-within edbrowse via html, and a linkage side effect would only confuse things.
-The second, eb$apch2, has side effects, as js code calls appendChild
-and those links have to pass back to edbrowse.
-But, the wrapper function appendChild makes another check;
-if the child is already linked into the tree, then we have to unlink it first,
-before we put it somewhere else.
-This is a call to removeChild, also native, which unlinks in js,
-and passses the remove side effect back to edbrowse.
-The same reasoning holds for insertBefore.
-These functions also check for a hierarchy error using isabove(),
-which throws an exception.
-*********************************************************************/
-
-function appendChild(c) {
-if(!c) return null;
-if(c.nodeType == 11) return appendFragment(this, c);
-isabove(c, this);
-if(c.parentNode) c.parentNode.removeChild(c);
-var r = this.eb$apch2(c);
-runScriptWhenAttached(r);
-if(r) mutFixup(this, false, c, null);
-return r;
-}
-
-function prependChild(c) {
-var v;
-isabove(c, this);
-if(this.childNodes.length) v = this.insertBefore(c, this.childNodes[0]);
-else v = this.appendChild(c);
-return v;
-}
-
 function insertBefore(c, t) {
 if(!c) return null;
 if(!t) return this.appendChild(c);
@@ -1356,8 +1319,6 @@ this.insertBefore(newc, nextinline);
 break;
 }
 }
-
-function hasChildNodes() { return (this.childNodes.length > 0); }
 
 function getSibling (obj,direction) {
 var pn = obj.parentNode;
@@ -3597,14 +3558,50 @@ return t1;
 }
 
 nodep.contains = nodeContains;
+
 nodep.matches = w.querySelector0;
+
 nodep.closest = function(s) {
 let u = this;
 while(u.nodeType == 1) { if(u.matches(s)) return u; u = u.parentNode; }
 return null}
-nodep.hasChildNodes = hasChildNodes;
-nodep.appendChild = appendChild;
-nodep.prependChild = prependChild;
+
+nodep.hasChildNodes = function() { return (this.childNodes.length > 0); }
+
+/*********************************************************************
+The functions eb$apch1 and eb$apch2 are native. They perform appendChild in js.
+The first has no side effects, because the linkage was already performed
+within edbrowse via html, and a linkage side effect would only confuse things.
+The second, eb$apch2, has side effects, as js code calls appendChild
+and those links have to pass back to edbrowse.
+But, the wrapper function appendChild makes another check;
+if the child is already linked into the tree, then we have to unlink it first,
+before we put it somewhere else.
+This is a call to removeChild, also native, which unlinks in js,
+and passses the remove side effect back to edbrowse.
+The same reasoning holds for insertBefore.
+These functions also check for a hierarchy error using isabove(),
+which throws an exception.
+*********************************************************************/
+nodep.appendChild = function(c) {
+if(!c) return null;
+if(c.nodeType == 11) return appendFragment(this, c);
+isabove(c, this);
+if(c.parentNode) c.parentNode.removeChild(c);
+let r = this.eb$apch2(c);
+runScriptWhenAttached(r);
+if(r) mutFixup(this, false, c, null);
+return r;
+}
+
+nodep.prependChild = function(c) {
+let v;
+isabove(c, this);
+if(this.childNodes.length) v = this.insertBefore(c, this.childNodes[0]);
+else v = this.appendChild(c);
+return v;
+}
+
 nodep.insertBefore = insertBefore;
 nodep.append = function() {
 let l = arguments.length;
@@ -4105,7 +4102,7 @@ trp.insertCell = insertCell;
 trp.deleteCell = deleteCell;
 
 // rows under a table section
-tablesecp.appendChildNative = appendChild;
+tablesecp.appendChildNative = nodep.appendChild;
 tablesecp.appendChild = function(newobj) {
 if(!newobj) return null;
 if(newobj.nodeType == 11) return appendFragment(this, newobj);
@@ -4175,7 +4172,7 @@ if(this.tFoot) this.removeChild(this.tFoot);
 }
 
 // rows or bodies under a table
-tablep.appendChildNative = appendChild;
+tablep.appendChildNative = nodep.appendChild;
 tablep.appendChild = function(newobj) {
 if(!newobj) return null;
 if(newobj.nodeType == 11) return appendFragment(this, newobj);
@@ -4248,7 +4245,7 @@ return item;
 }
 
 // row methods
-trp.appendChildNative = appendChild;
+trp.appendChildNative = nodep.appendChild;
 trp.appendChild = function(newobj) {
 if(!newobj) return null;
 if(newobj.nodeType == 11) return appendFragment(this, newobj);
@@ -4681,7 +4678,7 @@ let formp = w.HTMLFormElement.prototype;
 formp.submit = eb$formSubmit;
 formp.reset = eb$formReset;
 odp(formp, "length", { get: function() { return this.elements.length;}})
-formp.appendChildNative = appendChild;
+formp.appendChildNative = nodep.appendChild;
 formp.appendChild = formAppendChild;
 formp.insertBeforeNative = insertBefore;
 formp.insertBefore = formInsertBefore;
@@ -8412,23 +8409,17 @@ Response.prototype.toString = function(){return "[object Response]"}
 
 // end third party code.
 
-// lock down for security
-
-for(var k in URLSearchParams.prototype)
-Object.defineProperty(URLSearchParams.prototype, k,{writable:false,configurable:false});
-
+// have these functions say "native code" when stringified
 var flist = [
 getElementsByTagName, getElementsByClassName, getElementsByName, getElementById,nodeContains,
 dispatchEvent,
 NodeFilter,createNodeIterator,createTreeWalker,
 runScriptWhenAttached, traceBreakReplace,
-appendChild, prependChild, insertBefore, removeChild, replaceChild, hasChildNodes,
+insertBefore, removeChild, replaceChild,
 getComputedStyle,
-URL,
-TextEncoder, TextDecoder,
-];
-for(var i=0; i<flist.length; ++i)
-Object.defineProperty(flist[i], "toString",{value:wrapString});
+URL, TextEncoder, TextDecoder];
+for(let k of flist)
+Object.defineProperty(k, "toString",{value:wrapString});
 
 // objects and particularly classes have to be frozen,
 // so nobody replaces their prototype or the methods beneath
