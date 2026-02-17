@@ -587,9 +587,15 @@ const runAllHandlers = (n) => {
             t.dom$class == "HTMLFrameElement")) break;
         }
 
-        if(!t) { // pathological
-            dbg3("no root found, aborting with true");
-            return true;
+        if(!t) {
+            /* pathological and looks like we could just abort true here but
+                there's a corner case where someone could create an event
+                manually, call preventDefault() and then dispatch to the
+                non-rooted tag. That may not do much when you get back to C but
+                best to return the correct code in that case.
+            */
+            dbg3(`no root found, aborting with ${!e.defaultPrevented}`);
+            return !e.defaultPrevented;
         }
 
         /* Allow events to bubble up to the window. We need to use defaultView
