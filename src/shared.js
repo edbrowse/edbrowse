@@ -3194,7 +3194,7 @@ This lets us put more software into the shared window.
 *********************************************************************/
 
 function setupClasses(w) {
-const d = w.document;
+let d; // the document under window, which will be created below
 
 // we really need some shorthand here
 let odp = w.Object.defineProperty;
@@ -3908,6 +3908,46 @@ if(t === this) return DOCUMENT_POSITION_CONTAINS;
 }
 return DOCUMENT_POSITION_DISCONNECTED;
 }
+
+swp("EventTarget", function() {})
+swpp("EventTarget", w.Node)
+
+swp("Document", function() {
+    odp(this, "id$hash", {value: new w.Map});
+    odp(this, "id$registry", {value: new w.FinalizationRegistry(
+        (i) => {
+            alert3(`GC triggers delete of element with id ${i} from id hash`);
+            this.id$hash.delete(i);
+        }
+    )});
+});
+swpp("Document", w.EventTarget)
+let docp = w.Document.prototype;
+docp.activeElement = null;
+docp.querySelector = w.querySelector
+docp.querySelectorAll = function(c,s) { return new w.NodeList(w.querySelectorAll.call(this,c,s)) }
+odp(docp, "documentElement", {get: getElement});
+odp(docp, "head", {get: getHead,set:setHead});
+odp(docp, "body", {get: getBody,set:setBody});
+// scrollingElement makes no sense in edbrowse, I think body is our best bet
+odp(docp, "scrollingElement", {get: getBody});
+odp(docp, "URL", {get: function(){return this.location ? this.location.toString() : null}})
+odp(docp, "documentURI", {get: function(){return this.URL}})
+odp(docp, "cookie", { get: eb$getcook, set: eb$setcook});
+docp.defaultView = w
+docp.readyState = "interactive"
+docp.visibilityState = "visible"
+docp.getElementById = getElementById
+docp.nodeName = "#document"
+docp.tagName = "document"
+docp.nodeType = 9
+
+// create the document
+d = new w.Document;
+swpv("document", d);
+// this wasn't done by createElement, so have to make the child array
+    odp(d, "childNodes", {value:new w.Array,writable:true,configurable:true});
+    odp(d, "parentNode", {value:null,writable:true,configurable:true});
 
 // The html element, which is the head of the DOM nodes that you know and love.
 swp("HTMLElement", function(){})

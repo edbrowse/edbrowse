@@ -35,8 +35,6 @@ this.eb$falsefunction = function() { return false}
 this.db$flags = eb$falsefunction;
 this.eb$newLocation = function (s) { print("new location " + s)}
 this.eb$logElement = function(o, tag) { print("pass tag " + tag + " to edbrowse")}
-this.eb$getcook = function() { return "cookies"}
-this.eb$setcook = function(value) { print(" new cookie " + value)}
 this.eb$parent = function() { return this}
 this.eb$top = function() { return this}
 this.eb$frameElement = function() { return this}
@@ -72,6 +70,7 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
     this.mw$.setupClasses = () => {};
 // classes that setupClasses would have built, but didn't.
     this.URL = function(){}
+    this.EventTarget = function(){}
     this.HTMLElement = function(){}
     this.SVGElement = function(){}
     this.HTMLBodyElement = function(){}
@@ -234,58 +233,38 @@ this.push(v[i])
 swmp("HTMLCollection", Array)
 HTMLCollection.prototype.toString = function(){return "[object HTMLCollection]"}
 
+/*********************************************************************
+    Originally I developed the shared window for efficiency.
+    There's no point in "compiling" the entire dom every time we bring up a new web page. Other browsers don't do that!
+    That still holds but now there is another consideration: the context that holds startwindow.js never goes away, even if we free it.
+    So the less in startwindow, the better.
+    To this end I will try to move more stuff to the shared window.
+This includes the definition of most of the DOM classes.
+They still have to be "built" at runtime however; it's not a true compile.
+Here's why - using URL as an example.
+There are websites that replace URL.prototype.toString with their own function.
+They want to change the way URLs stringify, or whatever. I can't
+prevent sites from doing that, things might not work properly without it!
+So, if site A does that in the shared window, and site B invokes
+a.href.toString, directly or indirectly, B is calling a function from
+the unrelated website A.
+This could screw things up, or worse, site A could use it to hack into
+site B, hoping site B is your banking site or something important.
+So I can't define URL over there and say URL = mw$.url over here.
+However, the shared window can "build" the URL class over here,
+when asked to do so, and then the user is free to muck with the class
+or its prototype methods or anything else.
+So here is the line that does a lot, including the creation of the document object,
+which is an instance of Document, as it should be.
+*********************************************************************/
+
+mw$.setupClasses(window);
+
 // make sure to wrap global dispatchEvent, so this becomes this window,
 // and not the shared window.
 swm("dispatchEvent", mw$.dispatchEvent.bind(window))
 swm("addEventListener", mw$.addEventListener.bind(window))
 swm("removeEventListener", mw$.removeEventListener.bind(window))
-
-swm("EventTarget", function() {})
-swmp("EventTarget", Node)
-EventTarget.prototype.addEventListener = mw$.addEventListener;
-EventTarget.prototype.removeEventListener = mw$.removeEventListener;
-EventTarget.prototype.dispatchEvent = mw$.dispatchEvent;
-
-swm("Document", function() {
-    Object.defineProperty(this, "childNodes", {value:[],writable:true,configurable:true});
-    Object.defineProperty(this, "id$hash", {value: new Map});
-    Object.defineProperty(this, "id$registry", {value: new FinalizationRegistry(
-        (i) => {
-            alert3(`GC triggers delete of element with id ${i} from id hash`);
-            this.id$hash.delete(i);
-        }
-    )});
-});
-swmp("Document", EventTarget)
-this.docp = Document.prototype; // shorthand
-// We may abbreviate prototypes for the various classes when building them,
-// but we'll always delete it once the class is built.
-docp.activeElement = null;
-odp(docp, "children", {get:function(){return this.childNodes}})
-odp(docp, "childElementCount", {get:function(){return this.children.length}})
-docp.querySelector = querySelector
-docp.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
-odp(docp, "documentElement", {get: mw$.getElement});
-odp(docp, "head", {get: mw$.getHead,set:mw$.setHead});
-odp(docp, "body", {get: mw$.getBody,set:mw$.setBody});
-// scrollingElement makes no sense in edbrowse, I think body is our best bet
-odp(docp, "scrollingElement", {get: mw$.getBody});
-odp(docp, "URL", {get: function(){return this.location ? this.location.toString() : null}})
-odp(docp, "documentURI", {get: function(){return this.URL}})
-odp(docp, "cookie", {
-get: eb$getcook, set: eb$setcook});
-docp.defaultView = window
-docp.readyState = "interactive"
-docp.visibilityState = "visible"
-docp.getElementById = mw$.getElementById
-// the other getElementsBy we inherit from Node
-docp.nodeName = "#document"
-docp.tagName = "document"
-docp.nodeType = 9
-delete window.docp;
-
-// the most important line is right here
-swm1("document", new Document)
 
 /* Apparently people want to muck with DOMException so can't be shared as
 otherwise we end up with read-only prototype chain issues */
@@ -475,8 +454,6 @@ error: function(obj) { mw$.logtime(3, "error", obj)},
 timeStamp: function(label) { if(label === undefined) label = "x"; return label.toString() + (new Date).getTime(); }
 })
 
-// document should always have children, but...
-
 swm1("navigator", {})
 navigator.appName = "edbrowse";
 navigator["appCode Name"] = "edbrowse C/quickjs";
@@ -565,32 +542,6 @@ n = -n;
 if(n > l) return undefined;
 return this.charAt(l-n);
 }
-
-/*********************************************************************
-    Originally I developed the shared window for efficiency.
-    There's no point in "compiling" the entire dom every time we bring up a new web page. Other browsers don't do that!
-    That still holds but now there is another consideration: the context that holds startwindow.js never goes away, even if we free it.
-    So the less in startwindow, the better.
-    To this end I will try to move more stuff to the shared window.
-This includes the definition of most of the DOM classes.
-They still have to be "built" at runtime however; it's not a true compile.
-Here's why - using URL as an example.
-There are websites that replace URL.prototype.toString with their own function.
-They want to change the way URLs stringify, or whatever. I can't
-prevent sites from doing that, things might not work properly without it!
-So, if site A does that in the shared window, and site B invokes
-a.href.toString, directly or indirectly, B is calling a function from
-the unrelated website A.
-This could screw things up, or worse, site A could use it to hack into
-site B, hoping site B is your banking site or something important.
-So I can't define URL over there and say URL = mw$.url over here.
-However, the shared window can "build" the URL class over here,
-when asked to do so, and then the user is free to muck with the class
-or its prototype methods or anything else.
-So here is the line that does a lot!
-*********************************************************************/
-
-mw$.setupClasses(window);
 
 /*********************************************************************
 This is a special routine for textarea.innerHTML = "some html text";

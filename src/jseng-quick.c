@@ -3613,6 +3613,10 @@ JS_NewCFunction(mwc, nat_apch2, "apch2", 1), 0);
 JS_NewCFunction(mwc, nat_insbf, "insbf", 2), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$rmch2",
 JS_NewCFunction(mwc, nat_rmch2, "removeChild", 1), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$getcook",
+JS_NewCFunction(mwc, nat_getcook, "getcook", 0), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "eb$setcook",
+JS_NewCFunction(mwc, nat_setcook, "setcook", 1), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "puts",
 JS_NewCFunction(mwc, nat_puts, "puts", 1), JS_PROP_ENUMERABLE);
     JS_DefinePropertyValueStr(mwc, mwo, "wlf",
@@ -3822,10 +3826,6 @@ JS_NewCFunction(cx, nat_parent, "parent", 0), 0);
 JS_NewCFunction(cx, nat_top, "top", 0), 0);
     JS_DefinePropertyValueStr(cx, g, "eb$frameElement",
 JS_NewCFunction(cx, nat_fe, "fe", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$getcook",
-JS_NewCFunction(cx, nat_getcook, "getcook", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$setcook",
-JS_NewCFunction(cx, nat_setcook, "setcook", 1), 0);
     JS_DefinePropertyValueStr(cx, g, "querySelectorAll",
 JS_NewCFunction(cx, nat_qsa, "qsa", 2), 0);
     JS_DefinePropertyValueStr(cx, g, "querySelector",
