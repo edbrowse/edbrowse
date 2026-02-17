@@ -153,17 +153,17 @@ Then type b for browse.
 You should get something like this; if you do then all is well.
 ```
 relative
-body loading
 complete
-837
-lines 36 through 41 have been added
+body loading
+866
+lines 38 through 43 have been added
 ```
 
 	[after a delay of 10 seconds]
 
 ```
 10 seconds have passed!
-lines 42 through 43 have been added
+lines 44 through 45 have been added
 ```
 
 Type ,p to see the page, if you wish, as though it were ed.

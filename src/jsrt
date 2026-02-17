@@ -347,11 +347,17 @@ p_json.then(showcamp);
 <button onclick="xhrTest()">XHR test</button>
 <button onclick="awaitTest()">Await test</button>
 <button onclick="awaitFetchTest()">Await fetch test</button>
+<br>
 <label for="watch-things">Watch for changes</label>
 <input type="checkbox" id="watch-things" name="observe" />
+Interval
+<input type="checkbox" id="realtime" name="intervaltest" />
+<br>
+⏲
+ <span id=showcount><i>0</i></span> seconds
 </form>
 <script>
-// This'll be noisy when the box is checked
+// This'll be noisy when either box is checked
 const config = { attributes: true, childList: true, subtree: true };
 const callback = (mutationList, observer) => {
       for (const mutation of mutationList) {
@@ -372,6 +378,23 @@ function observerToggle() {
 }
 
 document.getElementById("watch-things").addEventListener("click", observerToggle);
+
+interval_count = 0;
+function increment() {
+    ++interval_count;
+    document.getElementById("showcount").innerHTML = "<i>"+interval_count+"</i>";
+}
+
+function intervalToggle() {
+    if (this.checked) {
+        if(typeof ticking == "undefined") ticking = setInterval("increment()", 1000);
+    } else {
+        if(typeof ticking != "undefined") clearInterval(ticking);
+        delete ticking;
+    }
+}
+
+document.getElementById("realtime").addEventListener("click", intervalToggle);
 </script>
 <!-- if I have an onload function, that forces the frame to expand,
 and I don't want it to expand every time, so I call it zonload.
@@ -660,12 +683,12 @@ if(body.value.substring(10,19) != "brilliant") fail(108);
 
 // for(var i in document.idMaster) alert(i);
 if(document.getElementById("hound").name != "dog") fail(110);
-if(document.getElementById("almond") != document.spans[0]) fail(111);
+if(document.getElementById("almond") != document.spans[1]) fail(111);
 // I'm not sure of any of this table row stuff
 if(document.getElementById("pecan") != document.tables[0].rows[1]) fail(112);
 if(document.getElementById("pecan").parentNode.parentNode.getAttribute("class") != "filbert") fail(115);
 if(document.all.tags("FORM")[1] != document.forms[1]) fail(113);
-if(document.all.tags("span").length != 5) fail(114);
+if(document.all.tags("span").length != 6) fail(114);
 
 n = 0;
 a = [29,31,37];
@@ -779,7 +802,7 @@ document.dispatchEvent(e);
 // eb$qs$start machinery, which is complicated, and we don't even see these
 // before after unless we set showall+, so one wonders if it's even worth it.
 if(document.getElementsByClassName("inject")[0].firstChild.data != "My ") fail(173);
-if(document.spans[0].lastChild.data != " zip") fail(174);
+if(document.spans[1].lastChild.data != " zip") fail(174);
 let dbs = document.body.style; // shorthand
 if(dbs.hasOwnProperty("animation")) fail(176);
 if(document.styleSheets[0].cssRules[0].cssText.substr(0,4) != "body") fail(180);
