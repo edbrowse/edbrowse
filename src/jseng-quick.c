@@ -2114,8 +2114,6 @@ JSValueConst b_j, const char *b_name)
 // If parent node has been removed, we don't have to keep its linkage current.
 	if (!parent)
 		return;
-// Lower objects could be disconnected, and no reconnected into the tree.
-// See the block comment above underKill().
 	if(!(add = tagFromObject(a_j))) {
 		grab(a_j);
 		add = tagFromObject2(JS_DupValue(cx, a_j), a_name);
@@ -4582,56 +4580,16 @@ void jsClose(void)
 	}
 }
 
-/*********************************************************************
-Here's a little web page that shows an object memory leak.
-	<body>hi <div id=snork></div>
-	<script> var dd = document.getElementById("snork");
-	while(true) { dd.innerHTML = 'a bunch of tags and text';
-	alert("x"); } </script> </body>
-The x's slow down and down, but they don't under duktape, they clip along
-at a steady pace.
-In quick the tags hold the objects away from garbage collection, but in
-duktape the objects collect away, then notify us, and we mark the tags dead.
-duktape cleans things up for us and we respond.
-quick doesn't do that, and the objects accumulate.
-Mozilla is more like quick, but I'm not maintaining sm at this time.
-So what can we do here in quick?
-underKill() disconnects all the tags from their objects.
-quick js can then garbage collect them away.
-But there's a risk.
-Imagine a web page that has a global variable
-var p = document.getElementById("my-favorite-paragraph");
-This node is in some html, that is displaced by new html, as we set
-innerHTML = "some new stuff";
-All those tags are gone.
-Then they call document.body.appendNode(p), restoring that little paragraph.
-There is no tag corresponding to p.
-tagFromObject() fails.
-We can't honor this node in our edbrowse tree, and it won't be rendered.
-It shouldn't core dump or anything horrible, but it won't be right.
-I work around this unlikely possibility by creating the tag again,
-if it cannot be found.
-This is in domSetsLinkage().
-But this is no fix!
-All the tags were disconnected, including the ones below the saved node.
-I'd have to traverse the subtree below this node and create new tags for all
-the nodes beneath, and link them properly, to resurrect that paragraph.
-Unless someone shows me that this happens in the real world,
-I'm not gonna work that hard.
-*********************************************************************/
-
+// This function disconects the children at a C level.
+// It use to disassemble the entire subtree, and disconnect from js,
+// but it should do neither.
 void underKill(Tag *t)
 {
-	Tag *u, *v;
-	for (u = t->firstchild; u; u = v) {
-		v = u->sibling;
-		u->sibling = u->parent = 0;
-		u->deleted = u->dead = true;
-		++cw->deadTags;
-		disconnectTagObject(u);
-		underKill(u);
-	}
-	t->firstchild = NULL;
+    Tag *u;
+    while((u = t->firstchild)) {
+        u->parent = 0, t->firstchild = u->sibling, u->sibling = 0;
+        u->deleted = true;// still connected to js, but do not render
+    }
 }
 
 // set the base url, stored in eb$base.
