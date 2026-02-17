@@ -602,6 +602,7 @@ Type your brilliant thoughts here.
 <br>We'll get back to you if we like what you have to say.</textarea>
 
 <div id=album>
+<span> &not;Rubber Soul</span>
 </div
 >
 <DIV id=sphere>Surface area is 4&#960;r<span class=sup>2</span>.
@@ -688,7 +689,7 @@ if(document.getElementById("almond") != document.spans[1]) fail(111);
 if(document.getElementById("pecan") != document.tables[0].rows[1]) fail(112);
 if(document.getElementById("pecan").parentNode.parentNode.getAttribute("class") != "filbert") fail(115);
 if(document.all.tags("FORM")[1] != document.forms[1]) fail(113);
-if(document.all.tags("span").length != 6) fail(114);
+if(document.all.tags("span").length != 7) fail(114);
 
 n = 0;
 a = [29,31,37];
@@ -853,15 +854,18 @@ document.body.appendChild(j);
 // test the innerHTML feature
 if(!document.getElementById("sphere").innerHTML.match(/^Surface area/))
 fail(145);
-album = document.getElementById("album");
+let album = document.getElementById("album");
+let prealbum = album.firstChild;
 album.innerHTML =
 "Why don't we do it <A title=White href=http://en.wikipedia.org/wiki/White_album style='color: red ;illegal;legit3:okay;'>in the road</A>?";
 /* all the js objects associated with this html should be here */
-var aa = album.getElementsByTagName("a")[0];
+let aa = album.getElementsByTagName("a")[0];
 if(!aa.href.match(/wikipedia.org/))
 fail(152);
 if(aa.style.color != "red")
 fail(153);
+// innerHTML should not totally destroy what was there
+album.appendChild(prealbum);
 
 } catch(e) {
 alert(e);
