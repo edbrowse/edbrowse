@@ -4589,6 +4589,10 @@ void underKill(Tag *t)
     while((u = t->firstchild)) {
         u->parent = 0, t->firstchild = u->sibling, u->sibling = 0;
         u->deleted = true;// still connected to js, but do not render
+        // sometimes this is called from htl-tags.c, from prerender().
+        // We are about to decorate with js objects, but these tags
+        // should not be decorated.
+        if(!u->jslink) u->dead = true;
     }
 }
 
