@@ -3560,6 +3560,13 @@ static JSValue nat_jobs(JSContext * cx, JSValueConst this, int argc, JSValueCons
 	return JS_UNDEFINED;
 }
 
+// bgarbage collect, strictly for debugging
+static JSValue nat_gc(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
+{
+    JS_RunGC(jsrt);
+    return JS_UNDEFINED;
+}
+
 // push pending job onto the queue, just to find the queue.
 static JSValue firstPending(JSContext *ctx, int argc, JSValueConst *argv)
 {
@@ -3854,6 +3861,8 @@ JS_NewCFunction(cx, nat_hasFocus, "hasFocus", 0), 0);
 JS_NewCFunction(cx, nat_doc_write, "doc_write", 0), 0);
     JS_DefinePropertyValueStr(cx, g, "eb$writeln",
 JS_NewCFunction(cx, nat_doc_writeln, "doc_writeln", 0), 0);
+    JS_DefinePropertyValueStr(cx, g, "eb$gc",
+JS_NewCFunction(cx, nat_gc, "garbageCollect", 0), 0);
 
 // The sequence is to set f->fileName, then createContext(), so for a short time,
 // we can rely on that variable.
