@@ -451,7 +451,6 @@ The prior tags are dead, but live on in our array of tags,
 unless we delete them here.
 Certain tags we might not want to delete, and hope they don't come up
 in the block of updated information very often.
-Look for Tag * in eb.h.
 frameTag indicates <frame> above that created this frame.
 Not sure how this tag could be dead but the frame still lives on and points
 back to this tag. Let's not test it.
@@ -467,8 +466,17 @@ dead means taken out of the tree, so no worries about parent or firstchild.
 There are a few controllers: table section row form select svg
 but can any of these tags be dead while a subordinate tag is still alive?
 I don't think so.
+Now for the real bummer.
+I had to change things so that tags are not dead, even after they are
+displaced by innerHTML. they live on, they might be used again.
+They might be put back into the tree in another location.
+So this function accomplishes nothing.
+I'll leave it be for a while, as a guide, in case we can some day
+make it useful again, but I think we have to redesign the tag / js object
+correspondence, and find a way to recognize and reclaim dead tags.
 *********************************************************************/
 
+#if 0
 static void backupTags(void)
 {
 	static const short forbidden[] = {
@@ -495,6 +503,7 @@ stop:
 	}
 	if(delmessage) debugPrint(4, "%d tags deleted", n);
 }
+#endif
 
 // for debugging
 // should this be gated on a debug variable rather than not compiled by default?
@@ -762,7 +771,10 @@ int htmlScanner(const char *htmltext, Tag *above, bool isgen)
 	const struct opentag *k;
 	static const char texttag[] = "text";
 
+#if 0
 	backupTags();
+#endif
+
 	startpos = cw->numTags;
 
 	headbody = 0, bodycount = htmlcount = 0;

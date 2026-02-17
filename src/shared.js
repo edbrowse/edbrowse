@@ -282,58 +282,6 @@ s += showarg(a[i]);
 return s;
 }
 
-// document.head, document.body; shortcuts to head and body.
-function getElement() {
-  var e = this.lastChild;
-if(!e) { alert3("missing documentElement node"); return null; }
-if(e.nodeName.toUpperCase() != "HTML") alert3("html node name " + e.nodeName);
-return e
-}
-
-function getHead() {
- var e = this.documentElement;
-if(!e) return null;
-// In case somebody adds extra nodes under <html>, I search for head and body.
-// But it should always be head, body.
-for(var i=0; i<e.childNodes.length; ++i)
-if(e.childNodes[i].nodeName.toUpperCase() == "HEAD") return e.childNodes[i];
-alert3("missing head node"); return null;
-}
-
-function setHead(h) {
- var i, e = this.documentElement;
-if(!e) return;
-for(i=0; i<e.childNodes.length; ++i)
-if(e.childNodes[i].nodeName.toUpperCase() == "HEAD") break;
-if(i < e.childNodes.length) e.removeChild(e.childNodes[i]); else i=0;
-if(h) {
-if(h.nodeName.toUpperCase() != "HEAD") { alert3("head replaced with node " + h.nodeName); h.nodeName = "HEAD"; }
-if(i == e.childNodes.length) e.appendChild(h);
-else e.insertBefore(h, e.childNodes[i]);
-}
-}
-
-function getBody() {
- var e = this.documentElement;
-if(!e) return null;
-for(var i=0; i<e.childNodes.length; ++i)
-if(e.childNodes[i].nodeName.toUpperCase() == "BODY") return e.childNodes[i];
-alert3("missing body node"); return null;
-}
-
-function setBody(b) {
- var i, e = this.documentElement;
-if(!e) return;
-for(i=0; i<e.childNodes.length; ++i)
-if(e.childNodes[i].nodeName.toUpperCase() == "BODY") break;
-if(i < e.childNodes.length) e.removeChild(e.childNodes[i]);
-if(b) {
-if(b.nodeName.toUpperCase() != "BODY") { alert3("body replaced with node " + b.nodeName); b.nodeName = "BODY"; }
-if(i == e.childNodes.length) e.appendChild(b);
-else e.insertBefore(b, e.childNodes[i]);
-}
-}
-
 // wrapper to turn function blah{ my js code } into function blah{ [native code] }
 // This is required by sanity tests in jquery and other libraries.
 function wrapString() {
@@ -3932,9 +3880,57 @@ let docp = w.Document.prototype;
 docp.activeElement = null;
 docp.querySelector = w.querySelector
 docp.querySelectorAll = function(c,s) { return new w.NodeList(w.querySelectorAll.call(this,c,s)) }
-odp(docp, "documentElement", {get: getElement});
-odp(docp, "head", {get: getHead,set:setHead});
-odp(docp, "body", {get: getBody,set:setBody});
+odp(docp, "documentElement", {get: function() {
+  let e = this.lastChild;
+if(!e) { alert3("missing documentElement node"); return null; }
+if(e.nodeName.toUpperCase() != "HTML") alert3("html expected, got " + e.nodeName);
+return e
+}})
+odp(docp, "head", {get: function() {
+ let e = this.documentElement;
+if(!e) return null;
+// In case somebody adds extra nodes under <html>, I search for head and body.
+// But it should always be head, body.
+for(let i=0; i<e.childNodes.length; ++i)
+if(e.childNodes[i].nodeName.toUpperCase() == "HEAD") return e.childNodes[i];
+alert3("missing head node"); return null;
+},
+set: function(h) {
+ let i, e = this.documentElement;
+if(!e) return;
+for(i=0; i<e.childNodes.length; ++i)
+if(e.childNodes[i].nodeName.toUpperCase() == "HEAD") break;
+if(i < e.childNodes.length) e.removeChild(e.childNodes[i]); else i=0;
+if(h) {
+if(h.nodeName.toUpperCase() != "HEAD") {
+alert3("head replaced with node " + h.nodeName);
+h.nodeName = "HEAD";
+}
+if(i == e.childNodes.length) e.appendChild(h);
+else e.insertBefore(h, e.childNodes[i]);
+}}})
+function getBody() {
+ let e = this.documentElement;
+if(!e) return null;
+for(let i=0; i<e.childNodes.length; ++i)
+if(e.childNodes[i].nodeName.toUpperCase() == "BODY") return e.childNodes[i];
+alert3("missing body node"); return null;
+}
+odp(docp, "body", {get: getBody,
+set: function(b) {
+ let i, e = this.documentElement;
+if(!e) return;
+for(i=0; i<e.childNodes.length; ++i)
+if(e.childNodes[i].nodeName.toUpperCase() == "BODY") break;
+if(i < e.childNodes.length) e.removeChild(e.childNodes[i]);
+if(b) {
+if(b.nodeName.toUpperCase() != "BODY") {
+alert3("body replaced with node " + b.nodeName);
+b.nodeName = "BODY";
+}
+if(i == e.childNodes.length) e.appendChild(b);
+else e.insertBefore(b, e.childNodes[i]);
+}}})
 // scrollingElement makes no sense in edbrowse, I think body is our best bet
 odp(docp, "scrollingElement", {get: getBody});
 odp(docp, "URL", {get: function(){return this.location ? this.location.toString() : null}})
@@ -4007,9 +4003,6 @@ elemp.nodeType = 1;
 swp("SVGElement", function(){})
 swpp("SVGElement", w.Element)
 
-// Document class is defined in startwindow, but we'll need its prototype.
-let docup = w.Document.prototype;
-
 swp("TextNode", function(){
 odp(this, "data$2", {value:"",writable:true})
 if(arguments.length > 0) {
@@ -4030,7 +4023,7 @@ set: function(s) { this.data$2 = s + ""; }})
 
 // Since we are createing all these classes here, does it make sense to
 // include the methods to properly instantiate those classes?  Perhaps.
-docup.createTextNode = function(t) {
+docp.createTextNode = function(t) {
 if(t == undefined) t = "";
 const c = new w.TextNode(t);
 /* A text node chould never have children, and does not need childNodes array,
@@ -4053,7 +4046,7 @@ let cmtp = w.Comment.prototype;
 cmtp.nodeName = cmtp.tagName = "#comment";
 cmtp.nodeType = 8;
 
-docup.createComment = function(t) {
+docp.createComment = function(t) {
 if(t == undefined) t = "";
 const c = new w.Comment(t);
     odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
@@ -4070,7 +4063,7 @@ fragp.nodeName = fragp.tagName = "#document-fragment";
 fragp.querySelector = w.querySelector
 fragp.querySelectorAll = function(c,s) { return new w.NodeList(w.querySelectorAll.call(this,c,s)) }
 
-docup.createDocumentFragment = function() {
+docp.createDocumentFragment = function() {
 const c = this.createElement("fragment");
 return c;
 }
@@ -5425,7 +5418,7 @@ xmlcp.nodeName = xmlcp.tagName = "#cdata-section";
 xmlcp.nodeType = 4;
 
 // We've defined the HTMLElement classes, now let's create instances of them.
-docup.createElement = function(s) {
+docp.createElement = function(s) {
 let c;
 if(!s) { // a null or missing argument
 alert3("bad createElement( type" + typeof s + ')');
@@ -5578,7 +5571,7 @@ eventp.initCustomEvent = function(t, bubbles, cancel, detail) {
 this.type = t, this.bubbles = bubbles, this.cancelable = cancel,
 this.detail = detail, this.eb$captures = true; }
 
-docup.createEvent = function(unused) { return new w.Event; }
+docp.createEvent = function(unused) { return new w.Event; }
 
 // various flavors of events; I'm sure there are more than I have here.
 swp("HashChangeEvent", function() {
