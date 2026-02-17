@@ -4121,8 +4121,6 @@ void delTimers(const Frame *f)
 	}
 	if(delcount)
 		debugPrint(3, "%d timers deleted from context %d", delcount, f->gsn);
-
-	delPendings(f);
 }
 
 static void runTimer0(struct jsTimer *jt, const Frame *save_cf);

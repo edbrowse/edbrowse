@@ -157,7 +157,7 @@ int jsLineno;			// line number
 static JSRuntime *jsrt;
 static bool js_running;
 static JSContext *mwc; // master window context
-
+static JSContext *freeing_context = NULL;
 // Find window and frame based on the js context. Set cw and cf accordingly.
 // This is inefficient, but is not called very often.
 static bool frameFromContext(jsobjtype cx)
@@ -2010,11 +2010,11 @@ static JSValue nat_unframe(JSContext * cx, JSValueConst this, int argc, JSValueC
 			debugPrint(1, "unframe can't find prior frame to relink");
 			goto done;
 		}
-		f->next = f1->next;
 		delTimers(f1);
 		freeJSContext(f1);
+		f->next = f1->next;
 		nzFree(f1->dw);
-		nzFree(f1->hbase);
+ 		nzFree(f1->hbase);
 		nzFree(f1->fileName);
 		nzFree(f1->firstURL);
 		free(f1);
@@ -3287,7 +3287,7 @@ int my_ExecutePendingJobs(void)
 {
     JSContext *ctx;
     JSJobEntry *e;
-				struct list_head *l, *l1;
+    struct list_head *l, *l1;
     JSValue res;
     int i, cnt = 0;
 	struct list_head *jl = (struct list_head *)((char*)jsrt + JSRuntimeJobIndex);
@@ -3297,61 +3297,71 @@ int my_ExecutePendingJobs(void)
 
 // step through the jobs
     list_for_each_safe(l, l1, jl) {
-	if(cnt == 10) // stop now and then to let the user interact with edbrowse
-	    break;
+/* stop now and then to let the user interact with edbrowse unless we're
+cleaning up when we really want to run all the finalizers */
+	if(cnt == 10 && !freeing_context)
+            break;
 	e = list_entry(l, JSJobEntry, link);
 	ctx = e->ctx;
+        if (freeing_context && ctx != freeing_context) continue;
 // This line resets cw and cf, and we don't put it back, so the calling routine must restore it.
 	if (!frameFromContext(ctx)) {
-		if(ctx == mwc)
-			debugPrint(3, "frameFromContext finds master window");
-		else
-			debugPrint(3, "frameFromContext cannot find a frame for pointer %p", ctx);
+            if(ctx == mwc)
+                debugPrint(3, "frameFromContext finds master window");
+            else {
+                debugPrint(3, "frameFromContext cannot find a frame for pointer %p", ctx);
 		debugPrint(3, "It is not safe to run this job (%d arguments), or even free it!", e->argc);
 		debugPrint(3, "But it's not great leaving it around either.");
 		debugPrint(3, "Deleting it from the pending queue and hoping for the best. 🤞");
-		    list_del(&e->link);
+	        list_del(&e->link);
 		continue;
-	}
+            }
+        }
 
 // Browsing a new web page in the current session pushes the old one, like ^z
 // in Linux. The prior page suspends, and the timers and pendings suspend.
 // ^ is like fg, bringing it back to life.
-	if(sessionList[cw->sno].lw != cw)
-	    continue;
+	if(!freeing_context && sessionList[cw->sno].lw != cw)
+            continue;
 
 	if(debugLevel >= 3) {
+            int jj = -1; // -1 = we're freeing the context
+            char *job_type = (
+                e->argc == 1 ? "microtask" : e->argc == 5 ? "promise" : "pending");
 // $pjobs is pending jobs, push this one onto the array.
 // Nobody ever cleans these up, which is why we only do it at debug 3.
-		JSValue g = JS_GetGlobalObject(ctx);
-		JSValue v = JS_GetPropertyStr(ctx, g, "$pjobs");
-		int jj = get_property_number(ctx, v, "length");
+            if (!freeing_context) {
+// No point pushing pending jobs when we're going to free the context
+                JSValue g = JS_GetGlobalObject(ctx);
+                JSValue v = JS_GetPropertyStr(ctx, g, "$pjobs");
+                jj = get_property_number(ctx, v, "length");
 // promise has argc = 5, microtask has argc = 1
-		if(e->argc == 5)
-			set_array_element_object(ctx, v, jj, e->argv[2]);
-		else if(e->argc)
-			set_array_element_object(ctx, v, jj, e->argv[0]);
-		JS_FreeValue(ctx, v);
-		JS_FreeValue(ctx, g);
-		debugPrint(3, "exec %s for context %d job %d",
-		(e->argc == 1 ? "microtask" : e->argc == 5 ? "promise" : "pending"),
-		cf->gsn, jj);
-		if(e->argc != 1 && e->argc != 5)
-			debugPrint(3, "%d arguments", e->argc);
-	}
+                if(e->argc == 5)
+                    set_array_element_object(ctx, v, jj, e->argv[2]);
+                else if(e->argc)
+                    set_array_element_object(ctx, v, jj, e->argv[0]);
+                JS_FreeValue(ctx, v);
+                JS_FreeValue(ctx, g);
+            }
+            if (jj > -1) debugPrint(3, "exec %s for context %d job %d",
+                job_type, cf->gsn, jj);
+            else debugPrint(3, "exec %s for freeing context %d", job_type, cf->gsn);
+            if(e->argc != 1 && e->argc != 5)
+                debugPrint(3, "%d arguments", e->argc);
+        }
 
-	res = e->job_func(ctx, e->argc, (JSValueConst *)e->argv);
+        list_del(&e->link);
+        res = e->job_func(ctx, e->argc, (JSValueConst *)e->argv);
 // Promise jobs never seem to return an error. That's why I didn't check for it.
 // But MicroTask jobs do. If the called function fails, we see it.
 // So I check for that.
-	if(JS_IsException(res)) processError(ctx);
-	debugPrint(3, "exec complete");
-	JS_FreeValue(ctx, res);
-	++cnt;
-	    list_del(&e->link);
-	    for(i = 0; i < e->argc; i++)
-		JS_FreeValue(ctx, e->argv[i]);
-	    js_free(ctx, e);
+        if(!freeing_context && JS_IsException(res)) processError(ctx);
+        debugPrint(3, "exec complete");
+        JS_FreeValue(ctx, res);
+        ++cnt;
+        for(i = 0; i < e->argc; i++)
+            JS_FreeValue(ctx, e->argv[i]);
+        js_free(ctx, e);
 
 /*********************************************************************
 On June 28 2025, quickjs made a significant change, commit 458c34d.
@@ -3369,12 +3379,13 @@ and it does not do this odd behavior, so I don't want to free the context.
 But some day quickjs-ng might absorb that change from quickjs,
 and if that happens, then once again we need to free the context.
 *********************************************************************/
+
 #if ! Q_NG
 	JS_FreeContext(ctx);
 #endif
     }
 
-				return cnt;
+    return cnt;
 }
 
 // see if any jobs would run, if you called the above
@@ -3405,6 +3416,8 @@ bool pendingJobsForCurrentWindow(void)
 				return rc;
 }
 
+#if 0
+// This breaks finalizers and appears to have other nasty effects on GC. It also doesn't free the job args so leaks there.
 void delPendings(const Frame *f)
 {
 	    JSJobEntry *e;
@@ -3435,7 +3448,7 @@ void delPendings(const Frame *f)
 	debugPrint(3, "%d pendings deleted, %d pendings kept",
 	delcount, keepcount);
 }
-
+#endif
 // don't need these quick macros any more
 #undef list_for_each
 #undef list_for_each_safe
@@ -3975,20 +3988,44 @@ static void setup_window_2(void)
 
 void freeJSContext(Frame *f)
 {
-	JSContext *cx;
 	if (!f->jslink)
 		return;
+	Window *save_cw = cw;
+	Frame *save_cf = cf;
+	debugPrint(3, "begin js context cleanup for %d", f->gsn);
+        freeing_context = f->cx;
+/* This looks mad on paper because it appears that we're going to lose our
+document and window objects as well as the context. However, from reading the
+quick code, the document and window objects as returned to us are both just
+references so all this does is decrease the ref counts by 1.
+Also note that, when running pending jobs, values referenced by the job args have their ref counts incremented so, even if something really odd is going on,
+they'll still be live for the purposes of that job function call.
+*/
+	JS_Release(f->cx, *((JSValue*)f->docobj));
+	JS_Release(f->cx, *((JSValue*)f->winobj));
+
+/* Run GC explicitly prior to freeing the frame to at least have a chance of
+catching the finalisers. This actually runs over the whole runtime but js is
+single-threaded so we should be good */
+        do {
+            JS_RunGC(jsrt);
+/* quick uses pending jobs for finalizers, again running over the whole runtime
+is fine as there is no guarantee re: job (rather than timer) timing */
+        } while(my_ExecutePendingJobs());
+/* This will either free the context or decrease its ref count so it can go on
+a future GC run. There's a possibility that what we need to do is check the
+liveness of the context and do something equivalent to the above in case
+someone's placed a finalisation registry on the global object but I'm not sure what they'd be expecting in that event.
+*/
+	JS_FreeContext(f->cx);
+	debugPrint(3, "complete js context cleanup for %d", f->gsn);
 	cssFree(f);
-	cx = f->cx;
-	JS_Release(cx, *((JSValue*)f->winobj));
 	free(f->winobj);
-	JS_Release(cx, *((JSValue*)f->docobj));
 	free(f->docobj);
-	f->winobj = f->docobj = 0;
-	f->cx = 0;
-	JS_FreeContext(cx);
-	debugPrint(3, "remove js context %d", f->gsn);
+	f->winobj = f->docobj = f->cx = 0;
 	f->jslink = false;
+        freeing_context = NULL;
+	cw = save_cw, cf = save_cf;
 }
 
 static bool has_property(JSContext *cx, JSValueConst parent, const char *name)
