@@ -1225,54 +1225,6 @@ s.dispatchEvent(e)
 */
 }
 
-function getSibling (obj,direction) {
-var pn = obj.parentNode;
-if(!pn) return null;
-var j, l;
-l = pn.childNodes.length;
-for (j=0; j<l; ++j)
-if (pn.childNodes[j] == obj) break;
-if (j == l) {
-// child not found under parent, error
-return null;
-}
-switch(direction) {
-case "previous":
-return (j > 0 ? pn.childNodes[j-1] : null);
-case "next":
-return (j < l-1 ? pn.childNodes[j+1] : null);
-default:
-// the function should always have been called with either 'previous' or 'next' specified
-return null;
-}
-}
-
-function getElementSibling (obj,direction) {
-var pn = obj.parentNode;
-if(!pn) return null;
-var j, l;
-l = pn.childNodes.length;
-for (j=0; j<l; ++j)
-if (pn.childNodes[j] == obj) break;
-if (j == l) {
-// child not found under parent, error
-return null;
-}
-switch(direction) {
-case "previous":
-for(--j; j>=0; --j)
-if(pn.childNodes[j].nodeType == 1) return pn.childNodes[j];
-return null;
-case "next":
-for(++j; j<l; ++j)
-if(pn.childNodes[j].nodeType == 1) return pn.childNodes[j];
-return null;
-default:
-// the function should always have been called with either 'previous' or 'next' specified
-return null;
-}
-}
-
 /*********************************************************************
 The attribute system is complex, with many functions
 and many surprising side effects.
@@ -3647,15 +3599,58 @@ if(!u) return z;
 for(let i=0; i<u.length; ++i) if(u[i].nodeType == 1) ++z;
 return z}})
 
+// helper functions to get the next or previous sibling
+function getSibling (obj,direction) {
+const pn = obj.parentNode;
+if(!pn) return null;
+let j, l = pn.childNodes.length;
+for (j=0; j<l; ++j)
+if (pn.childNodes[j] == obj) break;
+if (j == l) {
+// child not found under parent, error
+return null;
+}
+switch(direction) {
+case "previous":
+return (j > 0 ? pn.childNodes[j-1] : null);
+case "next":
+return (j < l-1 ? pn.childNodes[j+1] : null);
+default:
+// the function should always have been called with either 'previous' or 'next' specified
+return null;
+}
+}
+function getElementSibling (obj,direction) {
+const pn = obj.parentNode;
+if(!pn) return null;
+let j, l = pn.childNodes.length;
+for (j=0; j<l; ++j)
+if (pn.childNodes[j] == obj) break;
+if (j == l) {
+// child not found under parent, error
+return null;
+}
+switch(direction) {
+case "previous":
+for(--j; j>=0; --j)
+if(pn.childNodes[j].nodeType == 1) return pn.childNodes[j];
+return null;
+case "next":
+for(++j; j<l; ++j)
+if(pn.childNodes[j].nodeType == 1) return pn.childNodes[j];
+return null;
+default:
+// the function should always have been called with either 'previous' or 'next' specified
+return null;
+}
+}
+
 odp(nodep, "nextSibling", { get: function() {
 return getSibling(this,"next")} })
-
 odp(nodep, "nextElementSibling", { get: function() {
 return getElementSibling(this,"next")} })
-
 odp(nodep, "previousSibling", { get: function() {
 return getSibling(this,"previous")} })
-
 odp(nodep, "previousElementSibling", { get: function() {
 return getElementSibling(this,"previous")} })
 
@@ -3886,53 +3881,42 @@ if(!e) { alert3("missing documentElement node"); return null; }
 if(e.nodeName.toUpperCase() != "HTML") alert3("html expected, got " + e.nodeName);
 return e
 }})
-odp(docp, "head", {get: function() {
- let e = this.documentElement;
-if(!e) return null;
-// In case somebody adds extra nodes under <html>, I search for head and body.
-// But it should always be head, body.
-for(let i=0; i<e.childNodes.length; ++i)
-if(e.childNodes[i].nodeName.toUpperCase() == "HEAD") return e.childNodes[i];
-alert3("missing head node"); return null;
-},
-set: function(h) {
- let i, e = this.documentElement;
-if(!e) return;
-for(i=0; i<e.childNodes.length; ++i)
-if(e.childNodes[i].nodeName.toUpperCase() == "HEAD") break;
-if(i < e.childNodes.length) e.removeChild(e.childNodes[i]); else i=0;
-if(h) {
-if(h.nodeName.toUpperCase() != "HEAD") {
-alert3("head replaced with node " + h.nodeName);
-h.nodeName = "HEAD";
+
+// We need a helper function to get and set document.head and document.body.
+// But why would anyone ever want to set those?
+// Somebody did somewhere, or I wouldn't have written the function.
+// Probably an xml document.
+function getHeadBody(t, which) {
+    let e = t.documentElement;
+    if(!e) return null;
+    for(let i=0; i<e.childNodes.length; ++i)
+        if(e.childNodes[i].nodeName.toUpperCase() == which) return e.childNodes[i];
+    alert3(`missing ${which} node`); return null;
 }
-if(i == e.childNodes.length) e.appendChild(h);
-else e.insertBefore(h, e.childNodes[i]);
-}}})
-function getBody() {
- let e = this.documentElement;
-if(!e) return null;
-for(let i=0; i<e.childNodes.length; ++i)
-if(e.childNodes[i].nodeName.toUpperCase() == "BODY") return e.childNodes[i];
-alert3("missing body node"); return null;
+function setHeadBody(t, which, h) {
+    let i, e = t.documentElement;
+    if(!e) return;
+    for(i=0; i<e.childNodes.length; ++i)
+        if(e.childNodes[i].nodeName.toUpperCase() == which) break;
+    if(i < e.childNodes.length) e.removeChild(e.childNodes[i]);
+    else i=0;
+    if(h) {
+        if(h.nodeName.toUpperCase() != which) {
+            alert3(`${which} expected, but you passed in node ${h.nodeName}`);
+            h.nodeName = which;
+        }
+        if(i == e.childNodes.length) e.appendChild(h);
+        else e.insertBefore(h, e.childNodes[i]);
+    }
 }
-odp(docp, "body", {get: getBody,
-set: function(b) {
- let i, e = this.documentElement;
-if(!e) return;
-for(i=0; i<e.childNodes.length; ++i)
-if(e.childNodes[i].nodeName.toUpperCase() == "BODY") break;
-if(i < e.childNodes.length) e.removeChild(e.childNodes[i]);
-if(b) {
-if(b.nodeName.toUpperCase() != "BODY") {
-alert3("body replaced with node " + b.nodeName);
-b.nodeName = "BODY";
-}
-if(i == e.childNodes.length) e.appendChild(b);
-else e.insertBefore(b, e.childNodes[i]);
-}}})
+
+odp(docp, "head", {get: function() { return getHeadBody(this, "HEAD") },
+    set: function(h) { setHeadBody(this, "HEAD", h)}})
+odp(docp, "body", {get: function() { return getHeadBody(this, "BODY") },
+    set: function(h) { setHeadBody(this, "BODY", h)}})
 // scrollingElement makes no sense in edbrowse, I think body is our best bet
-odp(docp, "scrollingElement", {get: getBody});
+odp(docp, "scrollingElement", {get: function() { return getHeadBody(this, "BODY")}})
+
 odp(docp, "URL", {get: function(){return this.location ? this.location.toString() : null}})
 odp(docp, "documentURI", {get: function(){return this.URL}})
 odp(docp, "cookie", { get: eb$getcook, set: eb$setcook});
