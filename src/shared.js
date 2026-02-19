@@ -5716,6 +5716,10 @@ this.URL = {};
 // Code beyond this point is third party - necessary for the operation of the browser.
 // If you want to grab a more recent snapshot, and you're not sure
 // what I had to change to make it work, look for my$win().
+// I also have to change the Request class, so bodyUsed is set
+// in the constructor not in the prototype.
+// This lets us freeze Request.prototype, as we must,
+// and still update bodyUsed as the Request is processed.
 
 // NextSection
 // TextDecoder TextEncoder   https://github.com/anonyco/FastestSmallestTextEncoderDecoder
@@ -8166,7 +8170,8 @@ function bufferClone(buf) {
 }
 
 function Body() {
-  this.bodyUsed = false
+// Don't set any properties in the prototype. Set them in the constructor.
+//  this.bodyUsed = false
 
   this._initBody = function(body) {
     /*
@@ -8298,6 +8303,9 @@ function Request(input, options) {
     throw new TypeError('Please use the "new" operator, this DOM object constructor cannot be called as a function.')
   }
 
+// This was in Body(), and thus put onto the prototype; now I'm putting it here.
+   this.bodyUsed = false;
+
   options = options || {}
   var body = options.body
 
@@ -8410,6 +8418,8 @@ function Response(bodyInit, options) {
   if (!(this instanceof Response)) {
     throw new TypeError('Please use the "new" operator, this DOM object constructor cannot be called as a function.')
   }
+// This was in Body(), and thus put onto the prototype; now I'm putting it here.
+   this.bodyUsed = false;
   if (!options) {
     options = {}
   }
@@ -8589,8 +8599,7 @@ flist = [Object, Function, Date, Math,
 Promise, Array, Uint8Array, Error, String, URL, URLSearchParams,
 Intl_dt, Intl_num,
 Blob, FormData,
-// If I freeze these, fetch doesn't work. We need to fix this.
-// Request, Response,
+Request, Response,
 Headers, UnsupportedError];
 for(let k of flist) {
 Object.freeze(k);
