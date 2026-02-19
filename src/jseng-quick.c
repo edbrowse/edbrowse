@@ -2350,7 +2350,7 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 // I do this in C in the other engines, but can't figure it out in quick, so,
 // instead I use the js function that I already wrote.
 		JSValue l[2];
-		JSAtom a = JS_NewAtom(cx, "handle$cc");
+		JSAtom a = JS_NewAtom(cx, "handlerCompile");
 		body = JS_ToCString(cx, argv[0]);
 		l[0] = argv[0];
 		l[1] = g;

@@ -765,106 +765,6 @@ nodep.getElementsByClassName = function(t) { return live$wrapper(mw$.getElements
 nodep.querySelector = querySelector
 nodep.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
 
-/*********************************************************************
-acid test 48 sets frame.onclick to a string, then expects that function to run
-when the frame loads. There are two designs, both are complicated and subtle,
-and I'm not sure which one I like better. I implemented the first.
-1. Use a setter so that onload = function just carries the function through,
-but onload = string compiles the string into a function then sets onload
-to the function, as though you had done that in the first place.
-2. Allow functions or strings, but dispatch event, and the C event driver,
-check to see if it is a function or a string. If a string then compile it.
-There is probably a right answer here.
-Maybe there is some javascript somewhere that says
-a.onclick = "some_function(7,8,9)"; a.onclick();
-That would clinch it; 1 is the right answer.
-I don't know, but for now I implemented (1),
-and hope I don't have to recant some day and switch to (2).
-The compiled function has to run bound to this as the current node,
-and the current window as global, and trust me, it wasn't easy to set that up!
-You can see what I did in handle$cc().
-Then there's another complication. For onclick, the code just runs,
-but for onsubmit the code is suppose to return true or false.
-Mozilla had no trouble compiling and running  return true  at top level.
-Duktape won't do that. Return has to be in a function.
-So I wrap the code in (function (){ code })
-Then it doesn't matter if the code is just expression, or return expression.
-Again, look at handle$cc().
-*********************************************************************/
-
-; (function() {
-var cnlist = ["HTMLElement.prototype", "document", "window"];
-for(let cn of cnlist) {
-// there are lots more events, onmouseout etc, that we don't responnd to,
-// should we watch for them anyways?
-var evs = ["onload", "onunload", "onclick", "onchange", "oninput",
-"onsubmit", "onreset", "onmessage"];
-for(let evname of evs) {
-eval('odp(' + cn + ', "' + evname + '", { \
-get: function() { return this.' + evname + '$2}, \
-set: function(f) { if(db$flags(1)) alert3((this.'+evname+'?"clobber ":"create ") + (this.nodeName ? this.nodeName : "+"+this.dom$class) + ".' + evname + '"); \
-if(typeof f == "string") f = my$win().handle$cc(f, this); \
-if(typeof f == "function") { Object.defineProperty(this, "' + evname + '$2", {value:f,writable:true,configurable:true}); \
-}}})')
-}}})();
-
-// onhashchange from certain places
-; (function() {
-// also HTMLFrameSetElement which we have not yet implemented
-var cnlist = [HTMLBodyElement.prototype, SVGElement, window];
-for(let cn of cnlist) {
-odp(cn, "onhashchange", {
-get: function() { return this.onhashchange$2; },
-set: function(f) { if(db$flags(1)) alert3((this.onhashchange?"clobber ":"create ") + (this.nodeName ? this.nodeName : "+"+this.dom$class) + ".onhashchange");
-if(typeof f == "string") f = my$win().handle$cc(f, this);
-if(typeof f == "function") { this.onhashchange$2 = f}}})
-}})();
-
-// Some website expected an onhashchange handler from the get-go.
-// Don't know what website, and didn't write it down, but it makes no sense to me!
-// Handlers aren't there unless the website puts them there.
-// onhashchange = eb$voidfunction;
-// If we do need a default handler don't create it as above,
-// that leads to confusion; use the get  method.
-// get: function() { return this.onhashchange$2 ? this.onhashchange$2 : eb$voidfunction; }
-
-sdm2("createElementNS", function(nsurl,s) {
-var mismatch = false;
-var u = this.createElement(s);
-if(!u) return null;
-if(!nsurl) nsurl = "";
-u.namespaceURI = new z$URL(nsurl);
-// prefix and url have to fit together, I guess.
-// I don't understand any of this.
-if(!s.match(/:/)) {
-// no colon, let it pass
-u.prefix = "";
-u.localName = s.toLowerCase();
-u.tagName = u.nodeName = u.nodeName.toLowerCase();
-return u;
-}
-// There's a colon, and a prefix, and it has to be real.
-if(u.prefix == "prefix") {
-; // ok
-} else if(u.prefix == "html") {
-if(nsurl != "http://www.w3.org/1999/xhtml") mismatch = true;
-} else if(u.prefix == "svg") {
-if(nsurl != "http://www.w3.org/2000/svg") mismatch = true;
-} else if(u.prefix == "xbl") {
-if(nsurl != "http://www.mozilla.org/xbl") mismatch = true;
-} else if(u.prefix == "xul") {
-if(nsurl != "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul") mismatch = true;
-} else if(u.prefix == "xmlns") {
-if(nsurl != "http://www.w3.org/2000/xmlns/") mismatch = true;
-} else mismatch = true;
-if(mismatch) {
-alert3("bad createElementNS(" + nsurl + "," + s + ')');
-// throw error code 14
-return null;
-}
-return u;
-})
-
 sdm("implementation", {
 owner: document,
 /*********************************************************************
@@ -911,6 +811,21 @@ doc.appendChild(below);
 }
 return doc;
 }
+})
+
+// a simpler version of handlerCompile, for setTimeout().
+// We don't need to bind to this or return a value.
+swm("handlerCompile",  function(f) {
+let cf; // the compiled function
+try {
+cf = eval(`(function(){${f}})`);
+} catch(e) {
+cf = eval("(function(){})");
+alert3("timeout syntax error <" + f + ">");
+}
+cf.body = f;
+cf.toString = function() { return this.body; }
+return cf;
 })
 
 swm("XMLHttpRequest", mw$.XMLHttpRequest)
@@ -965,40 +880,6 @@ swm("$uv$sn", 0)
 */
 swm2("$jt$c", 'z')
 swm2("$jt$sn", 0)
-
-sdm("childNodes", [])
-// document should always and only have two children: DOCTYPE and HTML
-
-/*********************************************************************
-Compile a string for a handler such as onclick or onload.
-Warning: this is not protected.
-set_property_string(anchorObject, "onclick", "snork 7 7")
-will run through a setter, which says this is a string to be compiled into
-a function, whence a syntax error will cause duktape to abort.
-Perhaps every call, or some calls, to set_property_string should be protected,
-as I had to do with typeof_property_nat in jseng_duk.c.
-Maybe I should bite the bullet and protect the calls to set_property_string.
-I already had to work around an abort when setting readyState = "complete",
-see this in html.c. It's ugly.
-On the other hand, I may want to do something specific when a handler doesn't compile.
-Put in a stub handler that returns true or something.
-So maybe it's worth having a specific try catch here.
-*********************************************************************/
-
-swm("handle$cc", function(f, t) {
-var cf; // the compiled function
-try {
-cf = eval("(function(){" + f + " }.bind(t))");
-} catch(e) {
-// don't just use eb$nullfunction, cause I'm going to put the source
-// onto cf.body, which might help with debugging.
-cf = eval("(function(){return true;})");
-alert3("handler syntax error <" + f + ">");
-}
-cf.body = f;
-cf.toString = function() { return this.body; }
-return cf;
-})
 
 // Local storage, this is per window.
 // Then there's sessionStorage, and honestly I don't understand the difference.
