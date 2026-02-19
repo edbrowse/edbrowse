@@ -2787,7 +2787,7 @@ return d.createTextNode("DOMParser not yet implemented");
 function xml_open(method, url, async, user, password){
 const w = my$win();
 if(user || password) alert3("xml user and password ignored");
-this.readyState = 1;
+this.readyState$2 = 1;
 this.async = (async === false)?false:true;
 this.method = method || "GET";
 alert3("xhr " + (this.async ? "async " : "") + "open " + this.method + " " + url);
@@ -2903,7 +2903,7 @@ let value3 = value1.replace(/^.*?:/, "");
 this.responseHeaders[value2] = value3.trim();
 }
 
-this.readyState = 4;
+this.readyState$2 = 4;
 this.responseURL = url2.replace(/#.*/,"");
 if(success) {
 this.status = code;
@@ -5656,6 +5656,57 @@ if(typeof o == "object")
 this.name = o.name, this.detail = o.detail;
 })
 swpp("CustomEvent", w.Event);
+
+swp("XMLHttpRequestEventTarget", function(){})
+swpp("XMLHttpRequestEventTarget", w.EventTarget)
+
+swp("XMLHttpRequestUpload", function(){})
+swpp("XMLHttpRequestUpload", w.XMLHttpRequestEventTarget)
+
+// XMLHttpRequest was a static class above, but like URL,
+// what if somebody wants to replace XMLHttpRequest.prototype.toString?
+// So here we go.
+// Originally implemented by Yehuda Katz
+// And since then, from envjs, by Thatcher et al
+swpc("XMLHttpRequest", function() {
+    this.headers = new w.Object;
+    this.responseHeaders = new w.Object;
+    this.aborted = false;//non-standard
+    this.withCredentials = true;
+    this.upload = new w.XMLHttpRequestUpload;
+    this.readyState$2 = 0;
+    this.async = false;
+    this.responseText = "";
+    this.response = "";
+    this.responseXML = null;
+    this.status = 0;
+    this.statusText = "";
+})
+swpp("XMLHttpRequest", w.EventTarget)
+// defined by the standard: http://www.w3.org/TR/XMLHttpRequest/#xmlhttprequest
+// but not provided by Firefox.  Safari and others do define it.
+w.XMLHttpRequest.UNSENT = 0;
+w.XMLHttpRequest.OPEN = 1;
+w.XMLHttpRequest.HEADERS_RECEIVED = 2;
+w.XMLHttpRequest.LOADING = 3;
+w.XMLHttpRequest.DONE = 4;
+let xmlp = w.XMLHttpRequest.prototype;
+xmlp.toString = function(){return "[object XMLHttpRequest]"}
+xmlp.open = xml_open;
+xmlp.setRequestHeader = xml_srh;
+xmlp.getResponseHeader = xml_grh;
+xmlp.getAllResponseHeaders = xml_garh;
+xmlp.send = xml_send;
+xmlp.parseResponse = xml_parse;
+xmlp.overrideMimeType = function(t) {
+if(typeof t == "string") this.eb$mt = t;
+}
+xmlp.eb$mt = null;
+// make sure readyState is readonly
+// Should probably do the same for the other properties like code ant status.
+odp(xmlp, "readyState", {get: function(){
+    return this.readyState$2 ? this.readyState$2 : 0}})
+
 
 }
 
