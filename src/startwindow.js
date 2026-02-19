@@ -432,7 +432,7 @@ odp(window, "name", {get:function(){return frameElement.name}});
 sdm("bgcolor", "white")
 sdm("contentType", "text/html")
 function readyStateComplete() {
-    document.readyState = "complete"; document.activeElement = document.body;
+    document.readyState$2 = "complete"; document.activeElement = document.body;
     let e = new Event;
     e.initEvent("readystatechange", true, true);
     document.dispatchEvent(e);

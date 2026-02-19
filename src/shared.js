@@ -3816,6 +3816,7 @@ swp("Document", function() {
             this.id$hash.delete(i);
         }
     )});
+    this.readyState$2 = "interactive";
 });
 swpp("Document", w.EventTarget)
 let docp = w.Document.prototype;
@@ -3868,7 +3869,9 @@ odp(docp, "URL", {get: function(){return this.location ? this.location.toString(
 odp(docp, "documentURI", {get: function(){return this.URL}})
 odp(docp, "cookie", { get: eb$getcook, set: eb$setcook});
 docp.defaultView = w
-docp.readyState = "interactive"
+// make sure readyState is readonly
+odp(docp, "readyState", {get: function(){
+    return this.readyState$2 ? this.readyState$2 : null}})
 docp.visibilityState = "visible"
 docp.getElementById = getElementById
 docp.nodeName = "#document"
@@ -5478,7 +5481,6 @@ c = new w.CSSStyleDeclaration; c.element = null; break;
 case "style": c = new w.HTMLStyleElement; break;
 case "script": c = new w.HTMLScriptElement; break;
 case "template": c = new w.HTMLTemplateElement; break;
-// this isn't standard; it is mine
 case "document": c = new w.Document; break;
 case "root": c = new w.z$HTML; s = "html"; break;
 case "div": c = new w.HTMLDivElement; break;
@@ -5661,6 +5663,8 @@ swpp("CustomEvent", w.Event);
 this.URL = {};
 
 // Code beyond this point is third party - necessary for the operation of the browser.
+// If you want to grab a more recent snapshot, and you're not sure
+// what I had to change to make it work, look for my$win().
 
 // NextSection
 // TextDecoder TextEncoder   https://github.com/anonyco/FastestSmallestTextEncoderDecoder
