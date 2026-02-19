@@ -5638,7 +5638,7 @@ unparen:
 	case TAGACT_FRAME:
 		if (!retainTag) break;
 		if (t->f1 && !t->contracted) {	/* expanded frame */
-			sprintf(hnum, "\f%c%d*%s\f", InternalCodeChar, tagno,
+			sprintf(hnum, "\r%c%d*%s\r", InternalCodeChar, tagno,
 				(opentag ? "`--" : "--`"));
 			ns_hnum();
 			break;
@@ -5693,7 +5693,7 @@ unparen:
 		if(t->jslink)
 			t->contracted = !get_property_bool_t(t, "open");
 		if (!t->contracted) {	/* expanded frame */
-			sprintf(hnum, "\f%c%d*%s\f", InternalCodeChar, tagno,
+			sprintf(hnum, "\r%c%d*%s\r", InternalCodeChar, tagno,
 				(opentag ? "`--" : "--`"));
 			ns_hnum();
 			break;
