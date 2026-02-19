@@ -828,7 +828,48 @@ cf.toString = function() { return this.body; }
 return cf;
 })
 
-swm("XMLHttpRequest", mw$.XMLHttpRequest)
+swm("XMLHttpRequestEventTarget", function(){})
+swmp("XMLHttpRequestEventTarget", EventTarget)
+
+swm("XMLHttpRequestUpload", function(){})
+swmp("XMLHttpRequestUpload", XMLHttpRequestEventTarget)
+
+// Originally implemented by Yehuda Katz
+// And since then, from envjs, by Thatcher et al
+swm("XMLHttpRequest", function() {
+    this.headers = {};
+    this.responseHeaders = {};
+    this.aborted = false;//non-standard
+    this.withCredentials = true;
+this.upload = new XMLHttpRequestUpload;
+})
+swmp("XMLHttpRequest", EventTarget)
+// defined by the standard: http://www.w3.org/TR/XMLHttpRequest/#xmlhttprequest
+// but not provided by Firefox.  Safari and others do define it.
+XMLHttpRequest.UNSENT = 0;
+XMLHttpRequest.OPEN = 1;
+XMLHttpRequest.HEADERS_RECEIVED = 2;
+XMLHttpRequest.LOADING = 3;
+XMLHttpRequest.DONE = 4;
+XMLHttpRequest.prototype.toString = function(){return "[object XMLHttpRequest]"}
+XMLHttpRequest.prototype.open = mw$.xml_open;
+XMLHttpRequest.prototype.setRequestHeader = mw$.xml_srh;
+XMLHttpRequest.prototype.getResponseHeader = mw$.xml_grh;
+XMLHttpRequest.prototype.getAllResponseHeaders = mw$.xml_garh;
+XMLHttpRequest.prototype.send = mw$.xml_send;
+XMLHttpRequest.prototype.parseResponse = mw$.xml_parse;
+XMLHttpRequest.prototype.overrideMimeType = function(t) {
+if(typeof t == "string") this.eb$mt = t;
+}
+XMLHttpRequest.prototype.eb$mt = null;
+XMLHttpRequest.prototype.async = false;
+XMLHttpRequest.prototype.readyState = 0;
+XMLHttpRequest.prototype.responseText = "";
+XMLHttpRequest.prototype.response = "";
+XMLHttpRequest.prototype.responseXML = null;
+XMLHttpRequest.prototype.status = 0;
+XMLHttpRequest.prototype.statusText = "";
+
 // Request, Response, Headers, fetch; link to third party code in master window.
 // fetch calls XMLHttpRequest, but puts the Response in a Promise
 swm2("Headers", mw$.Headers)

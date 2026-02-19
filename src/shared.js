@@ -2783,7 +2783,6 @@ alert3(">>>");
 return d.createTextNode("DOMParser not yet implemented");
 }}}
 
-// various XMLHttpRequest methods
 function xml_open(method, url, async, user, password){
 if(user || password) alert3("xml user and password ignored");
 this.readyState = 1;
@@ -2933,63 +2932,6 @@ this.status = 0;
 this.statusText = "network error";
 }
 };
-
-// this is a minimal EventTarget class. It has the listeners but doesn't
-// inherit all the stuff from Node, like it should.
-// It is here so XMLHttpRequest can inherit its listeners.
-function EventTarget(){}
-EventTarget.prototype.addEventListener = addEventListener;
-EventTarget.prototype.removeEventListener = removeEventListener;
-EventTarget.prototype.dispatchEvent = dispatchEvent;
-
-function XMLHttpRequestEventTarget(){}
-XMLHttpRequestEventTarget.prototype = new EventTarget;
-
-function XMLHttpRequestUpload(){}
-XMLHttpRequestUpload.prototype = new XMLHttpRequestEventTarget;
-
-// Originally implemented by Yehuda Katz
-// And since then, from envjs, by Thatcher et al
-function XMLHttpRequest() {
-    this.headers = {};
-    this.responseHeaders = {};
-    this.aborted = false;//non-standard
-    this.withCredentials = true;
-this.upload = new XMLHttpRequestUpload;
-}
-XMLHttpRequest.prototype = new EventTarget;
-// defined by the standard: http://www.w3.org/TR/XMLHttpRequest/#xmlhttprequest
-// but not provided by Firefox.  Safari and others do define it.
-XMLHttpRequest.UNSENT = 0;
-XMLHttpRequest.OPEN = 1;
-XMLHttpRequest.HEADERS_RECEIVED = 2;
-XMLHttpRequest.LOADING = 3;
-XMLHttpRequest.DONE = 4;
-XMLHttpRequest.prototype.toString = function(){return "[object XMLHttpRequest]"}
-XMLHttpRequest.prototype.open = xml_open;
-// FormData takes over this function, and sets _hasContentType
-// if we are setting "Content-Type"
-// If even one website anywhere wants to take over this method, as FormData does,
-// then we have to move this XMLHttpRequest stuff back to startwindow.
-// See the comments on the URL class and why it has to be there.
-XMLHttpRequest.prototype.setRequestHeader = xml_srh;
-XMLHttpRequest.prototype.getResponseHeader = xml_grh;
-XMLHttpRequest.prototype.getAllResponseHeaders = xml_garh;
-// FormData takes over this function and sends it a different way
-//if the data is an instance of FormDataPolyfill
-XMLHttpRequest.prototype.send = xml_send;
-XMLHttpRequest.prototype.parseResponse = xml_parse;
-XMLHttpRequest.prototype.overrideMimeType = function(t) {
-if(typeof t == "string") this.eb$mt = t;
-}
-XMLHttpRequest.prototype.eb$mt = null;
-XMLHttpRequest.prototype.async = false;
-XMLHttpRequest.prototype.readyState = 0;
-XMLHttpRequest.prototype.responseText = "";
-XMLHttpRequest.prototype.response = "";
-XMLHttpRequest.prototype.responseXML = null;
-XMLHttpRequest.prototype.status = 0;
-XMLHttpRequest.prototype.statusText = "";
 
 this.CSS = {
 supports:function(w){ alert3("CSS.supports("+w+")"); return false},
@@ -6894,15 +6836,16 @@ function onmessage$$running() {
 }
 
 function lastModifiedByHead(url) {
-var d = new Date; // date object
+const w = my$win();
+let d = new Date; // date object
 var lm;
 url = url.toString(); // from URL object to string
 if(url.match(/^https?:\/\//)) {
-var xhr = new XMLHttpRequest;
+var xhr = new w.XMLHttpRequest;
 xhr.open("head", url, false);
 xhr.send("", 0);
 if(xhr.status == 200) {
-var r = xhr.responseHeaders;
+let r = xhr.responseHeaders;
 lm = r["Last-Modified"];
 if(typeof lm == "string" && lm.length > 10) {
 // the Date object should accept various formats from the web server
@@ -7878,7 +7821,7 @@ It has to be a function in startwindow.
 Thus I have fetch$onload over there, and all it does is call resolve on my behalf.
 resolve(new Response(body, options))
 becomes
-        my$win().fetch$onload(resolve, new Response(body, options))
+        w.fetch$onload(resolve, new Response(body, options))
 that's it, and yet that seems to play nicely with await
 in the asynchronous case, where resolve is called later,
 and spins off its own then() job to pass back to await.
@@ -7894,7 +7837,7 @@ It happens all the time.
 First the synchronous case.
 
 fetch creates a new Promise object in context 1.
-As mentioned earlier, I call my$win().Promise so it is promise in context 1.
+As mentioned earlier, I call w.Promise so it is promise in context 1.
 Pass in a support function to the constructor.
 Promise runs the function.
 Create XMLHttpRequest and open with the url.
@@ -8453,14 +8396,15 @@ Response.redirect = function(url, status) {
 }
 
 function fetch(input, init) {
-  return new (my$win().Promise)(function(resolve, reject) {
+const w = my$win();
+  return new (w.Promise)(function(resolve, reject) {
     var request = new Request(input, init)
 
     if (request.signal && request.signal.aborted) {
-      return reject(new (my$win().DOMException)('Aborted', 'AbortError'))
+      return reject(new (w.DOMException)('Aborted', 'AbortError'))
     }
 
-    var xhr = new XMLHttpRequest()
+    var xhr = new w.XMLHttpRequest()
 
     function abortXhr() {
       xhr.abort()
@@ -8480,7 +8424,7 @@ function fetch(input, init) {
       }
       options.url = 'responseURL' in xhr ? xhr.responseURL : options.headers.get('X-Request-URL')
       var body = 'response' in xhr ? xhr.response : xhr.responseText
-        my$win().fetch$onload(resolve, new Response(body, options))
+        w.fetch$onload(resolve, new Response(body, options))
     }
 
     xhr.onerror = function() {
@@ -8492,7 +8436,7 @@ function fetch(input, init) {
     }
 
     xhr.onabort = function() {
-        reject(new (my$win().DOMException)('Aborted', 'AbortError'))
+        reject(new (w.DOMException)('Aborted', 'AbortError'))
     }
 
     function fixUrl(url) {
@@ -8584,10 +8528,10 @@ Object.defineProperty(k, "toString",{value:wrapString});
 flist = [Object, Function, Date, Math,
 Promise, Array, Uint8Array, Error, String, URL, URLSearchParams,
 Intl_dt, Intl_num,
-// If I freeze these, the xhr system doesn't work. Hope to fix this soon.
-// EventTarget, XMLHttpRequestEventTarget, XMLHttpRequestUpload, XMLHttpRequest,
-// Blob, FormData, Request, Response, Headers,
-UnsupportedError];
+Blob, FormData,
+// If I freeze these, fetch doesn't work. We need to fix this.
+// Request, Response,
+Headers, UnsupportedError];
 for(let k of flist) {
 Object.freeze(k);
 Object.freeze(k.prototype);
