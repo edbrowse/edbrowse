@@ -8584,8 +8584,10 @@ Object.defineProperty(k, "toString",{value:wrapString});
 flist = [Object, Function, Date, Math,
 Promise, Array, Uint8Array, Error, String, URL, URLSearchParams,
 Intl_dt, Intl_num,
-EventTarget, XMLHttpRequestEventTarget, XMLHttpRequestUpload, XMLHttpRequest,
-Blob, FormData, Request, Response, Headers, UnsupportedError];
+// If I freeze these, the xhr system doesn't work. Hope to fix this soon.
+// EventTarget, XMLHttpRequestEventTarget, XMLHttpRequestUpload, XMLHttpRequest,
+// Blob, FormData, Request, Response, Headers,
+UnsupportedError];
 for(let k of flist) {
 Object.freeze(k);
 Object.freeze(k.prototype);
