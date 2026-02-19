@@ -85,15 +85,18 @@ The next link is an ftp link, which we should test / verify now and then,
 although ftp sites are becoming scarce.
 Go to it if you wish, descend into a directory or file, then ^ back.
 
-Next is a line with 5 buttons, 4 submit and a checkbox.
+Next is a line with 4 action buttons.
 The first button waits 5 seconds then sends you to a gopher site, to test the gopher protocol.
 This is a page replacement, you cannot return.
 
 The second button runs an xhr test.
 xhr is a system where javascript can go get a file from the internet.
 In this case it gets the home page from edbrowse.org.
-When the page is loaded it prints " base onload" from its onload function.
+When the page is loaded it prints "readyState is now 1" from its readyState function,
+and  " base onload" from its onload function,
+and a description of the target from another onload function.
 If the data looks right it will say "looks good".
+Finally it prints "readyState is now 4", the code for complete.
 It may print more debugging messages at db3.
 
 The third button is an await test.
@@ -106,8 +109,8 @@ The javascript fetch command uses await internally.
 Once again this command fetches the home page of edbrowse.org.
 If it succeeds it will print "camp Granada".
 
-Finally the fifth input field is a check box.
-Turn it on with i5=+.
+The next line has two checkboxes.
+Enable the first box with i1=+.
 This activates an observer, which watches the entire page.
 It reports any changes to the tree of objects, or to the attributes.
 If you are quick on the draw, and activate it before the 10 second timer fires,
@@ -127,7 +130,17 @@ f.setAttribute("sky","gray")
 
 The observer sees this right away and reports, "The sky attribute was modified."
 
-Next we come to Frame {butterfly}, and there are lot of things to test here.
+The second checkbox activates a timer, which is displayed on the next line.
+This timer updates once a second.
+Edbrowse rerenders every 20 seconds, so this should not overwhelm.
+Indeed, that is part of the test.
+Note the updated line as the timer runs.
+Type rr to rerender now, to see the value of the timer right now.
+Type i2=- to turn the timer off,
+whence the next line does not tick any more.
+
+Move down a couple lines, and we come to
+Frame {butterfly}, and there are lot of things to test here.
 Type exp to expand the frame, or g to go to the frame, the commands are equivalent.
 The frame is a file on edbrowse.org.
 It prints "script in frame", and presents a small web page, just 4 lines long.
