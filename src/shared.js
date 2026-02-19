@@ -1220,7 +1220,8 @@ but this doesn't run unless, perhaps, the script is loaded from src,
 which we don't even support at this time.
 If you need to support that some day, use XMLHttpRequest.
 Then execute then follow up with this onload code.
-var e = new w.Event("load")
+var e = new w.Event()
+e.initEvent("load", true, true)
 s.dispatchEvent(e)
 */
 }
@@ -2784,31 +2785,34 @@ return d.createTextNode("DOMParser not yet implemented");
 }}}
 
 function xml_open(method, url, async, user, password){
+const w = my$win();
 if(user || password) alert3("xml user and password ignored");
 this.readyState = 1;
 this.async = (async === false)?false:true;
 this.method = method || "GET";
 alert3("xhr " + (this.async ? "async " : "") + "open " + this.method + " " + url);
-this.url = resolveURL(my$win().eb$base, url);
+this.url = resolveURL(w.eb$base, url);
 this.status = 0;
 this.statusText = "";
 // state = 1 and technically that's a change
 // a website might use this to set something up, before send
 // warning: if you don't call open, just set variables, this won't be called;
 // but I think you're suppose to call open
-if(typeof this.onreadystatechange == "function") this.onreadystatechange();
-};
+let e = new w.Event("readystatechange");
+this.dispatchEvent(e);
+}
 
 function xml_srh(header, value){
 this.headers[header] = value;
-};
+}
 
 function xml_grh(header){
-var rHeader, returnedHeaders;
+const w = my$win();
+let rHeader, returnedHeaders;
 if (this.readyState < 3){
 throw new Error("INVALID_STATE_ERR");
 } else {
-returnedHeaders = [];
+returnedHeaders = new w.Array;
 for (rHeader in this.responseHeaders) {
 if (rHeader.match(new RegExp(header, "i"))) {
 returnedHeaders.push(this.responseHeaders[rHeader]);
@@ -2820,7 +2824,8 @@ return null;
 };
 
 function xml_garh(){
-var header, returnedHeaders = [];
+const w = my$win();
+let header, returnedHeaders = new w.Array;
 if (this.readyState < 3){
 throw new Error("INVALID_STATE_ERR");
 } else {
@@ -2828,19 +2833,19 @@ for (header in this.responseHeaders)
 returnedHeaders.push( header + ": " + this.responseHeaders[header] );
 }
 return returnedHeaders.join("\r\n");
-};
+}
 
 function xml_send(data, parsedoc){
+const w = my$win();
 if(parsedoc) alert3("xml parsedoc ignored");
-var w = my$win();
-var headerstring = "";
-for (var item in this.headers) {
-var v1=item;
-var v2=this.headers[item];
+let headerstring = "";
+for (let item in this.headers) {
+let v1=item;
+let v2=this.headers[item];
 headerstring+=v1+': '+v2+'\n';
 }
 if(headerstring) alert3("xhr headers " + headerstring.replace(/\n$/,''));
-var urlcopy = this.url;
+let urlcopy = this.url;
 if(urlcopy.match(/[*'";\[\]$\u0000-\u0020\u007f-\uffff]/)) {
 alert3("xhr url does not look encoded");
 // but assume it was anyways, cause it should be
@@ -2858,14 +2863,14 @@ data = encodeURI(data);
 }
 // check the sanity of data
 if(data === null || data === undefined) data = "";
-var td = typeof data;
-var pd = 0; // how to process the data
+let td = typeof data;
+let pd = 0; // how to process the data
 if(td == "object" && data instanceof w.Uint8Array) {
 pd = 1;
 // Turn the byte array into utf8.
 // code 0 becomes code 256, so we don't have a problem with null bytes.
-var s="";
-for(var i=0; i<data.length; ++i)
+let s="";
+for(let i=0; i<data.length; ++i)
 s += String.fromCharCode(data[i]?data[i]:256);
 td = typeof (data = s);
 }
@@ -2878,22 +2883,23 @@ if(this.$entire != "async") this.parseResponse();
 };
 
 function xml_parse(){
+const w = my$win();
 var responsebody_array = this.$entire.split("\r\n\r\n");
-var success = parseInt(responsebody_array[0]);
-var code = parseInt(responsebody_array[1]);
-var url2 = responsebody_array[2];
-var http_headers = responsebody_array[3];
+let success = parseInt(responsebody_array[0]);
+let code = parseInt(responsebody_array[1]);
+let url2 = responsebody_array[2];
+let http_headers = responsebody_array[3];
 responsebody_array[0] = responsebody_array[1] = responsebody_array[2] = responsebody_array[3] = "";
 this.responseText = responsebody_array[4];
 if(typeof this.responseText != "string") this.responseText = "";
 // some want responseText, some just want response
 this.response = this.responseText;
-var hhc = http_headers.split(/\r?\n/);
-for(var i=0; i<hhc.length; ++i) {
-var value1 = hhc[i];
+let hhc = http_headers.split(/\r?\n/);
+for(let i=0; i<hhc.length; ++i) {
+let value1 = hhc[i];
 if(!value1.match(/:/)) continue;
-var value2 = value1.replace(/:.*/, "");
-var value3 = value1.replace(/^.*?:/, "");
+let value2 = value1.replace(/:.*/, "");
+let value3 = value1.replace(/^.*?:/, "");
 this.responseHeaders[value2] = value3.trim();
 }
 
@@ -2906,27 +2912,26 @@ this.statusText = (code == 200 ? "OK" : "http error " + code);
 
 // Should we run the xml parser if the status was not 200?
 // And should we run it before the onreadystatechange function?
-var ct = this.getResponseHeader("^content-type$");
+let ct = this.getResponseHeader("^content-type$");
 if(!ct) ct = "text/xml"; // default
 // if overrideMimeType called, should we replace it in headers, or just here?
 if(this.eb$mt) ct = this.eb$mt;
 if(ct) ct = ct.toLowerCase().replace(/;.*/,'');
 if(code >= 200 && code < 300 && ct && (ct == "text/xml" || ct == "application/xml")) {
 alert3("parsing the response as xml");
-this.responseXML = (new (my$win().DOMParser)()).parseFromString(this.responseText, "text/xml");
+this.responseXML = (new (w.DOMParser)()).parseFromString(this.responseText, "text/xml");
 }
 
 // I'll do the load events, not loadstart or progress or loadend etc.
-var w = my$win();
-var e = new w.Event;
+let e = new w.Event;
 e.initEvent("load", true, true);
 e.loaded = this.response.length;
 this.dispatchEvent(e);
 // I don't understand the upload object at all
 this.upload.dispatchEvent(e);
-
-// does anyone call addEventListener for readystatechange? Hope not.
-if(typeof this.onreadystatechange == "function") this.onreadystatechange();
+e = new w.Event;
+e.initEvent("readystatechange", true, true);
+this.dispatchEvent(e);
 } else {
 this.status = 0;
 this.statusText = "network error";

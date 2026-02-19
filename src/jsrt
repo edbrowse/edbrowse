@@ -319,6 +319,8 @@ xhr.addEventListener("load", function(e){
  alert(`target ${e.target} phase ${e.eventPhase} response length ${this.responseText.length}`)
 if(this.responseText.indexOf("100% text based") > 0) alert("looks good"); else alert("search text not found");
 })
+xhr.addEventListener("readystatechange", function(e){
+alert(`ready state is now ${this.readyState}`)})
 xhr.open("get", "http://edbrowse.org", true);
 xhr.send("", 0);
 }

@@ -431,13 +431,11 @@ odp(window, "name", {get:function(){return frameElement.name}});
 
 sdm("bgcolor", "white")
 sdm("contentType", "text/html")
-function readyStateComplete() { document.readyState = "complete"; document.activeElement = document.body;
-if(document.onreadystatechange$$array) {
-let e = new Event;
-e.initEvent("readystatechange", true, true);
-e.target = e.currentTarget = document;
-document.dispatchEvent(e);
-}
+function readyStateComplete() {
+    document.readyState = "complete"; document.activeElement = document.body;
+    let e = new Event;
+    e.initEvent("readystatechange", true, true);
+    document.dispatchEvent(e);
 }
 
 swm1("screen", {
