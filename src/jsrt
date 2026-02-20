@@ -340,8 +340,10 @@ alert(await resolveAfter5Seconds("your 5 seconds are up") + greeting())
 async function awaitFetchTest()
 {
 function showcamp(o) { alert("camp " + o.camp); }
+const r = (await fetch("http://www.edbrowse.org/jscamp.json"));
 // p_json is the promise of the json object
-const p_json = (await fetch("http://www.edbrowse.org/jscamp.json")).json();
+const p_json = r.json();
+if(r.headers.get("content-type") != "application/json") fail(179);
 p_json.then(showcamp);
 }
 </script>
