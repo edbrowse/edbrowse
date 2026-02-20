@@ -342,8 +342,8 @@ swm1("blur", ()=>(document.activeElement = null))
 swm1("focus", ()=>(document.activeElement = document.body))
 
 swm1("self", window)
-odp(window, "parent", {get: eb$parent,enumerable:true});
-odp(window, "top", {get: eb$top,enumerable:true});
+window.top = eb$top();
+window.parent = window.eb$parent();
 odp(window, "frameElement", {get: eb$frameElement,enumerable:true});
 
 sdm("write", eb$write)
