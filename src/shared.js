@@ -2784,7 +2784,12 @@ alert3(">>>");
 return d.createTextNode("DOMParser not yet implemented");
 }}}
 
-function xml_open(method, url, async, user, password){
+// XMLHttpRequest methods. These could all be in setupClasses(), but there are
+// a lot of them and rather complex.
+this.xml = {
+
+// open the request
+open: function(method, url, async, user, password){
 const w = my$win();
 if(user || password) alert3("xml user and password ignored");
 this.readyState$2 = 1;
@@ -2800,13 +2805,15 @@ this.statusText = "";
 // but I think you're suppose to call open
 let e = new w.Event("readystatechange");
 this.dispatchEvent(e);
-}
+},
 
-function xml_srh(header, value){
+// set request header
+srh: function(header, value){
 this.headers[header] = value;
-}
+},
 
-function xml_grh(header){
+// get response header
+grh: function(header){
 const w = my$win();
 let rHeader, returnedHeaders;
 if (this.readyState < 3){
@@ -2821,9 +2828,10 @@ returnedHeaders.push(this.responseHeaders[rHeader]);
 if (returnedHeaders.length) return returnedHeaders.join(", ");
 }
 return null;
-};
+},
 
-function xml_garh(){
+// get all response headers
+garh: function(){
 const w = my$win();
 let header, returnedHeaders = new w.Array;
 if (this.readyState < 3){
@@ -2833,9 +2841,10 @@ for (header in this.responseHeaders)
 returnedHeaders.push( header + ": " + this.responseHeaders[header] );
 }
 return returnedHeaders.join("\r\n");
-}
+},
 
-function xml_send(data, parsedoc){
+// send the request, wait for the data to return, possibly asynchronous
+send: function(data, parsedoc){
 const w = my$win();
 if(parsedoc) alert3("xml parsedoc ignored");
 let headerstring = "";
@@ -2880,9 +2889,10 @@ alert3("payload data has improper type " + td);
 }
 this.$entire =  eb$fetchHTTP.call(this, urlcopy,this.method,headerstring,data, pd);
 if(this.$entire != "async") this.parseResponse();
-};
+},
 
-function xml_parse(){
+// parse the returned data
+parse: function(){
 const w = my$win();
 var responsebody_array = this.$entire.split("\r\n\r\n");
 let success = parseInt(responsebody_array[0]);
@@ -2936,7 +2946,10 @@ this.dispatchEvent(e);
 this.status = 0;
 this.statusText = "network error";
 }
-};
+},
+
+}
+Object.freeze(xml);
 
 this.CSS = {
 supports:function(w){ alert3("CSS.supports("+w+")"); return false},
@@ -5692,18 +5705,18 @@ w.XMLHttpRequest.LOADING = 3;
 w.XMLHttpRequest.DONE = 4;
 let xmlp = w.XMLHttpRequest.prototype;
 xmlp.toString = function(){return "[object XMLHttpRequest]"}
-xmlp.open = xml_open;
-xmlp.setRequestHeader = xml_srh;
-xmlp.getResponseHeader = xml_grh;
-xmlp.getAllResponseHeaders = xml_garh;
-xmlp.send = xml_send;
-xmlp.parseResponse = xml_parse;
+xmlp.open = xml.open;
+xmlp.setRequestHeader = xml.srh;
+xmlp.getResponseHeader = xml.grh;
+xmlp.getAllResponseHeaders = xml.garh;
+xmlp.send = xml.send;
+xmlp.parseResponse = xml.parse;
 xmlp.overrideMimeType = function(t) {
 if(typeof t == "string") this.eb$mt = t;
 }
 xmlp.eb$mt = null;
 // make sure readyState is readonly
-// Should probably do the same for the other properties like code ant status.
+// We should probably do the same for the other properties like code ant status.
 odp(xmlp, "readyState", {get: function(){
     return this.readyState$2 ? this.readyState$2 : 0}})
 
