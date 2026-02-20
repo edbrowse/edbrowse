@@ -62,10 +62,14 @@ void *allocZeroMem(size_t n)
 void *reallocMem(void *p, size_t n)
 {
 	void *s;
-	if (!n)
-		i_printfExit(MSG_ReallocP);
-	if (!p)
-		i_printfExit(MSG_Realloc0, n);
+	if (!n) {
+		i_printf(MSG_ReallocP);
+		n = 256;
+	}
+	if (!p) {
+		i_printf(MSG_Realloc0, n);
+		return allocMem(n);
+	}
 	if (p == emptyString) {
 		p = allocMem(n);
 // keep the null byte that was present in emptyString.
