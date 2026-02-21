@@ -3995,6 +3995,8 @@ someone's placed a finalisation registry on the global object but I'm not sure w
     JS_FreeContext(f->cx);
 // Run the GC again in case freeing the context allows any objects to be freed
     JS_RunGC(jsrt);
+/* No need to clean pending jobs again; if there's some path where pending jobs
+are created by the above gc run they'll go away at some point */
     debugPrint(3, "complete js context cleanup for %d", f->gsn);
     cssFree(f);
     free(f->winobj);
