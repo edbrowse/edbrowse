@@ -661,8 +661,7 @@ static void freeTag(Tag *t)
 	char **a;
 // Even if js has been turned off, if this tag was previously connected to an
 // object, we should disconnect it.
-	if(t->jslink)
-		disconnectTagObject(t);
+	disconnectTagObject(t);
 
 // is a child thread downloading on behalf of this tag?
 	if(t->threadcreated && !t->threadjoined) {

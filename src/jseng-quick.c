@@ -3318,12 +3318,17 @@ cleaning up when we really want to run all the finalizers */
 
 	if(debugLevel >= 3) {
             int jj = -1; // -1 = we're freeing the context
-            char *job_type = (
-                e->argc == 1 ? "microtask" : e->argc == 5 ? "promise" : "pending");
+            char pending_with_argc[40];
+            sprintf(pending_with_argc, "pending job with %d arguments", e->argc);
+// job type is a guess based on our experience with quickjs; it could be wrong
+            char *job_type = (e->argc == 1 ? "microtask" :
+            e->argc == 5 ? "promise" :
+            e->argc == 2 ? "finalizer" :
+            pending_with_argc);
 // $pjobs is pending jobs, push this one onto the array.
 // Nobody ever cleans these up, which is why we only do it at debug 3.
+// But no point pushing pending jobs when we're going to free the context
             if (!freeing_context) {
-// No point pushing pending jobs when we're going to free the context
                 JSValue g = JS_GetGlobalObject(ctx);
                 JSValue v = JS_GetPropertyStr(ctx, g, "$pjobs");
                 jj = get_property_number(ctx, v, "length");
@@ -3337,18 +3342,18 @@ cleaning up when we really want to run all the finalizers */
             }
             if (jj > -1) debugPrint(3, "exec %s for context %d job %d",
                 job_type, cf->gsn, jj);
-            else debugPrint(3, "exec %s for freeing context %d", job_type, cf->gsn);
-            if(e->argc != 1 && e->argc != 5)
-                debugPrint(3, "%d arguments", e->argc);
+            else debugPrint(3, "deleting %s for freeing context %d", job_type, cf->gsn);
         }
 
         list_del(&e->link);
-        res = e->job_func(ctx, e->argc, (JSValueConst *)e->argv);
+        if(!freeing_context) {
+            res = e->job_func(ctx, e->argc, (JSValueConst *)e->argv);
 // Promise jobs never seem to return an error. That's why I didn't check for it.
 // But MicroTask jobs do. If the called function fails, we see it.
 // So I check for that.
-        if(!freeing_context && JS_IsException(res)) processError(ctx);
-        debugPrint(3, "exec complete");
+            if(!freeing_context && JS_IsException(res)) processError(ctx);
+            debugPrint(3, "exec complete");
+        }
         JS_FreeValue(ctx, res);
         ++cnt;
         for(i = 0; i < e->argc; i++)
@@ -3408,39 +3413,6 @@ bool pendingJobsForCurrentWindow(void)
 				return rc;
 }
 
-#if 0
-// This breaks finalizers and appears to have other nasty effects on GC. It also doesn't free the job args so leaks there.
-void delPendings(const Frame *f)
-{
-	    JSJobEntry *e;
-	struct list_head *l, *l1;
-	    int i, delcount = 0, keepcount = 0;
-	struct list_head *jl = (struct list_head *)((char*)jsrt + JSRuntimeJobIndex);
-
-	    if(!f->jslink)
-		return;
-
-	    list_for_each_safe(l, l1, jl) {
-		e = list_entry(l, JSJobEntry, link);
-		if (f->cx != e->ctx) {
-			++keepcount;
-			continue;
-		}
-		list_del(&e->link);
-		++delcount;
-		for(i = 0; i < e->argc; i++)
-			    JS_FreeValue(e->ctx, e->argv[i]);
-		js_free(e->ctx, e);
-// See the earlier comment for pending jobs and freeing the context.
-#if ! Q_NG
-		JS_FreeContext(e->ctx);
-#endif
-	    }
-
-	debugPrint(3, "%d pendings deleted, %d pendings kept",
-	delcount, keepcount);
-}
-#endif
 // don't need these quick macros any more
 #undef list_for_each
 #undef list_for_each_safe
