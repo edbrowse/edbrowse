@@ -28,6 +28,7 @@ void restoreSubstitutionStrings(Window *nw);
 Window *createWindow(void);
 void freeWindowLines(struct lineMap *map);
 void undoCompare(void);
+void freeFrame(Frame *f);
 void freeWindows(int cx, bool all);
 bool cxCompare(int cx) ;
 bool cxActive(int cx, bool error);

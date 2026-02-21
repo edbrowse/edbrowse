@@ -3419,12 +3419,10 @@ bool reexpandFrame(void)
 
 // Warning: subframes of this frame are not removed.
 // they hang around in the js system until the entire window is removed.
-// Illustrated by jsrt: expand the butterfly frame,  then the rubix cube frame,
-// then replace the butterfly frame and the rubik context doesn't go away.
-// Fix this some day.
 	freeJSContext(cf);
 	delTimers(cf);
 	nzFree0(cf->dw);
+	cf->dw_l = 0;
 	nzFree0(cf->hbase);
 	nzFree(cf->fileName);
 	cf->fileName = newlocation;

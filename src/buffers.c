@@ -985,6 +985,22 @@ static void undoPush(void)
 	}
 }
 
+void freeFrame(Frame *f)
+{
+    // freeing the context can run pending jobs, which can create timers,
+    // so the order is important here.
+    freeJSContext(f);
+    delTimers(f);
+    nzFree0(f->dw);
+    f->dw_l = 0;
+    nzFree0(f->hbase);
+    nzFree0(f->firstURL);
+    if (f != &f->owner->f0) {
+        nzFree(f->fileName);
+        free(f);
+    }
+}
+
 static void freeWindow(Window *w)
 {
 	Frame *f, *fnext;
@@ -992,20 +1008,16 @@ static void freeWindow(Window *w)
 	freeTags(w);
 	for (f = &w->f0; f; f = fnext) {
 		fnext = f->next;
-		freeJSContext(f);
-		delTimers(f);
-		nzFree0(f->dw);
-		nzFree0(f->hbase);
-		nzFree0(f->fileName);
-		nzFree0(f->firstURL);
-		if (f != &w->f0)
-			free(f);
+		freeFrame(f);
 	}
+	nzFree(w->f0.fileName);
+
 	lnext = w->histLabel;
 	while ((label = lnext)) {
 		lnext = label->prev;
 		free(label);
 	}
+
 	freeWindowLines(w->map);
 	freeWindowLines(w->r_map);
 	nzFree(w->dmap);
@@ -1019,6 +1031,7 @@ static void freeWindow(Window *w)
 	nzFree(w->referrer);
 	nzFree(w->baseDirName);
 	nzFree(w->mail_raw);
+
 // only cleanup the curl handle on imapmode 1, if you try it again on 2 it will blow up.
 	if(w->imapMode1 && w->imap_h) imapCleanupInBackground(w->imap_h);
 	if(w->irciMode) {
@@ -1045,6 +1058,7 @@ static void freeWindow(Window *w)
 			ircClose(w2);
 		}
 	}
+
 	free(w);
 }
 
@@ -5600,20 +5614,7 @@ et_go:
 		cw->imapMode3 = false;
 		for (f = &cw->f0; f; f = fnext) {
 			fnext = f->next;
-			freeJSContext(f);
-			delTimers(f);
-			nzFree(f->dw);
-			nzFree(f->hbase);
-			nzFree(f->firstURL);
-			if (f != &cw->f0) {
-				nzFree(f->fileName);
-				free(f);
-			} else {
-				f->dw = 0;
-				f->dw_l = 0;
-				f->hbase = 0;
-				f->firstURL = 0;
-			}
+			freeFrame(f);
 		}
 		cw->f0.next = 0;
 		lnext = cw->histLabel;

@@ -2010,15 +2010,8 @@ static JSValue nat_unframe(JSContext * cx, JSValueConst this, int argc, JSValueC
 			debugPrint(1, "unframe can't find prior frame to relink");
 			goto done;
 		}
-// Handle the corner case where a pending job can create a timer
-		freeJSContext(f1);
-		delTimers(f1);
 		f->next = f1->next;
-		nzFree(f1->dw);
- 		nzFree(f1->hbase);
-		nzFree(f1->fileName);
-		nzFree(f1->firstURL);
-		free(f1);
+		freeFrame(f1);
 	// cdt use to belong to f1, which no longer exists.
 		cdt->f0 = f;		// back to its parent frame
 	// A running frame could create nodes in its parent frame, or any other frame.
