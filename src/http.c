@@ -3422,9 +3422,8 @@ bool reexpandFrame(void)
 // Illustrated by jsrt: expand the butterfly frame,  then the rubix cube frame,
 // then replace the butterfly frame and the rubik context doesn't go away.
 // Fix this some day.
-
-	delTimers(cf);
 	freeJSContext(cf);
+	delTimers(cf);
 	nzFree0(cf->dw);
 	nzFree0(cf->hbase);
 	nzFree(cf->fileName);

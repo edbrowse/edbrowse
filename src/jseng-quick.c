@@ -2010,8 +2010,9 @@ static JSValue nat_unframe(JSContext * cx, JSValueConst this, int argc, JSValueC
 			debugPrint(1, "unframe can't find prior frame to relink");
 			goto done;
 		}
-		delTimers(f1);
+// Handle the corner case where a pending job can create a timer
 		freeJSContext(f1);
+		delTimers(f1);
 		f->next = f1->next;
 		nzFree(f1->dw);
  		nzFree(f1->hbase);

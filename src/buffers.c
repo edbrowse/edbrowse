@@ -992,8 +992,8 @@ static void freeWindow(Window *w)
 	freeTags(w);
 	for (f = &w->f0; f; f = fnext) {
 		fnext = f->next;
-		delTimers(f);
 		freeJSContext(f);
+		delTimers(f);
 		nzFree0(f->dw);
 		nzFree0(f->hbase);
 		nzFree0(f->fileName);
@@ -5600,8 +5600,8 @@ et_go:
 		cw->imapMode3 = false;
 		for (f = &cw->f0; f; f = fnext) {
 			fnext = f->next;
-			delTimers(f);
 			freeJSContext(f);
+			delTimers(f);
 			nzFree(f->dw);
 			nzFree(f->hbase);
 			nzFree(f->firstURL);
