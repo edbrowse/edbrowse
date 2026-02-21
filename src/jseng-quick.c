@@ -3282,7 +3282,7 @@ int my_ExecutePendingJobs(void)
     struct list_head *l, *l1;
     JSValue res;
     int i, cnt = 0;
-	struct list_head *jl = (struct list_head *)((char*)jsrt + JSRuntimeJobIndex);
+    struct list_head *jl = (struct list_head *)((char*)jsrt + JSRuntimeJobIndex);
 
 // high runner case
     if (list_empty(jl)) return 0;
@@ -3291,32 +3291,36 @@ int my_ExecutePendingJobs(void)
     list_for_each_safe(l, l1, jl) {
 /* stop now and then to let the user interact with edbrowse unless we're
 cleaning up when we really want to run all the finalizers */
-	if(cnt == 10 && !freeing_context)
-            break;
-	e = list_entry(l, JSJobEntry, link);
-	ctx = e->ctx;
+        if(cnt == 10 && !freeing_context) break;
+        e = list_entry(l, JSJobEntry, link);
+        ctx = e->ctx;
         if (freeing_context && ctx != freeing_context) continue;
 // This line resets cw and cf, and we don't put it back, so the calling routine must restore it.
-	if (!frameFromContext(ctx)) {
+        if (!frameFromContext(ctx)) {
             if(ctx == mwc)
                 debugPrint(3, "frameFromContext finds master window");
             else {
                 debugPrint(3, "frameFromContext cannot find a frame for pointer %p", ctx);
-		debugPrint(3, "It is not safe to run this job (%d arguments), or even free it!", e->argc);
-		debugPrint(3, "But it's not great leaving it around either.");
-		debugPrint(3, "Deleting it from the pending queue and hoping for the best. 🤞");
-	        list_del(&e->link);
-		continue;
+                debugPrint(3, "It is not safe to run this job (%d arguments), or free its context!", e->argc);
+                debugPrint(3, "But it's not great leaving the context around either.");
+                debugPrint(3, "Deleting it from the pending queue, freeing what we can and hoping for the best.");
+                list_del(&e->link);
+// We can't use the context but we can free directly from the runtime
+                for(i = 0; i < e->argc; ++i)
+                    if (JS_IsLiveObject(jsrt, e->argv[i]))
+                        JS_FreeValueRT(jsrt, e->argv[i]);
+                js_free_rt(jsrt, e);
+
+                continue;
             }
         }
 
 // Browsing a new web page in the current session pushes the old one, like ^z
 // in Linux. The prior page suspends, and the timers and pendings suspend.
 // ^ is like fg, bringing it back to life.
-	if(!freeing_context && sessionList[cw->sno].lw != cw)
-            continue;
+        if(!freeing_context && sessionList[cw->sno].lw != cw) continue;
 
-	if(debugLevel >= 3) {
+        if(debugLevel >= 3) {
             int jj = -1; // -1 = we're freeing the context
             char pending_with_argc[40];
             sprintf(pending_with_argc, "pending job with %d arguments", e->argc);
@@ -3378,7 +3382,7 @@ and if that happens, then once again we need to free the context.
 *********************************************************************/
 
 #if ! Q_NG
-	JS_FreeContext(ctx);
+        JS_FreeContext(ctx);
 #endif
     }
 
