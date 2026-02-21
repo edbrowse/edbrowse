@@ -3357,8 +3357,8 @@ cleaning up when we really want to run all the finalizers */
 // So I check for that.
             if(!freeing_context && JS_IsException(res)) processError(ctx);
             debugPrint(3, "exec complete");
+            JS_FreeValue(ctx, res);
         }
-        JS_FreeValue(ctx, res);
         ++cnt;
         for(i = 0; i < e->argc; i++)
             JS_FreeValue(ctx, e->argv[i]);
