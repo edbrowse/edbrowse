@@ -3965,12 +3965,11 @@ static void setup_window_2(void)
 
 void freeJSContext(Frame *f)
 {
-	if (!f->jslink)
-		return;
-	Window *save_cw = cw;
-	Frame *save_cf = cf;
-	debugPrint(3, "begin js context cleanup for %d", f->gsn);
-        freeing_context = f->cx;
+    if (!f->jslink) return;
+    Window *save_cw = cw;
+    Frame *save_cf = cf;
+    debugPrint(3, "begin js context cleanup for %d", f->gsn);
+    freeing_context = f->cx;
 /* This looks mad on paper because it appears that we're going to lose our
 document and window objects as well as the context. However, from reading the
 quick code, the document and window objects as returned to us are both just
@@ -3978,31 +3977,32 @@ references so all this does is decrease the ref counts by 1.
 Also note that, when running pending jobs, values referenced by the job args have their ref counts incremented so, even if something really odd is going on,
 they'll still be live for the purposes of that job function call.
 */
-	JS_Release(f->cx, *((JSValue*)f->docobj));
-	JS_Release(f->cx, *((JSValue*)f->winobj));
+    JS_Release(f->cx, *((JSValue*)f->docobj));
+    JS_Release(f->cx, *((JSValue*)f->winobj));
 
 /* Run GC explicitly prior to freeing the frame to at least have a chance of
 catching the finalisers. This actually runs over the whole runtime but js is
 single-threaded so we should be good */
-        do {
-            JS_RunGC(jsrt);
-/* quick uses pending jobs for finalizers, again running over the whole runtime
-is fine as there is no guarantee re: job (rather than timer) timing */
-        } while(my_ExecutePendingJobs());
+    JS_RunGC(jsrt);
+/* quick uses pending jobs for finalizers; when freeing a context we simply
+clean up the pending jobs rather than run them as doing so is unsafe */
+    my_ExecutePendingJobs();
 /* This will either free the context or decrease its ref count so it can go on
 a future GC run. There's a possibility that what we need to do is check the
 liveness of the context and do something equivalent to the above in case
 someone's placed a finalisation registry on the global object but I'm not sure what they'd be expecting in that event.
 */
-	JS_FreeContext(f->cx);
-	debugPrint(3, "complete js context cleanup for %d", f->gsn);
-	cssFree(f);
-	free(f->winobj);
-	free(f->docobj);
-	f->winobj = f->docobj = f->cx = 0;
-	f->jslink = false;
-        freeing_context = NULL;
-	cw = save_cw, cf = save_cf;
+    JS_FreeContext(f->cx);
+// Run the GC again in case freeing the context allows any objects to be freed
+    JS_RunGC(jsrt);
+    debugPrint(3, "complete js context cleanup for %d", f->gsn);
+    cssFree(f);
+    free(f->winobj);
+    free(f->docobj);
+    f->winobj = f->docobj = f->cx = 0;
+    f->jslink = false;
+    freeing_context = NULL;
+    cw = save_cw, cf = save_cf;
 }
 
 static bool has_property(JSContext *cx, JSValueConst parent, const char *name)
