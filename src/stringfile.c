@@ -14,7 +14,7 @@ bool showHiddenFiles, isInteractive;
 int debugLevel = 1;
 FILE *debugFile = NULL;
 char *debugFileName;
-bool debugClone, debugEvent, debugThrow, debugCSS;
+bool debugClone, debugEvent, debugThrow, debugCSS, debugPromise;
 bool debugLayout;
 bool demin = false;
 bool gotimers = true;

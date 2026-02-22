@@ -3278,9 +3278,9 @@ typedef struct JSJobEntry {
 int my_ExecutePendingJobs(void)
 {
     JSContext *ctx;
+    JSValue res, g, v, arg1native;
     JSJobEntry *e;
     struct list_head *l, *l1;
-    JSValue res;
     int i, cnt = 0;
     struct list_head *jl = (struct list_head *)((char*)jsrt + JSRuntimeJobIndex);
 
@@ -3333,8 +3333,8 @@ cleaning up when we really want to run all the finalizers */
 // Nobody ever cleans these up, which is why we only do it at debug 3.
 // But no point pushing pending jobs when we're going to free the context
             if (!freeing_context) {
-                JSValue g = JS_GetGlobalObject(ctx);
-                JSValue v = JS_GetPropertyStr(ctx, g, "$pjobs");
+                g = JS_GetGlobalObject(ctx);
+                v = JS_GetPropertyStr(ctx, g, "$pjobs");
                 jj = get_property_number(ctx, v, "length");
 // promise has argc = 5, microtask has argc = 1
                 if(e->argc == 5)
@@ -3363,6 +3363,13 @@ cleaning up when we really want to run all the finalizers */
 
         list_del(&e->link);
         if(!freeing_context) {
+            if(debugLevel >= 3 && debugPromise) {
+                arg1native = e->argv[1];
+                g = JS_GetGlobalObject(ctx);
+                v = JS_GetPropertyStr(ctx, g, "promiseCatchFunction");
+            set_property_object(ctx, g, "promiseCatchFunctionNative", arg1native);
+                e->argv[1] = v;
+            }
             res = e->job_func(ctx, e->argc, (JSValueConst *)e->argv);
 // Promise jobs never seem to return an error. That's why I didn't check for it.
 // But MicroTask jobs do. If the called function fails, we see it.
@@ -3370,6 +3377,11 @@ cleaning up when we really want to run all the finalizers */
             if(!freeing_context && JS_IsException(res)) processError(ctx);
             debugPrint(3, "exec complete");
             JS_FreeValue(ctx, res);
+            if(debugLevel >= 3 && debugPromise) {
+                e->argv[1] = arg1native;
+                JS_FreeValue(ctx, v);
+                JS_FreeValue(ctx, g);
+            }
         }
         ++cnt;
         for(i = 0; i < e->argc; i++)

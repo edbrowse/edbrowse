@@ -882,4 +882,6 @@ MSG_ImaskOn,
         MSG_NoTempDir,
         MSG_TextDecOff,
         MSG_TextDecOn,
+	MSG_DebugPromiseOff,
+	MSG_DebugPromiseOn,
 };

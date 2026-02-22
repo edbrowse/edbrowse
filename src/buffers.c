@@ -288,6 +288,7 @@ static bool jdb_passthrough(const char *s)
 		"dberr", "dberr+", "dberr-",
 		"dbcn", "dbcn+", "dbcn-",
 		"dbev", "dbev+", "dbev-",
+		"dbprom", "dbprom+", "dbprom-",
 		"dbcss", "dbcss+", "dbcss-", "db",
 		"P", "P+", "P-",
 		"timers", "timers+", "timers-", "tmlist",
@@ -6195,6 +6196,20 @@ et_go:
 		debugEvent = (line[4] == '+');
 		if (helpMessagesOn)
 			i_puts(debugEvent + MSG_DebugEventOff);
+		return true;
+	}
+
+	if (stringEqual(line, "dbprom")) {
+		debugPromise ^= 1;
+		if (helpMessagesOn || debugLevel >= 1)
+			i_puts(debugPromise + MSG_DebugPromiseOff);
+		return true;
+	}
+
+	if (stringEqual(line, "dbprom+") || stringEqual(line, "dbprom-")) {
+		debugPromise = (line[6] == '+');
+		if (helpMessagesOn)
+			i_puts(debugPromise + MSG_DebugPromiseOff);
 		return true;
 	}
 

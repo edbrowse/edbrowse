@@ -272,7 +272,14 @@ extern CURLSH *global_share_handle;
 extern int debugLevel;		/* 0 to 9 */
 extern char *debugFileName;
 extern FILE *debugFile;
-extern bool debugClone, debugEvent, debugThrow, debugCSS, debugScanner, debugLayout;
+// these settings don't do anything unless you are at db3 or higher
+extern bool debugClone; // cloneNode()
+extern bool debugEvent; // events and listeners
+extern bool debugThrow; // stop at catch(e), but only with trace points injected
+extern bool debugCSS; // store css information in /tmp/css
+extern bool debugScanner; // parsing the html tags
+extern bool debugLayout; // formatting the output for display
+extern bool debugPromise; // show errors from within a promise job
 extern bool demin; // deminimize javascript
 extern bool uvw; // trace points
 extern bool gotimers; // run javascript timers

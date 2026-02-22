@@ -529,6 +529,16 @@ odp(window, "length", {get:function(){return frames$2.length},enumerable:true})
 // pending jobs, mostly to debug promise functions.
 swm("$pjobs", [])
 swm("$pjobsa", [])
+swm2("promiseCatchFunctionNative", eb$voidfunction)
+swm("promiseCatchFunction", function(e) {
+// use alert 3 so this will fold into the debug stream,  db>debug.log
+alert3("promise error");
+alert3(e);
+alert3(e.stack);
+// call the original native catch function, which sets up for
+// promise.catch(), which the web page may be expecting.
+return promiseCatchFunctionNative(e);
+})
 
 String.prototype.at = function(n) {
 if(typeof n != "number") return undefined;
