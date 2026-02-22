@@ -3363,7 +3363,7 @@ cleaning up when we really want to run all the finalizers */
 
         list_del(&e->link);
         if(!freeing_context) {
-            if(debugLevel >= 3 && debugPromise) {
+            if(debugLevel >= 3 && debugPromise && e->argc == 5) {
                 arg1native = e->argv[1];
                 g = JS_GetGlobalObject(ctx);
                 v = JS_GetPropertyStr(ctx, g, "promiseCatchFunction");
@@ -3377,7 +3377,7 @@ cleaning up when we really want to run all the finalizers */
             if(!freeing_context && JS_IsException(res)) processError(ctx);
             debugPrint(3, "exec complete");
             JS_FreeValue(ctx, res);
-            if(debugLevel >= 3 && debugPromise) {
+            if(debugLevel >= 3 && debugPromise && e->argc == 5) {
                 e->argv[1] = arg1native;
                 JS_FreeValue(ctx, v);
                 JS_FreeValue(ctx, g);
