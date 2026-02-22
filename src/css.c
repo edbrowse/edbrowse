@@ -1765,7 +1765,7 @@ lastrule:
 			rule->prop_ok =
 			(stringInList(allowableStyleElements, a) >= 0);
 			if(!rule->prop_ok)
-				debugPrint(3, "invalid css property %s", a);
+				debugPrint(4, "invalid css property %s", a);
 			d->prop_ok |= rule->prop_ok;
 			rule->visrel =
 			(stringInList(displayableStyleElements, a) >= 0);
