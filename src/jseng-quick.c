@@ -4328,6 +4328,7 @@ Don't do any of this if the tag is itself <style>. */
 		char *js_node = ((t->action == TAGACT_UNKNOWN || cf->xmlMode) ? t->nodeName : t->nodeNameU);
 		define_hidden_property_string(cx, io, "nodeName", js_node);
 		define_hidden_property_string(cx, io, "tagName", js_node);
+		define_hidden_property_object(cx, io, "ownerDocument", *(JSValue*)cf->docobj);
 	}
 	connectTagObject(t, io);
 }
