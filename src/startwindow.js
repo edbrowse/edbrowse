@@ -528,6 +528,7 @@ odp(window, "length", {get:function(){return frames$2.length},enumerable:true})
 
 // pending jobs, mostly to debug promise functions.
 swm("$pjobs", [])
+swm("$pjobsa", [])
 
 String.prototype.at = function(n) {
 if(typeof n != "number") return undefined;

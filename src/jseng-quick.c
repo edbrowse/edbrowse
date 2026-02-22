@@ -3341,11 +3341,23 @@ cleaning up when we really want to run all the finalizers */
                     set_array_element_object(ctx, v, jj, e->argv[2]);
                 else if(e->argc)
                     set_array_element_object(ctx, v, jj, e->argv[0]);
+                else
+                    set_array_element_object(ctx, v, jj, JS_UNDEFINED);
+                JS_FreeValue(ctx, v);
+                v = JS_GetPropertyStr(ctx, g, "$pjobsa");
+                if(e->argc == 5)
+                    set_array_element_object(ctx, v, jj, e->argv[4]);
+                else
+                    set_array_element_object(ctx, v, jj, JS_UNDEFINED);
                 JS_FreeValue(ctx, v);
                 JS_FreeValue(ctx, g);
             }
-            if (jj > -1) debugPrint(3, "exec %s for context %d job %d",
-                job_type, cf->gsn, jj);
+            const char *pbool = ""; // promise bool indicator
+// fourth argument to a promise call is bool, don't know what it means.
+            if(e->argc == 5 && JS_IsBool(e->argv[3]))
+                pbool = JS_ToBool(ctx, e->argv[3]) ? "+" : "-";
+            if (jj > -1) debugPrint(3, "exec %s for context %d job %d%s",
+                job_type, cf->gsn, jj, pbool);
             else debugPrint(3, "deleting %s for freeing context %d", job_type, cf->gsn);
         }
 
