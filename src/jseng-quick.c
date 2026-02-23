@@ -4104,7 +4104,7 @@ void establish_js_textnode(Tag *t, const char *fpn)
 {
 	JSContext *cx = cf->cx;
 	JSValue cn;
-	 JSValue tagobj = instantiate(cx, *((JSValue*)cf->winobj), fpn, "TextNode");
+	 JSValue tagobj = instantiate(cx, *((JSValue*)cf->winobj), fpn, "Text");
 	if(cf->xmlMode) set_property_bool(cx, tagobj, "eb$xml", true);
 	cn = instantiate_hidden_array(cx, tagobj, "childNodes");
 	JS_DefinePropertyValueStr(cx, tagobj, "parentNode", JS_NULL,

@@ -5006,7 +5006,7 @@ nocolor:
 		if (t->jslink) {
 // defer to the javascript text.
 // either we query js every time, on every piece of text, as we do now,
-// or we include a setter so that TextNode.data assignment has a side effect.
+// or we include a setter so that Text.data assignment has a side effect.
 			char *u = get_property_string_t(t, "data");
 			if (u)
 				nzFree(t->textval), t->textval = u;

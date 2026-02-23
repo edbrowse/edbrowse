@@ -578,7 +578,7 @@ t.value = "";
 if(t.childNodes.length == 0) return; // nothing below
 var tn; // our textNode
 if(t.childNodes.length == 1 && (tn = t.firstChild) &&
-tn.dom$class == "TextNode") {
+tn.dom$class == "Text") {
 var d = (tn.data ? tn.data : "");
 t.value = d;
 t.removeChild(tn);

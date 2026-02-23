@@ -3531,7 +3531,7 @@ Only looking for display=something or visibility=visible.
 Set a flag if that is found.
 To reiterate, t is not null, indicating the node, from cssEverybody.
 We derive the style object from the node.
-If matchtype is nonzero then we are looking at t.TextNode.style,
+If matchtype is nonzero then we are looking at t.Text.style,
 for the before or after text. For matchtype == 0 we access t.style.
 *********************************************************************/
 

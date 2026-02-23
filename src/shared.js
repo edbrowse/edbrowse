@@ -3950,15 +3950,15 @@ elemp.nodeType = 1;
 swp("SVGElement", function(){})
 swpp("SVGElement", w.Element)
 
-swp("TextNode", function(){
+swp("Text", function(){
 odp(this, "data$2", {value:"",writable:true})
 if(arguments.length > 0) {
 // data always has to be a string
 this.data$2 += arguments[0];
 }
 })
-swpp("TextNode", w.HTMLElement)
-let textp = w.TextNode.prototype;
+swpp("Text", w.HTMLElement)
+let textp = w.Text.prototype;
 textp.nodeName = textp.tagName = "#text";
 textp.nodeType = 3;
 // setter insures data is always a string, because roving javascript might:
@@ -3972,7 +3972,7 @@ set: function(s) { this.data$2 = s + ""; }})
 // include the methods to properly instantiate those classes?  Perhaps.
 docp.createTextNode = function(t) {
 if(t == undefined) t = "";
-const c = new w.TextNode(t);
+const c = new w.Text(t);
 /* A text node chould never have children, and does not need childNodes array,
  * but there is improper html out there <text> <stuff> </text>
  * which has to put stuff under the text node, so against this
