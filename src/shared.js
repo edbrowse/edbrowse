@@ -2560,6 +2560,10 @@ return answer;
 }
 
 function newTextUnder(top, s, flavor) {
+if(top.nodeName == "#text") {
+top.data = s;
+return;
+}
 var l = top.childNodes.length;
 for(var i=l-1; i>=0; --i)
 top.removeChild(top.childNodes[i]);

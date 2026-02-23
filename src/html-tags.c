@@ -4608,16 +4608,19 @@ static void jsNode(Tag *t, bool opentag, struct parseContext *pc)
 	const char *a;
 	bool linked_in;
 
-// run reindex at table close
 // all the js variables are on the open tag, except one or two
 	if (!opentag) {
+// run reindex at table close
 		if (action == TAGACT_TABLE && t->jslink)
 			run_function_onearg_win(cf, "rowReindex", t);
+// close the option group
 		if(action == TAGACT_OPTG) pc->currentOG = 0;
+// turn template into document fragment
 		if(action == TAGACT_TEMPLATE) {
 // when I reference content, the getter does everything we need
 			get_property_bool_t(t, "content");
 		}
+// keep the live array of frames up to date
 		if(action == TAGACT_FRAME)
 			run_function_bool_win(cf, "frames$rebuild");
 // test to see if we should run this script right now.
