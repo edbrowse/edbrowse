@@ -41,6 +41,13 @@ var l = extra.indexOf('\n');
 if(l >= 0) extra = extra.substr(0,l);
 if(extra.length > 120) extra = extra.substr(0,120);
 }
+if(nn === "#cdata-section" && top.text) {
+extra = top.text;
+extra = extra.replace(/^[ \t\n]*/, "");
+var l = extra.indexOf('\n');
+if(l >= 0) extra = extra.substr(0,l);
+if(extra.length > 120) extra = extra.substr(0,120);
+}
 if(nn === "OPTION" && top.value)
 extra = top.value;
 if(nn === "OPTION" && top.text) {
@@ -53,7 +60,7 @@ if(nn === "BASE" && top.href)
 extra = top.href.toString();
 if(extra.length) extra = ' ' + extra;
 // some tags should never have anything below them so skip the parentheses notation for these.
-if((nn == "BASE" || nn == "META" || nn == "LINK" ||nn == "#text" || nn == "IMAGE" || nn == "OPTION" || nn == "INPUT" || nn == "SCRIPT") &&
+if((nn == "BASE" || nn == "META" || nn == "LINK" ||nn == "#text" || nn == "#cdata-section" || nn == "IMAGE" || nn == "OPTION" || nn == "INPUT" || nn == "SCRIPT") &&
 (!top.childNodes || top.childNodes.length == 0)) {
 r += nn + extra + '\n';
 return r;
@@ -2503,7 +2510,7 @@ return rc;
 
 function htmlString(t) {
 if(t.nodeType == 3) return t.data;
-if(t.dom$class == "XMLCdata") return "<![Cdata[" + t.text + "]]>";
+if(t.dom$class == "CDataSection") return "<![Cdata[" + t.text + "]]>";
 if(t.nodeType != 1) return "";
 var s = "<" + (t.nodeName ? t.nodeName : "x");
 if(t.attributes$2) {
@@ -5434,11 +5441,11 @@ odp(w.z$Datalist.prototype, "multiple", {
 get:function(){ var t = this.getAttribute("multiple");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("multiple", v);}});
-swp("XMLCdata", function(t) {})
-swpp("XMLCdata", w.HTMLElement)
-let xmlcp = w.XMLCdata.prototype;
-xmlcp.nodeName = xmlcp.tagName = "#cdata-section";
-xmlcp.nodeType = 4;
+swp("CDataSection", function(t) {})
+swpp("CDataSection", w.Text)
+let cdatap = w.CDataSection.prototype;
+cdatap.nodeName = cdatap.tagName = "#cdata-section";
+cdatap.nodeType = 4;
 
 // We've defined the HTMLElement classes, now let's create instances of them.
 docp.createElement = function(s) {

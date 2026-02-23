@@ -4177,7 +4177,7 @@ void domLink(Tag *t, const char *classname,	/* instantiate this class */
 
 // HTMLElement and its derivations
 	if((!strncmp(classname, "HTML", 4) && strlen(classname) >= 11)
-	|| (!strncmp(classname, "XML", 3) && strlen(classname) >= 8)
+	|| stringEqual(classname, "CDataSection")
 	|| stringEqual(classname, "DocType")
 	|| stringEqual(classname, "DocumentType")
 	|| stringEqual(classname, "Comment"))
@@ -4326,8 +4326,10 @@ Don't do any of this if the tag is itself <style>. */
 
 	if(t->action != TAGACT_DOCTYPE) {
 		char *js_node = ((t->action == TAGACT_UNKNOWN || cf->xmlMode) ? t->nodeName : t->nodeNameU);
-		define_hidden_property_string(cx, io, "nodeName", js_node);
-		define_hidden_property_string(cx, io, "tagName", js_node);
+		if(!stringEqual(t->nodeNameU, "#CDATA-SECTION")) {
+			define_hidden_property_string(cx, io, "nodeName", js_node);
+			define_hidden_property_string(cx, io, "tagName", js_node);
+		}
 		define_hidden_property_object(cx, io, "ownerDocument", *(JSValue*)cf->docobj);
 	}
 	connectTagObject(t, io);

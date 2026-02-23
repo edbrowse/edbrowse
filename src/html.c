@@ -5011,14 +5011,20 @@ nocolor:
 			if (u)
 				nzFree(t->textval), t->textval = u;
 		}
-		if (!t->textval)
-			break;
+		if (!t->textval) break;
 		if (!invisible) {
 // I'm not gonna include the node numbers for all the text nodes;
 // a lot of text nodes are whitespace and the tag numbers just confuse things.
 // This assumes you're not goint to jump to a text node,
 // or otherwise interact with it from the command line.
 //			tagInStream(tagno);
+			stringAndString(&ns, &ns_l, t->textval);
+		}
+		break;
+
+	case TAGACT_CDATA:
+		if (!t->textval) break;
+		if (!invisible) {
 			stringAndString(&ns, &ns_l, t->textval);
 		}
 		break;

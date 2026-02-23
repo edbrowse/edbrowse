@@ -4710,7 +4710,10 @@ Needless to say that's not good!
 		break;
 
 	case TAGACT_CDATA:
-		domLink(t, "XMLCdata", 0, 0, 4);
+		nzFree(t->nodeName), nzFree(t->nodeNameU);
+		t->nodeName = cloneString("#cdata-section");
+		t->nodeNameU = cloneString("#CDATA-SECTION");
+		domLink(t, "CDataSection", 0, 0, 4);
 		set_property_string_t(t, "text", t->textval);
 		break;
 
