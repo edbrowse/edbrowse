@@ -4176,15 +4176,16 @@ void domLink(Tag *t, const char *classname,	/* instantiate this class */
 		   classname, extra, (symname ? symname : emptyString));
 	extra &= 6;
 
-// HTMLElement and its derivations
-	if((!strncmp(classname, "HTML", 4) && strlen(classname) >= 11)
-	|| stringEqual(classname, "CDATASection")
-	|| stringEqual(classname, "DocType")
-	|| stringEqual(classname, "DocumentType")
-	|| stringEqual(classname, "Comment"))
-		strcpy(classtweak, classname);
-	else
+// some classes are ours, not standard. We need to prepend z$
+	if(stringEqual(classname, "Header")
+	|| stringEqual(classname, "Footer")
+	|| stringEqual(classname, "Title")
+	|| classname[0] == 't' // tBody tHead tFoot
+	|| stringEqual(classname, "Datalist")
+	|| stringEqual(classname, "HTML"))
 		sprintf(classtweak, "z$%s", classname);
+	else
+		strcpy(classtweak, classname);
 
 	if(owntag)
 		owner = *((JSValue*)owntag->jv);
