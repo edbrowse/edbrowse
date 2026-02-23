@@ -2510,7 +2510,7 @@ return rc;
 
 function htmlString(t) {
 if(t.nodeType == 3) return t.data;
-if(t.dom$class == "CDataSection") return "<![Cdata[" + t.text + "]]>";
+if(t.dom$class == "CDATASection") return "<![Cdata[" + t.text + "]]>";
 if(t.nodeType != 1) return "";
 var s = "<" + (t.nodeName ? t.nodeName : "x");
 if(t.attributes$2) {
@@ -3308,9 +3308,6 @@ odp(urlp, "charAt", {enumerable:false,writable:true,configurable:true,value:func
 odp(urlp, "charCodeAt", {enumerable:false,writable:true,configurable:true,value:function(n) { return this.toString().charCodeAt(n); }})
 odp(urlp, "trim", {enumerable:false,writable:true,configurable:true,value:function() { return this.toString().trim(); }})
 
-swp("CharacterData", function(){})
-swpp("CharacterData", null)
-
 swp("Validity", function(){})
 swpp("Validity", null)
 /*********************************************************************
@@ -4021,6 +4018,14 @@ docp.createDocumentFragment = function() {
 const c = this.createElement("fragment");
 return c;
 }
+
+swp("CharacterData", function(){})
+swpp("CharacterData", w.Node)
+
+swp("ProcessingInstruction", function(){})
+swpp("ProcessingInstruction", w.CharacterData)
+let pip = w.ProcessingInstruction.prototype;
+pip.sheet = null;
 
 // tables, table sections, rows, cells.
 // First some helper functions to add and remove rows from a table or section,
@@ -5441,9 +5446,9 @@ odp(w.z$Datalist.prototype, "multiple", {
 get:function(){ var t = this.getAttribute("multiple");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("multiple", v);}});
-swp("CDataSection", function(t) {})
-swpp("CDataSection", w.Text)
-let cdatap = w.CDataSection.prototype;
+swp("CDATASection", function(t) {})
+swpp("CDATASection", w.Text)
+let cdatap = w.CDATASection.prototype;
 cdatap.nodeName = cdatap.tagName = "#cdata-section";
 cdatap.nodeType = 4;
 

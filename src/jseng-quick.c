@@ -4177,7 +4177,7 @@ void domLink(Tag *t, const char *classname,	/* instantiate this class */
 
 // HTMLElement and its derivations
 	if((!strncmp(classname, "HTML", 4) && strlen(classname) >= 11)
-	|| stringEqual(classname, "CDataSection")
+	|| stringEqual(classname, "CDATASection")
 	|| stringEqual(classname, "DocType")
 	|| stringEqual(classname, "DocumentType")
 	|| stringEqual(classname, "Comment"))
