@@ -4676,7 +4676,6 @@ Needless to say that's not good!
 		if (t->jslink) {
 			const char *w = t->textval;
 			set_property_string_t(t, "data", w);
-			set_property_string_t(t, "class", t->jclass);
 			if(t->deleted && t->parent && t->parent->action == TAGACT_SCRIPT)
 				set_property_bool_t(t, "eb$nomove", true);
 		}
@@ -4707,12 +4706,13 @@ Needless to say that's not good!
 
 	case TAGACT_COMMENT:
 		domLink(t, "Comment", 0, 0, 4);
+		set_property_string_t(t, "data", t->textval);
 		break;
 
 	case TAGACT_CDATA:
 		nzFree(t->nodeName), nzFree(t->nodeNameU);
-		t->nodeName = cloneString("#cdata-section");
-		t->nodeNameU = cloneString("#CDATA-SECTION");
+		t->nodeName = cloneString("cdata");
+		t->nodeNameU = cloneString("CDATA");
 		domLink(t, "CDATASection", 0, 0, 4);
 		set_property_string_t(t, "text", t->textval);
 		break;

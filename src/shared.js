@@ -3984,6 +3984,7 @@ const c = new w.Text(t);
  * I have to treat a text node like an html node. */
     odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
     odp(c, "parentNode", {value:null,writable:true,configurable:true});
+    odp(c, "ownerDocument", {value:this});
 if(this.eb$xml) c.eb$xml = true;
 eb$logElement(c, "text");
 return c;
@@ -4002,6 +4003,7 @@ if(t == undefined) t = "";
 const c = new w.Comment(t);
     odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
     odp(c, "parentNode", {value:null,writable:true,configurable:true});
+    odp(c, "ownerDocument", {value:this});
 eb$logElement(c, "comment");
 return c;
 }
@@ -5446,11 +5448,24 @@ odp(w.z$Datalist.prototype, "multiple", {
 get:function(){ var t = this.getAttribute("multiple");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("multiple", v);}});
-swp("CDATASection", function(t) {})
+
+swp("CDATASection", function(t) {
+this.data = t;
+})
 swpp("CDATASection", w.Text)
 let cdatap = w.CDATASection.prototype;
 cdatap.nodeName = cdatap.tagName = "#cdata-section";
 cdatap.nodeType = 4;
+
+docp.createCDATASection = function(t) {
+if(t == undefined) t = "";
+const c = new w.CDATASection(t);
+    odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
+    odp(c, "parentNode", {value:null,writable:true,configurable:true});
+    odp(c, "ownerDocument", {value:this});
+eb$logElement(c, "cdata");
+return c;
+}
 
 // We've defined the HTMLElement classes, now let's create instances of them.
 docp.createElement = function(s) {

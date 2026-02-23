@@ -4109,6 +4109,7 @@ void establish_js_textnode(Tag *t, const char *fpn)
 	cn = instantiate_hidden_array(cx, tagobj, "childNodes");
 	JS_DefinePropertyValueStr(cx, tagobj, "parentNode", JS_NULL,
 	JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE);
+	define_hidden_property_object(cx, tagobj, "ownerDocument", *(JSValue*)cf->docobj);
 	connectTagObject(t, tagobj);
 	JS_Release(cx, cn);
 }
@@ -4325,8 +4326,10 @@ Don't do any of this if the tag is itself <style>. */
 	}
 
 	if(t->action != TAGACT_DOCTYPE) {
-		char *js_node = ((t->action == TAGACT_UNKNOWN || cf->xmlMode) ? t->nodeName : t->nodeNameU);
-		if(!stringEqual(t->nodeNameU, "#CDATA-SECTION")) {
+		if(!stringEqual(t->nodeNameU, "CDATA") &&
+		!stringEqual(t->nodeNameU, "COMMENT")) {
+			char *js_node = ((t->action == TAGACT_UNKNOWN ||
+			cf->xmlMode) ? t->nodeName : t->nodeNameU);
 			define_hidden_property_string(cx, io, "nodeName", js_node);
 			define_hidden_property_string(cx, io, "tagName", js_node);
 		}
