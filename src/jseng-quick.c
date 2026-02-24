@@ -3546,8 +3546,6 @@ static JSValue nat_jobs(JSContext * cx, JSValueConst this, int argc, JSValueCons
 	Window *save_cw = cw;
 	Frame *save_cf = cf;
 	my_ExecutePendingJobs();
-	my_ExecutePendingMessages();
-	my_ExecutePendingMessagePorts();
 	cw = save_cw, cf = save_cf;
 	return JS_UNDEFINED;
 }

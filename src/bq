@@ -1,0 +1,51 @@
+class Eb$im {
+    #weakMap = new WeakMap();
+    #refSet = new Set();
+    #finalizationGroup = new FinalizationRegistry(Eb$im.#cleanup);
+
+    static #cleanup({ set, ref }) {
+        set.delete(ref);
+    }
+
+    set(key, value) {
+        const ref = new WeakRef(key);
+        this.#weakMap.set(key, { value, ref });
+        this.#refSet.add(ref);
+        this.#finalizationGroup.register(key, {
+            set: this.#refSet,
+            ref
+        }, ref);
+    }
+
+    delete(key) {
+        const entry = this.#weakMap.get(key);
+        if (!entry) return false;
+        this.#weakMap.delete(key);
+        this.#refSet.delete(entry.ref);
+        this.#finalizationGroup.unregister(entry.ref);
+        return true;
+    }
+
+}
+
+function MR(f) {
+    this.callback = f;
+    this.active = false;
+    this.targets = new Eb$im;
+    this.notification$queue = [];
+}
+
+MR.prototype.observe = function(target, cfg) {
+    this.observe$target(target, cfg);
+}
+
+MR.prototype.observe$target = function (target, cfg) {
+    this.targets.set(target, cfg);
+    if (!target.eb$observers) {
+        Object.defineProperty(target, "eb$observers", {value: new Set});
+    }
+    target.eb$observers.add(this);
+}
+
+let sample = {};
+    new MR(function () {    }).observe(sample, { characterData: !0 });

@@ -1335,8 +1335,6 @@ passes:
 	if (!async) {
 		if(startbrowse) {
 			cf = save_cf;
-			run_function_bool_win(cf, "readyStateComplete");
-			runOnload();
 			startbrowse = false;
 			change = true;
 		}
@@ -1418,10 +1416,7 @@ char *htmlParse(char *buf, int remote)
 		set_basehref(cf->hbase);
 		if(cf->xmlMode) goto past_html_events;
 		loadFinishCSS();
-		run_function_bool_win(cf, "eb$qs$start");
 		runScriptsPending(true);
-		run_event_win(cf, "window", "onfocus");
-		run_event_doc(cf, "document", "onfocus");
 		runScriptsPending(false);
 		rebuildSelectors();
 	}
@@ -4171,8 +4166,6 @@ Loop back around, see if the user has typed a key, if not come right back
 on the same timer and do some more.
 *********************************************************************/
 			if(my_ExecutePendingJobs()) goto done;
-			if(my_ExecutePendingMessages() |
-			my_ExecutePendingMessagePorts()) goto done;
 		}
 // promise jobs not throttled by timerspeed
 		int n = jt->jump_sec * 1000 + jt->jump_ms;
@@ -4870,8 +4863,7 @@ nocolorend:
 			t->disval = 0;
 // lots of text nodes, and they don't carry visibility information
 			if(action != TAGACT_TEXT)
-				t->disval =
-				    run_function_onearg_win(cf, "eb$visible", t);
+				t->disval = 0;
 // If things appear upon hover, they do this sometimes if your mouse
 // is anywhere in that section, so maybe we should see them.
 // Also if color is transparent then it surely changes to a color
