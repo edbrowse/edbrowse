@@ -2030,13 +2030,16 @@ cleaning up when we really want to run all the finalizers */
                 debugPrint(3, "frameFromContext cannot find a frame for pointer %p", ctx);
                 debugPrint(3, "It is not safe to run this job (%d arguments), or free its context!", e->argc);
                 debugPrint(3, "But it's not great leaving the context around either.");
-                debugPrint(3, "Deleting it from the pending queue, freeing what we can and hoping for the best.");
                 list_del(&e->link);
 // We can't use the context but we can free directly from the runtime
+// freeing things is an instant core dump,
+// but if we don't, we'll see one later when we free the runtime
+#if 0
                 for(i = 0; i < e->argc; ++i)
                     if (JS_IsLiveObject(jsrt, e->argv[i]))
                         JS_FreeValueRT(jsrt, e->argv[i]);
                 js_free_rt(jsrt, e);
+#endif
 
                 continue;
             }
@@ -3104,6 +3107,8 @@ void jsClose(void)
 		grabover();
 // release the timer for pending jobs
 	domSetsTimeout(0, "-", 0, false);
+// but we need to clear the pending queue, an orphan pending job causes FreeRuntime to blow up.
+		my_ExecutePendingJobs();
 		JS_FreeRuntime(jsrt);
 	}
 }
