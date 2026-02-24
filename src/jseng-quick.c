@@ -3597,166 +3597,8 @@ JSValue mwo; // master window object
 		JS_SetMaxStackSize(jsrt, 2048*1024);
 	mwc = JS_NewContext(jsrt);
 	mwo = JS_GetGlobalObject(mwc);
-
-/*********************************************************************
-Why put native functions in the master window, to be shared?
-It's native, how much space can it take up?
-Well, it produces a function object, and this way all the windows
-can have pointers to those objects, instead of function objects per window.
-Ok, but that's pretty tiny.
-Well, all our js functions and classes call these native methods,
-and if any of these classes are in the master window,
-then the native methods have to be there too.
-*********************************************************************/
-
-    JS_DefinePropertyValueStr(mwc, mwo, "natok",
-JS_NewCFunction(mwc, nat_ok, "nat_ok", 1), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "my$win",
-JS_NewCFunction(mwc, nat_mywin, "mywin", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "my$doc",
-JS_NewCFunction(mwc, nat_mydoc, "mydoc", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$apch1",
-JS_NewCFunction(mwc, nat_apch1, "apch1", 1), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$apch2",
-JS_NewCFunction(mwc, nat_apch2, "apch2", 1), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$insbf",
-JS_NewCFunction(mwc, nat_insbf, "insbf", 2), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$rmch2",
-JS_NewCFunction(mwc, nat_rmch2, "removeChild", 1), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$getcook",
-JS_NewCFunction(mwc, nat_getcook, "getcook", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$setcook",
-JS_NewCFunction(mwc, nat_setcook, "setcook", 1), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "puts",
-JS_NewCFunction(mwc, nat_puts, "puts", 1), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "wlf",
-JS_NewCFunction(mwc, nat_wlf, "wlf", 2), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "btoa",
-JS_NewCFunction(mwc, nat_btoa, "btoa", 1), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "atob",
-JS_NewCFunction(mwc, nat_atob, "atob", 1), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$voidfunction",
-JS_NewCFunction(mwc, nat_void, "void", 0), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$nullfunction",
-JS_NewCFunction(mwc, nat_null, "null", 0), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$truefunction",
-JS_NewCFunction(mwc, nat_true, "true", 0), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$falsefunction",
-JS_NewCFunction(mwc, nat_false, "false", 0), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "db$flags",
-JS_NewCFunction(mwc, nat_dbf, "debug_flags", 0), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "logputs",
-JS_NewCFunction(mwc, nat_logputs, "logputs", 2), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "prompt",
-JS_NewCFunction(mwc, nat_prompt, "prompt", 2), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "confirm",
-JS_NewCFunction(mwc, nat_confirm, "confirm", 1), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "color2rgb",
-JS_NewCFunction(mwc, nat_rgb, "rgb", 1), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "win$close",
-JS_NewCFunction(mwc, nat_win_close, "win_close", 0), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "fileModTime",
-JS_NewCFunction(mwc, nat_modtime, "modtime", 1), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "resolveURL",
-JS_NewCFunction(mwc, nat_resolveURL, "resolveURL", 2), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$newLocation",
-JS_NewCFunction(mwc, nat_new_location, "new_location", 1), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$logElement",
-JS_NewCFunction(mwc, nat_log_element, "log_element", 2), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "setTimeout",
-JS_NewCFunction(mwc, nat_setTimeout, "setTimeout", 2), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "clearTimeout",
-JS_NewCFunction(mwc, nat_clearTimeout, "clearTimeout", 1), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "setInterval",
-JS_NewCFunction(mwc, nat_setInterval, "setInterval", 2), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "clearInterval",
-JS_NewCFunction(mwc, nat_clearTimeout, "clearInterval", 1), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "cssDocLoad",
-JS_NewCFunction(mwc, nat_css_start, "css_start", 3), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$cssText",
-JS_NewCFunction(mwc, nat_cssText, "cssText", 1), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "cssApply",
-JS_NewCFunction(mwc, nat_cssApply, "cssApply", 3), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$formSubmit",
-JS_NewCFunction(mwc, nat_formSubmit, "formSubmit", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$formReset",
-JS_NewCFunction(mwc, nat_formReset, "formReset", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$fetchHTTP",
-JS_NewCFunction(mwc, nat_fetchHTTP, "fetchHTTP", 4), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$getter_cd",
-JS_NewCFunction(mwc, getter_cd, "getter_cd", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$getter_cw",
-JS_NewCFunction(mwc, getter_cw, "getter_cw", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$unframe",
-JS_NewCFunction(mwc, nat_unframe, "unframe", 1), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$unframe2",
-JS_NewCFunction(mwc, nat_unframe2, "unframe2", 1), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$playAudio",
-JS_NewCFunction(mwc, nat_playAudio, "play_audio", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "jobsPending",
-JS_NewCFunction(mwc, nat_jobs, "jobspending", 0), JS_PROP_ENUMERABLE);
-
-// shared functions and classes
-	jsSourceFile = "shared.js";
-	jsLineno = 1;
-	if (strstr(sharedJS, "bp@(")) {
-		const char *s, *u, *v1, *v2;
-		bool commapresent;
-		int l;
-		char *s2 = initString(&l);
-		u = s = sharedJS;
-		while (true) {
-			v1 = strstr(u, "bp@(");
-			if (!v1)
-				break;
-			stringAndBytes(&s2, &l, u, v1 - u);
-// The macros for bp and trace start and end with ;
-// That keeps them separate from what goes on around them.
-// But it also makes it impossible to write exp,exp,bp@(huh),exp
-// watch for comma on either side, and if so, omit the ;
-			while(l && s2[l-1] == ' ')
-				s2[--l] = 0;
-			commapresent = (l && s2[l-1] == ',');
-			stringAndString(&s2, &l,  bp_string + commapresent);
-// paste in the argument to bp@(x)
-			v1 = strchr(v1, '(') + 1;
-			v2 = strchr(v1, ')');
-			stringAndBytes(&s2, &l, v1, v2 - v1);
-			stringAndString(&s2, &l, "\");");
-			u = ++v2;
-			while(*u == ' ') ++u;
-			if(*u == ',' || *u == ';') {
-// commapresent on the other side, don't need trailing ;
-				s2[--l] = 0;
-			}
-		}
-		stringAndString(&s2, &l, u);
-		r = JS_Eval(mwc, s2, l,
-		jsSourceFile, JS_EVAL_TYPE_GLOBAL);
-		nzFree(s2);
-	} else {
-		r = JS_Eval(mwc, sharedJS, strlen(sharedJS),
-		jsSourceFile, JS_EVAL_TYPE_GLOBAL);
-	}
-
-// If you want to see the errors, you have to run edbrowse -d3
-// cause this stuff starts from main().
-	if(JS_IsException(r))
-		processError(mwc);
-	JS_FreeValue(mwc, r);
-
-	jsSourceFile = "demin.js";
-	r = JS_Eval(mwc, deminJS, strlen(deminJS),
-	jsSourceFile, JS_EVAL_TYPE_GLOBAL);
-	if(JS_IsException(r))
-		processError(mwc);
-	JS_FreeValue(mwc, r);
-
 	jsSourceFile = 0;
 	JS_DefinePropertyValueStr(mwc, mwo, "share", JS_NewInt32(mwc, 2), JS_PROP_ENUMERABLE);
-	JS_DefinePropertyValueStr(mwc, mwo, "bp_string", JS_NewAtomString(mwc, bp_string + 1), 0);
-	JS_DefinePropertyValueStr(mwc, mwo, "trace_string", JS_NewAtomString(mwc, trace_string + 1), 0);
-
 	JS_FreeValue(mwc, mwo);
 
 	memcpy(save_jsrt, jsrt, MAX_JSRT);
@@ -3815,44 +3657,12 @@ static void createJSContext_0(Frame *f)
 // link to the master window
 	JS_DefinePropertyValueStr(cx, g, "mw$", JS_GetGlobalObject(mwc), 0);
 
-    JS_DefinePropertyValueStr(cx, g, "eb$media",
-JS_NewCFunction(cx, nat_media, "media", 1), 0);
-// Yes, there really are sites that overwrite setTimeout
-    JS_DefinePropertyValueStr(cx, g, "setTimeout",
-JS_NewCFunction(cx, nat_setTimeout, "setTimeout", 2),
-JS_PROP_CONFIGURABLE|JS_PROP_WRITABLE | JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(cx, g, "clearTimeout",
-JS_NewCFunction(cx, nat_clearTimeout, "clearTimeout", 1),
-JS_PROP_CONFIGURABLE|JS_PROP_WRITABLE | JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(cx, g, "setInterval",
-JS_NewCFunction(cx, nat_setInterval, "setInterval", 2),
-JS_PROP_CONFIGURABLE|JS_PROP_WRITABLE | JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(cx, g, "clearInterval",
-JS_NewCFunction(cx, nat_clearTimeout, "clearInterval", 1),
-JS_PROP_CONFIGURABLE|JS_PROP_WRITABLE | JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(cx, g, "eb$parent",
-JS_NewCFunction(cx, nat_parent, "parent", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$top",
-JS_NewCFunction(cx, nat_top, "top", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$frameElement",
-JS_NewCFunction(cx, nat_fe, "fe", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "querySelectorAll",
-JS_NewCFunction(cx, nat_qsa, "qsa", 2), 0);
-    JS_DefinePropertyValueStr(cx, g, "querySelector",
-JS_NewCFunction(cx, nat_qs, "qs", 2), 0);
-    JS_DefinePropertyValueStr(cx, g, "querySelector0",
-JS_NewCFunction(cx, nat_qs0, "qs0", 1), 0);
-
-// these really belong in document, but I'm putting them in
-// window and we can copy them to document later.
-    JS_DefinePropertyValueStr(cx, g, "eb$hasFocus",
-JS_NewCFunction(cx, nat_hasFocus, "hasFocus", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$write",
-JS_NewCFunction(cx, nat_doc_write, "doc_write", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$writeln",
-JS_NewCFunction(cx, nat_doc_writeln, "doc_writeln", 0), 0);
+    JS_DefinePropertyValueStr(cx, g, "eb$apch1",
+JS_NewCFunction(cx, nat_apch1, "apch1", 1), 0);
     JS_DefinePropertyValueStr(cx, g, "eb$gc",
 JS_NewCFunction(cx, nat_gc, "garbageCollect", 0), 0);
+    JS_DefinePropertyValueStr(cx, g, "puts",
+JS_NewCFunction(cx, nat_puts, "puts", 1), JS_PROP_ENUMERABLE);
 
 // The sequence is to set f->fileName, then createContext(), so for a short time,
 // we can rely on that variable.
