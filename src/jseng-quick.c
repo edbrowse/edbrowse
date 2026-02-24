@@ -3301,15 +3301,16 @@ cleaning up when we really want to run all the finalizers */
                 debugPrint(3, "frameFromContext finds master window");
             else {
                 debugPrint(3, "frameFromContext cannot find a frame for pointer %p", ctx);
-                debugPrint(3, "It is not safe to run this job (%d arguments), or free its context!", e->argc);
-                debugPrint(3, "But it's not great leaving the context around either.");
-                debugPrint(3, "Deleting it from the pending queue, freeing what we can and hoping for the best.");
+                debugPrint(3, "It is not safe to run this job (%d arguments), nor free it!", e->argc);
                 list_del(&e->link);
-// We can't use the context but we can free directly from the runtime
+// Freeing this job induces an instant core dump.
+// But leaving it around causes FreeRuntime to free it, thence a core dump.
+#if 0
                 for(i = 0; i < e->argc; ++i)
                     if (JS_IsLiveObject(jsrt, e->argv[i]))
                         JS_FreeValueRT(jsrt, e->argv[i]);
                 js_free_rt(jsrt, e);
+#endif
 
                 continue;
             }
@@ -4574,13 +4575,15 @@ void set_gcs_string(const char *name, const char *s)
 
 void jsClose(void)
 {
-	if(js_running) {
-		JS_FreeContext(mwc);
-		grabover();
+    if(js_running) {
+        JS_FreeContext(mwc);
+        grabover();
 // release the timer for pending jobs
-	domSetsTimeout(0, "-", 0, false);
-		JS_FreeRuntime(jsrt);
-	}
+        domSetsTimeout(0, "-", 0, false);
+// clear out any orphan pending jobs, before shutdown
+        my_ExecutePendingJobs();
+        JS_FreeRuntime(jsrt);
+    }
 }
 
 // This function disconects the children at a C level.
