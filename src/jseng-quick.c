@@ -3305,6 +3305,7 @@ cleaning up when we really want to run all the finalizers */
                 list_del(&e->link);
 // Freeing this job induces an instant core dump.
 // But leaving it around causes FreeRuntime to free it, thence a core dump.
+// looks lie a quickjs-ng issue (#1318 probably)
 #if 0
                 for(i = 0; i < e->argc; ++i)
                     if (JS_IsLiveObject(jsrt, e->argv[i]))
