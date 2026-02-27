@@ -3303,9 +3303,13 @@ cleaning up when we really want to run all the finalizers */
                 debugPrint(3, "frameFromContext cannot find a frame for pointer %p", ctx);
                 debugPrint(3, "It is not safe to run this job (%d arguments), nor free it!", e->argc);
                 list_del(&e->link);
+
 // Freeing this job induces an instant core dump.
 // But leaving it around causes FreeRuntime to free it, thence a core dump.
-// looks lie a quickjs-ng issue (#1318 probably)
+// So don't free it here, and do delete any such orphan jobs before JS_FreeRuntime().
+// This is a quickjs-ng bug, issue 1318, which was fixed on Feb 26, 2026.
+// I'm leaving this work around in place because it is safer, in general,
+// and I don't know which version of quickjs you are building against.
 #if 0
                 for(i = 0; i < e->argc; ++i)
                     if (JS_IsLiveObject(jsrt, e->argv[i]))
