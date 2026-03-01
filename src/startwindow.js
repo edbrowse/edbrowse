@@ -47,11 +47,8 @@ for(let k of void_functions)
 window[k] = eb$voidfunction; })();
 this.my$win = function() { return window}
 this.my$doc = function() { return document}
-
-// other browsers don't have querySelectorAll under window
+this.querySelector = function() { return null }
 this.querySelectorAll = function() { return [] }
-this.querySelector = function() { return {} }
-this.querySelector0 = function() { return false}
 }
 
 // the third party deminimization stuff is in mw$, the master window.
@@ -83,28 +80,32 @@ this.odp = Object.defineProperty;
 // remember, we can't use odp inside function that run later:
 // constructors, setters, methods, etc.
 
-// set a window member, unseen, unchanging
-this.swm = function(k, v) { odp(window, k, {value:v})}
+// Establish a window getter and setter. Map back to the global object.
+this.swgs = function(h) {
+eval(`odp(Window.prototype, "${h}",  {get: function(){ return this["${h}"]}, set: function(v){this["${h}"] = v}})`)}
+
+// set a window property, unseen, unchanging
+this.swp = function(k, v) { odp(window, k, {value:v})}
 // visible (enumerable), but still protected
-this.swm1 = function(k, v) { odp(window, k, {value:v,enumerable:true})}
+this.swpv = function(k, v) { odp(window, k, {value:v,enumerable:true})}
 // unseen, but changeable
-this.swm2 = function(k, v) { odp(window, k, {value:v, writable:true, configurable:true})}
+this.swpc = function(k, v) { odp(window, k, {value:v, writable:true, configurable:true})}
 
 // establish the prototype for inheritance, then set dom$class
 // this is called as each html element is built
 // If our made-up class is z$Foo, dom$class becomes Foo
 // Letters mean set window member prototype
-this.swmp = function(c, inherit) {
+this.swpp = function(c, inherit) {
     const v = c.replace(/^z\$/, "");
     if(inherit)
         odp(window[c], "prototype", {value:new inherit})
     odp(window[c].prototype, "dom$class", {value:v})
 }
 
-// set document member, analogs of the set window member functions
-this.sdm = function(k, v) { odp(document, k, {value:v})}
-this.sdm1 = function(k, v) { odp(document, k, {value:v,enumerable:true})}
-this.sdm2 = function(k, v) { odp(document, k, {value:v, writable:true, configurable:true})}
+// set document property, analogs of the set window property functions
+this.sdp = function(k, v) { odp(document, k, {value:v})}
+// set document property changeable
+this.sdpc = function(k, v) { odp(document, k, {value:v, writable:true, configurable:true})}
 
 /* Extremely useful even if non-standard hence the Eb$ prefix but use a named
     class as if people see it it really doesn't matter and makes the definition
@@ -195,7 +196,7 @@ Error.prototype.NAMESPACE_ERR = 1;
 // use dom$class to make our own toString function, so that
 // document.createElement("div").toString() says "[object HTMLDiv?Element]" as it should
 // This is important to some websites!
-swm("toString$nat", toString);
+swp("toString$nat", toString);
 /* toString has to be replaceable by other websites, which happens more often
 than you think. Apparently sometimes people also want to grab the toString
 function directly from an object and expect to be able to call it without the
@@ -208,8 +209,8 @@ this.toString = Object.prototype.toString = function() {
 odp(window, "toString", {enumerable:false})
 
 // The first DOM class is Node, at the head of all else.
-swm("Node", function(){})
-swmp("Node", null)
+swp("Node", function(){})
+swpp("Node", null)
 
 /*********************************************************************
 a node list is and isn't an array; I don't really understand it.
@@ -218,19 +219,19 @@ Similarly for HTMLCollection.
 I seed it with an optional array, for my own convenience.
 Users aren't suppose to instantiate anyways, so I can't get in trouble by doing this.
 *********************************************************************/
-swm("NodeList", function(v){
+swp("NodeList", function(v){
 if(Array.isArray(v))
 for(var i=0; i<v.length; ++i)
 this.push(v[i])
 })
-swmp("NodeList", Array)
+swpp("NodeList", Array)
 NodeList.prototype.toString = function(){return "[object NodeList]"}
-swm("HTMLCollection", function(v){
+swp("HTMLCollection", function(v){
 if(Array.isArray(v))
 for(var i=0; i<v.length; ++i)
 this.push(v[i])
 })
-swmp("HTMLCollection", Array)
+swpp("HTMLCollection", Array)
 HTMLCollection.prototype.toString = function(){return "[object HTMLCollection]"}
 
 /*********************************************************************
@@ -262,9 +263,9 @@ mw$.setupClasses(window);
 
 // make sure to wrap global dispatchEvent, so this becomes this window,
 // and not the shared window.
-swm("dispatchEvent", mw$.dispatchEvent.bind(window))
-swm("addEventListener", mw$.addEventListener.bind(window))
-swm("removeEventListener", mw$.removeEventListener.bind(window))
+swp("dispatchEvent", mw$.dispatchEvent.bind(window))
+swp("addEventListener", mw$.addEventListener.bind(window))
+swp("removeEventListener", mw$.removeEventListener.bind(window))
 
 /* Apparently people want to muck with DOMException so can't be shared as
 otherwise we end up with read-only prototype chain issues */
@@ -280,77 +281,77 @@ DOMException.prototype.constructor = DOMException
 // importNode is the same as cloneNode, except it is copying a tree
 // of objects from another context into the current context.
 // Set the second parameter to true to indicate this.
-sdm("importNode", function(start,deep) {
+sdp("importNode", function(start,deep) {
     window.cloneRoot1 = start;
     return mw$.clone1 (start,deep, true);
 })
 
 // point to shared methods in the master window
-swm("UnsupportedError", mw$.UnsupportedError);
-swm("my$win", mw$.my$win)
-swm("my$doc", mw$.my$doc)
-swm("natok", mw$.natok)
-swm("db$flags", mw$.db$flags)
-swm("eb$voidfunction", mw$.eb$voidfunction)
-swm("eb$nullfunction", mw$.eb$nullfunction)
-swm("eb$truefunction", mw$.eb$truefunction)
-swm("eb$falsefunction", mw$.eb$falsefunction)
-swm1("close", mw$.win$close)
-swm("eb$visible", mw$.eb$visible)
-swm2("atob", mw$.atob)
-swm2("btoa", mw$.btoa)
-swm1("prompt", mw$.prompt)
-swm1("confirm", mw$.confirm)
-swm("eb$newLocation", mw$.eb$newLocation)
-swm("eb$logElement", mw$.eb$logElement)
-swm1("alert", mw$.alert)
-swm("alert3", mw$.alert3)
-swm("alert4", mw$.alert4)
+swp("UnsupportedError", mw$.UnsupportedError);
+swp("my$win", mw$.my$win)
+swp("my$doc", mw$.my$doc)
+swp("natok", mw$.natok)
+swp("db$flags", mw$.db$flags)
+swp("eb$voidfunction", mw$.eb$voidfunction)
+swp("eb$nullfunction", mw$.eb$nullfunction)
+swp("eb$truefunction", mw$.eb$truefunction)
+swp("eb$falsefunction", mw$.eb$falsefunction)
+swpv("close", mw$.win$close)
+swp("eb$visible", mw$.eb$visible)
+swpc("atob", mw$.atob)
+swpc("btoa", mw$.btoa)
+swpv("prompt", mw$.prompt)
+swpv("confirm", mw$.confirm)
+swp("eb$newLocation", mw$.eb$newLocation)
+swp("eb$logElement", mw$.eb$logElement)
+swpv("alert", mw$.alert)
+swp("alert3", mw$.alert3)
+swp("alert4", mw$.alert4)
 this.print = function() { alert("javascript is trying to print this document")}
 this.stop = function() { alert("javascript is trying to stop the browse process")}
-swm("dumptree", mw$.dumptree)
-swm("uptrace", mw$.uptrace)
-swm("by_esn", mw$.by_esn)
-swm("showscripts", mw$.showscripts)
-swm("searchscripts", mw$.searchscripts)
-swm("showframes", mw$.showframes)
-swm("snapshot", mw$.snapshot)
-swm("aloop", mw$.aloop)
-swm("showarg", mw$.showarg)
-swm("showarglist", mw$.showarglist)
-swm("set_location_hash", mw$.set_location_hash)
-sdm("nodeContains", mw$.nodeContains)
-swm("NodeFilter", mw$.NodeFilter)
-sdm2("createNodeIterator", mw$.createNodeIterator)
-sdm2("createTreeWalker", mw$.createTreeWalker)
-swm("rowReindex", mw$.rowReindex)
-swm2("getComputedStyle", mw$.getComputedStyle.bind(window))
-swm("mutFixup", mw$.mutFixup)
-swm("makeSheets", mw$.makeSheets)
-swm2("structuredClone", mw$.structuredClone.bind(window))
+swp("dumptree", mw$.dumptree)
+swp("uptrace", mw$.uptrace)
+swp("by_esn", mw$.by_esn)
+swp("showscripts", mw$.showscripts)
+swp("searchscripts", mw$.searchscripts)
+swp("showframes", mw$.showframes)
+swp("snapshot", mw$.snapshot)
+swp("aloop", mw$.aloop)
+swp("showarg", mw$.showarg)
+swp("showarglist", mw$.showarglist)
+swp("set_location_hash", mw$.set_location_hash)
+sdp("nodeContains", mw$.nodeContains)
+swp("NodeFilter", mw$.NodeFilter)
+sdpc("createNodeIterator", mw$.createNodeIterator)
+sdpc("createTreeWalker", mw$.createTreeWalker)
+swp("rowReindex", mw$.rowReindex)
+swpc("getComputedStyle", mw$.getComputedStyle.bind(window))
+swp("mutFixup", mw$.mutFixup)
+swp("makeSheets", mw$.makeSheets)
+swpc("structuredClone", mw$.structuredClone.bind(window))
 
-swm("dom$class", "Window")
+swp("dom$class", "Window")
 // next two are overwritten if xml
-sdm2("eb$xml", false)
-swm1("scroll", eb$voidfunction)
-swm1("scrollTo", eb$voidfunction)
-swm1("scrollBy", eb$voidfunction)
-swm1("scrollByLines", eb$voidfunction)
-swm1("scrollByPages", eb$voidfunction)
-sdm("close", eb$voidfunction)
-swm1("blur", ()=>(document.activeElement = null))
-swm1("focus", ()=>(document.activeElement = document.body))
+sdpc("eb$xml", false)
+swpv("scroll", eb$voidfunction)
+swpv("scrollTo", eb$voidfunction)
+swpv("scrollBy", eb$voidfunction)
+swpv("scrollByLines", eb$voidfunction)
+swpv("scrollByPages", eb$voidfunction)
+sdp("close", eb$voidfunction)
+swpv("blur", ()=>(document.activeElement = null))
+swpv("focus", ()=>(document.activeElement = document.body))
 
-swm1("self", window)
+swpv("self", window)
 window.top = eb$top();
 window.parent = window.eb$parent();
 odp(window, "frameElement", {get: eb$frameElement,enumerable:true});
 
-sdm("write", eb$write)
-sdm("writeln", eb$writeln)
-sdm("hasFocus", eb$hasFocus)
-sdm("eb$ctx", eb$ctx)
-sdm("eb$seqno", 0)
+sdp("write", eb$write)
+sdp("writeln", eb$writeln)
+sdp("hasFocus", eb$hasFocus)
+sdp("eb$ctx", eb$ctx)
+sdp("eb$seqno", 0)
 
 /* An ok (object keys) function for javascript/dom debugging.
  * This is in concert with the jdb command in edbrowse.
@@ -358,14 +359,14 @@ sdm("eb$seqno", 0)
  * mnemonic command that I could type in quickly.
  * If a web page creates an ok function it will override this one.
 And that does happen, e.g. the react system, so $ok is an alias for this. */
-swm2("ok", Object.keys)
-swm2("$ok", ok)
+swpc("ok", Object.keys)
+swpc("$ok", ok)
 
-swm("nodeName", "WINDOW") // in case you want to start at the top.
-sdm2("ownerDocument", null)
+swp("nodeName", "WINDOW") // in case you want to start at the top.
+sdpc("ownerDocument", null)
 
 // produce a stack for debugging purposes
-swm("step$stack", function(){
+swp("step$stack", function(){
 var s = "you shouldn't see this";
 try { 'use strict'; eval("yyz$"); } catch(e) { s = e.stack; }
 // Lop off some leading lines that don't mean anything.
@@ -375,9 +376,9 @@ return s;
 })
 
 if(top == window) {
-swm2("step$l", 0)
-swm2("step$val", "")
-swm2("step$go", "")
+swpc("step$l", 0)
+swpc("step$val", "")
+swpc("step$go", "")
 // First line of js in the base file of your snapshot might be
 // step$l = 0, step$go = "c275";
 // to start tracing at c275
@@ -389,7 +390,7 @@ odp(window, "step$go", {get:function(){return top.step$go}, set:function(x){top.
 // I don't use this trick on step$exp, because an expression should really live within its frame
 }
 
-swm("$zct", {}) // counters for trace points
+swp("$zct", {}) // counters for trace points
 function trace$ch(k) {
 var c=($zct[k]>=0?++$zct[k]:($zct[k]=1));
 step$val = k+":"+c;
@@ -398,39 +399,39 @@ if(k === step$go||typeof step$exp==='string'&&eval(step$exp)) trip = true;
 return trip ? 2 : step$l;
 }
 
-sdm("open", function() { return this })
+sdp("open", function() { return this })
 
 /* Some visual attributes of the window.
  * These are simulations as edbrowse has no screen.
  * Better to have something than nothing at all. */
-swm("height", 768)
-swm("width", 1024)
-swm1("pageXOffset", 0)
-swm1("scrollX", 0)
-swm1("pageYOffset", 0)
-swm1("scrollY", 0)
-swm1("devicePixelRatio", 1.0)
+swp("height", 768)
+swp("width", 1024)
+swpv("pageXOffset", 0)
+swpv("scrollX", 0)
+swpv("pageYOffset", 0)
+swpv("scrollY", 0)
+swpv("devicePixelRatio", 1.0)
 // document.status is removed because it creates a conflict with
 // the status property of the XMLHttpRequest implementation
-swm("defaultStatus", 0)
-swm("returnValue", true)
-swm1("menubar", mw$.generalbar)
-swm1("statusbar", mw$.generalbar)
-swm1("scrollbars", mw$.generalbar)
-swm1("toolbar", mw$.generalbar)
-swm1("personalbar", mw$.generalbar)
-swm("resizable", true)
-swm("directories", false)
+swp("defaultStatus", 0)
+swp("returnValue", true)
+swpv("menubar", mw$.generalbar)
+swpv("statusbar", mw$.generalbar)
+swpv("scrollbars", mw$.generalbar)
+swpv("toolbar", mw$.generalbar)
+swpv("personalbar", mw$.generalbar)
+swp("resizable", true)
+swp("directories", false)
 if(window == top) {
-swm1("name", "unspecifiedFrame")
+swpv("name", "unspecifiedFrame")
 } else {
 odp(window, "name", {get:function(){return frameElement.name}});
 // there is no setter here, should there be? Can we set name to something?
 // Should it propagate back up to the frame element name?
 }
 
-sdm("bgcolor", "white")
-sdm("contentType", "text/html")
+sdp("bgcolor", "white")
+sdp("contentType", "text/html")
 function readyStateComplete() {
     document.readyState$2 = "complete"; document.activeElement = document.body;
     let e = new Event;
@@ -438,12 +439,12 @@ function readyStateComplete() {
     document.dispatchEvent(e);
 }
 
-swm1("screen", {
+swpv("screen", {
 height: 768, width: 1024,
 availHeight: 768, availWidth: 1024, availTop: 0, availLeft: 0,
 colorDepth: 24})
 
-swm("console", {
+swp("console", {
 debug: function(obj) { mw$.logtime(3, "debug", obj)},
 log: function(obj) { mw$.logtime(3, "log", obj)},
 info: function(obj) { mw$.logtime(3, "info", obj)},
@@ -452,7 +453,7 @@ error: function(obj) { mw$.logtime(3, "error", obj)},
 timeStamp: function(label) { if(label === undefined) label = "x"; return label.toString() + (new Date).getTime(); }
 })
 
-swm1("navigator", {})
+swpv("navigator", {})
 navigator.appName = "edbrowse";
 navigator["appCode Name"] = "edbrowse C/quickjs";
 /* not sure what product is about */
@@ -484,7 +485,7 @@ removeEventListener: eb$voidfunction,
 
 // There's no history in edbrowse.
 // Only the current file is known, hence length is 1.
-swm1("history", {
+swpv("history", {
 length: 1,
 next: "",
 previous: "",
@@ -496,41 +497,41 @@ replaceState: eb$voidfunction,
 toString: function() {  return "Sorry, edbrowse does not maintain a browsing history."}
 })
 
-swm("CSS", mw$.CSS)
-swm("Intl", mw$.Intl)
+swp("CSS", mw$.CSS)
+swp("Intl", mw$.Intl)
 
 // some base arrays - lists of things we'll probably need
-sdm("heads", [])
-sdm("bases", [])
-sdm("links", [])
-sdm("metas", [])
-sdm("styles", [])
-sdm("bodies", [])
-sdm("forms", [])
-sdm("elements", [])
-sdm("divs", [])
-sdm("labels", [])
-sdm("htmlobjs", [])
-sdm("scripts", [])
-sdm("paragraphs", [])
-sdm("headers", [])
-sdm("footers", [])
-sdm("tables", [])
-sdm("spans", [])
-sdm("images", [])
+sdp("heads", [])
+sdp("bases", [])
+sdp("links", [])
+sdp("metas", [])
+sdp("styles", [])
+sdp("bodies", [])
+sdp("forms", [])
+sdp("elements", [])
+sdp("divs", [])
+sdp("labels", [])
+sdp("htmlobjs", [])
+sdp("scripts", [])
+sdp("paragraphs", [])
+sdp("headers", [])
+sdp("footers", [])
+sdp("tables", [])
+sdp("spans", [])
+sdp("images", [])
 // styleSheets is a placeholder for now; I don't know what to do with it.
-sdm("styleSheets", [])
+sdp("styleSheets", [])
 
-swm2("frames$2", []);
-swm1("frames", {})
+swpc("frames$2", []);
+swpv("frames", {})
 odp(frames, "length", {get:function(){return frames$2.length}})
 odp(window, "length", {get:function(){return frames$2.length},enumerable:true})
 
 // pending jobs, mostly to debug promise functions.
-swm("$pjobs", [])
-swm("$pjobsa", [])
-swm2("promiseCatchFunctionNative", eb$voidfunction)
-swm("promiseCatchFunction", function(e) {
+swp("$pjobs", [])
+swp("$pjobsa", [])
+swpc("promiseCatchFunctionNative", eb$voidfunction)
+swp("promiseCatchFunction", function(e) {
 // use alert 3 so this will fold into the debug stream,  db>debug.log
 alert3("promise error");
 alert3(e);
@@ -570,7 +571,7 @@ which is another setter, writtten in C.
 If all this works I'll be amazed.
 *********************************************************************/
 
-swm("textarea$html$crossover", function(t) {
+swp("textarea$html$crossover", function(t) {
 if(!t || t.dom$class != "HTMLElement" || t.type != "textarea")
 return;
 t.value = "";
@@ -588,9 +589,9 @@ alert3("textarea.innerHTML is too complicated for me to render");
 })
 
 // the performance registry
-swm("pf$registry", {mark:{},measure:{},measure0:{},resourceTiming:{}})
+swp("pf$registry", {mark:{},measure:{},measure0:{},resourceTiming:{}})
 odp(pf$registry, "measure0", {enumerable:false});
-swm1("Performance", function(){})
+swpv("Performance", function(){})
 Performance.prototype = {
 // timeOrigin is the start time of this window, I guess
 timeOrigin: Date.now(),
@@ -637,14 +638,14 @@ timing:{navigationStart:0},
 odp(window, "performance", {get: function(){return new Performance}});
 
 // this is a stub, I hope I don't have to implement this stuff.
-swm("PerformanceObserver", {
+swp("PerformanceObserver", {
 supportedEntryTypes: {
 // no types are supported
 includes: eb$falsefunction
 }
 })
 
-swm("cel$registry", new Map) // custom elements registry
+swp("cel$registry", new Map) // custom elements registry
 odp(window, "customElements", {get:function(){ return {
 define:mw$.cel_define,
 get:mw$.cel_get,
@@ -662,7 +663,7 @@ Watch out! If the script has inline text, it is a proper child of the script,
 and should not be moved. Check for eb$nomove.
 *********************************************************************/
 
-swm("eb$uplift", function(s) {
+swp("eb$uplift", function(s) {
 var p = s.parentNode;
 if(!p) return; // should never happen
 var before = s.nextSibling;
@@ -676,8 +677,8 @@ c = hold;
 }
 })
 
-swm("onmessage$$queue", []);
-swm1("postMessage", function (message,target_origin, transfer) {
+swp("onmessage$$queue", []);
+swpv("postMessage", function (message,target_origin, transfer) {
     let locstring = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
     if(!window.location.port)
         locstring += window.mw$.setDefaultPort(window.location.protocol);
@@ -716,36 +717,36 @@ swm1("postMessage", function (message,target_origin, transfer) {
             + "↑");
     }
 })
-swm("onmessage$$running", mw$.onmessage$$running)
+swp("onmessage$$running", mw$.onmessage$$running)
 
 // The Attr class and getAttributeNode().
-swm("Attr", function(){ this.owner = null; this.name = ""})
-swmp("Attr", null)
+swp("Attr", function(){ this.owner = null; this.name = ""})
+swpp("Attr", null)
 Attr.prototype.isId = function() { return this.name === "id"; }
 Attr.prototype.cloneNode = mw$.cloneAttr
 
 // this is sort of an array and sort of not.
 // For one thing, you can call setAttribute("length", "snork"), so I can't use length.
-swm("NamedNodeMap", function() { this.length = 0})
-swmp("NamedNodeMap", null)
+swp("NamedNodeMap", function() { this.length = 0})
+swpp("NamedNodeMap", null)
 NamedNodeMap.prototype.push = function(s) { this[this.length++] = s; }
 NamedNodeMap.prototype.item = function(n) { return this[n]; }
 NamedNodeMap.prototype.getNamedItem = function(name) { return this[name.toLowerCase()]; }
 NamedNodeMap.prototype.setNamedItem = function(name, v) { this.owner.setAttribute(name, v);}
 NamedNodeMap.prototype.removeNamedItem = function(name) { this.owner.removeAttribute(name);}
 
-swm("MediaQueryList", function() {
+swp("MediaQueryList", function() {
     this.matches = false;
     this.media = "";
 });
-swmp("MediaQueryList", null)
+swpp("MediaQueryList", null)
 MediaQueryList.prototype.addEventListener = mw$.addEventListener;
 MediaQueryList.prototype.removeEventListener = mw$.removeEventListener;
 MediaQueryList.prototype.nodeName = "MediaQueryList";
 MediaQueryList.prototype.addListener = function(f) { this.addEventListener("mediaChange", f, false); };
 MediaQueryList.prototype.removeListener = function(f) { this.removeEventListener("mediaChange", f, false); };
 
-swm1("matchMedia", function(s) {
+swpv("matchMedia", function(s) {
 var q = new MediaQueryList;
 q.media = s;
 q.matches = eb$media(s);
@@ -756,7 +757,7 @@ return q;
 // in the shared window. These are here because they reference
 // NodeList or HTMLCollection.
 
-swm("live$wrapper", function(f, start, arg) {
+swp("live$wrapper", function(f, start, arg) {
 // get the result as an array
 var a = f.call(start, arg)
 var c = new HTMLCollection(a)
@@ -774,7 +775,7 @@ nodep.getElementsByClassName = function(t) { return live$wrapper(mw$.getElements
 nodep.querySelector = querySelector
 nodep.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
 
-sdm("implementation", {
+sdp("implementation", {
 owner: document,
 /*********************************************************************
 This is my tentative implementation of hasFeature:
@@ -824,7 +825,7 @@ return doc;
 
 // a simpler version of handlerCompile, for setTimeout().
 // We don't need to bind to this or return a value.
-swm("handlerCompile",  function(f) {
+swp("handlerCompile",  function(f) {
 let cf; // the compiled function
 try {
 cf = eval(`(function(){${f}})`);
@@ -839,22 +840,22 @@ return cf;
 
 // Request, Response, Headers, fetch; link to third party code in master window.
 // fetch calls XMLHttpRequest, but puts the Response in a Promise
-swm2("Headers", mw$.Headers)
-swm2("Request", mw$.Request)
-swm2("Response", mw$.Response)
-swm2("fetch", mw$.fetch)
+swpc("Headers", mw$.Headers)
+swpc("Request", mw$.Request)
+swpc("Response", mw$.Response)
+swpc("fetch", mw$.fetch)
 // Next function is needed to support await fetch asynchronous
 // See the comments in shared.js - look for fetch$onload.
-swm2("fetch$onload", function(resolve, x){resolve(x)})
+swpc("fetch$onload", function(resolve, x){resolve(x)})
 
 // pages seem to want document.style to exist
-sdm("style", new CSSStyleDeclaration)
+sdp("style", new CSSStyleDeclaration)
 document.style.element = document;
 document.style.bgcolor = "white";
 
 // originally ms extension pre-DOM, we don't fully support it
 //but offer the legacy document.all.tags method.
-sdm("all", {})
+sdp("all", {})
 document.all.tags = function(s) {
 return mw$.gebtn(document.body, s.toLowerCase(), false, true);
 }
@@ -880,20 +881,20 @@ get: function() {
 return mw$.lastModifiedByHead(this.location);
 }});
 
-swm("eb$demin", mw$.deminimize)
-swm("eb$watch", mw$.addTrace)
+swp("eb$demin", mw$.deminimize)
+swp("eb$watch", mw$.addTrace)
 /*
-swm("$uv", [])
-swm("$uv$sn", 0)
+swp("$uv", [])
+swp("$uv$sn", 0)
 */
-swm2("$jt$c", 'z')
-swm2("$jt$sn", 0)
+swpc("$jt$c", 'z')
+swpc("$jt$sn", 0)
 
 // Local storage, this is per window.
 // Then there's sessionStorage, and honestly I don't understand the difference.
 // This is NamedNodeMap, to take advantage of preexisting methods.
-swm("localStorage", {})
-swm("sessionStorage", {})
+swp("localStorage", {})
+swp("sessionStorage", {})
 ; (function() {
 var cnlist = [localStorage, sessionStorage];
 for(let cn of cnlist) {
@@ -932,11 +933,11 @@ window.location$2.href = h;
 }
 }, enumerable:true});
 // We need location$2 so we can define origin and replace etc
-swm2("location$2", new URL)
+swpc("location$2", new URL)
 odp(location$2, "origin", {get:function(){
 return this.protocol ? this.protocol + "//" + this.host : null}});
 odp(window, "origin", {get: function(){return location.origin}});
-sdm("location$2", new URL)
+sdp("location$2", new URL)
 odp(document, "location", {
 get: function() { return this.location$2; },
 set: function(h) {
@@ -954,7 +955,7 @@ odp(document.location,'eb$ctx',{value:eb$ctx});
 
 // Window constructor, passes the url back to edbrowse
 // so it can open a new web page.
-swm("Window", function() {
+swp("Window", function() {
 var newloc = "";
 var winname = "";
 if(arguments.length > 0) newloc = arguments[0];
@@ -967,32 +968,32 @@ this.opener = window;
 })
 
 // window.open is the same as new window, just pass the args through
-swm1("open", function() {
+swpv("open", function() {
 return Window.apply(this, arguments);
 })
 
 // nasa.gov and perhaps other sites check for self.constructor == Window.
 // That is, Window should be the constructor of window.
 // The constructor is Object by default.
-swm("constructor", Window)
+swp("constructor", Window)
 
-swm("eb$qs$start", function() { mw$.cssGather(true); mw$.frames$rebuild(window);})
-swm("frames$rebuild", function() {mw$.frames$rebuild(window);})
+swp("eb$qs$start", function() { mw$.cssGather(true); mw$.frames$rebuild(window);})
+swp("frames$rebuild", function() {mw$.frames$rebuild(window);})
 
-swm("DOMParser", mw$.DOMParser)
+swp("DOMParser", mw$.DOMParser)
 
-swm("XMLSerializer", function(){})
+swp("XMLSerializer", function(){})
 XMLSerializer.prototype.serializeToString = function(root) {
 alert3("trying to use XMLSerializer");
 return "<div>XMLSerializer not yet implemented</div>"; }
 
-swm2("css$ver", 0)
-swm2("css_all", "")
-swm2("last$css_all", "")
-swm2("cssSource", [])
-sdm("xmlVersion", 0)
+swpc("css$ver", 0)
+swpc("css_all", "")
+swpc("last$css_all", "")
+swpc("cssSource", [])
+sdp("xmlVersion", 0)
 
-swm("MutationObserver", function(f) {
+swp("MutationObserver", function(f) {
     // We need to know what window we're in to queue the callback microtask
     this.observed$window = my$win();
     if (typeof f !== "function") throw new TypeError("not a function");
@@ -1002,7 +1003,7 @@ swm("MutationObserver", function(f) {
     this.async = true; // run as microtask by default
     this.notification$queue = [];
 })
-swmp("MutationObserver", null)
+swpp("MutationObserver", null)
 MutationObserver.prototype.disconnect = function() {
     const ts = this.targets.size;
     const nl = this.notification$queue.length;
@@ -1065,9 +1066,9 @@ MutationObserver.prototype.takeRecords = function() {
     return ret;
 }
 
-swm("MutationRecord", function(){})
-swmp("MutationRecord", null)
-swm1("crypto", {})
+swp("MutationRecord", function(){})
+swpp("MutationRecord", null)
+swpv("crypto", {})
 crypto.getRandomValues = function(a) {
 if(typeof a != "object") return NULL;
 var l = a.length;
@@ -1075,35 +1076,35 @@ for(var i=0; i<l; ++i) a[i] = Math.floor(Math.random()*0x100000000);
 return a;
 }
 
-swm2("ra$step", 0)
-swm1("requestAnimationFrame", function() {
+swpc("ra$step", 0)
+swpv("requestAnimationFrame", function() {
 // This absolutely doesn't do anything. What is edbrowse suppose to do with animation?
 return ++ra$step;
 })
 
-swm1("cancelAnimationFrame", eb$voidfunction)
+swpv("cancelAnimationFrame", eb$voidfunction)
 
 // link in the blob code
-swm("Blob", mw$.Blob)
-swm("File", mw$.File)
-swm("FileReader", mw$.FileReader)
+swp("Blob", mw$.Blob)
+swp("File", mw$.File)
+swp("FileReader", mw$.FileReader)
 URL.createObjectURL = mw$.URL.createObjectURL
 URL.revokeObjectURL = mw$.URL.revokeObjectURL
-swm("FormData", mw$.FormData)
-swm("TextEncoder", mw$.TextEncoder)
-swm("TextDecoder", mw$.TextDecoder)
-swm("MessagePort", mw$.MessagePort)
-swm("MessageChannel", mw$.MessageChannel)
-swm("mp$registry", []) // MessagePort registry
-swm2("URLSearchParams", mw$.URLSearchParams)
+swp("FormData", mw$.FormData)
+swp("TextEncoder", mw$.TextEncoder)
+swp("TextDecoder", mw$.TextDecoder)
+swp("MessagePort", mw$.MessagePort)
+swp("MessageChannel", mw$.MessageChannel)
+swp("mp$registry", []) // MessagePort registry
+swpc("URLSearchParams", mw$.URLSearchParams)
 
-swm("trustedTypes", function(){})
+swp("trustedTypes", function(){})
 trustedTypes.createPolicy = function(pn,po){
 var x = {policyName: pn};
 for (var i in po) { x[i] = po[i]}
 return x;
 }
-swm("AbortSignal", function(){})
+swp("AbortSignal", function(){})
 AbortSignal.prototype = new EventTarget;
 AbortSignal.prototype.aborted = false;
 AbortSignal.prototype.reason = 0;
@@ -1114,7 +1115,7 @@ AbortSignal.timeout = function(ms){ var c = new AbortSignal();
 if(typeof ms == "number") alert3("abort after " + ms + "ms not implemented");
 return c; }
 
-swm("AbortController", function(){})
+swp("AbortController", function(){})
 odp(AbortController.prototype, "signal",
 {get:function(){return new AbortSignal}});
 AbortController.prototype.abort = function(){
@@ -1124,7 +1125,7 @@ alert3("abort dom request not implemented"); }
 doesn't currently */
 if (!window.queueMicrotask) {
     alert3("Using fallback for queueMicrotask");
-    swm1("queueMicrotask", function(f) {
+    swpv("queueMicrotask", function(f) {
         if (typeof f !== "function") throw new TypeError("not a function");
 /* Per the spec we need to wait until after the caller's executed but before
 timers. This means we need to simulate with promises but the error handling
@@ -1137,8 +1138,8 @@ implementation provided by quickjs-ng. */
     });
 }
 
-swm("IntersectionObserverEntry", function(){})
-swm("IntersectionObserver", function(callback, o){
+swp("IntersectionObserverEntry", function(){})
+swp("IntersectionObserver", function(callback, o){
 this.callback = callback, this.root = null;
 var h = 1.0;
 if(typeof o == "object") {
@@ -1193,7 +1194,7 @@ IntersectionObserver.prototype.unobserve = eb$voidfunction
 
 // more visual stuff. But nothing resizes in edbrowse, ever,
 // so this should be easy to stub out.
-swm("ResizeObserver", function(){})
+swp("ResizeObserver", function(){})
 ResizeObserver.prototype.disconnect = eb$voidfunction;
 ResizeObserver.prototype.observe = eb$voidfunction;
 ResizeObserver.prototype.unobserve = eb$voidfunction;
@@ -1201,7 +1202,7 @@ ResizeObserver.prototype.unobserve = eb$voidfunction;
 // don't need these any more
 ;(function() {
     let names_to_delete = ["odp",
-    "swm", "swm1", "swm2", "swmp",
-    "sdm", "sdm1", "sdm2", "nodep"];
+    "swgs", "swp", "swpv", "swpc", "swpp",
+    "sdp", "sdpc", "nodep"];
     for (let k of names_to_delete) delete window[k]
 })();
