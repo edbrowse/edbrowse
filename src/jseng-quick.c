@@ -4660,5 +4660,9 @@ void set_location_hash(const char *h)
 
 const char *jseng_version(void)
 {
+#if Q_NG
 	return JS_GetVersion();
-	}
+#else
+	return "unknown";
+#endif
+}
