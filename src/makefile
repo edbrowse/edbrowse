@@ -1,7 +1,7 @@
 # compiler and flags
 CC ?= cc
 PERL ?= perl
-INSTALL ?= install -C -D
+INSTALL ?= install -C
 PREFIX ?= /usr/local
 QUICKJS_INCLUDE ?= $(PREFIX)/include
 QUICKJS_LIB ?= $(PREFIX)/lib
@@ -83,17 +83,20 @@ edbrowse: $(EBOBJS)
 
 
 #  You probably need to be root to do this.
-install: install-edbrowse install-docs install-plugins
+install: install-dirs install-edbrowse install-docs install-plugins
+
+install-dirs:
+	mkdir -p -m 755 $(BINDIR) $(DOCDIR) $(PLUGINSDIR)
 
 install-edbrowse: edbrowse
-	$(INSTALL) -m755 -t $(BINDIR) edbrowse
+	$(INSTALL) -m755 edbrowse $(BINDIR)
 
 install-docs: $(DOCS)
-	$(INSTALL) -m644 -t $(DOCDIR) $^
+	$(INSTALL) -m644 $^ $(DOCDIR)
 
 install-plugins: $(PLUGIN_SCRIPTS) $(PLUGIN_CONFIG)
-	$(INSTALL) -m755 -t $(BINDIR) $(PLUGIN_SCRIPTS)
-	$(INSTALL) -m644 -t $(PLUGINSDIR) $(PLUGIN_CONFIG)
+	$(INSTALL) -m755 $(PLUGIN_SCRIPTS) $(BINDIR)
+	$(INSTALL) -m644 $(PLUGIN_CONFIG) $(PLUGINSDIR)
 
 # native Informix library for database access.
 # Others could be built, e.g. Oracle, but odbc is the most general.
