@@ -3840,6 +3840,7 @@ swp("Document", function() {
     this.readyState$2 = "interactive";
 });
 swpp("Document", w.EventTarget)
+swpc("HTMLDocument", w.Document) // legacy
 let docp = w.Document.prototype;
 docp.activeElement = null;
 docp.querySelector = w.querySelector
