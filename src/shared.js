@@ -3216,7 +3216,7 @@ odp(urlp, "charAt", {enumerable:false,writable:true,configurable:true,value:func
 odp(urlp, "charCodeAt", {enumerable:false,writable:true,configurable:true,value:function(n) { return this.toString().charCodeAt(n); }})
 odp(urlp, "trim", {enumerable:false,writable:true,configurable:true,value:function() { return this.toString().trim(); }})
 
-swp("Validity", function(){})
+swpc("Validity", function(){})
 swpp("Validity", null)
 /*********************************************************************
 All these should be getters, or should they?
@@ -3246,11 +3246,13 @@ odp(valp, "valid", {
 get: function() { // only need to check items with getters
 return !(this.valueMissing)}})
 
-// Node is the king of all classes. I don't define it here, because it has
-// some complexity with the window object. So define it in startwindow.js.
-// But we can set most of the instance methods here. These methods,
-// e.g. appendchild, are often functions within this file anyways.
+swpc("EventTarget", function() {})
+swpp("EventTarget", null)
+
+swpc("Node", function() {})
+swpp("Node", w.EventTarget)
 let nodep = w.Node.prototype;
+
 // These are native helper functions
 nodep.eb$apch1 = eb$apch1;
 nodep.eb$apch2 = eb$apch2;
@@ -3454,10 +3456,7 @@ if(t === this) return DOCUMENT_POSITION_CONTAINS;
 return DOCUMENT_POSITION_DISCONNECTED;
 }
 
-swp("EventTarget", function() {})
-swpp("EventTarget", w.Node)
-
-swp("Document", function() {
+swpc("Document", function() {
     odp(this, "id$hash", {value: new w.Map});
     odp(this, "id$registry", {value: new w.FinalizationRegistry(
         (i) => {
@@ -3467,7 +3466,7 @@ swp("Document", function() {
     )});
     this.readyState$2 = "interactive";
 });
-swpp("Document", w.EventTarget)
+swpp("Document", w.Node)
 swpc("HTMLDocument", w.Document) // legacy
 let docp = w.Document.prototype;
 docp.activeElement = null;
@@ -3535,7 +3534,7 @@ swpv("document", d);
     odp(d, "childNodes", {value:new w.Array,writable:true,configurable:true});
     odp(d, "parentNode", {value:null,writable:true,configurable:true});
 
-swp("Element", function(){})
+swpc("Element", function(){})
 swpp("Element", w.Node)
 let elemp = w.Element.prototype;
 
@@ -3910,7 +3909,7 @@ w.soj$ = z.style;
 }
 
 // The html element, which is the DOM nodes that you know and love.
-swp("HTMLElement", function(){})
+swpc("HTMLElement", function(){})
 swpp("HTMLElement", w.Element)
 let helemp = w.HTMLElement.prototype;
 odp(helemp, "name", {
@@ -4017,10 +4016,10 @@ helemp.offsetWidth = 1.0;
 helemp.offsetTop = 0.0;
 helemp.offsetLeft = 0.0;
 
-swp("SVGElement", function(){})
+swpc("SVGElement", function(){})
 swpp("SVGElement", w.Element)
 
-swp("Text", function(){
+swpc("Text", function(){
 odp(this, "data$2", {value:"",writable:true})
 if(arguments.length > 0) {
 // data always has to be a string
@@ -4056,7 +4055,7 @@ eb$logElement(c, "text");
 return c;
 }
 
-swp("Comment", function(t) {
+swpc("Comment", function(t) {
 this.data = t;
 })
 swpp("Comment", w.HTMLElement)
@@ -4074,7 +4073,7 @@ eb$logElement(c, "comment");
 return c;
 }
 
-swp("DocumentFragment", function(){})
+swpc("DocumentFragment", function(){})
 swpp("DocumentFragment", w.HTMLElement)
 let fragp = w.DocumentFragment.prototype;
 fragp.nodeType = 11;
@@ -4087,10 +4086,10 @@ const c = this.createElement("fragment");
 return c;
 }
 
-swp("CharacterData", function(){})
+swpc("CharacterData", function(){})
 swpp("CharacterData", w.Node)
 
-swp("ProcessingInstruction", function(){})
+swpc("ProcessingInstruction", function(){})
 swpp("ProcessingInstruction", w.CharacterData)
 let pip = w.ProcessingInstruction.prototype;
 pip.sheet = null;
@@ -4162,7 +4161,7 @@ this.removeChild(this.cells[n]);
 }
 
 // classes and prototypes for table, sections, row, cell
-swp("HTMLTableSectionElement", function(){})
+swpc("HTMLTableSectionElement", function(){})
 swpp("HTMLTableSectionElement", w.HTMLElement)
 swp("z$tBody", function(){ this.rows = new w.Array})
 swpp("z$tBody", w.HTMLTableSectionElement)
@@ -4172,11 +4171,11 @@ swp("z$tFoot", function(){ this.rows = new w.Array})
 swpp("z$tFoot", w.HTMLTableSectionElement)
 swp("z$tCap", function(){}) // caption
 swpp("z$tCap", w.HTMLElement)
-swp("HTMLTableElement", function(){ this.rows = new w.Array; this.tBodies = new w.Array})
+swpc("HTMLTableElement", function(){ this.rows = new w.Array; this.tBodies = new w.Array})
 swpp("HTMLTableElement", w.HTMLElement)
-swp("HTMLTableRowElement", function(){ this.cells = new w.Array})
+swpc("HTMLTableRowElement", function(){ this.cells = new w.Array})
 swpp("HTMLTableRowElement", w.HTMLElement)
-swp("HTMLTableCellElement", function(){})
+swpc("HTMLTableCellElement", function(){})
 swpp("HTMLTableCellElement", w.HTMLElement)
 
 let tablep = w.HTMLTableElement.prototype;
@@ -4373,7 +4372,7 @@ return item;
 }
 
 // options, option groups, and the select element
-swp("HTMLOptionElement", function() {
+swpc("HTMLOptionElement", function() {
 if(arguments.length > 0)
 this.text = arguments[0];
 if(arguments.length > 1)
@@ -4387,12 +4386,12 @@ optp.defaultSelected = false;
 optp.nodeName = optp.tagName = "OPTION";
 optp.text = optp.value = "";
 
-swp("HTMLOptGroupElement", function() {})
+swpc("HTMLOptGroupElement", function() {})
 swpp("HTMLOptGroupElement", w.HTMLElement)
 let optgp = w.HTMLOptGroupElement.prototype;
 optgp.nodeName = optgp.tagName = "OPTGROUP";
 
-swp("HTMLSelectElement", function() {
+swpc("HTMLSelectElement", function() {
     this.selectedIndex = -1;
     this.options = new w.Array;
     this.selectedOptions = new w.Array;
@@ -4537,11 +4536,11 @@ selp.remove = function(idx) {
 }
 
 // input, textarea, button; the other input classes
-swp("HTMLInputElement", function(){this.validity = new w.Validity, this.validity.owner = this})
+swpc("HTMLInputElement", function(){this.validity = new w.Validity, this.validity.owner = this})
 swpp("HTMLInputElement", w.HTMLElement)
-swp("HTMLButtonElement", function(){})
+swpc("HTMLButtonElement", function(){})
 swpp("HTMLButtonElement", w.HTMLElement)
-swp("HTMLTextAreaElement", function(){})
+swpc("HTMLTextAreaElement", function(){})
 swpp("HTMLTextAreaElement", w.HTMLElement)
 
 let inputp = w.HTMLInputElement.prototype;
@@ -4692,7 +4691,7 @@ return t === null || t === false || t === "false" || t === 0 || t === '0' ? fals
 set:function(v) { this.setAttribute("readonly", v);}});
 
 // the html form
-swp("HTMLFormElement", function(){this.elements = new w.Array})
+swpc("HTMLFormElement", function(){this.elements = new w.Array})
 swpp("HTMLFormElement", w.HTMLElement)
 
 /*********************************************************************
@@ -4774,7 +4773,7 @@ formp.insertBefore = formInsertBefore;
 formp.removeChildNative = nodep.removeChild;
 formp.removeChild = formRemoveChild;
 
-swp("HTMLImageElement", function(){})
+swpc("HTMLImageElement", function(){})
 swpc("Image", w.HTMLImageElement)
 swpp("HTMLImageElement", w.HTMLElement)
 let imagep = w.HTMLImageElement.prototype;
@@ -4784,7 +4783,7 @@ return typeof t == "string" ? t : undefined},
 set:function(v) { this.setAttribute("alt", v);
 }})
 
-swp("HTMLScriptElement", function(){})
+swpc("HTMLScriptElement", function(){})
 swpp("HTMLScriptElement", w.HTMLElement)
 w.HTMLScriptElement.supports = function(t) {
 if(typeof t != "string") return false;
@@ -4808,20 +4807,20 @@ scriptp.eb$step = 0;
 scriptp.text = "";
 
 // the all important <a>, the whole point of the internet
-swp("HTMLAnchorElement", function(){})
+swpc("HTMLAnchorElement", function(){})
 swpp("HTMLAnchorElement", w.HTMLElement)
 
 // classes that support lists in html
-swp("HTMLOListElement", function(){})
+swpc("HTMLOListElement", function(){})
 swpp("HTMLOListElement", w.HTMLElement)
-swp("HTMLUListElement", function(){})
+swpc("HTMLUListElement", function(){})
 swpp("HTMLUListElement", w.HTMLElement)
-swp("HTMLDListElement", function(){})
+swpc("HTMLDListElement", function(){})
 swpp("HTMLDListElement", w.HTMLElement)
-swp("HTMLLIElement", function(){})
+swpc("HTMLLIElement", function(){})
 swpp("HTMLLIElement", w.HTMLElement)
 
-swp("HTMLLabelElement", function(){})
+swpc("HTMLLabelElement", function(){})
 swpp("HTMLLabelElement", w.HTMLElement)
 let labelp = w.HTMLLabelElement.prototype;
 odp(labelp, "htmlFor", { get: function() { return this.getAttribute("for"); }, set: function(h) { this.setAttribute("for", h); }})
@@ -4885,14 +4884,14 @@ htmlp.scrollTop = 0;
 htmlp.scrollLeft = 0;
 
 // is there a difference between DocType ad DocumentType?
-swp("DocType", function(){})
+swpc("DocType", function(){})
 swpp("DocType", w.HTMLElement)
 w.DocType.prototype.nodeType = 10;
 w.DocType.prototype.nodeName = "DOCTYPE";
-swp("DocumentType", w.DocType)
+swpc("DocumentType", w.DocType)
 
 // <div> <p> <span>
-swp("HTMLDivElement", function(){})
+swpc("HTMLDivElement", function(){})
 swpp("HTMLDivElement", w.HTMLElement)
 let divp = w.HTMLDivElement.prototype;
 divp.doScroll = eb$voidfunction;
@@ -4904,16 +4903,16 @@ var e = new w.Event;
 e.initEvent("click", true, true);
 this.dispatchEvent(e);
 }
-swp("HTMLParagraphElement", function(){})
+swpc("HTMLParagraphElement", function(){})
 swpp("HTMLParagraphElement", w.HTMLElement)
-swp("HTMLSpanElement", function(){})
+swpc("HTMLSpanElement", function(){})
 swpp("HTMLSpanElement", w.HTMLElement)
 let spanp = w.HTMLSpanElement.prototype;
 spanp.doScroll = eb$voidfunction;
 spanp.click = divp.click;
 
 // h1 through h6 and our own classes for header footer
-swp("HTMLHeadingElement", function(){})
+swpc("HTMLHeadingElement", function(){})
 swpp("HTMLHeadingElement", w.HTMLElement)
 swp("z$Header", function(){})
 swpp("z$Header", w.HTMLElement)
@@ -4921,7 +4920,7 @@ swp("z$Footer", function(){})
 swpp("z$Footer", w.HTMLElement)
 
 // media and audio
-swp("HTMLMediaElement", function(){})
+swpc("HTMLMediaElement", function(){})
 swpp("HTMLMediaElement", w.HTMLElement)
 let mediap = w.HTMLMediaElement.prototype;
 mediap.autoplay = false;
@@ -4938,12 +4937,12 @@ mediap.play = eb$playAudio;
 mediap.load = eb$voidfunction;
 mediap.pause = eb$voidfunction;
 
-swp("HTMLAudioElement", function(t){
+swpc("HTMLAudioElement", function(t){
 // arg to constructor is the url of the audio
 if(typeof t == "string") this.src = t;
 if(typeof t == "object") this.src = t.toString();
 })
-swp("Audio", w.HTMLAudioElement)
+swpc("Audio", w.HTMLAudioElement)
 swpp("HTMLAudioElement", w.HTMLMediaElement)
 w.HTMLAudioElement.prototype.nodeName = "AUDIO"
 
@@ -4955,7 +4954,7 @@ you might not want to hear it, you might rather see the url, or have a button
 to push, and then you call up the music only if / when you want it.
 Not sure what to do, so it's pretty much stubs for now.
 *********************************************************************/
-swp("AudioContext", function() {
+swpc("AudioContext", function() {
 this.outputLatency = 1.0;
 this.createMediaElementSource = eb$voidfunction;
 this.createMediaStreamSource = eb$voidfunction;
@@ -4966,10 +4965,10 @@ this.close = eb$voidfunction;
 })
 swpp("AudioContext", null)
 
-swp("HTMLObjectElement", function(){})
+swpc("HTMLObjectElement", function(){})
 swpp("HTMLObjectElement", w.HTMLElement)
 
-swp("HTMLTemplateElement", function(){})
+swpc("HTMLTemplateElement", function(){})
 swpp("HTMLTemplateElement", w.HTMLElement)
 odp(w.HTMLTemplateElement.prototype, "content", {
 get: function() {
@@ -4985,7 +4984,7 @@ odp(this, "content$2", {value:frag})
 return frag
 }})
 
-swp("HTMLDetailsElement", function(){})
+swpc("HTMLDetailsElement", function(){})
 swpp("HTMLDetailsElement", w.HTMLElement)
 let detp = w.HTMLDetailsElement.prototype;
 odp(detp, "open", {
@@ -4993,13 +4992,13 @@ get:function(){ let t = this.getAttribute("open");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("open", v);}});
 
-swp("ShadowRoot", function(){})
+swpc("ShadowRoot", function(){})
 swpp("ShadowRoot", w.HTMLElement)
 
-swp("HTMLAreaElement", function(){})
+swpc("HTMLAreaElement", function(){})
 swpp("HTMLAreaElement", w.HTMLElement)
 
-swp("HTMLFrameElement", function(){})
+swpc("HTMLFrameElement", function(){})
 swpp("HTMLFrameElement", w.HTMLElement)
 let framep = w.HTMLFrameElement.prototype;
 framep.is$frame = true;
@@ -5007,7 +5006,7 @@ odp(framep, "contentDocument", { get: eb$getter_cd});
 odp(framep, "contentWindow", { get: eb$getter_cw});
 
 // These may be different but for now I'm calling them the same.
-swp("HTMLIFrameElement", function(){})
+swpc("HTMLIFrameElement", function(){})
 swpp("HTMLIFrameElement", w.HTMLFrameElement)
 
 /*********************************************************************
@@ -5167,7 +5166,7 @@ odp(this, "onhashchange$2", {value:f,writable:true,configurable:true})}}})
 // but it still has to be there.
 // Because of the canvas element, I can't put the monster getContext function
 // into the prototype, I have to set it in the constructor.
-swp("HTMLCanvasElement", function() {
+swpc("HTMLCanvasElement", function() {
 this.getContext = function(x) { return {
 canvas: this,
  addHitRegion: eb$nullfunction,
@@ -5227,7 +5226,7 @@ if(this.height === 0  || this.width === 0) return "data:,";
 return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAADElEQVQImWNgoBMAAABpAAFEI8ARAAAAAElFTkSuQmCC";
 }
 
-swp("HTMLStyleElement", function(){})
+swpc("HTMLStyleElement", function(){})
 swpp("HTMLStyleElement", w.HTMLElement)
 // Kind of a hack to make this like the link element
 let stylep = w.HTMLStyleElement.prototype;
@@ -5238,7 +5237,7 @@ odp(stylep, "sheet", { get: function(){ if(!this.sheet$2) this.sheet$2 = new w.C
 
 // The css style declaration - complicated by all the default values,
 // and the plethora of shorthand properties that we must expand.
-swp("CSSStyleDeclaration", function(){
+swpc("CSSStyleDeclaration", function(){
 odp(this, "style$2", {value:this})
 odp(this, "element", {value:null, writable:true})
 })
@@ -5447,15 +5446,15 @@ return s;
 set: function(h) {
 w.soj$ = this; eb$cssText.call(this,h); delete w.soj$; } });
 
-swp("CSSRule", function(){this.cssText=""})
+swpc("CSSRule", function(){this.cssText=""})
 w. CSSRule.prototype = new w.Object;
 w. CSSRule.prototype.toString = function(){return this.cssText}
 
-swp("CSSRuleList", function(){})
+swpc("CSSRuleList", function(){})
 // This isn't really right, but it's easy
 w. CSSRuleList.prototype = new w.Array;
 
-swp("CSSStyleSheet", function() { this.cssRules = new w.CSSRuleList})
+swpc("CSSStyleSheet", function() { this.cssRules = new w.CSSRuleList})
 swpp("CSSStyleSheet", null)
 let cssp = w.CSSStyleSheet.prototype;
 cssp.insertRule = function(r, idx) {
@@ -5476,11 +5475,14 @@ else
 list.splice(idx, 0, r);
 }
 
-// stragglers
 swp("HTMLUnknownElement", function(){})
 swpp("HTMLUnknownElement", w.HTMLElement)
+
 swp("z$Timer", function(){this.nodeName = "TIMER"})
 swpp("z$Timer", w.EventTarget)
+let timerp = w.z$Timer.prototype;
+timerp.dispatchEvent = dispatchEvent;
+
 swp("z$Datalist", function() {})
 swpp("z$Datalist", w.HTMLElement)
 odp(w.z$Datalist.prototype, "multiple", {
@@ -5488,7 +5490,7 @@ get:function(){ var t = this.getAttribute("multiple");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("multiple", v);}});
 
-swp("CDATASection", function(t) {
+swpc("CDATASection", function(t) {
 this.data = t;
 })
 swpp("CDATASection", w.Text)
@@ -5599,7 +5601,7 @@ return c;
 case "form": c = new w.HTMLFormElement; break;
 case "input": c = new w.HTMLInputElement; break;
 case "textarea": c = new w.HTMLTextAreaElement; break;
-case "element": c = new w.HTMLElement; break;
+case "element": c = new w.Element; break;
 case "button": c = new w.HTMLButtonElement; break;
 case "svg": c = new w.SVGElement; break;
 default:
@@ -5699,7 +5701,7 @@ this.detail = detail, this.eb$captures = true; }
 docp.createEvent = function(unused) { return new w.Event; }
 
 // various flavors of events; I'm sure there are more than I have here.
-swp("HashChangeEvent", function() {
+swpc("HashChangeEvent", function() {
     this.timeStamp = new Date().getTime();
     this.type = "hashchange";
     this.bubbles = false;
@@ -5707,7 +5709,7 @@ swp("HashChangeEvent", function() {
 })
 swpp("HashChangeEvent", w.Event);
 
-swp("MouseEvent", function(etype){
+swpc("MouseEvent", function(etype){
     this.timeStamp = new Date().getTime();
 if(typeof etype == "string") this.type = etype;
 })
@@ -5719,13 +5721,13 @@ meventp.shiftKey = false;
 meventp.metaKey = false;
 meventp.initMouseEvent = function() { this.initEvent.apply(this, arguments)}
 
-swp("PromiseRejectionEvent", function(etype){
+swpc("PromiseRejectionEvent", function(etype){
     this.timeStamp = new Date().getTime();
 if(typeof etype == "string") this.type = etype;
 })
 swpp("PromiseRejectionEvent", w.Event);
 
-swp("CustomEvent", function(etype, o){
+swpc("CustomEvent", function(etype, o){
 alert3("customEvent " + etype + " " + typeof o);
     this.timeStamp = new Date().getTime();
 if(typeof etype == "string") this.type = etype;
@@ -5736,10 +5738,10 @@ this.name = o.name, this.detail = o.detail;
 })
 swpp("CustomEvent", w.Event);
 
-swp("XMLHttpRequestEventTarget", function(){})
+swpc("XMLHttpRequestEventTarget", function(){})
 swpp("XMLHttpRequestEventTarget", w.EventTarget)
 
-swp("XMLHttpRequestUpload", function(){})
+swpc("XMLHttpRequestUpload", function(){})
 swpp("XMLHttpRequestUpload", w.XMLHttpRequestEventTarget)
 
 // XMLHttpRequest was a static class above, but like URL,

@@ -65,10 +65,8 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
     this.mw$.setupClasses = () => {};
 // classes that setupClasses would have built, but didn't.
     this.URL = function(){}
+    this.Node = function(){}
     this.EventTarget = function(){}
-    this.HTMLElement = function(){}
-    this.SVGElement = function(){}
-    this.HTMLBodyElement = function(){}
     this.CSSStyleDeclaration = function(){}
 }
 
@@ -205,10 +203,6 @@ this.toString = Object.prototype.toString = function() {
     ) : toString$nat.call(this);
 }
 odp(window, "toString", {enumerable:false})
-
-// The first DOM class is Node, at the head of all else.
-swp("Node", function(){})
-swpp("Node", null)
 
 /*********************************************************************
 a node list is and isn't an array; I don't really understand it.
