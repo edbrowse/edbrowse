@@ -3379,6 +3379,9 @@ nodep.cloneNode = function(deep) {
     return clone1 (this,deep, false);
 }
 
+nodep.querySelector = querySelector
+nodep.querySelectorAll = function(c,s) { return new w.NodeList(querySelectorAll.call(this,c,s)) }
+
 // visual
 nodep.clientHeight = 16;
 nodep.clientWidth = 120;
@@ -3468,8 +3471,8 @@ swpp("Document", w.EventTarget)
 swpc("HTMLDocument", w.Document) // legacy
 let docp = w.Document.prototype;
 docp.activeElement = null;
-docp.querySelector = w.querySelector
-docp.querySelectorAll = function(c,s) { return new w.NodeList(w.querySelectorAll.call(this,c,s)) }
+docp.querySelector = querySelector
+docp.querySelectorAll = function(c,s) { return new w.NodeList(querySelectorAll.call(this,c,s)) }
 odp(docp, "documentElement", {get: function() {
   let e = this.lastChild;
 if(!e) { alert3("missing documentElement node"); return null; }
@@ -3709,7 +3712,7 @@ return null;
 }
 }
 
-elemp.matches = w.querySelector0;
+elemp.matches = querySelector0;
 
 elemp.closest = function(s) {
 let u = this;
@@ -4076,8 +4079,8 @@ swpp("DocumentFragment", w.HTMLElement)
 let fragp = w.DocumentFragment.prototype;
 fragp.nodeType = 11;
 fragp.nodeName = fragp.tagName = "#document-fragment";
-fragp.querySelector = w.querySelector
-fragp.querySelectorAll = function(c,s) { return new w.NodeList(w.querySelectorAll.call(this,c,s)) }
+fragp.querySelector = querySelector
+fragp.querySelectorAll = function(c,s) { return new w.NodeList(querySelectorAll.call(this,c,s)) }
 
 docp.createDocumentFragment = function() {
 const c = this.createElement("fragment");

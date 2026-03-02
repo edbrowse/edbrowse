@@ -47,8 +47,6 @@ for(let k of void_functions)
 window[k] = eb$voidfunction; })();
 this.my$win = function() { return window}
 this.my$doc = function() { return document}
-this.querySelector = function() { return null }
-this.querySelectorAll = function() { return [] }
 }
 
 // the third party deminimization stuff is in mw$, the master window.
@@ -771,9 +769,6 @@ this.nodep = Node.prototype;
 nodep.getElementsByTagName = function(t) { return live$wrapper(mw$.getElementsByTagName, this, t)}
 nodep.getElementsByName = function(t) { return live$wrapper(mw$.getElementsByName, this, t)}
 nodep.getElementsByClassName = function(t) { return live$wrapper(mw$.getElementsByClassName, this, t)}
-
-nodep.querySelector = querySelector
-nodep.querySelectorAll = function(c,s) { return new NodeList(querySelectorAll.call(this,c,s)) }
 
 sdp("implementation", {
 owner: document,

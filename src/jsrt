@@ -1006,9 +1006,9 @@ style2 = getComputedStyle(document.body,'')
 if(style2.color != "rgb(0,0,0)") fail(165);
 // I don't know which way this is suppose to go
 // if(style2.fontSize != "1.0em") fail(166);
-if(querySelector(".filbert #pecan").nodeName != "TR")
+if(document.querySelector(".filbert #pecan").nodeName != "TR")
 fail(170);
-if(querySelector("text + #bird").nodeName != "INPUT")
+if(document.body.querySelector("text + #bird").nodeName != "INPUT")
 fail(171);
 dbs.cssText = "border-block-start:ger' a'ld";
 if(dbs.borderBlockStart != "ger ald")

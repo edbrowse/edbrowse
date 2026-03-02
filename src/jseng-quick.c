@@ -3691,6 +3691,12 @@ JS_NewCFunction(mwc, nat_formSubmit, "formSubmit", 0), 0);
 JS_NewCFunction(mwc, nat_formReset, "formReset", 0), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$fetchHTTP",
 JS_NewCFunction(mwc, nat_fetchHTTP, "fetchHTTP", 4), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "querySelectorAll",
+JS_NewCFunction(mwc, nat_qsa, "qsa", 2), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "querySelector",
+JS_NewCFunction(mwc, nat_qs, "qs", 2), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "querySelector0",
+JS_NewCFunction(mwc, nat_qs0, "qs0", 1), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$getter_cd",
 JS_NewCFunction(mwc, getter_cd, "getter_cd", 0), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$getter_cw",
@@ -3844,12 +3850,6 @@ JS_NewCFunction(cx, nat_parent, "parent", 0), 0);
 JS_NewCFunction(cx, nat_top, "top", 0), 0);
     JS_DefinePropertyValueStr(cx, g, "eb$frameElement",
 JS_NewCFunction(cx, nat_fe, "fe", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "querySelectorAll",
-JS_NewCFunction(cx, nat_qsa, "qsa", 2), 0);
-    JS_DefinePropertyValueStr(cx, g, "querySelector",
-JS_NewCFunction(cx, nat_qs, "qs", 2), 0);
-    JS_DefinePropertyValueStr(cx, g, "querySelector0",
-JS_NewCFunction(cx, nat_qs0, "qs0", 1), 0);
 
 // these really belong in document, but I'm putting them in
 // window and we can copy them to document later.
