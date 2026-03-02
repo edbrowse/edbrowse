@@ -66,6 +66,7 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
 // classes that setupClasses would have built, but didn't.
     this.URL = function(){}
     this.Node = function(){}
+    this.Window = function(){}
     this.EventTarget = function(){}
     this.CSSStyleDeclaration = function(){}
 }
@@ -75,10 +76,6 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
 this.odp = Object.defineProperty;
 // remember, we can't use odp inside function that run later:
 // constructors, setters, methods, etc.
-
-// Establish a window getter and setter. Map back to the global object.
-this.swgs = function(h) {
-eval(`odp(Window.prototype, "${h}",  {get: function(){ return this["${h}"]}, set: function(v){this["${h}"] = v}})`)}
 
 // set a window property, unseen, unchanging
 this.swp = function(k, v) { odp(window, k, {value:v})}
@@ -941,25 +938,6 @@ odp(window.location,'replace',{enumerable:false});
 odp(document.location,'replace',{enumerable:false});
 odp(window.location,'eb$ctx',{value:eb$ctx});
 odp(document.location,'eb$ctx',{value:eb$ctx});
-
-// Window constructor, passes the url back to edbrowse
-// so it can open a new web page.
-swp("Window", function() {
-var newloc = "";
-var winname = "";
-if(arguments.length > 0) newloc = arguments[0];
-if(arguments.length > 1) winname = arguments[1];
-// I only do something if opening a new web page.
-// If it's just a blank window, I don't know what to do with that.
-if(newloc.length)
-eb$newLocation('p' + eb$ctx + newloc+ '\n' + winname);
-this.opener = window;
-})
-
-// window.open is the same as new window, just pass the args through
-swpv("open", function() {
-return Window.apply(this, arguments);
-})
 
 // nasa.gov and perhaps other sites check for self.constructor == Window.
 // That is, Window should be the constructor of window.

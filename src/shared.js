@@ -3534,6 +3534,26 @@ swpv("document", d);
     odp(d, "childNodes", {value:new w.Array,writable:true,configurable:true});
     odp(d, "parentNode", {value:null,writable:true,configurable:true});
 
+// Window constructor, passes the url back to edbrowse
+// so it can open a new web page.
+swpc("Window", function() {
+    var newloc = "";
+    var winname = "";
+    if(arguments.length > 0) newloc = arguments[0];
+    if(arguments.length > 1) winname = arguments[1];
+// I only do something if opening a new web page.
+// If it's just a blank window, I don't know what to do with that.
+    if(newloc.length)
+        eb$newLocation('p' + w.eb$ctx + newloc+ '\n' + winname);
+    this.opener = w;
+})
+swpp("Window", w.EventTarget)
+
+// window.open is the same as new window, just pass the args through
+w.open = function(a, b) {
+    return new w.Window(a, b);
+}
+
 swpc("Element", function(){})
 swpp("Element", w.Node)
 let elemp = w.Element.prototype;
