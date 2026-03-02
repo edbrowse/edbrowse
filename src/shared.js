@@ -898,68 +898,6 @@ function uncamelCase(t) {
 return t.replace(/([a-z])([A-Z])/g, function(f,a,b){return a+'-'+b.toLowerCase()});
 }
 
-// Functions that support classList
-function classListRemove() {
-for(var i=0; i<arguments.length; ++i) {
-for(var j=0; j<this.length; ++j) {
-if(arguments[i] != this[j]) continue;
-this.splice(j, 1);
---j;
-}
-}
-this.node.setAttribute("class", this.join(' '));
-}
-
-function classListAdd() {
-for(var i=0; i<arguments.length; ++i) {
-for(var j=0; j<this.length; ++j)
-if(arguments[i] == this[j]) break;
-if(j == this.length) this.push(arguments[i]);
-}
-this.node.setAttribute("class", this.join(' '));
-}
-
-function classListReplace(o, n) {
-if(!o) return;
-if(!n) { this.remove(o); return; }
-for(var j=0; j<this.length; ++j)
-if(o == this[j]) { this[j] = n; break; }
-this.node.setAttribute("class", this.join(' '));
-}
-
-function classListContains(t) {
-if(!t) return false;
-for(var j=0; j<this.length; ++j)
-if(t == this[j]) return true;
-return false;
-}
-
-function classListToggle(t, force) {
-if(!t) return false;
-if(arguments.length > 1) {
-if(force) this.add(t); else this.remove(t);
-return force;
-}
-if(this.contains(t)) { this.remove(t); return false; }
-this.add(t); return true;
-}
-
-function classList(node) {
-var c = node.getAttribute("class");
-if(!c) c = "";
-// turn string into array
-var a = c.replace(/^\s+/, "").replace(/\s+$/, "").split(/\s+/);
-// remember the node you came from
-a.node = node;
-// attach functions
-a.remove = classListRemove;
-a.add = classListAdd;
-a.replace = classListReplace;
-a.contains = classListContains;
-a.toggle = classListToggle;
-return a;
-}
-
 /*********************************************************************
 I'm going to call Fixup from appendChild, removeChild, setAttribute,
 anything that changes something we might be observing.
@@ -2538,40 +2476,6 @@ while(t.lastChild) p.insertBefore(t.lastChild, t.nextSibling);
 p.removeChild(t);
 }
 
-// There are subtle differences between contentText and textContent, which I don't grok.
-function textUnder(top, flavor) {
-const nn = top.nodeName;
-if(nn == "#text") return top.data.trim();
-if(nn == "SCRIPT" || nn == "#cdata-section") return top.text;
-const pre = (nn=="PRE");
-let answer = "", part, delim = " ";
-if(pre) delim = '';
-const t = top.querySelectorAll("cdata,text");
-for(let u of t) {
-if(u.parentNode && u.parentNode.nodeName == "OPTION") continue;
-// any other texts we should skip?
-part = u.nodeName == "#text" ? u.data : u.text;
-if(!pre) part = part.trim(); // should we be doing this?
-if(!part) continue;
-if(answer) answer += delim;
-answer += part;
-}
-return answer;
-}
-
-function newTextUnder(top, s, flavor) {
-if(top.nodeName == "#text") {
-top.data = s;
-return;
-}
-var l = top.childNodes.length;
-for(var i=l-1; i>=0; --i)
-top.removeChild(top.childNodes[i]);
-// do nothing if s is undefined, or null, or the empty string
-if(!s) return;
-top.appendChild(my$doc().createTextNode(s));
-}
-
 // We need UnsupportedError for this
 class UnsupportedError extends Error {
     constructor(message) { super(message); }
@@ -3353,43 +3257,13 @@ nodep.eb$apch2 = eb$apch2;
 nodep.eb$rmch2 = eb$rmch2;
 nodep.eb$insbf = eb$insbf;
 
-// These subordinate objects are on-demand.
+// dataset is on demand
 odp( nodep, "dataset", { get: function(){
 if(!this.dataset$2)
 odp(this, "dataset$2", {value:new w.Object})
 return this.dataset$2}})
-odp( nodep, "attributes", { get: function(){ if(!this.attributes$2) {
-odp(this, "attributes$2", {value:new w.NamedNodeMap})
-this.attributes$2.owner = this
-this.attributes$2.ownerDocument = this.ownerDocument ? this.ownerDocument : d;
-}
-return this.attributes$2}})
-odp( nodep, "style", { get: function(){ if(!this.style$2) {
-odp(this,"style$2", {value:new w.CSSStyleDeclaration,configurable:true});
-this.style$2.element = this}
-return this.style$2}})
-
-nodep.getRootNode = function(o) {
-let composed = false;
-if(typeof o == "object" && o.composed) composed = true;
-let t = this, t1 = this;
-while(t) {
-t1 = t;
-if(t.nodeName == "#document") return t;
-if(!composed && t.nodeName == "SHADOWROOT") return t;
-t = t.parentNode;
-}
-return t1;
-}
 
 nodep.contains = nodeContains;
-
-nodep.matches = w.querySelector0;
-
-nodep.closest = function(s) {
-let u = this;
-while(u.nodeType == 1) { if(u.matches(s)) return u; u = u.parentNode; }
-return null}
 
 nodep.hasChildNodes = function() { return (this.childNodes.length > 0); }
 
@@ -3456,116 +3330,15 @@ var r = this.eb$rmch2(c);
 return r;
 }
 
-nodep.append = function() {
-let l = arguments.length;
-for(let i=0; i<l; ++i) {
-let c = arguments[i];
-if(typeof c == "string") c = d.createTextNode(c); // convert to node
-if(c.nodeType > 0) this.appendChild(c);
-}
-}
-
-nodep.prepend = function() {
-let l = arguments.length;
-for(let i=l-1; i>=0; --i) {
-let c = arguments[i];
-if(typeof c == "string") c = d.createTextNode(c); // convert to node
-if(c.nodeType > 0) this.prependChild(c);
-}
-}
-
-nodep.before = function() {
-let p = this.parentNode;
-if(!p) return;
-let l = arguments.length;
-for(let i=0; i<l; ++i) {
-let c = arguments[i];
-if(typeof c == "string") c = d.createTextNode(c);
-if(c.nodeType > 0) p.insertBefore(c, this);
-}
-}
-
-nodep.after = function() {
-let p = this.parentNode;
-if(!p) return;
-let l = arguments.length;
-let n = this.nextSibling;
-for(let i=0; i<l; ++i) {
-let c = arguments[i];
-if(typeof c == "string") c = d.createTextNode(c);
-if(c.nodeType > 0)
-n ? p.insertBefore(c,n) : p.appendChild(c);
-}
-}
-
-nodep.replaceWith = function() {
-let p = this.parentNode;
-if(!p) return;
-let l = arguments.length;
-let n = this.nextSibling;
-for(let i=0; i<l; ++i) {
-let c = arguments[i];
-if(typeof c == "string") c = d.createTextNode(c);
-if(c.nodeType > 0)
-n ? p.insertBefore(c,n) : p.appendChild(c);
-}
-p.removeChild(this);
-}
-
-nodep.replaceChild = function(newc, oldc) {
-var lastentry;
-var l = this.childNodes.length;
-var nextinline;
-for(var i=0; i<l; ++i) {
-if(this.childNodes[i] != oldc)
-continue;
-if(i == l-1)
-lastentry = true;
-else {
-lastentry = false;
-nextinline = this.childNodes[i+1];
-}
-this.removeChild(oldc);
-if(lastentry)
-this.appendChild(newc);
-else
-this.insertBefore(newc, nextinline);
-break;
-}
-}
-
-nodep.remove = function() { if(this.parentNode) this.parentNode.removeChild(this)}
-
 odp(nodep, "firstChild", {
 get: function() {
 return (this.childNodes && this.childNodes.length) ?
 this.childNodes[0] : null; } })
 
-odp(nodep, "firstElementChild", {
-get: function() {
-let u = this.childNodes;
-if(!u) return null;
-for(let i=0; i<u.length; ++i) if(u[i].nodeType == 1) return u[i];
-return null}});
-
 odp(nodep, "lastChild", {
 get: function() {
 return (this.childNodes && this.childNodes.length) ?
 this.childNodes[this.childNodes.length-1] : null} })
-
-odp(nodep, "lastElementChild", {
-get: function() {
-let u = this.childNodes;
-if(!u) return null;
-for(let i=u.length-1; i>=0; --i) if(u[i].nodeType == 1) return u[i];
-return null}})
-
-odp(nodep, "childElementCount", {
-get: function() {
-let z=0, u = this.childNodes;
-if(!u) return z;
-for(let i=0; i<u.length; ++i) if(u[i].nodeType == 1) ++z;
-return z}})
 
 // helper functions to get the next or previous sibling
 function getSibling (obj,direction) {
@@ -3588,69 +3361,11 @@ default:
 return null;
 }
 }
-function getElementSibling (obj,direction) {
-const pn = obj.parentNode;
-if(!pn) return null;
-let j, l = pn.childNodes.length;
-for (j=0; j<l; ++j)
-if (pn.childNodes[j] == obj) break;
-if (j == l) {
-// child not found under parent, error
-return null;
-}
-switch(direction) {
-case "previous":
-for(--j; j>=0; --j)
-if(pn.childNodes[j].nodeType == 1) return pn.childNodes[j];
-return null;
-case "next":
-for(++j; j<l; ++j)
-if(pn.childNodes[j].nodeType == 1) return pn.childNodes[j];
-return null;
-default:
-// the function should always have been called with either 'previous' or 'next' specified
-return null;
-}
-}
 
 odp(nodep, "nextSibling", { get: function() {
 return getSibling(this,"next")} })
-odp(nodep, "nextElementSibling", { get: function() {
-return getElementSibling(this,"next")} })
 odp(nodep, "previousSibling", { get: function() {
 return getSibling(this,"previous")} })
-odp(nodep, "previousElementSibling", { get: function() {
-return getElementSibling(this,"previous")} })
-
-// children is subtly different from childnodes; this code taken from
-// https://developer.mozilla.org/en-US/docs/Web/API/ParentNode/children
-odp(nodep, 'children', {
-get: function() {
-let i = 0, node, nodes = this.childNodes, children = new w.Array;
-if(!nodes) return children;
-while(i<nodes.length) {
-node = nodes[i++];
-if (node.nodeType === 1)  children.push(node);
-}
-return children;
-}})
-
-// attributes, functions are in the attr object
-; (function(){ const list = [
-"hasAttribute", "hasAttributeNS", "getAttributeNames",
-"getAttribute", "getAttributeNS", "getAttributeNode",
-"setAttribute", "setAttributeNS", "setAttributeNode",
-"removeAttribute", "removeAttributeNS", "removeAttributeNode"];
-for(let k of list)
-eval('nodep.'+k+' = attr.'+k)})();
-
-odp(nodep, "className", {
-get: function() {
-let c = this.getAttribute("class");
-if(c === null) return "";
-return c; },
-set: function(h) {
-this.setAttribute("class", h)}})
 
 odp(nodep, "parentElement", {
 get: function() {
@@ -3688,10 +3403,6 @@ nodep.addEventListener = addEventListener;
 nodep.removeEventListener = removeEventListener;
 nodep.dispatchEvent = dispatchEvent;
 
-// outerHTML is dynamic; should innerHTML be?
-odp(nodep, "outerHTML", { get: function() { return htmlString(this);},
-set: function(h) { outer$1(this,h); }});
-
 // constants
 nodep.ELEMENT_NODE = 1
 nodep.TEXT_NODE = 3
@@ -3701,92 +3412,6 @@ nodep.DOCUMENT_TYPE_NODE = 10
 nodep.DOCUMENT_FRAGMENT_NODE = 11
 // default tabIndex is 0 but running js can override this.
 nodep.tabIndex = 0
-
-// class and text methods
-odp(nodep, "classList", { get : function() { return classList(this);}});
-nodep.cl$present = true;
-odp(nodep, "textContent", {
-get: function() { return textUnder(this, 0); },
-set: function(s) { return newTextUnder(this, s, 0); }});
-// spec says there is a difference between textContent and innerText,
-// but I don't think it's significant for edbrowse.
-odp(nodep, "innerText", {
-get: function() { return textUnder(this, 0); },
-set: function(s) { return newTextUnder(this, s, 0); }});
-odp(nodep, "contentText", {
-get: function() { return textUnder(this, 1); },
-set: function(s) { return newTextUnder(this, s, 1); }});
-odp(nodep, "nodeValue", {
-get: function() {
-return this.nodeType == 3 ?
-this.data : this.nodeType == 4 ? this.text : null;},
-set: function(h) {
-if(this.nodeType == 3) this.data = h;
-if (this.nodeType == 4) this.text = h }})
-
-nodep.insertAdjacentElement = function(pos, e) {
-let n, p = this.parentNode;
-if(!p || typeof pos != "string") return null;
-pos = pos.toLowerCase();
-switch(pos) {
-case "beforebegin": return p.insertBefore(e, this);
-case "afterend": n = this.nextSibling; return n ? p.insertBefore(e, n) : p.appendChild(e);
-case "beforeend": return this.appendChild(e);
-case "afterbegin": return this.prependChild(e);
-return null;
-}
-}
-
-nodep.insertAdjacentHTML = function(flavor, h) {
-// easiest implementation is just to use the power of innerHTML
-let p = d.createElement("p");
-p.innerHTML = h; // the magic
-let s, parent = this.parentNode;
-switch(flavor) {
-case "beforebegin":
-while(s = p.firstChild)
-parent.insertBefore(s, this);
-break;
-case "afterbegin":
-while(s = p.lastChild)
-this.insertBefore(s, this.firstChild);
-break;
-case "beforeend":
-while(s = p.firstChild)
-this.appendChild(s);
-break;
-case "afterend":
-while(s = p.lastChild)
-parent.insertBefore(s, this.nextSibling);
-break;
-}
-}
-
-// This is a manufactured method for css purposes,
-// to inject words or marks before or after a tag, marks that you don't see
-// unless you type showall, marks that nobody probably cares about anyways,
-// but I read about it in the spec and tried to make it happen.
-nodep.injectSetup = function(which) {
-let z = this;
-switch(which) {
-case 'a':
-if(!this.inj$after) {
-z = this.appendChild(d.createTextNode())
-odp(z, "inj$css", {value:true})
-odp(this, "inj$after", {value:true})
-} else z = this.lastChild;
-break;
-case 'b':
-if(!this.inj$before) {
-z = this.prependChild(d.createTextNode())
-odp(z, "inj$css", {value:true})
-odp(this, "inj$before", {value:true})
-} else z = this.firstChild;
-break;
-}
-// establish the style object, for the calling function in css.c
-w.soj$ = z.style;
-}
 
 /*********************************************************************
 compareDocumentPosition:
@@ -3907,15 +3532,385 @@ swpv("document", d);
     odp(d, "childNodes", {value:new w.Array,writable:true,configurable:true});
     odp(d, "parentNode", {value:null,writable:true,configurable:true});
 
-// The html element, which is the head of the DOM nodes that you know and love.
+swp("Element", function(){})
+swpp("Element", w.Node)
+let elemp = w.Element.prototype;
+
+// attributes are on demand
+odp( elemp, "attributes", { get: function(){ if(!this.attributes$2) {
+odp(this, "attributes$2", {value:new w.NamedNodeMap})
+this.attributes$2.owner = this
+this.attributes$2.ownerDocument = this.ownerDocument ? this.ownerDocument : d;
+}
+return this.attributes$2}})
+; (function(){ const list = [
+"hasAttribute", "hasAttributeNS", "getAttributeNames",
+"getAttribute", "getAttributeNS", "getAttributeNode",
+"setAttribute", "setAttributeNS", "setAttributeNode",
+"removeAttribute", "removeAttributeNS", "removeAttributeNode"];
+for(let k of list)
+eval('elemp.'+k+' = attr.'+k)})();
+
+// children is subtly different from childnodes; this code taken from
+// https://developer.mozilla.org/en-US/docs/Web/API/ParentNode/children
+odp(elemp, 'children', {
+get: function() {
+let i = 0, node, nodes = this.childNodes, children = new w.Array;
+if(!nodes) return children;
+while(i<nodes.length) {
+node = nodes[i++];
+if (node.nodeType === 1)  children.push(node);
+}
+return children;
+}})
+
+odp(elemp, "childElementCount", {
+get: function() {
+let z=0, u = this.childNodes;
+if(!u) return z;
+for(let i=0; i<u.length; ++i) if(u[i].nodeType == 1) ++z;
+return z}})
+
+odp(elemp, "firstElementChild", {
+get: function() {
+let u = this.childNodes;
+if(!u) return null;
+for(let i=0; i<u.length; ++i) if(u[i].nodeType == 1) return u[i];
+return null}});
+
+odp(elemp, "lastElementChild", {
+get: function() {
+let u = this.childNodes;
+if(!u) return null;
+for(let i=u.length-1; i>=0; --i) if(u[i].nodeType == 1) return u[i];
+return null}})
+
+function getElementSibling (obj,direction) {
+const pn = obj.parentNode;
+if(!pn) return null;
+let j, l = pn.childNodes.length;
+for (j=0; j<l; ++j)
+if (pn.childNodes[j] == obj) break;
+if (j == l) {
+// child not found under parent, error
+return null;
+}
+switch(direction) {
+case "previous":
+for(--j; j>=0; --j)
+if(pn.childNodes[j].nodeType == 1) return pn.childNodes[j];
+return null;
+case "next":
+for(++j; j<l; ++j)
+if(pn.childNodes[j].nodeType == 1) return pn.childNodes[j];
+return null;
+default:
+// the function should always have been called with either 'previous' or 'next' specified
+return null;
+}
+}
+odp(elemp, "nextElementSibling", { get: function() {
+return getElementSibling(this,"next")} })
+odp(elemp, "previousElementSibling", { get: function() {
+return getElementSibling(this,"previous")} })
+
+elemp.append = function() {
+let l = arguments.length;
+for(let i=0; i<l; ++i) {
+let c = arguments[i];
+if(typeof c == "string") c = d.createTextNode(c); // convert to node
+if(c.nodeType > 0) this.appendChild(c);
+}
+}
+
+elemp.prepend = function() {
+let l = arguments.length;
+for(let i=l-1; i>=0; --i) {
+let c = arguments[i];
+if(typeof c == "string") c = d.createTextNode(c); // convert to node
+if(c.nodeType > 0) this.prependChild(c);
+}
+}
+
+elemp.before = function() {
+let p = this.parentNode;
+if(!p) return;
+let l = arguments.length;
+for(let i=0; i<l; ++i) {
+let c = arguments[i];
+if(typeof c == "string") c = d.createTextNode(c);
+if(c.nodeType > 0) p.insertBefore(c, this);
+}
+}
+
+elemp.after = function() {
+let p = this.parentNode;
+if(!p) return;
+let l = arguments.length;
+let n = this.nextSibling;
+for(let i=0; i<l; ++i) {
+let c = arguments[i];
+if(typeof c == "string") c = d.createTextNode(c);
+if(c.nodeType > 0)
+n ? p.insertBefore(c,n) : p.appendChild(c);
+}
+}
+
+elemp.replaceWith = function() {
+let p = this.parentNode;
+if(!p) return;
+let l = arguments.length;
+let n = this.nextSibling;
+for(let i=0; i<l; ++i) {
+let c = arguments[i];
+if(typeof c == "string") c = d.createTextNode(c);
+if(c.nodeType > 0)
+n ? p.insertBefore(c,n) : p.appendChild(c);
+}
+p.removeChild(this);
+}
+
+// replaceChildren not yet implemented
+
+elemp.replaceChild = function(newc, oldc) {
+var lastentry;
+var l = this.childNodes.length;
+var nextinline;
+for(var i=0; i<l; ++i) {
+if(this.childNodes[i] != oldc)
+continue;
+if(i == l-1)
+lastentry = true;
+else {
+lastentry = false;
+nextinline = this.childNodes[i+1];
+}
+this.removeChild(oldc);
+if(lastentry)
+this.appendChild(newc);
+else
+this.insertBefore(newc, nextinline);
+break;
+}
+}
+
+elemp.remove = function() { if(this.parentNode) this.parentNode.removeChild(this)}
+
+elemp.insertAdjacentElement = function(pos, e) {
+let n, p = this.parentNode;
+if(!p || typeof pos != "string") return null;
+pos = pos.toLowerCase();
+switch(pos) {
+case "beforebegin": return p.insertBefore(e, this);
+case "afterend": n = this.nextSibling; return n ? p.insertBefore(e, n) : p.appendChild(e);
+case "beforeend": return this.appendChild(e);
+case "afterbegin": return this.prependChild(e);
+return null;
+}
+}
+
+elemp.matches = w.querySelector0;
+
+elemp.closest = function(s) {
+let u = this;
+while(u.nodeType == 1) { if(u.matches(s)) return u; u = u.parentNode; }
+return null}
+
+// helper functions that support Element.classList
+function classListRemove() {
+for(var i=0; i<arguments.length; ++i) {
+for(var j=0; j<this.length; ++j) {
+if(arguments[i] != this[j]) continue;
+this.splice(j, 1);
+--j;
+}
+}
+this.node.setAttribute("class", this.join(' '));
+}
+
+function classListAdd() {
+for(var i=0; i<arguments.length; ++i) {
+for(var j=0; j<this.length; ++j)
+if(arguments[i] == this[j]) break;
+if(j == this.length) this.push(arguments[i]);
+}
+this.node.setAttribute("class", this.join(' '));
+}
+
+function classListReplace(o, n) {
+if(!o) return;
+if(!n) { this.remove(o); return; }
+for(var j=0; j<this.length; ++j)
+if(o == this[j]) { this[j] = n; break; }
+this.node.setAttribute("class", this.join(' '));
+}
+
+function classListContains(t) {
+if(!t) return false;
+for(var j=0; j<this.length; ++j)
+if(t == this[j]) return true;
+return false;
+}
+
+function classListToggle(t, force) {
+if(!t) return false;
+if(arguments.length > 1) {
+if(force) this.add(t); else this.remove(t);
+return force;
+}
+if(this.contains(t)) { this.remove(t); return false; }
+this.add(t); return true;
+}
+
+function classList(node) {
+var c = node.getAttribute("class");
+if(!c) c = "";
+// turn string into array
+var a = c.replace(/^\s+/, "").replace(/\s+$/, "").split(/\s+/);
+// remember the node you came from
+a.node = node;
+// attach functions
+a.remove = classListRemove;
+a.add = classListAdd;
+a.replace = classListReplace;
+a.contains = classListContains;
+a.toggle = classListToggle;
+return a;
+}
+
+odp(elemp, "classList", { get : function() { return classList(this);}});
+elemp.cl$present = true;
+odp(elemp, "className", {
+get: function() {
+let c = this.getAttribute("class");
+if(c === null) return "";
+return c; },
+set: function(h) {
+this.setAttribute("class", h)}})
+
+odp(elemp, "id", {
+get:function(){ var t = this.getAttribute("id");
+return typeof t == "string" ? t : undefined; },
+set:function(v) { this.setAttribute("id", v)}});
+
+odp(elemp, "outerHTML", { get: function() { return htmlString(this);},
+set: function(h) { outer$1(this,h); }});
+
+elemp.insertAdjacentHTML = function(flavor, h) {
+// easiest implementation is just to use the power of innerHTML
+let p = d.createElement("p");
+p.innerHTML = h; // the magic
+let s, parent = this.parentNode;
+switch(flavor) {
+case "beforebegin":
+while(s = p.firstChild)
+parent.insertBefore(s, this);
+break;
+case "afterbegin":
+while(s = p.lastChild)
+this.insertBefore(s, this.firstChild);
+break;
+case "beforeend":
+while(s = p.firstChild)
+this.appendChild(s);
+break;
+case "afterend":
+while(s = p.lastChild)
+parent.insertBefore(s, this.nextSibling);
+break;
+}
+}
+
+// insertAdjacentText not yet implemented
+
+odp(elemp, "shadowRoot", {
+get:function(){
+var r = this.firstChild;
+if(r && r.nodeName == "SHADOWROOT" && r.mode == "open") return r;
+return null;
+}});
+
+elemp.attachShadow = function(o){
+// I should have a list of allowed tags here, but custom tags are allowed,
+// and I don't know how to determine that,
+// so I'll just reject a few tags.
+var nn = this.nodeName;
+if(nn == "A" || nn == "FRAME" || nn == "IFRAME" | nn == "#document" || nn == "#text" || nn == "#comment" ||
+nn == "TABLE" || nn == "TH" || nn == "TD" || nn == "TR" || nn == "FORM" || nn == "INPUT" ||
+nn == "SHADOWROOT") // no shadow root within a shadow root
+return null;
+var r = d.createElement("ShadowRoot");
+this.appendChild(r);
+r.mode = "open";
+r.delegatesFocus = false;
+r.slotAssignment = "";
+if(typeof o == "object") {
+if(o.mode) r.mode = o.mode;
+if(o.delegatesFocus) r.delegatesFocus = o.delegatesFocus;
+if(o.slotAssignment) r.slotAssignment = o.slotAssignment;
+}
+return r;
+}
+
+// visual
+elemp.clientTop = 0;
+elemp.clientHeight = 16;
+elemp.clientWidth = 120;
+elemp.scrollHeight = 16;
+elemp.scrollWidth = 120;
+elemp.scrollTop = 0;
+elemp.scrollLeft = 0;
+elemp.dir = "auto";
+elemp.focus = function(){d.activeElement=this}
+elemp.blur = function(){d.activeElement=null}
+elemp.getBoundingClientRect = function(){
+return {
+top: 0, bottom: 0, left: 0, right: 0,
+x: 0, y: 0,
+width: 0, height: 0
+}
+}
+elemp.scroll = eb$voidfunction;
+elemp.scrollBy = eb$voidfunction;
+elemp.scrollByLines = eb$voidfunction;
+elemp.scrollByPages = eb$voidfunction;
+elemp.scrollTo = eb$voidfunction;
+elemp.scrollIntoView = eb$voidfunction;
+
+// the various aria properties, for assistive technologies;
+// these might be very important, but edbrowse doesn't honor any of them yet.
+
+// This is a manufactured method for css purposes,
+// to inject words or marks before or after a tag, marks that you don't see
+// unless you type showall, marks that nobody probably cares about anyways,
+// but I read about it in the spec and tried to make it happen.
+elemp.injectSetup = function(which) {
+let z = this;
+switch(which) {
+case 'a':
+if(!this.inj$after) {
+z = this.appendChild(d.createTextNode())
+odp(z, "inj$css", {value:true})
+odp(this, "inj$after", {value:true})
+} else z = this.lastChild;
+break;
+case 'b':
+if(!this.inj$before) {
+z = this.prependChild(d.createTextNode())
+odp(z, "inj$css", {value:true})
+odp(this, "inj$before", {value:true})
+} else z = this.firstChild;
+break;
+}
+// establish the style object, for the calling function in css.c
+w.soj$ = z.style;
+}
+
+// The html element, which is the DOM nodes that you know and love.
 swp("HTMLElement", function(){})
-swpp("HTMLElement", w.Node)
-let elemp = w.HTMLElement.prototype;
-/* According to MDN Element isn't a synonym for HTMLElement, as SVGElement
-should also inherit from it, but leave as is until we get there */
-swpc("Element", w.HTMLElement)
-// spillup and spilldown for id and name
-odp(elemp, "name", {
+swpp("HTMLElement", w.Element)
+let helemp = w.HTMLElement.prototype;
+odp(helemp, "name", {
 get: function() {
 const isinput = (this.dom$class == "HTMLInputElement" || this.dom$class == "HTMLButtonElement" || this.dom$class == "HTMLSelectElement");
 if(!isinput) return this.name$2 ;
@@ -3935,26 +3930,89 @@ if(!f.elements[n]) f.elements[n] = this;
 }
 this.setAttribute("name", n);
 }});
-odp(elemp, "id", {
-get:function(){ var t = this.getAttribute("id");
-return typeof t == "string" ? t : undefined; },
-set:function(v) { this.setAttribute("id", v)}});
-odp(elemp, "title", {
+odp(helemp, "title", {
 get:function(){ const t = this.getAttribute("title");
 // in the real world this is always a string, but acid test 3 has numbers for titles
 const y = typeof t;
 return y == "string" || y == "number" ? t : undefined; },
 set:function(v) { this.setAttribute("title", v);}});
 // almost anything can be disabled, an entire div section, etc
-odp(elemp, "disabled", {
+odp(helemp, "disabled", {
 get:function(){ const t = this.getAttribute("disabled");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("disabled", v);}});
-odp(elemp, "hidden", {
+odp(helemp, "hidden", {
 get:function(){ const t = this.getAttribute("hidden");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("hidden", v);}});
-elemp.nodeType = 1;
+helemp.nodeType = 1;
+
+// Helper functions for contentText and textContent, the differences of which,
+// I don't grok.
+function textUnder(top, flavor) {
+const nn = top.nodeName;
+if(nn == "#text") return top.data.trim();
+if(nn == "SCRIPT" || nn == "#cdata-section") return top.text;
+const pre = (nn=="PRE");
+let answer = "", part, delim = " ";
+if(pre) delim = '';
+const t = top.querySelectorAll("cdata,text");
+for(let u of t) {
+if(u.parentNode && u.parentNode.nodeName == "OPTION") continue;
+// any other texts we should skip?
+part = u.nodeName == "#text" ? u.data : u.text;
+if(!pre) part = part.trim(); // should we be doing this?
+if(!part) continue;
+if(answer) answer += delim;
+answer += part;
+}
+return answer;
+}
+
+function newTextUnder(top, s, flavor) {
+if(top.nodeName == "#text") {
+top.data = s;
+return;
+}
+var l = top.childNodes.length;
+for(var i=l-1; i>=0; --i)
+top.removeChild(top.childNodes[i]);
+// do nothing if s is undefined, or null, or the empty string
+if(!s) return;
+top.appendChild(my$doc().createTextNode(s));
+}
+
+odp(helemp, "textContent", {
+get: function() { return textUnder(this, 0); },
+set: function(s) { return newTextUnder(this, s, 0); }});
+odp(helemp, "contentText", {
+get: function() { return textUnder(this, 1); },
+set: function(s) { return newTextUnder(this, s, 1); }});
+odp(helemp, "nodeValue", {
+get: function() {
+return this.nodeType == 3 ?
+this.data : this.nodeType == 4 ? this.text : null;},
+set: function(h) {
+if(this.nodeType == 3) this.data = h;
+if (this.nodeType == 4) this.text = h }})
+
+// spec says there is a difference between textContent and innerText,
+// but I don't think it's significant for edbrowse.
+odp(helemp, "innerText", {
+get: function() { return textUnder(this, 0); },
+set: function(s) { return newTextUnder(this, s, 0); }});
+
+// style object is on demand
+odp( helemp, "style", { get: function(){ if(!this.style$2) {
+odp(this,"style$2", {value:new w.CSSStyleDeclaration,configurable:true});
+this.style$2.element = this}
+return this.style$2}})
+
+// visual
+helemp.offsetHeight = 1.0;
+helemp.offsetWidth = 1.0;
+helemp.offsetTop = 0.0;
+helemp.offsetLeft = 0.0;
 
 swp("SVGElement", function(){})
 swpp("SVGElement", w.Element)
@@ -4934,33 +4992,6 @@ set:function(v) { this.setAttribute("open", v);}});
 
 swp("ShadowRoot", function(){})
 swpp("ShadowRoot", w.HTMLElement)
-elemp.attachShadow = function(o){
-// I should have a list of allowed tags here, but custom tags are allowed,
-// and I don't know how to determine that,
-// so I'll just reject a few tags.
-var nn = this.nodeName;
-if(nn == "A" || nn == "FRAME" || nn == "IFRAME" | nn == "#document" || nn == "#text" || nn == "#comment" ||
-nn == "TABLE" || nn == "TH" || nn == "TD" || nn == "TR" || nn == "FORM" || nn == "INPUT" ||
-nn == "SHADOWROOT") // no shadow root within a shadow root
-return null;
-var r = d.createElement("ShadowRoot");
-this.appendChild(r); // are we suppose to do this?
-r.mode = "open";
-r.delegatesFocus = false;
-r.slotAssignment = "";
-if(typeof o == "object") {
-if(o.mode) r.mode = o.mode;
-if(o.delegatesFocus) r.delegatesFocus = o.delegatesFocus;
-if(o.slotAssignment) r.slotAssignment = o.slotAssignment;
-}
-return r;
-}
-odp(elemp, "shadowRoot", {
-get:function(){
-var r = this.firstChild;
-if(r && r.nodeName == "SHADOWROOT" && r.mode == "open") return r;
-return null;
-}});
 
 swp("HTMLAreaElement", function(){})
 swpp("HTMLAreaElement", w.HTMLElement)
