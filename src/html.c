@@ -1190,9 +1190,11 @@ I will disconnect here, and also check for inxhr in runOnload().
 	if (!cf->dw) return;
 // completely different behavior before and after browse
 // After browse, it clobbers the page.
-	if(cf->browseMode) {
+	if(cf->browseMode && ! cf->dw_clobber) {
+		debugPrint(3, "document.write clobber 1");
 		run_function_onestring_t(cf->bodytag, "eb$dbih",
 		strstr(cf->dw, "<body>")+6);
+		cf->dw_clobber = true;
 	} else {
 // Any newly generated scripts have to run next. Move them up in the linked list.
 		Tag *t1, *t2, *u;
@@ -1234,9 +1236,11 @@ void runScriptsPending(bool startbrowse)
 		cf = f;
 // completely different behavior before and after browse
 // After browse, it clobbers the page.
-		if(cf->browseMode) {
+		if(cf->browseMode && !cf->dw_clobber) {
+			debugPrint(3, "document.write clobber 2");
 			run_function_onestring_t(cf->bodytag, "eb$dbih",
 			strstr(cf->dw, "<body>")+6);
+			cf->dw_clobber = true;
 		} else {
 			stringAndString(&cf->dw, &cf->dw_l, "</body>");
 			runGeneratedHtml(cf->bodytag, cf->dw);

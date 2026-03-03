@@ -994,6 +994,7 @@ void freeFrame(Frame *f)
     delTimers(f);
     nzFree0(f->dw);
     f->dw_l = 0;
+    f->dw_clobber = false;
     nzFree0(f->hbase);
     nzFree0(f->firstURL);
     if (f != &f->owner->f0) {

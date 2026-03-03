@@ -3423,11 +3423,14 @@ bool reexpandFrame(void)
 	delTimers(cf);
 	nzFree0(cf->dw);
 	cf->dw_l = 0;
+	cf->dw_clobber = false;
 	nzFree0(cf->hbase);
 	nzFree(cf->fileName);
 	cf->fileName = newlocation;
 	newlocation = 0;
 	cf->uriEncoded = false;
+	cf->baseset = false;
+	cf->xmlMode = false;
 	nzFree0(cf->firstURL);
 	rc = readFileArgv(cf->fileName, 2, 0);
 	if (!rc) {
