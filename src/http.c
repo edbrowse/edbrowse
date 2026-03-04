@@ -39,14 +39,21 @@ static struct listHead down_jobs = {
 static pthread_mutex_t share_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void lock_share(CURL * handle, curl_lock_data data,
-		       curl_lock_access access, void *userptr)
+    curl_lock_access access, void *userptr)
 {
 /* TODO error handling. */
+        (void) handle;
+        (void) data;
+        (void) access;
+        (void) userptr;
 	pthread_mutex_lock(&share_mutex);
 }
 
 static void unlock_share(CURL * handle, curl_lock_data data, void *userptr)
 {
+        (void) handle;
+        (void) data;
+        (void) userptr;
 	pthread_mutex_unlock(&share_mutex);
 }
 
@@ -445,11 +452,16 @@ showdots:
 
 static int
 curl_progress(void *data_p, curl_off_t dl_total, curl_off_t dl_now,
-	      curl_off_t ul_total, curl_off_t ul_now)
+	curl_off_t ul_total, curl_off_t ul_now)
 {
 	struct i_get *g = data_p;
 	int ret = 0;
 // ^c will interrupt an http or ftp download but not a background download
+        (void) dl_total;
+        (void) dl_now;
+        (void) ul_total;
+        (void) ul_now;
+
 	if (intFlag && g->down_force != 1) {
 		if (g->down_force == 0)
 			i_puts(MSG_Interrupted);
@@ -2443,12 +2455,9 @@ void setHTTPLanguage(const char *lang)
 static int
 my_curl_safeSocket(void *clientp, curl_socket_t socketfd, curlsocktype purpose)
 {
-	int success = fcntl(socketfd, F_SETFD, FD_CLOEXEC);
-	if (success == -1)
-		success = 1;
-	else
-		success = 0;
-	return success;
+        (void) purpose;
+        (void) clientp;
+	return fcntl(socketfd, F_SETFD, FD_CLOEXEC) == -1;
 }
 
 static CURL *http_curl_init(struct i_get *g)
@@ -2821,6 +2830,7 @@ ebcurl_debug_handler(CURL * handle, curl_infotype info_desc, char *data,
 // We need to explicitly cast as apparently curl wants to pass us a void type pointer these days
         struct i_get *g = (struct i_get *) client;
 
+        (void) handle;
 // There's a special case where this function is used
 // by the imap client to see if the server is move capable.
 // Unfortunately this check runns all the while we are at db4, even for http etc,
