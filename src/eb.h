@@ -750,17 +750,20 @@ enum {
 };
 extern const char *const inp_others[];
 
+// type completed below but this allows us to define the callback type correctly
+typedef struct parseContext parseContext;
+
+/* For traversing a tree of html nodes, this is the callback function */
+typedef void (*nodeFunction) (Tag * node, bool opentag, parseContext *pc);
+
 // context variables when parsing and decorating html
 struct parseContext {
 	bool malformed; // tree is somehow malformed
 	bool abort; // traversal aborted, should never happen
-	void *callback; // actually nodeFunction but that typedef has to appear below
+	nodeFunction callback;
 	Tag *currentOG; // option group
 	Tag *innerParent; // which tag invoked innerHTML
 };
-
-/* For traversing a tree of html nodes, this is the callback function */
-typedef void (*nodeFunction) (struct htmlTag * node, bool opentag, struct parseContext *pc);
 
 /* Return codes for base64Decode() */
 #define GOOD_BASE64_DECODE 0
