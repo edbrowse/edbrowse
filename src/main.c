@@ -485,18 +485,20 @@ int main(int argc, char **argv)
 /* For now just check for the presence of the config in the xdg location but
 create in the old location to avoid surprises */
 	if (fileTypeByName(configFile, 0) == 0) {
-		setError(-1); // this is an ok error
-                free(configFile);
-                createFormattedString(&configFile, "%s/.ebrc", home);
+	    setError(-1); // this is an ok error
+            free(configFile);
+            createFormattedString(&configFile, "%s/.ebrc", home);
 // if not present then create it
-                if (fileTypeByName(configFile, 0) == 0) {
-                        int fh = creat(configFile, MODE_private);
-                        if (fh >= 0) {
-                                write(fh, ebrc_string, strlen(ebrc_string));
-                                close(fh);
-                                i_printfExit(MSG_Personalize, configFile);
-                        }
+            if (fileTypeByName(configFile, 0) == 0) {
+                int fh = creat(configFile, MODE_private);
+                if (fh >= 0) {
+		    int l = strlen(ebrc_string);
+                    if(write(fh, ebrc_string, l) < l)
+			unlink(configFile);
+                    close(fh);
+                    i_printfExit(MSG_Personalize, configFile);
                 }
+            }
         }
 
 /* recycle bin and .signature files are unix-like, and not adjusted for windows. */
@@ -1052,8 +1054,7 @@ int runEbFunction(const char *line)
 	char *allargs = 0;
 	const char *args[10];
 	int argl[10];		/* lengths of args */
-	const char *s;
-	char *t, *new;
+	char *s, *t, *new;
 	int nest;
 	unsigned j;
 	const char *ip;		// think instruction pointer

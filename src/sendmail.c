@@ -488,7 +488,11 @@ empty:
 						setError(MSG_SigAccess);
 						goto freefail;
 					}
-					read(fd, buf + buflen, n);
+					if(read(fd, buf + buflen, n) < n) {
+						close(fd);
+						setError(MSG_SigAccess);
+						goto freefail;
+					}
 					close(fd);
 					buflen += n;
 					buf[buflen] = 0;
@@ -499,27 +503,27 @@ empty:
 
 	// Infer content type from the filename
 	ct = 0;
-	s = strrchr(file, '.');
-	if (s && s[1]) {
-		++s;
-		if (stringEqualCI(s, "ps"))
+	const char *suf = strrchr(file, '.');
+	if (suf && suf[1]) {
+		++suf;
+		if (stringEqualCI(suf, "ps"))
 			ct = "application/PostScript";
-		if (stringEqualCI(s, "jpeg"))
+		if (stringEqualCI(suf, "jpeg"))
 			ct = "image/jpeg";
-		if (stringEqualCI(s, "gif"))
+		if (stringEqualCI(suf, "gif"))
 			ct = "image/gif";
-		if (stringEqualCI(s, "wav"))
+		if (stringEqualCI(suf, "wav"))
 			ct = "audio/basic";
-		if (stringEqualCI(s, "mpeg"))
+		if (stringEqualCI(suf, "mpeg"))
 			ct = "video/mpeg";
-		if (stringEqualCI(s, "rtf"))
+		if (stringEqualCI(suf, "rtf"))
 			ct = "text/richtext";
-		if (stringEqualCI(s, "eml"))
+		if (stringEqualCI(suf, "eml"))
 			ct = "message/rfc822";
-		if (stringEqualCI(s, "htm") ||
-		    stringEqualCI(s, "html") ||
-		    stringEqualCI(s, "shtm") ||
-		    stringEqualCI(s, "shtml") || stringEqualCI(s, "asp"))
+		if (stringEqualCI(suf, "htm") ||
+		    stringEqualCI(suf, "html") ||
+		    stringEqualCI(suf, "shtm") ||
+		    stringEqualCI(suf, "shtml") || stringEqualCI(suf, "asp"))
 			ct = "text/html";
 	}
 

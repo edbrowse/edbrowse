@@ -2227,7 +2227,8 @@ nextpart:
 // <a href=foo.html#bar>go to the bar section</a>
 		h = 0;
 		if(prebrowse && icmd == 'g')
-			h = strchr(filename, '#');
+// modifying a const string but I'll put it back
+			h = (char *)strchr(filename, '#');
 		if(h) *h = 0;
 		n = fileIntoMemory(filename, &rbuf, &partSize, inparts);
 		rc = (n > 0);
@@ -4780,7 +4781,7 @@ static char *lessFile(const char *line, bool tamode)
 			lno1 = 1, lno2 = dol;
 		} else {
 			if(!atPartCracker(0, n, false, p, &lno1, &lno2))
-				return false;
+				return 0;
 			if (lno2 > lno1 && !tamode) {
 				setError(MSG_BufferXLines, n);
 				return 0;
@@ -4802,7 +4803,7 @@ static char *lessFile(const char *line, bool tamode)
 			p = shorthand;
 		}
 		if(!atPartCracker(line[0], n, false, p, &lno1, &lno2))
-			return false;
+			return 0;
 		if (lno2 > lno1 && !tamode) {
 			setError(MSG_BufferXLines, n);
 			return 0;
@@ -6647,12 +6648,13 @@ static int twoLetterG(const char *line, const char **runThis)
 			if(!timestring) {
 				puts("-");
 			} else if(*lsmode == 't') {
-				char *t2 = strchr(timestring, '^');
+// modifying a const string but I'll put it back
+				char *t2 = (char *)strchr(timestring, '^');
 				if(t2) *t2 = 0;
 				puts(timestring);
 				if(t2) *t2 = '^';
 			} else {
-				char *t2 = strchr(timestring, '^');
+				const char *t2 = strchr(timestring, '^');
 				puts(t2 ? t2+1 : "-");
 			}
 			return true;
@@ -7211,7 +7213,7 @@ range2:
 	}
 
 	if((first == 'r' || first == 'w' || first == '<') && (line[1] == '/' || line[1] == '?') && !stringEqual(line, "w/")) {
-		char *at = strchr(line, '@'); // look for at syntax
+		char *at = (char *)strchr(line, '@'); // look for at syntax
 		if(at) *at = 0; // I'll put it back
 		cmd = 'e';
 		n = sessionByText(line + 2, line[1] == '/' ? 1 : -1);
@@ -7232,7 +7234,7 @@ range2:
 	}
 
 	if(first == '<' && line[1] == '*' && (line[2] == '/' || line[2] == '?')) {
-		char *at = strchr(line, '@'); // look for at syntax
+		char *at = (char *)strchr(line, '@'); // look for at syntax
 		if(at) *at = 0; // I'll put it back
 		cmd = 'e';
 		n = sessionByText(line + 3, line[1] == '/' ? 1 : -1);
