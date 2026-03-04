@@ -313,7 +313,7 @@ static bool httpDefault(const char *url)
 		"au",
 		"ca", "de", "jp", "nz", 0
 	};
-	int n, len;
+	size_t n, len;
 	const char *s, *lastdot, *end;
 	if (hrefContext)
 		return false;
@@ -323,9 +323,8 @@ static bool httpDefault(const char *url)
 	s = strrchr(url, ':');
 	if (s && s < end) {
 		const char *colon = s;
-		++s;
-		while (isdigitByte(*s))
-			++s;
+                ++s;
+		while (isdigitByte(*s)) ++s;
 		if (s == end)
 			end = colon;
 	}
@@ -335,39 +334,33 @@ static bool httpDefault(const char *url)
 		for (s = url + 1; s < end - 1; ++s) {
 			if(*s == ':') ++n;
 			else if(!isxdigit(*s)) return false;
-		}
+                }
 		return (n >= 5); // at least 5 colons
-	}
+        }
 // only domain characters allowed
 	for (s = url; s < end; ++s)
-		if (!isalnumByte(*s) && *s != '.' && *s != '-')
-			return false;
+		if (!isalnumByte(*s) && *s != '.' && *s != '-') return false;
 /* need at least two embedded dots */
 	n = 0;
         lastdot = url; // gcc warns about lack of initialisation otherwise
 	for (s = url + 1; s < end - 1; ++s)
 		if (*s == '.' && s[-1] != '.' && s[1] != '.')
-			++n, lastdot = s;
-	if (n < 2)
-		return false;
+                        ++n, lastdot = s;
+	if (n < 2) return false;
 /* All digits, like an ip address, is ok. */
 	if (n == 3) {
 		for (s = url; s < end; ++s)
-			if (!isdigitByte(*s) && *s != '.')
-				break;
-		if (s == end)
-			return true;
-	}
+			if (!isdigitByte(*s) && *s != '.') break;
+		if (s == end) return true;
+        }
 /* Look for standard domain suffix */
-	++lastdot;
+        ++lastdot;
 	len = end - lastdot;
 	for (n = 0; domainSuffix[n]; ++n)
 		if (len == strlen(domainSuffix[n])
-                    || memEqualCI(lastdot, domainSuffix[n], len))
-			return true;
+                    || memEqualCI(lastdot, domainSuffix[n], len)) return true;
 /* www.anything.xx is ok */
-	if (len >= 2 && memEqualCI(url, "www.", 4))
-		return true;
+	if (len >= 2 && memEqualCI(url, "www.", 4)) return true;
 	return false;
 }
 
@@ -3933,7 +3926,7 @@ static char * ircEat(char *s, int (*p)(int), int r)
 
 // This uses addTextToBuffer to place the line, and so,
 // cw has to be set to the receiving window.
-static void ircAddLine(Window *win, const char *channel, bool show, bool priv, const char *fmt, ...)
+static void ircAddLine(const char *channel, bool show, bool priv, const char *fmt, ...)
 {
 	unsigned l1, l2;
 	int n = cw->dol;
@@ -4056,7 +4049,7 @@ static void ircPrepLine(Window *win, Window *wout, char *line)
 // going to call ircAddLine below
 	save_cw = cw, cw = wout;
 	if(stringEqual("PRIVMSG", line)) {
-		ircAddLine(win, par, win->showchan,
+		ircAddLine(par, win->showchan,
 // I hope this is a valid test for you as recipient, hence a private message
 		stringEqual(par, win->ircNick),
 		"<%s> %s", usr, txt);
@@ -4064,7 +4057,7 @@ static void ircPrepLine(Window *win, Window *wout, char *line)
 		debugPrint(3, "ping pong %s", txt);
 		ircSend(win, "PONG %s", txt);
 	} else {
-		ircAddLine(win, usr, win->showchan, false, ">< %s (%s): %s", line, par, txt);
+		ircAddLine(usr, win->showchan, false, ">< %s (%s): %s", line, par, txt);
 		if(stringEqual("NICK", line) && stringEqual(usr, win->ircNick)) {
 			nzFree(win->ircNick);
 			win->ircNick = cloneString(txt);
@@ -4088,13 +4081,13 @@ static void ircMessage(Window *wout, const char *receiver, const char *msg)
 		actionflag = true;
 	cw = wout;
 	if(!actionflag)
-		ircAddLine(win, receiver, win->showchan, false, "<%s> %s",
+		ircAddLine(receiver, win->showchan, false, "<%s> %s",
 		(win->ircNick ? win->ircNick : emptyString), msg);
 	else if(receiver && win->showchan)
-		ircAddLine(win, receiver, win->showchan, false, " %s %s",
+		ircAddLine(receiver, win->showchan, false, " %s %s",
 		(win->ircNick ? win->ircNick : emptyString), msg + 4);
 	else
-		ircAddLine(win, receiver, win->showchan, false, "%s %s",
+		ircAddLine(receiver, win->showchan, false, "%s %s",
 		(win->ircNick ? win->ircNick : emptyString), msg + 4);
 	cw = win;
 	if(actionflag)
@@ -4307,7 +4300,7 @@ teardown:
 	if(w2) {
 		Window *save_cw = cw;
 		cw = w2;
-		ircAddLine(w, w->ircChannel, true, false, emsg);
+		ircAddLine(w->ircChannel, true, false, emsg);
 		cw = save_cw;
 		if(--w2->ircCount == 0) {
 			w2->ircoMode = false;
@@ -4504,6 +4497,7 @@ Only one "thread" is managing buffers at a time. We hope.
 static volatile bool ircAlarming;
 static void ircAlarm(int n)
 {
+        (void) n;
 	ircAlarming = true;
 	ircRead();
 	signal(SIGALRM, ircAlarm);
