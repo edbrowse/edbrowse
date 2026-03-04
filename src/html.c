@@ -310,7 +310,7 @@ void jSyncup(bool fromtimer, const Tag *active)
 			continue;
 		}
 
-		value = getFieldFromBuffer(t->seqno, 0);
+		value = getFieldFromBuffer(t->seqno);
 /* If that line has been deleted from the user's buffer,
  * indicated by value = 0,
  * then don't do anything. */
@@ -2261,7 +2261,7 @@ static char *fetchTextVar(const Tag *t)
 	}
 
 	if (t->itype > INP_HIDDEN) {
-		v = getFieldFromBuffer(t->seqno, 0);
+		v = getFieldFromBuffer(t->seqno);
 		if (v)
 			return v;
 	}
@@ -2608,7 +2608,7 @@ Here is a small page to test some of these select option cases.
 *********************************************************************/
 
 		if (itype == INP_SELECT) {
-			char *display = getFieldFromBuffer(t->seqno, 0);
+			char *display = getFieldFromBuffer(t->seqno);
 			char *s, *e;
 			if (!display) {	/* off the air */
 				Tag *v;
@@ -3578,6 +3578,7 @@ static void currentTime(void)
 
 static void silent(int msg, ...)
 {
+    (void) msg;
 }
 
 // Is there an active tag below?
@@ -4799,6 +4800,7 @@ static void renderNode(Tag *t, bool opentag, struct parseContext *pc)
 	char *u;
 	Tag *ltag;
 
+        (void) pc;
 	debugPrint(6, "rend %c%s", (opentag ? ' ' : '/'), ti->name);
 	if(opentag) ++rrcount;
 
