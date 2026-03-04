@@ -1004,6 +1004,10 @@ past_html_close_semantics:
 #endif
 			if(!xml && isWall(lowname)) {
 				atWall = true;
+// code here to keep trailing whitespace for document.write or innerHTML
+// remember I tack </body> on the end
+				if(htmlGenerated && stringEqual(lowname, bodytag))
+					lasttext = 0;
 				if(lasttext) trimWhite(lasttext->textval);
 				lasttext = 0;
 			}
