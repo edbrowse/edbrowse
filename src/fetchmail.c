@@ -604,8 +604,10 @@ This callback function doesn't use a data block, mailstring is assumed.
 static size_t imap_null_callback(char *i, size_t size,
 				   size_t nitems, void *data)
 {
-	size_t b = nitems * size;
-	return b;
+// params required by prototype but unused
+        (void) i;
+        (void) data;
+	return nitems * size;
 }
 
 // after the email has been fetched via pop3 or imap
