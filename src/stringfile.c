@@ -1663,8 +1663,8 @@ char *makeAbsPath(const char *f)
 /* I'm not sure if we care about old glibc at this point (probably not) but
 handle both the new-style and old-style truncation checks just in case
 */
-                if (total < sizeof(path) && total > 0) ret = path;
-        } else if (strlen(f) < sizeof(path)) {
+                if (total > 0 && total < ABSPATH) ret = path;
+        } else if (strlen(f) < ABSPATH) {
                 strcpy(path, f);
                 ret = path;
         }
