@@ -4115,6 +4115,7 @@ static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
 	int action = t->action;
 	const char *a;		/* usually an attribute */
 
+        (void) pc;
 	if (t->step >= 1)
 		return;
 	debugPrint(6, "prend %c%s %d",
