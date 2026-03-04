@@ -123,6 +123,7 @@ static void catchSig(int n)
 	int d;
 	pthread_t t1 = foreground_thread, t2;
 	intFlag = true;
+        (void) n; // unused but required in the prototype
 // If we were reading from a file, or socket, this signal should
 //cause the read to fail.  Check for intFlag in that routine,
 // so we know it was interrupted, and not an io failure.
@@ -856,6 +857,7 @@ create in the old location to avoid surprises */
 
 static void *inputForever(void *ptr)
 {
+        (void) ptr; // unused
 	foreground_thread = pthread_self();
 	printPrompt();
 	while (true) {
