@@ -50,7 +50,7 @@ bool edbrowseCommand(const char *line, bool script) ;
 int sideBuffer(int cx, const char *text, int textlen, const char *bufname);
 void freeEmptySideBuffer(int n);
 bool locateTagInBuffer(int tagno, int *ln1_p, int *ln2_p, char **p1_p, char **p2_p, char **s_p, char **t_p);
-char *getFieldFromBuffer(int tagno, int ln0);
+char *getFieldFromBuffer(int tagno);
 int fieldIsChecked(int tagno);
 
 // sourcefile=dbodbc.c (and others)

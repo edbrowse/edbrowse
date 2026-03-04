@@ -4626,7 +4626,7 @@ static int substituteText(const char *line)
 			*replaceStringEnd = 0;
 // if substituting one line, remember it for undo
 			if(startRange == endRange && !globalMode)
-				undoSpecial = getFieldFromBuffer(tagno, 0), undo1line = ln, undoField = whichField;
+				undoSpecial = getFieldFromBuffer(tagno), undo1line = ln, undoField = whichField;
 // We're managing our own printing, so leave notify = 0
 			if (!infReplace(tagno, replaceString, false))
 				goto abort;
@@ -6573,7 +6573,7 @@ no_action:
 
 // these two-letter commands are ok to run even in a g/re/ construct.
 // There aren't very many of them.
-static int twoLetterG(const char *line, const char **runThis)
+static int twoLetterG(const char *line)
 {
 	if (stringEqual(line, "bw") || !strncmp(line, "bw/", 3) || !strncmp(line, "bw?", 3) || (!strncmp(line, "bw", 2) && isdigitByte(line[2]))) {
 		Window *lw;
@@ -7031,7 +7031,7 @@ bool runCommand(const char *line)
 		if(j == 3) allocatedLine = (char*)line;
 	}
 
-	j = twoLetterG(line, &line);
+	j = twoLetterG(line);
 	if (j < 2) goto donej;
 	if(j == 3) allocatedLine = (char*)line;
 
@@ -7580,7 +7580,7 @@ after_ib:
 		s = strchr(s, '<') + 1;
 		if(!(t = strstr(s, searchend)))
 			goto fail;
-		undoSpecial = getFieldFromBuffer(tagno, 0);
+		undoSpecial = getFieldFromBuffer(tagno);
 		rc = infReplace(tagno, oldline, true);
 		nzFree(oldline);
 		if(!rc)
@@ -9392,14 +9392,14 @@ look4end:
 	return false;
 }
 
-char *getFieldFromBuffer(int tagno, int ln0)
+char *getFieldFromBuffer(int tagno)
 {
 	int ln1, ln2;
 	char *p1, *p2, *s, *t;
 	char *a;
 	int len, j;
 	if (!locateTagInBuffer(tagno, &ln1, &ln2, &p1, &p2, &s, &t))
-		return 0; 	// apparently the line has been deleted
+		return 0; // apparently the line has been deleted
 	if(ln1 == ln2) // high runner case
 		return pullString1(s, t);
 
