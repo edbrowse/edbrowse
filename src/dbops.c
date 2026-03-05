@@ -1992,6 +1992,7 @@ int findColByName(const char *name)
 
 static int syncup_comm_fn(char action, char *line1, char *line2, long key)
 {
+        (void) line1; // Can this arg just be deleted
 	switch (action) {
 	case '<':		/* delete */
 		sql_exec("delete from %s where %s = %d %0s",
