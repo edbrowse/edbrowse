@@ -1562,21 +1562,37 @@ static Tag *tagFromObject2(JSValueConst v, const char *tagname)
 // some do-nothing native methods
 static JSValue nat_void(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
+        (void) cx;
+        (void) this;
+        (void) argc;
+        (void) argv;
 	return JS_UNDEFINED;
 }
 
 static JSValue nat_null(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
+        (void) cx;
+        (void) this;
+        (void) argc;
+        (void) argv;
 	return JS_NULL;
 }
 
 static JSValue nat_true(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
+        (void) cx;
+        (void) this;
+        (void) argc;
+        (void) argv;
 	return JS_TRUE;
 }
 
 static JSValue nat_false(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
+        (void) cx;
+        (void) this;
+        (void) argc;
+        (void) argv;
 	return JS_FALSE;
 }
 
@@ -1592,11 +1608,15 @@ static JSValue nat_dbf(JSContext * cx, JSValueConst this, int argc, JSValueConst
 		case 3: rc = debugThrow; break;
 		case 4: return JS_NewInt32(cx, ++cw->ehsn);
 	}
+        (void) this;
 	return JS_NewBool(cx, rc);
 }
 
 static JSValue nat_array(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
+        (void) this;
+        (void) argc;
+        (void) argv;
 	return JS_NewArray(cx);
 }
 
@@ -1619,6 +1639,7 @@ static JSValue nat_btoa(JSContext * cx, JSValueConst this, int argc, JSValueCons
 	nzFree(s);
 	v = JS_NewAtomString(cx, t);
 	nzFree(t);
+        (void) this;
 	return v;
 }
 
@@ -1644,6 +1665,7 @@ static JSValue nat_atob(JSContext * cx, JSValueConst this, int argc, JSValueCons
 empty:
 	v = JS_NewStringLen(cx, t1, len);
 	nzFree(t1);
+        (void) this;
 	return v;
 }
 
@@ -1662,6 +1684,7 @@ static JSValue nat_ok(JSContext * cx, JSValueConst this, int argc, JSValueConst 
 		}
 		  free(p_list);
 	}
+        (void) this;
 	return JS_NewInt32(cx, p_len);
 }
 
@@ -1681,6 +1704,7 @@ static JSValue nat_new_location(JSContext * cx, JSValueConst this, int argc, JSV
 	}
 	if(argc >= 1)
 		JS_FreeCString(cx, s);
+        (void) this;
 	return JS_UNDEFINED;
 }
 
@@ -1703,17 +1727,26 @@ That's a null pointer.
 Not sure what to do here, so just return null.
 *********************************************************************/
 	if(!cf->winobj) return JS_NULL;
+        (void) this;
+        (void) argc;
+        (void) argv;
 	return JS_DupValue(cx, *(JSValue*)cf->winobj);
 }
 
 static JSValue nat_mydoc(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
 	if(!cf->docobj) return JS_NULL;
+        (void) this;
+        (void) argc;
+        (void) argv;
 	return JS_DupValue(cx, *(JSValue*)cf->docobj);
 }
 
 static JSValue nat_hasFocus(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
+        (void) this;
+        (void) argc;
+        (void) argv;
 	return JS_NewBool(cx, foregroundWindow);
 }
 
@@ -1727,7 +1760,8 @@ static JSValue nat_puts(JSContext * cx, JSValueConst this, int argc, JSValueCons
 		            }
 	        }
 	printf("\n");
-	    return JS_UNDEFINED;
+        (void) this;
+        return JS_UNDEFINED;
 }
 
 // write local file
@@ -1763,6 +1797,8 @@ static JSValue nat_wlf(JSContext * cx, JSValueConst this, int argc, JSValueConst
 done:
 	JS_FreeCString(cx, s);
 	JS_FreeCString(cx, filename);
+        (void) this;
+        (void) argc;
 	return JS_UNDEFINED;
 }
 
@@ -1776,6 +1812,8 @@ static JSValue nat_media(JSContext * cx, JSValueConst this, int argc, JSValueCon
 		nzFree(t);
 	}
 	JS_FreeCString(cx, s);
+        (void) this;
+        (void) argc;
 	return JS_NewBool(cx, rc);
 }
 
@@ -1788,6 +1826,8 @@ static JSValue nat_logputs(JSContext * cx, JSValueConst this, int argc, JSValueC
 	if (debugLevel >= minlev && s && *s)
 		debugPrint(3, "%s", s);
 	JS_FreeCString(cx, s);
+        (void) this;
+        (void) argc;
 	return JS_UNDEFINED;
 }
 
@@ -1831,6 +1871,7 @@ static JSValue nat_prompt(JSContext * cx, JSValueConst this, int argc, JSValueCo
 		JS_FreeCString(cx, msg);
 	if(argc > 1)
 		JS_FreeCString(cx, answer);
+        (void) this;
 	return v;
 }
 
@@ -1840,6 +1881,7 @@ static JSValue nat_confirm(JSContext * cx, JSValueConst this, int argc, JSValueC
 	bool answer = false, first = true;
 	char c = 'n';
 	char inbuf[80];
+        (void) this;
 	if(argc > 0)
 		msg = JS_ToCString(cx, argv[0]);
 	if (msg && *msg) {
@@ -1880,6 +1922,7 @@ static JSValue nat_rgb(JSContext * cx, JSValueConst this, int argc, JSValueConst
 	v = JS_NewAtomString(cx, answer);
 	if(word)
 		JS_FreeCString(cx, word);
+        (void) this;
 	return v;
 }
 
@@ -1928,7 +1971,7 @@ void forceFrameExpand(Tag *t)
 // or incorect content type, etc.
 // The onload function didn't run after browse; run it now.
 		if (isURL(t->href) && !isDataURI(t->href))
-			run_event_t(t, t->info->name, "onload");
+			run_event_t(t, "onload");
 	}
 	cf = save_cf;
 	jsSourceFile = save_src;
