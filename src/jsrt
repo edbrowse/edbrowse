@@ -1100,6 +1100,8 @@ up.delete("b c");
 up.append("d", "p=q")
 if(up != "a=%C2%BD+cup&d=p%3Dq") fail(288);
 
+if(!(window instanceof EventTarget)) fail(289);
+
 function relative() {
 var el = document.createElement("DIV")
 el.innerHTML = "<img src=/foo snork=77 id=garage>";

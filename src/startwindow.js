@@ -250,6 +250,19 @@ which is an instance of Document, as it should be.
 
 mw$.setupClasses(window);
 
+/*********************************************************************
+window is and must remain the global object.
+Plenty of sites set window.foo = something, then refer to foo.
+Conversely, plenty of sites set bar = something, then refer to window.bar.
+There is no compromise on this matter.
+At the same time, window has to be an instance of Window,
+has to be an instance of EventTarget.
+This line accomplishes that, and so far I haven't seen any side effects.
+I hope I never do, because I can't think of any other way.
+*********************************************************************/
+
+Object.setPrototypeOf(window, Window.prototype)
+
 // make sure to wrap global dispatchEvent, so this becomes this window,
 // and not the shared window.
 swp("dispatchEvent", mw$.dispatchEvent.bind(window))
