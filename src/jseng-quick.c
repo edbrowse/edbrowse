@@ -406,6 +406,8 @@ char *get_style_string_t(const Tag *t, const char *name)
 
 static JSValue getter_innerHTML(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
+        (void) argv;
+        (void) argc;
 	return JS_GetPropertyStr(cx, this, "inner$HTML");
 }
 
@@ -417,6 +419,7 @@ static JSValue setter_innerHTML(JSContext * cx, JSValueConst this, int argc, JSV
 	int run_l;
 	Tag *t;
 	const char *h = JS_ToCString(cx, argv[0]);
+        (void) argc;
 	if (!h)			// should never happen
 		return JS_UNDEFINED;
 	debugPrint(5, "setter h in");
@@ -482,6 +485,8 @@ static JSValue setter_innerHTML(JSContext * cx, JSValueConst this, int argc, JSV
 
 static JSValue getter_value(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
+        (void) argc;
+        (void) argv;
 	return JS_GetPropertyStr(cx, this, "val$ue");
 }
 
@@ -490,6 +495,7 @@ static JSValue setter_value(JSContext * cx, JSValueConst this, int argc, JSValue
 	char *k;
 	Tag *t;
 	const char *h = JS_ToCString(cx, argv[0]);
+        (void) argc;
 	if (!h)			// should never happen
 		return JS_UNDEFINED;
 	debugPrint(5, "setter v in");
@@ -2928,47 +2934,56 @@ static JSValue nat_playAudio(JSContext * cx, JSValueConst this, int argc, JSValu
 // The sound is in our hand but what are we suppose to do with it??
 	if(result) debugPrint(3, "don't know what to do with audio result length %lld", g.length);
 	nzFree(result);
-		return JS_UNDEFINED;
+        (void) argc;
+        (void) argv;
+	return JS_UNDEFINED;
 }
 
 static JSValue nat_resolveURL(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
-	const char *base = JS_ToCString(cx, argv[0]);
-	const char *rel = JS_ToCString(cx, argv[1]);
-	char *outgoing_url;
-	JSValue u;
-	outgoing_url = resolveURL(base, rel);
-	if (outgoing_url == NULL)
-		outgoing_url = emptyString;
-	JS_FreeCString(cx, base);
-	JS_FreeCString(cx, rel);
-	u = JS_NewAtomString(cx, outgoing_url);
-	nzFree(outgoing_url);
-	return u;
+    const char *base = JS_ToCString(cx, argv[0]);
+    const char *rel = JS_ToCString(cx, argv[1]);
+    char *outgoing_url;
+    JSValue u;
+    outgoing_url = resolveURL(base, rel);
+    if (outgoing_url == NULL) outgoing_url = emptyString;
+    JS_FreeCString(cx, base);
+    JS_FreeCString(cx, rel);
+    u = JS_NewAtomString(cx, outgoing_url);
+    nzFree(outgoing_url);
+    (void) this;
+    (void) argc;
+    return u;
 }
 
 static JSValue nat_formSubmit(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
-Tag *t = tagFromObject(this);
-	if(t && t->action == TAGACT_FORM) {
-		debugPrint(3, "submit form tag %d", t->seqno);
-		domSubmitsForm(t, false);
-	} else {
-		debugPrint(3, "submit form tag not found");
-	}
-	return JS_UNDEFINED;
+    Tag *t = tagFromObject(this);
+    if(t && t->action == TAGACT_FORM) {
+        debugPrint(3, "submit form tag %d", t->seqno);
+        domSubmitsForm(t, false);
+    } else {
+        debugPrint(3, "submit form tag not found");
+    }
+    (void) cx;
+    (void) argc;
+    (void) argv;
+    return JS_UNDEFINED;
 }
 
 static JSValue nat_formReset(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
-Tag *t = tagFromObject(this);
-	if(t && t->action == TAGACT_FORM) {
-		debugPrint(3, "reset form tag %d", t->seqno);
-		domSubmitsForm(t, true);
-	} else {
-		debugPrint(3, "reset form tag not found");
-	}
-	return JS_UNDEFINED;
+    Tag *t = tagFromObject(this);
+    if(t && t->action == TAGACT_FORM) {
+        debugPrint(3, "reset form tag %d", t->seqno);
+        domSubmitsForm(t, true);
+    } else {
+        debugPrint(3, "reset form tag not found");
+    }
+    (void) cx;
+    (void) argc;
+    (void) argv;
+    return JS_UNDEFINED;
 }
 
 /*********************************************************************
@@ -3011,6 +3026,9 @@ static void startCookie(void)
 // Fix this some day!
 static JSValue nat_getcook(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
+        (void) this;
+        (void) argc;
+        (void) argv;
 	startCookie();
 	return JS_NewAtomString(cx, cookieCopy);
 }
@@ -3018,6 +3036,8 @@ static JSValue nat_getcook(JSContext * cx, JSValueConst this, int argc, JSValueC
 static JSValue nat_setcook(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
 	const char *newcook = JS_ToCString(cx, argv[0]);
+        (void) this;
+        (void) argc;
 	debugPrint(5, "cook in");
 	if (newcook) {
 		const char *s = strchr(newcook, '=');
@@ -3041,6 +3061,8 @@ static JSValue nat_css_start(JSContext * cx, JSValueConst this, int argc, JSValu
 	int32_t n;
 	const char *s;
 	int b;
+        (void) this;
+        (void) argc;
 	JS_ToInt32(cx, &n, argv[0]);
 	s = JS_ToCString(cx, argv[1]);
 	b = JS_ToBool(cx, argv[2]);
@@ -3146,6 +3168,7 @@ static JSValue nat_qs0(JSContext * cx, JSValueConst this, int argc, JSValueConst
 	Tag *t;
 	bool rc;
 	const char *selstring = JS_ToCString(cx, argv[0]);
+        (void) argc;
 	start = this;
 	if(!rootTag(start, &t)) {
 		JS_FreeCString(cx, selstring);
@@ -3169,6 +3192,8 @@ static JSValue nat_cssApply(JSContext * cx, JSValueConst this, int argc, JSValue
 		cssApply(n, t, pe);
 	else
 		debugPrint(3, "eb$cssApply is passed an object that does not correspond to an html tag");
+        (void) this;
+        (void) argc;
 	return JS_UNDEFINED;
 }
 
@@ -3177,6 +3202,8 @@ static JSValue nat_cssText(JSContext * cx, JSValueConst this, int argc, JSValueC
 	const char *rulestring = JS_ToCString(cx, argv[0]);
 	cssText(rulestring);
 	JS_FreeCString(cx, rulestring);
+        (void) this;
+        (void) argc;
 	return JS_UNDEFINED;
 }
 
@@ -3547,10 +3574,14 @@ bool my_ExecutePendingMessagePorts(void)
 }
 
 // We don't use this function any more
-static JSValue nat_jobs(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
+static JSValue nat_jobs(JSContext *cx, JSValueConst this, int argc, JSValueConst *argv)
 {
 	Window *save_cw = cw;
 	Frame *save_cf = cf;
+        (void) cx;
+        (void) this;
+        (void) argc;
+        (void) argv;
 	my_ExecutePendingJobs();
 	my_ExecutePendingMessages();
 	my_ExecutePendingMessagePorts();
@@ -3559,8 +3590,12 @@ static JSValue nat_jobs(JSContext * cx, JSValueConst this, int argc, JSValueCons
 }
 
 // bgarbage collect, strictly for debugging
-static JSValue nat_gc(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
+static JSValue nat_gc(JSContext *cx, JSValueConst this, int argc, JSValueConst *argv)
 {
+    (void) cx;
+    (void) this;
+    (void) argc;
+    (void) argv;
     JS_RunGC(jsrt);
     return JS_UNDEFINED;
 }
@@ -3568,6 +3603,9 @@ static JSValue nat_gc(JSContext * cx, JSValueConst this, int argc, JSValueConst 
 // push pending job onto the queue, just to find the queue.
 static JSValue firstPending(JSContext *ctx, int argc, JSValueConst *argv)
 {
+        (void) ctx;
+        (void) argc;
+        (void) argv;
 	debugPrint(3, "pending queue active");
 	return JS_TRUE;
 }
