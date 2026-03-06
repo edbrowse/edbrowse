@@ -3390,7 +3390,7 @@ cdt doesn't have or need an object; it's a place holder.
 // run the frame onload function if it is there.
 // I assume it should run in the higher frame.
 		if(isURL(t->href) && !isDataURI(t->href))
-			run_event_t(t, t->info->name, "onload");
+			run_event_t(t, "onload");
 	}
 
 // success, frame is expanded

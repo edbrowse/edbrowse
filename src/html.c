@@ -1319,7 +1319,7 @@ passes:
 		if(t->lic == 1 && t->jslink && !t->dead &&
 		save_cf == t->f0) {
 			cf = save_cf;
-			run_event_t(t, "link", "onload");
+			run_event_t(t, "onload");
 			t->lic = 0;
 			change = true;
 		}
@@ -1424,8 +1424,8 @@ char *htmlParse(char *buf, int remote)
 		loadFinishCSS();
 		run_function_bool_win(cf, "eb$qs$start");
 		runScriptsPending(true);
-		run_event_win(cf, "window", "onfocus");
-		run_event_doc(cf, "document", "onfocus");
+		run_event_win(cf, "onfocus");
+		run_event_doc(cf, "onfocus");
 		runScriptsPending(false);
 		rebuildSelectors();
 	}
@@ -2831,7 +2831,7 @@ bool infPush(int tagno, char **post_string)
 				else {
 					rc = true;
 					if (form->jslink)
-						rc = run_event_t(form, "form", "onreset");
+						rc = run_event_t(form, "onreset");
 					if (!rc)
 						return true;
 					if (js_redirects)
@@ -3847,13 +3847,13 @@ static void runOnload(void)
 	if (intFlag)
 		return;
 
-run_event_doc(cf, "document", "onDOMContentLoaded");
+run_event_doc(cf, "onDOMContentLoaded");
 
 /* window and document onload */
-	run_event_win(cf, "window", "onload");
+	run_event_win(cf, "onload");
 	if (intFlag)
 		return;
-	run_event_doc(cf, "document", "onload");
+	run_event_doc(cf, "onload");
 	if (intFlag)
 		return;
 
@@ -3871,11 +3871,11 @@ run_event_doc(cf, "document", "onDOMContentLoaded");
 		if (!t->jslink)
 			continue;
 		if (action == TAGACT_BODY)
-			run_event_t(t, "body", "onload");
+			run_event_t(t, "onload");
 		if (action == TAGACT_BODY && t->onunload)
 			unloadHyperlink("document.body.onunload", "Body");
 		if (action == TAGACT_FORM)
-			run_event_t(t, "form", "onload");
+			run_event_t(t, "onload");
 // tidy5 says there is no form.onunload
 		if (action == TAGACT_FORM && t->onunload) {
 			char formfunction[48];
@@ -3883,7 +3883,7 @@ run_event_doc(cf, "document", "onDOMContentLoaded");
 			unloadHyperlink(formfunction, "Form");
 		}
 		if (action == TAGACT_H)
-			run_event_t(t, "h1", "onload");
+			run_event_t(t, "onload");
 	}
 }
 

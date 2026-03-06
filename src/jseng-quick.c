@@ -186,7 +186,7 @@ static bool jsCheckAndThrow(JSContext * cx);
 #define jsInterruptCheck(cx) if(jsCheckAndThrow(cx)) return JS_EXCEPTION
 static Tag *tagFromObject(JSValueConst v);
 static int run_function_onearg(JSContext *cx, JSValueConst parent, const char *name, JSValueConst child);
-static bool run_event(JSContext *cx, JSValueConst obj, const char *pname, const char *evname);
+static bool run_event(JSContext *cx, JSValueConst obj, const char *evname);
 
 // The level 0 functions live right next to the engine, and in the interest
 // of encapsulation, they should not be called outside of this file.
@@ -891,7 +891,7 @@ void run_ontimer(const Frame *f, const char *backlink)
 		debugPrint(3, "could not find timer backlink %s in context %d", backlink, f->gsn);
 		return;
 	}
-	run_event(cx, to, "timer", "ontimer");
+	run_event(cx, to, "ontimer");
 	JS_Release(cx, to);
 }
 
@@ -1223,7 +1223,7 @@ void jsRunData(const Tag *t, const char *filename, int lineno)
 // Right now it does.
 // The script could be removed, replaced by other nodes by innerHTML.
 	if (t->jslink && isURL(t->href) && !isDataURI(t->href))
-		run_event(cx, *((JSValue*)t->jv), "script", "onload");
+		run_event(cx, *((JSValue*)t->jv), "onload");
 	debugPrint(5, "< ok");
 }
 
@@ -1281,7 +1281,7 @@ static void unlink_event(JSContext *cx, JSValueConst parent)
 	delete_property(cx, parent, "gc$event");
 }
 // Run a non-capturing, non-bubbling event
-static bool run_event(JSContext *cx, JSValueConst obj, const char *pname, const char *evname)
+static bool run_event(JSContext *cx, JSValueConst obj, const char *evname)
 {
     int rc;
     JSValue eo;	// created event object
@@ -1294,25 +1294,25 @@ static bool run_event(JSContext *cx, JSValueConst obj, const char *pname, const 
     return rc;
 }
 
-bool run_event_t(const Tag *t, const char *pname, const char *evname)
+bool run_event_t(const Tag *t, const char *evname)
 {
 	if (!allowJS || !t->jslink)
 		return true;
-	return run_event(t->f0->cx, *((JSValue*)t->jv), pname, evname);
+	return run_event(t->f0->cx, *((JSValue*)t->jv), evname);
 }
 
-bool run_event_win(const Frame *f, const char *pname, const char *evname)
+bool run_event_win(const Frame *f, const char *evname)
 {
 	if (!allowJS || !f->jslink)
 		return true;
-	return run_event(f->cx, *((JSValue*)f->winobj), pname, evname);
+	return run_event(f->cx, *((JSValue*)f->winobj), evname);
 }
 
-bool run_event_doc(const Frame *f, const char *pname, const char *evname)
+bool run_event_doc(const Frame *f, const char *evname)
 {
 	if (!allowJS || !f->jslink)
 		return true;
-	return run_event(f->cx, *((JSValue*)f->docobj), pname, evname);
+	return run_event(f->cx, *((JSValue*)f->docobj), evname);
 }
 
 // Allow event propagation
