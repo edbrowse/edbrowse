@@ -2000,6 +2000,8 @@ fail:
 		release(ao);
 		return ao;
 }
+        (void) argc;
+        (void) argv;
 	return JS_NULL;
 }
 
@@ -2022,7 +2024,9 @@ fail:
 	if(JS_IsObject(ao)) {
 		release(ao);
 		return ao;
-}
+        }
+        (void) argc;
+        (void) argv;
 	return JS_NULL;
 }
 
@@ -2074,11 +2078,15 @@ static JSValue nat_unframe(JSContext * cx, JSValueConst this, int argc, JSValueC
 			debugPrint(3, "%d nodes pushed up to the parent frame", n);
 	}
 done:
+        (void) cx;
+        (void) this;
 	return JS_UNDEFINED;
 }
 
 static JSValue nat_unframe2(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
+        (void) cx;
+        (void) this;
 	if(argc >= 1 && JS_IsObject(argv[0])) {
 		Tag *t = tagFromObject(argv[0]);
 		if(t)
@@ -2351,6 +2359,8 @@ static JSValue nat_log_element(JSContext * cx, JSValueConst this, int argc, JSVa
 	domSetsLinkage2('c', newobj, tagname);
 	JS_FreeCString(cx, tagname);
 	debugPrint(5, "log out");
+        (void) this;
+        (void) argc;
 	return JS_UNDEFINED;
 }
 
@@ -2463,6 +2473,7 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 	domSetsTimeout(n, fname, fpn, isInterval);
 	debugPrint(5, "timer out");
 	release(to);
+        (void) this;
 	return to;
 }
 
@@ -2486,6 +2497,7 @@ static JSValue nat_clearTimeout(JSContext * cx, JSValueConst this, int argc, JSV
 	fpn = get_property_string(cx, argv[0], "backlink");
 	domSetsTimeout(tsn, "-", fpn, false);
 	nzFree(fpn);
+        (void) this;
 	return JS_UNDEFINED;
 }
 
@@ -2494,6 +2506,10 @@ static JSValue nat_win_close(JSContext * cx, JSValueConst this, int argc, JSValu
 	i_puts(MSG_PageDone);
 // I should probably freeJSContext and close down javascript,
 // but not sure I can do that while the js function is still running.
+        (void) cx;
+        (void) this;
+        (void) argc;
+        (void) argv;
 	return JS_UNDEFINED;
 }
 
@@ -2509,6 +2525,7 @@ static JSValue nat_modtime(JSContext * cx, JSValueConst this, int argc, JSValueC
 		t = buf.st_mtime;
 	if(argc > 0)
 		JS_FreeCString(cx, file);
+        (void) this;
 	return JS_NewInt64(cx, t);
 }
 
@@ -2585,6 +2602,8 @@ if(current == &(cw->f0))
 		return JS_DupValue(cx, *((JSValue*)current->winobj));
 	if(!current->frametag) // should not happen
 		return JS_UNDEFINED;
+        (void) argc;
+        (void) argv;
 	return JS_DupValue(cx, *((JSValue*)current->frametag->f0->winobj));
 }
 
@@ -2593,6 +2612,8 @@ static JSValue nat_fe(JSContext * cx, JSValueConst this, int argc, JSValueConst 
 	Frame *current = win2frame(this);
 	if(!current || current == &(cw->f0) || !current->frametag)
 		return JS_UNDEFINED;
+        (void) argc;
+        (void) argv;
 	return JS_DupValue(cx, *((JSValue*)current->frametag->jv));
 }
 
@@ -2600,6 +2621,9 @@ static JSValue nat_top(JSContext * cx, JSValueConst this, int argc, JSValueConst
 {
 	jsobjtype w = cw->f0.winobj;
 	if(!w) return JS_NULL; // should never happen
+        (void) this;
+        (void) argc;
+        (void) argv;
 	return JS_DupValue(cx, *((JSValue*)w));
 }
 
@@ -2800,6 +2824,7 @@ JS_SetPropertyStr(cx, child, "parentNode", JS_NULL);
 fail:
 	debugPrint(5, "remove fail");
 	JS_Release(cx, cn);
+        (void) argc;
 	return JS_NULL;
 }
 
@@ -2822,6 +2847,7 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 	int32_t pd; // process the data
 	bool dopost = false, dohead = false;
 
+        (void) argc;
 	debugPrint(5, "xhr in");
 	JS_ToInt32(cx, &pd, argv[4]);
 	async = get_property_bool(cx, this, "async");
