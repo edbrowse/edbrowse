@@ -4176,8 +4176,8 @@ Loop back around, see if the user has typed a key, if not come right back
 on the same timer and do some more.
 *********************************************************************/
 			if(my_ExecutePendingJobs()) goto done;
-			if(my_ExecutePendingMessages() |
-			my_ExecutePendingMessagePorts()) goto done;
+			if(my_ExecutePendingMessages()
+                        || my_ExecutePendingMessagePorts()) goto done;
 		}
 // promise jobs not throttled by timerspeed
 		int n = jt->jump_sec * 1000 + jt->jump_ms;
