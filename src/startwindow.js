@@ -647,12 +647,6 @@ includes: eb$falsefunction
 }
 })
 
-swp("cel$registry", new Map) // custom elements registry
-odp(window, "customElements", {get:function(){ return {
-define:mw$.cel_define,
-get:mw$.cel_get,
-}},enumerable:true});
-
 /*********************************************************************
 When a script runs it may call document.write. But where to put those nodes?
 I think they belong under the script object, I think that's intuitive,
