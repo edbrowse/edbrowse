@@ -5810,12 +5810,18 @@ function cel_has(name) {
     return this.map.has(name);
 }
 
+function cel_getName(name) {
+    if(typeof name != "string") throw new w.DOMException("name is not a string");
+    return this.map.has(name) ? name : null;
+}
+
 swpc("CustomElementRegistry", function(){
 this.map = new w.Map})
 swpp("CustomElementRegistry", null);
 let cerp = w.CustomElementRegistry.prototype;
 cerp.define = cel_define;
 cerp.get = cel_get;
+cerp.getName = cel_getName;
 cerp.has = cel_has;
 // create the global custom element registry for the page.
 // You create scope registries via new CustomElementRegistry.

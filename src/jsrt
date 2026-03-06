@@ -1107,10 +1107,13 @@ function customTest() {
 // create a new tag see if it calls the constructor.
 function jk_construct() { this.found = 4321}
 jk_construct.prototype.more = 5432;
-customElements.define("j-k", jk_construct);
+const ce = customElements; // shorthand
+ce.define("j-k", jk_construct);
 let c = document.createElement("j-k");
 if(c.found != 4321) fail(300);
 if(c.more != 5432) fail(301);
+if(!ce.has("j-k") || ce.getName("j-k") != "j-k") fail(302);
+if(ce.has("l-m") || ce.getName("l-m") != null) fail(303);
 }
 customTest();
 
