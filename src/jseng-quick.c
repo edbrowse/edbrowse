@@ -698,22 +698,27 @@ void delete_property_doc(const Frame *f, const char *name)
 	delete_property(f->cx, *((JSValue*)f->docobj), name);
 }
 
+// The instantiate functions take an optional parent and name,
+// to hand the instantiated thing on, if you wish.
+// This is part convenience and part legacy.
 static JSValue instantiate_array(JSContext *cx, JSValueConst parent, const char *name)
 {
-	debugPrint(5, "new Array");
-	JSValue a = JS_NewArray(cx);
-	grab(a);
-	set_property_object(cx, parent, name, a);
-	return a;
+    debugPrint(5, "new Array");
+    JSValue a = JS_NewArray(cx);
+    grab(a);
+    if(name)
+        set_property_object(cx, parent, name, a);
+    return a;
 }
 
 static JSValue instantiate_hidden_array(JSContext *cx, JSValueConst parent, const char *name)
 {
-	debugPrint(5, "new Array");
-	JSValue a = JS_NewArray(cx);
-	grab(a);
-	define_hidden_property_object(cx, parent, name, a);
-	return a;
+    debugPrint(5, "new Array");
+    JSValue a = JS_NewArray(cx);
+    grab(a);
+    if(name)
+        define_hidden_property_object(cx, parent, name, a);
+    return a;
 }
 
 static JSValue instantiate(JSContext *cx, JSValueConst parent, const char *name,
@@ -735,6 +740,8 @@ static JSValue instantiate(JSContext *cx, JSValueConst parent, const char *name,
 			JS_Release(cx, v);
 			return JS_UNDEFINED;
 		}
+// l, the array of args, isn't initialized to anything,
+// but we are passing 0 for argc, so it shouldn't even look at l.
 		o = JS_CallConstructor(cx, v, 0, l);
 		grab(o);
 		JS_Release(cx, v);
@@ -748,7 +755,8 @@ static JSValue instantiate(JSContext *cx, JSValueConst parent, const char *name,
 			return JS_UNDEFINED;
 		}
 	}
-	set_property_object(cx, parent, name, o);
+	if(name)
+		set_property_object(cx, parent, name, o);
 	return o;
 }
 
@@ -784,6 +792,7 @@ static JSValue instantiate_array_element(JSContext *cx, JSValueConst parent, int
 			return JS_UNDEFINED;
 		}
 	}
+// we should always have parent and idx here.
 	set_array_element_object(cx, parent, idx, o);
 	return o;
 }
@@ -2377,7 +2386,8 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 	const char *body; // function body
 	char fname[48];		/* function name */
 	const char *fstr;	/* function string */
-	const char *s, *fpn;
+	static char fpn[24]; // fake property name
+	const char *s;
 
 	g = *(JSValue*)cf->winobj;
 	if (argc == 0)
@@ -2451,7 +2461,7 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 		JS_FreeCString(cx, body);
 	JS_Release(cx, r);
 
-	fpn = fakePropName();
+	sprintf(fpn, "timer$%d", timer_sn + 1);
 	if (cc_error)
 		debugPrint(3, "compile error on timer %s", fpn);
 // Create a timer object.
@@ -4213,11 +4223,11 @@ connectTagObject(t, oo);
 	JS_Release(cx, oa);
 }
 
-void establish_js_textnode(Tag *t, const char *fpn)
+void establish_js_textnode(Tag *t)
 {
 	JSContext *cx = cf->cx;
 	JSValue cn;
-	 JSValue tagobj = instantiate(cx, *((JSValue*)cf->winobj), fpn, "Text");
+	 JSValue tagobj = instantiate(cx, *((JSValue*)cf->winobj), 0, "Text");
 	if(cf->xmlMode) set_property_bool(cx, tagobj, "eb$xml", true);
 	cn = instantiate_hidden_array(cx, tagobj, "childNodes");
 	JS_DefinePropertyValueStr(cx, tagobj, "parentNode", JS_NULL,
@@ -4275,14 +4285,16 @@ void domLink(Tag *t, const char *classname,	/* instantiate this class */
 	JSValue alist = JS_UNDEFINED;
 	JSValue io = JS_UNDEFINED;	// input object
 	int length;
-	bool dupname = false, fakeName = false;
+	bool dupname = false;
 	uchar isradio = (extra&1);
 // some strings from the html tag
 	const char *symname = t->name;
 	const char *idname = t->id;
-	const char *membername = 0;	/* usually symname */
+	const char *membername = 0;	// usually symname
 	const char *stylestring = attribVal(t, "style");
 	JSValue cn; // child nodes
+// longest name so far from html-tags.c is HTMLParagraphElement,
+// allow for z$ to be prepended.
 	char classtweak[MAXTAGNAME + 4];
 
 	debugPrint(5, "domLink %s.%d name %s",
@@ -4341,7 +4353,7 @@ don't overwrite form.action, or anything else that pre-exists.
 Ok, the above condition does not hold.
 We'll be creating a new object under owner, but through what name?
 The name= tag, unless it's a duplicate,
-or id= if there is no name=, or a fake name just to protect it from gc.
+or id= if there is no name=, or no name at all.
 That's how it was for a long time, but I think we only do this on form.
 *********************************************************************/
 		if (t->action == TAGACT_INPUT && list) {
@@ -4360,23 +4372,19 @@ That's how it was for a long time, but I think we only do this on form.
 				membername = 0;
 			}
 		}
-		if (!membername)
-			membername = fakePropName(), fakeName = true;
 
 		if (isradio) {	// the first radio button
-			if(fakeName)
-				io = instantiate_hidden_array(cx, *((JSValue*)cf->winobj), membername);
-			else
+			if(membername)
 				io = instantiate_array(cx, owner, membername);
-			if(JS_IsUndefined(io))
-				return;
+			else
+				io = instantiate_hidden_array(cx, *((JSValue*)cf->winobj), 0);
+			if(JS_IsUndefined(io)) return;
 			set_property_string(cx, io, "type", "radio");
 		} else {
-/* A standard input element, just create it. */
+// A standard input element, just create it.
 			io = instantiate(cx,
-(fakeName ? *((JSValue*)cf->winobj) : owner), membername, classtweak);
-			if(JS_IsUndefined(io))
-				return;
+(!membername ? *((JSValue*)cf->winobj) : owner), membername, classtweak);
+			if(JS_IsUndefined(io)) return;
 			if(cf->xmlMode) set_property_bool(cx, io, "eb$xml", true);
 // Not an array; needs the childNodes array beneath it for the children.
 			cn = instantiate_hidden_array(cx, io, "childNodes");
@@ -4407,11 +4415,6 @@ Don't do any of this if the tag is itself <style>. */
 			if (symname && !dupname
 			    && !has_property(cx, alist, symname))
 				set_property_object(cx, alist, symname, io);
-#if 0
-			if (idname && symname != idname
-			    && !has_property(cx, alist, idname))
-				set_property_object(cx, alist, idname, io);
-#endif
 			JS_Release(cx, alist);
 		}		// list indicated
 	}
@@ -4424,15 +4427,12 @@ Don't do any of this if the tag is itself <style>. */
 		cn = instantiate_array_element(cx, io, length, "HTMLInputElement");
 		if(cf->xmlMode) set_property_bool(cx, cn, "eb$xml", true);
 		JS_Release(cx, io);
-		if(JS_IsUndefined(cn))
-			return;
+		if(JS_IsUndefined(cn)) return;
 		io = cn; // now io is the new radio button at the end of the array
 	}
 
 	if(symname) set_property_string(cx, io, "name", symname);
-	if(idname) {
-		set_property_string(cx, io, "id", idname);
-	}
+	if(idname) set_property_string(cx, io, "id", idname);
 
 	if (t->action == TAGACT_INPUT) {
 /* link back to the form that owns the element */

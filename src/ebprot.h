@@ -216,7 +216,6 @@ Tag *findOpenList(Tag *t);
 void formControl(Tag *t, bool namecheck);
 void htmlInputHelper(Tag *t);
 void prerender(int start);
-const char *fakePropName(void);
 void decorate(int start, Tag *above);
 void rowspan(void);
 
@@ -525,7 +524,7 @@ void jsRunScriptWin(const char *str, const char *filename, 		 int lineno);
 void jsRunScript_t(const Tag *t, const char *str, const char *filename, 		 int lineno);
 char *jsRunScriptWinResult(const char *str, const char *filename, int lineno) ;
 void establish_js_option(Tag *t, Tag *sel, Tag *og);
-void establish_js_textnode(Tag *t, const char *fpn);
+void establish_js_textnode(Tag *t);
 void domLink(Tag *t, const char *classname, const char *list, const Tag *owntag, int extra);
 void rebuildSelectors(void);
 int get_gcs_number(const char *name);

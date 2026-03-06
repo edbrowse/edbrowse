@@ -4491,14 +4491,6 @@ currentAudio = NULL;
 	debugPrint(4, "prerender complete");
 }
 
-static char fakePropLast[24];
-const char *fakePropName(void)
-{
-	static int idx = 0;
-	sprintf(fakePropLast, "gc$%d", ++idx);
-	return fakePropLast;
-}
-
 static void establish_inner(Tag *t, const char *start, const char *end,
 			    bool isText)
 {
@@ -4669,13 +4661,12 @@ Needless to say that's not good!
 		return;
 
 	debugPrint(6, "decorate %s %d", t->info->name, t->seqno);
-	fakePropLast[0] = 0;
 
 	switch (action) {
 
 	case TAGACT_TEXT:
 		debugPrint(5, "domText");
-		establish_js_textnode(t, fakePropName());
+		establish_js_textnode(t);
 // nodeName and nodeType set in constructor
 		if (t->jslink) {
 			const char *w = t->textval;
@@ -4919,10 +4910,10 @@ Needless to say that's not good!
 // so just call it an html element.
 		domLink(t, "HTMLElement", 0, 0, 4);
 		break;
-	}			/* switch */
+	}			// switch
 
 	if (!t->jslink)
-		return;		/* nothing else to do */
+		return;		// nothing else to do
 
 // js tree mirrors the dom tree
 	linked_in = false;
@@ -4945,12 +4936,6 @@ Needless to say that's not good!
 // It is never html head or body, as those are skipped.
 		run_function_onearg_t(pc->innerParent, "eb$apch1", t);
 		linked_in = true;
-	}
-
-	if (linked_in && fakePropLast[0]) {
-// Node linked to document/gc to protect if from garbage collection,
-// but now it is linked to its parent.
-		delete_property_win(cf, fakePropLast);
 	}
 
 	if (!linked_in) {
