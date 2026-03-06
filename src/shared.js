@@ -5509,10 +5509,9 @@ return null;
 let t = s.toLowerCase();
 
 // check for custom elements first
-var x = w.cel$registry[s];
+let x = w.customElements.get(s);
 if(x) { // here we go
-c = new x.construct;
-if(c instanceof w.HTMLElement) {
+c = new x;
     odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
     odp(c, "parentNode", {value:null,writable:true,configurable:true});
 if(this.eb$xml)
@@ -5521,7 +5520,6 @@ else
 s = s.toUpperCase()
     odp(c, "nodeName", {value:s,writable:true,configurable:true});
     odp(c, "tagName", {value:s,writable:true,configurable:true});
-}
 odp(c, "ownerDocument", {value:this,writable:true})
 eb$logElement(c, t);
 return c;
@@ -5784,46 +5782,44 @@ odp(xmlp, "readyState", {get: function(){
 // under window, which isn't quite right. First some helper functions.
 
 function cel_define(name, c, options) {
-    const cr = w.cel$registry;
     let ext = "";
     if(typeof options == "object" && options.extends) ext = options.extends;
     if(ext) alert3("define custom element " + name + " extends " + ext);
     else alert3("define custom element " + name);
     if(typeof name != "string") throw new w.DOMException("name is not a string");
     if (!name.match(/.-./)) throw new w.DOMException(`name ${name} is invalid`);
-    if(cr.has(name)) throw new UnsupportedError(`name ${name} already defined`);
+    if(this.map.has(name)) throw new UnsupportedError(`name ${name} already defined`);
     if(typeof c != "function") throw new w.DOMException("not a function");
     const o = {construct:c};
     // what other stuff should we remember in o?
-    cr.set(name, o);
+    this.map.set(name, o);
 }
 
 function cel_get(name) {
-    const cr = w.cel$registry;
     if(typeof name != "string") throw new w.DOMException("name is not a string");
     /* It looks like we need to allow people to get whatever an return
     undefined if it's not there which'll be the case if the name is invalid.
     Since we're using a map to hold everything there's no risk of using this
     to grab bits of the object hierarchy. */
-    const o = cr.get(name);
+    const o = this.map.get(name);
     return o ? o.construct : undefined;
 }
 
 function cel_has(name) {
-    const cr = w.cel$registry;
     if(typeof name != "string") throw new w.DOMException("name is not a string");
-    return cr.has(name);
+    return this.map.has(name);
 }
 
-swpc("CustomElementRegistry", function(){});
+swpc("CustomElementRegistry", function(){
+this.map = new w.Map})
 swpp("CustomElementRegistry", null);
-swp("cel$registry", new w.Map); // holds the registry for this window
 let cerp = w.CustomElementRegistry.prototype;
 cerp.define = cel_define;
 cerp.get = cel_get;
 cerp.has = cel_has;
-odp(w, "customElements", {get: function() {
-return new w.CustomElementRegistry}})
+// create the global custom element registry for the page.
+// You create scope registries via new CustomElementRegistry.
+swpc("customElements", new w.CustomElementRegistry);
 
 }
 

@@ -1102,6 +1102,18 @@ if(up != "a=%C2%BD+cup&d=p%3Dq") fail(288);
 
 if(!(window instanceof EventTarget)) fail(289);
 
+function customTest() {
+// there's a lot of things we can test for, but lets start simple.
+// create a new tag see if it calls the constructor.
+function jk_construct() { this.found = 4321}
+jk_construct.prototype.more = 5432;
+customElements.define("j-k", jk_construct);
+let c = document.createElement("j-k");
+if(c.found != 4321) fail(300);
+if(c.more != 5432) fail(301);
+}
+customTest();
+
 function relative() {
 var el = document.createElement("DIV")
 el.innerHTML = "<img src=/foo snork=77 id=garage>";
