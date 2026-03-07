@@ -798,6 +798,46 @@ static JSValue instantiate_array_element(JSContext *cx, JSValueConst parent, int
 }
 
 /*********************************************************************
+Instantiate a class based on a nonstandard html tag. Could be a custom element.
+this is much easier in js, so call upon a js function.
+This is a function we write: findClass4Tag().
+If the class name doesn't look like a custom element,
+then just call instantiate() above, with the default class HTMLElement.
+*********************************************************************/
+
+static JSValue instantiate_custom(JSContext *cx, JSValueConst parent,
+			  const char *classname)
+{
+    const char *s;
+    char c;
+    bool hyphen = false;
+// check classname for custom pattern
+    for(s = classname; (c = *s); ++s) {
+        if(c == '-') {
+            if(s > classname && s[-1] != c &&
+            s[1] && s[1] != '-')
+                hyphen = true;
+            continue;
+        }
+        if(!isalnum(c)) break;
+    }
+    if(c || !hyphen)
+        return instantiate(cx, parent, 0, "HTMLElement");
+
+    JSValue res, l[2];
+    JSValue g = *(JSValue*)cf->winobj;
+    JSAtom a = JS_NewAtom(cx, "findClass4Tag");
+    l[0] = JS_NewAtomString(cx, classname);
+    grab(l[0]);
+    l[1] = parent;
+    res = JS_Invoke(cx, g, a, 2, l);
+    grab(res);
+    JS_FreeAtom(cx, a);
+    JS_Release(cx, l[0]);
+    return res;
+}
+
+/*********************************************************************
 No arguments; returns abool.
 This function is typically used for handlers: onclick, onchange, onsubmit, onload, etc.
 The return value is sometimes significant.
@@ -4299,9 +4339,6 @@ int extra) // bits: radio, window, document, unknown
         sprintf(class_z, "z$%s", classname);
         classtweak = class_z;
     }
-// this is temporary until we can implement custom elements from html
-    if(isunknown)
-        classtweak = "HTMLElement";
 
     debugPrint(5, "domLink %s.%d name %s",
     	   classname, extra, (symname ? symname : emptyString));
@@ -4376,8 +4413,11 @@ That's how it was for a long time, but I think we only do this on form.
 			set_property_string(cx, io, "type", "radio");
 		} else {
 // A standard input element, just create it.
-			io = instantiate(cx,
-(!membername ? *((JSValue*)cf->winobj) : owner), membername, classtweak);
+			if(isunknown)
+				io = instantiate_custom(cx, owner, classname);
+			else
+				io = instantiate(cx,
+				(!membername ? *((JSValue*)cf->winobj) : owner), membername, classtweak);
 			if(JS_IsUndefined(io)) return;
 			if(cf->xmlMode) set_property_bool(cx, io, "eb$xml", true);
 // Not an array; needs the childNodes array beneath it for the children.

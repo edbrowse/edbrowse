@@ -263,6 +263,15 @@ I hope I never do, because I can't think of any other way.
 
 Object.setPrototypeOf(window, Window.prototype)
 
+// find the constructor for a custom element. This is part of html parsing.
+// It is either the original browse, innerHTML, or document.write.
+swp("findClass4Tag", function(tagname, above) {
+    if(!above) alert4(`searching for custom ${tagname}`);
+    else alert4(`searching for custom ${tagname} under ${above.nodeName} ${above.eb$seqno}`);
+// this is just a stub for now
+    return new HTMLElement;
+});
+
 // make sure to wrap global dispatchEvent, so this becomes this window,
 // and not the shared window.
 swp("dispatchEvent", mw$.dispatchEvent.bind(window))
