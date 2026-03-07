@@ -1174,6 +1174,16 @@ s.dispatchEvent(e)
 */
 }
 
+function connectedCallbackCheck(t)
+{
+if(t.connectedCallback$pending) {
+t.connectedCallback();
+t.connectedCallback$pending = false;
+}
+for(let i = 0; i < t.childNodes.length; ++i)
+connectedCallbackCheck(t.childNodes[i]);
+}
+
 /*********************************************************************
 The attribute system is complex, with many functions
 and many surprising side effects.
@@ -3275,8 +3285,11 @@ if(c.nodeType == 11) return appendFragment(this, c);
 isabove(c, this);
 if(c.parentNode) c.parentNode.removeChild(c);
 let r = this.eb$apch2(c);
+if(r) {
 runScriptWhenAttached(r);
-if(r) mutFixup(this, false, c, null);
+mutFixup(this, false, c, null);
+if(isRooted(r)) connectedCallbackCheck(r);
+}
 return r;
 }
 
@@ -5517,14 +5530,11 @@ if(x) { // here we go
 c = new x;
     odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
     odp(c, "parentNode", {value:null,writable:true,configurable:true});
-if(this.eb$xml)
-c.eb$xml = true;
-else
-s = s.toUpperCase()
+if(this.eb$xml) c.eb$xml = true;
     odp(c, "nodeName", {value:s,writable:true,configurable:true});
     odp(c, "tagName", {value:s,writable:true,configurable:true});
 odp(c, "ownerDocument", {value:this,writable:true})
-odp(c, "connectedCallback$pending", {value:!!x.connectedCallback, writable:true})
+odp(c, "connectedCallback$pending", {value:!!c.connectedCallback, writable:true})
 eb$logElement(c, t);
 return c;
 }
