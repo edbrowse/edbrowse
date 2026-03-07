@@ -1279,16 +1279,11 @@ static JSValue create_event(JSContext *cx, JSValueConst parent, const char *evna
 	const char *evname1 = evname;
 	if (evname[0] == 'o' && evname[1] == 'n')
 		evname1 += 2;
-// gc$event protects from garbage collection
-	e = instantiate(cx, parent, "gc$event", "Event");
+	e = instantiate(cx, parent, 0, "Event");
 	set_property_string(cx, e, "type", evname1);
 	return e;
 }
 
-static void unlink_event(JSContext *cx, JSValueConst parent)
-{
-	delete_property(cx, parent, "gc$event");
-}
 // Run a non-capturing, non-bubbling event
 static bool run_event(JSContext *cx, JSValueConst obj, const char *evname)
 {
@@ -1298,7 +1293,6 @@ static bool run_event(JSContext *cx, JSValueConst obj, const char *evname)
     set_property_bool(cx, eo, "eb$captures", false);
     set_property_bool(cx, eo, "bubbles", false);
     rc = run_function_onearg(cx, obj, "dispatchEvent", eo);
-    unlink_event(cx, obj);
     JS_Release(cx, eo);
     return rc;
 }
@@ -1344,7 +1338,6 @@ and that in turn could replace t with a new node, thereby disconnecting it.
 Seems contrived, but it actually happens.
 *********************************************************************/
 	if(t->jslink)
-		unlink_event(cx, *((JSValue*)t->jv));
 	JS_Release(cx, e);
 	return rc;
 }
