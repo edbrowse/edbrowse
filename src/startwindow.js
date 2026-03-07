@@ -268,8 +268,26 @@ Object.setPrototypeOf(window, Window.prototype)
 swp("findClass4Tag", function(tagname, above) {
     if(!above) alert4(`searching for custom ${tagname}`);
     else alert4(`searching for custom ${tagname} under ${above.nodeName} ${above.eb$seqno}`);
-// this is just a stub for now
-    return new HTMLElement;
+    let ce = customElements;
+// see if there is another registry in our scope
+    while(above) {
+        if(above.custom$Elements) {
+            ce = above.custom$elements;
+            break;
+        }
+// don't go up past document
+        if(above.nodeType == 9) break;
+        above = above.parentNode;
+    }
+    let f = ce.get(tagname);
+    if(!f) return new HTMLElement; // revert back to the default constructor
+    let f2 = new f;
+// f is almost always an extension of HTMLElement, it will therefore have
+// eb$apch1, which we need to link this into the growing html tree.
+// But if it doesn't, we have to provide it.
+    if(!f2.eb$apch1)
+        Object.defineProperty(f2, "eb$apch1", {value:mw$.eb$apch1});
+    return f2;
 });
 
 // make sure to wrap global dispatchEvent, so this becomes this window,
