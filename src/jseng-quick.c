@@ -4413,7 +4413,7 @@ That's how it was for a long time, but I think we only do this on form.
 			set_property_string(cx, io, "type", "radio");
 		} else {
 // A standard input element, just create it.
-			if(isunknown)
+			if(isunknown && !cf->xmlMode)
 				io = instantiate_custom(cx, owner, classname);
 			else
 				io = instantiate(cx,

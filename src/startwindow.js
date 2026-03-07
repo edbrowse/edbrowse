@@ -287,6 +287,7 @@ swp("findClass4Tag", function(tagname, above) {
 // But if it doesn't, we have to provide it.
     if(!f2.eb$apch1)
         Object.defineProperty(f2, "eb$apch1", {value:mw$.eb$apch1});
+    Object.defineProperty(f2, "connectedCallback$pending", {value:!!f2.connectedCallback, writable:true})
     return f2;
 });
 

@@ -5524,6 +5524,7 @@ s = s.toUpperCase()
     odp(c, "nodeName", {value:s,writable:true,configurable:true});
     odp(c, "tagName", {value:s,writable:true,configurable:true});
 odp(c, "ownerDocument", {value:this,writable:true})
+odp(c, "connectedCallback$pending", {value:!!x.connectedCallback, writable:true})
 eb$logElement(c, t);
 return c;
 }
