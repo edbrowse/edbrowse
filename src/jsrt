@@ -430,10 +430,88 @@ function catdog(item) { alert('fluffy'); if(item.checked&&document.forms[1].dog.
 
 // Let javascript generate another javascript tag
 document.writeln("<script language=JavaScript>document.writeln('Nested Script ');<" + "/script>");
+
+// examples of custom elements derived from
+// https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements#examples
+// Here is a popup info class that will be linked to <popup-info>
+class PopupInfo extends HTMLElement {
+  constructor() { super(); }
+  connectedCallback() {
+    const shadow = this.attachShadow({ mode: "open" });
+    const wrapper = document.createElement("span");
+    const icon = document.createElement("span");
+    const info = document.createElement("span");
+    info.setAttribute("class", "info");
+    // Take attribute content and put it inside the info span
+    const text = this.getAttribute("data-text");
+    info.textContent = ' ' + text;
+    // Insert icon
+    let imgUrl;
+    if (this.hasAttribute("img")) {
+      imgUrl = this.getAttribute("img");
+    } else {
+      imgUrl = "img/default.png";
+    }
+    const img = document.createElement("img");
+    img.src = imgUrl;
+// put an alt on it just so it shows up
+    img.alt = "popimage";
+    icon.appendChild(img);
+    // Create some CSS to apply to the shadow dom
+    const style = document.createElement("style");
+    style.textContent = `
+      .info {
+        color: green;
+        border: 1px solid black;
+        padding: 10px;
+        background: white;
+        border-radius: 10px;
+      }
+    `;
+    // Attach the created elements to the shadow dom
+    shadow.appendChild(style);
+    shadow.appendChild(wrapper);
+    wrapper.appendChild(icon);
+    wrapper.appendChild(info);
+  }
+}
+
+function customTest1() {
+// create a new tag see if it calls the constructor.
+function jk_construct() { this.found = 4321}
+jk_construct.prototype.more = 5432;
+const ce = customElements; // shorthand
+ce.define("j-k", jk_construct);
+let c = document.createElement("j-k");
+if(c.found != 4321) fail(300);
+if(c.more != 5432) fail(301);
+if(!ce.has("j-k") || ce.getName("j-k") != "j-k") fail(302);
+if(ce.has("l-m") || ce.getName("l-m") != null) fail(303);
+// and now get ready for the popup-info tag, which is coming up.
+ce.define("popup-info", PopupInfo);
+}
+customTest1();
+
+</script>
+
+<p><popup-info data-text="Bolognese are folk art sculptures made from Chinese coins."
+img="http://www.eklhad.net/dolls/v194513.jpg"></popup-info></p>
+
+<script>
+pinfo = document.querySelector("popup-info");
+function customTest2() {
+const sr = pinfo.firstChild; // should be shado root
+if(sr.nodeName != "SHADOWROOT") fail(304);
+if(pinfo.shadowRoot != sr) fail(305);
+// remember we put that leading space in front
+if(sr.lastChild.lastChild.lastChild.data.substring(1,10) != "Bolognese") fail(306);
+if(sr.querySelector("img").src.indexOf("/v194513") < 0) fail(307);
+}
+customTest2();
 </script>
 
 <P class=inject>
-subject: <input type=hidden name=who value=eklhad>
+Subject: <input type=hidden name=who value=eklhad>
 <input type=hidden name=password value=secret>
 <input type=text name=subject size=50 maxlength=80 required>
 <a href=#senddata>skip form fields</a>
@@ -693,7 +771,7 @@ if(document.getElementById("almond") != document.spans[1]) fail(111);
 if(document.getElementById("pecan") != document.tables[0].rows[1]) fail(112);
 if(document.getElementById("pecan").parentNode.parentNode.getAttribute("class") != "filbert") fail(115);
 if(document.all.tags("FORM")[1] != document.forms[1]) fail(113);
-if(document.all.tags("span").length != 7) fail(114);
+if(document.all.tags("span").length != 10) fail(114);
 
 n = 0;
 a = [29,31,37];
@@ -1101,21 +1179,6 @@ up.append("d", "p=q")
 if(up != "a=%C2%BD+cup&d=p%3Dq") fail(288);
 
 if(!(window instanceof EventTarget)) fail(289);
-
-function customTest() {
-// there's a lot of things we can test for, but lets start simple.
-// create a new tag see if it calls the constructor.
-function jk_construct() { this.found = 4321}
-jk_construct.prototype.more = 5432;
-const ce = customElements; // shorthand
-ce.define("j-k", jk_construct);
-let c = document.createElement("j-k");
-if(c.found != 4321) fail(300);
-if(c.more != 5432) fail(301);
-if(!ce.has("j-k") || ce.getName("j-k") != "j-k") fail(302);
-if(ce.has("l-m") || ce.getName("l-m") != null) fail(303);
-}
-customTest();
 
 function relative() {
 var el = document.createElement("DIV")

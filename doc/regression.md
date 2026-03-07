@@ -187,7 +187,13 @@ And why are there two such systems?
 Well, I don't know.
 The great thing about standards is, there are so many of them.
 
-Now we come to a sprawling fill-out form.
+There is a line with an image of a statue made of Chinese coins.
+It is created dynamically by a custom element.
+There are several tests to make sure it is created properly, so you don't have to interact with it.
+If you like, you can verify the url of the image by img?, or download it by img.
+In the usual edbrowse fashion, the image is not fetched unless you ask for it.
+
+Next we come to a sprawling fill-out form.
 The idea is to enter fields, and choose from dropdown lists, and click on checkboxes and radio buttons, and submit the form, and see if everything is transmitted correctly.
 Do that at db3 so you can see the fields as they are sent - because the url goes no where.
 
