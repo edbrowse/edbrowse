@@ -4828,10 +4828,6 @@ Needless to say that's not good!
 		domLink(t, "HTMLObjectElement", "htmlobjs", 0, 4);
 		break;
 
-	case TAGACT_UNKNOWN:
-		domLink(t, "HTMLElement", 0, 0, 4);
-		break;
-
 	case TAGACT_SPAN:
 	case TAGACT_SUB:
 	case TAGACT_SUP:
@@ -4906,9 +4902,8 @@ Needless to say that's not good!
 		break;
 
 	default:
-// Don't know what this tag is, or it's not semantically important,
-// so just call it an html element.
-		domLink(t, "HTMLElement", 0, 0, 4);
+// this could be a custom element
+		domLink(t, t->nodeName, 0, pc->innerParent, 8);
 		break;
 	}			// switch
 

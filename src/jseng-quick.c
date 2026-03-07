@@ -4278,7 +4278,10 @@ static void processStyles(JSValueConst so, const char *stylestring)
 
 void domLink(Tag *t, const char *classname,	/* instantiate this class */
 		    const char *list,	/* next member of this array */
-		    const Tag * owntag, int extra)
+		    const Tag * owntag,
+// owner tag is form for input elements, table for sections or rows,
+// row for cells, and above for unknown elements from innerHTML.
+int extra) // bits: radio, window, document, unknown
 {
     JSContext *cx = cf->cx;
     JSValue owner = JS_NULL;
@@ -4287,6 +4290,7 @@ void domLink(Tag *t, const char *classname,	/* instantiate this class */
     int length;
     bool dupname = false;
     uchar isradio = (extra&1);
+    uchar isunknown = (extra&8);
 // some strings from the html tag
     const char *symname = t->name;
     const char *idname = t->id;
@@ -4302,10 +4306,13 @@ void domLink(Tag *t, const char *classname,	/* instantiate this class */
         sprintf(class_z, "z$%s", classname);
         classtweak = class_z;
     }
+// this is temporary until we can implement custom elements from html
+    if(isunknown)
+        classtweak = "HTMLElement";
 
-	debugPrint(5, "domLink %s.%d name %s",
-		   classname, extra, (symname ? symname : emptyString));
-	extra &= 6;
+    debugPrint(5, "domLink %s.%d name %s",
+    	   classname, extra, (symname ? symname : emptyString));
+    extra &= 6;
 
 	if(owntag)
 		owner = *((JSValue*)owntag->jv);
@@ -4332,8 +4339,7 @@ don't overwrite form.action, or anything else that pre-exists.
 		if (isradio) {
 /* name present and radio buttons, name should be the array of buttons */
 			io = get_property_object(cx, owner, symname);
-			if(JS_IsUndefined(io))
-				return;
+			if(JS_IsUndefined(io)) return;
 		} else {
 // don't know why the duplicate name
 			dupname = true;
