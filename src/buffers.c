@@ -20,7 +20,7 @@ const char *pcre_version(void)
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#define selfFrame() ( cf = &(cw->f0), cf->owner = cw )
+#define selfFrame() ( cf = &(cw->f0))
 
 // Static variables for this file
 
@@ -803,6 +803,7 @@ Window *createWindow(void)
 	saveSubstitutionStrings();
 	restoreSubstitutionStrings(nw);
 	nw->f0.gsn = ++gfsn;
+	nw->f0.owner = nw;
 	return nw;
 }
 
