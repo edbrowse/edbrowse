@@ -82,9 +82,12 @@ function uptrace(t) {
 var r = "";
 while(t) {
 var msg = t.nodeName;
+// at the top, document has no attribute functions
+if(t.nodeType == 1) {
 let tc = t.getAttribute("class")
 if(tc) msg += "." + tc;
 if(t.id) msg += "#" + t.id;
+}
 r += msg + '\n'
 t = t.parentNode;
 }
