@@ -4280,37 +4280,32 @@ void domLink(Tag *t, const char *classname,	/* instantiate this class */
 		    const char *list,	/* next member of this array */
 		    const Tag * owntag, int extra)
 {
-	JSContext *cx = cf->cx;
-	JSValue owner = JS_NULL;
-	JSValue alist = JS_UNDEFINED;
-	JSValue io = JS_UNDEFINED;	// input object
-	int length;
-	bool dupname = false;
-	uchar isradio = (extra&1);
+    JSContext *cx = cf->cx;
+    JSValue owner = JS_NULL;
+    JSValue alist = JS_UNDEFINED;
+    JSValue io = JS_UNDEFINED;	// input object
+    int length;
+    bool dupname = false;
+    uchar isradio = (extra&1);
 // some strings from the html tag
-	const char *symname = t->name;
-	const char *idname = t->id;
-	const char *membername = 0;	// usually symname
-	const char *stylestring = attribVal(t, "style");
-	JSValue cn; // child nodes
-// longest name so far from html-tags.c is HTMLParagraphElement,
-// allow for z$ to be prepended.
-	char classtweak[MAXTAGNAME + 4];
+    const char *symname = t->name;
+    const char *idname = t->id;
+    const char *membername = 0;	// usually symname
+    const char *stylestring = attribVal(t, "style");
+    JSValue cn; // child nodes
+    	static const char * const z_list[] = {
+    "Header", "Footer", "Title", "Datalist",
+    "tHead", "tBody", "tFoot", "HTML", 0};
+    char class_z[11]; // room for the largest in the list
+    const char *classtweak = classname;
+    if(stringInList(z_list, classname) >= 0) {
+        sprintf(class_z, "z$%s", classname);
+        classtweak = class_z;
+    }
 
 	debugPrint(5, "domLink %s.%d name %s",
 		   classname, extra, (symname ? symname : emptyString));
 	extra &= 6;
-
-// some classes are ours, not standard. We need to prepend z$
-	if(stringEqual(classname, "Header")
-	|| stringEqual(classname, "Footer")
-	|| stringEqual(classname, "Title")
-	|| classname[0] == 't' // tBody tHead tFoot
-	|| stringEqual(classname, "Datalist")
-	|| stringEqual(classname, "HTML"))
-		sprintf(classtweak, "z$%s", classname);
-	else
-		strcpy(classtweak, classname);
 
 	if(owntag)
 		owner = *((JSValue*)owntag->jv);
