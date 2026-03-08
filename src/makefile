@@ -2,21 +2,24 @@
 CC ?= cc
 PERL ?= perl
 INSTALL ?= install -C -D
+# may need to be set to pkgconf on some systems but most still come with the
+# link to the older name
+PKGCONFIG ?= pkg-config
 PREFIX ?= /usr/local
 QUICKJS_INCLUDE ?= $(PREFIX)/include
 QUICKJS_LIB ?= $(PREFIX)/lib
 QUICKJS_LIB_NAME ?= qjs
-CFLAGS +=	-Wall -D_FILE_OFFSET_BITS=64
 INSTALLBASE ?= $(shell realpath "$(DESTDIR)/$(PREFIX)")
 DOCDIR ?= $(INSTALLBASE)/share/doc/edbrowse
 BINDIR ?= $(INSTALLBASE)/bin
 FILESDIR ?= $(INSTALLBASE)/share/edbrowse
 PLUGINSDIR ?= $(FILESDIR)/plugins
 # determine includes and linker flags
-DEPENDENCIES = libcurl:curl odbc libpcre2-8:pcre2-8 readline openssl
-INCLUDES = $(shell ./make-helper.sh pkg-config-includes $(DEPENDENCIES))
-LINKER_LIBS = $(shell ./make-helper.sh pkg-config-libs $(DEPENDENCIES))
-CPPFLAGS += $(INCLUDES) -I$(QUICKJS_INCLUDE)
+DEPENDENCIES = libcurl odbc libpcre2-8 readline openssl
+CFLAGS += -Wall -D_FILE_OFFSET_BITS=64
+CFLAGS += $(shell pkg-config --cflags $(DEPENDENCIES))
+CFLAGS += -I$(QUICKJS_INCLUDE)
+LINKER_LIBS = $(shell pkg-config --libs $(DEPENDENCIES))
 
 #  Set EBDEMIN=on to support dynamic js deminimization
 ifneq ($(EBDEMIN),)
@@ -56,7 +59,7 @@ ESQLDFLAGS = $(STRIP)
 #  Make the dynamically linked executable program by default.
 all: edbrowse
 
-#  edbrowse objects
+# edbrowse objects
 EBOBJS = main.o buffers.o sendmail.o fetchmail.o \
 	html.o html-tags.o format.o stringfile.o ebrc.o \
 	msg-strings.o http.o isup.o css.o startwindow.o dbops.o dbodbc.o \
