@@ -4,7 +4,7 @@ PERL ?= perl
 INSTALL ?= install -C -D
 # may need to be set to pkgconf on some systems but most still come with the
 # link to the older name
-PKGCONFIG ?= pkg-config
+PKG_CONFIG ?= pkg-config
 PREFIX ?= /usr/local
 QUICKJS_INCLUDE ?= $(PREFIX)/include
 QUICKJS_LIB ?= $(PREFIX)/lib
@@ -15,11 +15,10 @@ BINDIR ?= $(INSTALLBASE)/bin
 FILESDIR ?= $(INSTALLBASE)/share/edbrowse
 PLUGINSDIR ?= $(FILESDIR)/plugins
 # determine includes and linker flags
-DEPENDENCIES = libcurl odbc libpcre2-8 readline openssl
-CFLAGS += -Wall -D_FILE_OFFSET_BITS=64
-CFLAGS += $(shell pkg-config --cflags $(DEPENDENCIES))
-CFLAGS += -I$(QUICKJS_INCLUDE)
-LINKER_LIBS = $(shell pkg-config --libs $(DEPENDENCIES))
+DEPENDENCIES ?= libcurl odbc libpcre2-8 readline openssl
+dependency_cflags ::= $(shell $(PKG_CONFIG) --cflags $(DEPENDENCIES))
+dependency_libs ::= $(shell $(PKG_CONFIG) --libs $(DEPENDENCIES))
+CFLAGS += -Wall -D_FILE_OFFSET_BITS=64 $(dependency_cflags) -I$(QUICKJS_INCLUDE)
 
 #  Set EBDEMIN=on to support dynamic js deminimization
 ifneq ($(EBDEMIN),)
@@ -47,9 +46,7 @@ QUICKJS_LDFLAGS = -L$(QUICKJS_LIB) -l$(QUICKJS_LIB_NAME) -ldl
 ifeq ($(shell uname),Linux)
 	QUICKJS_LDFLAGS += -latomic
 endif
-LDFLAGS += $(QUICKJS_LDFLAGS)
-#  and the other loader flags
-LDFLAGS += $(STRIP) $(LINKER_LIBS) -lpthread -lm -lssl -lcrypto
+LDFLAGS += $(dependency_libs) $(QUICKJS_LDFLAGS) -lpthread -lm $(STRIP)
 
 #  ESQL C load flags
 #ESQLDFLAGS = $(STRIP) -Xlinker -rpath -Xlinker $(INFORMIXDIR)/lib:$(INFORMIXDIR)/lib/esql
@@ -83,8 +80,7 @@ msg-strings.c: ../lang/msg-*
 # The implicit linking rule isn't good enough, because we don't have an
 # edbrowse.o object, and it expects one.
 edbrowse: $(EBOBJS)
-	$(CC) $(EBOBJS) $(LDFLAGS)  -o $@
-
+	$(CC) $(EBOBJS) $(LDFLAGS) -o $@
 
 #  You probably need to be root to do this.
 install: install-edbrowse install-docs install-emojis install-plugins
