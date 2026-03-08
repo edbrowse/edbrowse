@@ -903,7 +903,7 @@ return t.replace(/([a-z])([A-Z])/g, function(f,a,b){return a+'-'+b.toLowerCase()
 
 /*********************************************************************
 I'm going to call Fixup from appendChild, removeChild, setAttribute,
-anything that changes something we might be observing.
+textContent; anything that changes something we might be observing.
 
 Gather the list of mutation records (notifications from some perspectives) in
 the observer and queue the callback if needed. Importantly the callback happens
@@ -915,15 +915,20 @@ cases where takeRecords can be called prior to the callback being called which
 then means the records are not acted upon.
 
 Support functions mrKids and mrList are below.
+
+flavor:
+0 change to the treee
+1 change of attribute
+2 change of character data
 *********************************************************************/
 
-function mutFixup(b, isattr, y, z) {
+function mutFixup(b, flavor, y, z) {
     const w = my$win();
     let w2; // might not be the same window as w
     // frames is a live array of windows.
     // Test: a change to the tree, and the base node is rooted,
     // and the thing added or removed is a frame or an array or it has frames below.
-    if(!isattr && (w2 = isRooted(b))) {
+    if(flavor == 0 && (w2 = isRooted(b))) {
         const j = typeof y == "object" ? y : z;
         if(Array.isArray(j) || j.is$frame || (j.childNodes&&gebtn(j, "iframe", true, false).length))
             frames$rebuild(w2);
@@ -955,12 +960,22 @@ function mutFixup(b, isattr, y, z) {
             let target_cfg = o.targets.get(b);
             if (!target_cfg) return null;
             const r = new o.observed$window.MutationRecord;
-            if(isattr) { // the easy case
+            if(flavor == 1) {
                 if(target_cfg.attributes) {
                     r.type = "attributes";
                     r.attributeName = y;
                     r.target = b;
                     if (target_cfg.attributeOldValue) r.oldValue = z;
+                    return r;
+                }
+                return null;
+            }
+            if(flavor == 2) {
+                if(target_cfg.characterData) {
+                    r.type = "characterData";
+                    r.attributeName = y;
+                    r.target = b;
+                    if (target_cfg.characterDataOldValue) r.oldValue = z;
                     return r;
                 }
                 return null;
@@ -975,7 +990,8 @@ function mutFixup(b, isattr, y, z) {
         })();
         if (!record) continue;
         const nl = o.notification$queue.length;
-        if(isattr) alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno} attribute ${y}`);
+        if(flavor == 1) alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno} attribute ${y}`);
+        else if(flavor == 2) alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno} characterData`);
         else alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno} children`);
         o.notification$queue.push(record);
         if (o.callback$queued) {
@@ -1341,7 +1357,7 @@ v = (v === "false" ? false : true);
 this[name] = v;
 }
 }
-mutFixup(this, true, name, oldv);
+mutFixup(this, 1, name, oldv);
 },
 
 setAttributeNS: function(space, name, v) {
@@ -1382,7 +1398,7 @@ if(found) this.attributes[i] = this.attributes[i+1];
 this.attributes.length = i;
 delete this.attributes[i];
 if(name !== "length") delete this.attributes[name]
-mutFixup(this, true, name, a.value);
+mutFixup(this, 1, name, a.value);
 },
 
 removeAttributeNS: function(space, name) {
@@ -3291,7 +3307,7 @@ if(c.parentNode) c.parentNode.removeChild(c);
 let r = this.eb$apch2(c);
 if(r) {
 runScriptWhenAttached(r);
-mutFixup(this, false, c, null);
+mutFixup(this, 0, c, null);
 if(isRooted(r)) connectedCallbackCheck(r);
 }
 return r;
@@ -3313,7 +3329,7 @@ if(c.nodeType == 11) return insertFragment(this, c, t);
 if(c.parentNode) c.parentNode.removeChild(c);
 var r = this.eb$insbf(c, t);
 runScriptWhenAttached(r);
-if(r) mutFixup(this, false, r, null);
+if(r) mutFixup(this, 0, r, null);
 return r;
 }
 
@@ -3978,17 +3994,24 @@ answer += part;
 return answer;
 }
 
-function newTextUnder(top, s, flavor) {
-if(top.nodeName == "#text") {
-top.data = s;
-return;
-}
-var l = top.childNodes.length;
-for(var i=l-1; i>=0; --i)
-top.removeChild(top.childNodes[i]);
+function newTextUnder(top, s, flavor)
+{
+    if(top.nodeName == "#text") {
+        const old = top.data;
+        top.data = s;
+        mutFixup(top, 2, "text", old);
+        return;
+    }
+    let l = top.childNodes.length;
+    for(let i=l-1; i>=0; --i)
+        top.removeChild(top.childNodes[i]);
 // do nothing if s is undefined, or null, or the empty string
-if(!s) return;
-top.appendChild(my$doc().createTextNode(s));
+    if(s) top.appendChild(my$doc().createTextNode(s));
+// we need to call mutfixup here, and hopefully not on every removeChild above
+// which is how it works now, but just once, here, with nodes removed and the new text node added.
+// That is the correct flow I think.
+// I'll work on it but it is complicated cause mutFixup is
+// called from the native rmch2 method in C, which is bizarre.
 }
 
 odp(helemp, "textContent", {
@@ -4488,7 +4511,7 @@ selp.appendChild = function(newobj) {
     if(newobj.defaultSelected) newobj.selected = true, this.selectedIndex = l;
     this.childNodes.push(newobj); newobj.parentNode = this;
     this.eb$bso();
-    mutFixup(this, false, newobj, null);
+    mutFixup(this, 0, newobj, null);
     return newobj;
 }
 selp.insertBefore = function(newobj, item) {
@@ -4513,7 +4536,7 @@ selp.insertBefore = function(newobj, item) {
         return null;
     }
     this.eb$bso();
-    mutFixup(this, false, newobj, null);
+    mutFixup(this, 0, newobj, null);
     return newobj;
 }
 selp.removeChild = function(item) {
@@ -4525,7 +4548,7 @@ selp.removeChild = function(item) {
     this.childNodes.splice(i, 1);
     item.parentNode = null;
     this.eb$bso();
-    mutFixup(this, false, i, item);
+    mutFixup(this, 0, i, item);
     return item;
 }
 

@@ -468,7 +468,7 @@ static JSValue setter_innerHTML(JSContext * cx, JSValueConst this, int argc, JSV
 		JSAtom a = JS_NewAtom(cx, "mutFixup");
 		JSValue l[4];
 		l[0] = this;
-		l[1] = JS_FALSE;
+		l[1] = JS_NewInt32(cx, 0);
 		l[2] = c2;
 		l[3] = c1;
 		r = JS_Invoke(cx, g, a, 4, l);
@@ -2851,7 +2851,7 @@ JS_SetPropertyStr(cx, child, "parentNode", JS_NULL);
 		JSAtom a = JS_NewAtom(cx, "mutFixup");
 		JSValue l[4];
 		l[0] = this;
-		l[1] = JS_FALSE;
+		l[1] = JS_NewInt32(cx, 0);
 // exception here, push an integer where the node was.
 		l[2] = JS_NewInt32(cx, mark);
 		l[3] = child;

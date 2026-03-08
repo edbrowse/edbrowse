@@ -362,13 +362,15 @@ Interval
 </form>
 <script>
 // This'll be noisy when either box is checked
-const config = { attributes: true, childList: true, subtree: true };
+const config = { attributes: true, childList: true, subtree: true , characterData: true};
 const callback = (mutationList, observer) => {
       for (const mutation of mutationList) {
         if (mutation.type === "childList") {
             alert("A child node has been added or removed");
         } else if (mutation.type === "attributes") {
             alert(`The ${mutation.attributeName} attribute was modified.`);
+        } else if (mutation.type === "characterData") {
+            alert(`Character data was modified.`);
         }
     }
 };
