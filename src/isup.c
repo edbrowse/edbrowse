@@ -2074,7 +2074,7 @@ static int cache_data_len;
 static time_t now_t;
 static char *cacheFile, *cacheLock, *cacheControl;
 
-#if defined(__APPLE__) || defined(__ANDROID__)
+#if defined(__APPLE__)
 #define ns_member st_mtimespec
 #else
 #define ns_member st_mtim

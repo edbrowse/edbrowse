@@ -1,5 +1,11 @@
 Here are some changes introduced by recent versions of edbrowse.
 
+3.8.17
+
+Fix some makefile issues, and warnings across different compilers.
+
+Support custom Elements and the CustomElementRegistry.
+
 3.8.16
 
 Use strict js in shared.js and startwindow.js
