@@ -3232,6 +3232,10 @@ return !(this.valueMissing)}})
 
 swpc("EventTarget", function() {})
 swpp("EventTarget", null)
+let targetp = w.EventTarget.prototype;
+targetp.addEventListener = addEventListener;
+targetp.removeEventListener = removeEventListener;
+targetp.dispatchEvent = dispatchEvent;
 
 swpc("Node", function() {})
 swpp("Node", w.EventTarget)
@@ -3390,10 +3394,6 @@ x: 0, y: 0,
 width: 0, height: 0
 }
 }
-
-nodep.addEventListener = addEventListener;
-nodep.removeEventListener = removeEventListener;
-nodep.dispatchEvent = dispatchEvent;
 
 // constants
 nodep.ELEMENT_NODE = 1
@@ -5487,8 +5487,6 @@ swpp("HTMLUnknownElement", w.HTMLElement)
 
 swp("z$Timer", function(){this.nodeName = "TIMER"})
 swpp("z$Timer", w.EventTarget)
-let timerp = w.z$Timer.prototype;
-timerp.dispatchEvent = dispatchEvent;
 
 swp("z$Datalist", function() {})
 swpp("z$Datalist", w.HTMLElement)
