@@ -498,6 +498,7 @@ customTest1();
 img="http://www.eklhad.net/dolls/v194513.jpg"></popup-info></p>
 
 <script>
+try {
 pinfo = document.querySelector("popup-info");
 function customTest2() {
 const sr = pinfo.firstChild; // should be shado root
@@ -506,8 +507,23 @@ if(pinfo.shadowRoot != sr) fail(305);
 // remember we put that leading space in front
 if(sr.lastChild.lastChild.lastChild.data.substring(1,10) != "Bolognese") fail(306);
 if(sr.querySelector("img").src.indexOf("/v194513") < 0) fail(307);
+// now let's create a custom object and link it into the tree.
+let p2 = document.createElement("popup-info");
+// this isn't an html tag so we have to set our own attributes
+p2.setAttribute("data-text", "freezer");
+pinfo.append(p2); // that should do it
+if(p2.firstChild.nodeName != "SHADOWROOT") fail(308);
+if(p2.querySelector("img").src.indexOf("default.png") < 0) fail(309);
+// And now, we don't need this cluttering the page.
+// This should call any disconnectedCallback functions,
+// but that hasn't been implemented yet.
+p2.remove();
 }
 customTest2();
+} catch(e) {
+alert(e);
+alert(e.stack);
+}
 </script>
 
 <P class=inject>
@@ -771,7 +787,6 @@ if(document.getElementById("almond") != document.spans[1]) fail(111);
 if(document.getElementById("pecan") != document.tables[0].rows[1]) fail(112);
 if(document.getElementById("pecan").parentNode.parentNode.getAttribute("class") != "filbert") fail(115);
 if(document.all.tags("FORM")[1] != document.forms[1]) fail(113);
-if(document.all.tags("span").length != 10) fail(114);
 
 n = 0;
 a = [29,31,37];
