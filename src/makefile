@@ -1,7 +1,8 @@
 # compiler and flags
 CC ?= cc
 PERL ?= perl
-INSTALL ?= install -C -D
+INSTALL ?= install
+MKDIR ?= mkdir
 # may need to be set to pkgconf on some systems but most still come with the
 # link to the older name
 PKG_CONFIG ?= pkg-config
@@ -14,6 +15,17 @@ DOCDIR ?= $(INSTALLBASE)/share/doc/edbrowse
 BINDIR ?= $(INSTALLBASE)/bin
 FILESDIR ?= $(INSTALLBASE)/share/edbrowse
 PLUGINSDIR ?= $(FILESDIR)/plugins
+# Some systems want to install with different permissions
+DIRMODE ?= 755
+EXECMODE ?= 755
+FILEMODE ?= 644
+# install macros
+define install_generic
+$(MKDIR) -p -m $(DIRMODE) $(1); $(INSTALL) -C -m $(2) $(3) $(1)
+endef
+install_exec = $(call install_generic,$(1),$(EXECMODE),$(2))
+install_file = $(call install_generic,$(1),$(FILEMODE),$(2))
+
 # determine includes and linker flags
 DEPENDENCIES ?= libcurl odbc libpcre2-8 readline openssl
 dependency_cflags ::= $(shell $(PKG_CONFIG) --cflags $(DEPENDENCIES))
@@ -86,17 +98,17 @@ edbrowse: $(EBOBJS)
 install: install-edbrowse install-docs install-emojis install-plugins
 
 install-edbrowse: edbrowse
-	$(INSTALL) -m755 -t $(BINDIR) edbrowse
+	$(call install_exec,$(BINDIR),$^)
 
 install-docs: $(DOCS)
-	$(INSTALL) -m644 -t $(DOCDIR) $^
+	$(call install_file,$(DOCDIR),$^)
 
 install-plugins: $(PLUGIN_SCRIPTS) $(PLUGIN_CONFIG)
-	$(INSTALL) -m755 -t $(BINDIR) $(PLUGIN_SCRIPTS)
-	$(INSTALL) -m644 -t $(PLUGINSDIR) $(PLUGIN_CONFIG)
+	$(call install_exec,$(BINDIR),$(PLUGIN_SCRIPTS))
+	$(call install_file,$(PLUGINSDIR),$(PLUGIN_CONFIG))
 
 install-emojis: emojis.txt
-	$(INSTALL) -m644 -t $(FILESDIR) $^
+	$(call install_file,$(FILESDIR),$^)
 
 # native Informix library for database access.
 # Others could be built, e.g. Oracle, but odbc is the most general.
