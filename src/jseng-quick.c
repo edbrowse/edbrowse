@@ -4661,7 +4661,7 @@ void rebuildSelectors(void)
 
 // Some primitives needed by css.c. These bounce through window.soj$
 static const char soj[] = "soj$";
-static void sofail() { debugPrint(3, "no style object"); }
+static void sofail(void) { debugPrint(3, "no style object"); }
 
 int get_gcs_number(const char *name)
 {

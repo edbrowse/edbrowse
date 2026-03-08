@@ -5071,7 +5071,7 @@ bool saveEmailWhileEnvelopes(char key, const char *name)
 	return true;
 }
 
-bool rfWhileReading()
+bool rfWhileReading(void)
 {
 	Window *pw = cw->prev;
 // pop and go
@@ -5081,7 +5081,7 @@ bool rfWhileReading()
 	return mailDescend((char*)cw->r_map[cw->dot].text, 'g');
 }
 
-bool addFolders()
+bool addFolders(void)
 {
 	CURLcode res;
 	CURL *h = cw->imap_h;

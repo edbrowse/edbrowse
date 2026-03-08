@@ -374,7 +374,7 @@ and then call lineFormat("insert into foo values(%s)",
 but don't do that!
 The returned string is built by lineFormat and is already in the buffer.
 You instead need to make a copy of the string and then call lineFormat. */
-char *sql_mkinsupd()
+char *sql_mkinsupd(void)
 {
 	char fmt[NUMRETS * 3 + 1];
 	int i;
