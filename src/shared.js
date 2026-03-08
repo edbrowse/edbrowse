@@ -2851,7 +2851,7 @@ this.statusText = "network error";
 Object.freeze(xml);
 
 this.CSS = {
-supports:function(w){ alert3("CSS.supports("+w+")"); return false},
+supports:function(w){ alert3("CSS.supports("+w+")"); return true},
 escape:function(s) {
 if(typeof s == "number") s = s.toString();
 if(typeof s != "string") return null;
