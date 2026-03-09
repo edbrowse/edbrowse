@@ -3291,17 +3291,17 @@ b = b.parentNode;
 }
 
 nodep.appendChild = function(c) {
-if(!c) return null;
-if(c.nodeType == 11) return appendFragment(this, c);
-isabove(c, this);
-if(c.parentNode) c.parentNode.removeChild(c);
-let r = this.eb$apch2(c);
-if(r) {
-runScriptWhenAttached(r);
-mutFixup(this, 0, c, null);
-if(isRooted(r)) connectedCallbackCheck(r);
-}
-return r;
+    if(!c) return null;
+    if(c.nodeType == 11) return appendFragment(this, c);
+    isabove(c, this);
+    if(c.parentNode) c.parentNode.removeChild(c);
+    let r = this.eb$apch2(c);
+    if(r) {
+        mutFixup(this, 0, c, null);
+        runScriptWhenAttached(r);
+        if(isRooted(r)) connectedCallbackCheck(r);
+    }
+    return r;
 }
 
 nodep.appendChild$nm = function(c) {
@@ -3320,15 +3320,18 @@ return v;
 }
 
 nodep.insertBefore = function(c, t) {
-if(!c) return null;
-if(!t) return this.appendChild(c);
-isabove(c, this);
-if(c.nodeType == 11) return insertFragment(this, c, t);
-if(c.parentNode) c.parentNode.removeChild(c);
-var r = this.eb$insbf(c, t);
-runScriptWhenAttached(r);
-if(r) mutFixup(this, 0, r, null);
-return r;
+    if(!c) return null;
+    if(!t) return this.appendChild(c);
+    isabove(c, this);
+    if(c.nodeType == 11) return insertFragment(this, c, t);
+    if(c.parentNode) c.parentNode.removeChild(c);
+    let r = this.eb$insbf(c, t);
+    if(r) {
+        mutFixup(this, 0, r, null);
+        runScriptWhenAttached(r);
+        if(isRooted(r)) connectedCallbackCheck(r);
+    }
+    return r;
 }
 
 nodep.removeChild = function(c) {
