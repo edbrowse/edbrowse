@@ -3304,6 +3304,13 @@ if(isRooted(r)) connectedCallbackCheck(r);
 return r;
 }
 
+nodep.appendChild$nm = function(c) {
+    if(!c) return null;
+    isabove(c, this);
+    if(c.parentNode) c.parentNode.removeChild$nm(c);
+    return this.eb$apch2(c);
+}
+
 nodep.prependChild = function(c) {
 let v;
 isabove(c, this);
@@ -4015,16 +4022,18 @@ function newTextUnder(top, s, flavor)
         mutFixup(top, 2, "text", old);
         return;
     }
+    const oldlist = Array.from(top.childNodes); // make a copy
     let l = top.childNodes.length;
     for(let i=l-1; i>=0; --i)
-        top.removeChild(top.childNodes[i]);
+        top.removeChild$nm(top.childNodes[i]);
 // do nothing if s is undefined, or null, or the empty string
-    if(s) top.appendChild(my$doc().createTextNode(s));
-// we need to call mutfixup here, and hopefully not on every removeChild above
-// which is how it works now, but just once, here, with nodes removed and the new text node added.
-// That is the correct flow I think.
-// I'll work on it but it is complicated cause mutFixup is
-// called from the native rmch2 method in C, which is bizarre.
+    if(s) {
+        let newtext = my$doc().createTextNode(s);
+        top.appendChild$nm(newtext);
+        mutFixup(top, 0, oldlist, [newtext]);
+    } else {
+        mutFixup(top, 0, oldlist, null);
+    }
 }
 
 odp(helemp, "textContent", {
