@@ -132,8 +132,8 @@ The observer sees this right away and reports, "The sky attribute was modified."
 
 You can also test character data, like this.
 
-tt=document.body.querySelectorAll("text")
-tt[2].textContent = "some ftp site"
+tt = document.getElementById("ftp").firstChild
+tt.textContent = "some ftp site"
 
 The second checkbox activates a timer, which is displayed on the next line.
 This timer updates once a second.

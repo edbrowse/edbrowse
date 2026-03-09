@@ -69,10 +69,8 @@ r += nn + "{" + extra + '\n';
 if(top.is$frame) {
 if(top.eb$expf) r += top.contentWindow.dumptree(top.contentDocument);
 } else if(top.childNodes) {
-for(var i=0; i<top.childNodes.length; ++i) {
-var c = top.childNodes[i];
+for(let c of top.childNodes)
 r += dumptree(c);
-}
 }
 r += '}\n';
 return r;
@@ -325,10 +323,8 @@ if(top.childNodes) {
 // don't descend into another frame.
 // The frame has no children through childNodes, so we don't really need this line.
 if(!top.is$frame)
-for(var i=0; i<top.childNodes.length; ++i) {
-var c = top.childNodes[i];
+for(let c of top.childNodes)
 a = a.concat(gebtn(c, s, false, all));
-}
 }
 return a;
 }
@@ -348,10 +344,8 @@ if(!first && (s === '*' || top.name === s))
 a.push(top);
 if(top.childNodes) {
 if(!top.is$frame)
-for(var i=0; i<top.childNodes.length; ++i) {
-var c = top.childNodes[i];
+for(let c of top.childNodes)
 a = a.concat(gebn(c, s, false));
-}
 }
 return a;
 }
@@ -396,8 +390,7 @@ function gebi(d, top, s) {
         // don't descend into another frame.
         // The frame has no children through childNodes, so we don't really need this line.
         if (top.is$frame) return null;
-        for (let i in top.childNodes) {
-            let c = top.childNodes[i];
+for(let c of top.childNodes) {
             let res = gebi(d, c, s);
             if (res) return res;
         }
@@ -430,10 +423,8 @@ if(ok) a.push(top);
 }
 if(top.childNodes) {
 if(!top.is$frame)
-for(var i=0; i<top.childNodes.length; ++i) {
-var c = top.childNodes[i];
+for(let c of top.childNodes)
 a = a.concat(gebcn(c, sa, false));
-}
 }
 return a;
 }
@@ -3972,8 +3963,20 @@ return t === null || t === false || t === "false" || t === 0 || t === '0' ? fals
 set:function(v) { this.setAttribute("hidden", v);}});
 helemp.nodeType = 1;
 
-// Helper functions for contentText and textContent, the differences of which,
+// Helper functions for contentText and textContent, the differences of which
 // I don't grok.
+// First function is recursive and gathers text and data sections.
+// Some internet code uses querySelectorAll("text,cdata"), but then I found
+// an internet article that says this can't work and shouldn't work.
+function gatherText(t) {
+let a = [];
+if(t.nodeType == 3 || t.nodeType == 4) // text or cdata
+a.push(t);
+for(let c of t.childNodes)
+a = a.concat(gatherText(c));
+return a;
+}
+
 function textUnder(top, flavor) {
 const nn = top.nodeName;
 if(nn == "#text") return top.data.trim();
@@ -3981,7 +3984,7 @@ if(nn == "SCRIPT" || nn == "#cdata-section") return top.text;
 const pre = (nn=="PRE");
 let answer = "", part, delim = " ";
 if(pre) delim = '';
-const t = top.querySelectorAll("cdata,text");
+const t = gatherText(top);
 for(let u of t) {
 if(u.parentNode && u.parentNode.nodeName == "OPTION") continue;
 // any other texts we should skip?

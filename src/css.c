@@ -3376,9 +3376,13 @@ static void build_doclist(Tag *top)
 	qsort(doclist, doclist_n, sizeof(Tag *), doclist_cmp);
 }
 
-// This is a bit like getElementsByTagName("*").  This function is recursive.
+// This is a bit like getElementsByTagName("*"), though we cull certain nodes,
+// such as text nodes, comments, etc. This function is recursive.
 static void build1_doclist(Tag *t)
 {
+	if(t->action == TAGACT_TEXT || t->action == TAGACT_COMMENT ||
+	t->action == TAGACT_DOC || t->action == TAGACT_FRAG ||
+	t->action == TAGACT_CDATA) goto skip;
 // do we need to allocate more space?
 	if (doclist_n == doclist_a) {
 		doclist_a += 500;
@@ -3390,6 +3394,7 @@ static void build1_doclist(Tag *t)
 	t->highspec = 0;
 	if (topmatch)		// top only
 		return;
+skip:
 // can't descend into another frame
 	if (t->action == TAGACT_FRAME)
 		return;

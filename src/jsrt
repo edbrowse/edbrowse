@@ -299,7 +299,7 @@ alert(e.stack);
 
 <H1 onload="onlv+=16"> jsrt </H1>
 
-<a href="ftp://ftp.netbsd.org/">NetBsd FTP site</a>
+<a id=ftp href="ftp://ftp.netbsd.org/">NetBsd FTP site</a>
 <form>
 <script>
 // these can't be in a try block
