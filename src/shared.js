@@ -3325,9 +3325,19 @@ return r;
 }
 
 nodep.removeChild = function(c) {
-if(!c) return null;
-var r = this.eb$rmch2(c);
-return r;
+    if(!c) return null;
+    const mark = this.eb$rmch2(c);
+    if(mark < 0) return null;
+// passing an integer as third argument is a special case, only from here.
+    mutFixup(this, 0, mark, c);
+    return c;
+}
+
+// like the above but with no mutation records
+nodep.removeChild$nm = function(c) {
+    if(!c) return null;
+    const mark = this.eb$rmch2(c);
+    return mark < 0 ? null : c;
 }
 
 odp(nodep, "firstChild", {

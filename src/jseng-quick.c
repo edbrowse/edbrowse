@@ -2802,20 +2802,19 @@ done:
 static JSValue nat_rmch2(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
 	jsInterruptCheck(cx);
-	int i, length, mark;
+	int i, length, mark = -1;
 	JSValue child, cn;
 	const char *thisname, *childname;
 
 	debugPrint(5, "remove in");
 	if (!JS_IsObject(argv[0]))
-		return JS_NULL;
+		goto done;
 	child = argv[0];
 	cn = JS_GetPropertyStr(cx, this, "childNodes");
 	grab(cn);
 	if(!wrap_IsArray(cx, cn))
 		goto fail;
 	length = get_arraylength(cx, cn);
-	mark = -1;
 	for (i = 0; i < length; ++i) {
 		JSValue v = get_array_element_object(cx, cn, i);
 		bool same = (JS_VALUE_GET_PTR(v) == JS_VALUE_GET_PTR(child));
@@ -2825,11 +2824,10 @@ static JSValue nat_rmch2(JSContext * cx, JSValueConst this, int argc, JSValueCon
 			break;
 		}
 	}
-
 	if (mark < 0)
 		goto fail;
 
-/* push the other elements down */
+// push the other elements down
 	for (i = mark + 1; i < length; ++i) {
 		JSValue v = get_array_element_object(cx, cn, i);
 		set_array_element_object(cx, cn, i - 1, v);
@@ -2839,36 +2837,21 @@ static JSValue nat_rmch2(JSContext * cx, JSValueConst this, int argc, JSValueCon
 // missing parentnode must always be null
 JS_SetPropertyStr(cx, child, "parentNode", JS_NULL);
 
-/* pass this linkage information back to edbrowse, to update its dom tree */
+// pass this linkage information back to edbrowse, to update its dom tree
 	thisname = embedNodeName(cx, this);
 	childname = embedNodeName(cx, child);
 	domSetsLinkage1('r', this, thisname, child, childname);
 
 	debugPrint(5, "remove out");
-// mutation fix up from native code
-	{
-		JSValue g = *(JSValue*)cf->winobj, r;
-		JSAtom a = JS_NewAtom(cx, "mutFixup");
-		JSValue l[4];
-		l[0] = this;
-		l[1] = JS_NewInt32(cx, 0);
-// exception here, push an integer where the node was.
-		l[2] = JS_NewInt32(cx, mark);
-		l[3] = child;
-		r = JS_Invoke(cx, g, a, 4, l);
-// worked, didn't work, I don't care.
-		JS_FreeValue(cx, r);
-		JS_FreeAtom(cx, a);
-	}
-
 	JS_Release(cx, cn);
-	return JS_DupValue(cx, argv[0]);
+	return JS_NewInt32(cx, mark);
 
 fail:
 	debugPrint(5, "remove fail");
 	JS_Release(cx, cn);
         (void) argc;
-	return JS_NULL;
+done:
+	return JS_NewInt32(cx, -1);
 }
 
 static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
