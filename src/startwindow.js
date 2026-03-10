@@ -865,9 +865,6 @@ swpc("Headers", mw$.Headers)
 swpc("Request", mw$.Request)
 swpc("Response", mw$.Response)
 swpc("fetch", mw$.fetch)
-// Next function is needed to support await fetch asynchronous
-// See the comments in shared.js - look for fetch$onload.
-swpc("fetch$onload", function(resolve, x){resolve(x)})
 
 // pages seem to want document.style to exist
 sdp("style", new CSSStyleDeclaration)

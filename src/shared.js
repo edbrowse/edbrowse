@@ -8061,7 +8061,7 @@ await uses the context of the function that issues the resolve.
 If it is here, the context is the master window, and that's wrong.
 the promise job won't even run.
 It has to be a function in startwindow.
-Thus I have fetch$onload over there, and all it does is call resolve on my behalf.
+Thus I create fetch$onload over there, and all it does is call resolve on my behalf.
 resolve(new Response(body, options))
 becomes
         w.fetch$onload(resolve, new Response(body, options))
@@ -8069,7 +8069,6 @@ that's it, and yet that seems to play nicely with await
 in the asynchronous case, where resolve is called later,
 and spins off its own then() job to pass back to await.
 Don't feel bad, I don't understand it either, it just works.
-If it ever doesn't work, turn jsbg off and you're back to synchronous.
 You realize, we wouldn't have any of these headaches, nor the security concerns,
 if we just put everything in startwindow and didn't try
 to maintain a shared window for efficiency.
@@ -8118,13 +8117,15 @@ The timer fires in context 1, call parseResponse,
 dispatch load event,
 and call the onload function that fetch provides.
 This resolves the Promise but we can't do it here;
-call fetch$onload in window 1.
+create fetch$onload in window 1, using eval in window 1,
+so it's like it was compiled over there,
+then call fetch$onload in window 1,
+then delete it just to clean up.
 Now resolved, await creates a then job in context 1.
 It runs on the next tick, passes response back through await,
 and resumes execution in the calling function.
 This will make more sense when you read the fetch code below,
 which is, fortunately, clear and well written.
-Remind me to use open source whenever possible.
 */
 
 /* eslint-disable no-prototype-builtins */
@@ -8673,7 +8674,9 @@ const w = my$win();
       }
       options.url = 'responseURL' in xhr ? xhr.responseURL : options.headers.get('X-Request-URL')
       var body = 'response' in xhr ? xhr.response : xhr.responseText
-        w.fetch$onload(resolve, new Response(body, options))
+       w.eval("window.fetch$onload = function(r,x) { r(x) }")
+      w.fetch$onload(resolve, new Response(body, options))
+       delete w.fetch$onload;
     }
 
     xhr.onerror = function() {
