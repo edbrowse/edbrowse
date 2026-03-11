@@ -3710,20 +3710,20 @@ static unsigned andLookup(char *entity, char *v)
 // Here is a general routine to traverse the tree, with a callback function.
 static void traverseNode(Tag *t, struct parseContext *pc)
 {
-	const nodeFunction f = pc->callback;
-	Tag *child, *next_child, *u;
+    const nodeFunction f = pc->callback;
+    Tag *child, *next_child, *u;
 
-	if (t->visited) {
-		pc->malformed = true;
-		debugPrint(4, "node revisit %s %d", t->info->name, t->seqno);
-		return;
-	}
-	t->visited = true;
+    if (t->visited) {
+        pc->malformed = true;
+        debugPrint(4, "node revisit %s %d", t->info->name, t->seqno);
+        return;
+    }
+    t->visited = true;
 
 // open tag <foo>
-	(*f) (t, true, pc);
+    (*f) (t, true, pc);
 
-	for (child = t->firstchild; child; child = child->sibling) {
+    for (child = t->firstchild; child; child = child->sibling) {
 /*********************************************************************
 This will take some splaining. Suppose the html looks like:
 paragraph1 script paragraph3, and script is going to append paragraph2.
@@ -3757,22 +3757,28 @@ but those checks probably take as much time as actually doing it
 when the pointers don't change out from under us.
 *********************************************************************/
 
-		next_child = child->sibling, child->sibling = 0;
-		if(next_child)
-		debugPrint(5, "%s lifts up %s", child->info->name, next_child ? next_child->info->name : "empty");
-		traverseNode(child, pc);
-		if(pc->abort) return;
-		if(next_child)
-		debugPrint(5, "after sibling %s %s above", child->sibling ? child->sibling->info->name : "empty",
-		next_child ? next_child->info->name : "empty");
-		if(next_child) {
-			for(u = child; u->sibling; u = u->sibling)  ;
-			u->sibling = next_child;
-		}
-	}
+        next_child = child->sibling, child->sibling = 0;
+        if(next_child)
+            debugPrint(5, "%s lifts up %s", child->info->name, next_child ? next_child->info->name : "empty");
+        traverseNode(child, pc);
+        if(pc->abort) return;
+        if(!child->parent)
+            debugPrint(3, "stepping around missing script");
+        if(next_child) {
+            debugPrint(5, "after sibling %s %s above",
+            child->sibling ? child->sibling->info->name : "empty",
+            next_child->info->name);
+// This line is if the script removed itself and that was the only node
+            if(!t->firstchild) t->firstchild = next_child;
+            else {
+                for(u = t->firstchild; u->sibling; u = u->sibling)  ;
+                u->sibling = next_child;
+            }
+        }
+    }
 
 // close tag </foo>
-	(*f) (t, false, pc);
+    (*f) (t, false, pc);
 }
 
 void traverseAll(int start, struct parseContext *pc)
@@ -4599,11 +4605,11 @@ static char *upSnap(const Tag *t)
 
 static void jsNode(Tag *t, bool opentag, struct parseContext *pc)
 {
-	const struct tagInfo *ti = t->info;
-	int action = t->action;
-	const Tag *above;
-	const char *a;
-	bool linked_in;
+    const struct tagInfo *ti = t->info;
+    int action = t->action;
+    const Tag *above;
+    const char *a;
+    bool linked_in;
 
 /*********************************************************************
 If js is off, and you don't decorate this tree,
@@ -4670,8 +4676,11 @@ get_property_bool_t(t, "connectedCallback$pending")) {
 // while we're in the middle of building the tree?!
 // this doesn't catch every possible weird thing a script might do,
 // but most of them.
-            if(!stringEqual(up1, up2)) {
-                debugPrint(0, "script removes or moves itself within the tree. Decoration process aborted. Results of this browse are unpredictable!");
+            if(!t->parent) {
+                debugPrint(3, "script %d removes itself from the tree", t->seqno);
+            } else if(!stringEqual(up1, up2)) {
+                debugPrint(0, "script moves itself within the tree.\n<%s><%s>\nDecoration process aborted. Results of this browse are unpredictable!",
+                up1, up2);
                 pc->abort = true;
             }
             nzFree(up1), nzFree(up2);
