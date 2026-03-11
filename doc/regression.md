@@ -145,7 +145,7 @@ Type i2=- to turn the timer off,
 whence the next line does not tick any more.
 
 Move down a couple lines, and we come to
-Frame {butterfly}, and there are lot of things to test here.
+Frame {butterfly}, and there are a lot of things to test here.
 Type exp to expand the frame, or g to go to the frame, the commands are equivalent.
 The frame is a file on edbrowse.org.
 It prints "script in frame", and presents a small web page, just 4 lines long.
@@ -172,7 +172,7 @@ document.forms[0] produces an error.
 However, top.document.forms[0] gives you the form with all the buttons, as before,
 because top is a variable that takes us up to the top frame.
 
-There is another frame test you can perform, which is rather a corner case,
+There is another frame test you can perform, which is rather a corner case that
 does not come up often in the wild.
 Replace this frame with the Munsters.
 This is not a hyperlink, where you can go and come back.
@@ -224,7 +224,8 @@ If those conditions hold, then edbrowse tries to send, and it prints out all the
 there is another test for the layout of the page.
 showall+ changes the subject line, the state line, and the White Album line.
 These lines have pieces of css injected into them.
-these pieces are typically not shown, because they are usually bullets or marks or other small punctuations.
+these pieces are typically not shown,
+because they are usually bullets or punctuation marks.
 But you can see them with the showall command, and jsrt facilitates this test.
 
 I'm sure jsrt will evolve,

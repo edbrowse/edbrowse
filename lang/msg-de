@@ -775,11 +775,11 @@ kann keine leere Datei weiterleiten
 kann keine Binärdatei weiterleiten
 keine Zeile mit \"unformatted\"
 rohe E-Mail %05d nicht gefunden
+keine weitere Zeile
+zu viele verschachtelte Kommandos
+konnte formattierten String nicht erstellen; %s
 0
-0
-0
-0
-0
+Temporäres Verzeichnis existiert nicht: %s
 0
 0
 0
