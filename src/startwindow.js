@@ -689,7 +689,13 @@ and should not be moved. Check for eb$nomove.
 
 swp("eb$uplift", function(s) {
 var p = s.parentNode;
-if(!p) return; // should never happen
+if(!p) {
+// this can happen if a script removes itself from the tree.
+// And perhaps it created some nodes via document.write.
+// No I've never seen this combination in the wild.
+p = s.orig$parent;
+}
+if(!p) return;
 var before = s.nextSibling;
 var c = s.firstChild;
 if(c && c.nodeType == 3 && c.eb$nomove) c = c.nextSibling;

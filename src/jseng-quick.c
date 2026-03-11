@@ -1251,6 +1251,11 @@ void jsRunData(const Tag *t, const char *filename, int lineno)
 	}
 // have to set currentScript
 	JS_SetPropertyStr(cx, *((JSValue*)t->f0->docobj), "currentScript", JS_DupValue(cx, *((JSValue*)t->jv)));
+// this next line is if a script removes itself from the tree, and also
+// uses document.write to add more nodes. Remember the parent.
+	if(t->parent && t->parent->jslink)
+		define_hidden_property_object(cx, *((JSValue*)t->jv),
+		"orig$parent", *((JSValue*)t->parent->jv));
 // defer to the earlier routine if there are breakpoints
 	if (strstr(s, "bp@(") || strstr(s, "trace@(")) {
 		char *result = run_script(cx, s);
