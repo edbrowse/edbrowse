@@ -683,6 +683,8 @@ comfortable
 <input type=radio name=money value=2>
 rich
 <input type=radio name=money value=3>
+<script> // a script that removes itself, right in the middle of the tree.
+document.currentScript.remove(); </script>
 <br>Pets:
 dog <input type=checkbox name=dog id=hound checked onclick="alert('rover')">
 cat <input type=checkbox name=cat onclick="catdog(this)" value=meow>
