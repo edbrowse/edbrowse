@@ -5186,11 +5186,16 @@ Eventually the `@ and '@ are crunched away.
 		emphasize(t, opentag, '*');
 		break;
 
+#if 0
+// to from date subject etc in the original block of a reply email
+// are bolded, and that information is not useful at all.
+// So I'm going to recant <b> for now. The other tags I do find useful.
 	case TAGACT_B:
 		if (invisible || !textd) break;
 		if(findOpenTag(t, TAGACT_B)) break;
 		emphasize(t, opentag, '+');
 		break;
+#endif
 
 	case TAGACT_DEL:
 	case TAGACT_S:
