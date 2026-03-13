@@ -370,8 +370,10 @@ past_html_close_semantics:
 
 		stack = k->next;
 // set up for innerHTML
-		if(k->t->info->bits & TAG_INNERHTML && k->start && mark)
-			k->t->innerHTML = pullString(k->start, mark - k->start);
+		if(k->t->info->bits & TAG_INNERHTML && k->start && mark
+// I don't think innerHTML is meaningful in xml
+		&& allowJS && !cf->xmlMode)
+			k->t->innerHTML = pullString1(k->start, mark);
 		free(k);
 	}
 }
