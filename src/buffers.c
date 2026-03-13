@@ -6793,7 +6793,7 @@ static char *showLinks(void)
 				continue;
 			}
 // quotes may be permitted in encoded urls, apostrophes never.
-			stringAndString(&a, &a_l, "<br><a href='");
+			stringAndString(&a, &a_l, "<br/><a href='");
 
 			if (memEqualCI(h, "javascript:", 11)) {
 				stringAndString(&a, &a_l, "javascript:'>\n");
@@ -6843,7 +6843,7 @@ static char *showLinks(void)
 			return 0;
 		}
 		h = htmlEscape(h);
-		stringAndString(&a, &a_l, "<br><a href='");
+		stringAndString(&a, &a_l, "<br/><a href='");
 		stringAndString(&a, &a_l, h);
 		stringAndString(&a, &a_l, "'>\n");
 /* get text from the html title if you can */
