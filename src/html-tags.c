@@ -19,6 +19,147 @@ which we must then import into the edbrowse tree of tags.
 bool debugScanner;
 bool browseMail;
 
+// Start with the list of available tags, in alphabetical order.
+// First one has to be the unknown tag.
+// whitespace bits: open nl, open para, close nl, close para.
+// property bits: innerHTML,text is invisible, closing tag is insignificant.
+static const struct tagInfo availableTags[] = {
+	{"0unknown", "an html entity", TAGACT_UNKNOWN, 5, 1},
+	{"a", "an anchor", TAGACT_A, 0, 1},
+	{"abbr", "an abbreviation", TAGACT_JS, 0, 0},
+	{"address", "an address block", TAGACT_NOP, 1, 0},
+	{"area", "an image map area", TAGACT_AREA, 0, 4},
+	{"audio", "audio passage", TAGACT_MUSIC, 0, 0},
+	{"b", "bold text", TAGACT_B, 0, 0},
+	{"base", "base reference for relative URLs", TAGACT_BASE, 0, 4},
+	{"bgsound", "background music", TAGACT_MUSIC, 0, 0},
+	{"blockquote", "a quoted section", TAGACT_BQ, 0, 1},
+	{"body", "the html body", TAGACT_BODY, 10, 5},
+	{"br", "a line break", TAGACT_BR, 1, 4},
+	{"button", "a button", TAGACT_INPUT, 0, 1},
+	{"canvas", "a canvas", TAGACT_CANVAS, 0, 1},
+	{"caption", "a caption", TAGACT_NOP, 5, 0},
+	{"cdata", "xml cdata", TAGACT_CDATA, 0, 2},
+	{"center", "centered text", TAGACT_P, 2, 5},
+	{"cite", "a citation", TAGACT_NOP, 0, 0},
+	{"code", "a block of code", TAGACT_CODE, 0, 0},
+	{"comment", "a comment", TAGACT_COMMENT, 0, 2},
+	{"datalist", "an input list", TAGACT_DATAL, 0, 0},
+	{"dd", "a definition", TAGACT_DD, 1, 4},
+	{"del", "deleted text", TAGACT_DEL, 0, 0},
+	{"details", "details", TAGACT_DET, 10, 1},
+	{"dfn", "definition text", TAGACT_JS, 0, 0},
+	{"dir", "a directory list", TAGACT_NOP, 5, 0},
+	{"div", "a divided section", TAGACT_DIV, 5, 1},
+	{"dl", "a definition list", TAGACT_DL, 10, 1},
+	{"doctype", "doctype", TAGACT_DOCTYPE, 0, 0},
+	{"document", "a document", TAGACT_DOC, 5, 1},
+	{"dt", "a term", TAGACT_DT, 2, 4},
+	{"element", "an input element", TAGACT_INPUT, 0, 4},
+	{"em", "emphasized text", TAGACT_EM, 0, 0},
+	{"embed", "embedded html", TAGACT_MUSIC, 0, 0},
+	{"fieldset", "a paragraph", TAGACT_NOP, 10, 1},
+	{"figcaption", "a figure caption", TAGACT_NOP, 10, 0},
+	{"figure", "a figure", TAGACT_NOP, 10, 0},
+	{"fixed", "a fixed presentation", TAGACT_NOP, 1, 0},
+	{"font", "a font", TAGACT_NOP, 0, 0},
+	{"footer", "a footer", TAGACT_FOOTER, 2, 5},
+	{"form", "a form", TAGACT_FORM, 10, 1},
+	{"fragment", "a document fragment", TAGACT_FRAG, 5, 1},
+	{"frame", "a frame", TAGACT_FRAME, 2, 0},
+	{"frameset", "a frame set", TAGACT_JS, 0, 0},
+	{"h1", "a level 1 header", TAGACT_H, 10, 1},
+	{"h2", "a level 2 header", TAGACT_H, 10, 1},
+	{"h3", "a level 3 header", TAGACT_H, 10, 1},
+	{"h4", "a level 4 header", TAGACT_H, 10, 1},
+	{"h5", "a level 5 header", TAGACT_H, 10, 1},
+	{"h6", "a level 6 header", TAGACT_H, 10, 1},
+	{"head", "the html header information", TAGACT_HEAD, 10, 5},
+	{"header", "a header", TAGACT_HEADER, 2, 5},
+	{"hr", "a horizontal line", TAGACT_HR, 5, 4},
+	{"html", "html", TAGACT_HTML, 0, 0},
+	{"htmlanchorelement", "an anchor element", TAGACT_A, 0, 1},
+	{"i", "italicized text", TAGACT_I, 0, 0},
+	{"iframe", "a frame", TAGACT_FRAME, 2, 1},
+	{"image", "an image", TAGACT_IMAGE, 0, 4},
+	{"img", "an image", TAGACT_IMAGE, 0, 4},
+	{"input", "an input item", TAGACT_INPUT, 0, 4},
+	{"ins", "inserted text", TAGACT_INS, 0, 0},
+	{"kbd", "keyboard text", TAGACT_JS, 0, 0},
+	{"label", "a label", TAGACT_LABEL, 0, 0},
+	{"li", "a list item", TAGACT_LI, 1, 5},
+	{"link", "a link tag", TAGACT_LINK, 0, 4},
+	{"listing", "a listing", TAGACT_PRE, 1, 0},
+	{"map", "a map of images", TAGACT_NOP, 5, 0},
+	{"menu", "a menu", TAGACT_NOP, 5, 0},
+	{"meta", "a meta tag", TAGACT_META, 0, 4},
+	{"nav", "a navigation section", TAGACT_DIV, 5, 1},
+	{"noembed", "no embed section", TAGACT_NOP, 0, 2},
+	{"noframes", "no frames section", TAGACT_NOP, 0, 2},
+	{"noscript", "no script section", TAGACT_NOSCRIPT, 0, 2},
+	{"object", "an html object", TAGACT_OBJECT, 5, 3},
+	{"ol", "a numbered list", TAGACT_OL, 10, 1},
+	{"optgroup", "an optiongroup", TAGACT_OPTG, 0, 0},
+	{"option", "a select option", TAGACT_OPTION, 0, 0},
+	{"ovb", "an overbar", TAGACT_OVB, 0, 0},
+	{"p", "a paragraph", TAGACT_P, 10, 1},
+	{"pre", "a preformatted section", TAGACT_PRE, 10, 0},
+	{"q", "quoted text", TAGACT_JS, 0, 0},
+	{"s", "strikethrough text", TAGACT_S, 0, 0},
+	{"samp", "a block of sample text", TAGACT_NOP, 0, 0},
+	{"script", "a script", TAGACT_SCRIPT, 0, 3},
+	{"section", "an html section", TAGACT_SPAN, 0, 1},
+	{"select", "an option list", TAGACT_SELECT, 0, 0},
+	{"source", "source of audio or video", TAGACT_SOURCE, 0, 4},
+	{"span", "an html span", TAGACT_SPAN, 0, 1},
+	{"strike", "emphasized text", TAGACT_JS, 0, 0},
+	{"strong", "emphasized text", TAGACT_STRONG, 0, 0},
+	{"style", "a style tag", TAGACT_STYLE, 0, 2},
+	{"sub", "a subscript", TAGACT_SUB, 0, 0},
+	{"summary", "summary of details", TAGACT_SUMMARY, 10, 1},
+	{"sup", "a superscript", TAGACT_SUP, 0, 0},
+	{"svg", "an svg image", TAGACT_SVG, 0, 1},
+	{"table", "a table", TAGACT_TABLE, 10, 1},
+	{"tbody", "a table body", TAGACT_TBODY, 0, 1},
+	{"td", "a table entry", TAGACT_TD, 0, 1},
+	{"template", "a template", TAGACT_TEMPLATE, 0, 2},
+	{"text", "a text section", TAGACT_TEXT, 0, 4},
+	{"textarea", "an input text area", TAGACT_TA, 0, 0},
+	{"tfoot", "a table foot", TAGACT_TFOOT, 0, 1},
+	{"th", "a table heading", TAGACT_TD, 0, 1},
+	{"thead", "a table head", TAGACT_THEAD, 0, 1},
+	{"title", "the title", TAGACT_TITLE, 0, 0},
+	{"tr", "a table row", TAGACT_TR, 5, 1},
+	{"tt", "teletype", TAGACT_NOP, 0, 0},
+	{"u", "underlined text", TAGACT_U, 0, 0},
+	{"ul", "a bullet list", TAGACT_UL, 10, 1},
+	{"var", "variable text", TAGACT_JS, 0, 0},
+	{"video", "video passage", TAGACT_MUSIC, 0, 0},
+	{"xmp", "an example", TAGACT_PRE, 1, 0},
+};
+static const int availableTagCount = sizeof(availableTags) / sizeof(struct tagInfo);
+
+const struct tagInfo *name2tagInfo(const char *name)
+{
+// binary search, as you would imagine
+    int i, l = -1, r = availableTagCount, rc;
+    const struct tagInfo *ti;
+// so far the longest tag is 17
+    char namelow[20];
+    int n = strlen(name) + 1;
+    if(n > sizeof(namelow)) return 0;
+   memcpy(namelow, name, n);
+    caseShift(namelow, 'l');
+    while(r - l > 1) {
+        i = (l + r) / 2;
+        ti = availableTags + i;
+        rc = strcmp(ti->name, namelow);
+        if(!rc) return ti;
+        if(rc < 0)l = i; else r = i;
+    }
+    return 0;
+}
+
 static const char htmltag[] = "html";
 static const char innerhtmltag[] = "innerhtml";
 static const char headtag[] = "head";
@@ -251,11 +392,8 @@ static int isNonest(const char *name, const struct opentag *k)
 	if(!y->name) {
 // Not on our special list, do we know this tag at all?
 // Unknown tags will be nestable. Consistent with xml.
-		const struct tagInfo *ti;
-		for (ti = availableTags; ti->name[0]; ++ti)
-			if (stringEqual(ti->name, name))
-				return true;
-		return false;
+            const struct tagInfo *ti = name2tagInfo(name);
+            return !!ti;
 	}
 
 	if(y->nestable) return false;
@@ -380,13 +518,8 @@ static void pushTag(Tag *t);
 Tag *newTag(const Frame *f, const char *name)
 {
 	Tag *t, *t1, *t2 = 0;
-	const struct tagInfo *ti;
-
-	for (ti = availableTags; ti->name[0]; ++ti)
-		if (stringEqualCI(ti->name, name))
-			break;
-
-	if (!ti->name[0]) {
+	const struct tagInfo *ti = name2tagInfo(name);
+	if (!ti) {
 		debugPrint(4, "warning, created node %s reverts to generic", name);
 		ti = availableTags;
 	}
@@ -535,126 +668,6 @@ static void pushTag(Tag *t)
 	if (cw->numTags > MAXLINES)
 		i_printfExit(MSG_LineLimit);
 }
-
-// first one has to be the unknown.
-// Whitespace: open nl, open para, close nl, close para.
-// Bits: innerHTML,text is invisible, closing tag is insignificant.
-const struct tagInfo availableTags[] = {
-	{"unknown0", "an html entity", TAGACT_UNKNOWN, 5, 1},
-	{"doctype", "doctype", TAGACT_DOCTYPE, 0, 0},
-	{"html", "html", TAGACT_HTML, 0, 0},
-	{"base", "base reference for relative URLs", TAGACT_BASE, 0, 4},
-	{"object", "an html object", TAGACT_OBJECT, 5, 3},
-	{"a", "an anchor", TAGACT_A, 0, 1},
-	{"htmlanchorelement", "an anchor element", TAGACT_A, 0, 1},
-	{"input", "an input item", TAGACT_INPUT, 0, 4},
-	{"element", "an input element", TAGACT_INPUT, 0, 4},
-	{"title", "the title", TAGACT_TITLE, 0, 0},
-	{"textarea", "an input text area", TAGACT_TA, 0, 0},
-	{"select", "an option list", TAGACT_SELECT, 0, 0},
-	{"datalist", "an input list", TAGACT_DATAL, 0, 0},
-	{"option", "a select option", TAGACT_OPTION, 0, 0},
-	{"optgroup", "an optiongroup", TAGACT_OPTG, 0, 0},
-	{"sub", "a subscript", TAGACT_SUB, 0, 0},
-	{"sup", "a superscript", TAGACT_SUP, 0, 0},
-	{"ovb", "an overbar", TAGACT_OVB, 0, 0},
-	{"font", "a font", TAGACT_NOP, 0, 0},
-	{"cite", "a citation", TAGACT_NOP, 0, 0},
-	{"tt", "teletype", TAGACT_NOP, 0, 0},
-	{"center", "centered text", TAGACT_P, 2, 5},
-	{"caption", "a caption", TAGACT_NOP, 5, 0},
-	{"head", "the html header information", TAGACT_HEAD, 10, 5},
-	{"body", "the html body", TAGACT_BODY, 10, 5},
-	{"text", "a text section", TAGACT_TEXT, 0, 4},
-	{"bgsound", "background music", TAGACT_MUSIC, 0, 0},
-	{"audio", "audio passage", TAGACT_MUSIC, 0, 0},
-	{"video", "video passage", TAGACT_MUSIC, 0, 0},
-	{"source", "source of audio or video", TAGACT_SOURCE, 0, 4},
-	{"meta", "a meta tag", TAGACT_META, 0, 4},
-	{"style", "a style tag", TAGACT_STYLE, 0, 2},
-	{"link", "a link tag", TAGACT_LINK, 0, 4},
-	{"img", "an image", TAGACT_IMAGE, 0, 4},
-	{"image", "an image", TAGACT_IMAGE, 0, 4},
-	{"br", "a line break", TAGACT_BR, 1, 4},
-	{"p", "a paragraph", TAGACT_P, 10, 1},
-	{"details", "details", TAGACT_DET, 10, 1},
-	{"summary", "summary of details", TAGACT_SUMMARY, 10, 1},
-	{"fieldset", "a paragraph", TAGACT_NOP, 10, 1},
-	{"blockquote", "a quoted section", TAGACT_BQ, 0, 1},
-	{"header", "a header", TAGACT_HEADER, 2, 5},
-	{"footer", "a footer", TAGACT_FOOTER, 2, 5},
-	{"div", "a divided section", TAGACT_DIV, 5, 1},
-	{"nav", "a navigation section", TAGACT_DIV, 5, 1},
-	{"map", "a map of images", TAGACT_NOP, 5, 0},
-	{"figure", "a figure", TAGACT_NOP, 10, 0},
-	{"figcaption", "a figure caption", TAGACT_NOP, 10, 0},
-	{"document", "a document", TAGACT_DOC, 5, 1},
-	{"fragment", "a document fragment", TAGACT_FRAG, 5, 1},
-	{"comment", "a comment", TAGACT_COMMENT, 0, 2},
-	{"cdata", "xml cdata", TAGACT_CDATA, 0, 2},
-	{"template", "a template", TAGACT_TEMPLATE, 0, 2},
-	{"h1", "a level 1 header", TAGACT_H, 10, 1},
-	{"h2", "a level 2 header", TAGACT_H, 10, 1},
-	{"h3", "a level 3 header", TAGACT_H, 10, 1},
-	{"h4", "a level 4 header", TAGACT_H, 10, 1},
-	{"h5", "a level 5 header", TAGACT_H, 10, 1},
-	{"h6", "a level 6 header", TAGACT_H, 10, 1},
-	{"dt", "a term", TAGACT_DT, 2, 4},
-	{"dd", "a definition", TAGACT_DD, 1, 4},
-	{"li", "a list item", TAGACT_LI, 1, 5},
-	{"ul", "a bullet list", TAGACT_UL, 10, 1},
-	{"dir", "a directory list", TAGACT_NOP, 5, 0},
-	{"menu", "a menu", TAGACT_NOP, 5, 0},
-	{"ol", "a numbered list", TAGACT_OL, 10, 1},
-	{"dl", "a definition list", TAGACT_DL, 10, 1},
-	{"hr", "a horizontal line", TAGACT_HR, 5, 4},
-	{"form", "a form", TAGACT_FORM, 10, 1},
-	{"button", "a button", TAGACT_INPUT, 0, 1},
-	{"frame", "a frame", TAGACT_FRAME, 2, 0},
-	{"iframe", "a frame", TAGACT_FRAME, 2, 1},
-	{"map", "an image map", TAGACT_MAP, 2, 4},
-	{"area", "an image map area", TAGACT_AREA, 0, 4},
-	{"table", "a table", TAGACT_TABLE, 10, 1},
-	{"tbody", "a table body", TAGACT_TBODY, 0, 1},
-	{"thead", "a table head", TAGACT_THEAD, 0, 1},
-	{"tfoot", "a table foot", TAGACT_TFOOT, 0, 1},
-	{"tr", "a table row", TAGACT_TR, 5, 1},
-	{"td", "a table entry", TAGACT_TD, 0, 1},
-	{"th", "a table heading", TAGACT_TD, 0, 1},
-	{"pre", "a preformatted section", TAGACT_PRE, 10, 0},
-	{"listing", "a listing", TAGACT_PRE, 1, 0},
-	{"xmp", "an example", TAGACT_PRE, 1, 0},
-	{"fixed", "a fixed presentation", TAGACT_NOP, 1, 0},
-	{"code", "a block of code", TAGACT_CODE, 0, 0},
-	{"samp", "a block of sample text", TAGACT_NOP, 0, 0},
-	{"address", "an address block", TAGACT_NOP, 1, 0},
-	{"script", "a script", TAGACT_SCRIPT, 0, 3},
-	{"noscript", "no script section", TAGACT_NOSCRIPT, 0, 2},
-	{"noframes", "no frames section", TAGACT_NOP, 0, 2},
-	{"embed", "embedded html", TAGACT_MUSIC, 0, 0},
-	{"noembed", "no embed section", TAGACT_NOP, 0, 2},
-	{"em", "emphasized text", TAGACT_EM, 0, 0},
-	{"label", "a label", TAGACT_LABEL, 0, 0},
-	{"strike", "emphasized text", TAGACT_JS, 0, 0},
-	{"s", "strikethrough text", TAGACT_S, 0, 0},
-	{"strong", "emphasized text", TAGACT_STRONG, 0, 0},
-	{"b", "bold text", TAGACT_B, 0, 0},
-	{"i", "italicized text", TAGACT_I, 0, 0},
-	{"u", "underlined text", TAGACT_U, 0, 0},
-	{"var", "variable text", TAGACT_JS, 0, 0},
-	{"kbd", "keyboard text", TAGACT_JS, 0, 0},
-	{"dfn", "definition text", TAGACT_JS, 0, 0},
-	{"q", "quoted text", TAGACT_JS, 0, 0},
-	{"abbr", "an abbreviation", TAGACT_JS, 0, 0},
-	{"span", "an html span", TAGACT_SPAN, 0, 1},
-	{"section", "an html section", TAGACT_SPAN, 0, 1},
-	{"svg", "an svg image", TAGACT_SVG, 0, 1},
-	{"canvas", "a canvas", TAGACT_CANVAS, 0, 1},
-	{"frameset", "a frame set", TAGACT_JS, 0, 0},
-	{"del", "deleted text", TAGACT_DEL, 0, 0},
-	{"ins", "inserted text", TAGACT_INS, 0, 0},
-	{"", NULL, 0, 0, 0}
-};
 
 // Of course we have to free the tags when the window is done.
 static void freeTag(Tag *t)

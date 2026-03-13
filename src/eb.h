@@ -575,7 +575,6 @@ struct tagInfo {
 	uchar para;		/* paragraph and line breaks */
 	ushort bits;		/* a bunch of boolean attributes */
 };
-extern const struct tagInfo availableTags[];
 
 // Information on tagInfo->bits
 // support innerHTML

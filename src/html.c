@@ -1474,10 +1474,7 @@ bool htmlTest(void)
 		look[j - 1] = 0;
 		if (j > 1 && (p[j] == '>' || isspaceByte(p[j]))) {
 // something we recognize?
-			const struct tagInfo *ti;
-			for (ti = availableTags; ti->name[0]; ++ti)
-				if (stringEqualCI(ti->name, look))
-					return true;
+                    if(name2tagInfo(look)) return true;
 		}
 		return false;
 	}
