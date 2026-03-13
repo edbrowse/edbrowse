@@ -4023,9 +4023,8 @@ return answer;
 function newTextUnder(top, s, flavor)
 {
     if(top.nodeName == "#text") {
-        const old = top.data;
         top.data = s;
-        mutFixup(top, 2, "text", old);
+// don't mutFixup here; the text setter does it
         return;
     }
     const oldlist = Array.from(top.childNodes); // make a copy
@@ -4092,8 +4091,13 @@ textp.nodeType = 3;
 // node.data = 7;  ...  if(node.data.match(/x/) ...
 // and boom! It blows up because Number doesn't have a match function.
 odp(textp, "data", {
-get: function() { return this.data$2; },
-set: function(s) { this.data$2 = s + ""; }})
+    get: function() { return this.data$2; },
+    set: function(s) {
+        const old = this.data$2;
+        this.data$2 = s + "";
+        mutFixup(this, 2, "text", old);
+    }
+})
 
 // Since we are createing all these classes here, does it make sense to
 // include the methods to properly instantiate those classes?  Perhaps.
