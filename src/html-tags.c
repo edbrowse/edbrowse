@@ -282,7 +282,7 @@ static const char *seek;
 // generate a tag using newTag, which does most of the work
 static void makeTag(const char *name, const char *lowname, bool slash, const char *mark)
 {
-	Tag *t, *c, *parent;
+	Tag *t, *parent;
 	struct opentag *k;
 
 	if(slash) {
@@ -308,13 +308,11 @@ static void makeTag(const char *name, const char *lowname, bool slash, const cha
 			goto skiplink;
 		t->parent = parent = stack ? stack->t : overnode;
 		if(parent) {
-			if(!(c =     parent->firstchild))
+			if(!parent->lastchild)
 				parent->firstchild = t;
-			else {
-				while (c->sibling)
-					c = c->sibling;
-				c->sibling = t;
-			}
+			else
+				parent->lastchild->sibling = t;
+			parent->lastchild = t;
 		}
 skiplink:
 
@@ -784,7 +782,12 @@ int htmlScanner(const char *htmltext, Tag *above, bool isgen)
 	atWall = false;
 	lasttext = 0;
 	start_idx = cw->numTags;
-	overnode = above;
+	if((overnode = above)) {
+		Tag *u = overnode->firstchild;
+		if(u)
+			for(; u->sibling; u = u->sibling) ;
+		overnode->lastchild = u;
+	}
 	htmlGenerated = isgen;
 // magic code to say this is xml
 	if(!strncmp(htmltext, "`~*xml}@;", 9)) {

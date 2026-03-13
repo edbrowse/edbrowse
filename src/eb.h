@@ -591,6 +591,7 @@ extern const struct tagInfo availableTags[];
 struct htmlTag {
 // maintain a tree structure
 	struct htmlTag *parent, *firstchild, *sibling;
+	struct htmlTag *lastchild; // only used in html parse
 	struct htmlTag *same; // same action
 	struct ebFrame *f0; // frame that owns this tag
 	struct ebFrame *f1; // subordinate frame if this is a <frame> tag
