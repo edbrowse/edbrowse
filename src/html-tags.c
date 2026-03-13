@@ -446,8 +446,11 @@ static void makeTag(const char *name, const char *lowname, bool slash, const cha
 
 	if(!slash) {
 		working_t = t = newTag(cf, name);
-// xml parse comes from the xhr system, so we need the javascript objects
-		if(cf->xmlMode) t->doorway = true;
+// xml parse comes from the xhr system, so we need the javascript objects -
+// unless you have faked it out with my xml code and this is the primary frame,
+// and then you don't need the js objects, and they only slow you down.
+		if(cf->xmlMode && cf != &cw->f0)
+			t->doorway = true;
 		if((t->action == TAGACT_HTML || t->action == TAGACT_BODY) && htmlGenerated)
 			goto skiplink;
 		t->parent = parent = stack ? stack->t : overnode;
