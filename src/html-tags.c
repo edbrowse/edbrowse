@@ -20,7 +20,7 @@ bool debugScanner;
 bool browseMail;
 
 // Start with the list of available tags, in alphabetical order.
-// First one has to be the unknown tag.
+// First one has to be the unknown tag. Second has to be <a>.
 // whitespace bits: open nl, open para, close nl, close para.
 // property bits: innerHTML,text is invisible, closing tag is insignificant.
 static const struct tagInfo availableTags[] = {
@@ -141,15 +141,21 @@ static const int availableTagCount = sizeof(availableTags) / sizeof(struct tagIn
 
 const struct tagInfo *name2tagInfo(const char *name)
 {
-// binary search, as you would imagine
-    int i, l = -1, r = availableTagCount, rc;
-    const struct tagInfo *ti;
-// so far the longest tag is 17
+// some bookmark files have thousands of tags;
+// here is an efficiency for <a>
+    if(name[1] == 0 && (name[0] == 'a' || name[0] == 'A'))
+        return availableTags + 1;
+
+// lower case, so far the longest tag is 17
     char namelow[20];
     int n = strlen(name) + 1;
     if(n > sizeof(namelow)) return 0;
    memcpy(namelow, name, n);
     caseShift(namelow, 'l');
+
+// binary search, as you would imagine
+    int i, l = -1, r = availableTagCount, rc;
+    const struct tagInfo *ti;
     while(r - l > 1) {
         i = (l + r) / 2;
         ti = availableTags + i;
