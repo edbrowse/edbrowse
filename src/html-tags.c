@@ -3751,37 +3751,47 @@ document.body.appendChild(p);
 <p>third paragraph
 </body>
 
-We could do this pointer magic only in the decorate phase,
-e.g. no need to do this when rendering the page for display,
-but those checks probably take as much time as actually doing it
-when the pointers don't change out from under us.
+We do this pointer magic only in the decorate phase,
+e.g. no need to do this when rendering the page for display.
+The liftup variable determines that.
 *********************************************************************/
 
 top:
-        next_child = child->sibling, child->sibling = 0;
-        if(next_child)
-            debugPrint(5, "%s lifts up %s", child->info->name, next_child ? next_child->info->name : "empty");
+        if(pc->liftup) {
+            next_child = child->sibling, child->sibling = 0;
+            if(next_child)
+                debugPrint(5, "%s lifts up %s", child->info->name, next_child ? next_child->info->name : "empty");
+        }
         traverseNode(child, pc);
         if(pc->abort) return;
+// If we aren't decorating, or if we are in xml mode,
+// then we can just move on. Business as usual.
+        if(!pc->liftup) continue;
         if(!child->parent)
             debugPrint(3, "stepping around missing script");
-        if(next_child) {
-            debugPrint(5, "after sibling %s %s above",
-            child->sibling ? child->sibling->info->name : "empty",
-            next_child->info->name);
+// If there were no more nodes at this level, and if more have been added,
+// We don't hvae to decorate those; they already have js objects.
+// Even if the script removes itself, or prior nodes, and there is no
+// next_child, then we are done.
+        if(!next_child) break;
+        debugPrint(5, "after sibling %s %s above",
+        child->sibling ? child->sibling->info->name : "empty",
+        next_child->info->name);
 // This line is if the script removed itself and that was the only node
-            if(!t->firstchild) {
-                t->firstchild = next_child;
-                child = next_child;
-                goto top;
-            }
-            for(u = t->firstchild; u->sibling; u = u->sibling)  ;
-            u->sibling = next_child;
-// move on to the next undecorated node
-            child = u;
-        } else if(!child->parent) {
-            break;
+        if(!t->firstchild) {
+            t->firstchild = next_child;
+            child = next_child;
+            goto top;
         }
+// the high runner case first - the tag is still there.
+// But if the script removed itself, we have to start at the beginning.
+        if(child->parent)
+            for(u = child; u->sibling; u = u->sibling)  ;
+        else
+            for(u = t->firstchild; u->sibling; u = u->sibling)  ;
+        u->sibling = next_child;
+// skip ahead to the next undecorated node
+        child = u;
     }
 
 // close tag </foo>
@@ -4495,6 +4505,7 @@ currentAudio = NULL;
 	currentStyle = NULL;
 	optg = NULL;
 	nzFree0(radioCheck);
+	pc.liftup = false;
 	pc.callback = prerenderNode;
 
 	debugPrint(4, "prerender starts at %d", start);
@@ -5027,6 +5038,7 @@ void decorate(int start, Tag *above)
 	pc.callback = jsNode;
 	pc.currentOG = 0;
 	pc.innerParent = above;
+	pc.liftup = ! cf->xmlMode;
 
 	debugPrint(4, "decorate starts at %d", start);
 	traverseAll(start, &pc);

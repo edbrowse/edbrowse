@@ -760,6 +760,7 @@ typedef void (*nodeFunction) (Tag * node, bool opentag, parseContext *pc);
 struct parseContext {
 	bool malformed; // tree is somehow malformed
 	bool abort; // traversal aborted, should never happen
+	bool liftup;
 	nodeFunction callback;
 	Tag *currentOG; // option group
 	Tag *innerParent; // which tag invoked innerHTML

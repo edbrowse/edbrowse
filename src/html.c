@@ -5796,6 +5796,7 @@ char *render(void)
 	inv2 = NULL;
 	currentForm = currentA = NULL;
 	struct parseContext pc;
+	pc.liftup = false;
 	pc.callback = renderNode;
 	traverseAll(0, &pc);
 	cf = save_cf;
