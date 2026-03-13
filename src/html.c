@@ -278,82 +278,82 @@ that's the way it goes.
 
 void jSyncup(bool fromtimer, const Tag *active)
 {
-	Tag *t;
-	int itype, j, cx;
-	char *value, *cxbuf;
+    Tag *t;
+    int itype, j, cx;
+    char *value, *cxbuf;
 
-	if (!cw->browseMode)
-		return;		// not necessary
-	if (cw->sank)
-		return;		/* already done */
-	cw->sank = true;
-	if (!isJSAlive)
-		return;
-	debugPrint(4, "jSyncup starts");
-	if (!fromtimer)
-		cw->nextrender = 0;
+    if (!cw->browseMode)
+        return;     // not necessary
+    if (cw->sank)
+        return;     // already done
+    cw->sank = true;
+    debugPrint(4, "jSyncup starts");
+    if (!fromtimer)
+        cw->nextrender = 0;
 
-	if(active)
-		set_property_object_doc(cf, "activeElement", active);
+    if(active)
+        set_property_object_doc(cf, "activeElement", active);
 
-	for (t = cw->inputlist; t; t = t->same) {
-		itype = t->itype;
-		if (itype <= INP_HIDDEN)
-			continue;
+    for (t = cw->inputlist; t; t = t->same) {
+        itype = t->itype;
+        if (itype <= INP_HIDDEN)
+            continue;
 
-		if (itype >= INP_RADIO) {
-			int checked = fieldIsChecked(t->seqno);
-			if (checked < 0)
-				continue;
-			t->checked = checked;
-			set_property_bool_t(t, "checked", checked);
-			continue;
-		}
+        if (itype >= INP_RADIO) {
+            int checked = fieldIsChecked(t->seqno);
+            if (checked < 0)
+                continue;
+            t->checked = checked;
+            set_property_bool_t(t, "checked", checked);
+            continue;
+        }
 
-		value = getFieldFromBuffer(t->seqno);
+        value = getFieldFromBuffer(t->seqno);
 /* If that line has been deleted from the user's buffer,
  * indicated by value = 0,
  * then don't do anything. */
-		if (!value)
-			continue;
+        if (!value)
+            continue;
 
-		if (itype == INP_SELECT) {
+        if (itype == INP_SELECT) {
 // set option.selected in js based on the option(s) in value
-			locateOptions(t, (value ? value : t->value), 0, 0, true);
-			run_function_bool_t(t, "eb$bso");
-			if (value) {
-				nzFree(t->value);
-				t->value = value;
-			}
-			continue;
-		}
+            locateOptions(t, (value ? value : t->value), 0, 0, true);
+            run_function_bool_t(t, "eb$bso");
+            if (value) {
+                nzFree(t->value);
+                t->value = value;
+            }
+            continue;
+        }
 
-		if (itype == INP_TA) {
-			if (!value) {
-				set_property_string_t(t, "value", 0);
-				continue;
-			}
-			if((cx = t->lic) >= 0) {
+        if (itype == INP_TA) {
+            if (!value) {
+                set_property_string_t(t, "value", 0);
+                continue;
+            }
+            if((cx = t->lic) >= 0) {
 // Now value is just <session 3>, which is meaningless.
-				nzFree(value);
-				if (!cx) continue;
+                nzFree(value);
+                if (!cx) continue;
+                if(allowJS && t->jslink) {
 // unfoldBuffer could fail if we have quit that session.
-				if (!unfoldBuffer(cx, false, &cxbuf, &j))
-					continue;
-				set_property_string_t(t, "value", cxbuf);
-				nzFree(cxbuf);
-				continue;
-			}
-		}
+                    if (!unfoldBuffer(cx, false, &cxbuf, &j))
+                        continue;
+                    set_property_string_t(t, "value", cxbuf);
+                    nzFree(cxbuf);
+                }
+                continue;
+            }
+        }
 
-		if (value) {
-			set_property_string_t(t, "value", value);
-			nzFree(t->value);
-			t->value = value;
-		}
-	}			// loop over tags
+        if (value) {
+            set_property_string_t(t, "value", value);
+            nzFree(t->value);
+            t->value = value;
+        }
+    } // loop over tags
 
-	debugPrint(4, "jSyncup ends");
+    debugPrint(4, "jSyncup ends");
 }
 
 void jClearSync(void)
