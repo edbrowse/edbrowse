@@ -5665,6 +5665,8 @@ case "textarea": c = new w.HTMLTextAreaElement; break;
 case "element": c = new w.Element; break;
 case "button": c = new w.HTMLButtonElement; break;
 case "svg": c = new w.SVGElement; break;
+case "article": case "section": c = new w.HTMLElement; break;
+case "time": c = new w.HTMLTimeElement; break;
 default:
 unknown = true;
 // alert("createElement default " + s);
