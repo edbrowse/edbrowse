@@ -3136,60 +3136,63 @@ eb$newLocation('r' + this.eb$ctx + this.href$val + '\n');
 // don't forget the w here, and in other vital places below.
 let urlp = w.URL.prototype;
 odp(urlp, "rebuild", {value:url_rebuild})
+// I've seen websites hijack properties that are getters and setters,
+// so we have to set configurable:true for this possibility,
+// here and throughout the rest of this function.
 odp(urlp, "protocol", {
   get: function() {return this.protocol$val; },
   set: function(v) { this.protocol$val = v; this.rebuild(); },
-enumerable:true});
+  enumerable:true, configurable:true});
 odp(urlp, "pathname", {
   get: function() {return this.pathname$val; },
   set: function(v) { this.pathname$val = v; this.rebuild(); },
-enumerable:true});
+  enumerable:true, configurable:true});
 odp(urlp, "search", {
   get: function() {return this.search$val; },
   set: function(v) { this.search$val = v; this.rebuild(); },
-enumerable:true});
+  enumerable:true, configurable:true});
 odp(urlp, "searchParams", {
   get: function() {return new w.URLSearchParams(this.search$val); },
 // is there a setter?
-enumerable:true});
+  enumerable:true, configurable:true});
 odp(urlp, "hash", {
   get: function() {return this.hash$val; },
   set: function(v) { if(typeof v != "string") return; if(!v.match(/^#/)) v = '#'+v; this.hash$val = v; this.rebuild(); },
-enumerable:true});
+  enumerable:true, configurable:true});
 odp(urlp, "port", {
   get: function() {return this.port$val; },
   set: function(v) { this.port$val = v;
-if(this.hostname$val.length)
-this.host$val = this.hostname$val + ":" + v;
-this.rebuild(); },
-enumerable:true});
+    if(this.hostname$val.length)
+      this.host$val = this.hostname$val + ":" + v;
+    this.rebuild(); },
+  enumerable:true, configurable:true});
 odp(urlp, "hostname", {
   get: function() {return this.hostname$val; },
   set: function(v) { this.hostname$val = v;
-if(this.port$val)
-this.host$val = v + ":" +  this.port$val;
-this.rebuild(); },
-enumerable:true});
+    if(this.port$val)
+      this.host$val = v + ":" +  this.port$val;
+    this.rebuild(); },
+  enumerable:true, configurable:true});
 odp(urlp, "host", {
   get: function() {return this.host$val; },
   set: function(v) { this.host$val = v;
-if(v.match(/:/)) {
-this.hostname$val = v.replace(/:.*/, "");
-this.port$val = v.replace(/^.*:/, "");
-} else {
-this.hostname$val = v;
-this.port$val = "";
-}
-this.rebuild(); },
-enumerable:true})
+    if(v.match(/:/)) {
+      this.hostname$val = v.replace(/:.*/, "");
+      this.port$val = v.replace(/^.*:/, "");
+    } else {
+      this.hostname$val = v;
+      this.port$val = "";
+    }
+    this.rebuild(); },
+  enumerable:true, configurable:true})
 odp(urlp, "href", {
   get: function() {return this.href$val; },
   set: url_hrefset,
-enumerable:true})
+  enumerable:true, configurable:true})
 odp(urlp, "toString", {enumerable:false,writable:true,configurable:true,value:function() {  return this.href$val}})
 // use toString in the following - in case they replace toString with their own function.
 // Don't just grab href$val, tempting as that may be.
-odp(urlp, "length", {enumerable:false,get:function() { return this.toString().length; }})
+odp(urlp, "length", {enumerable:false, configurable:true,get:function() { return this.toString().length; }})
 odp(urlp, "concat", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().concat(s); }})
 odp(urlp, "startsWith", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().startsWith(s); }})
 odp(urlp, "endsWith", {enumerable:false,writable:true,configurable:true,value:function(s) {  return this.toString().endsWith(s); }})
@@ -3356,12 +3359,14 @@ nodep.removeChild$nm = function(c) {
 odp(nodep, "firstChild", {
 get: function() {
 return (this.childNodes && this.childNodes.length) ?
-this.childNodes[0] : null; } })
+this.childNodes[0] : null; },
+configurable:true})
 
 odp(nodep, "lastChild", {
 get: function() {
 return (this.childNodes && this.childNodes.length) ?
-this.childNodes[this.childNodes.length-1] : null} })
+this.childNodes[this.childNodes.length-1] : null},
+configurable:true})
 
 // helper functions to get the next or previous sibling
 function getSibling (obj,direction) {
@@ -4058,8 +4063,9 @@ if (this.nodeType == 4) this.text = h }})
 // spec says there is a difference between textContent and innerText,
 // but I don't think it's significant for edbrowse.
 odp(helemp, "innerText", {
-get: function() { return textUnder(this, 0); },
-set: function(s) { return newTextUnder(this, s, 0); }});
+    get: function() { return textUnder(this, 0); },
+    set: function(s) { return newTextUnder(this, s, 0); },
+    configurable:true});
 
 // style object is on demand
 odp( helemp, "style", { get: function(){ if(!this.style$2) {

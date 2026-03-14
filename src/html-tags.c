@@ -155,8 +155,9 @@ const struct tagInfo *name2tagInfo(const char *name)
    memcpy(namelow, name, n);
     caseShift(namelow, 'l');
 
-// binary search, as you would imagine
-    int i, l = -1, r = availableTagCount, rc;
+// Binary search, as you would imagine. Since we already checked for <a>,
+// we can put the left mark there.
+    int i, l = 1, r = availableTagCount, rc;
     const struct tagInfo *ti;
     while(r - l > 1) {
         i = (l + r) / 2;
