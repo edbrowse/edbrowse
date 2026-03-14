@@ -4875,6 +4875,9 @@ nocolorend:
 			if(action != TAGACT_TEXT)
 				t->disval =
 				    run_function_onearg_win(cf, "eb$visible", t);
+			if(t->disval)
+				debugPrint(4, "tag %s.%d visibility %d",
+				t->info->name, t->seqno, t->disval);
 // If things appear upon hover, they do this sometimes if your mouse
 // is anywhere in that section, so maybe we should see them.
 // Also if color is transparent then it surely changes to a color
