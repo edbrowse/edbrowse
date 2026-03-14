@@ -26,6 +26,7 @@ bool browseMail;
 static const struct tagInfo availableTags[] = {
 	{"0unknown", "an html entity", TAGACT_UNKNOWN, 5, 1},
 	{"a", "an anchor", TAGACT_A, 0, 1},
+	{"article", "an article", TAGACT_HE, 10, 1},
 	{"abbr", "an abbreviation", TAGACT_JS, 0, 0},
 	{"address", "an address block", TAGACT_NOP, 1, 0},
 	{"area", "an image map area", TAGACT_AREA, 0, 4},
@@ -108,7 +109,7 @@ static const struct tagInfo availableTags[] = {
 	{"s", "strikethrough text", TAGACT_S, 0, 0},
 	{"samp", "a block of sample text", TAGACT_NOP, 0, 0},
 	{"script", "a script", TAGACT_SCRIPT, 0, 3},
-	{"section", "an html section", TAGACT_SPAN, 0, 1},
+	{"section", "an html section", TAGACT_HE, 10, 1},
 	{"select", "an option list", TAGACT_SELECT, 0, 0},
 	{"source", "source of audio or video", TAGACT_SOURCE, 0, 4},
 	{"span", "an html span", TAGACT_SPAN, 0, 1},
@@ -122,12 +123,13 @@ static const struct tagInfo availableTags[] = {
 	{"table", "a table", TAGACT_TABLE, 10, 1},
 	{"tbody", "a table body", TAGACT_TBODY, 0, 1},
 	{"td", "a table entry", TAGACT_TD, 0, 1},
-	{"template", "a template", TAGACT_TEMPLATE, 0, 2},
+	{"template", "a template", TAGACT_TEMPLATE, 0, 0},
 	{"text", "a text section", TAGACT_TEXT, 0, 4},
 	{"textarea", "an input text area", TAGACT_TA, 0, 0},
 	{"tfoot", "a table foot", TAGACT_TFOOT, 0, 1},
 	{"th", "a table heading", TAGACT_TD, 0, 1},
 	{"thead", "a table head", TAGACT_THEAD, 0, 1},
+	{"time", "the title", TAGACT_TIME, 0, 0},
 	{"title", "the title", TAGACT_TITLE, 0, 0},
 	{"tr", "a table row", TAGACT_TR, 5, 1},
 	{"tt", "teletype", TAGACT_NOP, 0, 0},
@@ -4973,6 +4975,14 @@ get_property_bool_t(t, "connectedCallback$pending")) {
 		domLink(t, "HTMLBaseElement", 0, 0, 4);
 		if(t->href && *t->href)
 			set_property_string_win(cf, "eb$base", t->href);
+		break;
+
+	case TAGACT_TIME:
+		domLink(t, "HTMLTimeElement", 0, 0, 0);
+		break;
+
+	case TAGACT_HE:
+		domLink(t, "HTMLElement", 0, 0, 0);
 		break;
 
 	default:

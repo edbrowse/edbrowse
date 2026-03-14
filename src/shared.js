@@ -5537,6 +5537,11 @@ else
 list.splice(idx, 0, r);
 }
 
+swp("HTMLTimeElement", function(){})
+swpp("HTMLTimeElement", w.HTMLElement)
+let timep = w.HTMLTimeElement.prototype;
+odp(timep, "dateTime", {get: function(){return this.getAttribute("datetime")}})
+
 swp("HTMLUnknownElement", function(){})
 swpp("HTMLUnknownElement", w.HTMLElement)
 
