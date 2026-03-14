@@ -50,7 +50,7 @@ try { // protect
  let udef = "undefined";
 function fail(n) { alert("failed "+n); }
 
-let popwin = new Window("http://www.moreAndMoreCrap.com/BuyNow.html", "obnoxious_ad", "width=72");
+let popwin = window.open("http://www.moreAndMoreCrap.com/BuyNow.html", "obnoxious_ad");
 
 var memhog = new Array();
 
@@ -480,7 +480,12 @@ class PopupInfo extends HTMLElement {
 
 function customTest1() {
 // create a new tag see if it calls the constructor.
-function jk_construct() { this.found = 4321}
+class jk_construct extends HTMLElement {
+constructor() {
+super();
+ this.found = 4321
+}
+}
 jk_construct.prototype.more = 5432;
 const ce = customElements; // shorthand
 ce.define("j-k", jk_construct);
