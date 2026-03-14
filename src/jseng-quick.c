@@ -3957,8 +3957,11 @@ static void createJSContext_0(Frame *f)
 	cx = f->cx = JS_NewContext(jsrt);
 	if (!cx)
 		return;
-	debugPrint(3, "create js context %d pointer %p",
-	f->gsn, cx);
+	if(debugLevel == 3)
+		debugPrint(3, "create js context %d", f->gsn);
+	if(debugLevel >= 4)
+		debugPrint(4, "create js context %d pointer %p",
+		f->gsn, cx);
 // the global object, which will become window,
 // and the document object.
 	f->winobj = allocMem(sizeof(JSValue));

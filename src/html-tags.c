@@ -26,10 +26,10 @@ bool browseMail;
 static const struct tagInfo availableTags[] = {
 	{"0unknown", "an html entity", TAGACT_UNKNOWN, 5, 1},
 	{"a", "an anchor", TAGACT_A, 0, 1},
-	{"article", "an article", TAGACT_HE, 10, 1},
 	{"abbr", "an abbreviation", TAGACT_JS, 0, 0},
 	{"address", "an address block", TAGACT_NOP, 1, 0},
 	{"area", "an image map area", TAGACT_AREA, 0, 4},
+	{"article", "an article", TAGACT_HE, 10, 1},
 	{"audio", "audio passage", TAGACT_MUSIC, 0, 0},
 	{"b", "bold text", TAGACT_B, 0, 0},
 	{"base", "base reference for relative URLs", TAGACT_BASE, 0, 4},
@@ -262,91 +262,98 @@ static struct opentag *balance(const char *name)
 }
 
 static const struct specialtag {
-	const char *name;
-	bool autoclose, nestable, inhead;
-	const char *second;
+    const char *name;
+    bool autoclose, nestable, inhead;
+    const char *second;
 	} specialtags[] = {
-// special code to allow nesting of <body> which should never happen
-{innerhtmltag,0,1, 0, 0},
-{innerbodytag,0,1, 0, 0},
-{"script", 0, 0, 1, 0},
-{"noscript", 0, 0, 1, 0},
-{"comment", 0, 0, 1, 0},
-{"style", 0, 0, 1, 0},
-{"source", 1, 0, 0, 0},
-{"meta", 1, 0, 1, 0},
-{"bgsound", 1, 0, 1, 0},
-{"title", 0, 0, 1, 0},
-{"base", 1, 0, 1, 0},
-{"link", 1, 0, 1, 0},
+    {"a", 0, 0, 2, 0},
+    {"area", 1, 0, 0, 0},
+    {"b",0,1, 0, 0},
+    {"base", 1, 0, 1, 0},
+    {"bgsound", 1, 0, 1, 0},
+    {"blockquote", 0, 1, 0, 0},
 /*********************************************************************
 The next line allows <br> in the head section, and that is a kludge,
 because of the way I crank out an email in html.
 I want to put a header in front, and allow their html to run,
 and they might start with a head section, so I don't want to disrupt that.
-Any tag I include in my header has to be allowed in <head>,
+Any tag I include in my email header has to be allowed in <head>,
 so it doesn't push us over into <body>, whence their <head> would be invalid.
 I also use <pre> and <p> so that has to be allowed.
 And even <a> for the attachments.
 But these only live in <head> if browseMail is true.
 *********************************************************************/
-{"br", 1, 0, 2, 0},
-{"pre", 0, 0, 2, 0},
-{"a", 0, 0, 2, 0},
-{"p",0,0, 2, "blockquote"},
-{"hr", 1, 0, 0, 0},
-{"blockquote", 0, 1, 0, 0},
-{"img", 1, 0, 0, 0},
-{"area", 1, 0, 0, 0},
-{"image", 1, 0, 0, 0},
-{"input", 1, 0, 0, 0},
-{"ul",0,1, 0, 0},
-{"ol",0,1, 0, 0},
-{"li",0,0, 0, "ul,ol"},
-{"dl",0,1, 0, 0},
-{"dt",0,0, 0, "dl"},
-{"table",0,1, 0, 0},
-{"td",0,0, 0, "table"},
-{"th",0,0, 0, "table"},
-{"tr",0,0, 0, "table"},
-{"thead",0,0, 0, "table"},
-{"tbody",0,0, 0, "table"},
-{"tfoot",0,0, 0, "table"},
-{"div",0,1, 0, 0},
-{"center",0,1, 0, 0},
-{"font",0,1, 0, 0},
-// relatives of font
-{"b",0,1, 0, 0},
-{"i",0,1, 0, 0},
-{"u",0,1, 0, 0},
-{"strong",0,1, 0, 0},
-{"em",0,1, 0, 0},
+    {"br", 1, 0, 2, 0},
+    {"center",0,1, 0, 0},
+    {"comment", 0, 0, 1, 0},
+    {"div",0,1, 0, 0},
+    {"dl",0,1, 0, 0},
+    {"dt",0,0, 0, "dl"},
+    {"em",0,1, 0, 0},
+    {"font",0,1, 0, 0},
+    {"hr", 1, 0, 0, 0},
+    {"i",0,1, 0, 0},
+    {"image", 1, 0, 0, 0},
+    {"img", 1, 0, 0, 0},
+// special code to allow nesting of <body> which should never happen but it does
+    {innerbodytag,0,1, 0, 0},
+    {innerhtmltag,0,1, 0, 0},
+    {"input", 1, 0, 0, 0},
+    {"li",0,0, 0, "ul,ol"},
+    {"link", 1, 0, 1, 0},
+    {"meta", 1, 0, 1, 0},
+    {"noscript", 0, 0, 1, 0},
+    {"ol",0,1, 0, 0},
+    {"p",0,0, 2, "blockquote"},
+    {"pre", 0, 0, 2, 0},
+    {"script", 0, 0, 1, 0},
+    {"source", 1, 0, 0, 0},
 // youtube has <span> in its head section. Don't know why.
-{"span",0,1, 1, 0},
-{"sub",0,1, 0, 0},
-{"sup",0,1, 0, 0},
-{0, 0,0,0, 0},
+    {"span",0,1, 1, 0},
+    {"strong",0,1, 0, 0},
+    {"style", 0, 0, 1, 0},
+    {"sub",0,1, 0, 0},
+    {"sup",0,1, 0, 0},
+    {"table",0,1, 0, 0},
+    {"tbody",0,0, 0, "table"},
+    {"td",0,0, 0, "table"},
+    {"tfoot",0,0, 0, "table"},
+    {"th",0,0, 0, "table"},
+    {"thead",0,0, 0, "table"},
+    {"title", 0, 0, 1, 0},
+    {"tr",0,0, 0, "table"},
+    {"u",0,1, 0, 0},
+    {"ul",0,1, 0, 0},
 };
+static const int specialtagCount = sizeof(specialtags) / sizeof(struct specialtag);
+
+static const struct specialtag *name2specialtag(const char *name)
+{
+    int i, l = -1, r = specialtagCount, rc;
+    const struct specialtag *y;
+    while(r - l > 1) {
+        i = (l + r) / 2;
+        y = specialtags + i;
+        rc = strcmp(y->name, name);
+        if(!rc) return y;
+        if(rc < 0)l = i; else r = i;
+    }
+    return 0;
+}
 
 static int isAutoclose(const char *name)
 {
-	const struct specialtag *y;
-	for(y = specialtags; y->name; ++y)
-		if(stringEqual(name, y->name))
-			return y->autoclose;
-	return false;
+    const struct specialtag *y = name2specialtag(name);
+    return y ? y->autoclose: false;
 }
 
 static int isInhead(const char *name)
 {
-	const struct specialtag *y;
-	for(y = specialtags; y->name; ++y)
-		if(stringEqual(name, y->name)) {
-			uchar c = y->inhead;
-			if(c == 2 && !browseMail) c = 0;
-			return c;
-		}
-	return false;
+    const struct specialtag *y = name2specialtag(name);
+    if(!y) return false;
+    uchar c = y->inhead;
+    if(c == 2 && !browseMail) c = 0;
+    return c;
 }
 
 static int isNextclose(const char *name)
@@ -390,21 +397,19 @@ static int isWall(const char *name)
 
 static int isNonest(const char *name, const struct opentag *k)
 {
-	const struct specialtag *y;
-	const char *s, *t;
-	char watch[MAXTAGNAME];
-	const struct opentag *l;
+    const struct specialtag *y = name2specialtag(name);
+    const char *s, *t;
+    char watch[MAXTAGNAME];
+    const struct opentag *l;
 
-	for(y = specialtags; y->name; ++y)
-		if(stringEqual(name, y->name)) break;
-	if(!y->name) {
+    if(!y) {
 // Not on our special list, do we know this tag at all?
 // Unknown tags will be nestable. Consistent with xml.
-            const struct tagInfo *ti = name2tagInfo(name);
-            return !!ti;
-	}
+        const struct tagInfo *ti = name2tagInfo(name);
+        return !!ti;
+    }
 
-	if(y->nestable) return false;
+    if(y->nestable) return false;
 
 // td can be inside td, if there is table in between,
 // second indicates this in-between tag
