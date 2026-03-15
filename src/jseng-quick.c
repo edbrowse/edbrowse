@@ -940,7 +940,7 @@ void run_ontimer(const Frame *f, const char *backlink)
 		debugPrint(3, "could not find timer backlink %s in context %d", backlink, f->gsn);
 		return;
 	}
-	run_event(cx, to, "ontimer");
+	run_function_bool(cx, to, "ontimer");
 	JS_Release(cx, to);
 }
 
