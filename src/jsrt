@@ -32,7 +32,9 @@ If javascript fails, I catch the error and print the stack.
 Fix the bug and rerun, until all tests pass.
 Warning: these tests are in no particular order, except if you rearrange
 them they will fail, because some depend on variables that were
-set by others.  Yeah, it's ugly. */
+set by others. */
+
+isedbrowse = navigator.userAgent.substr(0,8) == "edbrowse";
 
 // make the class Circle - which apparently doesn't work in a try block.
 function Circle()
@@ -843,7 +845,7 @@ new_path = new_path.replace(/middle/, "end");
 if(uo != new_path) fail(138);
 
 if(document.readyState != "interactive") fail(140);
-document.addEventListener("readystatechange", function(){alert(document.readyState)});
+document.addEventListener("readystatechange", function(){if(isedbrowse) alert(document.readyState)});
 if(!document.title.match(/regression/)) fail(141);
 if(document.head.id != "boom") fail(142);
 if(document.getElementsByTagName("head")[0].id != "boom") fail(143);
@@ -898,7 +900,7 @@ olist.add(oo);
 }
 
 function bodyLoad() {
-alert("body loading");
+if(isedbrowse) alert("body loading");
 onlv++;
 var e = document.createEvent();
 e.type = "snork";
@@ -952,7 +954,7 @@ if(onlv != 93) fail(1000);
 
 setTimeout("joker()", 10000);
 function joker() {
-alert("10 seconds have passed!");
+if(isedbrowse) alert("10 seconds have passed!");
 var j = document.createTextNode(" And the timer text");
 document.body.appendChild(j);
 }
@@ -1300,7 +1302,7 @@ o.type = "checkbox";
 if(o.value != "on") fail(259);
 o = document.createElement("button");
 if(o.type != "submit") fail(260);
-alert("relative");
+if(isedbrowse) alert("relative");
 }
 relative();
 
