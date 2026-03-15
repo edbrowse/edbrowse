@@ -3746,7 +3746,7 @@ static unsigned andLookup(char *entity, char *v)
 static void traverseNode(Tag *t, struct parseContext *pc)
 {
     const nodeFunction f = pc->callback;
-    Tag *child, *next_child, *u;
+    Tag *child, *next_child = NULL, *u;
 
     if (t->visited) {
         pc->malformed = true;
@@ -3805,7 +3805,7 @@ top:
         if(!child->parent)
             debugPrint(3, "stepping around missing script");
 // If there were no more nodes at this level, and if more have been added,
-// We don't hvae to decorate those; they already have js objects.
+// We don't have to decorate those; they already have js objects.
 // Even if the script removes itself, or prior nodes, and there is no
 // next_child, then we are done.
         if(!next_child) break;
