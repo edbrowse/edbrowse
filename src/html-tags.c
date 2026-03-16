@@ -359,38 +359,55 @@ static int isInhead(const char *name)
 
 static int isNextclose(const char *name)
 {
-// there are so few of these; may as well just make a list
-	static const char * const list[] = {"title", "option", 0};
-	return stringInList(list, name) >= 0;
+// In this function and others, I'll retain the list for clarity and
+// documentation, but there is often a more efficient way.
+//  static const char * const list[] = {"title", "option", 0};
+    if(!strcmp(name, "option")) return true;
+    if(!strcmp(name, "title")) return true;
+    return false;
 }
 
 static int isCrossclose(const char *name)
 {
-	static const char * const list[] = {"h1","h2","h3","h4","h5","h6","p",0};
-	return stringInList(list, name) >= 0;
+//  static const char * const list[] = {"h1","h2","h3","h4","h5","h6","p",0};
+    if(name[0] == 'h' && isdigit(name[1]) && !name[2]) return true;
+    if(name[0] == 'p' && !name[1]) return true;
+    return false;
 }
 
 static int isCrossclose2(const char *name)
 {
-	static const char * const list[] = {"h1","h2","h3","h4","h5","h6","table","ul","ol","dl","hr","div","form",0};
-	return stringInList(list, name) >= 0;
+//  static const char * const list[] = {"h1","h2","h3","h4","h5","h6","table","ul","ol","dl","hr","div","form",0};
+    if(name[0] == 'h' && (isdigit(name[1]) || name[1] == 'r') && !name[2]) return true;
+    if(name[1] == 'l' && !name[2] && (name[0] == 'o' || name[0] == 'u' || name[0] == 'd')) return true;
+    if(!strcmp(name, "div")) return true;
+    if(!strcmp(name, "form")) return true;
+    if(!strcmp(name, "table")) return true;
+    return false;
 }
 
 static int isTableSection(const char *name)
 {
-	static const char * const list[] = {"thead","tbody","tfoot",0};
-	return stringInList(list, name) >= 0;
+//  static const char * const list[] = {"thead","tbody","tfoot",0};
+    if(name[0] != 't') return false;
+    if(!name[2]) return false;
+    if(!strcmp(name, "thead")) return true;
+    if(!strcmp(name, "tbody")) return true;
+    if(!strcmp(name, "tfoot")) return true;
+    return false;
 }
 
 static int isCell(const char *name)
 {
-	static const char * const list[] = {"th","td",0};
-	return stringInList(list, name) >= 0;
+//  static const char * const list[] = {"th","td",0};
+    if(name[0] == 't' && !name[2] && (name[1] == 'h' || name[1] == 'd')) return true;
+    return false;
 }
 
 // space after these tags isn't significant
 static int isWall(const char *name)
 {
+// only way to improve on this might be binary search
 	static const char * const list[] = {"body","innerbody","innerhtml","title","h1","h2","h3","h4","h5","h6","p","table","thead","tbody","tfoot","tr","td","th","ul","ol","dl","li","dt","div","br","hr","iframe","option","optgroup","form",0};
 	return stringInList(list, name) >= 0;
 }
