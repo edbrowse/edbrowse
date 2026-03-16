@@ -264,15 +264,18 @@ static struct opentag *balance(const char *name)
 
 static const struct specialtag {
     const char *name;
-    bool autoclose, nestable, inhead;
+    bool autoclose, nestable;
+    uchar inhead;
+    bool iswall;
     const char *second;
 	} specialtags[] = {
-    {"a", 0, 0, 2, 0},
-    {"area", 1, 0, 0, 0},
-    {"b",0,1, 0, 0},
-    {"base", 1, 0, 1, 0},
-    {"bgsound", 1, 0, 1, 0},
-    {"blockquote", 0, 1, 0, 0},
+    {"a", 0, 0, 2, 0, 0},
+    {"area", 1, 0, 0, 0, 0},
+    {"b",0,1, 0, 0, 0},
+    {"base", 1, 0, 1, 0, 0},
+    {"bgsound", 1, 0, 1, 0, 0},
+    {"blockquote", 0, 1, 0, 0, 0},
+    {"body", 0, 0, 0, 1, 0},
 /*********************************************************************
 The next line allows <br> in the head section, and that is a kludge,
 because of the way I crank out an email in html.
@@ -284,47 +287,57 @@ I also use <pre> and <p> so that has to be allowed.
 And even <a> for the attachments.
 But these only live in <head> if browseMail is true.
 *********************************************************************/
-    {"br", 1, 0, 2, 0},
-    {"center",0,1, 0, 0},
-    {"comment", 0, 0, 1, 0},
-    {"div",0,1, 0, 0},
-    {"dl",0,1, 0, 0},
-    {"dt",0,0, 0, "dl"},
-    {"em",0,1, 0, 0},
-    {"font",0,1, 0, 0},
-    {"hr", 1, 0, 0, 0},
-    {"i",0,1, 0, 0},
-    {"image", 1, 0, 0, 0},
-    {"img", 1, 0, 0, 0},
+    {"br", 1, 0, 2, 1, 0},
+    {"center",0,1, 0, 0, 0},
+    {"comment", 0, 0, 1, 0, 0},
+    {"div",0,1, 0, 1, 0},
+    {"dl",0,1, 0, 1, 0},
+    {"dt",0,0, 0, 1, "dl"},
+    {"em",0,1, 0, 0, 0},
+    {"font",0,1, 0, 0, 0},
+    {"form", 0, 0, 0, 1, 0},
+    {"h1",0,0, 0, 1, 0},
+    {"h2",0,0, 0, 1, 0},
+    {"h3",0,0, 0, 1, 0},
+    {"h4",0,0, 0, 1, 0},
+    {"h5",0,0, 0, 1, 0},
+    {"h6",0,0, 0, 1, 0},
+    {"hr", 1, 0, 0, 1, 0},
+    {"i",0,1, 0, 0, 0},
+    {"iframe", 0, 0, 0, 1, 0},
+    {"image", 1, 0, 0, 0, 0},
+    {"img", 1, 0, 0, 0, 0},
 // special code to allow nesting of <body> which should never happen but it does
-    {innerbodytag,0,1, 0, 0},
-    {innerhtmltag,0,1, 0, 0},
-    {"input", 1, 0, 0, 0},
-    {"li",0,0, 0, "ul,ol"},
-    {"link", 1, 0, 1, 0},
-    {"meta", 1, 0, 1, 0},
-    {"noscript", 0, 0, 1, 0},
-    {"ol",0,1, 0, 0},
-    {"p",0,0, 2, "blockquote"},
-    {"pre", 0, 0, 2, 0},
-    {"script", 0, 0, 1, 0},
-    {"source", 1, 0, 0, 0},
+    {innerbodytag,0,1, 0, 1, 0},
+    {innerhtmltag,0,1, 0, 1, 0},
+    {"input", 1, 0, 0, 0, 0},
+    {"li",0,0, 0, 1, "ul,ol"},
+    {"link", 1, 0, 1, 0, 0},
+    {"meta", 1, 0, 1, 0, 0},
+    {"noscript", 0, 0, 1, 0, 0},
+    {"ol",0,1, 0, 1, 0},
+    {"optgroup", 0, 0, 0, 1, 0},
+    {"option", 0, 0, 0, 1, 0},
+    {"p",0,0, 2, 1, "blockquote"},
+    {"pre", 0, 0, 2, 0, 0},
+    {"script", 0, 0, 1, 0, 0},
+    {"source", 1, 0, 0, 0, 0},
 // youtube has <span> in its head section. Don't know why.
-    {"span",0,1, 1, 0},
-    {"strong",0,1, 0, 0},
-    {"style", 0, 0, 1, 0},
-    {"sub",0,1, 0, 0},
-    {"sup",0,1, 0, 0},
-    {"table",0,1, 0, 0},
-    {"tbody",0,0, 0, "table"},
-    {"td",0,0, 0, "table"},
-    {"tfoot",0,0, 0, "table"},
-    {"th",0,0, 0, "table"},
-    {"thead",0,0, 0, "table"},
-    {"title", 0, 0, 1, 0},
-    {"tr",0,0, 0, "table"},
-    {"u",0,1, 0, 0},
-    {"ul",0,1, 0, 0},
+    {"span",0,1, 1, 0, 0},
+    {"strong",0,1, 0, 0, 0},
+    {"style", 0, 0, 1, 0, 0},
+    {"sub",0,1, 0, 0, 0},
+    {"sup",0,1, 0, 0, 0},
+    {"table",0,1, 0, 1, 0},
+    {"tbody",0,0, 0, 1, "table"},
+    {"td",0,0, 0, 1, "table"},
+    {"tfoot",0,0, 0, 1, "table"},
+    {"th",0,0, 0, 1, "table"},
+    {"thead",0,0, 0, 1, "table"},
+    {"title", 0, 0, 1, 1, 0},
+    {"tr",0,0, 1, 0, "table"},
+    {"u",0,1, 0, 0, 0},
+    {"ul",0,1, 0, 1, 0},
 };
 static const int specialtagCount = sizeof(specialtags) / sizeof(struct specialtag);
 
@@ -407,9 +420,8 @@ static int isCell(const char *name)
 // space after these tags isn't significant
 static int isWall(const char *name)
 {
-// only way to improve on this might be binary search
-	static const char * const list[] = {"body","innerbody","innerhtml","title","h1","h2","h3","h4","h5","h6","p","table","thead","tbody","tfoot","tr","td","th","ul","ol","dl","li","dt","div","br","hr","iframe","option","optgroup","form",0};
-	return stringInList(list, name) >= 0;
+    const struct specialtag *y = name2specialtag(name);
+    return y ? y->iswall : false;
 }
 
 
