@@ -8568,7 +8568,7 @@ past_js:
 // to access local files
 // but not for a fragment
 			if (!isURL(h) && *h != '#')
-				unpercentString(h);
+				unpercentString2(h);
 		}
 	}
 
