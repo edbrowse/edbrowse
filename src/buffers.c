@@ -1978,7 +1978,7 @@ uchar prebrowse, const Tag *gotag)
 		}
 		fileprot = true;
 		changeFileName = cloneString(filename);
-		unpercentString(changeFileName);
+		unpercentString2(changeFileName);
 		if (stringEqual(filename, changeFileName)) {
 			free(changeFileName);
 			changeFileName = 0;

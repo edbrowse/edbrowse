@@ -131,7 +131,7 @@ void unpercentString(char *s)
 }
 
 // like the above but without + processing
-static void unpercentString2(char *s)
+void unpercentString2(char *s)
 {
 	char c, *u, *w;
 	u = w = s;

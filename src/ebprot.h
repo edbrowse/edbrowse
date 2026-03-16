@@ -397,6 +397,7 @@ int eb_system(const char *cmd, bool print_on_success);
 // sourcefile=isup.c
 void unpercentURL(char *url) ;
 void unpercentString(char *s) ;
+void unpercentString2(char *s) ;
 char *percentURL(const char *start, const char *end);
 bool looksPercented(const char *start, const char *end);
 char *percentString(const char *start, const char *end);
