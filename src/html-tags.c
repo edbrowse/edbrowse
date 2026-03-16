@@ -418,7 +418,7 @@ static int isCell(const char *name)
 }
 
 // space after these tags isn't significant
-static int isWall(const char *name)
+static bool isWall(const char *name)
 {
     const struct specialtag *y = name2specialtag(name);
     return y ? y->iswall : false;
@@ -431,14 +431,12 @@ static int isNonest(const char *name, const struct opentag *k)
     const char *s, *t;
     char watch[MAXTAGNAME];
     const struct opentag *l;
-
     if(!y) {
 // Not on our special list, do we know this tag at all?
 // Unknown tags will be nestable. Consistent with xml.
         const struct tagInfo *ti = name2tagInfo(name);
         return !!ti;
     }
-
     if(y->nestable) return false;
 
 // td can be inside td, if there is table in between,

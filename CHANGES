@@ -6,6 +6,9 @@ Fix some makefile issues, and warnings across different compilers.
 
 Support custom Elements and the CustomElementRegistry.
 
+Make html parsing more efficient, so it isn't quadratic in a file
+containing thousands of hyperlinks, which is not unusual.
+
 3.8.16
 
 Use strict js in shared.js and startwindow.js
