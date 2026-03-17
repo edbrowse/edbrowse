@@ -8553,7 +8553,7 @@ past_g_file:
 
 			if (jsh) {
 /* actually running the url, not passing it to http etc, need to unescape */
-				unpercentString(h);
+				unpercentString2(h);
 				cf = tag->f0;
 				jsRunScriptWin(h, "a.href", 1);
 				jSideEffects();
