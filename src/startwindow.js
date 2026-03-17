@@ -1024,9 +1024,14 @@ MutationObserver.prototype.disconnect = function() {
     }
 }
 MutationObserver.prototype.observe = function(target, cfg) {
-    this.observe$target(target, cfg);
-    if(cfg.subtree)
-        this.observe$subtree(target, cfg);
+    /* Not sure if this ever happens in the wild but protect against someone
+        accidentally externally altering the config for an observed target as
+        the config is passed in by reference.
+    */
+    const cfg_copy = structuredClone(cfg);
+    this.observe$target(target, cfg_copy);
+    if(cfg_copy.subtree)
+        this.observe$subtree(target, cfg_copy);
 }
 MutationObserver.prototype.observe$target = function (target, cfg, dbg=alert3) {
     // May have other valid targets so don't disconnect
