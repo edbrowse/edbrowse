@@ -2961,6 +2961,57 @@ if(s.dom$class == "HTMLTableRowElement")
 t.rows.push(s), s.rowIndex = n++, s.sectionRowIndex = j;
 }
 
+function formReindex(f) {
+// clear out what we had; we are rebuilding from scratch
+if(!f.elements) f.elements = [];
+else f.elements.length = 0;
+const el = f.elements; // shorthand
+let name;
+for(name in f) {
+if(!f.hasOwnProperty(name)) continue;
+if(typeof f[name] != "object") continue;
+if(name == "childNodes") continue;
+if(name == "elements") continue;
+// special code to detect and delete an array of radio buttons.
+if(Array.isArray(f[name]) && (f[name].length == 0 ||
+f[name][0].form == f)) {
+for(let v of f[name]) delete v.form;
+delete f[name];
+delete el[name];
+continue;
+}
+if(f[name].form != f) continue;
+let inclass = f[name].dom$class;
+if(!inclass) continue;
+if(inclass != "HTMLInputElement" && inclass != "HTMLTextAreaElement" && inclass != "HTMLSelectElement" && inclass != "HTMLButtonElement") continue;
+// we may be deleting this just to put it back,
+// but that's how this function goes.
+delete f[name].form;
+delete f[name];
+delete el[name];
+}
+const ilist = f.querySelectorAll("input,select,textarea,button");
+for(let i of ilist) {
+el.push(i);
+i.form = f;
+name = i.name;
+if(!name) continue;
+if(name in f) {
+// already there
+if(!f.hasOwnProperty(name)) continue; // it's implicit, don't displace
+if(Array.isArray(f[name]) && i.type == "radio") f[name].push(i);
+continue;
+}
+// New input tag, create the link, or the array
+// if it's an array of radio buttons.
+if(i.type == "radio") {
+f[name] = el[name] = [i];
+continue;
+}
+f[name] = el[name] = i;
+}
+}
+
 /*********************************************************************
 We can define (build) the various classes for the running window here,
 if we are always careful to use the window parameter w in everything we do,
