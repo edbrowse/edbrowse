@@ -701,16 +701,6 @@ void delete_property_doc(const Frame *f, const char *name)
 // The instantiate functions take an optional parent and name,
 // to hand the instantiated thing on, if you wish.
 // This is part convenience and part legacy.
-static JSValue instantiate_array(JSContext *cx, JSValueConst parent, const char *name)
-{
-    debugPrint(5, "new Array");
-    JSValue a = JS_NewArray(cx);
-    grab(a);
-    if(name)
-        set_property_object(cx, parent, name, a);
-    return a;
-}
-
 static JSValue instantiate_hidden_array(JSContext *cx, JSValueConst parent, const char *name)
 {
     debugPrint(5, "new Array");
@@ -4318,10 +4308,8 @@ int extra) // bits: radio, window, document, unknown
 // some strings from the html tag
     const char *symname = t->name;
     const char *idname = t->id;
-    const char *membername = 0;	// usually symname
     const char *stylestring = attribVal(t, "style");
     JSValue cn; // child nodes
-    JSValue ra = JS_UNDEFINED; // radio array, if we even need it
     	static const char * const z_list[] = {
         "Header", "Footer", "Title", "Datalist",
         "tHead", "tBody", "tFoot", "HTML", 0};
@@ -4349,10 +4337,6 @@ What? We already have this name, under this object or form.
 This could be a duplicate name.
 Yes, that really happens.
 Link to the first tag having this name only.
-Or - it could be a duplicate name because multiple radio buttons
-all share the same name.
-The first time we create the array,
-and thereafter we just link under that array.
 Or - and this really does happen -
 an input tag could have the name action, colliding with form.action.
 don't overwrite form.action, or anything else that pre-exists.
@@ -4360,53 +4344,19 @@ don't overwrite form.action, or anything else that pre-exists.
 
         if (isradio) {
 // name present and radio buttons, name should be the array of buttons
-            ra = get_property_object(cx, owner, symname);
+// That is handled by formReindex().
         } else {
 // don't know why the duplicate name
             dupname = true;
         }
     }
 
-    if (JS_IsUndefined(ra)) {
-/* We don't have an established radio array. This is the usual case.
-Create a new object under owner, but through what name?
-The name= tag, unless it's a duplicate,
-or id= if there is no name=, or no name at all.
-That's how it was for a long time, but I think we only do this on form. */
-        if (t->action == TAGACT_INPUT && list) {
-            if (!symname && idname)
-                membername = idname;
-            else if (symname && !dupname)
-                membername = symname;
-/* id= or name= must not displace submit, reset, or action in form.
- * Example www.startpage.com, where id=submit.
- * nor should it collide with another attribute, such as document.cookie and
- * <div ID=cookie> in www.orange.com.
- * This call checks for the name in the object and its prototype. */
-            if (membername && has_property(cx, owner, membername)) {
-                debugPrint(3, "membername overload %s.%s",
-                classname, membername);
-                membername = 0;
-            }
-        }
-
-        if (isradio) {	// the first radio button
-            if(membername) // should always be the case
-                ra = instantiate_array(cx, owner, membername);
-            else
-                ra = instantiate_hidden_array(cx, *((JSValue*)cf->winobj), 0);
-            if(JS_IsUndefined(ra)) return;
-            membername = 0;
-        }
-    }
-// at this point ra is defined, if we are a radio button
-
 // Instantiate the object - could be a custom element.
     if(isunknown && !cf->xmlMode)
         io = instantiate_custom(cx, owner, classname);
     else
         io = instantiate(cx,
-        (!membername ? *((JSValue*)cf->winobj) : owner), membername, classtweak);
+        *((JSValue*)cf->winobj), 0, classtweak);
     if(JS_IsUndefined(io)) return;
     if(cf->xmlMode) set_property_bool(cx, io, "eb$xml", true);
     cn = instantiate_hidden_array(cx, io, "childNodes");
@@ -4416,10 +4366,6 @@ That's how it was for a long time, but I think we only do this on form. */
 // these two have spillup setters
     if(symname) set_property_string(cx, io, "name", symname);
     if(idname) set_property_string(cx, io, "id", idname);
-    if (t->action == TAGACT_INPUT) {
-// link back to the form that owns the element
-        set_property_object(cx, io, "form", owner);
-    }
 
 /* If this node contains style='' of one or more name-value pairs,
 call out to process those and add them to the object.
@@ -4442,17 +4388,9 @@ Don't do any of this if the tag is itself <style>. */
         set_array_element_object(cx, alist, length, io);
         if (symname && !dupname
             && !has_property(cx, alist, symname))
-// if radio, set elements.name to the array, just as we did with form.name
-            set_property_object(cx, alist, symname, isradio ? ra : io);
+            set_property_object(cx, alist, symname, io);
         JS_Release(cx, alist);
         }		// list indicated
-
-    if (isradio) {
-// append io to the radio array
-        length = get_arraylength(cx, ra);
-          set_array_element_object(cx, ra, length, io);
-        JS_Release(cx, ra);
-    }
 
     if(t->action != TAGACT_DOCTYPE) {
         if(!stringEqual(t->nodeNameU, "CDATA") &&

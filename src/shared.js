@@ -2961,6 +2961,20 @@ if(s.dom$class == "HTMLTableRowElement")
 t.rows.push(s), s.rowIndex = n++, s.sectionRowIndex = j;
 }
 
+// more efficient than querySelectorAll
+function gatherInputElements(t) {
+let a = [];
+if(t.nodeType == 1) {
+let inclass = t.dom$class;
+if(inclass && (
+inclass == "HTMLInputElement" || inclass == "HTMLTextAreaElement" || inclass == "HTMLSelectElement" || inclass == "HTMLButtonElement"))
+a.push(t);
+}
+for(let c of t.childNodes)
+a = a.concat(gatherInputElements(c));
+return a;
+}
+
 function formReindex(f) {
 // clear out what we had; we are rebuilding from scratch
 if(!f.elements) f.elements = [];
@@ -2990,7 +3004,7 @@ delete f[name].form;
 delete f[name];
 delete el[name];
 }
-const ilist = f.querySelectorAll("input,select,textarea,button");
+const ilist = gatherInputElements(f);
 for(let i of ilist) {
 el.push(i);
 i.form = f;

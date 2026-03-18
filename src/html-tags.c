@@ -4615,7 +4615,7 @@ static void formControlJS(Tag *t)
 	const Tag *form = t->controller;
 
 	if (form && form->jslink)
-		domLink(t, whichclass, "elements", form, isradio);
+		domLink(t, whichclass, 0, form, isradio);
 	else
 		domLink(t, whichclass, 0, 0, (4|isradio));
 	if (!t->jslink)
@@ -4715,6 +4715,10 @@ Needless to say that's not good!
 // run reindex at table close
         if (action == TAGACT_TABLE && t->jslink)
             run_function_onearg_win(cf, "rowReindex", t);
+
+// run reindex at form close
+        if (action == TAGACT_FORM && t->jslink)
+            run_function_onearg_win(cf, "formReindex", t);
 
 // close the option group
         if(action == TAGACT_OPTG) pc->currentOG = 0;
