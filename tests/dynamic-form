@@ -1,5 +1,5 @@
 <head></head><body>
-<form>
+<form action= http://localhost:1200>
   <fieldset>
     <legend>Please select your preferred contact method:</legend>
     <div id=under>
@@ -19,6 +19,7 @@ Fruit: <select name=fruit multiple>
     </div>
     <div>
       <button type="submit">Show</button>
+<input type=submit name=act value=Send>
     </div>
   </fieldset>
 </form>
@@ -41,16 +42,16 @@ button.addEventListener("click", (event) => {
   event.preventDefault();
 });
 
-// add a new radio button dynamicall
+// add a new radio button dynamically
 i = document.createElement("input");
 i.type="radio";
 i.name="contact";
 i.value="carrier pigeon";
 const panel = document.getElementById("under");
 const br = form.querySelector("br");
-alert(el.length);
+if(el.length != 7) alert(`browse elements.length ${el.length}`);
 panel.insertBefore(i, br);
-alert(el.length);
+if(el.length != 8) alert(`browse elements.length ${el.length}`);
 const fs = panel.parentNode; // field set
 // you can panel.removeChild() and verify the form is wiped out.
 // Then you can add it back again and verify the form resurrects.

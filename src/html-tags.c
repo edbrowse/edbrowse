@@ -88,6 +88,7 @@ static const struct tagInfo availableTags[] = {
 	{"ins", "inserted text", TAGACT_INS, 0, 0},
 	{"kbd", "keyboard text", TAGACT_JS, 0, 0},
 	{"label", "a label", TAGACT_LABEL, 0, 0},
+	{"legend", "a legend", TAGACT_HE, 0, 0},
 	{"li", "a list item", TAGACT_LI, 1, 5},
 	{"link", "a link tag", TAGACT_LINK, 0, 4},
 	{"listing", "a listing", TAGACT_PRE, 1, 0},
@@ -3948,6 +3949,13 @@ Tag *findOpenList(Tag *t)
 		if (t->action == TAGACT_OL || t->action == TAGACT_UL)
 			return t;
 	return 0;
+}
+
+bool controlledBy(const Tag *t, const Tag *above)
+{
+    for(t = t->parent; t; t = t->parent)
+        if(t == above) return true;
+    return false;
 }
 
 /*********************************************************************

@@ -4437,7 +4437,7 @@ static void rebuildSelector(Tag *sel, JSValue oa, int len2)
 		bool connect_o = false;
 		t0 = t;
 /* there is more to both lists */
-		if (t->controller != sel) {
+		if (!controlledBy(t, sel)) {
 			t = t->same;
 			continue;
 		}
@@ -4498,7 +4498,7 @@ I'm bringing the tags back to life.
 /* one list or the other or both has run to the end */
 	if (i2 == len2) {
 		for (; t; t = t->same) {
-			if (t->controller != sel) {
+			if (!controlledBy(t, sel)) {
 				t0 = t;
 				continue;
 			}
@@ -4519,6 +4519,7 @@ I'm bringing the tags back to life.
 				break;
 			t = newTag(sel->f0, "option");
 			t->lic = i2;
+// I set controller for legacy, but we don't use it.
 			t->controller = sel;
 			connectTagObject(t, oo);
 			t->step = 2;	// already decorated

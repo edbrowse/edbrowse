@@ -697,12 +697,13 @@ dog <input type=checkbox name=dog id=hound checked onclick="alert('rover')">
 cat <input type=checkbox name=cat onclick="catdog(this)" value=meow>
 bird <input type=checkbox id=bird>
 rabbit <input type=checkbox name=rabbit>
-<br>
+<div id=hog>
 Amount of objects to create <input type="text" id="fill_amount" name="fill_amount" value="2000000" />
 <input type=button name=hog value="memory hog" onclick=memfill()>
 <input type=button name=mclear value="memory clear" onclick="memhog.length = 0">
-<br>
 <button onclick="memshow()" name="mshow">show memory length</button>
+</div>
+<br>
 <input type=button name=goodbye value="jump away"
 onclick="alert('page is being replaced'); window.location.href='http://www.cartercenter.org';">
 <br>Message Body:
@@ -1302,6 +1303,9 @@ o.type = "checkbox";
 if(o.value != "on") fail(259);
 o = document.createElement("button");
 if(o.type != "submit") fail(260);
+// delete the memory stuff from the form,
+// elements and links and so on should readjust.
+document.getElementById("hog").remove();
 if(isedbrowse) alert("relative");
 }
 relative();

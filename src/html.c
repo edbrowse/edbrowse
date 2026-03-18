@@ -108,7 +108,7 @@ static Tag *locateOptionByName(const Tag *sel,
 	const char *s;
 
 	for (t = cw->optlist; t; t = t->same) {
-		if (t->controller != sel) continue;
+		if (!controlledBy(t, sel)) continue;
 		if (!(s = t->textval)) continue;
 		if(inputHidden(t)) continue;
 		if (stringEqualCI(s, name)) {
@@ -136,7 +136,7 @@ static Tag *locateOptionByNum(const Tag *sel, int n)
 	int cnt = 0;
 
 	for (t = cw->optlist; t; t = t->same) {
-		if (t->controller != sel) continue;
+		if (!controlledBy(t, sel)) continue;
 		if (!t->textval) continue;
 		++cnt;
 		if(inputHidden(t)) continue;
@@ -167,7 +167,7 @@ locateOptions(const Tag *sel, const char *input,
 		if (sel->jslink && allowJS)
 			set_property_number_t(sel, "selectedIndex", -1);
 		for (t = cw->optlist; t; t = t->same) {
-			if (t->controller == sel && t->textval) {
+			if (controlledBy(t, sel) && t->textval) {
 				t->checked = false;
 				if (t->jslink && allowJS)
 					set_property_bool_t(t, "selected",   false);
@@ -211,7 +211,7 @@ locateOptions(const Tag *sel, const char *input,
 		}
 
 		if(inputDisabled(t) ||
-		inputDisabled(t->controller) ||
+		inputDisabled(sel) ||
 		(t->parent && t->parent->action == TAGACT_OPTG && inputDisabled(t->parent))) {
 // If we are gathering values, to submit the form,
 // then somehow all these options have been selected.
@@ -1730,7 +1730,7 @@ void infShow(int tagno, const char *search)
 		eb_printf(" multiple");
 	if (t->itype == INP_SELECT) {
 		for (v = cw->optlist; v; v = v->same) {
-			if (v->controller != t) continue;
+			if (!controlledBy(v, t)) continue;
 			if (!v->textval) continue;
 			if(inputHidden(v)) break;
 		}
@@ -1760,8 +1760,9 @@ void infShow(int tagno, const char *search)
 	if(t->itype == INP_SUBMIT &&
 	!inputDisabled(t) &&
 	debugLevel >= 3) {
-		if(t->controller && t->controller->href)
-			  eb_printf(" %s", t->controller->href);
+		const Tag *f = findOpenTag(t, TAGACT_FORM);
+		if(f && f->href)
+			  eb_printf(" %s", f->href);
 		else if(attribVal(t, "onclick"))
 			  eb_printf(" %s", attribVal(t, "onclick"));
 		}
@@ -1777,7 +1778,7 @@ void infShow(int tagno, const char *search)
 	cnt = 0;
 	show = false;
 	for (v = cw->optlist; v; v = v->same) {
-		if (v->controller != t) continue;
+		if (!controlledBy(v, t)) continue;
 		if (!v->textval) continue;
 		++cnt;
 		if(inputHidden(v)) continue;
@@ -1924,7 +1925,7 @@ bool infReplace(int tagno, char *newtext, bool notify)
 {
 	Tag *t = tagList[tagno];
 	const Tag *v;
-	const Tag *form = t->controller;
+	const Tag *form = findOpenTag(t, TAGACT_FORM);
 	char *display = 0;
 	int itype = t->itype;
 	int itype_minor = t->itype_minor;
@@ -2078,8 +2079,7 @@ bool infReplace(int tagno, char *newtext, bool notify)
 	if (itype == INP_RADIO && form && t->name && *newtext == '+') {
 /* clear the other radio button */
 		for (v = cw->inputlist; v; v = v->same) {
-			if (v->controller != form)
-				continue;
+			if (!controlledBy(v, form)) continue;
 			if (v->itype != INP_RADIO)
 				continue;
 			if (!v->name)
@@ -2133,7 +2133,7 @@ char *displayOptions(const Tag *sel)
 
 	opt = initString(&opt_l);
 	for (t = cw->optlist; t; t = t->same) {
-		if (t->controller != sel) continue;
+		if (!controlledBy(t, sel)) continue;
 		if (!t->checked) continue;
 		if (*opt)
 			stringAndChar(&opt, &opt_l, selsep);
@@ -2191,8 +2191,10 @@ static void resetVar(Tag *t)
 	} else if (itype == INP_SELECT) {
 /* remember this means option */
 		set_property_bool_t(t, "selected", bval);
-		if (bval && !t->controller->multiple && t->controller->jslink)
-			set_property_number_t(t->controller,
+		const Tag *sel = findOpenTag(t, TAGACT_INPUT);
+		if(bval && sel && sel->itype == INP_SELECT &&
+		!sel->multiple && sel->jslink)
+			set_property_number_t(sel,
 					    "selectedIndex", t->lic);
 	} else
 		set_property_string_t(t, "value", w);
@@ -2215,8 +2217,7 @@ static void formReset(const Tag *form)
 
 		if (t->action != TAGACT_INPUT)
 			continue;
-		if (t->controller != form)
-			continue;
+		if (!controlledBy(t, form)) continue;
 		itype = t->itype;
 		if (itype != INP_SELECT) {
 			resetVar(t);
@@ -2228,8 +2229,7 @@ static void formReset(const Tag *form)
 
 /* loop again to look for select, now that options are set */
 	for (t = cw->inputlist; t; t = t->same) {
-		if (t->controller != form)
-			continue;
+		if (!controlledBy(t, form)) continue;
 		itype = t->itype;
 		if (itype != INP_SELECT)
 			continue;
@@ -2471,7 +2471,7 @@ skip_encode:
 	}
 
 	for (t = cw->inputlist; t; t = t->same) {
-		if (t->controller != form) continue;
+		if (!controlledBy(t, form)) continue;
 		itype = t->itype;
 		if (itype <= INP_SUBMIT && t != submit) continue;
 		if (inputDisabled(t)) continue;
@@ -2504,7 +2504,7 @@ skip_encode:
 			bval = fetchBoolVar(t);
 			if (!bval) continue;
 			value = t->value;
-			if (itype == INP_CHECKBOX && (!value || !*value))
+			if (!value || !*value)
 				value = "on";
 			goto success;
 		}
@@ -2611,7 +2611,7 @@ Here is a small page to test some of these select option cases.
 				Tag *v;
 /* revert back to reset state */
 				for (v = cw->optlist; v; v = v->same)
-					if (v->controller == t)
+					if (controlledBy(v, t))
 						v->checked = v->rchecked;
 				display = displayOptions(t);
 			}
@@ -2769,7 +2769,7 @@ bool infPush(int tagno, char **post_string)
 		t = 0;
 		itype = INP_SUBMIT;
 	} else {
-		form = t->controller;
+		form = findOpenTag(t, TAGACT_FORM);
 		itype = t->itype;
 	}
 
@@ -3071,14 +3071,16 @@ void domSetsTagValue(Tag *t, const char *newtext)
 bool charInOptions(char c)
 {
 	const Window *w;
-	const Tag *t;
+	Tag *t;
 	int i;
+	Tag *sel;
 	for(i = 1; i <= maxSession; ++i) {
 		for(w = sessionList[i].lw; w; w = w->prev) {
 			if(!w->browseMode) continue;
 			for (t = w->optlist; t; t = t->same)
 				if(t->textval && strchr(t->textval, c) &&
-				t->controller && t->controller->multiple)
+				(sel = findOpenTag(t, TAGACT_INPUT)) &&
+				sel->itype == INP_SELECT && sel->multiple)
 					return true;
 		}
 	}
