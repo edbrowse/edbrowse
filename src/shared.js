@@ -1494,8 +1494,6 @@ return null;
 node2 = d.createElement(node1.nodeName);
 if(node1 == w0.cloneRoot1) w0.cloneRoot2 = node2;
 
-var lostElements = false;
-
 // now for strings and functions and such.
 for (var item in node1) {
 // don't copy the things that come from prototype
@@ -1528,41 +1526,13 @@ if(item.match(/^on[a-zA-Z]+\$\$array$/)) continue;
 
 // live arrays
 if((item == "options" || item == "selectedOptions") && node1.dom$class == "HTMLSelectElement") continue;
-
-/*********************************************************************
-Ok we need some special code here for form.elements,
-an array of input nodes within the form.
-We are preserving links, rather like tar or cpio.
-The same must be done for an array of rows beneath <table>,
-or an array of cells in a row, and perhaps others.
-But the thing is, we don't have to do that, because appendChild
-does it for us, as side effects, for these various classes.
-*********************************************************************/
+if(node1.dom$class == "HTMLFormElement") {
+if(item == "elements") continue;
+// check for array of radio buttons
+if(node1[item].length && node1[item][0].form == node1) continue;
+}
 
 node2[item] = new w.Array;
-
-// special code here for an array of radio buttons within a form.
-if(node1.dom$class == "HTMLFormElement" && node1[item].length &&
-node1[item][0].dom$class == "HTMLInputElement" && node1[item][0].name == item) {
-var a1 = node1[item];
-var a2 = node2[item];
-if(debug) alert3("linking form.radio " + item + " with " + a1.length + " buttons");
-a2.type = a1.type;
-a2.nodeName = a1.nodeName;
-if(a1.hasAttribute("class")) a2.setAttribute("class", a1.getAttribute("class"));
-for(i = 0; i < a1.length; ++i) {
-var p = findObject(a1[i]);
-if(p.length) {
-a2.push(correspondingObject(p));
-} else {
-a2.push(null);
-if(debug) alert3("oops, button " + i + " not linked");
-}
-}
-continue;
-}
-
-// It's a regular array.
 if(debug) alert3("copy array " + item + " with " + node1[item].length + " members");
 for(i = 0; i < node1[item].length; ++i)
 node2[item].push(node1[item][i]);
@@ -1596,6 +1566,12 @@ if(debug) alert3("copy URL " + item);
 node2[item] = new w.URL(u.toString());
 continue;
 }
+
+// link from fomr to input element will be built later
+if(node1.dom$class == "HTMLFormElement" &&
+node1[item].nodeType == 1 &&
+node1[item].form == node1)
+continue;
 
 // Look for a link from A to B within the tree of nodes,
 // A.foo = B, and try to preserve that link in the new tree, A1.foo = B1,
@@ -1673,27 +1649,6 @@ if(debug) alert3("copy attributes");
 for(var l=0; l<node1.attributes.length; ++l) {
 if(debug) alert3("copy attribute " + node1.attributes[l].name);
 node2.setAttribute(node1.attributes[l].name, node1.attributes[l].value);
-}
-}
-
-// This is an ugly patch for radio button arrays that don't get linked into the elements array.
-if(lostElements) {
-var e1 = node1.elements;
-var e2 = node2.elements;
-if(debug) alert3("looking for lost radio elements");
-for(i=0; i<e2.length; ++i) {
-if(e2[i]) continue;
-if(e1[i].nodeName !== "RADIO") {
-if(debug) alert3("oops, lost element " + i + " is type " + e1[i].nodeName);
-continue;
-}
-for (var item in node1) {
-if(!node1.hasOwnProperty(item)) continue;
-if(node1[item] !== e1[i]) continue;
-e2[i] = node2[item];
-if(debug) alert3("patching element " + i + " through to " + item);
-break;
-}
 }
 }
 
@@ -2986,7 +2941,7 @@ if(!f.hasOwnProperty(name)) continue;
 if(typeof f[name] != "object") continue;
 if(name == "childNodes") continue;
 if(name == "elements") continue;
-if(name.match(/$$array$/)) continue;
+if(name.match(/^on[a-zA-Z]+\$\$array$/)) continue;
 // special code to detect and delete an array of radio buttons.
 if(Array.isArray(f[name]) && (f[name].length == 0 ||
 f[name][0].form == f)) {
@@ -3384,7 +3339,8 @@ nodep.appendChild = function(c) {
     if(c.parentNode) c.parentNode.removeChild(c);
     let r = this.eb$apch2(c);
     if(r) {
-        formReindex2(this);
+// a text node won't change the structure of the form
+        if(r.nodeType != 3) formReindex2(this);
         mutFixup(this, 0, c, null);
         runScriptWhenAttached(r);
         if(isRooted(r)) connectedCallbackCheck(r);
@@ -3415,7 +3371,7 @@ nodep.insertBefore = function(c, t) {
     if(c.parentNode) c.parentNode.removeChild(c);
     let r = this.eb$insbf(c, t);
     if(r) {
-        formReindex2(this);
+        if(r.nodeType != 3) formReindex2(this);
         mutFixup(this, 0, r, null);
         runScriptWhenAttached(r);
         if(isRooted(r)) connectedCallbackCheck(r);
@@ -3427,7 +3383,7 @@ nodep.removeChild = function(c) {
     if(!c) return null;
     const mark = this.eb$rmch2(c);
     if(mark < 0) return null;
-    formReindex2(this);
+    if(c.nodeType != 3) formReindex2(this);
 // passing an integer as third argument is a special case, only from here.
     mutFixup(this, 0, mark, c);
     return c;

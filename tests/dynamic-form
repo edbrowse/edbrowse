@@ -51,9 +51,19 @@ const panel = document.getElementById("under");
 const br = form.querySelector("br");
 if(el.length != 7) alert(`browse elements.length ${el.length}`);
 panel.insertBefore(i, br);
+panel.insertBefore(document.createTextNode(" Pigeon"), br);
 if(el.length != 8) alert(`browse elements.length ${el.length}`);
 const fs = panel.parentNode; // field set
 // you can panel.removeChild() and verify the form is wiped out.
 // Then you can add it back again and verify the form resurrects.
+// cloneNode is incredibly inefficient relative to forms. It calls formReindex
+// as it copies every node, instead of waiting til the end.
+// But it works.
+const f2 = form.cloneNode(true)
+if(f2.elements.length != 8) alert(`clone elements.length ${f2.elements.length}`);
+if(f2.contact.length != 4) alert(`clone contact.length ${f2.contact.length}`);
+if(f2.contact[0] != f2.elements[0]) alert("clone contact elements mismatch");
+if(f2.contact[0].form != f2) alert("clone input.form mismatch");
+if(f2.action != form.action) alert("clone action mismatch");
 </script>
 </body>
