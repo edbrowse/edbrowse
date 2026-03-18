@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Details test</title>
+</head>
+<body>
+<p>This is a test.</p>
+<details>
+<summary>Command output</summary>
+<pre>               total        used        free      shared  buff/cache   available
+Mem:        61611112    14425648     3365848      173972    44683916    47185464
+Swap:              0           0           0</pre>
+</details>
+<details open>
+<summary>Another test</summary>
+<p>This is a test.</p>
+</details>
+<script>
+t = document.body.querySelectorAll("details")
+</script>
+</body>

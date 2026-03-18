@@ -2986,6 +2986,7 @@ if(!f.hasOwnProperty(name)) continue;
 if(typeof f[name] != "object") continue;
 if(name == "childNodes") continue;
 if(name == "elements") continue;
+if(name.match(/$$array$/)) continue;
 // special code to detect and delete an array of radio buttons.
 if(Array.isArray(f[name]) && (f[name].length == 0 ||
 f[name][0].form == f)) {
@@ -3023,6 +3024,21 @@ f[name] = el[name] = [i];
 continue;
 }
 f[name] = el[name] = i;
+}
+}
+
+// if we add or remove something from the tree, which is or was
+// part of a form, reindex the form. item doesn't have to be an input element,
+// it could be div with input elements below.
+// Parameter is the parent of the thing added or removed.
+function formReindex2(t) {
+while(t) {
+if(t.nodeType != 1) return; // stop ad document or fragment
+if(t.dom$class == "HTMLFormElement") {
+formReindex(t);
+return;
+}
+t = t.parentNode;
 }
 }
 
@@ -3368,6 +3384,7 @@ nodep.appendChild = function(c) {
     if(c.parentNode) c.parentNode.removeChild(c);
     let r = this.eb$apch2(c);
     if(r) {
+        formReindex2(this);
         mutFixup(this, 0, c, null);
         runScriptWhenAttached(r);
         if(isRooted(r)) connectedCallbackCheck(r);
@@ -3398,6 +3415,7 @@ nodep.insertBefore = function(c, t) {
     if(c.parentNode) c.parentNode.removeChild(c);
     let r = this.eb$insbf(c, t);
     if(r) {
+        formReindex2(this);
         mutFixup(this, 0, r, null);
         runScriptWhenAttached(r);
         if(isRooted(r)) connectedCallbackCheck(r);
@@ -3409,6 +3427,7 @@ nodep.removeChild = function(c) {
     if(!c) return null;
     const mark = this.eb$rmch2(c);
     if(mark < 0) return null;
+    formReindex2(this);
 // passing an integer as third argument is a special case, only from here.
     mutFixup(this, 0, mark, c);
     return c;
@@ -4826,111 +4845,10 @@ set:function(v) { this.setAttribute("readonly", v);}});
 // the html form
 swpc("HTMLFormElement", function(){this.elements = new w.Array})
 swpp("HTMLFormElement", w.HTMLElement)
-
-/*********************************************************************
-most of the work is done by helper functions, 2 native and 4 below.
-The first is used by the other three.
-If you add an input to a form, it adds under childNodes in the usual way,
-but also must add in the elements[] array.
-Same for insertBefore and removeChild.
-When adding an input element to a form,
-linnk form[element.name] to that element.
-*********************************************************************/
-
-function formname(parent, child) {
-var s;
-if(typeof child.name === "string")
-s = child.name;
-else if(typeof child.id === "string")
-s = child.id;
-else return;
-if(!s) return;
-if(!parent[s]) parent[s] = child;
-if(!parent.elements[s]) parent.elements[s] = child;
-}
-
-function formAppendChild(newobj) {
-if(!newobj) return null;
-if(newobj.nodeType == 11) return appendFragment(this, newobj);
-this.appendChildNative(newobj);
-// appending the first radio button?
-const name = newobj.name;
-if(newobj.nodeName == "INPUT" && newobj.type == "radio" && name) {
-if(!this[name])
-this[name] = this.elements[name] = [];
-this[name].push(newobj);
-}
-if(newobj.nodeName === "INPUT" || newobj.nodeName === "SELECT") {
-this.elements.push(newobj);
-newobj.form = this;
-formname(this, newobj);
-}
-return newobj;
-}
-
-function formInsertBefore(newobj, item) {
-if(!newobj) return null;
-if(!item) return this.appendChild(newobj);
-if(newobj.nodeType == 11) return insertFragment(this, newobj, item);
-let r = this.insertBeforeNative(newobj, item);
-if(!r) return null;
-const name = newobj.name;
-if(newobj.nodeName == "INPUT" && newobj.type == "radio" && name) {
-if(!this[name])
-this[name] = this.elements[name] = [];
-for(let i=0; i<this[name].length; ++i)
-if(this[name][i] == item) {
-this[name].splice(i, 0, newobj);
-break;
-}
-}
-if(newobj.nodeName === "INPUT" || newobj.nodeName === "SELECT") {
-for(let i=0; i<this.elements.length; ++i)
-if(this.elements[i] == item) {
-this.elements.splice(i, 0, newobj);
-break;
-}
-newobj.form = this;
-formname(this, newobj);
-}
-return newobj;
-}
-
-function formRemoveChild(item) {
-if(!item) return null;
-if(!this.removeChildNative(item))
-return null;
-const name = item.name;
-if(item.nodeName == "input" && item.type == "radio" && name && this[name]) {
-for(let i=0; i<this[name].length; ++i)
-if(this[name][i] == item) {
-this[name].splice(i, 1);
-break;
-}
-}
-if(item.nodeName === "INPUT" || item.nodeName === "SELECT") {
-for(let i=0; i<this.elements.length; ++i)
-if(this.elements[i] == item) {
-this.elements.splice(i, 1);
-break;
-}
-delete item.form;
-if(item.name$2 && this[item.name$2] == item) delete this[item.name$2];
-if(item.name$2 && this.elements[item.name$2] == item) delete this.elements[item.name$2];
-}
-return item;
-}
-
 let formp = w.HTMLFormElement.prototype;
 formp.submit = eb$formSubmit;
 formp.reset = eb$formReset;
 odp(formp, "length", { get: function() { return this.elements.length;}})
-formp.appendChildNative = nodep.appendChild;
-formp.appendChild = formAppendChild;
-formp.insertBeforeNative = nodep.insertBefore;
-formp.insertBefore = formInsertBefore;
-formp.removeChildNative = nodep.removeChild;
-formp.removeChild = formRemoveChild;
 
 swpc("HTMLImageElement", function(){})
 swpc("Image", w.HTMLImageElement)

@@ -4639,7 +4639,6 @@ static void optionJS(Tag *t, Tag *og)
 {
 	Tag *sel = t->controller;
 	const char *tx = t->textval;
-	const char *cl = t->jclass;
 
 	if (!sel)
 		return;
@@ -4659,11 +4658,6 @@ establish_js_option(t, sel, og);
 	set_property_string_t(t, "value", t->value);
 	set_property_bool_t(t, "selected", t->checked);
 	set_property_bool_t(t, defsel, t->checked);
-	if (!cl)
-		cl = emptyString;
-// we probably shouldn't do this
-	set_property_string_t(t, "class", cl);
-
 	if (t->checked && !sel->multiple)
 		set_property_number_t(sel, "selectedIndex", t->lic);
 }
