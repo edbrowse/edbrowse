@@ -548,7 +548,6 @@ sdp("paragraphs", [])
 sdp("headers", [])
 sdp("footers", [])
 sdp("tables", [])
-sdp("spans", [])
 sdp("images", [])
 // styleSheets is a placeholder for now; I don't know what to do with it.
 sdp("styleSheets", [])

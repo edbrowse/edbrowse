@@ -4947,7 +4947,7 @@ get_property_bool_t(t, "connectedCallback$pending")) {
 	case TAGACT_SUB:
 	case TAGACT_SUP:
 	case TAGACT_OVB:
-		domLink(t, "HTMLSpanElement", "spans", 0, 4);
+		domLink(t, "HTMLSpanElement", 0, 0, 4);
 		break;
 
 	case TAGACT_AREA:
