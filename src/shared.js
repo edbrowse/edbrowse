@@ -4779,6 +4779,7 @@ s = child.name;
 else if(typeof child.id === "string")
 s = child.id;
 else return;
+if(!s) return;
 if(!parent[s]) parent[s] = child;
 if(!parent.elements[s]) parent.elements[s] = child;
 }
@@ -4787,6 +4788,13 @@ function formAppendChild(newobj) {
 if(!newobj) return null;
 if(newobj.nodeType == 11) return appendFragment(this, newobj);
 this.appendChildNative(newobj);
+// appending the first radio button?
+const name = newobj.name;
+if(newobj.nodeName == "INPUT" && newobj.type == "radio" && name) {
+if(!this[name])
+this[name] = this.elements[name] = [];
+this[name].push(newobj);
+}
 if(newobj.nodeName === "INPUT" || newobj.nodeName === "SELECT") {
 this.elements.push(newobj);
 newobj.form = this;
@@ -4799,10 +4807,20 @@ function formInsertBefore(newobj, item) {
 if(!newobj) return null;
 if(!item) return this.appendChild(newobj);
 if(newobj.nodeType == 11) return insertFragment(this, newobj, item);
-var r = this.insertBeforeNative(newobj, item);
+let r = this.insertBeforeNative(newobj, item);
 if(!r) return null;
+const name = newobj.name;
+if(newobj.nodeName == "INPUT" && newobj.type == "radio" && name) {
+if(!this[name])
+this[name] = this.elements[name] = [];
+for(let i=0; i<this[name].length; ++i)
+if(this[name][i] == item) {
+this[name].splice(i, 0, newobj);
+break;
+}
+}
 if(newobj.nodeName === "INPUT" || newobj.nodeName === "SELECT") {
-for(var i=0; i<this.elements.length; ++i)
+for(let i=0; i<this.elements.length; ++i)
 if(this.elements[i] == item) {
 this.elements.splice(i, 0, newobj);
 break;
@@ -4817,8 +4835,16 @@ function formRemoveChild(item) {
 if(!item) return null;
 if(!this.removeChildNative(item))
 return null;
+const name = item.name;
+if(item.nodeName == "input" && item.type == "radio" && name && this[name]) {
+for(let i=0; i<this[name].length; ++i)
+if(this[name][i] == item) {
+this[name].splice(i, 1);
+break;
+}
+}
 if(item.nodeName === "INPUT" || item.nodeName === "SELECT") {
-for(var i=0; i<this.elements.length; ++i)
+for(let i=0; i<this.elements.length; ++i)
 if(this.elements[i] == item) {
 this.elements.splice(i, 1);
 break;

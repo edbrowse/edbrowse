@@ -782,7 +782,7 @@ if(a.join('zz') != "25zz21zz17") fail(97);
 with(document.forms[1]) {
 if(!(dog.checked && dog.defaultChecked)) fail(100);
 if(cat.checked || cat.defaultChecked) fail(101);
-if(dog.type != "checkbox" || money.type != "radio" || money.length != 4) fail(102);
+if(dog.type != "checkbox" || money[0].type != "radio" || money.length != 4) fail(102);
 if(who.type != "hidden" || subject.type != "text") fail(103);
 if(b0.type != "reset" || b1.type != "submit") fail(104);
 if(body.type != "textarea" || b.type != "button") fail(105);

@@ -4310,7 +4310,7 @@ int extra) // bits: radio, window, document, unknown
     JSContext *cx = cf->cx;
     JSValue owner = JS_NULL;
     JSValue alist = JS_UNDEFINED;
-    JSValue io = JS_UNDEFINED;	// input object
+    JSValue io = JS_UNDEFINED;	// the input object
     int length;
     bool dupname = false;
     uchar isradio = (extra&1);
@@ -4321,9 +4321,10 @@ int extra) // bits: radio, window, document, unknown
     const char *membername = 0;	// usually symname
     const char *stylestring = attribVal(t, "style");
     JSValue cn; // child nodes
+    JSValue ra = JS_UNDEFINED; // radio array, if we even need it
     	static const char * const z_list[] = {
-    "Header", "Footer", "Title", "Datalist",
-    "tHead", "tBody", "tFoot", "HTML", 0};
+        "Header", "Footer", "Title", "Datalist",
+        "tHead", "tBody", "tFoot", "HTML", 0};
     char class_z[11]; // room for the largest in the list
     const char *classtweak = classname;
     if(stringInList(z_list, classname) >= 0) {
@@ -4332,22 +4333,22 @@ int extra) // bits: radio, window, document, unknown
     }
 
     debugPrint(5, "domLink %s.%d name %s",
-    	   classname, extra, (symname ? symname : emptyString));
+       classname, extra, (symname ? symname : emptyString));
     extra &= 6;
 
-	if(owntag)
-		owner = *((JSValue*)owntag->jv);
+    if(owntag)
+        owner = *((JSValue*)owntag->jv);
 if(extra == 2)
-		owner = *((JSValue*)cf->winobj);
+        owner = *((JSValue*)cf->winobj);
 if(extra == 4)
-		owner = *((JSValue*)cf->docobj);
+        owner = *((JSValue*)cf->docobj);
 
-	if (symname && typeof_property(cx, owner, symname)) {
+    if (symname && typeof_property(cx, owner, symname)) {
 /*********************************************************************
+What? We already have this name, under this object or form.
 This could be a duplicate name.
 Yes, that really happens.
-Link to the first tag having this name,
-and link the second tag under a fake name so gc won't throw it away.
+Link to the first tag having this name only.
 Or - it could be a duplicate name because multiple radio buttons
 all share the same name.
 The first time we create the array,
@@ -4357,124 +4358,113 @@ an input tag could have the name action, colliding with form.action.
 don't overwrite form.action, or anything else that pre-exists.
 *********************************************************************/
 
-		if (isradio) {
-/* name present and radio buttons, name should be the array of buttons */
-			io = get_property_object(cx, owner, symname);
-			if(JS_IsUndefined(io)) return;
-		} else {
+        if (isradio) {
+// name present and radio buttons, name should be the array of buttons
+            ra = get_property_object(cx, owner, symname);
+        } else {
 // don't know why the duplicate name
-			dupname = true;
-		}
-	}
+            dupname = true;
+        }
+    }
 
-/* The input object is nonzero if&only if the input is a radio button,
- * and not the first button in the set, thus it isce the array containing
- * these buttons. */
-	if (JS_IsUndefined(io)) {
-/*********************************************************************
-Ok, the above condition does not hold.
-We'll be creating a new object under owner, but through what name?
+    if (JS_IsUndefined(ra)) {
+/* We don't have an established radio array. This is the usual case.
+Create a new object under owner, but through what name?
 The name= tag, unless it's a duplicate,
 or id= if there is no name=, or no name at all.
-That's how it was for a long time, but I think we only do this on form.
-*********************************************************************/
-		if (t->action == TAGACT_INPUT && list) {
-			if (!symname && idname)
-				membername = idname;
-			else if (symname && !dupname)
-				membername = symname;
+That's how it was for a long time, but I think we only do this on form. */
+        if (t->action == TAGACT_INPUT && list) {
+            if (!symname && idname)
+                membername = idname;
+            else if (symname && !dupname)
+                membername = symname;
 /* id= or name= must not displace submit, reset, or action in form.
  * Example www.startpage.com, where id=submit.
  * nor should it collide with another attribute, such as document.cookie and
  * <div ID=cookie> in www.orange.com.
  * This call checks for the name in the object and its prototype. */
-			if (membername && has_property(cx, owner, membername)) {
-				debugPrint(3, "membername overload %s.%s",
-					   classname, membername);
-				membername = 0;
-			}
-		}
+            if (membername && has_property(cx, owner, membername)) {
+                debugPrint(3, "membername overload %s.%s",
+                classname, membername);
+                membername = 0;
+            }
+        }
 
-		if (isradio) {	// the first radio button
-			if(membername)
-				io = instantiate_array(cx, owner, membername);
-			else
-				io = instantiate_hidden_array(cx, *((JSValue*)cf->winobj), 0);
-			if(JS_IsUndefined(io)) return;
-			set_property_string(cx, io, "type", "radio");
-		} else {
-// A standard input element, just create it.
-			if(isunknown && !cf->xmlMode)
-				io = instantiate_custom(cx, owner, classname);
-			else
-				io = instantiate(cx,
-				(!membername ? *((JSValue*)cf->winobj) : owner), membername, classtweak);
-			if(JS_IsUndefined(io)) return;
-			if(cf->xmlMode) set_property_bool(cx, io, "eb$xml", true);
-// Not an array; needs the childNodes array beneath it for the children.
-			cn = instantiate_hidden_array(cx, io, "childNodes");
-			JS_DefinePropertyValueStr(cx, io, "parentNode", JS_NULL,
-			JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE);
-			JS_Release(cx, cn);
-		}
+        if (isradio) {	// the first radio button
+            if(membername) // should always be the case
+                ra = instantiate_array(cx, owner, membername);
+            else
+                ra = instantiate_hidden_array(cx, *((JSValue*)cf->winobj), 0);
+            if(JS_IsUndefined(ra)) return;
+            membername = 0;
+        }
+    }
+// at this point ra is defined, if we are a radio button
+
+// Instantiate the object - could be a custom element.
+    if(isunknown && !cf->xmlMode)
+        io = instantiate_custom(cx, owner, classname);
+    else
+        io = instantiate(cx,
+        (!membername ? *((JSValue*)cf->winobj) : owner), membername, classtweak);
+    if(JS_IsUndefined(io)) return;
+    if(cf->xmlMode) set_property_bool(cx, io, "eb$xml", true);
+    cn = instantiate_hidden_array(cx, io, "childNodes");
+    JS_Release(cx, cn);
+    JS_DefinePropertyValueStr(cx, io, "parentNode", JS_NULL,
+    JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE);
+// these two have spillup setters
+    if(symname) set_property_string(cx, io, "name", symname);
+    if(idname) set_property_string(cx, io, "id", idname);
+    if (t->action == TAGACT_INPUT) {
+// link back to the form that owns the element
+        set_property_object(cx, io, "form", owner);
+    }
 
 /* If this node contains style='' of one or more name-value pairs,
 call out to process those and add them to the object.
 Don't do any of this if the tag is itself <style>. */
-		if (stylestring && t->action != TAGACT_STYLE) {
+    if (stylestring && t->action != TAGACT_STYLE) {
 // This call creates the styl object on demand.
-			JSValue so = get_property_object(cx, io, "style");
-			processStyles(so, stylestring);
-			JS_Release(cx, so);
-		}
+        JSValue so = get_property_object(cx, io, "style");
+        processStyles(so, stylestring);
+        JS_Release(cx, so);
+    }
 
 // only anchors with href go into links[]
-		if (list && stringEqual(list, "links") &&
-		    !attribPresent(t, "href"))
-			list = 0;
-		if (list)
-			alist = get_property_object(cx, owner, list);
-		if (!JS_IsUndefined(alist)) {
-			length = get_arraylength(cx, alist);
-			set_array_element_object(cx, alist, length, io);
-			if (symname && !dupname
-			    && !has_property(cx, alist, symname))
-				set_property_object(cx, alist, symname, io);
-			JS_Release(cx, alist);
-		}		// list indicated
-	}
+    if (stringEqual(list, "links") &&
+        !attribPresent(t, "href"))
+        list = 0;
+    if (list)
+        alist = get_property_object(cx, owner, list);
+    if (!JS_IsUndefined(alist)) {
+        length = get_arraylength(cx, alist);
+        set_array_element_object(cx, alist, length, io);
+        if (symname && !dupname
+            && !has_property(cx, alist, symname))
+// if radio, set elements.name to the array, just as we did with form.name
+            set_property_object(cx, alist, symname, isradio ? ra : io);
+        JS_Release(cx, alist);
+        }		// list indicated
 
-	if (isradio) {
-// drop down to the element within the radio array, and return that element.
-// io becomes the object associated with this radio button.
-// At present, io is an array.
-		length = get_arraylength(cx, io);
-		cn = instantiate_array_element(cx, io, length, "HTMLInputElement");
-		if(cf->xmlMode) set_property_bool(cx, cn, "eb$xml", true);
-		JS_Release(cx, io);
-		if(JS_IsUndefined(cn)) return;
-		io = cn; // now io is the new radio button at the end of the array
-	}
+    if (isradio) {
+// append io to the radio array
+        length = get_arraylength(cx, ra);
+          set_array_element_object(cx, ra, length, io);
+        JS_Release(cx, ra);
+    }
 
-	if(symname) set_property_string(cx, io, "name", symname);
-	if(idname) set_property_string(cx, io, "id", idname);
-
-	if (t->action == TAGACT_INPUT) {
-/* link back to the form that owns the element */
-		set_property_object(cx, io, "form", owner);
-	}
-
-	if(t->action != TAGACT_DOCTYPE) {
-		if(!stringEqual(t->nodeNameU, "CDATA") &&
-		!stringEqual(t->nodeNameU, "COMMENT")) {
-			char *js_node = ((t->action == TAGACT_UNKNOWN ||
-			cf->xmlMode) ? t->nodeName : t->nodeNameU);
-			define_hidden_property_string(cx, io, "nodeName", js_node);
-			define_hidden_property_string(cx, io, "tagName", js_node);
-		}
-		define_hidden_property_object(cx, io, "ownerDocument", *(JSValue*)cf->docobj);
-	}
-	connectTagObject(t, io);
+    if(t->action != TAGACT_DOCTYPE) {
+        if(!stringEqual(t->nodeNameU, "CDATA") &&
+        !stringEqual(t->nodeNameU, "COMMENT")) {
+            char *js_node = ((t->action == TAGACT_UNKNOWN ||
+            cf->xmlMode) ? t->nodeName : t->nodeNameU);
+            define_hidden_property_string(cx, io, "nodeName", js_node);
+            define_hidden_property_string(cx, io, "tagName", js_node);
+        }
+        define_hidden_property_object(cx, io, "ownerDocument", *(JSValue*)cf->docobj);
+    }
+    connectTagObject(t, io);
 }
 
 /*********************************************************************
