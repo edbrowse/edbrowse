@@ -3562,6 +3562,19 @@ if(t === this) return DOCUMENT_POSITION_CONTAINS;
 return DOCUMENT_POSITION_DISCONNECTED;
 }
 
+nodep.getRootNode = function(o) {
+let composed = false;
+if(typeof o == "object" && o.composed) composed = true;
+let t = this, t1 = this;
+while(t) {
+t1 = t;
+if(t.nodeName == "#document") return t;
+if(!composed && t.nodeName == "SHADOWROOT") return t;
+t = t.parentNode;
+}
+return t1;
+}
+
 swpc("Document", function() {
     odp(this, "id$hash", {value: new w.Map});
     odp(this, "id$registry", {value: new w.FinalizationRegistry(
