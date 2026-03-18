@@ -1,0 +1,17 @@
+<head></head>
+<body><p>first paragraph
+<script>
+var p = document.createElement("p");
+p.appendChild(document.createTextNode("second paragraph"));
+document.body.appendChild(p);
+</script>
+<p>third paragraph</p>
+<script>
+(function () {
+document.write("<p>fourth paragraph</p>");
+        var e = document.currentScript
+e.remove();
+    })();
+</script>
+<p>fifth paragraph</p>
+</body>
