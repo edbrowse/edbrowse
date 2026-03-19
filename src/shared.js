@@ -1655,8 +1655,15 @@ node2.setAttribute(node1.attributes[l].name, node1.attributes[l].value);
 if (deep && kids) {
 for(i = 0; i < kids.length; ++i) {
 var current_item = kids[i];
-node2.appendChild(clone1(current_item,deep, into));
+// mutation observers don't apply to these newly created items.
+// I can call the faster, simpler apendChild.
+node2.appendChild$nm(clone1(current_item,deep, into));
 }
+}
+
+if(node1.nodeType == 1) {
+if(node1.dom$class == "HTMLFormElement")
+formReindex(node2);
 }
 
 if(debug) alert3("}");
