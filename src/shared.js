@@ -1456,7 +1456,8 @@ into means we are cloning into this context, as in importNode().
 It's frickin complicated, so set cloneDebug to debug it.
 *********************************************************************/
 
-function clone1(node1,deep, into) {
+function clone1(node1,deep, into)
+{
 var node2;
 var i, j;
 var kids = null;
@@ -1505,8 +1506,6 @@ if(item === "childNodes" || item === "parentNode") continue;
 if(attr.implicitMember(node1, item)) continue;
 
 if (typeof node1[item] === 'function') {
-// event handlers shouldn't carry across.
-if(item.match(/^on[a-zA-Z]+(\$\$fn|\$2|)$/)) continue;
 if(debug) alert3("copy function " + item);
 node2[item] = node1[item];
 continue;
@@ -1524,12 +1523,12 @@ if(Array.isArray(node1[item])) {
 // event handlers shouldn't carry across.
 if(item.match(/^on[a-zA-Z]+\$\$array$/)) continue;
 
-// live arrays
-if((item == "options" || item == "selectedOptions") && node1.dom$class == "HTMLSelectElement") continue;
 if(node1.dom$class == "HTMLFormElement") {
-if(item == "elements") continue;
-// check for array of radio buttons
-if(node1[item].length && node1[item][0].form == node1) continue;
+// form.elements is culled by implicitMember(),
+// along with table.rows and tr.cells and many other derived arrays.
+// Arrays of radio buttons are not predictable and handled here.
+if(node1[item].length &&  typeof node1[item][0] == "object" &&
+node1[item][0].form == node1) continue;
 }
 
 node2[item] = new w.Array;
@@ -1657,19 +1656,15 @@ node2.setAttribute(node1.attributes[l].name, node1.attributes[l].value);
             let current_item = kids[i];
 // mutation observers don't apply to these newly created items.
 // I can call the faster, simpler apendChild method.
-// But not yet, because of tables and sections.
-            node2.appendChild(clone1(current_item,deep, into));
+            node2.appendChild$nm(clone1(current_item,deep, into));
         }
     }
 
     if(node1.nodeType == 1) {
         if(node1.dom$class == "HTMLFormElement")
             formReindex(node2);
-// warning - the table rows structure is not replicated, because I call
-// appendChild$nm. I need something to rebuild all the rows in all the sections,
-// and don't have that but if I did that's what I would call here.
-//      if(node1.dom$class == "HTMLTableElement")
-//          rowReindexAll(node2);
+        if(node1.dom$class == "HTMLTableElement")
+            rowReindexAll(node2);
     }
 
     if(debug) alert3("}");
@@ -2897,7 +2892,8 @@ return port;
 }
 
 // It's crude, but reindex the rows under <table>.
-function rowReindex(t) {
+function rowReindex(t)
+{
 let i, j, n = 0;
 let s; // section
 t.rows.length = 0; // squash and start over
@@ -2932,6 +2928,52 @@ function rowReindex2(t) {
         }
         t = t.parentNode;
     }
+}
+
+function cellReindex(r)
+{
+    r.cells.length = 0; // crunch and rebuild
+    for(let c of r.childNodes)
+        if(c.nodeName == "TD") r.cells.push(c);
+}
+
+function rowReindexAll(t)
+{
+    delete t.tHead; delete t.tFoot; // crunch and rebuild
+    t.tBodies.length = 0;
+    for(let c of t.childNodes) {
+        if(c.nodeName == "TR") {
+            cellReindex(c);
+        }
+        if(c.nodeName == "THEAD") {
+            if(t.tHead) continue; // only one head
+            t.tHead = c;
+            c.rows.length = 0;
+            for(let d of c.childNodes) {
+                if(d.nodeName == "TR")
+                    cellReindex(d), c.rows.push(d);
+            }
+        }
+        if(c.nodeName == "TFOOT") {
+            if(t.tFoot) continue; // only one foot
+            t.tFoot = c;
+            c.rows.length = 0;
+            for(let d of c.childNodes) {
+                if(d.nodeName == "TR")
+                    cellReindex(d), c.rows.push(d);
+            }
+        }
+        if(c.nodeName == "TBODY") {
+            t.tBodies.push(c);
+            c.rows.length = 0;
+            for(let d of c.childNodes) {
+                if(d.nodeName == "TR")
+                    cellReindex(d), c.rows.push(d);
+            }
+        }
+    }
+
+    rowReindex(t);
 }
 
 // more efficient than querySelectorAll
@@ -4104,6 +4146,9 @@ function newTextUnder(top, s, flavor)
         return;
     }
     const oldlist = Array.from(top.childNodes); // make a copy
+// if innertext removes input nodes from a form,
+// or rows from a table, then using the faster and more direct
+// removeChild$nm will not keep the superstructure in sync.
     let l = top.childNodes.length;
     for(let i=l-1; i>=0; --i)
         top.removeChild$nm(top.childNodes[i]);

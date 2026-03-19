@@ -170,12 +170,6 @@ It exercises some of the javascript DOM interactions.
 It also presents frames and hyperlinks and forms and input fields,
 so you can play around.
 
-src/acid3:
-A snapshot of http://acid3.acidtests.org, with modifications,
-so that some or all of the acid tests pass under edbrowse.
-This is a work in progress.
-My modifications are indicated by the comment   //@`
-
 src/dbops.c:
 Database operations; insert update delete.
 

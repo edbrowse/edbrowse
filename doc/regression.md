@@ -1,12 +1,11 @@
 ##Edbrowse regression tests
 
-There are two regression tests in the edbrowse package.
-They are both in the src directory.
+There are two (primary) regression tests in the edbrowse package, acid3 and jsrt.
 Please run these tests before committing a significant software change.
 Note however that they don't test everything.
 It is possible to pass both of these tests and still break something.
 
-The first test is acid3, which is a snapshot of http://acid3.acidtests.org.acid3.org.
+The first test is tests/acid3, which is a snapshot of http://acid3.acidtests.org.
 It has been much modified.
 It consists of 100 tests, but I only run the first 69.
 The latter tests seemed to have little relevance to websites in the real world,
