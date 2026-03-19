@@ -1652,22 +1652,28 @@ node2.setAttribute(node1.attributes[l].name, node1.attributes[l].value);
 }
 }
 
-if (deep && kids) {
-for(i = 0; i < kids.length; ++i) {
-var current_item = kids[i];
+    if (deep && kids) {
+        for(i = 0; i < kids.length; ++i) {
+            let current_item = kids[i];
 // mutation observers don't apply to these newly created items.
-// I can call the faster, simpler apendChild.
-node2.appendChild$nm(clone1(current_item,deep, into));
-}
-}
+// I can call the faster, simpler apendChild method.
+// But not yet, because of tables and sections.
+            node2.appendChild(clone1(current_item,deep, into));
+        }
+    }
 
-if(node1.nodeType == 1) {
-if(node1.dom$class == "HTMLFormElement")
-formReindex(node2);
-}
+    if(node1.nodeType == 1) {
+        if(node1.dom$class == "HTMLFormElement")
+            formReindex(node2);
+// warning - the table rows structure is not replicated, because I call
+// appendChild$nm. I need something to rebuild all the rows in all the sections,
+// and don't have that but if I did that's what I would call here.
+//      if(node1.dom$class == "HTMLTableElement")
+//          rowReindexAll(node2);
+    }
 
-if(debug) alert3("}");
-return node2;
+    if(debug) alert3("}");
+    return node2;
 }
 
 /* an attempt at a structured clone implementation, definitely needs some work
@@ -2890,23 +2896,16 @@ if(defport.hasOwnProperty(p)) port = defport[p];
 return port;
 }
 
-// It's crude, but just reindex all the rows in a table.
-// Used by the Table class below, but other places as well.
+// It's crude, but reindex the rows under <table>.
 function rowReindex(t) {
-// climb up to find Table
-while(t.dom$class != "HTMLTableElement") {
-if(t.is$frame) return;
-t = t.parentNode;
-if(!t) return;
-}
-
-var i, j, n = 0;
-var s; // section
-t.rows.length = 0;
+let i, j, n = 0;
+let s; // section
+t.rows.length = 0; // squash and start over
 if(s = t.tHead) {
 for(j=0; j<s.rows.length; ++j)
 t.rows.push(s.rows[j]), s.rows[j].rowIndex = n++, s.rows[j].sectionRowIndex = j;
 }
+// a table can have multiple bodies
 for(i=0; i<t.tBodies.length; ++i) {
 s = t.tBodies[i];
 for(j=0; j<s.rows.length; ++j)
@@ -2917,10 +2916,22 @@ for(j=0; j<s.rows.length; ++j)
 t.rows.push(s.rows[j]), s.rows[j].rowIndex = n++, s.rows[j].sectionRowIndex = j;
 }
 
-j = 0;
-for(s=t.firstChild; s; s=s.nextSibling)
-if(s.dom$class == "HTMLTableRowElement")
-t.rows.push(s), s.rowIndex = n++, s.sectionRowIndex = j;
+// in case there are rows below <table> but not under a section
+    j = 0;
+    for(s=t.firstChild; s; s=s.nextSibling)
+        if(s.dom$class == "HTMLTableRowElement")
+            t.rows.push(s), s.rowIndex = n++, s.sectionRowIndex = j;
+}
+
+function rowReindex2(t) {
+    while(t) {
+        if(t.nodeType != 1) return; // stop ad document or fragment
+        if(t.dom$class == "HTMLTableElement") {
+            rowReindex(t);
+            return;
+        }
+        t = t.parentNode;
+    }
 }
 
 // more efficient than querySelectorAll
@@ -2994,14 +3005,14 @@ f[name] = el[name] = i;
 // it could be div with input elements below.
 // Parameter is the parent of the thing added or removed.
 function formReindex2(t) {
-while(t) {
-if(t.nodeType != 1) return; // stop ad document or fragment
-if(t.dom$class == "HTMLFormElement") {
-formReindex(t);
-return;
-}
-t = t.parentNode;
-}
+    while(t) {
+        if(t.nodeType != 1) return; // stop ad document or fragment
+        if(t.dom$class == "HTMLFormElement") {
+            formReindex(t);
+            return;
+        }
+        t = t.parentNode;
+    }
 }
 
 /*********************************************************************
@@ -4324,7 +4335,7 @@ if(!newobj) return null;
 if(newobj.nodeType == 11) return appendFragment(this, newobj);
 this.appendChildNative(newobj);
 if(newobj.dom$class == "HTMLTableRowElement") // shouldn't be anything other than TR
-this.rows.push(newobj), rowReindex(this);
+this.rows.push(newobj), rowReindex2(this);
 return newobj;
 }
 tablesecp.insertBeforeNative = nodep.insertBefore;
@@ -4338,7 +4349,7 @@ if(newobj.dom$class == "HTMLTableRowElement")
 for(let i=0; i<this.rows.length; ++i)
 if(this.rows[i] == item) {
 this.rows.splice(i, 0, newobj);
-rowReindex(this);
+rowReindex2(this);
 break;
 }
 return newobj;
@@ -4352,7 +4363,7 @@ if(item.dom$class == "HTMLTableRowElement")
 for(let i=0; i<this.rows.length; ++i)
 if(this.rows[i] == item) {
 this.rows.splice(i, 1);
-rowReindex(this);
+rowReindex2(this);
 break;
 }
 return item;
