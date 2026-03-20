@@ -1050,7 +1050,7 @@ if (string_deep_true != "should exist on clone when called with deep true")
 fail(156);
 if (test_anchor.style.color != "red")
 fail(157);
-if (test_anchor.href.host != "water.com")
+if (test_anchor.host != "water.com")
 fail(158);
 }
 test_cloneNode();

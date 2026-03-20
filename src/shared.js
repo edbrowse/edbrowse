@@ -2937,6 +2937,19 @@ function cellReindex(r)
         if(c.nodeName == "TD") r.cells.push(c);
 }
 
+/*********************************************************************
+This function, and the modified appendChild removeChild insertBefore methods,
+for table and table sections and table row, don't do what they need to do
+relative to rows unless tr is directly below table,
+(with a possible table section in between), and td is directly below tr.
+Any intervening tags will blow it.
+<table><div><tr>...</tr></div></table>
+I haven't seen a website in the wild that does this, yet,
+if I do, then we have to punt.
+Note that formReindex doesn't suffer from theese restrictions.
+It is quite common to have tags between <form> and <input>.
+*********************************************************************/
+
 function rowReindexAll(t)
 {
     delete t.tHead; delete t.tFoot; // crunch and rebuild
@@ -5142,7 +5155,7 @@ const s = k.split('.');
 const cn = s[0]; // class name
 const u = s[1]; // url name
 eval('odp(w.' + cn + '.prototype, "' + u + '", { ' +
-'get: function() { return this.href$2 ? this.href$2 : ""}, ' +
+'get: function() { return this.href$2 ? this.href$2.href$val : ""}, ' +
 'set: function(h) { if(h === null || h === undefined) h = ""; ' +
 'if(h instanceof w.URL || h.dom$class == "URL") h = h.toString(); ' +
 'if(typeof h != "string") { alert3("hrefset " + typeof h); ' +
@@ -5168,11 +5181,11 @@ eval('odp(w.' + cn + '.prototype, "' + piece + '", {get: function() { return thi
 })();
 
 /*********************************************************************
-Ok - a.href is a url object, but script.src is a string.
-You won't find that anywhere in the documentation, w3 schools etc, nope, I just
-respond to the javascript in the wild, and that's what it seems to expect.
-I only know for sure a.href is URL, and script.src is string,
-everything else is a guess.
+Ok - a.href has all the peices, a.protocol etc.
+I don't know if script.src does or not.
+I don't think so, so what follows is just like the above but without the pieces.
+If one of these classes is suppose to have pieces, then move it to the above,
+and also put it in spilldownResolveURL instead of spilldownResolve.
 *********************************************************************/
 
 ; (function() {
