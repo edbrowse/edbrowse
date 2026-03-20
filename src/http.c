@@ -273,14 +273,14 @@ static void scan_http_headers(struct i_get *g, bool fromCallback)
 
 	if (!g->newloc && (v = find_http_header(g, "location"))) {
 // as though a user had typed it in
-		unpercentURL(v);
+		unpercentHost(v);
 		g->newloc = v;
 	}
 
 	if (!g->newloc && (v = find_http_header(g, "refresh"))) {
 		int delay;
 		if (parseRefresh(v, &delay)) {
-			unpercentURL(v);
+			unpercentHost(v);
 			g->newloc = v;
 			g->newloc_d = delay;
 			v = NULL;
@@ -2908,7 +2908,7 @@ default_filename:
 	else
 		filepart = getFileURL(g->urlcopy, true);
 	fp2 = cloneString(filepart);
-	unpercentURL(fp2);
+	unpercentHost(fp2);
 // transliterate to get rid of /
 	for (s = fp2; *s; ++s)
 		if (*s == '/' || *s == '\\')

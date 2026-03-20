@@ -576,7 +576,7 @@ void htmlMetaHelper(const Tag *t)
 		    && stringEqualCI(heq, "Refresh")) {
 			if (parseRefresh(copy, &delay)) {
 				char *newcontent;
-				unpercentURL(copy);
+				unpercentHost(copy);
 				newcontent = resolveURL(cf->hbase, copy);
 				gotoLocation(newcontent, delay, true, cf);
 			}

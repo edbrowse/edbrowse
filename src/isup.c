@@ -81,15 +81,16 @@ static int protocolByName(const char *p, int l)
 }
 
 // Unpercent the host component of a url, not the data component.
-void unpercentURL(char *url)
+// This is restricted to ascii letters and numbers and hypen and dot,
+// I don't know why any of it would be encoded anyways.
+// Perhaps the at sign if you include password.
+void unpercentHost(char *url)
 {
 	char c, *u, *w;
 	int n;
 	u = w = url;
 	while ((c = *u)) {
 		++u;
-		if (c == '+')
-			c = ' ';
 		if (c == '%' && isxdigit(u[0]) && isxdigit(u[1])) {
 			c = fromHex(u[0], u[1]);
 			u += 2;
