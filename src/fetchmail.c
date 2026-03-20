@@ -168,23 +168,6 @@ static void linkAttachment(struct MHINFO *w)
 	stringAndString(&imapLines, &iml_l,  "unknown");
 	stringAndString(&imapLines, &iml_l, ";base64,");
 	e = base64Encode(w->start, w->end - w->start, false);
-// Bad news, + is interpreted by the url machinery, need to %encode.
-	int pc = 0; // plus count
-	const char *f;
-	for(f = e; *f; ++f)
-		if(*f == '+') ++pc;
-	if(pc) {
-		int l = strlen(e);
-		char *e2 = allocMem(l + pc*2 + 2);
-		char *f2 = e2;
-		for(f = e; *f; ++f) {
-			if(*f != '+') { *f2++ = *f; continue; }
-			strcpy(f2, "%2b");
-			f2 += 3;
-		}
-		*f2 = 0;
-		nzFree(e), e = e2;
-	}
 	stringAndString(&imapLines, &iml_l, e);
 	nzFree(e);
 	if (w->cfn[0]) {

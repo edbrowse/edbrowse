@@ -2390,7 +2390,7 @@ static bool dataConnect(struct i_get *g)
 	}
 	g->code = 200;
 	*comma++ = 0;
-	unpercentString(comma);
+	unpercentString2(comma);
 	if(comma - copy >= 8 && stringEqual(comma - 8, ";base64")) {
 		debugPrint(3, "data:base64");
 		char *end = comma + strlen(comma);
