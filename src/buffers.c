@@ -1978,7 +1978,7 @@ uchar prebrowse, const Tag *gotag)
 		}
 		fileprot = true;
 		changeFileName = cloneString(filename);
-		unpercentString2(changeFileName);
+		unpercentString(changeFileName);
 		if (stringEqual(filename, changeFileName)) {
 			free(changeFileName);
 			changeFileName = 0;
@@ -8553,7 +8553,7 @@ past_g_file:
 
 			if (jsh) {
 /* actually running the url, not passing it to http etc, need to unescape */
-				unpercentString2(h);
+				unpercentString(h);
 				cf = tag->f0;
 				jsRunScriptWin(h, "a.href", 1);
 				jSideEffects();
@@ -8568,7 +8568,7 @@ past_js:
 // to access local files
 // but not for a fragment
 			if (!isURL(h) && *h != '#')
-				unpercentString2(h);
+				unpercentString(h);
 		}
 	}
 

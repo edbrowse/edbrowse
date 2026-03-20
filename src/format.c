@@ -2499,7 +2499,7 @@ bool parseDataURI(const char *uri, char **mediatype, char **data, int *data_l)
 
 	encoded_len = strlen(data_sep + 1);
 	*data = pullString(data_sep + 1, encoded_len);
-	unpercentString2(*data);
+	unpercentString(*data);
 
 	if (!base64) {
 		*data_l = strlen(*data);

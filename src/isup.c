@@ -111,15 +111,14 @@ void unpercentHost(char *url)
 	strmove(w, u);
 }
 
-// Unpercent an entire string
-void unpercentString(char *s)
+// Unpercent an entire string, including + to space
+void unpercentStringPlus(char *s)
 {
 	char c, *u, *w;
 	u = w = s;
 	while ((c = *u)) {
 		++u;
-		if (c == '+')
-			c = ' ';
+		if (c == '+') c = ' ';
 		if (c == '%' && isxdigit(u[0]) && isxdigit(u[1])) {
 			c = fromHex(u[0], u[1]);
 			u += 2;
@@ -132,7 +131,7 @@ void unpercentString(char *s)
 }
 
 // like the above but without + processing
-void unpercentString2(char *s)
+void unpercentString(char *s)
 {
 	char c, *u, *w;
 	u = w = s;
@@ -1362,7 +1361,7 @@ void decodeMailURL(const char *url, char **addr_p, char **subj_p, char **body_p)
 	if(!s) s = url + strlen(url);
 	if (addr_p) {
 		*addr_p = pullString1(url, s);
-		unpercentString2(*addr_p);
+		unpercentString(*addr_p);
 	}
 	if (subj_p)
 		*subj_p = 0;
