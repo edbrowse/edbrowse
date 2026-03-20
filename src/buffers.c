@@ -8691,7 +8691,7 @@ past_js:
 					cf = save_cf;
 // the action of the button could fail, and stil some event handlers
 // could change some lines on the screen.
-					rerender(0);
+					if(!inscript) rerender(0);
 					if (!c)
 						goto fail;
 					if (newlocation) goto redirect;
