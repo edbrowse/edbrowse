@@ -1065,7 +1065,8 @@ x1.removeEventListener("click",x1click);
 if(x1.onclick$$array.length)
 fail(160);
 }
-test_removeListener();
+// This accesses onclick$$array which is an edbrowse construct
+if(isedbrowse) test_removeListener();
 
 // This comes after the original onsubmit function
 document.forms[1].addEventListener("submit", function(e) { alert("submit phase "+e.eventPhase);});
