@@ -1181,14 +1181,23 @@ s.dispatchEvent(e)
 */
 }
 
+// argument should be document; we descend down from there.
+// Return true if anything was called.
 function connectedCallbackCheck(t)
 {
-if(t.connectedCallback$pending) {
-t.connectedCallback();
-t.connectedCallback$pending = false;
-}
-for(let i = 0; i < t.childNodes.length; ++i)
-connectedCallbackCheck(t.childNodes[i]);
+    let rc = false;
+    if(t.connectedCallback$pending) {
+        t.connectedCallback();
+        t.connectedCallback$pending = false;
+        rc = true;
+    }
+    for(let c of t.childNodes) {
+        if(c.nodeType != 1) continue;
+        if(c.dom$class == "HTMLFrameElement" ||
+        c.dom$class == "HTMLIFrameElement") continue;
+        rc |= connectedCallbackCheck(c);
+    }
+    return rc;
 }
 
 /*********************************************************************
@@ -1619,6 +1628,8 @@ continue;
 }
 
 if (typeof node1[item] === 'boolean') {
+if(item == "connectedCallback$pending" ||
+item == "disconnectedCallback$pending") continue;
 // these are spilldown from the attributes, and will be copied over as attributes
 if(item == "aria-hidden") continue;
 if(debug) alert3("copy boolean " + item + " = " + node1[item]);
