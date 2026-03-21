@@ -6433,7 +6433,7 @@ et_go:
 	}
 
 	if (stringEqual(line, "textd+") || stringEqual(line, "textd-")) {
-		textd = (line[4] == '+');
+		textd = (line[5] == '+');
 		if (helpMessagesOn)
 			i_puts(textd + MSG_TextDecOff);
 		if (cw->browseMode)
