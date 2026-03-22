@@ -867,6 +867,10 @@ static bool run_function_bool(JSContext *cx, JSValueConst parent, const char *na
 			JS_ToInt32(cx, &seqno, v);
 		JS_Release(cx, v);
 	}
+	if (stringEqual(name, "connectedCallbackStart"))
+		dbl = 4;
+	if (stringEqual(name, "frames$rebuild"))
+		dbl = 4;
 // don't print message function running in and out, it runs all the time!
 	if (stringEqual(name, "onmessage$$running"))
 		dbl = 9;

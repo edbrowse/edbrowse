@@ -1337,22 +1337,25 @@ passes:
 			forceFrameExpand(t);
 	}
 
-	if (!async) {
-		if(startbrowse) {
-			cf = save_cf;
-			run_function_bool_win(cf, "readyStateComplete");
-			runOnload();
-			startbrowse = false;
-			change = true;
-		}
-		async = true;
-		goto passes;
-	}
+    if (!async) {
+        if(startbrowse) {
+            cf = save_cf;
+            run_function_bool_win(cf, "readyStateComplete");
+            runOnload();
+            runConnectedCallback();
+            startbrowse = false;
+            change = true;
+        }
+        async = true;
+        goto passes;
+    }
 
-	if (change)
-		goto top;
+    if (change) {
+    runConnectedCallback();
+        goto top;
+    }
 
-	cf = save_cf;
+    cf = save_cf;
 
 	if ((t = js_reset)) {
 		js_reset = 0;

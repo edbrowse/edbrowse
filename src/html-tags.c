@@ -4735,15 +4735,6 @@ Needless to say that's not good!
         if(action == TAGACT_FRAME)
             run_function_bool_win(cf, "frames$rebuild");
 
-// custom element with a connected callback function
-        if(isRooted(t) &&
-        !cf->xmlMode &&
-get_property_bool_t(t, "connectedCallback$pending")) {
-            debugPrint(3, "%s %d connectedCallback", t->nodeName, t->seqno);
-            run_function_bool_t(t, "connectedCallback");
-            set_property_bool_t(t, "connectedCallback$pending", false);
-        }
-
 // test to see if we should run this script right now.
 // It should be part of the html, not generated - I think.
 // And definitely not xml.

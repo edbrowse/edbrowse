@@ -508,27 +508,24 @@ img="http://www.eklhad.net/dolls/v194513.jpg"></popup-info></p>
 
 <script>
 try {
-pinfo = document.querySelector("popup-info");
+pinfo1 = document.querySelector("popup-info");
+// now let's create a custom object and link it into the tree.
+pinfo2 = document.createElement("popup-info");
+// this isn't an html tag so we have to set our own attributes
+pinfo2.setAttribute("data-text", "freezer");
+pinfo2.style.display = "none"; // don't need to see the second one
+pinfo1.parentNode.append(pinfo2);
 function customTest2() {
-const sr = pinfo.firstChild; // should be shado root
+const sr = pinfo1.firstChild; // should be shado root
 if(sr.nodeName != "SHADOWROOT") fail(304);
-if(pinfo.shadowRoot != sr) fail(305);
+if(pinfo1.shadowRoot != sr) fail(305);
 // remember we put that leading space in front
 if(sr.lastChild.lastChild.lastChild.data.substring(1,10) != "Bolognese") fail(306);
 if(sr.querySelector("img").src.indexOf("/v194513") < 0) fail(307);
-// now let's create a custom object and link it into the tree.
-let p2 = document.createElement("popup-info");
-// this isn't an html tag so we have to set our own attributes
-p2.setAttribute("data-text", "freezer");
-pinfo.append(p2); // that should do it
-if(p2.firstChild.nodeName != "SHADOWROOT") fail(308);
-if(p2.querySelector("img").src.indexOf("default.png") < 0) fail(309);
-// And now, we don't need this cluttering the page.
-// This should call any disconnectedCallback functions,
-// but that hasn't been implemented yet.
-p2.remove();
+if(pinfo2.firstChild.nodeName != "SHADOWROOT") fail(308);
+if(pinfo2.querySelector("img").src.indexOf("default.png") < 0) fail(309);
 }
-customTest2();
+setTimeout(customTest2, 600);
 } catch(e) {
 alert(e);
 alert(e.stack);

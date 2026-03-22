@@ -1185,6 +1185,7 @@ s.dispatchEvent(e)
 function connectedCallbackCheck(t)
 {
     if(t.connectedCallback$pending) {
+        alert3(`${t.nodeName} tag ${t.eb$seqno} connectedCallback`);
         t.connectedCallback();
         t.connectedCallback$pending = false;
     }
@@ -3425,7 +3426,6 @@ nodep.appendChild = function(c) {
         if(r.nodeType != 3) formReindex2(this);
         mutFixup(this, 0, c, null);
         runScriptWhenAttached(r);
-        if(isRooted(r)) connectedCallbackCheck(r);
     }
     return r;
 }
@@ -3456,7 +3456,6 @@ nodep.insertBefore = function(c, t) {
         if(r.nodeType != 3) formReindex2(this);
         mutFixup(this, 0, r, null);
         runScriptWhenAttached(r);
-        if(isRooted(r)) connectedCallbackCheck(r);
     }
     return r;
 }
