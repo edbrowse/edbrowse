@@ -356,6 +356,7 @@ sdpc("createNodeIterator", mw$.createNodeIterator)
 sdpc("createTreeWalker", mw$.createTreeWalker)
 swp("rowReindex", mw$.rowReindex)
 swp("formReindex", mw$.formReindex)
+swp("connectedCallbackStart", () => mw$.connectedCallbackCheck(my$doc()));
 swpc("getComputedStyle", mw$.getComputedStyle.bind(window))
 swp("mutFixup", mw$.mutFixup)
 swp("makeSheets", mw$.makeSheets)

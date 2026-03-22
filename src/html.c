@@ -1221,6 +1221,7 @@ I will disconnect here, and also check for inxhr in runOnload().
 }
 
 static void runOnload(void);
+static void runConnectedCallback(void);
 void runScriptsPending(bool startbrowse)
 {
 	Tag *t;
@@ -3832,9 +3833,9 @@ static void unloadHyperlink(const char *js_function, const char *where)
 	stringAndString(&cf->dw, &cf->dw_l, "</A><br>");
 }
 
-/* Run the various onload functions */
-/* Turn the onunload functions into hyperlinks */
-/* This runs after the page is parsed and before the various javascripts run, is that right? */
+// Run the various onload functions.
+// Turn the onunload functions into hyperlinks.
+// This runs after the page is parsed and before the deferred scripts run.
 static void runOnload(void)
 {
 	int i, action;
@@ -3884,6 +3885,14 @@ run_event_doc(cf, "onDOMContentLoaded");
 		if (action == TAGACT_H)
 			run_event_t(t, "onload");
 	}
+}
+
+static void runConnectedCallback(void)
+{
+    Frame *save_cf = cf;
+    for(cf = &cw->f0; cf; cf = cf->next)
+        run_function_bool_win(cf, "connectedCallbackStart");
+    cf = save_cf;
 }
 
 // In one place, tack on the $$Aarray to turn onfoo into onfoo$$array
