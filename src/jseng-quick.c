@@ -158,26 +158,31 @@ static JSRuntime *jsrt;
 static bool js_running;
 static JSContext *mwc; // master window context
 static JSContext *freeing_context = NULL;
+static Frame *freeing_frame = NULL;
 // Find window and frame based on the js context. Set cw and cf accordingly.
 // This is inefficient, but is not called very often.
 static bool frameFromContext(jsobjtype cx)
 {
-	int i;
-	Window *w;
-	Frame *f;
-	if(cx == mwc)
-		return false;
-	for (i = 1; i <= maxSession; ++i) {
-		for (w = sessionList[i].lw; w; w = w->prev) {
-			for (f = &(w->f0); f; f = f->next) {
-				if(f->cx == cx) {
-					cf = f, cw = w;
-					return true;
-				}
-			}
-		}
-	}
-	return false;
+    int i;
+    Window *w;
+    Frame *f;
+// It's ridiculous to fish around for the frame when we know what it is.
+    if(freeing_frame) {
+        cf = freeing_frame, cw = cf->owner;
+        return true;
+    }
+    if(cx == mwc) return false;
+    for (i = 1; i <= maxSession; ++i) {
+        for (w = sessionList[i].lw; w; w = w->prev) {
+            for (f = &(w->f0); f; f = f->next) {
+                if(f->cx == cx) {
+                    cf = f, cw = w;
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
 static void processError(JSContext * cx);
@@ -3416,7 +3421,7 @@ cleaning up when we really want to run all the finalizers */
         e = list_entry(l, JSJobEntry, link);
         ctx = e->ctx;
         if (freeing_context && ctx != freeing_context) continue;
-// This line resets cw and cf, and we don't put it back, so the calling routine must restore it.
+// This line resets cw and cf, and we don't put it back, so the calling routine must restore it!
         if (!frameFromContext(ctx)) {
             if(ctx == mwc)
                 debugPrint(3, "frameFromContext finds master window");
@@ -4134,6 +4139,7 @@ void freeJSContext(Frame *f)
     Window *save_cw = cw;
     Frame *save_cf = cf;
     debugPrint(3, "begin js context cleanup for %d", f->gsn);
+    freeing_frame = f;
     freeing_context = f->cx;
 /* This looks mad on paper because it appears that we're going to lose our
 document and window objects as well as the context. However, from reading the
@@ -4168,6 +4174,7 @@ are created by the above gc run they'll go away at some point */
     free(f->docobj);
     f->winobj = f->docobj = f->cx = 0;
     f->jslink = false;
+    freeing_frame = NULL;
     freeing_context = NULL;
     cw = save_cw, cf = save_cf;
 }
