@@ -1072,7 +1072,7 @@ void freeWindows(int cx, bool all)
 while (w) {
 		Window *p = w->prev;
 		freeWindow(w);
-		w = p;
+		s->lw2 = w = p;
 	}
 	s->fw2 = s->lw2 = 0;
 	if(!all) return;
@@ -1080,7 +1080,7 @@ while (w) {
 	while (w) {
 		Window *p = w->prev;
 		freeWindow(w);
-		w = p;
+		s->lw = w = p;
 	}
 	s->fw = s->lw = 0;
 }
