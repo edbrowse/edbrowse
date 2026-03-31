@@ -2325,7 +2325,9 @@ bool writeFile(const char *name, int mode)
 		return false;
 	}
 
-	if (isURL(name)) {
+	if (isURL(name) &&
+// http://www.foo.bar is bad, but you can write to www.foo.bar
+	!missingProtURL(name)) {
 		if (mode & O_APPEND) {
 			setError(MSG_NoAppendURL);
 			return false;
