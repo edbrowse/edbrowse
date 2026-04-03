@@ -249,6 +249,7 @@ void ebClose(int n);
 void eeCheck(void);
 void setDataSource(char *v);
 bool javaOK(const char *url);
+bool textDecorateOK(void);
 bool mustVerifyHost(const char *url);
 const char *findProxyForURL(const char *url);
 const char *findAgentForURL(const char *url);

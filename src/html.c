@@ -5196,7 +5196,7 @@ Eventually the `@ and '@ are crunched away.
 
 	case TAGACT_STRONG:
 	case TAGACT_EM:
-		if (invisible || !textd) break;
+		if (invisible || !textDecorateOK()) break;
 // check for the tags that produce the same symbol
 		if(findOpenTag(t, TAGACT_EM)) break;
 		if(findOpenTag(t, TAGACT_STRONG)) break;
@@ -5208,7 +5208,7 @@ Eventually the `@ and '@ are crunched away.
 // are bolded, and that information is not useful at all.
 // So I'm going to recant <b> for now. The other tags I do find useful.
 	case TAGACT_B:
-		if (invisible || !textd) break;
+		if (invisible || !textDecorateOK()) break;
 		if(findOpenTag(t, TAGACT_B)) break;
 		emphasize(t, opentag, '+');
 		break;
@@ -5216,21 +5216,21 @@ Eventually the `@ and '@ are crunched away.
 
 	case TAGACT_DEL:
 	case TAGACT_S:
-		if (invisible || !textd) break;
+		if (invisible || !textDecorateOK()) break;
 		if(findOpenTag(t, TAGACT_DEL)) break;
 		if(findOpenTag(t, TAGACT_S)) break;
 		emphasize(t, opentag, '~');
 		break;
 
 	case TAGACT_I:
-		if (invisible || !textd) break;
+		if (invisible || !textDecorateOK()) break;
 		if(findOpenTag(t, TAGACT_I)) break;
 		emphasize(t, opentag, '@');
 		break;
 
 	case TAGACT_INS:
 	case TAGACT_U:
-		if (invisible || !textd) break;
+		if (invisible || !textDecorateOK()) break;
 		if(findOpenTag(t, TAGACT_U)) break;
 		if(findOpenTag(t, TAGACT_INS)) break;
 		emphasize(t, opentag, '_');

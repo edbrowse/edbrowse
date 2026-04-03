@@ -203,9 +203,9 @@ void eeCheck(void)
 }
 
 static struct ebhost {
-// j = nojs, v = novs, p = proxy, f = function,
+// j = nojs, J = js, v = novs, p = proxy, f = function,
 // s = subject, t = to, r = reply, a = agentsite,
-// J = js, j = nojs
+// d = notd
 	char type, filler;
 	short n;
 // watch out, these fields are highly overloaded, depending on type
@@ -265,8 +265,7 @@ static void add_proxy(char *v)
 bool javaOK(const char *url)
 {
 	int j;
-	if (!allowJS)
-		return false;
+	if (!allowJS) return false;
 	if (isDataURI(url))
 		return true;
 	for (j = 0; (unsigned)j < ebhosts_avail; ++j)
@@ -285,6 +284,21 @@ bool javaOK(const char *url)
 		    patternMatchURL(url, ebhosts[j].host))
 			return false;
 	return true;
+}
+
+// Are we ok to decorate the text for emphasis and italics and such?
+bool textDecorateOK(void)
+{
+    int j;
+    const char *url = cf->fileName;
+    if (!textd) return false;
+    if(!url) return true;
+    if(!isURL(url)) return true;
+    for (j = 0; (unsigned)j < ebhosts_avail; ++j)
+        if (ebhosts[j].type == 'd' &&
+        patternMatchURL(url, ebhosts[j].host))
+            return false;
+    return true;
 }
 
 /* Return true if the cert for this host should be verified. */
@@ -1414,19 +1428,20 @@ void unreadConfigFile(void)
 #define GLOBALWORDS 27
 
 static const char *const keywords[] = {
-	"inserver", "outserver", "login", "password", "from", "reply",
-	"inport", "outport",
-	"to", "cc", "bcc", "attach",
-	"imask", "isub", "dx",
-	"type", "desc", "suffix", "protocol", "program",
-	"content", "outtype", "urlmatch",
-	"tname", "tshort", "cols", "keycol",
-	"downdir", "maildir", "agent",
-	"jar", "nojs", "cachedir",
-	"webtimer", "mailtimer", "certfile", "datasource", "proxy",
-	"agentsite", "localizeweb", "imapfetch", "novs", "cachesize",
-	"adbook", "envelope", "emojis", "emoji",
-"include", "optinclude", "js", "pubkey", "irclog", 0};
+    "inserver", "outserver", "login", "password", "from", "reply",
+    "inport", "outport",
+    "to", "cc", "bcc", "attach",
+    "imask", "isub", "dx",
+    "type", "desc", "suffix", "protocol", "program",
+    "content", "outtype", "urlmatch",
+    "tname", "tshort", "cols", "keycol",
+    "downdir", "maildir", "agent",
+    "jar", "nojs", "cachedir",
+    "webtimer", "mailtimer", "certfile", "datasource", "proxy",
+    "agentsite", "localizeweb", "imapfetch", "novs", "cachesize",
+    "adbook", "envelope", "emojis", "emoji",
+    "include", "optinclude", "js", "pubkey", "irclog",
+    "notd", 0};
 
 /* Read the config file and populate the corresponding data structures. */
 /* This routine succeeds, or aborts via one of these macros. */
@@ -2097,6 +2112,17 @@ inside:
 		case 51:	// irclog
 			nzFree0(irclog);
 			irclog = envFileAlloc(f->file, v);
+			continue;
+
+		case 52:	// notd
+			if (*v == '.')
+				++v;
+/* Is this essential?
+			q = strchr(v, '.');
+			if (!q || q[1] == 0)
+				cfgLine1(MSG_EBRC_DomainDot, v);
+*/
+			add_ebhost(v, 'd');
 			continue;
 
 		default:
