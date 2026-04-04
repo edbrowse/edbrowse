@@ -17,5 +17,5 @@
 plugin {
 desc = youtube
 urlmatch = youtube.com/watch?|youtube.com/embed/|godtube.com/watch|youtu.be
-program = mpv %i
+program = edbrowse-plugin-mpv %i
 }

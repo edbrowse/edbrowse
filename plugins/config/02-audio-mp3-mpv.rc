@@ -39,5 +39,5 @@ type = audio/mp3
 desc = audio file in mp3 format
 suffix = mp3
 content = audio/mpeg
-program = mpv --really-quiet %i
+program = edbrowse-plugin-mpv --really-quiet %i
 }

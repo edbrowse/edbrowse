@@ -2,5 +2,5 @@ plugin {
 desc = play web media protocols
 type = */*
 protocol = nitro,rtsp,rtmp
-program = mpv %i
+program = edbrowse-plugin-mpv %i
 }

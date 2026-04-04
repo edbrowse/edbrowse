@@ -1,0 +1,3 @@
+#!/bin/sh
+[ ! "$PLUGINHEADERS" ] || set -- --http-header-fields="$PLUGINHEADERS" "$@"
+exec mpv "$@"

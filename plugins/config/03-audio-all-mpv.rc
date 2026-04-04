@@ -2,6 +2,6 @@ plugin {
 type = audio
 suffix = ogg,mp3,flac,wav,voc,au
 content = audio/*,*/audio,*/audio/*
-program = mpv %i
+program = edbrowse-plugin-mpv %i
 desc = audio
 }

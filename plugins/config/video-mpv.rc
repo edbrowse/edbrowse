@@ -6,5 +6,5 @@ type = video
 desc = video file in mpv compatible format
 suffix = mp4,m4a,webm
 content = video/*,*/video,*/video/*
-program = mpv %i
+program = edbrowse-plugin-mpv %i
 }
