@@ -5195,49 +5195,20 @@ No false positives, as you would surely encounter with a single *.
 Eventually the `@ and '@ are crunched away.
 *********************************************************************/
 
-	case TAGACT_STRONG:
-	case TAGACT_EM:
-		if (invisible || !textDecorateOK()) break;
+    case TAGACT_EM: case TAGACT_STRONG: case TAGACT_B: case TAGACT_I:
+    case TAGACT_U: case TAGACT_INS: case TAGACT_S: case TAGACT_DEL:
+// TAGACT_CODE could go here, but it's more like blockquote than
+// an emphasized word or phrase.
+        if (invisible || !textDecorateOK()) break;
+        c = tdchars[action - TAGACT_EM];
+        if(c == 'x') break; // x is code for no action
 // check for the tags that produce the same symbol
-		if(findOpenTag(t, TAGACT_EM)) break;
-		if(findOpenTag(t, TAGACT_STRONG)) break;
-		emphasize(t, opentag, tdchars[action - TAGACT_EM]);
-		break;
-
-#if 0
-// to from date subject etc in the original block of a reply email
-// are bolded, and that information is not useful at all.
-// So I'm going to recant <b> for now. The other tags I do find useful.
-	case TAGACT_B:
-		if (invisible || !textDecorateOK()) break;
-		if(findOpenTag(t, TAGACT_B)) break;
-		emphasize(t, opentag, tdchars[action - TAGACT_EM]);
-		break;
-#endif
-
-	case TAGACT_DEL:
-	case TAGACT_S:
-		if (invisible || !textDecorateOK()) break;
-		if(findOpenTag(t, TAGACT_DEL)) break;
-		if(findOpenTag(t, TAGACT_S)) break;
-		emphasize(t, opentag, tdchars[action - TAGACT_EM]);
-		break;
-
-	case TAGACT_I:
-		if (invisible || !textDecorateOK()) break;
-		if(findOpenTag(t, TAGACT_I)) break;
-		emphasize(t, opentag, tdchars[action - TAGACT_EM]);
-		break;
-
-	case TAGACT_INS:
-	case TAGACT_U:
-		if (invisible || !textDecorateOK()) break;
-		if(findOpenTag(t, TAGACT_U)) break;
-		if(findOpenTag(t, TAGACT_INS)) break;
-		emphasize(t, opentag, tdchars[action - TAGACT_EM]);
-		break;
-
-// TAGACT_CODE goes here
+        for(j = 0; j < 8; ++j)
+            if(c == tdchars[j] &&
+            findOpenTag(t, TAGACT_EM + j))
+                return;
+        emphasize(t, opentag, c);
+        break;
 
 	case TAGACT_SVG:
 		if (!invisible && opentag) {
