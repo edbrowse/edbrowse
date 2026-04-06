@@ -4764,10 +4764,12 @@ static int ahref_under(const Tag *t)
 	return 0;
 }
 
-static void emphasize(Tag *t, bool opentag, char d)
+static void emphasize(Tag *t, bool opentag, const char *a)
 {
-	char mark[4];
-	sprintf(mark, "%c@%c", (opentag ? '`' : '\''), d);
+// no utf8 for now - just ascii
+    char d = *a;
+	char mark[12];
+	sprintf(mark, "%c@%s", (opentag ? '`' : '\''), a);
 
 // I don't see the point of injecting these marks if we are
 // inside a hyperlink or button.
@@ -4792,7 +4794,10 @@ static void emphasize(Tag *t, bool opentag, char d)
 }
 
 static Tag *deltag;
-static const char tdchars[] = "**x@__~~x";
+// the text decoration characters
+static char  tdchars[8][8] =  {
+    "*", "*", "x", "@", "_", "_", "~", "~", 
+};
 
 static void renderNode(Tag *t, bool opentag, struct parseContext *pc)
 {
@@ -5200,14 +5205,14 @@ Eventually the `@ and '@ are crunched away.
 // TAGACT_CODE could go here, but it's more like blockquote than
 // an emphasized word or phrase.
         if (invisible || !textDecorateOK()) break;
-        c = tdchars[action - TAGACT_EM];
-        if(c == 'x') break; // x is code for no action
+        a = tdchars[action - TAGACT_EM];
+        if(*a == 'x') break; // x is code for no action
 // check for the tags that produce the same symbol
         for(j = 0; j < 8; ++j)
-            if(c == tdchars[j] &&
+            if(!strcmp(a, tdchars[j]) &&
             findOpenTag(t, TAGACT_EM + j))
                 return;
-        emphasize(t, opentag, c);
+        emphasize(t, opentag, a);
         break;
 
 	case TAGACT_SVG:
