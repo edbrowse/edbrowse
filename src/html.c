@@ -4792,6 +4792,7 @@ static void emphasize(Tag *t, bool opentag, char d)
 }
 
 static Tag *deltag;
+static const char tdchars[] = "**x@__~~x";
 
 static void renderNode(Tag *t, bool opentag, struct parseContext *pc)
 {
@@ -5200,7 +5201,7 @@ Eventually the `@ and '@ are crunched away.
 // check for the tags that produce the same symbol
 		if(findOpenTag(t, TAGACT_EM)) break;
 		if(findOpenTag(t, TAGACT_STRONG)) break;
-		emphasize(t, opentag, '*');
+		emphasize(t, opentag, tdchars[action - TAGACT_EM]);
 		break;
 
 #if 0
@@ -5210,7 +5211,7 @@ Eventually the `@ and '@ are crunched away.
 	case TAGACT_B:
 		if (invisible || !textDecorateOK()) break;
 		if(findOpenTag(t, TAGACT_B)) break;
-		emphasize(t, opentag, '+');
+		emphasize(t, opentag, tdchars[action - TAGACT_EM]);
 		break;
 #endif
 
@@ -5219,13 +5220,13 @@ Eventually the `@ and '@ are crunched away.
 		if (invisible || !textDecorateOK()) break;
 		if(findOpenTag(t, TAGACT_DEL)) break;
 		if(findOpenTag(t, TAGACT_S)) break;
-		emphasize(t, opentag, '~');
+		emphasize(t, opentag, tdchars[action - TAGACT_EM]);
 		break;
 
 	case TAGACT_I:
 		if (invisible || !textDecorateOK()) break;
 		if(findOpenTag(t, TAGACT_I)) break;
-		emphasize(t, opentag, '@');
+		emphasize(t, opentag, tdchars[action - TAGACT_EM]);
 		break;
 
 	case TAGACT_INS:
@@ -5233,8 +5234,10 @@ Eventually the `@ and '@ are crunched away.
 		if (invisible || !textDecorateOK()) break;
 		if(findOpenTag(t, TAGACT_U)) break;
 		if(findOpenTag(t, TAGACT_INS)) break;
-		emphasize(t, opentag, '_');
+		emphasize(t, opentag, tdchars[action - TAGACT_EM]);
 		break;
+
+// TAGACT_CODE goes here
 
 	case TAGACT_SVG:
 		if (!invisible && opentag) {
