@@ -195,6 +195,7 @@ void showTimers(void);
 void domOpensWindow(const char *href, const char *name);
 int tableType(const Tag *t);
 bool all_th(const Tag *tr);
+int is_tdchar(const char *s);
 char *render(void);
 bool itext(int d);
 struct htmlTag *line2tr(int ln);

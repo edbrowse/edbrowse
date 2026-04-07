@@ -13,7 +13,10 @@ Swap:              0           0           0</pre>
 </details>
 <details open>
 <summary>Another test</summary>
-<p>This is a test.</p>
+<p>This is a test.
+<em>   </em>
+<em> <b> <em> <i> word </i> </em></b>  </em>
+</p>
 </details>
 <script>
 t = document.body.querySelectorAll("details")

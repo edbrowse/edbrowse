@@ -416,16 +416,16 @@ normalChar:
 	debugPrint(4, "anchorSwap %d", cnt);
 }
 
-// Like the above but this time we push whitespace past emphasize marks.
-// Simpler, no tags, no pipes, just 3-character marks.
+// Like anchorSwap but this time we push whitespace past emphasize marks.
+// Simpler, no tags, no pipes, just emphasize marks.
 // It's important to run this one first, before anchorSwap.
+
 static void emphasizeSwap(char *buf)
 {
-	char c, d, *s, *w, *a;
+	char c, *s, *w, *a;
 	bool change;		// made a swap somewhere
-	int cnt = 0;
-	char mark[4];
-	static const char markchars[] = "*+~_@";
+	int cnt = 0, l;
+	char mark[12];
 
 top1:
 	change = false;
@@ -444,7 +444,7 @@ top1:
 // end of white space, should we swap it with prior mark?
 		if (w && a) {
 			memmove(a, w, s - w);
-			memmove(a + (s - w), mark, 3);
+			memmove(a + (s - w), mark, strlen(mark));
 			change = true;
 			w = NULL;
 		}
@@ -452,20 +452,22 @@ top1:
 		a = NULL;
 		if (c != '`' && c != '\'') goto normalChar;
 		if(s[1] != '@') goto normalChar;
-		if(!s[2] || !strchr(markchars, s[2])) goto normalChar;
-		memcpy(mark, s, 3);
+		if(!(l = is_tdchar(s + 2))) goto normalChar;
+		l += 2;
+		memcpy(mark, s, l);
+		mark[l] = 0;
 // We have a mark, should we swap it with prior whitespace?
 		if(w && c == '\'') {
-			memmove(w + 3, w, s - w);
-			memcpy(w, mark, 3);
+			memmove(w + l, w, s - w);
+			memcpy(w, mark, l);
 			change = true;
-			w += 3;
-			s += 2;
+			w += l;
+			s += l - 1;
 			continue;
 		}
 
 		if(c == '`') a = s;
-		s += 2;
+		s += l - 1;
 normalChar:
 		w = 0;
 	}
@@ -477,9 +479,9 @@ if(change) goto top1;
 top2:
 	change = false;
 	for(s = a = buf; (c = *s); ++s) {
-		if(c == '`' && s[1] == '@' && (d = s[2]) &&
-		s[3] == '\'' && s[4] == '@' && s[5] == d) {
-			s += 5;
+		if(c == '`' && s[1] == '@' && (l = is_tdchar(s + 2)) &&
+		s[2 + l] == '\'' && s[3 + l] == '@' && !strncmp(s + 2, s + 4 + l, l)) {
+			s += 3 + 2*l;
 			change = true;
 			continue;
 		}
@@ -488,43 +490,14 @@ top2:
 	*a = 0;
 	if(change) goto top2;
 
-// compress <em><em>text</em></em>
-// more likely to be <em><b>text</b></em>, if it ever happens at all.
-// We don't need this code in the html world, because I check for nested tags
-// by findOpenTag(); but if we ever infor emphasis from css, we might
-// need this code or something like it, so I'll just def it out for now.
-#if 0
-top3:
-	change = false;
-	for(s = a = buf; (c = *s); ++s) {
-		if(c == '`' && s[1] == '@' && (d = s[2]) &&
-		s[3] == '`' && s[4] == '@' && s[5] == d) {
-			char * u1 = strstr(s+6, "`@");
-			char * u2 = strstr(s+6, "'@");
-			if(!u1) u1 = u2;
-			if(u1 && u2 && u2 < u1) u1 = u2;
-			if(u1 && u1[0] == '\'' && u1[2] == d &&
-			u1[3] == '\'' && u1[4] == '@' && u1[5] == d) {
-				s += 2;
-				strmove(u1, u1 + 3);
-				change = true;
-				continue;
-			}
-		}
-		*a++ = c;
-	}
-	*a = 0;
-	if(change) goto top3;
-#endif
-
 // and now let's crunch the marks down to single characters.
-	for(s = a = buf; (c = *s); ++s) {
-		if((c == '`' || c == '\'') &&
-		s[1] == '@' && s[2] && strchr(markchars, s[2]))
-			s += 2;
-		*a++ = *s;
-	}
-	*a = 0;
+    for(s = a = buf; (c = *s); ++s) {
+        if((c == '`' || c == '\'') &&
+        s[1] == '@' && is_tdchar(s + 2))
+            s += 2;
+    	*a++ = *s;
+    }
+    *a = 0;
 }
 
 /* Framing characters like [] around an anchor are unnecessary here,

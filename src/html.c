@@ -4799,6 +4799,17 @@ static char  tdchars[8][8] =  {
     "*", "*", "x", "@", "_", "_", "~", "~", 
 };
 
+int is_tdchar(const char *s)
+{
+    int i;
+    for(i = 0; i < 8; ++i) {
+        const char *a = tdchars[i];
+        int l = strlen(a);
+        if(!strncmp(a, s, l)) return l;
+    }
+    return 0;
+}
+
 static void renderNode(Tag *t, bool opentag, struct parseContext *pc)
 {
 	int tagno = t->seqno;
