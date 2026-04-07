@@ -30,83 +30,72 @@ static struct listHead down_jobs = {
 	&down_jobs, &down_jobs
 };
 
-/*
- * Libcurl allows some really fine-grained access to data.  We could
- * have multiple mutexes if we want, and that might lead to less
- * blocking.  For now, we just use one mutex.
- */
+/* We need to have a mutex for each type of thing to be locked */
+static pthread_mutex_t mutexes[CURL_LOCK_DATA_LAST];
 
-static pthread_mutex_t share_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-static void lock_share(CURL * handle, curl_lock_data data,
+static void lock_share(CURL *handle, curl_lock_data data,
     curl_lock_access access, void *userptr)
 {
-/* TODO error handling. */
-        (void) handle;
-        (void) data;
-        (void) access;
-        (void) userptr;
-	pthread_mutex_lock(&share_mutex);
+    (void) handle;
+    (void) access;
+    (void) userptr;
+    pthread_mutex_lock(&mutexes[data]);
 }
 
 static void unlock_share(CURL * handle, curl_lock_data data, void *userptr)
 {
-        (void) handle;
-        (void) data;
-        (void) userptr;
-	pthread_mutex_unlock(&share_mutex);
+    (void) handle;
+    (void) userptr;
+    pthread_mutex_unlock(&mutexes[data]);
 }
 
 void eb_curl_global_init(void)
 {
-	curlActive = true;
-	CURLcode curl_init_status = curl_global_init(CURL_GLOBAL_ALL);
-	if (curl_init_status != 0) goto libcurl_init_fail;
+    int i;
+    curlActive = true;
+    if (curl_global_init(CURL_GLOBAL_ALL)) goto libcurl_init_fail;
 
+    for(i = 0; i < CURL_LOCK_DATA_LAST; ++i)
+        pthread_mutex_init(&mutexes[i], NULL);
 // Initialize the global handle, to manage the cookie space.
-	global_share_handle = curl_share_init();
-	if (global_share_handle == NULL) goto libcurl_init_fail;
+    global_share_handle = curl_share_init();
+    if (global_share_handle == NULL) goto libcurl_init_fail;
 
-	curl_share_setopt(global_share_handle, CURLSHOPT_LOCKFUNC, lock_share);
-	curl_share_setopt(global_share_handle, CURLSHOPT_UNLOCKFUNC,
-			  unlock_share);
-	curl_share_setopt(global_share_handle, CURLSHOPT_SHARE,
-			  CURL_LOCK_DATA_COOKIE);
-	curl_share_setopt(global_share_handle, CURLSHOPT_SHARE,
-			  CURL_LOCK_DATA_DNS);
-	curl_share_setopt(global_share_handle, CURLSHOPT_SHARE,
-			  CURL_LOCK_DATA_SSL_SESSION);
+    curl_share_setopt(global_share_handle, CURLSHOPT_LOCKFUNC, lock_share);
+    curl_share_setopt(global_share_handle, CURLSHOPT_UNLOCKFUNC, unlock_share);
+    curl_share_setopt(global_share_handle, CURLSHOPT_SHARE, CURL_LOCK_DATA_COOKIE);
+    curl_share_setopt(global_share_handle, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS);
+    curl_share_setopt(global_share_handle, CURLSHOPT_SHARE, CURL_LOCK_DATA_SSL_SESSION);
 
-	global_http_handle = curl_easy_init();
-	if (global_http_handle == NULL) goto libcurl_init_fail;
-	if (cookieFile && !ismc) {
-		curl_init_status =
-		    curl_easy_setopt(global_http_handle, CURLOPT_COOKIEFILE,
-				     "");
-		if (curl_init_status != CURLE_OK) goto libcurl_init_fail;
-		curl_init_status =
-		    curl_easy_setopt(global_http_handle, CURLOPT_COOKIEJAR,
-				     cookieFile);
-		if (curl_init_status != CURLE_OK) goto libcurl_init_fail;
-	}
-	curl_init_status =
-	    curl_easy_setopt(global_http_handle, CURLOPT_ENCODING, "");
-	if (curl_init_status != CURLE_OK) goto libcurl_init_fail;
+    global_http_handle = curl_easy_init();
+    if (global_http_handle == NULL) goto libcurl_init_fail;
+    if (cookieFile && !ismc) {
+        if (
+            curl_easy_setopt(global_http_handle, CURLOPT_COOKIEFILE, "") != CURLE_OK
+        ) goto libcurl_init_fail;
+        if (
+            curl_easy_setopt( global_http_handle, CURLOPT_COOKIEJAR, cookieFile)
+            != CURLE_OK) goto libcurl_init_fail;
+    }
 
-	curl_init_status =
-	    curl_easy_setopt(global_http_handle, CURLOPT_SHARE,
-			     global_share_handle);
-	if (curl_init_status != CURLE_OK) goto libcurl_init_fail;
-	return;
+    if(curl_easy_setopt(global_http_handle, CURLOPT_ENCODING, "") != CURLE_OK)
+        goto libcurl_init_fail;
+
+    if(
+        curl_easy_setopt(global_http_handle, CURLOPT_SHARE, global_share_handle)
+        != CURLE_OK) goto libcurl_init_fail;
+    return;
 
 libcurl_init_fail:
-	i_printfExit(MSG_LibcurlNoInit);
+    i_printfExit(MSG_LibcurlNoInit);
 }
 
 void eb_curl_global_cleanup(void)
 {
-	curl_easy_cleanup(global_http_handle);
-	curl_global_cleanup();
+    int i;
+    curl_easy_cleanup(global_http_handle);
+    curl_global_cleanup();
+    for(i = 0; i < CURL_LOCK_DATA_LAST; ++i) pthread_mutex_destroy(&mutexes[i]);
 }
 
 static void setup_download(struct i_get *g);
