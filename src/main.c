@@ -1443,7 +1443,7 @@ static const char *const keywords[] = {
     "agentsite", "localizeweb", "imapfetch", "novs", "cachesize",
     "adbook", "envelope", "emojis", "emoji",
     "include", "optinclude", "js", "pubkey", "irclog",
-    "notd", 0};
+    "notd", "tdmarks", 0};
 
 /* Read the config file and populate the corresponding data structures. */
 /* This routine succeeds, or aborts via one of these macros. */
@@ -2125,6 +2125,11 @@ inside:
 				cfgLine1(MSG_EBRC_DomainDot, v);
 */
 			add_ebhost(v, 'd');
+			continue;
+
+		case 53:	// tdmarks
+			if(!set_tdchars(v))
+				cfgLine0(MSG_EBRC_Markups);
 			continue;
 
 		default:

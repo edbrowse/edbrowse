@@ -784,7 +784,7 @@ don't show text decorations
 show text decorations
 debug promise disabled
 debug promise enabled
-0
+%s: invalid markup characters at line %d
 0
 0
 0

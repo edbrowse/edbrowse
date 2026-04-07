@@ -3518,6 +3518,10 @@ the css property that controls some of these features.
 At present, edbrowse only responds to the html tags, not the css properties.
 
 <p>
+These marks can be customized in your config file.
+See the tdmarks directive.
+
+<p>
 A block quote, &lt;blockquote&gt;, is indicated by the opening and closing marks `` and ''.
 It is placed in its own paragraph, which is usually the intent of the author.
 Some email servers place the original email in blockquote, at the bottom, when formulating a reply.
@@ -4837,6 +4841,25 @@ Specify a domain that should not use punctuation marks for emphasis, italics, et
 Perhaps there are a lot of them and its distracting.
 
 <p class=item>
+tdmarks = **x@__~~
+<p>
+Specify the text decoration marks.
+These 8 characters will correspond to
+&lt;em&gt; &lt;strong&gt; &lt;b&gt; &lt;i&gt; &lt;u&gt; &lt;ins&gt; &lt;s&gt; &lt;del&gt;.
+Use an x for tags that will not be rendered in any way.
+The above line is the default.
+
+<p>
+Higher unicodes can be used; enter the character as utf8.
+This string indicates bold text with an up arrow.
+<br>
+tdmarks = **↑@__~~
+<br>
+The advantage is: there is no confusion with ascii characters on the page,
+and you can configure your adapter to speak a higher unicode character in any way you wish.
+Choose an unusual unicode, and set your adapter to say "bold" for that symbol, and bold text will be so indicated.
+
+<p class=item>
 novs = example.com
 <p>
 Indicate hostnames for which SSL certificate verification should not
@@ -4846,6 +4869,7 @@ since these cannot be verified.
 It should probably not be used for anything serious, such as a site that
 is going to receive your credit card number.
 This directive includes subdomains, such as www.example.com.
+
 <p class=item>
 inserver = pop3.some-domain.com
 <br>
