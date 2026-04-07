@@ -4766,10 +4766,9 @@ static int ahref_under(const Tag *t)
 
 static void emphasize(Tag *t, bool opentag, const char *a)
 {
-// no utf8 for now - just ascii
-    char d = *a;
 	char mark[12];
 	sprintf(mark, "%c@%s", (opentag ? '`' : '\''), a);
+	int l = strlen(a);
 
 // I don't see the point of injecting these marks if we are
 // inside a hyperlink or button.
@@ -4784,9 +4783,12 @@ static void emphasize(Tag *t, bool opentag, const char *a)
 // see if we can compress adjacent blocks of emphasized text
 		char *u = ns + ns_l;
 		while(u > ns && u[-1] == ' ') --u;
-		if(u - ns >= 3 && u[-1] == d && u[-2] == '@' && u[-3] == '\'') {
-			memmove(u - 3, u, ns + ns_l - u);
-			ns_l -= 3;
+		if(u - ns >= 2 + l &&
+		u[-(l+2)] == '\'' &&
+		u[-(l+1)] == '@' &&
+		!memcmp(u - l, a, l)) {
+			memmove(u - (l+2), u, ns + ns_l - u);
+			ns_l -= (2+l);
 			return;
 		}
 	}
@@ -4796,7 +4798,7 @@ static void emphasize(Tag *t, bool opentag, const char *a)
 static Tag *deltag;
 // the text decoration characters
 static char  tdchars[8][8] =  {
-    "*", "*", "x", "@", "_", "_", "~", "~", 
+    "x", "x", "x", "x", "x", "x", "x", "x", 
 };
 
 int is_tdchar(const char *s)
@@ -4808,6 +4810,39 @@ int is_tdchar(const char *s)
         if(!strncmp(a, s, l)) return l;
     }
     return 0;
+}
+
+bool set_tdchars(const char *s)
+{
+    int n, j;
+    unsigned char c, d;
+    for(n = 0; n < 8; ++n)
+        tdchars[n][0] = 'x', tdchars[n][1] = 0;
+    n = 0;
+    while(n < 8) {
+        c = *s++;
+        if(!c) break; // end of string
+        if(c <= ' ') return false; // control character
+        if(!(c & 0x80)) { // ascii
+            if(isalnum(c) && c != 'x') return false;
+            tdchars[n++][0] = c;
+            continue;
+        }
+        if(!(c & 0x40)) return false; // bad utf8
+        tdchars[n][0] = c;
+        c <<= 1, j = 1;
+        while(c & 0x80) {
+            d = *s++;
+            if((d & 0xc0) != 0x80) goto badstring;
+            tdchars[n][j++] = d;
+            c <<= 1;
+        }
+        tdchars[n++][j] = 0;
+    }
+    return true;
+badstring:
+    tdchars[n][0] = 'x', tdchars[n][1] = 0;
+        return false;
 }
 
 static void renderNode(Tag *t, bool opentag, struct parseContext *pc)

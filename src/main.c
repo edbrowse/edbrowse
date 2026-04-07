@@ -473,6 +473,7 @@ int main(int argc, char **argv)
 
 	selectLanguage();
 	setHTTPLanguage(eb_language);
+	set_tdchars("**x@__~~");
 
 	curlCiphers = getenv("EBCIPHERS");
 	if(curlCiphers && !*curlCiphers) curlCiphers = 0;
@@ -1403,6 +1404,7 @@ void unreadConfigFile(void)
 	memset(dbtables, 0, sizeof(dbtables));
 	numTables = 0;
 	memset(userAgents + 1, 0, sizeof(userAgents) - sizeof(userAgents[0]));
+	set_tdchars("**x@__~~");
 
 	nzFree0(addressFile);
 	nzFree0(emojiFile);

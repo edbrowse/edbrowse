@@ -14,7 +14,7 @@ Swap:              0           0           0</pre>
 <details open>
 <summary>Another test</summary>
 <p>This is a test.
-<em>   </em>
+<del>a</del>  <del>b</del>
 <em> <b> <em> <i> word </i> </em></b>  </em>
 </p>
 </details>
