@@ -29,22 +29,21 @@ reply = edbrowse@gmail.com
 }
 
 # adiciona um catálogo de endereços.
-#adbook=/home/usuario/externos/catend
+#adbook=/home/usuário/externos/catend
 
 # caixa de entrada. Tem que ser um caminho absoluto.
-#maildir = /home/usuario/mbox
+#maildir = /home/usuário/mbox
 
 # Coloca arquivos baixados aqui. Tem que ser um caminho absoluto.
-# downdir = /home/usuario/downloads
+# downdir = /home/usuário/baixados
 # Se ausente, os arquivos são baixados onde você estiver.
 
 # A cookie jar - onde são armazenados os cookies http.
-#jar = /home/usuario/externo/cookies
+#jar = /home/usuário/externo/cookies
 
 # o diretório que armazena o cache do edbrowse e o tamanho do cache em megabytes
 # cachedir = /b3/ebcache
 # cachesize = 200
-
 
 # aguarda 30 segundos uma resposta de um servidor da web
 webtimer = 30
@@ -59,59 +58,20 @@ jerk@hotmail.com > x
 word@m-w.com > -wod
 }
 
-# tofilter { }
-
 # Descreve os tipos mime e os plug-ins para executá-los.
-plugin {
-type = audio/basic
-desc = arquivo de áudio num formato wave
-suffix = wav,voc,au,ogg
-content = audio/x-wav
+# Aqui um exemplo comentado e então uma referência para o
+# diretório compartilhado que contém uma coleção de plug-ins.
+# plugin {
+# type = audio/basic
+# desc = arquivo de áudio num formato wave
+# suffix = wav,voc,au,ogg
+# content = audio/x-wav
 # %i é o arquivo temporário de entrada gerado pelo edbrowse ou pela URL
-program = play -q %i
-}
-
-plugin {
-type = audio/mp3
-desc = arquivo de áudio em formato mp3
-suffix = mp3
-content = audio/mpeg
-program = mpg123 -q -C %i
-}
-
-plugin {
-type = audio/x-pn-realaudio
-desc = ouvindo por streaming
-protocol = rtsp,pnm,sdp
-suffix = rm,ra,ram,m3u8
-urlmatch = youtube.com/watch?|youtube.com/embed/
-content = audio/x-scpls,application/pls+xml
-program = /usr/bin/mpv --really-quiet --load-unsafe-playlists %i
-}
-
-# este plug-in renderiza um arquivo ao invés de "reproduzir" o arquivo.
-plugin {
-type = pdf
-desc = arquivo pdf
-suffix = pdf
-content = application/pdf
-program = pdftohtml -i -q -noframes %i %o
-# indica que a saída é em html e não texto
-outtype = H
-#  indica que os dados têm que ser baixados; o pdftohtml não aceita uma URL
-down_url
-}
-
-plugin {
-type = rtf
-desc = arquivo de texto rico
-suffix = rtf
-content = application/rtf
-down_url
-program = catdoc %i
-# isto é texto e não html
-outtype = T
-}
+# program = play -q %i
+# }
+optinclude = /usr/share/edbrowse/plugin
+# caso você mesmo tenha instalado
+optinclude = /usr/local/share/edbrowse/plugin
 
 # Toda vez que você baixa uma página da internet,
 # o navegador identifica-se para o servidor.
@@ -120,31 +80,43 @@ agent = Lynx/2.8.4rel.1 libwww-FM/2.14
 agent = Mozilla/4.0 (compatible; MSIE 5.5; Windows 98; Win 9x 4.90)
 
 # OK, estamos prontos para escrever nosso primeiro script.
-# Que tal uma função para acessar o Google?
-# Aí <gg elefantes tigres   vai chamar o Google,
+# Que tal uma função para acessar o DuckDuckGo?
+#  So   <ddg elephants tigers   vai chamar o duckduckgo,
 # procurando elefantes e também tigres.
-function+gg {
-db0
-b http://www.google.com
-sw+
-/<>/ i=~0
-db1
-/</ i1*
-/h3/p
-}
+nojs = duckduckgo.com
+        function:ddg {
+# duckduckgo lookup
+        b https://www.duckduckgo.com/
+        /<>/ i1=~0
+        i2*
+        g/h2 Ad/X
+        /h2 {/
+        }
 
-# procura no dicionário Merriam-Webster, ~1 é o parámetro 1, a palavra a procurar.
-# <mw elephant
+nojs = merriam-webster.com
 function+mw {
+#  procura no dicionário mariam-webster
 b http://www.merriam-webster.com/dictionary/~0
 sw+
-/spelling suggestion/X
+/sugestão de soletragem/X
 if(*){
 /{.*}?/
 } else {
 /^h1/X
 /^h2/
 }
+}
+
+function+unf {
+# chama a versão não-formatada (bruta) de um e-mail
+/^Unformat/X
+etmp
+r+1@$
+s/.* //
+s/\..*//
+s;^;/home/usuário/.trash/rawmail/;
+W !cat '.
+b
 }
 
 # Esta função é executada ao iniciar o edbrowse.
@@ -155,7 +127,8 @@ dw
 ls=s
 # limite de caracteres ao mostrar uma linha; linhas podem ser indefinidamente longas internamente.
 ll 700
+# liga o javascript até que você esteja acostumado com a funcionalidade básica
+js-
 # outras configurações pessoais
 }
 
-# e muito mais...

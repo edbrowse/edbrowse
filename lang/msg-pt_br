@@ -489,7 +489,7 @@ download via SCP:
 %s: nome de função na linha %d começa com um algarismo
 %s: nome de função na linha %d é longo demais; o limite é dez caracteres
 %s: a sintaxe de definição de função na linha %d é imprópria
-%s: linha %d, esperado \"condição > arquivo\" 
+%s: linha %d, esperado \"condição > arquivo\"
 %s: linha %d, regras de filtragem não têm cadeias a coincidir
 %s: linha %d, critério em %s não está definido em lugar algum
 %s: linha %d, agente número %d não definido
@@ -760,31 +760,31 @@ divisão por 0
 falso
 removendo marca de byte order
 restaurando marca de byte order
-0
-0
-impossível apagar ..
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
+procurar em todas as sessões
+procurar em sessões similares
+não posso excluir ..
+não posso encaminhar mais que um e-mail
+não posso combinar encaminhamento de e-mail com outra apresentação
+diretiva enc tem que vir antes dos anexos
+texto encaminhado tem que ser um e-mail original com cabeçalhos
+não posso encaminhar em modo diretório
+não posso encaminhar em modo banco de dados
+não posso encaminhar em modo IRC
+não posso encaminhar em modo imap
+não posso encaminhar um arquivo vazio
+não posso encaminhar um arquivo binário
+nenhuma linha \"formatada\"
+arquivo de e-mail bruto %05d não encontrado
+nenhuma linha restante
+muitos comandos aninhados
+falha ao criar cadeia formatada; %s
+já está navegando desta maneira
+Diretório temporário não existe %s
+não mostrar decorações do texto
+mostrar decorações do texto
+desabilitado debug promise
+habilitado debug promise
+%s: caracteres de marcação inválidos na linha %d
 0
 0
 0
