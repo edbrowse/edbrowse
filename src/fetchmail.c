@@ -1409,7 +1409,20 @@ range:
 	}
 	curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, t);
 	if(*imapLines) free(t);
+
+// this data comes in through the header function, or the write function,
+// or both, or I really don't know. header seems to be more reliable so here we go.
+	curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, eb_curl_callback);
+	curl_easy_setopt(handle, CURLOPT_HEADERDATA, &callback_data);
+	curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, imap_null_callback);
+
 	res = getMailData(handle);
+
+// and put things back
+	curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, eb_curl_callback);
+	curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, NULL);
+	curl_easy_setopt(handle, CURLOPT_HEADERDATA, NULL);
+
 	if (res != CURLE_OK) goto abort;
 //	FILE *z; z = fopen("ms1", "we"); fprintf(z, "%s", mailstring); fclose(z);
 
