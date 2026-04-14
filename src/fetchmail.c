@@ -1439,7 +1439,7 @@ range:
 		mif->ccrec = emptyString;
 
 		if(!t || !(t = strstr(t, "FETCH (UID "))) {
-			printf("mail %d has no uid, operations will not work!", mif->seqno);
+			printf("mail %d has no uid, operations will not work!\n", mif->seqno);
 			continue;
 		}
 		t += 11;
@@ -1447,7 +1447,7 @@ range:
 		if (isdigitByte(*t))
 			mif->uid = atoi(t);
 		else
-			printf("mail %d has no uid, operations will not work!", mif->seqno);
+			printf("mail %d has no uid, operations will not work!\n", mif->seqno);
 	}
 		nzFree0(mailstring);
 
