@@ -214,7 +214,7 @@ testo non atteso dopo il comando ^
 non c'è testo precedente
 testo non atteso dopo il comando M
 spostato alla sessione %d\n
-non c'è testo precedente, impossibile effettuare il backup
+0
 impossibile applicare il range %s ad un range
 g non disponibile in modalità database
 impossibile applicare il comando i%c ad un range

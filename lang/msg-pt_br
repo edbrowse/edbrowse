@@ -214,7 +214,7 @@ texto inesperado após o comando ^
 sem texto anterior
 texto inesperado após o comando M
 movido para a sessão %d\n
-sem texto anterior; impossível copiar
+0
 impossível aplicar comando %s a um intervalo
 g não disponível em modo banco de dados
 impossível aplicar comando i%c a um intervalo

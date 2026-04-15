@@ -8179,10 +8179,6 @@ doquit:
 			setError(MSG_MAfter);
 			goto fail;
 		}
-		if (!cw->prev) {
-			setError(MSG_NoBackup);
-			goto fail;
-		}
 		if (cx) {
 			if (!cxCompare(cx))
 				goto fail;
@@ -8208,6 +8204,25 @@ doquit:
 		cw = cs->lw;
 		if(cx > maxSession) maxSession = cx;
 		cx_previous = cx;
+// Everything is different if we are moving the top buffer and there is nobody above
+		if(!cw) { // ouch
+			cs->fw = 0;
+			if(!cs->lw2) { // nobody below
+				i_printf(MSG_RelocateSession, cx);
+				cxSwitch(cx, false);
+				goto success;
+			}
+// pull the buffer below up to current
+			cs->fw = cs->lw = cw = cs->fw2;
+			if(cs->fw2 == cs->lw2) {
+				cs->fw2 = cs->lw2 = 0;
+			} else {
+				Window *x = cs->lw2;
+				while(x->prev != cs->fw2) x = x->prev;
+				x->prev = 0;
+				cs->fw2 = x;
+			}
+		}
 		selfFrame();
 		if(debugLevel >= 1)
 			printDot();

@@ -214,7 +214,7 @@ nieoczekiwany tekst po poleceniu '^'
 brak poprzedniego tekstu
 nieoczekiwany tekst po poleceniu 'M'
 przeniesiono do sesji %d\n
-brak poprzedniego tekstu, nie można zapisać
+0
 nie można zastosować polecenia '%s' do zakresu
 polecenie 'g' niedostępne w trybie bazy danych
 nie można zastosować polecenia 'i%c' do zakresu

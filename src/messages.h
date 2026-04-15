@@ -314,7 +314,7 @@ enum {
 	MSG_NoPrevious,
 	MSG_MAfter,
 	MSG_MovedSession,
-	MSG_NoBackup,
+	MSG_RelocateSession,
 	MSG_RangeCmd,
 	MSG_DBG,
 	MSG_RangeI,

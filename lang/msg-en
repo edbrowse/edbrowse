@@ -214,7 +214,7 @@ unexpected text after the ^ command
 no previous text
 unexpected text after the M command
 moved to session %d\n
-no previous text, cannot back up
+relocate to session %d\n
 cannot apply the %s command to a range
 g not available in database mode
 cannot apply the i%c command to a range

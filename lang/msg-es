@@ -214,7 +214,7 @@ inesperado texto después del comando ^
 no hay texto previo
 inesperado texto después del comando M
 movido a la sesión %d\n
-no hay texto previo, no se puede volver atrás
+0
 no es puede aplicar el comando %s al rango
 g no está disponible en el modo base de datos
 no se puede aplicar el comando i%c al rango
