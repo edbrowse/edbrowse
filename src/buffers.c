@@ -8199,6 +8199,7 @@ doquit:
 // Magic with pointers, hang on to your hat.
 		cw->imapMode3 = false;
 		sessionList[cx].fw = sessionList[cx].lw = cw;
+		cw->sno = cx;
 		cs->lw = cw->prev;
 		cw->prev = 0;
 		cw = cs->lw;
