@@ -214,7 +214,7 @@ texte inattendu après la commande ^
 pas de texte antérieur
 texte inattendu après la commande M
 déplacé en session %d\n
-0
+déplacer vers la session %d\n
 impossible d'appliquer la commande %s à un intervalle
 g impossible en mode base de données
 impossible d'appliquer la commande i%c à un intervalle
