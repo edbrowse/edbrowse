@@ -1821,8 +1821,9 @@ bool readDirectory(const char *filename, int endline, char cmd, struct lineMap *
 	uchar innersort = (dno ? 0 : ls_sort);
 	bool innerrev = (dno ? false : ls_reverse);
 
+	bool has_newlines = false;
 	cw->baseDirName = cloneString(filename);
-/* get rid of trailing slash */
+// get rid of trailing slash
 	len = strlen(cw->baseDirName);
 	if (len && cw->baseDirName[len - 1] == '/')
 		cw->baseDirName[len - 1] = 0;
@@ -1855,7 +1856,7 @@ bool readDirectory(const char *filename, int endline, char cmd, struct lineMap *
 	if (innersort)
 		dsr_list = allocZeroMem(sizeof(struct DSR) * linecount);
 
-/* change 0 to nl and count bytes */
+// change 0 to nl and count bytes
 	fileSize = 0;
 	mptr = *map_p;
 	for (j = 0; j < linecount; ++j, ++mptr) {
@@ -1869,7 +1870,7 @@ bool readDirectory(const char *filename, int endline, char cmd, struct lineMap *
 
 		while (*t) {
 			if (*t == '\n')
-				*t = '\t';
+				*t = '\t', has_newlines = true;
 			++t;
 		}
 		*t = '\n';
@@ -1877,8 +1878,7 @@ bool readDirectory(const char *filename, int endline, char cmd, struct lineMap *
 		fileSize += len + 1;
 		if (innersort)
 			dsr_list[j].idx = j;
-		if (!abspath)
-			continue;	/* should never happen */
+		if (!abspath) continue;
 
 		ftype = fileTypeByName(abspath, 2);
 		if (!ftype)
@@ -1943,6 +1943,8 @@ bool readDirectory(const char *filename, int endline, char cmd, struct lineMap *
 			*t = 0;
 		}
 	}			// loop fixing files in the directory scan
+	if(has_newlines)
+		i_puts(MSG_WarnNewlines);
 
 	if (innersort) {
 		struct lineMap *tmp;

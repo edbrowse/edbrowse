@@ -785,7 +785,7 @@ show text decorations
 debug promise disabled
 debug promise enabled
 %s: invalid markup characters at line %d
-0
+warning: some filenames contain \\n
 0
 0
 0
