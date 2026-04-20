@@ -154,6 +154,7 @@ static void grabover(void)
 
 const char *jsSourceFile;	// sourcefile providing the javascript
 int jsLineno;			// line number
+static int js_eval_flag = JS_EVAL_TYPE_GLOBAL; // global, module etc
 static JSRuntime *jsrt;
 static bool js_running;
 static JSContext *mwc; // master window context
@@ -1142,87 +1143,73 @@ static 	const char *trace_string =
 	  ";(function(arg$,l$ne){ var t$t=trace$ch(l$ne); if(t$t == 0) return; if(t$t == 1) { alert3(step$val); return; } alert('break at line ' + step$val); while(true){var res = prompt('bp'); if(!res) continue; if(res === '.') break; try { res = eval(res); alert(res); } catch(e) { alert(e.toString()); }}}).call(this,(typeof arguments=='object'?arguments:[]),\"";
 static char *run_script(JSContext *cx, const char *s)
 {
-	char *result = 0;
-	JSValue r;
-	char *s2 = 0;
-	const char *s3;
-	const char *ebnobp = getenv("EBNOBP");
-	int commapresent;
+    char *result = NULL;
+    JSValue r;
+    char *s2 = NULL;
+    const char *s3;
+    const char *ebnobp = getenv("EBNOBP");
+    int commapresent;
 
 // special debugging code to replace bp@ and trace@ with expanded macros.
 // Warning: breakpoints and tracing can change the flow of execution
 // in unusual cases, e.g. when a js verifyer checks f.toString(),
 // and of course it will be very different with the debugging stuff in it.
-	if((!ebnobp || !*ebnobp) &&
-	(strstr(s, "bp@(") || strstr(s, "trace@("))) {
-		int l;
-		const char *u, *v1, *v2;
-
-		s2 = initString(&l);
-		u = s;
-		while (true) {
-			v1 = strstr(u, "bp@(");
-			v2 = strstr(u, "trace@(");
-			if (v1 && v2 && v2 < v1)
-				v1 = v2;
-			if (!v1)
-				v1 = v2;
-			if (!v1)
-				break;
-			stringAndBytes(&s2, &l, u, v1 - u);
+    if ((!ebnobp || !*ebnobp) && (strstr(s, "bp@(") || strstr(s, "trace@("))) {
+        int l;
+        const char *u, *v1, *v2;
+        s2 = initString(&l);
+        u = s;
+        while (true) {
+            v1 = strstr(u, "bp@(");
+            v2 = strstr(u, "trace@(");
+            if (v1 && v2 && v2 < v1) v1 = v2;
+            if (!v1) v1 = v2;
+            if (!v1) break;
+            stringAndBytes(&s2, &l, u, v1 - u);
 
 // The macros for bp and trace start and end with ;
 // That keeps them separate from what goes on around them.
 // But it also makes it impossible to write exp,exp,bp@(huh),exp
 // watch for comma on either side, and if so, omit the ;
 
-			while(l && s2[l-1] == ' ')
-				s2[--l] = 0;
-			commapresent = (l && s2[l-1] == ',');
-
-			stringAndString(&s2, &l, (*v1 == 'b' ?
-			bp_string + commapresent
-			  :
-			trace_string + commapresent
-			) );
+            while(l && s2[l-1] == ' ') s2[--l] = 0;
+            commapresent = (l && s2[l-1] == ',');
+            stringAndString(&s2, &l, (
+                *v1 == 'b' ?
+                bp_string + commapresent :
+                trace_string + commapresent));
 
 // paste in the argument to bp@(x) or trace@(x)
-			v1 = strchr(v1, '(') + 1;
-			v2 = strchr(v1, ')');
-			stringAndBytes(&s2, &l, v1, v2 - v1);
-			stringAndString(&s2, &l, "\");");
-
-			u = ++v2;
-			while(*u == ' ') ++u;
-			if(*u == ',' || *u == ';') {
+            v1 = strchr(v1, '(') + 1;
+            v2 = strchr(v1, ')');
+            stringAndBytes(&s2, &l, v1, v2 - v1);
+            stringAndString(&s2, &l, "\");");
+            u = ++v2;
+            while(*u == ' ') ++u;
 // commapresent on the other side, don't need trailing ;
-				s2[--l] = 0;
-			}
-		}
-		stringAndString(&s2, &l, u);
-	}
+            if(*u == ',' || *u == ';') s2[--l] = 0;
 
-	s3 = (s2 ? s2 : s);
-	r = JS_Eval(cx, s3, strlen(s3),
-	(jsSourceFile ? jsSourceFile : "internal"), JS_EVAL_TYPE_GLOBAL);
-	grab(r);
-	nzFree(s2);
-	if (intFlag)
-		i_puts(MSG_Interrupted);
-	if(!JS_IsException(r)) {
-		s = JS_ToCString(cx, r);
-		if(s && *s)
-			result = cloneString(s);
-		JS_FreeCString(cx, s);
-	} else {
-		processError(cx);
-	}
-	JS_Release(cx, r);
-	return result;
+        }
+        stringAndString(&s2, &l, u);
+    }
+
+    s3 = (s2 ? s2 : s);
+    r = JS_Eval(cx, s3, strlen(s3),
+        (jsSourceFile ? jsSourceFile : "internal"), js_eval_flag);
+    grab(r);
+    nzFree(s2);
+    if (intFlag) i_puts(MSG_Interrupted);
+    if (!JS_IsException(r)) {
+        s = JS_ToCString(cx, r);
+        if(s && *s) result = cloneString(s);
+        JS_FreeCString(cx, s);
+    } else processError(cx);
+    JS_Release(cx, r);
+    return result;
 }
 
 // execute script.text code; more efficient than the above.
-void jsRunData(const Tag *t, const char *filename, int lineno)
+void jsRunData(const Tag *t, const char *filename, int lineno, bool is_module)
 {
 	JSValue v;
 	const char *s;
@@ -1233,6 +1220,7 @@ void jsRunData(const Tag *t, const char *filename, int lineno)
 	cx = t->f0->cx;
 	jsSourceFile = filename;
 	jsLineno = lineno;
+        if (is_module) js_eval_flag = JS_EVAL_TYPE_MODULE;
 	v = JS_GetPropertyStr(cx, *((JSValue*)t->jv), "text");
 	grab(v);
 	if(!JS_IsString(v)) {
@@ -1261,7 +1249,7 @@ void jsRunData(const Tag *t, const char *filename, int lineno)
 		nzFree(result);
 	} else {
 		JSValue r = JS_Eval(cx, s, strlen(s),
-		(jsSourceFile ? jsSourceFile : "internal"), JS_EVAL_TYPE_GLOBAL);
+		(jsSourceFile ? jsSourceFile : "internal"), js_eval_flag);
 		grab(r);
 		if (intFlag)
 			i_puts(MSG_Interrupted);
@@ -1271,6 +1259,7 @@ void jsRunData(const Tag *t, const char *filename, int lineno)
 	}
 	JS_FreeCString(cx, s);
 	jsSourceFile = NULL;
+        js_eval_flag = JS_EVAL_TYPE_GLOBAL;
 	delete_property(cx, *((JSValue*)t->f0->docobj), "currentScript");
 // onload handler? Should this run even if the script fails?
 // Right now it does.
@@ -1283,38 +1272,34 @@ void jsRunData(const Tag *t, const char *filename, int lineno)
 // Run some javascript code under the named object, usually window.
 // Pass the return value of the script back as a string.
 static char *jsRunScriptResult(const Frame *f, const char *str,
-const char *filename, 			int lineno)
+const char *filename, int lineno)
 {
-	char *result;
-	if (!allowJS || !f->jslink)
-		return NULL;
-	if (!str || !str[0])
-		return NULL;
-	debugPrint(5, "> script:");
-	jsSourceFile = filename;
-	jsLineno = lineno;
-	result = run_script(f->cx, str);
-	jsSourceFile = NULL;
-	debugPrint(5, "< ok");
-	return result;
+    char *result;
+    if (!allowJS || !f->jslink) return NULL;
+    if (!str || !str[0]) return NULL;
+    debugPrint(5, "> script:");
+    jsSourceFile = filename;
+    jsLineno = lineno;
+    result = run_script(f->cx, str);
+    jsSourceFile = NULL;
+    debugPrint(5, "< ok");
+    return result;
 }
 
 /* like the above but throw away the result */
-void jsRunScriptWin(const char *str, const char *filename, 		 int lineno)
+void jsRunScriptWin(const char *str, const char *filename, int lineno)
 {
-	char *s = jsRunScriptResult(cf, str, filename, lineno); 	nzFree(s);
+    nzFree(jsRunScriptResult(cf, str, filename, lineno));
 }
 
-void jsRunScript_t(const Tag *t, const char *str, const char *filename, 		 int lineno)
+void jsRunScript_t(const Tag *t, const char *str, const char *filename, int lineno)
 {
-	char *s = jsRunScriptResult(t->f0, str, filename, lineno);
-	nzFree(s);
+    nzFree(jsRunScriptResult(t->f0, str, filename, lineno));
 }
 
-char *jsRunScriptWinResult(const char *str,
-const char *filename, 			int lineno)
+char *jsRunScriptWinResult(const char *str, const char *filename, int lineno)
 {
-return jsRunScriptResult(cf, str, filename, lineno);
+    return jsRunScriptResult(cf, str, filename, lineno);
 }
 
 static JSValue create_event(JSContext *cx, JSValueConst parent, const char *evname)
