@@ -371,6 +371,7 @@ but I allow, at the end of this, control a followed by post data, with the
 understanding that there should not be query_string and post data simultaneously.
 *********************************************************************/
 
+static const char http[] = "http://";
 static bool parseURL(const char *url, const char **proto, int *prlen, const char **user, int *uslen, const char **pass, int *palen,	/* ftp protocol */
 		     const char **host, int *holen,
 		     const char **portloc, int *port,
@@ -381,37 +382,25 @@ static bool parseURL(const char *url, const char **proto, int *prlen, const char
 	int a;
 	bool has_slashes = false;
 
-	if (proto)
-		*proto = NULL;
-	if (prlen)
-		*prlen = 0;
-	if (user)
-		*user = NULL;
-	if (uslen)
-		*uslen = 0;
-	if (pass)
-		*pass = NULL;
-	if (palen)
-		*palen = 0;
-	if (host)
-		*host = NULL;
-	if (holen)
-		*holen = 0;
-	if (portloc)
-		*portloc = 0;
-	if (port)
-		*port = 0;
-	if (data)
-		*data = NULL;
-	if (dalen)
-		*dalen = 0;
-	if (post)
-		*post = NULL;
-	if (freep)
-		*freep = false;
+    if (proto) *proto = NULL;
+    if (prlen) *prlen = 0;
+    if (user) *user = NULL;
+    if (uslen) *uslen = 0;
+    if (pass) *pass = NULL;
+    if (palen) *palen = 0;
+    if (host) *host = NULL;
+    if (holen) *holen = 0;
+    if (portloc) *portloc = 0;
+    if (port) *port = 0;
+    if (data) *data = NULL;
+    if (dalen) *dalen = 0;
+    if (post) *post = NULL;
+    if (freep) *freep = false;
 
-	if (!url)
-		return false;
+    if (!url) return false;
+
+// for html like <a href=" http://blah.blah.blah">  and this does happen
+    while(isspaceByte(*url)) ++url;
 
 // Find the leading protocol://
 	a = -1;
@@ -451,7 +440,6 @@ static bool parseURL(const char *url, const char **proto, int *prlen, const char
 		else
 			p = q;
 	} else if (httpDefault(url)) {
-		static const char http[] = "http://";
 		if (proto)
 			*proto = http;
 		if (prlen)
@@ -659,6 +647,7 @@ bool missingProtURL(const char *url)
 	const char *s;
 	if (!parseURL(url, &s, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
 		return false;	// not a url
+	while(isspaceByte(*url)) ++url;
 // protocol is always the start of url, unless url is a recognized
 // format like www.foo.bar.com, then s points to the static string "http://".
 	return (s != url);
@@ -1017,16 +1006,9 @@ out_n:
 		goto squash;
 	}
 
-	if (parseURL(rel, &s, &l, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0) > 0) {
-/* has a protocol */
-		n[0] = 0;
-		if (s != rel) {
-/* It didn't have http in front of it before, put it on now. */
-/* This is old; it shouldn't happen any more. */
-			strncpy(n, s, l);
-			strcpy(n + l, "://");
-		}
-		strcat(n, rel);
+	if (isURL(rel)) {
+		while(isspaceByte(*rel)) ++rel;
+		strcpy(n, rel);
 		goto squash;
 	}
 // at this point rel is not a url.
@@ -1104,9 +1086,9 @@ bool sameURL(const char *s, const char *t)
 		q = u;
 
 // It's ok if one says http and the other implies it.
-	if (memEqualCI(s, "http://", 7))
+	if (memEqualCI(s, http, 7))
 		s += 7;
-	if (memEqualCI(t, "http://", 7))
+	if (memEqualCI(t, http, 7))
 		t += 7;
 
 	if (p - s >= 7 && stringEqual(p - 7, ".browse"))
