@@ -1021,6 +1021,11 @@ string that contains the > would run past end of line.
 That makes acid3 and usps.gov happy.
 But some web pages are all on a line to save bits,
 so also break out at >< like a new tag is starting.
+Then this was found in the wild.
+<a nofollow=<"" href="https://foo.bar.com">hello</a>
+I watch for =< and let < slide past in this case.
+I think < should completely disappear in this case, but I don't know
+and so that is not implemented.
 *********************************************************************/
 
 		for(gt = t, qc = 0; *gt; ++gt) {
@@ -1031,6 +1036,7 @@ so also break out at >< like a new tag is starting.
 				if(*gt == '>' && gt[1] == '<' && u) { gt = u; break; }
 				continue;
 			}
+			if(*gt == '<' && gt > t && gt[-1] == '=') continue;
 			if(*gt == '<' || *gt == '>') break;
 			if(*gt == '"' || *gt == '\'') qc = *gt, u = 0;
 		}
