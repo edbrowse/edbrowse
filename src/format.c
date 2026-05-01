@@ -4,6 +4,14 @@
 
 #include "eb.h"
 
+bool isBlankTag(const Tag *t)
+{
+    if(t->action != TAGACT_TEXT) return false;
+    const char *s = t->textval;
+    while(isspace(*s)) ++s;
+    return *s == 0;
+}
+
 // It's possible that console has to be utf8, or edbrowse won't work properly.
 bool cons_utf8, iuConvert = true;
 char type8859 = 1;

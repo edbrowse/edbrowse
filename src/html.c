@@ -4766,6 +4766,7 @@ static int ahref_under(const Tag *t)
 
 static void emphasize(Tag *t, bool opentag, const char *a)
 {
+	const Tag *u;
 	char mark[12];
 	sprintf(mark, "%c@%s", (opentag ? '`' : '\''), a);
 	int l = strlen(a);
@@ -4778,6 +4779,13 @@ static void emphasize(Tag *t, bool opentag, const char *a)
 	if(t2 && t2->info->name[0] != 'b') return;
 	t2 = findOpenTag(t, TAGACT_OPTION);
 	if(t2) return;
+
+// the converse; don't emphasize if we are a hyperlink.
+    for(u = t->firstchild; u; u = u->sibling) {
+        if(isBlankTag(u)) continue;
+        if(u->action != TAGACT_A || !u->href) break;
+    }
+    if(!u) return;
 
 	if(opentag) {
 // see if we can compress adjacent blocks of emphasized text

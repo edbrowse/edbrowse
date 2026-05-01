@@ -104,6 +104,7 @@ bool renameFolder(const char *src, const char *dest);
 void imapCleanupInBackground(CURL *h);
 
 // sourcefile=format.c
+bool isBlankTag(const Tag *t);
 void prepareForBrowse(char *h, int h_len);
 void prepareForField(char *h);
 bool breakLine(const char *line, int len, int *newlen);
