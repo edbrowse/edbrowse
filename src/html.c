@@ -5360,29 +5360,34 @@ Should we watch for empty-ish tags besides span, or even empty trees? */
 past_cell_paragraph:
 
 		if (j) {
-			c = '\f';
-			if (j == 1) {
-				c = '\r';
-				if (action == TAGACT_BR)
-					c = '\n';
-			}
-			stringAndChar(&ns, &ns_l, c);
-			if (doColors && t->iscolor &&
-			    ns_l > 4 && !memcmp(ns + ns_l - 4, "≪", 3)) {
+		    c = '\f';
+		    if (j == 1) {
+		    	c = '\r';
+		    	if (action == TAGACT_BR)
+		    		c = '\n';
+		    }
+		    stringAndChar(&ns, &ns_l, c);
+		    if (doColors && t->iscolor &&
+		        ns_l > 4 && !memcmp(ns + ns_l - 4, "≪", 3)) {
 // move the newline before the color
-				char *u0 = ns + ns_l - 4;
-				u0 = backColon(u0);
-				if (*u0 == ':') {
-					int j = strlen(u0);
-					memmove(u0 + 1, u0, j);
-					*u0 = c;
-				}
-			}
-			if (opentag && action == TAGACT_H) {
-				strcpy(hnum, ti->name);
-				strcat(hnum, " ");
-				ns_hnum();
-			}
+		    	char *u0 = ns + ns_l - 4;
+		    	u0 = backColon(u0);
+		    	if (*u0 == ':') {
+		    		int j = strlen(u0);
+		    		memmove(u0 + 1, u0, j);
+		    		*u0 = c;
+		    	}
+		    }
+		    if (opentag && action == TAGACT_H) {
+// no need to print h1 if the section is empty
+		        for(ltag = t->firstchild; ltag; ltag = ltag->sibling)
+		            if(!isBlankTag(ltag)) break;
+		        if(ltag) {
+		            strcpy(hnum, ti->name);
+		            strcat(hnum, " ");
+		            ns_hnum();
+		        }
+		    }
 		}
 
 // tags with id= have to be part of the screen, so you can jump to them.
