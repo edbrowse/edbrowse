@@ -4722,6 +4722,32 @@ static char *arialabel(const Tag *t)
 	return (a && *a) ? cloneString(a) : 0;
 }
 
+static int ariaHeadingLevel(const Tag *t)
+{
+	const char *role, *lvl;
+	int n;
+	if(allowJS && t->jslink) {
+		char *r = get_property_string_t(t, "role");
+		if(stringEqual(r, "heading")) {
+			nzFree(r);
+			char *l = get_property_string_t(t, "aria-level");
+			n = l ? atoi(l) : 2;
+			nzFree(l);
+			if(n < 1) n = 1;
+			if(n > 6) n = 6;
+			return n;
+		}
+		nzFree(r);
+	}
+	role = attribVal(t, "role");
+	if(!stringEqual(role, "heading")) return 0;
+	lvl = attribVal(t, "aria-level");
+	n = lvl ? atoi(lvl) : 2;
+	if(n < 1) n = 1;
+	if(n > 6) n = 6;
+	return n;
+}
+
 static void tagInStream(int tagno)
 {
 	char buf[32];
@@ -5119,16 +5145,7 @@ nocolor:
 		}
 		currentA = (opentag ? t : 0);
 		if (!retainTag) break;
-		int arialevel_a = 0;
-		{
-			const char *role = attribVal(t, "role");
-			if(stringEqual(role, "heading")) {
-				const char *lvl = attribVal(t, "aria-level");
-				arialevel_a = lvl ? atoi(lvl) : 2;
-				if(arialevel_a < 1) arialevel_a = 1;
-				if(arialevel_a > 6) arialevel_a = 6;
-			}
-		}
+		int arialevel_a = ariaHeadingLevel(t);
 // Javascript might have set this url.
 		if (opentag && !t->href && t->jslink) {
 			char *new_url = get_property_url_t(t, false);
@@ -5340,17 +5357,8 @@ nop:
 		else
 			j >>= 2;
 
-		int arialevel = 0;
-		if(action != TAGACT_H) {
-			const char *role = attribVal(t, "role");
-			if(stringEqual(role, "heading")) {
-				const char *lvl = attribVal(t, "aria-level");
-				arialevel = lvl ? atoi(lvl) : 2;
-				if(arialevel < 1) arialevel = 1;
-				if(arialevel > 6) arialevel = 6;
-				if(!j) j = 2;
-			}
-		}
+		int arialevel = (action != TAGACT_H) ? ariaHeadingLevel(t) : 0;
+		if(arialevel && !j) j = 2;
 
 // special code for div inside a header, which shouldn't happen but does
 		if(action == TAGACT_DIV && findOpenTag(t, TAGACT_H))
