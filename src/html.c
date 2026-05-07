@@ -5119,6 +5119,16 @@ nocolor:
 		}
 		currentA = (opentag ? t : 0);
 		if (!retainTag) break;
+		int arialevel_a = 0;
+		{
+			const char *role = attribVal(t, "role");
+			if(stringEqual(role, "heading")) {
+				const char *lvl = attribVal(t, "aria-level");
+				arialevel_a = lvl ? atoi(lvl) : 2;
+				if(arialevel_a < 1) arialevel_a = 1;
+				if(arialevel_a > 6) arialevel_a = 6;
+			}
+		}
 // Javascript might have set this url.
 		if (opentag && !t->href && t->jslink) {
 			char *new_url = get_property_url_t(t, false);
@@ -5160,7 +5170,15 @@ nocolor:
 			else
 				hnum[0] = 0;
 		} // href or no href
+		if(arialevel_a && opentag) {
+			stringAndChar(&ns, &ns_l, '\f');
+			char hbuf_a[8];
+			sprintf(hbuf_a, "h%d ", arialevel_a);
+			stringAndString(&ns, &ns_l, hbuf_a);
+		}
 		ns_hnum();
+		if(arialevel_a && !opentag)
+			stringAndChar(&ns, &ns_l, '\f');
 		if (endcolor)
 			swapArrow();
 		break;
@@ -5322,6 +5340,18 @@ nop:
 		else
 			j >>= 2;
 
+		int arialevel = 0;
+		if(action != TAGACT_H) {
+			const char *role = attribVal(t, "role");
+			if(stringEqual(role, "heading")) {
+				const char *lvl = attribVal(t, "aria-level");
+				arialevel = lvl ? atoi(lvl) : 2;
+				if(arialevel < 1) arialevel = 1;
+				if(arialevel > 6) arialevel = 6;
+				if(!j) j = 2;
+			}
+		}
+
 // special code for div inside a header, which shouldn't happen but does
 		if(action == TAGACT_DIV && findOpenTag(t, TAGACT_H))
 			j = 0;
@@ -5378,13 +5408,17 @@ past_cell_paragraph:
 		    		*u0 = c;
 		    	}
 		    }
-		    if (opentag && action == TAGACT_H) {
+		    if (opentag && (action == TAGACT_H || arialevel)) {
 // no need to print h1 if the section is empty
 		        for(ltag = t->firstchild; ltag; ltag = ltag->sibling)
 		            if(!isBlankTag(ltag)) break;
 		        if(ltag) {
-		            strcpy(hnum, ti->name);
-		            strcat(hnum, " ");
+		            if(arialevel)
+		                sprintf(hnum, "h%d ", arialevel);
+		            else {
+		                strcpy(hnum, ti->name);
+		                strcat(hnum, " ");
+		            }
 		            ns_hnum();
 		        }
 		    }
