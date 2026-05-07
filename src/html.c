@@ -4726,6 +4726,9 @@ static int ariaHeadingLevel(const Tag *t)
 {
 	const char *role, *lvl;
 	int n;
+#if 0
+// This works on the attribute system, not on properties,
+// look into this later.
 	if(allowJS && t->jslink) {
 		char *r = get_property_string_t(t, "role");
 		if(stringEqual(r, "heading")) {
@@ -4739,6 +4742,7 @@ static int ariaHeadingLevel(const Tag *t)
 		}
 		nzFree(r);
 	}
+#endif
 	role = attribVal(t, "role");
 	if(!stringEqual(role, "heading")) return 0;
 	lvl = attribVal(t, "aria-level");
