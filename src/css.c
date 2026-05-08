@@ -2472,7 +2472,7 @@ top:
 	if (bulkmatch)
 		v = (char *)attribVal(t, "lang");
 	else {
-		v = run_function_onestring1_t(t, "getAttribute", "lang");
+		v = get_js_attribute(t, "lang");
 		valloc = true;
 	}
 	if (!v)
@@ -2767,7 +2767,7 @@ if(!t) {
 			if (bulkmatch)
 				v = (char *)attribVal(t, p + 1);
 			else {
-					v = run_function_onestring1_t(t, "getAttribute", p + 1);
+					v = get_js_attribute(t, p + 1);
 				valloc = true;
 			}
 			if (cut)
@@ -3728,9 +3728,9 @@ void cssApply(int frameNumber, Tag *t, int pe)
 // defer to the js here;
 // then I don't have to get these attributes on every css rule.
 	nzFree(t->jclass);
-	t->jclass = run_function_onestring1_t(t, "getAttribute", "class");
+	t->jclass = get_js_attribute(t, "class");
 	nzFree(t->id);
-	t->id = run_function_onestring1_t(t, "getAttribute", "id");
+	t->id = get_js_attribute(t, "id");
 
 // this is cheeky- but do_rules checks bulkmatch then visibility,
 // so set bulkmatch temporarily.

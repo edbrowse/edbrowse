@@ -502,6 +502,10 @@ int run_function_onearg_win(const Frame *f, const char *name, const Tag *t2);
 int run_function_onearg_doc(const Frame *f, const char *name, const Tag *t2);
 void run_function_onestring_t(const Tag *t, const char *name, const char *s);
 char *run_function_onestring1_t(const Tag *t, const char *name, const char *s);
+// Access an objects attributes, not just its properties. These are separate
+// and independent systems, except in a few rare cases of spillup and spilldown,
+// such as href, which is why we can access that property directly.
+#define get_js_attribute(t, name) run_function_onestring1_t(t, "getAttribute", name)
 void run_function_twostring_t(const Tag *t, const char *name, const char *s1, const char *s2);
 void run_function_onestring_win(const Frame *f, const char *name, const char *s);
 void jsRunData(const Tag *t, const char *filename, int lineno);
