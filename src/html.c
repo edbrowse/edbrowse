@@ -4722,6 +4722,36 @@ static char *arialabel(const Tag *t)
 	return (a && *a) ? cloneString(a) : 0;
 }
 
+static int ariaHeadingLevel(const Tag *t)
+{
+	const char *role, *lvl;
+	int n;
+#if 0
+// This works on the attribute system, not on properties,
+// look into this later.
+	if(allowJS && t->jslink) {
+		char *r = get_property_string_t(t, "role");
+		if(stringEqual(r, "heading")) {
+			nzFree(r);
+			char *l = get_property_string_t(t, "aria-level");
+			n = l ? atoi(l) : 2;
+			nzFree(l);
+			if(n < 1) n = 1;
+			if(n > 6) n = 6;
+			return n;
+		}
+		nzFree(r);
+	}
+#endif
+	role = attribVal(t, "role");
+	if(!stringEqual(role, "heading")) return 0;
+	lvl = attribVal(t, "aria-level");
+	n = lvl ? atoi(lvl) : 2;
+	if(n < 1) n = 1;
+	if(n > 6) n = 6;
+	return n;
+}
+
 static void tagInStream(int tagno)
 {
 	char buf[32];
@@ -4766,6 +4796,7 @@ static int ahref_under(const Tag *t)
 
 static void emphasize(Tag *t, bool opentag, const char *a)
 {
+	const Tag *u;
 	char mark[12];
 	sprintf(mark, "%c@%s", (opentag ? '`' : '\''), a);
 	int l = strlen(a);
@@ -4778,6 +4809,13 @@ static void emphasize(Tag *t, bool opentag, const char *a)
 	if(t2 && t2->info->name[0] != 'b') return;
 	t2 = findOpenTag(t, TAGACT_OPTION);
 	if(t2) return;
+
+// the converse; don't emphasize if we are a hyperlink.
+    for(u = t->firstchild; u; u = u->sibling) {
+        if(isBlankTag(u)) continue;
+        if(u->action != TAGACT_A || !u->href) break;
+    }
+    if(!u) return;
 
 	if(opentag) {
 // see if we can compress adjacent blocks of emphasized text
@@ -5111,6 +5149,7 @@ nocolor:
 		}
 		currentA = (opentag ? t : 0);
 		if (!retainTag) break;
+		int arialevel_a = ariaHeadingLevel(t);
 // Javascript might have set this url.
 		if (opentag && !t->href && t->jslink) {
 			char *new_url = get_property_url_t(t, false);
@@ -5152,7 +5191,15 @@ nocolor:
 			else
 				hnum[0] = 0;
 		} // href or no href
+		if(arialevel_a && opentag) {
+			stringAndChar(&ns, &ns_l, '\f');
+			char hbuf_a[8];
+			sprintf(hbuf_a, "h%d ", arialevel_a);
+			stringAndString(&ns, &ns_l, hbuf_a);
+		}
 		ns_hnum();
+		if(arialevel_a && !opentag)
+			stringAndChar(&ns, &ns_l, '\f');
 		if (endcolor)
 			swapArrow();
 		break;
@@ -5314,6 +5361,9 @@ nop:
 		else
 			j >>= 2;
 
+		int arialevel = (action != TAGACT_H) ? ariaHeadingLevel(t) : 0;
+		if(arialevel && !j) j = 2;
+
 // special code for div inside a header, which shouldn't happen but does
 		if(action == TAGACT_DIV && findOpenTag(t, TAGACT_H))
 			j = 0;
@@ -5352,29 +5402,38 @@ Should we watch for empty-ish tags besides span, or even empty trees? */
 past_cell_paragraph:
 
 		if (j) {
-			c = '\f';
-			if (j == 1) {
-				c = '\r';
-				if (action == TAGACT_BR)
-					c = '\n';
-			}
-			stringAndChar(&ns, &ns_l, c);
-			if (doColors && t->iscolor &&
-			    ns_l > 4 && !memcmp(ns + ns_l - 4, "≪", 3)) {
+		    c = '\f';
+		    if (j == 1) {
+		    	c = '\r';
+		    	if (action == TAGACT_BR)
+		    		c = '\n';
+		    }
+		    stringAndChar(&ns, &ns_l, c);
+		    if (doColors && t->iscolor &&
+		        ns_l > 4 && !memcmp(ns + ns_l - 4, "≪", 3)) {
 // move the newline before the color
-				char *u0 = ns + ns_l - 4;
-				u0 = backColon(u0);
-				if (*u0 == ':') {
-					int j = strlen(u0);
-					memmove(u0 + 1, u0, j);
-					*u0 = c;
-				}
-			}
-			if (opentag && action == TAGACT_H) {
-				strcpy(hnum, ti->name);
-				strcat(hnum, " ");
-				ns_hnum();
-			}
+		    	char *u0 = ns + ns_l - 4;
+		    	u0 = backColon(u0);
+		    	if (*u0 == ':') {
+		    		int j = strlen(u0);
+		    		memmove(u0 + 1, u0, j);
+		    		*u0 = c;
+		    	}
+		    }
+		    if (opentag && (action == TAGACT_H || arialevel)) {
+// no need to print h1 if the section is empty
+		        for(ltag = t->firstchild; ltag; ltag = ltag->sibling)
+		            if(!isBlankTag(ltag)) break;
+		        if(ltag) {
+		            if(arialevel)
+		                sprintf(hnum, "h%d ", arialevel);
+		            else {
+		                strcpy(hnum, ti->name);
+		                strcat(hnum, " ");
+		            }
+		            ns_hnum();
+		        }
+		    }
 		}
 
 // tags with id= have to be part of the screen, so you can jump to them.

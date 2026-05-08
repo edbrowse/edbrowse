@@ -12,6 +12,6 @@ desc = markdown file
 suffix = md
 content = application/markdown
 down_url
-program = pandoc -f markdown -t html %i
+program = pandoc -f markdown -s -t html %i
 outtype = h
 }
