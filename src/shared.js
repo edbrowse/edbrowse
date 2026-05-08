@@ -5935,6 +5935,15 @@ function cel_define(name, c, options) {
     const o = {construct:c};
     // what other stuff should we remember in o?
     this.map.set(name, o);
+
+// check to see if we already have tags of this nature.
+// If so, I don't know what to do about it.
+const d = my$doc();
+    const a = gebtn(d, "*", true, false)
+    let cnt = 0;
+    for(let t of a)
+        if(t.tagName == name) ++cnt;
+    if(cnt) alert3(`${cnt} ${name} tags already exist; these will not be customized`);
 }
 
 function cel_get(name) {
