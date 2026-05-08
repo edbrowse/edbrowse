@@ -508,7 +508,7 @@ char *run_function_onestring1_t(const Tag *t, const char *name, const char *s);
 #define get_js_attribute(t, name) run_function_onestring1_t(t, "getAttribute", name)
 void run_function_twostring_t(const Tag *t, const char *name, const char *s1, const char *s2);
 void run_function_onestring_win(const Frame *f, const char *name, const char *s);
-void jsRunData(const Tag *t, const char *filename, int lineno);
+void jsRunData(const Tag *t, const char *filename, int lineno, bool is_module);
 bool run_event_t(const Tag *t, const char *evname);
 bool run_event_win(const Frame *f, const char *evname);
 bool run_event_doc(const Frame *f, const char *evname);
