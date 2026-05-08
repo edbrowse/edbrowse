@@ -8,6 +8,7 @@ bool isBlankTag(const Tag *t)
 {
     if(t->action != TAGACT_TEXT) return false;
     const char *s = t->textval;
+    if(!s) return true;
     while(isspace(*s)) ++s;
     return *s == 0;
 }
