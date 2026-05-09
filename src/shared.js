@@ -308,7 +308,7 @@ function customizeInPlace(o1, custom)
         o2.appendChild(c);
     o1.replaceWith(o2);
     if(o1.attributes$2) {
-        for(var i=0; i<this.attributes.length; ++i)
+        for(var i=0; i<o1.attributes.length; ++i)
             o2.setAttribute(o1.attributes[i].name, o1.attributes[i].value);
     }
     o2.connectedCallback$pending = true;
