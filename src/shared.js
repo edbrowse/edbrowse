@@ -5961,10 +5961,10 @@ const d = my$doc();
     let cnt = 0;
     for(let t of a)
         if(t.tagName == name) {
-// possibly call customizeInPlace here
+            customizeInPlace(t, name);
             ++cnt;
         }
-    if(cnt) alert3(`${cnt} ${name} tags already exist; these are not customized`);
+    if(cnt) alert3(`${cnt} ${name} tags already exist; these have beent customized retroactively`);
 }
 
 function cel_get(name) {
