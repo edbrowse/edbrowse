@@ -292,8 +292,26 @@ return s;
 
 // wrapper to turn function blah{ my js code } into function blah{ [native code] }
 // This is required by sanity tests in jquery and other libraries.
-function wrapString() {
-return Object.toString.bind(this)().replace(/\([\u0000-\uffff]*/, "() {\n    [native code]\n}");
+function wrapString()
+{
+    return Object.toString.bind(this)().replace(/\([\u0000-\uffff]*/, "() {\n    [native code]\n}");
+}
+
+function customizeInPlace(o1, custom)
+{
+// be sure to use createElement, so we get a tag in the C world
+    const d = my$doc();
+    const o2 = d.createElement(custom);
+// move o2 into the tree, where o1 was
+    let c;
+    while(c = o1.firstChild)
+        o2.appendChild(c);
+    o1.replaceWith(o2);
+    if(o1.attributes$2) {
+        for(var i=0; i<this.attributes.length; ++i)
+            o2.setAttribute(o1.attributes[i].name, o1.attributes[i].value);
+    }
+    o2.connectedCallback$pending = true;
 }
 
 // implementation of getElementsByTagName, getElementsByName, and getElementsByClassName.
@@ -5942,8 +5960,11 @@ const d = my$doc();
     const a = gebtn(d, "*", true, false)
     let cnt = 0;
     for(let t of a)
-        if(t.tagName == name) ++cnt;
-    if(cnt) alert3(`${cnt} ${name} tags already exist; these will not be customized`);
+        if(t.tagName == name) {
+// possibly call customizeInPlace here
+            ++cnt;
+        }
+    if(cnt) alert3(`${cnt} ${name} tags already exist; these are not customized`);
 }
 
 function cel_get(name) {
