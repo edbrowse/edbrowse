@@ -419,14 +419,14 @@ void sql_connect(const char *db, const char *login, const char *pw)
 	}
 
 	/* connect to the database */
-	sprintf(constring, "DSN=%s", db);
+	snprintf(constring, sizeof(constring), "DSN=%s", db);
 	if (login) {
 		s = constring + strlen(constring);
-		sprintf(s, ";UID=%s", login);
+		snprintf(s, sizeof(constring) - (s - constring), ";UID=%s", login);
 	}
 	if (pw) {
 		s = constring + strlen(constring);
-		sprintf(s, ";PWD=%s", pw);
+		snprintf(s, sizeof(constring) - (s - constring), ";PWD=%s", pw);
 	}
 
 	stmt_text = constring;
@@ -713,7 +713,7 @@ sql_blobInsert(const char *tabname, const char *colname, int rowid,
 	}
 
 	/* set up the blob insert command, using one host variable */
-	sprintf(blobcmd, "update %s set %s = %s where rowid = %d",
+	snprintf(blobcmd, sizeof(blobcmd), "update %s set %s = %s where rowid = %d",
 		tabname, colname, (length ? "?" : "NULL"), rowid);
 	stmt_text = blobcmd;
 	debugStatement();
@@ -1427,8 +1427,7 @@ static bool sql_procGo(const char *stmt)
 {
 	bool rowfound;
 	char *s = allocMem(20 + strlen(stmt));
-	strcpy(s, "execute procedure ");
-	strcat(s, stmt);
+	snprintf(s, 20 + strlen(stmt), "execute procedure %s", stmt);
 	rowfound = execInternal(s, 3);
 	/* if execInternal doesn't return, we have a memory leak */
 	nzFree(s);
@@ -1826,7 +1825,7 @@ SQLSetConnectAttr(hdbc, SQL_ATTR_METADATA_ID,
 	buf = initString(&buflen);
 	while (SQLFetch(hstmt) == SQL_SUCCESS) {
 		char tabline[140];
-		sprintf(tabline, "%s.%s|%s\n", tabowner, tabname, tabtype);
+		snprintf(tabline, sizeof(tabline), "%s.%s|%s\n", tabowner, tabname, tabtype);
 		stringAndString(&buf, &buflen, tabline);
 	}
 
