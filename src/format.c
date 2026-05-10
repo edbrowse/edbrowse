@@ -9,8 +9,16 @@ bool isBlankTag(const Tag *t)
     if(t->action != TAGACT_TEXT) return false;
     const char *s = t->textval;
     if(!s) return true;
-    while(isspace(*s)) ++s;
-    return *s == 0;
+    while(*s) {
+        if(isspaceByte(*s)) { ++s; continue; }
+// non break space in utf8
+        if((uchar)*s == 0xc2 && (uchar)s[1] == 0xa0) {
+            s += 2;
+            continue;
+        }
+        return false;
+    }
+    return true;
 }
 
 // It's possible that console has to be utf8, or edbrowse won't work properly.
