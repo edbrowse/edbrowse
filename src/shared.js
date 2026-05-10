@@ -2592,18 +2592,13 @@ return;
 }
 
 // Ok, run it through the deminimizer.
-if(self.escodegen) {
+if(self.js_beautify) {
 s.original = s.text;
-s.text = escodegen.generate(esprima.parse(s.text));
-// This is a crude workaround because codegen doesn't understand the syntax of extending a class.
-// There is a patch in demin.js that inserts 18392748934
-// We need to remove it here.
-// buildsourcestring will remove the space after colon if I'm not careful.
-s.text = s.text.replace(/:\s18392748934\n/g, "\n");
+s.text = self.js_beautify(s.text);
 s.expanded = true;
 alert3("expanded");
 } else {
-alert("deminimization not available");
+alert("deminimization not available; try EBDEMIN=on");
 }
 }
 
@@ -8889,7 +8884,9 @@ Object.defineProperty(k, "toString",{value:wrapString});
 
 // objects and particularly classes have to be frozen,
 // so nobody replaces their prototype or the methods beneath
-flist = [Object, Function, Date, Math,
+flist = [
+// We need Object.prototype to remain writable, for the deminimizer
+Function, Date, Math,
 Promise, Array, Uint8Array, Error, String, URL, URLSearchParams,
 Intl_dt, Intl_num,
 Blob, FormData,

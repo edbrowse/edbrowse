@@ -15,6 +15,9 @@ tdmarks = **+@__~~
 Support aria heading attributes:
 role=heading aria-level=1 presents like h1
 
+replace the earlier deminimizer, which has become out of date, with
+https://github.com/beautifier/js-beautify
+
 3.8.16
 
 Use strict js in shared.js and startwindow.js

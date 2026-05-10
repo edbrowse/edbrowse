@@ -1,12206 +1,4062 @@
 // stringname=deminJS
-/*********************************************************************
-This file contains third party open source javascript routines
-that are useful to edbrowse.
-Licenses and links are included here.
-These are snapshots; you will need to update this file, i.e. grab a new
-snapshot, as the software evolves.
 
-Being huge, these functions are compiled once in the master window,
-then referenced from every other window.
-You might have to change the functions slightly,
-e.g. replacing document with my$doc(),
-though I don't see any examples of that here.
-I'll make notes if this is the case.
+// snapshot https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.15.4/beautify.js
+// on 05/10/2026
 
-Third-party libraries: esprima-next, which converts javascript code into
-an Abstract Syntax Tree (AST), and escodegen, which converts an AST into
-javascript code.  We are using them together, as one apparatus.  What's
-the point?  The point is that when escodegen converts an AST into code,
-it deminifies (aka deminimizes), adding returns.
-This makes the difference between a reported JS runtime with an unhelpful
-line number (missing method name in blah.js on line 1, where line 1 goes on for pages)
-and a JS runtime with a real line number (missing method name in blah.js on
-line 2345, which you can follow through on and debug something.)
+/* AUTO-GENERATED. DO NOT MODIFY. */
+/*
 
-For a long time, esprima was a robust AST generator library.  As of 2023 it is now semi neglected but there is an active fork called esprima-next.
+  The MIT License (MIT)
 
-1. Link for esprima-next: https://github.com/node-projects/esprima-next.git 
+  Copyright (c) 2007-2018 Einar Lielmanis, Liam Newman, and contributors.
 
-2. License for esprima-next: 
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation files
+  (the "Software"), to deal in the Software without restriction,
+  including without limitation the rights to use, copy, modify, merge,
+  publish, distribute, sublicense, and/or sell copies of the Software,
+  and to permit persons to whom the Software is furnished to do so,
+  subject to the following conditions:
 
-Copyright JS Foundation and other contributors, https://js.foundation/
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
 
-  * Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
-  * Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in the
-    documentation and/or other materials provided with the distribution.
+ JS Beautifier
+---------------
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-3. Step-by-step guide to including esprima-next
-3.1 Get the code using https://github.com/node-projects/esprima-next.git
-3.2 esprima-next is in Typescript.  Run a converter/build tool to convert to Javascript.  Here is the procedure for esbuild.  You can substitute a different one.
-3.2.1 Install esbuild using npm
-3.2.2 Navigate to the esprima-next folder containing several Typescript files ending in ts
-3.2.3 Create and execute a one-line command modelled on the following:
-../node_modules/.bin/esbuild * --bundle --outfile=out.js
-3.2.4 This command creates a folder full of small JS files.  Use 'cat' to concatenate them all into one big JS file
-3.2.5 It may be necessary to comment out or delete the use of 'async' because there are crossed wires between 'async' within the esprima level and 'async' within the literal-JS-being-ASTized level
- 
-Last update for esprima-next portion: 20231217
------------------------------------------------
+  Written by Einar Lielmanis, <einar@beautifier.io>
+      https://beautifier.io/
+
+  Originally converted to javascript by Vital, <vital76@gmail.com>
+  "End braces on own line" added by Chris J. Shull, <chrisjshull@gmail.com>
+  Parsing improvements for brace-less statements by Liam Newman <bitwiseman@beautifier.io>
+
+
+  Usage:
+    js_beautify(js_source_text);
+    js_beautify(js_source_text, options);
+
+  The options are:
+    indent_size (default 4)          - indentation size,
+    indent_char (default space)      - character to indent with,
+    preserve_newlines (default true) - whether existing line breaks should be preserved,
+    max_preserve_newlines (default unlimited) - maximum number of line breaks to be preserved in one chunk,
+
+    jslint_happy (default false) - if true, then jslint-stricter mode is enforced.
+
+            jslint_happy        !jslint_happy
+            ---------------------------------
+            function ()         function()
+
+            switch () {         switch() {
+            case 1:               case 1:
+              break;                break;
+            }                   }
+
+    space_after_anon_function (default false) - should the space before an anonymous function's parens be added, "function()" vs "function ()",
+          NOTE: This option is overridden by jslint_happy (i.e. if jslint_happy is true, space_after_anon_function is true by design)
+
+    brace_style (default "collapse") - "collapse" | "expand" | "end-expand" | "none" | any of the former + ",preserve-inline"
+            put braces on the same line as control statements (default), or put braces on own line (Allman / ANSI style), or just put end braces on own line, or attempt to keep them where they are.
+            preserve-inline will try to preserve inline blocks of curly braces
+
+    space_before_conditional (default true) - should the space before conditional statement be added, "if(true)" vs "if (true)",
+
+    unescape_strings (default false) - should printable characters in strings encoded in \xNN notation be unescaped, "example" vs "\x65\x78\x61\x6d\x70\x6c\x65"
+
+    wrap_line_length (default unlimited) - lines should wrap at next opportunity after this number of characters.
+          NOTE: This is not a hard limit. Lines will continue until a point where a newline would
+                be preserved if it were present.
+
+    end_with_newline (default false)  - end output with a newline
+
+
+    e.g
+
+    js_beautify(js_source_text, {
+      'indent_size': 1,
+      'indent_char': '\t'
+    });
+
+*/
+
+(function() {
+
+/* GENERATED_BUILD_OUTPUT */
+var legacy_beautify_js;
+/******/ (function() { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	var __webpack_modules__ = ([
+/* 0 */
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+/*jshint node:true */
+/*
+
+  The MIT License (MIT)
+
+  Copyright (c) 2007-2018 Einar Lielmanis, Liam Newman, and contributors.
+
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation files
+  (the "Software"), to deal in the Software without restriction,
+  including without limitation the rights to use, copy, modify, merge,
+  publish, distribute, sublicense, and/or sell copies of the Software,
+  and to permit persons to whom the Software is furnished to do so,
+  subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
 */
 
 
-(() => {
-  var __defProp = Object.defineProperty;
-  var __export = (target, all) => {
-    for (var name in all)
-      __defProp(target, name, { get: all[name], enumerable: true });
-  };
 
-  // syntax.ts
-  var Syntax = /* @__PURE__ */ ((Syntax2) => {
-    Syntax2["AssignmentExpression"] = "AssignmentExpression";
-    Syntax2["AssignmentPattern"] = "AssignmentPattern";
-    Syntax2["ArrayExpression"] = "ArrayExpression";
-    Syntax2["ArrayPattern"] = "ArrayPattern";
-    Syntax2["ArrowFunctionExpression"] = "ArrowFunctionExpression";
-    Syntax2["AwaitExpression"] = "AwaitExpression";
-    Syntax2["BlockStatement"] = "BlockStatement";
-    Syntax2["BinaryExpression"] = "BinaryExpression";
-    Syntax2["BreakStatement"] = "BreakStatement";
-    Syntax2["CallExpression"] = "CallExpression";
-    Syntax2["CatchClause"] = "CatchClause";
-    Syntax2["ChainExpression"] = "ChainExpression";
-    Syntax2["ClassBody"] = "ClassBody";
-    Syntax2["ClassDeclaration"] = "ClassDeclaration";
-    Syntax2["ClassExpression"] = "ClassExpression";
-    Syntax2["ConditionalExpression"] = "ConditionalExpression";
-    Syntax2["ContinueStatement"] = "ContinueStatement";
-    Syntax2["Decorator"] = "Decorator";
-    Syntax2["DoWhileStatement"] = "DoWhileStatement";
-    Syntax2["DebuggerStatement"] = "DebuggerStatement";
-    Syntax2["EmptyStatement"] = "EmptyStatement";
-    Syntax2["ExportAllDeclaration"] = "ExportAllDeclaration";
-    Syntax2["ExportDefaultDeclaration"] = "ExportDefaultDeclaration";
-    Syntax2["ExportNamedDeclaration"] = "ExportNamedDeclaration";
-    Syntax2["ExportSpecifier"] = "ExportSpecifier";
-    Syntax2["ExpressionStatement"] = "ExpressionStatement";
-    Syntax2["ForStatement"] = "ForStatement";
-    Syntax2["ForOfStatement"] = "ForOfStatement";
-    Syntax2["ForInStatement"] = "ForInStatement";
-    Syntax2["FunctionDeclaration"] = "FunctionDeclaration";
-    Syntax2["FunctionExpression"] = "FunctionExpression";
-    Syntax2["Identifier"] = "Identifier";
-    Syntax2["IfStatement"] = "IfStatement";
-    Syntax2["ImportAttribute"] = "ImportAttribute";
-    Syntax2["ImportExpression"] = "ImportExpression";
-    Syntax2["ImportDeclaration"] = "ImportDeclaration";
-    Syntax2["ImportDefaultSpecifier"] = "ImportDefaultSpecifier";
-    Syntax2["ImportNamespaceSpecifier"] = "ImportNamespaceSpecifier";
-    Syntax2["ImportSpecifier"] = "ImportSpecifier";
-    Syntax2["Literal"] = "Literal";
-    Syntax2["LabeledStatement"] = "LabeledStatement";
-    Syntax2["LogicalExpression"] = "LogicalExpression";
-    Syntax2["MemberExpression"] = "MemberExpression";
-    Syntax2["MetaProperty"] = "MetaProperty";
-    Syntax2["MethodDefinition"] = "MethodDefinition";
-    Syntax2["NewExpression"] = "NewExpression";
-    Syntax2["ObjectExpression"] = "ObjectExpression";
-    Syntax2["ObjectPattern"] = "ObjectPattern";
-    Syntax2["Program"] = "Program";
-    Syntax2["Property"] = "Property";
-    Syntax2["PrivateIdentifier"] = "PrivateIdentifier";
-    Syntax2["RestElement"] = "RestElement";
-    Syntax2["ReturnStatement"] = "ReturnStatement";
-    Syntax2["SequenceExpression"] = "SequenceExpression";
-    Syntax2["SpreadElement"] = "SpreadElement";
-    Syntax2["StaticBlock"] = "StaticBlock";
-    Syntax2["Super"] = "Super";
-    Syntax2["SwitchCase"] = "SwitchCase";
-    Syntax2["SwitchStatement"] = "SwitchStatement";
-    Syntax2["TaggedTemplateExpression"] = "TaggedTemplateExpression";
-    Syntax2["TemplateElement"] = "TemplateElement";
-    Syntax2["TemplateLiteral"] = "TemplateLiteral";
-    Syntax2["ThisExpression"] = "ThisExpression";
-    Syntax2["ThrowStatement"] = "ThrowStatement";
-    Syntax2["TryStatement"] = "TryStatement";
-    Syntax2["UnaryExpression"] = "UnaryExpression";
-    Syntax2["UpdateExpression"] = "UpdateExpression";
-    Syntax2["VariableDeclaration"] = "VariableDeclaration";
-    Syntax2["VariableDeclarator"] = "VariableDeclarator";
-    Syntax2["WhileStatement"] = "WhileStatement";
-    Syntax2["WithStatement"] = "WithStatement";
-    Syntax2["YieldExpression"] = "YieldExpression";
-    return Syntax2;
-  })(Syntax || {});
+var Beautifier = (__webpack_require__(1).Beautifier),
+  Options = (__webpack_require__(5).Options);
 
-  // comment-handler.ts
-  var CommentHandler = class {
-    attach;
-    comments;
-    stack;
-    leading;
-    trailing;
-    constructor() {
-      this.attach = false;
-      this.comments = [];
-      this.stack = [];
-      this.leading = [];
-      this.trailing = [];
-    }
-    insertInnerComments(node, metadata) {
-      if (node.type === "BlockStatement" /* BlockStatement */ && node.body.length === 0) {
-        const innerComments = [];
-        for (let i = this.leading.length - 1; i >= 0; --i) {
-          const entry = this.leading[i];
-          if (metadata.end.offset >= entry.start) {
-            innerComments.unshift(entry.comment);
-            this.leading.splice(i, 1);
-            this.trailing.splice(i, 1);
-          }
-        }
-        if (innerComments.length) {
-          node.innerComments = innerComments;
-        }
-      }
-    }
-    findTrailingComments(metadata) {
-      let trailingComments = [];
-      if (this.trailing.length > 0) {
-        for (let i = this.trailing.length - 1; i >= 0; --i) {
-          const entry = this.trailing[i];
-          if (entry.start >= metadata.end.offset) {
-            trailingComments.unshift(entry.comment);
-          }
-        }
-        this.trailing.length = 0;
-        return trailingComments;
-      }
-      const last = this.stack[this.stack.length - 1];
-      if (last && last.node.trailingComments) {
-        const firstComment = last.node.trailingComments[0];
-        if (firstComment && firstComment.range[0] >= metadata.end.offset) {
-          trailingComments = last.node.trailingComments;
-          delete last.node.trailingComments;
-        }
-      }
-      return trailingComments;
-    }
-    findLeadingComments(metadata) {
-      const leadingComments = [];
-      let target;
-      while (this.stack.length > 0) {
-        const entry = this.stack[this.stack.length - 1];
-        if (entry && entry.start >= metadata.start.offset) {
-          target = entry.node;
-          this.stack.pop();
-        } else {
-          break;
-        }
-      }
-      if (target) {
-        const count = target.leadingComments ? target.leadingComments.length : 0;
-        for (let i = count - 1; i >= 0; --i) {
-          const comment = target.leadingComments[i];
-          if (comment.range[1] <= metadata.start.offset) {
-            leadingComments.unshift(comment);
-            target.leadingComments.splice(i, 1);
-          }
-        }
-        if (target.leadingComments && target.leadingComments.length === 0) {
-          delete target.leadingComments;
-        }
-        return leadingComments;
-      }
-      for (let i = this.leading.length - 1; i >= 0; --i) {
-        const entry = this.leading[i];
-        if (entry.start <= metadata.start.offset) {
-          leadingComments.unshift(entry.comment);
-          this.leading.splice(i, 1);
-        }
-      }
-      return leadingComments;
-    }
-    visitNode(node, metadata) {
-      if (node.type === "Program" /* Program */ && node.body.length > 0) {
-        return;
-      }
-      this.insertInnerComments(node, metadata);
-      const trailingComments = this.findTrailingComments(metadata);
-      const leadingComments = this.findLeadingComments(metadata);
-      if (leadingComments.length > 0) {
-        node.leadingComments = leadingComments;
-      }
-      if (trailingComments.length > 0) {
-        node.trailingComments = trailingComments;
-      }
-      this.stack.push({
-        node,
-        start: metadata.start.offset
-      });
-    }
-    visitComment(node, metadata) {
-      const type = node.type[0] === "L" ? "Line" : "Block";
-      const comment = {
-        type,
-        value: node.value
-      };
-      if (node.range) {
-        comment.range = node.range;
-      }
-      if (node.loc) {
-        comment.loc = node.loc;
-      }
-      this.comments.push(comment);
-      if (this.attach) {
-        const entry = {
-          comment: {
-            type,
-            value: node.value,
-            range: [metadata.start.offset, metadata.end.offset]
-          },
-          start: metadata.start.offset
-        };
-        if (node.loc) {
-          entry.comment.loc = node.loc;
-        }
-        node.type = type;
-        this.leading.push(entry);
-        this.trailing.push(entry);
-      }
-    }
-    visit(node, metadata) {
-      if (node.type === "LineComment") {
-        this.visitComment(node, metadata);
-      } else if (node.type === "BlockComment") {
-        this.visitComment(node, metadata);
-      } else if (this.attach) {
-        this.visitNode(node, metadata);
-      }
-    }
-  };
+function js_beautify(js_source_text, options) {
+  var beautifier = new Beautifier(js_source_text, options);
+  return beautifier.beautify();
+}
 
-  // character.ts
-  var Regex = {
-    // Unicode v12.1.0 NonAsciiIdentifierStart:
-    NonAsciiIdentifierStart: /[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u052F\u0531-\u0556\u0559\u0560-\u0588\u05D0-\u05EA\u05EF-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u0860-\u086A\u08A0-\u08B4\u08B6-\u08BD\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0980\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u09FC\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0AF9\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D\u0C58-\u0C5A\u0C60\u0C61\u0C80\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D54-\u0D56\u0D5F-\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E86-\u0E8A\u0E8C-\u0EA3\u0EA5\u0EA7-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F5\u13F8-\u13FD\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1878\u1880-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191E\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4B\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1C80-\u1C88\u1C90-\u1CBA\u1CBD-\u1CBF\u1CE9-\u1CEC\u1CEE-\u1CF3\u1CF5\u1CF6\u1CFA\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2118-\u211D\u2124\u2126\u2128\u212A-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303C\u3041-\u3096\u309B-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312F\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FEF\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA69D\uA6A0-\uA6EF\uA717-\uA71F\uA722-\uA788\uA78B-\uA7BF\uA7C2-\uA7C6\uA7F7-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA8FD\uA8FE\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uA9E0-\uA9E4\uA9E6-\uA9EF\uA9FA-\uA9FE\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA7E-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB67\uAB70-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD40-\uDD74\uDE80-\uDE9C\uDEA0-\uDED0\uDF00-\uDF1F\uDF2D-\uDF4A\uDF50-\uDF75\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDCB0-\uDCD3\uDCD8-\uDCFB\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDCE0-\uDCF2\uDCF4\uDCF5\uDD00-\uDD15\uDD20-\uDD39\uDD80-\uDDB7\uDDBE\uDDBF\uDE00\uDE10-\uDE13\uDE15-\uDE17\uDE19-\uDE35\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE4\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48\uDC80-\uDCB2\uDCC0-\uDCF2\uDD00-\uDD23\uDF00-\uDF1C\uDF27\uDF30-\uDF45\uDFE0-\uDFF6]|\uD804[\uDC03-\uDC37\uDC83-\uDCAF\uDCD0-\uDCE8\uDD03-\uDD26\uDD44\uDD50-\uDD72\uDD76\uDD83-\uDDB2\uDDC1-\uDDC4\uDDDA\uDDDC\uDE00-\uDE11\uDE13-\uDE2B\uDE80-\uDE86\uDE88\uDE8A-\uDE8D\uDE8F-\uDE9D\uDE9F-\uDEA8\uDEB0-\uDEDE\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3D\uDF50\uDF5D-\uDF61]|\uD805[\uDC00-\uDC34\uDC47-\uDC4A\uDC5F\uDC80-\uDCAF\uDCC4\uDCC5\uDCC7\uDD80-\uDDAE\uDDD8-\uDDDB\uDE00-\uDE2F\uDE44\uDE80-\uDEAA\uDEB8\uDF00-\uDF1A]|\uD806[\uDC00-\uDC2B\uDCA0-\uDCDF\uDCFF\uDDA0-\uDDA7\uDDAA-\uDDD0\uDDE1\uDDE3\uDE00\uDE0B-\uDE32\uDE3A\uDE50\uDE5C-\uDE89\uDE9D\uDEC0-\uDEF8]|\uD807[\uDC00-\uDC08\uDC0A-\uDC2E\uDC40\uDC72-\uDC8F\uDD00-\uDD06\uDD08\uDD09\uDD0B-\uDD30\uDD46\uDD60-\uDD65\uDD67\uDD68\uDD6A-\uDD89\uDD98\uDEE0-\uDEF2]|\uD808[\uDC00-\uDF99]|\uD809[\uDC00-\uDC6E\uDC80-\uDD43]|[\uD80C\uD81C-\uD820\uD840-\uD868\uD86A-\uD86C\uD86F-\uD872\uD874-\uD879][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD811[\uDC00-\uDE46]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDED0-\uDEED\uDF00-\uDF2F\uDF40-\uDF43\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDE40-\uDE7F\uDF00-\uDF4A\uDF50\uDF93-\uDF9F\uDFE0\uDFE1\uDFE3]|\uD821[\uDC00-\uDFF7]|\uD822[\uDC00-\uDEF2]|\uD82C[\uDC00-\uDD1E\uDD50-\uDD52\uDD64-\uDD67\uDD70-\uDEFB]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB]|\uD838[\uDD00-\uDD2C\uDD37-\uDD3D\uDD4E\uDEC0-\uDEEB]|\uD83A[\uDC00-\uDCC4\uDD00-\uDD43\uDD4B]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD869[\uDC00-\uDED6\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D\uDC20-\uDFFF]|\uD873[\uDC00-\uDEA1\uDEB0-\uDFFF]|\uD87A[\uDC00-\uDFE0]|\uD87E[\uDC00-\uDE1D]/,
-    // Unicode v12.1.0 NonAsciiIdentifierPart:
-    // eslint-disable-next-line no-misleading-character-class
-    NonAsciiIdentifierPart: /[\xAA\xB5\xB7\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u0487\u048A-\u052F\u0531-\u0556\u0559\u0560-\u0588\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA\u05EF-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u07FD\u0800-\u082D\u0840-\u085B\u0860-\u086A\u08A0-\u08B4\u08B6-\u08BD\u08D3-\u08E1\u08E3-\u0963\u0966-\u096F\u0971-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-\u09F1\u09FC\u09FE\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0AF9-\u0AFF\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5C\u0B5D\u0B5F-\u0B63\u0B66-\u0B6F\u0B71\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-\u0BEF\u0C00-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58-\u0C5A\u0C60-\u0C63\u0C66-\u0C6F\u0C80-\u0C83\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D00-\u0D03\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D44\u0D46-\u0D48\u0D4A-\u0D4E\u0D54-\u0D57\u0D5F-\u0D63\u0D66-\u0D6F\u0D7A-\u0D7F\u0D82\u0D83\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DE6-\u0DEF\u0DF2\u0DF3\u0E01-\u0E3A\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E86-\u0E8A\u0E8C-\u0EA3\u0EA5\u0EA7-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F29\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1369-\u1371\u1380-\u138F\u13A0-\u13F5\u13F8-\u13FD\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD\u17E0-\u17E9\u180B-\u180D\u1810-\u1819\u1820-\u1878\u1880-\u18AA\u18B0-\u18F5\u1900-\u191E\u1920-\u192B\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19DA\u1A00-\u1A1B\u1A20-\u1A5E\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1AB0-\u1ABD\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1C80-\u1C88\u1C90-\u1CBA\u1CBD-\u1CBF\u1CD0-\u1CD2\u1CD4-\u1CFA\u1D00-\u1DF9\u1DFB-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u200C\u200D\u203F\u2040\u2054\u2071\u207F\u2090-\u209C\u20D0-\u20DC\u20E1\u20E5-\u20F0\u2102\u2107\u210A-\u2113\u2115\u2118-\u211D\u2124\u2126\u2128\u212A-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2DE0-\u2DFF\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312F\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FEF\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA66F\uA674-\uA67D\uA67F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA7BF\uA7C2-\uA7C6\uA7F7-\uA827\uA840-\uA873\uA880-\uA8C5\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA8FD-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-\uA9D9\uA9E0-\uA9FE\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A-\uAAC2\uAADB-\uAADD\uAAE0-\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB67\uAB70-\uABEA\uABEC\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE2F\uFE33\uFE34\uFE4D-\uFE4F\uFE70-\uFE74\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF3F\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD40-\uDD74\uDDFD\uDE80-\uDE9C\uDEA0-\uDED0\uDEE0\uDF00-\uDF1F\uDF2D-\uDF4A\uDF50-\uDF7A\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDCA0-\uDCA9\uDCB0-\uDCD3\uDCD8-\uDCFB\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDCE0-\uDCF2\uDCF4\uDCF5\uDD00-\uDD15\uDD20-\uDD39\uDD80-\uDDB7\uDDBE\uDDBF\uDE00-\uDE03\uDE05\uDE06\uDE0C-\uDE13\uDE15-\uDE17\uDE19-\uDE35\uDE38-\uDE3A\uDE3F\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE6\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48\uDC80-\uDCB2\uDCC0-\uDCF2\uDD00-\uDD27\uDD30-\uDD39\uDF00-\uDF1C\uDF27\uDF30-\uDF50\uDFE0-\uDFF6]|\uD804[\uDC00-\uDC46\uDC66-\uDC6F\uDC7F-\uDCBA\uDCD0-\uDCE8\uDCF0-\uDCF9\uDD00-\uDD34\uDD36-\uDD3F\uDD44-\uDD46\uDD50-\uDD73\uDD76\uDD80-\uDDC4\uDDC9-\uDDCC\uDDD0-\uDDDA\uDDDC\uDE00-\uDE11\uDE13-\uDE37\uDE3E\uDE80-\uDE86\uDE88\uDE8A-\uDE8D\uDE8F-\uDE9D\uDE9F-\uDEA8\uDEB0-\uDEEA\uDEF0-\uDEF9\uDF00-\uDF03\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3B-\uDF44\uDF47\uDF48\uDF4B-\uDF4D\uDF50\uDF57\uDF5D-\uDF63\uDF66-\uDF6C\uDF70-\uDF74]|\uD805[\uDC00-\uDC4A\uDC50-\uDC59\uDC5E\uDC5F\uDC80-\uDCC5\uDCC7\uDCD0-\uDCD9\uDD80-\uDDB5\uDDB8-\uDDC0\uDDD8-\uDDDD\uDE00-\uDE40\uDE44\uDE50-\uDE59\uDE80-\uDEB8\uDEC0-\uDEC9\uDF00-\uDF1A\uDF1D-\uDF2B\uDF30-\uDF39]|\uD806[\uDC00-\uDC3A\uDCA0-\uDCE9\uDCFF\uDDA0-\uDDA7\uDDAA-\uDDD7\uDDDA-\uDDE1\uDDE3\uDDE4\uDE00-\uDE3E\uDE47\uDE50-\uDE99\uDE9D\uDEC0-\uDEF8]|\uD807[\uDC00-\uDC08\uDC0A-\uDC36\uDC38-\uDC40\uDC50-\uDC59\uDC72-\uDC8F\uDC92-\uDCA7\uDCA9-\uDCB6\uDD00-\uDD06\uDD08\uDD09\uDD0B-\uDD36\uDD3A\uDD3C\uDD3D\uDD3F-\uDD47\uDD50-\uDD59\uDD60-\uDD65\uDD67\uDD68\uDD6A-\uDD8E\uDD90\uDD91\uDD93-\uDD98\uDDA0-\uDDA9\uDEE0-\uDEF6]|\uD808[\uDC00-\uDF99]|\uD809[\uDC00-\uDC6E\uDC80-\uDD43]|[\uD80C\uD81C-\uD820\uD840-\uD868\uD86A-\uD86C\uD86F-\uD872\uD874-\uD879][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD811[\uDC00-\uDE46]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDE60-\uDE69\uDED0-\uDEED\uDEF0-\uDEF4\uDF00-\uDF36\uDF40-\uDF43\uDF50-\uDF59\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDE40-\uDE7F\uDF00-\uDF4A\uDF4F-\uDF87\uDF8F-\uDF9F\uDFE0\uDFE1\uDFE3]|\uD821[\uDC00-\uDFF7]|\uD822[\uDC00-\uDEF2]|\uD82C[\uDC00-\uDD1E\uDD50-\uDD52\uDD64-\uDD67\uDD70-\uDEFB]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99\uDC9D\uDC9E]|\uD834[\uDD65-\uDD69\uDD6D-\uDD72\uDD7B-\uDD82\uDD85-\uDD8B\uDDAA-\uDDAD\uDE42-\uDE44]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB\uDFCE-\uDFFF]|\uD836[\uDE00-\uDE36\uDE3B-\uDE6C\uDE75\uDE84\uDE9B-\uDE9F\uDEA1-\uDEAF]|\uD838[\uDC00-\uDC06\uDC08-\uDC18\uDC1B-\uDC21\uDC23\uDC24\uDC26-\uDC2A\uDD00-\uDD2C\uDD30-\uDD3D\uDD40-\uDD49\uDD4E\uDEC0-\uDEF9]|\uD83A[\uDC00-\uDCC4\uDCD0-\uDCD6\uDD00-\uDD4B\uDD50-\uDD59]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD869[\uDC00-\uDED6\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D\uDC20-\uDFFF]|\uD873[\uDC00-\uDEA1\uDEB0-\uDFFF]|\uD87A[\uDC00-\uDFE0]|\uD87E[\uDC00-\uDE1D]|\uDB40[\uDD00-\uDDEF]/
-  };
-  var Character = {
-    fromCodePoint(cp) {
-      return cp < 65536 ? String.fromCharCode(cp) : String.fromCharCode(55296 + (cp - 65536 >> 10)) + String.fromCharCode(56320 + (cp - 65536 & 1023));
-    },
-    isStringWellFormedUnicode(text) {
-      for (let i = 0; i < text.length; i++) {
-        let c = text.charCodeAt(i);
-        if (c >= 55296 && c <= 56319) {
-          if (i === text.length - 1) {
-            return false;
-          }
-          i++;
-          c = text.charCodeAt(i);
-          if (c < 56320 && c > 57343) {
-            return false;
-          }
-        } else if (c >= 56320 && c <= 57343) {
-          return false;
-        }
-      }
-      return true;
-    },
-    // https://tc39.github.io/ecma262/#sec-white-space
-    isWhiteSpace(cp) {
-      return cp === 32 || cp === 9 || cp === 11 || cp === 12 || cp === 160 || cp >= 5760 && [5760, 8192, 8193, 8194, 8195, 8196, 8197, 8198, 8199, 8200, 8201, 8202, 8239, 8287, 12288, 65279].indexOf(cp) >= 0;
-    },
-    // https://tc39.github.io/ecma262/#sec-line-terminators
-    isLineTerminator(cp) {
-      return cp === 10 || cp === 13 || cp === 8232 || cp === 8233;
-    },
-    // https://tc39.github.io/ecma262/#sec-names-and-keywords
-    isIdentifierStart(cp) {
-      return cp === 36 || cp === 95 || // $ (dollar) and _ (underscore)
-      cp >= 65 && cp <= 90 || // A..Z
-      cp >= 97 && cp <= 122 || // a..z
-      cp === 92 || // \ (backslash)
-      cp >= 128 && Regex.NonAsciiIdentifierStart.test(Character.fromCodePoint(cp));
-    },
-    isIdentifierPart(cp) {
-      return cp === 36 || cp === 95 || // $ (dollar) and _ (underscore)
-      cp >= 65 && cp <= 90 || // A..Z
-      cp >= 97 && cp <= 122 || // a..z
-      cp >= 48 && cp <= 57 || // 0..9
-      cp === 92 || // \ (backslash)
-      cp >= 128 && Regex.NonAsciiIdentifierPart.test(Character.fromCodePoint(cp));
-    },
-    // https://tc39.github.io/ecma262/#sec-literals-numeric-literals
-    isDecimalDigit(cp) {
-      return cp >= 48 && cp <= 57;
-    },
-    isDecimalDigitChar(ch) {
-      return ch.length === 1 && Character.isDecimalDigit(ch.charCodeAt(0));
-    },
-    isHexDigit(cp) {
-      return cp >= 48 && cp <= 57 || // 0..9
-      cp >= 65 && cp <= 70 || // A..F
-      cp >= 97 && cp <= 102;
-    },
-    isHexDigitChar(ch) {
-      return ch.length === 1 && Character.isHexDigit(ch.charCodeAt(0));
-    },
-    isOctalDigit(cp) {
-      return cp >= 48 && cp <= 55;
-    },
-    isOctalDigitChar(ch) {
-      return ch.length === 1 && Character.isOctalDigit(ch.charCodeAt(0));
-    }
-  };
+module.exports = js_beautify;
+self.js_beautify = js_beautify;
+module.exports.defaultOptions = function() {
+  return new Options();
+};
 
-  // jsx-nodes.ts
-  var JSXClosingElement = class {
-    type;
-    name;
-    constructor(name) {
-      this.type = "JSXClosingElement" /* JSXClosingElement */;
-      this.name = name;
-    }
-  };
-  var JSXClosingFragment = class {
-    type;
-    constructor() {
-      this.type = "JSXClosingFragment" /* JSXClosingFragment */;
-    }
-  };
-  var JSXElement = class {
-    type;
-    openingElement;
-    children;
-    closingElement;
-    constructor(openingElement, children, closingElement) {
-      this.type = "JSXElement" /* JSXElement */;
-      this.openingElement = openingElement;
-      this.children = children;
-      this.closingElement = closingElement;
-    }
-  };
-  var JSXEmptyExpression = class {
-    type;
-    constructor() {
-      this.type = "JSXEmptyExpression" /* JSXEmptyExpression */;
-    }
-  };
-  var JSXExpressionContainer = class {
-    type;
-    expression;
-    constructor(expression) {
-      this.type = "JSXExpressionContainer" /* JSXExpressionContainer */;
-      this.expression = expression;
-    }
-  };
-  var JSXIdentifier = class {
-    type;
-    name;
-    constructor(name) {
-      this.type = "JSXIdentifier" /* JSXIdentifier */;
-      this.name = name;
-    }
-  };
-  var JSXMemberExpression = class {
-    type;
-    object;
-    property;
-    constructor(object, property) {
-      this.type = "JSXMemberExpression" /* JSXMemberExpression */;
-      this.object = object;
-      this.property = property;
-    }
-  };
-  var JSXAttribute = class {
-    type;
-    name;
-    value;
-    constructor(name, value) {
-      this.type = "JSXAttribute" /* JSXAttribute */;
-      this.name = name;
-      this.value = value;
-    }
-  };
-  var JSXNamespacedName = class {
-    type;
-    namespace;
-    name;
-    constructor(namespace, name) {
-      this.type = "JSXNamespacedName" /* JSXNamespacedName */;
-      this.namespace = namespace;
-      this.name = name;
-    }
-  };
-  var JSXOpeningElement = class {
-    type;
-    name;
-    selfClosing;
-    attributes;
-    constructor(name, selfClosing, attributes) {
-      this.type = "JSXOpeningElement" /* JSXOpeningElement */;
-      this.name = name;
-      this.selfClosing = selfClosing;
-      this.attributes = attributes;
-    }
-  };
-  var JSXOpeningFragment = class {
-    type;
-    selfClosing;
-    constructor(selfClosing) {
-      this.type = "JSXOpeningFragment" /* JSXOpeningFragment */;
-      this.selfClosing = selfClosing;
-    }
-  };
-  var JSXSpreadAttribute = class {
-    type;
-    argument;
-    constructor(argument) {
-      this.type = "JSXSpreadAttribute" /* JSXSpreadAttribute */;
-      this.argument = argument;
-    }
-  };
-  var JSXText = class {
-    type;
-    value;
-    raw;
-    constructor(value, raw) {
-      this.type = "JSXText" /* JSXText */;
-      this.value = value;
-      this.raw = raw;
-    }
-  };
 
-  // nodes.ts
-  var nodes_exports = {};
-  __export(nodes_exports, {
-    ArrayExpression: () => ArrayExpression,
-    ArrayPattern: () => ArrayPattern,
-    ArrowFunctionExpression: () => ArrowFunctionExpression,
-    AssignmentExpression: () => AssignmentExpression,
-    AssignmentPattern: () => AssignmentPattern,
-    AsyncFunctionDeclaration: () => AsyncFunctionDeclaration,
-    AwaitExpression: () => AwaitExpression,
-    BigIntLiteral: () => BigIntLiteral,
-    BinaryExpression: () => BinaryExpression,
-    BlockStatement: () => BlockStatement,
-    BreakStatement: () => BreakStatement,
-    CallExpression: () => CallExpression,
-    CatchClause: () => CatchClause,
-    ChainExpression: () => ChainExpression,
-    ClassBody: () => ClassBody,
-    ClassDeclaration: () => ClassDeclaration,
-    ClassExpression: () => ClassExpression,
-    ConditionalExpression: () => ConditionalExpression,
-    ContinueStatement: () => ContinueStatement,
-    DebuggerStatement: () => DebuggerStatement,
-    Decorator: () => Decorator,
-    Directive: () => Directive,
-    DoWhileStatement: () => DoWhileStatement,
-    EmptyStatement: () => EmptyStatement,
-    ExportAllDeclaration: () => ExportAllDeclaration,
-    ExportDefaultDeclaration: () => ExportDefaultDeclaration,
-    ExportNamedDeclaration: () => ExportNamedDeclaration,
-    ExportSpecifier: () => ExportSpecifier,
-    ExpressionStatement: () => ExpressionStatement,
-    ForInStatement: () => ForInStatement,
-    ForOfStatement: () => ForOfStatement,
-    ForStatement: () => ForStatement,
-    FunctionDeclaration: () => FunctionDeclaration,
-    FunctionExpression: () => FunctionExpression,
-    Identifier: () => Identifier,
-    IfStatement: () => IfStatement,
-    ImportAttribute: () => ImportAttribute,
-    ImportDeclaration: () => ImportDeclaration,
-    ImportDefaultSpecifier: () => ImportDefaultSpecifier,
-    ImportExpression: () => ImportExpression,
-    ImportNamespaceSpecifier: () => ImportNamespaceSpecifier,
-    ImportSpecifier: () => ImportSpecifier,
-    LabeledStatement: () => LabeledStatement,
-    Literal: () => Literal,
-    LogicalExpression: () => LogicalExpression,
-    MemberExpression: () => MemberExpression,
-    MetaProperty: () => MetaProperty,
-    MethodDefinition: () => MethodDefinition,
-    Module: () => Module,
-    NewExpression: () => NewExpression,
-    ObjectExpression: () => ObjectExpression,
-    ObjectPattern: () => ObjectPattern,
-    PrivateIdentifier: () => PrivateIdentifier,
-    Program: () => Program,
-    Property: () => Property,
-    PropertyDefinition: () => PropertyDefinition,
-    RegexLiteral: () => RegexLiteral,
-    RestElement: () => RestElement,
-    ReturnStatement: () => ReturnStatement,
-    Script: () => Script,
-    SequenceExpression: () => SequenceExpression,
-    SpreadElement: () => SpreadElement,
-    StaticBlock: () => StaticBlock,
-    Super: () => Super,
-    SwitchCase: () => SwitchCase,
-    SwitchStatement: () => SwitchStatement,
-    TaggedTemplateExpression: () => TaggedTemplateExpression,
-    TemplateElement: () => TemplateElement,
-    TemplateLiteral: () => TemplateLiteral,
-    ThisExpression: () => ThisExpression,
-    ThrowStatement: () => ThrowStatement,
-    TryStatement: () => TryStatement,
-    UnaryExpression: () => UnaryExpression,
-    UpdateExpression: () => UpdateExpression,
-    VariableDeclaration: () => VariableDeclaration,
-    VariableDeclarator: () => VariableDeclarator,
-    WhileStatement: () => WhileStatement,
-    WithStatement: () => WithStatement,
-    YieldExpression: () => YieldExpression
-  });
-  var ArrayExpression = class {
-    type;
-    elements;
-    constructor(elements) {
-      this.type = "ArrayExpression" /* ArrayExpression */;
-      this.elements = elements;
-    }
-  };
-  var ArrayPattern = class {
-    type;
-    elements;
-    constructor(elements) {
-      this.type = "ArrayPattern" /* ArrayPattern */;
-      this.elements = elements;
-    }
-  };
-  var ArrowFunctionExpression = class {
-    type;
-    id;
-    params;
-    body;
-    generator;
-    expression;
-// patch by Kevin Carhart
-//    async;
-    
-    constructor(params, body, expression, isAsync) {
-      this.type = "ArrowFunctionExpression" /* ArrowFunctionExpression */;
-      this.id = null;
-      this.params = params;
-      this.body = body;
-      this.generator = false;
-      this.expression = expression;
-      this.async = isAsync;
-    }
-  };
-  var AssignmentExpression = class {
-    type;
-    operator;
-    left;
-    right;
-    constructor(operator, left, right) {
-      this.type = "AssignmentExpression" /* AssignmentExpression */;
-      this.operator = operator;
-      this.left = left;
-      this.right = right;
-    }
-  };
-  var AssignmentPattern = class {
-    type;
-    left;
-    right;
-    constructor(left, right) {
-      this.type = "AssignmentPattern" /* AssignmentPattern */;
-      this.left = left;
-      this.right = right;
-    }
-  };
-  var AsyncFunctionDeclaration = class {
-    type;
-    id;
-    params;
-    body;
-    generator;
-    expression;
-    
-    constructor(id, params, body, generator) {
-      this.type = "FunctionDeclaration" /* FunctionDeclaration */;
-      this.id = id;
-      this.params = params;
-      this.body = body;
-      this.generator = generator;
-      this.expression = false;
-      this.async = true;
-    }
-  };
-  var AwaitExpression = class {
-    type;
-    argument;
-    constructor(argument) {
-      this.type = "AwaitExpression" /* AwaitExpression */;
-      this.argument = argument;
-    }
-  };
-  var BigIntLiteral = class {
-    type;
-    value;
-    raw;
-    bigint;
-    constructor(value, raw, bigint) {
-      this.type = "Literal" /* Literal */;
-      this.value = value;
-      this.raw = raw;
-      this.bigint = bigint;
-    }
-  };
-  var BinaryExpression = class {
-    type;
-    operator;
-    left;
-    right;
-    constructor(operator, left, right) {
-      this.type = "BinaryExpression" /* BinaryExpression */;
-      this.operator = operator;
-      this.left = left;
-      this.right = right;
-    }
-  };
-  var BlockStatement = class {
-    type;
-    body;
-    constructor(body) {
-      this.type = "BlockStatement" /* BlockStatement */;
-      this.body = body;
-    }
-  };
-  var BreakStatement = class {
-    type;
-    label;
-    constructor(label) {
-      this.type = "BreakStatement" /* BreakStatement */;
-      this.label = label;
-    }
-  };
-  var CallExpression = class {
-    type;
-    callee;
-    arguments;
-    optional;
-    constructor(callee, args, optional) {
-      this.type = "CallExpression" /* CallExpression */;
-      this.callee = callee;
-      this.arguments = args;
-      this.optional = optional;
-    }
-  };
-  var CatchClause = class {
-    type;
-    param;
-    body;
-    constructor(param, body) {
-      this.type = "CatchClause" /* CatchClause */;
-      this.param = param;
-      this.body = body;
-    }
-  };
-  var ChainExpression = class {
-    type;
-    expression;
-    constructor(expression) {
-      this.type = "ChainExpression" /* ChainExpression */;
-      this.expression = expression;
-    }
-  };
-  var ClassBody = class {
-    type;
-    body;
-    constructor(body) {
-      this.type = "ClassBody" /* ClassBody */;
-      this.body = body;
-    }
-  };
-  var ClassDeclaration = class {
-    type;
-    id;
-    superClass;
-    body;
-    decorators;
-    constructor(id, superClass, body, decorators) {
-      this.type = "ClassDeclaration" /* ClassDeclaration */;
-      this.id = id;
-      this.superClass = superClass;
-      this.body = body;
-      this.decorators = decorators;
-    }
-  };
-  var ClassExpression = class {
-    type;
-    id;
-    superClass;
-    body;
-    decorators;
-    constructor(id, superClass, body, decorators) {
-      this.type = "ClassExpression" /* ClassExpression */;
-      this.id = id;
-      this.superClass = superClass;
-      this.body = body;
-      this.decorators = decorators;
-    }
-  };
-  var ConditionalExpression = class {
-    type;
-    test;
-    consequent;
-    alternate;
-    constructor(test, consequent, alternate) {
-      this.type = "ConditionalExpression" /* ConditionalExpression */;
-      this.test = test;
-      this.consequent = consequent;
-      this.alternate = alternate;
-    }
-  };
-  var ContinueStatement = class {
-    type;
-    label;
-    constructor(label) {
-      this.type = "ContinueStatement" /* ContinueStatement */;
-      this.label = label;
-    }
-  };
-  var DebuggerStatement = class {
-    type;
-    constructor() {
-      this.type = "DebuggerStatement" /* DebuggerStatement */;
-    }
-  };
-  var Decorator = class {
-    type;
-    expression;
-    constructor(expression) {
-      this.type = "Decorator" /* Decorator */;
-      this.expression = expression;
-    }
-  };
-  var Directive = class {
-    type;
-    expression;
-    directive;
-    constructor(expression, directive) {
-      this.type = "ExpressionStatement" /* ExpressionStatement */;
-      this.expression = expression;
-      this.directive = directive;
-    }
-  };
-  var DoWhileStatement = class {
-    type;
-    body;
-    test;
-    constructor(body, test) {
-      this.type = "DoWhileStatement" /* DoWhileStatement */;
-      this.body = body;
-      this.test = test;
-    }
-  };
-  var EmptyStatement = class {
-    type;
-    constructor() {
-      this.type = "EmptyStatement" /* EmptyStatement */;
-    }
-  };
-  var ExportAllDeclaration = class {
-    type;
-    source;
-    exported;
-    assertions;
-    constructor(source, exported, assertions) {
-      this.type = "ExportAllDeclaration" /* ExportAllDeclaration */;
-      this.source = source;
-      this.exported = exported;
-      this.assertions = assertions;
-    }
-  };
-  var ExportDefaultDeclaration = class {
-    type;
-    declaration;
-    constructor(declaration) {
-      this.type = "ExportDefaultDeclaration" /* ExportDefaultDeclaration */;
-      this.declaration = declaration;
-    }
-  };
-  var ExportNamedDeclaration = class {
-    type;
-    declaration;
-    specifiers;
-    source;
-    assertions;
-    constructor(declaration, specifiers, source, assertions) {
-      this.type = "ExportNamedDeclaration" /* ExportNamedDeclaration */;
-      this.declaration = declaration;
-      this.specifiers = specifiers;
-      this.source = source;
-      this.assertions = assertions;
-    }
-  };
-  var ExportSpecifier = class {
-    type;
-    exported;
-    local;
-    constructor(local, exported) {
-      this.type = "ExportSpecifier" /* ExportSpecifier */;
-      this.exported = exported;
-      this.local = local;
-    }
-  };
-  var ExpressionStatement = class {
-    type;
-    expression;
-    constructor(expression) {
-      this.type = "ExpressionStatement" /* ExpressionStatement */;
-      this.expression = expression;
-    }
-  };
-  var ForInStatement = class {
-    type;
-    left;
-    right;
-    body;
-    each;
-    constructor(left, right, body) {
-      this.type = "ForInStatement" /* ForInStatement */;
-      this.left = left;
-      this.right = right;
-      this.body = body;
-      this.each = false;
-    }
-  };
-  var ForOfStatement = class {
-    type;
-    await;
-    left;
-    right;
-    body;
-    constructor(left, right, body, _await) {
-      this.type = "ForOfStatement" /* ForOfStatement */;
-      this.await = _await;
-      this.left = left;
-      this.right = right;
-      this.body = body;
-    }
-  };
-  var ForStatement = class {
-    type;
-    init;
-    test;
-    update;
-    body;
-    constructor(init, test, update, body) {
-      this.type = "ForStatement" /* ForStatement */;
-      this.init = init;
-      this.test = test;
-      this.update = update;
-      this.body = body;
-    }
-  };
-  var FunctionDeclaration = class {
-    type;
-    id;
-    params;
-    body;
-    generator;
-    expression;
-    
-    constructor(id, params, body, generator) {
-      this.type = "FunctionDeclaration" /* FunctionDeclaration */;
-      this.id = id;
-      this.params = params;
-      this.body = body;
-      this.generator = generator;
-      this.expression = false;
-      this.async = false;
-    }
-  };
-  var FunctionExpression = class {
-    type;
-    id;
-    params;
-    body;
-    generator;
-    expression;
-    
-    constructor(id, params, body, generator, isAsync) {
-      this.type = "FunctionExpression" /* FunctionExpression */;
-      this.id = id;
-      this.params = params;
-      this.body = body;
-      this.generator = generator;
-      this.expression = false;
-      this.async = isAsync;
-    }
-  };
-  var Identifier = class {
-    type;
-    name;
-    constructor(name) {
-      this.type = "Identifier" /* Identifier */;
-      this.name = name;
-    }
-  };
-  var IfStatement = class {
-    type;
-    test;
-    consequent;
-    alternate;
-    constructor(test, consequent, alternate) {
-      this.type = "IfStatement" /* IfStatement */;
-      this.test = test;
-      this.consequent = consequent;
-      this.alternate = alternate;
-    }
-  };
-  var ImportAttribute = class {
-    type;
-    key;
-    value;
-    constructor(key, value) {
-      this.type = "ImportAttribute" /* ImportAttribute */;
-      this.key = key;
-      this.value = value;
-    }
-  };
-  var ImportExpression = class {
-    type;
-    source;
-    attributes;
-    constructor(source, attributes) {
-      this.type = "ImportExpression" /* ImportExpression */;
-      this.source = source;
-      this.attributes = attributes;
-    }
-  };
-  var ImportDeclaration = class {
-    type;
-    specifiers;
-    source;
-    assertions;
-    constructor(specifiers, source, assertions) {
-      this.type = "ImportDeclaration" /* ImportDeclaration */;
-      this.specifiers = specifiers;
-      this.source = source;
-      this.assertions = assertions;
-    }
-  };
-  var ImportDefaultSpecifier = class {
-    type;
-    local;
-    constructor(local) {
-      this.type = "ImportDefaultSpecifier" /* ImportDefaultSpecifier */;
-      this.local = local;
-    }
-  };
-  var ImportNamespaceSpecifier = class {
-    type;
-    local;
-    constructor(local) {
-      this.type = "ImportNamespaceSpecifier" /* ImportNamespaceSpecifier */;
-      this.local = local;
-    }
-  };
-  var ImportSpecifier = class {
-    type;
-    local;
-    imported;
-    constructor(local, imported) {
-      this.type = "ImportSpecifier" /* ImportSpecifier */;
-      this.local = local;
-      this.imported = imported;
-    }
-  };
-  var LabeledStatement = class {
-    type;
-    label;
-    body;
-    constructor(label, body) {
-      this.type = "LabeledStatement" /* LabeledStatement */;
-      this.label = label;
-      this.body = body;
-    }
-  };
-  var Literal = class {
-    type;
-    value;
-    raw;
-    constructor(value, raw) {
-      this.type = "Literal" /* Literal */;
-      this.value = value;
-      this.raw = raw;
-    }
-  };
-  var LogicalExpression = class {
-    type;
-    operator;
-    left;
-    right;
-    constructor(operator, left, right) {
-      this.type = "LogicalExpression" /* LogicalExpression */;
-      this.operator = operator;
-      this.left = left;
-      this.right = right;
-    }
-  };
-  var MemberExpression = class {
-    type;
-    computed;
-    object;
-    property;
-    optional;
-    constructor(computed, object, property, optional) {
-      this.type = "MemberExpression" /* MemberExpression */;
-      this.computed = computed;
-      this.object = object;
-      this.property = property;
-      this.optional = optional;
-    }
-  };
-  var MetaProperty = class {
-    type;
-    meta;
-    property;
-    constructor(meta, property) {
-      this.type = "MetaProperty" /* MetaProperty */;
-      this.meta = meta;
-      this.property = property;
-    }
-  };
-  var MethodDefinition = class {
-    type;
-    key;
-    computed;
-    value;
-    kind;
-    static;
-    decorators;
-    constructor(key, computed, value, kind, isStatic, decorators) {
-      this.type = "MethodDefinition" /* MethodDefinition */;
-      this.key = key;
-      this.computed = computed;
-      this.value = value;
-      this.kind = kind;
-      this.static = isStatic;
-      this.decorators = decorators;
-    }
-  };
-  var Module = class {
-    type;
-    body;
-    sourceType;
-    constructor(body) {
-      this.type = "Program" /* Program */;
-      this.body = body;
-      this.sourceType = "module";
-    }
-  };
-  var NewExpression = class {
-    type;
-    callee;
-    arguments;
-    constructor(callee, args) {
-      this.type = "NewExpression" /* NewExpression */;
-      this.callee = callee;
-      this.arguments = args;
-    }
-  };
-  var ObjectExpression = class {
-    type;
-    properties;
-    constructor(properties) {
-      this.type = "ObjectExpression" /* ObjectExpression */;
-      this.properties = properties;
-    }
-  };
-  var ObjectPattern = class {
-    type;
-    properties;
-    constructor(properties) {
-      this.type = "ObjectPattern" /* ObjectPattern */;
-      this.properties = properties;
-    }
-  };
-  var PrivateIdentifier = class {
-    type;
-    name;
-    constructor(name) {
-      this.type = "PrivateIdentifier" /* PrivateIdentifier */;
-      this.name = name;
-    }
-  };
-  var Program = class {
-    type;
-    body;
-    sourceType;
-    constructor(sourceType, body) {
-      this.type = "Program" /* Program */;
-      this.sourceType = sourceType;
-      this.body = body;
-    }
-  };
-  var Property = class {
-    type;
-    key;
-    computed;
-    value;
-    kind;
-    method;
-    shorthand;
-    constructor(kind, key, computed, value, method, shorthand) {
-      this.type = "Property" /* Property */;
-      this.key = key;
-      this.computed = computed;
-      this.value = value;
-      this.kind = kind;
-      this.method = method;
-      this.shorthand = shorthand;
-    }
-  };
-  var PropertyDefinition = class {
-    type;
-    key;
-    computed;
-    value;
-    static;
-    decorators;
-    constructor(key, computed, value, isStatic, decorators) {
-      this.type = "Property" /* Property */;
-      this.key = key;
-      this.computed = computed;
-      this.value = value;
-      this.static = isStatic;
-      this.decorators = decorators;
-    }
-  };
-  var RegexLiteral = class {
-    type;
-    value;
-    raw;
-    regex;
-    constructor(value, raw, pattern, flags) {
-      this.type = "Literal" /* Literal */;
-      this.value = value;
-      this.raw = raw;
-      this.regex = { pattern, flags };
-    }
-  };
-  var RestElement = class {
-    type;
-    argument;
-    constructor(argument) {
-      this.type = "RestElement" /* RestElement */;
-      this.argument = argument;
-    }
-  };
-  var ReturnStatement = class {
-    type;
-    argument;
-    constructor(argument) {
-      this.type = "ReturnStatement" /* ReturnStatement */;
-      this.argument = argument;
-    }
-  };
-  var Script = class {
-    type;
-    body;
-    sourceType;
-    constructor(body) {
-      this.type = "Program" /* Program */;
-      this.body = body;
-      this.sourceType = "script";
-    }
-  };
-  var SequenceExpression = class {
-    type;
-    expressions;
-    constructor(expressions) {
-      this.type = "SequenceExpression" /* SequenceExpression */;
-      this.expressions = expressions;
-    }
-  };
-  var SpreadElement = class {
-    type;
-    argument;
-    constructor(argument) {
-      this.type = "SpreadElement" /* SpreadElement */;
-      this.argument = argument;
-    }
-  };
-  var StaticBlock = class {
-    type;
-    body;
-    constructor(body) {
-      this.type = "StaticBlock" /* StaticBlock */;
-      this.body = body;
-    }
-  };
-  var Super = class {
-    type;
-    constructor() {
-      this.type = "Super" /* Super */;
-    }
-  };
-  var SwitchCase = class {
-    type;
-    test;
-    consequent;
-    constructor(test, consequent) {
-      this.type = "SwitchCase" /* SwitchCase */;
-      this.test = test;
-      this.consequent = consequent;
-    }
-  };
-  var SwitchStatement = class {
-    type;
-    discriminant;
-    cases;
-    constructor(discriminant, cases) {
-      this.type = "SwitchStatement" /* SwitchStatement */;
-      this.discriminant = discriminant;
-      this.cases = cases;
-    }
-  };
-  var TaggedTemplateExpression = class {
-    type;
-    tag;
-    quasi;
-    constructor(tag, quasi) {
-      this.type = "TaggedTemplateExpression" /* TaggedTemplateExpression */;
-      this.tag = tag;
-      this.quasi = quasi;
-    }
-  };
-  var TemplateElement = class {
-    type;
-    value;
-    tail;
-    constructor(value, tail) {
-      this.type = "TemplateElement" /* TemplateElement */;
-      this.value = value;
-      this.tail = tail;
-    }
-  };
-  var TemplateLiteral = class {
-    type;
-    quasis;
-    expressions;
-    constructor(quasis, expressions) {
-      this.type = "TemplateLiteral" /* TemplateLiteral */;
-      this.quasis = quasis;
-      this.expressions = expressions;
-    }
-  };
-  var ThisExpression = class {
-    type;
-    constructor() {
-      this.type = "ThisExpression" /* ThisExpression */;
-    }
-  };
-  var ThrowStatement = class {
-    type;
-    argument;
-    constructor(argument) {
-      this.type = "ThrowStatement" /* ThrowStatement */;
-      this.argument = argument;
-    }
-  };
-  var TryStatement = class {
-    type;
-    block;
-    handler;
-    finalizer;
-    constructor(block, handler, finalizer) {
-      this.type = "TryStatement" /* TryStatement */;
-      this.block = block;
-      this.handler = handler;
-      this.finalizer = finalizer;
-    }
-  };
-  var UnaryExpression = class {
-    type;
-    operator;
-    argument;
-    prefix;
-    constructor(operator, argument) {
-      this.type = "UnaryExpression" /* UnaryExpression */;
-      this.operator = operator;
-      this.argument = argument;
-      this.prefix = true;
-    }
-  };
-  var UpdateExpression = class {
-    type;
-    operator;
-    argument;
-    prefix;
-    constructor(operator, argument, prefix) {
-      this.type = "UpdateExpression" /* UpdateExpression */;
-      this.operator = operator;
-      this.argument = argument;
-      this.prefix = prefix;
-    }
-  };
-  var VariableDeclaration = class {
-    type;
-    declarations;
-    kind;
-    constructor(declarations, kind) {
-      this.type = "VariableDeclaration" /* VariableDeclaration */;
-      this.declarations = declarations;
-      this.kind = kind;
-    }
-  };
-  var VariableDeclarator = class {
-    type;
-    id;
-    init;
-    constructor(id, init) {
-      this.type = "VariableDeclarator" /* VariableDeclarator */;
-      this.id = id;
-      this.init = init;
-    }
-  };
-  var WhileStatement = class {
-    type;
-    test;
-    body;
-    constructor(test, body) {
-      this.type = "WhileStatement" /* WhileStatement */;
-      this.test = test;
-      this.body = body;
-    }
-  };
-  var WithStatement = class {
-    type;
-    object;
-    body;
-    constructor(object, body) {
-      this.type = "WithStatement" /* WithStatement */;
-      this.object = object;
-      this.body = body;
-    }
-  };
-  var YieldExpression = class {
-    type;
-    argument;
-    delegate;
-    constructor(argument, delegate) {
-      this.type = "YieldExpression" /* YieldExpression */;
-      this.argument = argument;
-      this.delegate = delegate;
-    }
-  };
+/***/ }),
+/* 1 */
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-  // assert.ts
-  function assert(condition, message) {
-    if (!condition) {
-      throw new Error("ASSERT: " + message);
-    }
+/*jshint node:true */
+/*
+
+  The MIT License (MIT)
+
+  Copyright (c) 2007-2018 Einar Lielmanis, Liam Newman, and contributors.
+
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation files
+  (the "Software"), to deal in the Software without restriction,
+  including without limitation the rights to use, copy, modify, merge,
+  publish, distribute, sublicense, and/or sell copies of the Software,
+  and to permit persons to whom the Software is furnished to do so,
+  subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
+
+
+var Output = (__webpack_require__(2).Output);
+var Token = (__webpack_require__(3).Token);
+var acorn = __webpack_require__(4);
+var Options = (__webpack_require__(5).Options);
+var Tokenizer = (__webpack_require__(7).Tokenizer);
+var line_starters = (__webpack_require__(7).line_starters);
+var positionable_operators = (__webpack_require__(7).positionable_operators);
+var TOKEN = (__webpack_require__(7).TOKEN);
+
+
+function in_array(what, arr) {
+  return arr.indexOf(what) !== -1;
+}
+
+function ltrim(s) {
+  return s.replace(/^\s+/g, '');
+}
+
+function generateMapFromStrings(list) {
+  var result = {};
+  for (var x = 0; x < list.length; x++) {
+    // make the mapped names underscored instead of dash
+    result[list[x].replace(/-/g, '_')] = list[x];
+  }
+  return result;
+}
+
+function reserved_word(token, word) {
+  return token && token.type === TOKEN.RESERVED && token.text === word;
+}
+
+function reserved_array(token, words) {
+  return token && token.type === TOKEN.RESERVED && in_array(token.text, words);
+}
+// Unsure of what they mean, but they work. Worth cleaning up in future.
+var special_words = ['case', 'return', 'do', 'if', 'throw', 'else', 'await', 'break', 'continue', 'async'];
+
+var validPositionValues = ['before-newline', 'after-newline', 'preserve-newline'];
+
+// Generate map from array
+var OPERATOR_POSITION = generateMapFromStrings(validPositionValues);
+
+var OPERATOR_POSITION_BEFORE_OR_PRESERVE = [OPERATOR_POSITION.before_newline, OPERATOR_POSITION.preserve_newline];
+
+var MODE = {
+  BlockStatement: 'BlockStatement', // 'BLOCK'
+  Statement: 'Statement', // 'STATEMENT'
+  ObjectLiteral: 'ObjectLiteral', // 'OBJECT',
+  ArrayLiteral: 'ArrayLiteral', //'[EXPRESSION]',
+  ForInitializer: 'ForInitializer', //'(FOR-EXPRESSION)',
+  Conditional: 'Conditional', //'(COND-EXPRESSION)',
+  Expression: 'Expression' //'(EXPRESSION)'
+};
+
+function remove_redundant_indentation(output, frame) {
+  // This implementation is effective but has some issues:
+  //     - can cause line wrap to happen too soon due to indent removal
+  //           after wrap points are calculated
+  // These issues are minor compared to ugly indentation.
+
+  if (frame.multiline_frame ||
+    frame.mode === MODE.ForInitializer ||
+    frame.mode === MODE.Conditional) {
+    return;
   }
 
-  // error-handler.ts
-  var ErrorHandler = class {
-    errors;
-    tolerant;
-    constructor() {
-      this.errors = [];
-      this.tolerant = false;
-    }
-    recordError(error) {
-      this.errors.push(error);
-    }
-    tolerate(error) {
-      if (this.tolerant) {
-        this.recordError(error);
-      } else {
-        throw error;
-      }
-    }
-    constructError(msg, column) {
-      let error = new Error(msg);
-      try {
-        throw error;
-      } catch (base) {
-        if (Object.create && Object.defineProperty) {
-          error = Object.create(base);
-          Object.defineProperty(error, "column", { value: column });
-        }
-      }
-      return error;
-    }
-    createError(index, line, col, description) {
-      const msg = "Line " + line + ": " + description;
-      const _error = this.constructError(msg, col);
-      _error.index = index;
-      _error.lineNumber = line;
-      _error.description = description;
-      const error = _error;
-      return error;
-    }
-    throwError(index, line, col, description) {
-      throw this.createError(index, line, col, description);
-    }
-    tolerateError(index, line, col, description) {
-      const error = this.createError(index, line, col, description);
-      if (this.tolerant) {
-        this.recordError(error);
-      } else {
-        throw error;
-      }
-    }
-  };
+  // remove one indent from each line inside this section
+  output.remove_indent(frame.start_line_index);
+}
 
-  // messages.ts
-  var Messages = {
-    AsyncFunctionInSingleStatementContext: "Async functions can only be declared at the top level or inside a block.",
-    BadImportCallArity: "Unexpected token",
-    BadGetterArity: "Getter must not have any formal parameters",
-    BadSetterArity: "Setter must have exactly one formal parameter",
-    BadSetterRestParameter: "Setter function argument must not be a rest parameter",
-    CannotUseImportMetaOutsideAModule: "Cannot use 'import.meta' outside a module",
-    ConstructorIsAsync: "Class constructor may not be an async method",
-    ConstructorIsPrivate: "Class constructor may not be a private method",
-    ConstructorSpecialMethod: "Class constructor may not be an accessor",
-    DeclarationMissingInitializer: "Missing initializer in %0 declaration",
-    DefaultRestParameter: "Unexpected token =",
-    DefaultRestProperty: "Unexpected token =",
-    DuplicateBinding: "Duplicate binding %0",
-    DuplicateConstructor: "A class may only have one constructor",
-    DuplicateParameter: "Duplicate parameter name not allowed in this context",
-    DuplicateProtoProperty: "Duplicate __proto__ fields are not allowed in object literals",
-    ForInOfLoopInitializer: "%0 loop variable declaration may not have an initializer",
-    GeneratorInLegacyContext: "Generator declarations are not allowed in legacy contexts",
-    IllegalBreak: "Illegal break statement",
-    IllegalContinue: "Illegal continue statement",
-    IllegalExportDeclaration: "Unexpected token",
-    IllegalImportDeclaration: "Unexpected token",
-    IllegalLanguageModeDirective: "Illegal 'use strict' directive in function with non-simple parameter list",
-    IllegalReturn: "Illegal return statement",
-    InvalidEscapedReservedWord: "Keyword must not contain escaped characters",
-    InvalidHexEscapeSequence: "Invalid hexadecimal escape sequence",
-    InvalidLHSInAssignment: "Invalid left-hand side in assignment",
-    InvalidLHSInForIn: "Invalid left-hand side in for-in",
-    InvalidLHSInForLoop: "Invalid left-hand side in for-loop",
-    InvalidModuleSpecifier: "Unexpected token",
-    InvalidRegExp: "Invalid regular expression",
-    InvalidTaggedTemplateOnOptionalChain: "Invalid tagged template on optional chain",
-    InvalidUnicodeEscapeSequence: "Invalid Unicode escape sequence",
-    LetInLexicalBinding: "let is disallowed as a lexically bound name",
-    MissingFromClause: "Unexpected token",
-    MultipleDefaultsInSwitch: "More than one default clause in switch statement",
-    NewlineAfterThrow: "Illegal newline after throw",
-    NoAsAfterImportNamespace: "Unexpected token",
-    NoAsAndFromEscapeSequences: "The `as` and `from` contextual keywords must not contain Unicode escape sequences.",
-    NoCatchOrFinally: "Missing catch or finally after try",
-    NoSemicolonAfterDecorator: "Decorators must not be followed by a semicolon.",
-    NumericSeperatorOneUnderscore: "Numeric separator must be exactly one underscore",
-    NumericSeperatorNotAllowedHere: "Numeric separator is not allowed here",
-    ParameterAfterRestParameter: "Rest parameter must be last formal parameter",
-    PropertyAfterRestProperty: "Unexpected token",
-    Redeclaration: "%0 '%1' has already been declared",
-    StaticPrototype: "Classes may not have static property named prototype",
-    StrictCatchVariable: "Catch variable may not be eval or arguments in strict mode",
-    StrictDelete: "Delete of an unqualified identifier in strict mode.",
-    StrictFunction: "In strict mode code, functions can only be declared at top level or inside a block",
-    StrictFunctionName: "Function name may not be eval or arguments in strict mode",
-    StrictLHSAssignment: "Assignment to eval or arguments is not allowed in strict mode",
-    StrictLHSPostfix: "Postfix increment/decrement may not have eval or arguments operand in strict mode",
-    StrictLHSPrefix: "Prefix increment/decrement may not have eval or arguments operand in strict mode",
-    StrictModeWith: "Strict mode code may not include a with statement",
-    StrictOctalLiteral: "Octal literals are not allowed in strict mode.",
-    StrictParamName: "Parameter name eval or arguments is not allowed in strict mode",
-    StrictReservedWord: "Use of future reserved word in strict mode",
-    StrictVarName: "Variable name may not be eval or arguments in strict mode",
-    TemplateOctalLiteral: "Octal literals are not allowed in template strings.",
-    TemplateEscape89: "\\8 and \\9 are not allowed in template strings.",
-    UnexpectedEOS: "Unexpected end of input",
-    UnexpectedIdentifier: "Unexpected identifier",
-    UnexpectedNumber: "Unexpected number",
-    UnexpectedReserved: "Unexpected reserved word",
-    UnexpectedString: "Unexpected string",
-    UnexpectedSuper: "'super' keyword unexpected here",
-    UnexpectedTemplate: "Unexpected quasi %0",
-    UnexpectedToken: "Unexpected token %0",
-    UnexpectedTokenIllegal: "Unexpected token ILLEGAL",
-    UnknownLabel: "Undefined label '%0'",
-    UnterminatedRegExp: "Invalid regular expression: missing /"
-  };
+// we could use just string.split, but
+// IE doesn't like returning empty strings
+function split_linebreaks(s) {
+  //return s.split(/\x0d\x0a|\x0a/);
 
-  // token.ts
-  var TokenName = {};
-  TokenName[1 /* BooleanLiteral */] = "Boolean";
-  TokenName[2 /* EOF */] = "<end>";
-  TokenName[3 /* Identifier */] = "Identifier";
-  TokenName[4 /* Keyword */] = "Keyword";
-  TokenName[5 /* NullLiteral */] = "Null";
-  TokenName[6 /* NumericLiteral */] = "Numeric";
-  TokenName[7 /* Punctuator */] = "Punctuator";
-  TokenName[8 /* StringLiteral */] = "String";
-  TokenName[9 /* RegularExpression */] = "RegularExpression";
-  TokenName[10 /* Template */] = "Template";
-
-  // scanner.ts
-  function hexValue(ch) {
-    return "0123456789abcdef".indexOf(ch.toLowerCase());
+  s = s.replace(acorn.allLineBreaks, '\n');
+  var out = [],
+    idx = s.indexOf("\n");
+  while (idx !== -1) {
+    out.push(s.substring(0, idx));
+    s = s.substring(idx + 1);
+    idx = s.indexOf("\n");
   }
-  function octalValue(ch) {
-    return "01234567".indexOf(ch);
+  if (s.length) {
+    out.push(s);
   }
-  var Scanner = class {
-    source;
-    errorHandler;
-    trackComment;
-    isModule;
-    index;
-    lineNumber;
-    lineStart;
-    curlyStack;
-    length;
-    constructor(code, handler) {
-      this.source = code;
-      this.errorHandler = handler;
-      this.trackComment = false;
-      this.isModule = false;
-      this.length = code.length;
-      this.index = 0;
-      this.lineNumber = code.length > 0 ? 1 : 0;
-      this.lineStart = 0;
-      this.curlyStack = [];
-    }
-    saveState() {
-      return {
-        index: this.index,
-        lineNumber: this.lineNumber,
-        lineStart: this.lineStart,
-        curlyStack: this.curlyStack.slice()
-      };
-    }
-    restoreState(state) {
-      this.index = state.index;
-      this.lineNumber = state.lineNumber;
-      this.lineStart = state.lineStart;
-      this.curlyStack = state.curlyStack;
-    }
-    eof() {
-      return this.index >= this.length;
-    }
-    throwUnexpectedToken(message = Messages.UnexpectedTokenIllegal) {
-      return this.errorHandler.throwError(
-        this.index,
-        this.lineNumber,
-        this.index - this.lineStart + 1,
-        message
-      );
-    }
-    tolerateUnexpectedToken(message = Messages.UnexpectedTokenIllegal) {
-      this.errorHandler.tolerateError(
-        this.index,
-        this.lineNumber,
-        this.index - this.lineStart + 1,
-        message
-      );
-    }
-    // https://tc39.github.io/ecma262/#sec-comments
-    skipSingleLineComment(offset) {
-      let comments = [];
-      let start, loc;
-      if (this.trackComment) {
-        comments = [];
-        start = this.index - offset;
-        loc = {
-          start: {
-            line: this.lineNumber,
-            column: this.index - this.lineStart - offset
-          },
-          end: {}
-        };
-      }
-      while (!this.eof()) {
-        const ch = this.source.charCodeAt(this.index);
-        ++this.index;
-        if (Character.isLineTerminator(ch)) {
-          if (this.trackComment) {
-            loc.end = {
-              line: this.lineNumber,
-              column: this.index - this.lineStart - 1
-            };
-            const entry = {
-              multiLine: false,
-              slice: [start + offset, this.index - 1],
-              range: [start, this.index - 1],
-              loc
-            };
-            comments.push(entry);
-          }
-          if (ch === 13 && this.source.charCodeAt(this.index) === 10) {
-            ++this.index;
-          }
-          ++this.lineNumber;
-          this.lineStart = this.index;
-          return comments;
-        }
-      }
-      if (this.trackComment) {
-        loc.end = {
-          line: this.lineNumber,
-          column: this.index - this.lineStart
-        };
-        const entry = {
-          multiLine: false,
-          slice: [start + offset, this.index],
-          range: [start, this.index],
-          loc
-        };
-        comments.push(entry);
-      }
-      return comments;
-    }
-    skipMultiLineComment() {
-      let comments = [];
-      let start, loc;
-      if (this.trackComment) {
-        comments = [];
-        start = this.index - 2;
-        loc = {
-          start: {
-            line: this.lineNumber,
-            column: this.index - this.lineStart - 2
-          },
-          end: {}
-        };
-      }
-      while (!this.eof()) {
-        const ch = this.source.charCodeAt(this.index);
-        if (Character.isLineTerminator(ch)) {
-          if (ch === 13 && this.source.charCodeAt(this.index + 1) === 10) {
-            ++this.index;
-          }
-          ++this.lineNumber;
-          ++this.index;
-          this.lineStart = this.index;
-        } else if (ch === 42) {
-          if (this.source.charCodeAt(this.index + 1) === 47) {
-            this.index += 2;
-            if (this.trackComment) {
-              loc.end = {
-                line: this.lineNumber,
-                column: this.index - this.lineStart
-              };
-              const entry = {
-                multiLine: true,
-                slice: [start + 2, this.index - 2],
-                range: [start, this.index],
-                loc
-              };
-              comments.push(entry);
-            }
-            return comments;
-          }
-          ++this.index;
-        } else {
-          ++this.index;
-        }
-      }
-      if (this.trackComment) {
-        loc.end = {
-          line: this.lineNumber,
-          column: this.index - this.lineStart
-        };
-        const entry = {
-          multiLine: true,
-          slice: [start + 2, this.index],
-          range: [start, this.index],
-          loc
-        };
-        comments.push(entry);
-      }
-      this.tolerateUnexpectedToken();
-      return comments;
-    }
-    scanComments() {
-      let comments;
-      if (this.trackComment) {
-        comments = [];
-      }
-      let start = this.index === 0;
-      while (!this.eof()) {
-        let ch = this.source.charCodeAt(this.index);
-        if (Character.isWhiteSpace(ch)) {
-          ++this.index;
-        } else if (Character.isLineTerminator(ch)) {
-          ++this.index;
-          if (ch === 13 && this.source.charCodeAt(this.index) === 10) {
-            ++this.index;
-          }
-          ++this.lineNumber;
-          this.lineStart = this.index;
-          start = true;
-        } else if (ch === 47) {
-          ch = this.source.charCodeAt(this.index + 1);
-          if (ch === 47) {
-            this.index += 2;
-            const comment = this.skipSingleLineComment(2);
-            if (this.trackComment) {
-              comments = comments.concat(comment);
-            }
-            start = true;
-          } else if (ch === 42) {
-            this.index += 2;
-            const comment = this.skipMultiLineComment();
-            if (this.trackComment) {
-              comments = comments.concat(comment);
-            }
-          } else {
-            break;
-          }
-        } else if (start && ch === 45) {
-          if (this.source.charCodeAt(this.index + 1) === 45 && this.source.charCodeAt(this.index + 2) === 62) {
-            this.index += 3;
-            const comment = this.skipSingleLineComment(3);
-            if (this.trackComment) {
-              comments = comments.concat(comment);
-            }
-          } else {
-            break;
-          }
-        } else if (ch === 60 && !this.isModule) {
-          if (this.source.slice(this.index + 1, this.index + 4) === "!--") {
-            this.index += 4;
-            const comment = this.skipSingleLineComment(4);
-            if (this.trackComment) {
-              comments = comments.concat(comment);
-            }
-          } else {
-            break;
-          }
-        } else {
-          break;
-        }
-      }
-      return comments;
-    }
-    // https://tc39.github.io/ecma262/#sec-future-reserved-words
-    isFutureReservedWord(id) {
-      switch (id) {
-        case "enum":
-        case "export":
-        case "import":
-        case "super":
-          return true;
-        default:
-          return false;
-      }
-    }
-    isStrictModeReservedWord(id) {
-      switch (id) {
-        case "implements":
-        case "interface":
-        case "package":
-        case "private":
-        case "protected":
-        case "public":
-        case "static":
-        case "yield":
-        case "let":
-          return true;
-        default:
-          return false;
-      }
-    }
-    isRestrictedWord(id) {
-      return id === "eval" || id === "arguments";
-    }
-    // https://tc39.github.io/ecma262/#sec-keywords
-    isKeyword(id) {
-      switch (id.length) {
-        case 2:
-          return id === "if" || id === "in" || id === "do";
-        case 3:
-          return id === "var" || id === "for" || id === "new" || id === "try" || id === "let";
-        case 4:
-          return id === "this" || id === "else" || id === "case" || id === "void" || id === "with" || id === "enum";
-        case 5:
-          return id === "while" || id === "break" || id === "catch" || id === "throw" || id === "const" || id === "yield" || id === "class" || id === "super";
-        case 6:
-          return id === "return" || id === "typeof" || id === "delete" || id === "switch" || id === "export" || id === "import";
-        case 7:
-          return id === "default" || id === "finally" || id === "extends";
-        case 8:
-          return id === "function" || id === "continue" || id === "debugger";
-        case 10:
-          return id === "instanceof";
-        default:
-          return false;
-      }
-    }
-    codePointAt(i) {
-      let cp = this.source.charCodeAt(i);
-      if (cp >= 55296 && cp <= 56319) {
-        const second = this.source.charCodeAt(i + 1);
-        if (second >= 56320 && second <= 57343) {
-          const first = cp;
-          cp = (first - 55296) * 1024 + second - 56320 + 65536;
-        }
-      }
-      return cp;
-    }
-    scanHexEscape(prefix) {
-      const len = prefix === "u" ? 4 : 2;
-      let code = 0;
-      for (let i = 0; i < len; ++i) {
-        if (!this.eof() && Character.isHexDigit(this.source.charCodeAt(this.index))) {
-          code = code * 16 + hexValue(this.source[this.index++]);
-        } else {
-          return null;
-        }
-      }
-      return String.fromCharCode(code);
-    }
-    tryToScanUnicodeCodePointEscape() {
-      let ch = this.source[this.index];
-      let code = 0;
-      if (ch === "}") {
-        return null;
-      }
-      while (!this.eof()) {
-        ch = this.source[this.index++];
-        if (!Character.isHexDigit(ch.charCodeAt(0))) {
-          break;
-        }
-        code = code * 16 + hexValue(ch);
-      }
-      if (code > 1114111 || ch !== "}") {
-        return null;
-      }
-      return Character.fromCodePoint(code);
-    }
-    scanUnicodeCodePointEscape() {
-      const result = this.tryToScanUnicodeCodePointEscape();
-      if (result === null) {
-        return this.throwUnexpectedToken();
-      }
-      return result;
-    }
-    getIdentifier() {
-      const start = this.index++;
-      while (!this.eof()) {
-        const ch = this.source.charCodeAt(this.index);
-        if (ch === 92) {
-          this.index = start;
-          return this.getComplexIdentifier();
-        } else if (ch >= 55296 && ch < 57343) {
-          this.index = start;
-          return this.getComplexIdentifier();
-        }
-        if (Character.isIdentifierPart(ch)) {
-          ++this.index;
-        } else {
-          break;
-        }
-      }
-      return this.source.slice(start, this.index);
-    }
-    getComplexIdentifier() {
-      let cp = this.codePointAt(this.index);
-      let id = Character.fromCodePoint(cp);
-      this.index += id.length;
-      let ch;
-      if (cp === 92) {
-        if (this.source.charCodeAt(this.index) !== 117) {
-          this.throwUnexpectedToken();
-        }
-        ++this.index;
-        if (this.source[this.index] === "{") {
-          ++this.index;
-          ch = this.scanUnicodeCodePointEscape();
-        } else {
-          ch = this.scanHexEscape("u");
-          if (ch === null || ch === "\\" || !Character.isIdentifierStart(ch.charCodeAt(0))) {
-            this.throwUnexpectedToken();
-          }
-        }
-        id = ch;
-      }
-      while (!this.eof()) {
-        cp = this.codePointAt(this.index);
-        if (!Character.isIdentifierPart(cp)) {
-          break;
-        }
-        ch = Character.fromCodePoint(cp);
-        id += ch;
-        this.index += ch.length;
-        if (cp === 92) {
-          id = id.substr(0, id.length - 1);
-          if (this.source.charCodeAt(this.index) !== 117) {
-            this.throwUnexpectedToken();
-          }
-          ++this.index;
-          if (this.source[this.index] === "{") {
-            ++this.index;
-            ch = this.scanUnicodeCodePointEscape();
-          } else {
-            ch = this.scanHexEscape("u");
-            if (ch === null || ch === "\\" || !Character.isIdentifierPart(ch.charCodeAt(0))) {
-              this.throwUnexpectedToken();
-            }
-          }
-          id += ch;
-        }
-      }
-      return id;
-    }
-    octalToDecimal(ch) {
-      let octal = ch !== "0";
-      let code = octalValue(ch);
-      if (!this.eof() && Character.isOctalDigit(this.source.charCodeAt(this.index))) {
-        octal = true;
-        code = code * 8 + octalValue(this.source[this.index++]);
-        if ("0123".indexOf(ch) >= 0 && !this.eof() && Character.isOctalDigit(this.source.charCodeAt(this.index))) {
-          code = code * 8 + octalValue(this.source[this.index++]);
-        }
-      }
-      return {
-        code,
-        octal
-      };
-    }
-    // https://tc39.github.io/ecma262/#sec-names-and-keywords
-    scanIdentifier() {
-      let type;
-      const start = this.index;
-      const escaped = this.source.charCodeAt(start) === 92;
-      const id = escaped ? this.getComplexIdentifier() : this.getIdentifier();
-      if (id.length === 1) {
-        type = 3 /* Identifier */;
-      } else if (this.isKeyword(id)) {
-        type = 4 /* Keyword */;
-      } else if (id === "null") {
-        type = 5 /* NullLiteral */;
-      } else if (id === "true" || id === "false") {
-        type = 1 /* BooleanLiteral */;
-      } else {
-        type = 3 /* Identifier */;
-      }
-      if (type !== 3 /* Identifier */ && start + id.length !== this.index) {
-        const restore = this.index;
-        this.index = start;
-        this.tolerateUnexpectedToken(Messages.InvalidEscapedReservedWord);
-        this.index = restore;
-      }
-      return {
-        type,
-        value: id,
-        lineNumber: this.lineNumber,
-        lineStart: this.lineStart,
-        start,
-        end: this.index,
-        escaped
-      };
-    }
-    // https://tc39.github.io/ecma262/#sec-punctuators
-    scanPunctuator() {
-      const start = this.index;
-      let str = this.source[this.index];
-      switch (str) {
-        case "(":
-        case "{":
-          if (str === "{") {
-            this.curlyStack.push("{");
-          }
-          ++this.index;
-          break;
-        case ".":
-          ++this.index;
-          if (this.source[this.index] === "." && this.source[this.index + 1] === ".") {
-            this.index += 2;
-            str = "...";
-          }
-          break;
-        case "}":
-          ++this.index;
-          this.curlyStack.pop();
-          break;
-        case "?":
-          ++this.index;
-          if (this.source[this.index] === "?") {
-            ++this.index;
-            if (this.source[this.index] === "=") {
-              ++this.index;
-              str = "??=";
-            } else {
-              str = "??";
-            }
-          }
-          if (this.source[this.index] === "." && !/^\d$/.test(this.source[this.index + 1])) {
-            ++this.index;
-            str = "?.";
-          }
-          break;
-        case "#":
-        case ")":
-        case ";":
-        case ",":
-        case "[":
-        case "]":
-        case ":":
-        case "~":
-        case "@":
-          ++this.index;
-          break;
-        default:
-          str = this.source.substr(this.index, 4);
-          if (str === ">>>=") {
-            this.index += 4;
-          } else {
-            str = str.substr(0, 3);
-            if (str === "===" || str === "!==" || str === ">>>" || str === "<<=" || str === ">>=" || str === "**=" || str === "&&=" || str === "||=") {
-              this.index += 3;
-            } else {
-              str = str.substr(0, 2);
-              if (str === "&&" || str === "||" || str === "==" || str === "!=" || str === "+=" || str === "-=" || str === "*=" || str === "/=" || str === "++" || str === "--" || str === "<<" || str === ">>" || str === "&=" || str === "|=" || str === "^=" || str === "%=" || str === "<=" || str === ">=" || str === "=>" || str === "**") {
-                this.index += 2;
-              } else {
-                str = this.source[this.index];
-                if ("<>=!+-*%&|^/".indexOf(str) >= 0) {
-                  ++this.index;
-                }
-              }
-            }
-          }
-      }
-      if (this.index === start) {
-        this.throwUnexpectedToken();
-      }
-      return {
-        type: 7 /* Punctuator */,
-        value: str,
-        lineNumber: this.lineNumber,
-        lineStart: this.lineStart,
-        start,
-        end: this.index
-      };
-    }
-    // https://tc39.github.io/ecma262/#sec-literals-numeric-literals
-    scanHexLiteral(start) {
-      let num = this.scanLiteralPart(Character.isHexDigitChar);
-      if (num.length === 0) {
-        this.throwUnexpectedToken();
-      }
-      if (this.source[this.index] === "n") {
-        this.index++;
-        return {
-          type: 6 /* NumericLiteral */,
-          value: BigInt("0x" + num),
-          lineNumber: this.lineNumber,
-          lineStart: this.lineStart,
-          start,
-          end: this.index
-        };
-      }
-      if (Character.isIdentifierStart(this.source.charCodeAt(this.index))) {
-        this.throwUnexpectedToken();
-      }
-      return {
-        type: 6 /* NumericLiteral */,
-        value: parseInt("0x" + num, 16),
-        lineNumber: this.lineNumber,
-        lineStart: this.lineStart,
-        start,
-        end: this.index
-      };
-    }
-    scanBinaryLiteral(start) {
-      let ch;
-      let num = this.scanLiteralPart((c) => c === "0" || c === "1");
-      if (num.length === 0) {
-        this.throwUnexpectedToken();
-      }
-      if (this.source[this.index] === "n") {
-        this.index++;
-        return {
-          type: 6 /* NumericLiteral */,
-          value: BigInt("0b" + num),
-          lineNumber: this.lineNumber,
-          lineStart: this.lineStart,
-          start,
-          end: this.index
-        };
-      }
-      if (!this.eof()) {
-        ch = this.source.charCodeAt(this.index);
-        if (Character.isIdentifierStart(ch) || Character.isDecimalDigit(ch)) {
-          this.throwUnexpectedToken();
-        }
-      }
-      return {
-        type: 6 /* NumericLiteral */,
-        value: parseInt(num, 2),
-        lineNumber: this.lineNumber,
-        lineStart: this.lineStart,
-        start,
-        end: this.index
-      };
-    }
-    scanOctalLiteral(prefix, start) {
-      let num = "";
-      let octal = false;
-      if (Character.isOctalDigit(prefix.charCodeAt(0))) {
-        octal = true;
-        num = "0" + this.source[this.index++];
-      } else {
-        ++this.index;
-      }
-      num += this.scanLiteralPart(Character.isOctalDigitChar);
-      if (!octal && num.length === 0) {
-        this.throwUnexpectedToken();
-      }
-      if (this.source[this.index] === "n") {
-        this.index++;
-        return {
-          type: 6 /* NumericLiteral */,
-          value: BigInt("0o" + num),
-          lineNumber: this.lineNumber,
-          lineStart: this.lineStart,
-          start,
-          end: this.index
-        };
-      }
-      if (Character.isIdentifierStart(this.source.charCodeAt(this.index)) || Character.isDecimalDigit(this.source.charCodeAt(this.index))) {
-        this.throwUnexpectedToken();
-      }
-      return {
-        type: 6 /* NumericLiteral */,
-        value: parseInt(num, 8),
-        octal,
-        lineNumber: this.lineNumber,
-        lineStart: this.lineStart,
-        start,
-        end: this.index
-      };
-    }
-    isImplicitOctalLiteral() {
-      for (let i = this.index + 1; i < this.length; ++i) {
-        const ch = this.source[i];
-        if (ch === "8" || ch === "9" || ch === "n") {
-          return false;
-        }
-        if (!Character.isOctalDigit(ch.charCodeAt(0))) {
-          return true;
-        }
-      }
-      return true;
-    }
-    scanLiteralPart(check) {
-      let num = "";
-      if (this.source[this.index] === "_")
-        this.throwUnexpectedToken(Messages.NumericSeperatorNotAllowedHere);
-      while (this.source[this.index] && (check(this.source[this.index]) || this.source[this.index] === "_")) {
-        if (this.source[this.index] !== "_")
-          num += this.source[this.index];
-        this.index++;
-        if (this.source[this.index - 1] === "_" && this.source[this.index] === "_")
-          this.throwUnexpectedToken(Messages.NumericSeperatorOneUnderscore);
-      }
-      if (this.source[this.index - 1] === "_")
-        this.throwUnexpectedToken(Messages.NumericSeperatorNotAllowedHere);
-      return num;
-    }
-    scanNumericLiteral() {
-      const start = this.index;
-      let ch = this.source[start];
-      assert(
-        Character.isDecimalDigit(ch.charCodeAt(0)) || ch === ".",
-        "Numeric literal must start with a decimal digit or a decimal point"
-      );
-      let num = "";
-      if (ch !== ".") {
-        num = this.source[this.index++];
-        ch = this.source[this.index];
-        if (num === "0") {
-          if (ch === "x" || ch === "X") {
-            ++this.index;
-            return this.scanHexLiteral(start);
-          }
-          if (ch === "b" || ch === "B") {
-            ++this.index;
-            return this.scanBinaryLiteral(start);
-          }
-          if (ch === "o" || ch === "O") {
-            return this.scanOctalLiteral(ch, start);
-          }
-          if (ch && Character.isOctalDigit(ch.charCodeAt(0))) {
-            if (this.isImplicitOctalLiteral()) {
-              return this.scanOctalLiteral(ch, start);
-            }
-          }
-        }
-        this.index--;
-        num = this.scanLiteralPart(Character.isDecimalDigitChar);
-        ch = this.source[this.index];
-      }
-      if (ch === ".") {
-        num += this.source[this.index++];
-        num += this.scanLiteralPart(Character.isDecimalDigitChar);
-        ch = this.source[this.index];
-      }
-      if (ch === "e" || ch === "E") {
-        num += this.source[this.index++];
-        ch = this.source[this.index];
-        if (ch === "+" || ch === "-") {
-          num += this.source[this.index++];
-        }
-        if (Character.isDecimalDigit(this.source.charCodeAt(this.index))) {
-          num += this.scanLiteralPart(Character.isDecimalDigitChar);
-        } else {
-          this.throwUnexpectedToken();
-        }
-      } else if (ch === "n") {
-        if (num.length > 1 && num[0] === "0") {
-          this.throwUnexpectedToken();
-        }
-        this.index++;
-        return {
-          type: 6 /* NumericLiteral */,
-          value: BigInt(num),
-          lineNumber: this.lineNumber,
-          lineStart: this.lineStart,
-          start,
-          end: this.index
-        };
-      }
-      if (Character.isIdentifierStart(this.source.charCodeAt(this.index))) {
-        this.throwUnexpectedToken();
-      }
-      return {
-        type: 6 /* NumericLiteral */,
-        value: parseFloat(num),
-        lineNumber: this.lineNumber,
-        lineStart: this.lineStart,
-        start,
-        end: this.index
-      };
-    }
-    // https://tc39.github.io/ecma262/#sec-literals-string-literals
-    scanStringLiteral() {
-      const start = this.index;
-      let quote = this.source[start];
-      assert(
-        quote === "'" || quote === '"',
-        "String literal must starts with a quote"
-      );
-      ++this.index;
-      let octal = false;
-      let str = "";
-      while (!this.eof()) {
-        let ch = this.source[this.index++];
-        if (ch === quote) {
-          quote = "";
-          break;
-        } else if (ch === "\\") {
-          ch = this.source[this.index++];
-          if (!ch || !Character.isLineTerminator(ch.charCodeAt(0))) {
-            switch (ch) {
-              case "u":
-                if (this.source[this.index] === "{") {
-                  ++this.index;
-                  str += this.scanUnicodeCodePointEscape();
-                } else {
-                  const unescapedChar = this.scanHexEscape(ch);
-                  if (unescapedChar === null) {
-                    this.throwUnexpectedToken();
-                  }
-                  str += unescapedChar;
-                }
-                break;
-              case "x":
-                const unescaped = this.scanHexEscape(ch);
-                if (unescaped === null) {
-                  this.throwUnexpectedToken(Messages.InvalidHexEscapeSequence);
-                }
-                str += unescaped;
-                break;
-              case "n":
-                str += "\n";
-                break;
-              case "r":
-                str += "\r";
-                break;
-              case "t":
-                str += "	";
-                break;
-              case "b":
-                str += "\b";
-                break;
-              case "f":
-                str += "\f";
-                break;
-              case "v":
-                str += "\v";
-                break;
-              case "8":
-              case "9":
-                str += ch;
-                this.tolerateUnexpectedToken();
-                break;
-              default:
-                if (ch && Character.isOctalDigit(ch.charCodeAt(0))) {
-                  const octToDec = this.octalToDecimal(ch);
-                  octal = octToDec.octal || octal;
-                  str += String.fromCharCode(octToDec.code);
-                } else {
-                  str += ch;
-                }
-                break;
-            }
-          } else {
-            ++this.lineNumber;
-            if (ch === "\r" && this.source[this.index] === "\n") {
-              ++this.index;
-            }
-            this.lineStart = this.index;
-          }
-        } else if (Character.isLineTerminator(ch.charCodeAt(0))) {
-          break;
-        } else {
-          str += ch;
-        }
-      }
-      if (quote !== "") {
-        this.index = start;
-        this.throwUnexpectedToken();
-      }
-      return {
-        type: 8 /* StringLiteral */,
-        value: str,
-        octal,
-        lineNumber: this.lineNumber,
-        lineStart: this.lineStart,
-        start,
-        end: this.index
-      };
-    }
-    // https://tc39.github.io/ecma262/#sec-template-literal-lexical-components
-    scanTemplate() {
-      let cooked = "";
-      let terminated = false;
-      const start = this.index;
-      const head = this.source[start] === "`";
-      let tail = false;
-      let notEscapeSequenceHead = null;
-      let rawOffset = 2;
-      ++this.index;
-      while (!this.eof()) {
-        let ch = this.source[this.index++];
-        if (ch === "`") {
-          rawOffset = 1;
-          tail = true;
-          terminated = true;
-          break;
-        } else if (ch === "$") {
-          if (this.source[this.index] === "{") {
-            this.curlyStack.push("${");
-            ++this.index;
-            terminated = true;
-            break;
-          }
-          cooked += ch;
-        } else if (notEscapeSequenceHead !== null) {
-          continue;
-        } else if (ch === "\\") {
-          ch = this.source[this.index++];
-          if (!Character.isLineTerminator(ch.charCodeAt(0))) {
-            switch (ch) {
-              case "n":
-                cooked += "\n";
-                break;
-              case "r":
-                cooked += "\r";
-                break;
-              case "t":
-                cooked += "	";
-                break;
-              case "u":
-                if (this.source[this.index] === "{") {
-                  ++this.index;
-                  const unicodeCodePointEscape = this.tryToScanUnicodeCodePointEscape();
-                  if (unicodeCodePointEscape === null) {
-                    notEscapeSequenceHead = "u";
-                  } else {
-                    cooked += unicodeCodePointEscape;
-                  }
-                } else {
-                  const unescapedChar = this.scanHexEscape(ch);
-                  if (unescapedChar === null) {
-                    notEscapeSequenceHead = "u";
-                  } else {
-                    cooked += unescapedChar;
-                  }
-                }
-                break;
-              case "x":
-                const unescaped = this.scanHexEscape(ch);
-                if (unescaped === null) {
-                  notEscapeSequenceHead = "x";
-                } else {
-                  cooked += unescaped;
-                }
-                break;
-              case "b":
-                cooked += "\b";
-                break;
-              case "f":
-                cooked += "\f";
-                break;
-              case "v":
-                cooked += "\v";
-                break;
-              default:
-                if (ch === "0") {
-                  if (Character.isDecimalDigit(this.source.charCodeAt(this.index))) {
-                    notEscapeSequenceHead = "0";
-                  } else {
-                    cooked += "\0";
-                  }
-                } else if (Character.isDecimalDigitChar(ch)) {
-                  notEscapeSequenceHead = ch;
-                } else {
-                  cooked += ch;
-                }
-                break;
-            }
-          } else {
-            ++this.lineNumber;
-            if (ch === "\r" && this.source[this.index] === "\n") {
-              ++this.index;
-            }
-            this.lineStart = this.index;
-          }
-        } else if (Character.isLineTerminator(ch.charCodeAt(0))) {
-          ++this.lineNumber;
-          if (ch === "\r" && this.source[this.index] === "\n") {
-            ++this.index;
-          }
-          this.lineStart = this.index;
-          cooked += "\n";
-        } else {
-          cooked += ch;
-        }
-      }
-      if (!terminated) {
-        this.throwUnexpectedToken();
-      }
-      if (!head) {
-        this.curlyStack.pop();
-      }
-      return {
-        type: 10 /* Template */,
-        value: this.source.slice(start + 1, this.index - rawOffset),
-        cooked: notEscapeSequenceHead === null ? cooked : null,
-        head,
-        tail,
-        notEscapeSequenceHead,
-        lineNumber: this.lineNumber,
-        lineStart: this.lineStart,
-        start,
-        end: this.index
-      };
-    }
-    // https://tc39.github.io/ecma262/#sec-literals-regular-expression-literals
-    testRegExp(pattern, flags) {
-      const astralSubstitute = "\uFFFF";
-      let tmp = pattern;
-      if (flags.indexOf("u") >= 0) {
-        tmp = tmp.replace(/\\u\{([0-9a-fA-F]+)\}|\\u([a-fA-F0-9]{4})/g, ($0, $1, $2) => {
-          const codePoint = parseInt($1 || $2, 16);
-          if (codePoint > 1114111) {
-            this.throwUnexpectedToken(Messages.InvalidRegExp);
-          }
-          if (codePoint <= 65535) {
-            return String.fromCharCode(codePoint);
-          }
-          return astralSubstitute;
-        }).replace(
-          /[\uD800-\uDBFF][\uDC00-\uDFFF]/g,
-          astralSubstitute
-        );
-      }
-      try {
-        RegExp(tmp);
-      } catch (e) {
-        this.throwUnexpectedToken(Messages.InvalidRegExp);
-      }
-      try {
-        return new RegExp(pattern, flags);
-      } catch (exception) {
-        return null;
-      }
-    }
-    scanRegExpBody() {
-      let ch = this.source[this.index];
-      assert(ch === "/", "Regular expression literal must start with a slash");
-      let str = this.source[this.index++];
-      let classMarker = false;
-      let terminated = false;
-      while (!this.eof()) {
-        ch = this.source[this.index++];
-        str += ch;
-        if (ch === "\\") {
-          ch = this.source[this.index++];
-          if (Character.isLineTerminator(ch.charCodeAt(0))) {
-            this.throwUnexpectedToken(Messages.UnterminatedRegExp);
-          }
-          str += ch;
-        } else if (Character.isLineTerminator(ch.charCodeAt(0))) {
-          this.throwUnexpectedToken(Messages.UnterminatedRegExp);
-        } else if (classMarker) {
-          if (ch === "]") {
-            classMarker = false;
-          }
-        } else {
-          if (ch === "/") {
-            terminated = true;
-            break;
-          } else if (ch === "[") {
-            classMarker = true;
-          }
-        }
-      }
-      if (!terminated) {
-        this.throwUnexpectedToken(Messages.UnterminatedRegExp);
-      }
-      return str.substr(1, str.length - 2);
-    }
-    scanRegExpFlags() {
-      let str = "";
-      let flags = "";
-      while (!this.eof()) {
-        let ch = this.source[this.index];
-        if (!Character.isIdentifierPart(ch.charCodeAt(0))) {
-          break;
-        }
-        ++this.index;
-        if (ch === "\\" && !this.eof()) {
-          ch = this.source[this.index];
-          if (ch === "u") {
-            ++this.index;
-            let restore = this.index;
-            const char = this.scanHexEscape("u");
-            if (char !== null) {
-              flags += char;
-              for (str += "\\u"; restore < this.index; ++restore) {
-                str += this.source[restore];
-              }
-            } else {
-              this.index = restore;
-              flags += "u";
-              str += "\\u";
-            }
-            this.tolerateUnexpectedToken();
-          } else {
-            str += "\\";
-            this.tolerateUnexpectedToken();
-          }
-        } else {
-          flags += ch;
-          str += ch;
-        }
-      }
-      return flags;
-    }
-    scanRegExp() {
-      const start = this.index;
-      const pattern = this.scanRegExpBody();
-      const flags = this.scanRegExpFlags();
-      const value = this.testRegExp(pattern, flags);
-      return {
-        type: 9 /* RegularExpression */,
-        value: "",
-        pattern,
-        flags,
-        regex: value,
-        lineNumber: this.lineNumber,
-        lineStart: this.lineStart,
-        start,
-        end: this.index
-      };
-    }
-    lex() {
-      if (this.eof()) {
-        return {
-          type: 2 /* EOF */,
-          value: "",
-          lineNumber: this.lineNumber,
-          lineStart: this.lineStart,
-          start: this.index,
-          end: this.index
-        };
-      }
-      const cp = this.source.charCodeAt(this.index);
-      if (Character.isIdentifierStart(cp)) {
-        return this.scanIdentifier();
-      }
-      if (cp === 40 || cp === 41 || cp === 59) {
-        return this.scanPunctuator();
-      }
-      if (cp === 39 || cp === 34) {
-        return this.scanStringLiteral();
-      }
-      if (cp === 46) {
-        if (Character.isDecimalDigit(this.source.charCodeAt(this.index + 1))) {
-          return this.scanNumericLiteral();
-        }
-        return this.scanPunctuator();
-      }
-      if (Character.isDecimalDigit(cp)) {
-        return this.scanNumericLiteral();
-      }
-      if (cp === 96 || cp === 125 && this.curlyStack[this.curlyStack.length - 1] === "${") {
-        return this.scanTemplate();
-      }
-      if (cp >= 55296 && cp < 57343) {
-        if (Character.isIdentifierStart(this.codePointAt(this.index))) {
-          return this.scanIdentifier();
-        }
-      }
-      return this.scanPunctuator();
-    }
-  };
+  return out;
+}
 
-  // parser.ts
-  var ArrowParameterPlaceHolder = "ArrowParameterPlaceHolder";
-  var Parser = class {
-    config;
-    delegate;
-    errorHandler;
-    scanner;
-    operatorPrecedence;
-    lookahead;
-    hasLineTerminator;
-    context;
-    tokens;
-    startMarker;
-    lastMarker;
-    constructor(code, options = {}, delegate) {
-      this.config = {
-        range: typeof options.range === "boolean" && options.range,
-        loc: typeof options.loc === "boolean" && options.loc,
-        source: null,
-        tokens: typeof options.tokens === "boolean" && options.tokens,
-        comment: typeof options.comment === "boolean" && options.comment,
-        tolerant: typeof options.tolerant === "boolean" && options.tolerant
-      };
-      if (this.config.loc && options.source && options.source !== null) {
-        this.config.source = String(options.source);
-      }
-      this.delegate = delegate;
-      this.errorHandler = new ErrorHandler();
-      this.errorHandler.tolerant = this.config.tolerant == true;
-      this.scanner = new Scanner(code, this.errorHandler);
-      this.scanner.trackComment = this.config.comment == true;
-      this.operatorPrecedence = {
-        ")": 0,
-        ";": 0,
-        ",": 0,
-        "=": 0,
-        "]": 0,
-        "??": 5,
-        "||": 6,
-        "&&": 7,
-        "|": 8,
-        "^": 9,
-        "&": 10,
-        "==": 11,
-        "!=": 11,
-        "===": 11,
-        "!==": 11,
-        "<": 12,
-        ">": 12,
-        "<=": 12,
-        ">=": 12,
-        "<<": 13,
-        ">>": 13,
-        ">>>": 13,
-        "+": 14,
-        "-": 14,
-        "*": 15,
-        "/": 15,
-        "%": 15
-      };
-      this.lookahead = {
-        type: 2 /* EOF */,
-        value: "",
-        lineNumber: this.scanner.lineNumber,
-        lineStart: 0,
-        start: 0,
-        end: 0
-      };
-      this.hasLineTerminator = false;
-      this.context = {
-        isModule: false,
-        isAsync: false,
-        allowIn: true,
-        allowStrictDirective: true,
-        allowSuper: false,
-        allowYield: true,
-        firstCoverInitializedNameError: null,
-        isAssignmentTarget: false,
-        isBindingElement: false,
-        inConstructor: false,
-        inFunctionBody: false,
-        inIteration: false,
-        inSwitch: false,
-        inClassConstructor: false,
-        labelSet: {},
-        strict: false,
-        decorators: null
-      };
-      this.tokens = [];
-      this.startMarker = {
-        index: 0,
-        line: this.scanner.lineNumber,
-        column: 0
-      };
-      this.lastMarker = {
-        index: 0,
-        line: this.scanner.lineNumber,
-        column: 0
-      };
-      this.nextToken();
-      this.lastMarker = {
-        index: this.scanner.index,
-        line: this.scanner.lineNumber,
-        column: this.scanner.index - this.scanner.lineStart
-      };
-    }
-    throwError(messageFormat, ...values) {
-      const args = values.slice();
-      const msg = messageFormat.replace(
-        /%(\d)/g,
-        (whole, idx) => {
-          assert(idx < args.length, "Message reference must be in range");
-          return args[idx];
-        }
-      );
-      const index = this.lastMarker.index;
-      const line = this.lastMarker.line;
-      const column = this.lastMarker.column + 1;
-      throw this.errorHandler.createError(index, line, column, msg);
-    }
-    tolerateError(messageFormat, ...values) {
-      const args = values.slice();
-      const msg = messageFormat.replace(
-        /%(\d)/g,
-        (whole, idx) => {
-          assert(idx < args.length, "Message reference must be in range");
-          return args[idx];
-        }
-      );
-      const index = this.lastMarker.index;
-      const line = this.scanner.lineNumber;
-      const column = this.lastMarker.column + 1;
-      this.errorHandler.tolerateError(index, line, column, msg);
-    }
-    // Throw an exception because of the token.
-    unexpectedTokenError(token, message) {
-      let msg = message || Messages.UnexpectedToken;
-      let value;
-      if (token) {
-        if (!message) {
-          msg = token.type === 2 /* EOF */ ? Messages.UnexpectedEOS : token.type === 3 /* Identifier */ ? Messages.UnexpectedIdentifier : token.type === 6 /* NumericLiteral */ ? Messages.UnexpectedNumber : token.type === 8 /* StringLiteral */ ? Messages.UnexpectedString : token.type === 10 /* Template */ ? Messages.UnexpectedTemplate : Messages.UnexpectedToken;
-          if (token.type === 4 /* Keyword */) {
-            if (this.scanner.isFutureReservedWord(token.value)) {
-              msg = Messages.UnexpectedReserved;
-            } else if (this.context.strict && this.scanner.isStrictModeReservedWord(token.value)) {
-              msg = Messages.StrictReservedWord;
-            }
-          }
-        }
-        value = token.value;
-      } else {
-        value = "ILLEGAL";
-      }
-      msg = msg.replace("%0", value);
-      if (token && typeof token.lineNumber === "number") {
-        const index = token.start;
-        const line = token.lineNumber;
-        const lastMarkerLineStart = this.lastMarker.index - this.lastMarker.column;
-        const column = token.start - lastMarkerLineStart + 1;
-        return this.errorHandler.createError(index, line, column, msg);
-      } else {
-        const index = this.lastMarker.index;
-        const line = this.lastMarker.line;
-        const column = this.lastMarker.column + 1;
-        return this.errorHandler.createError(index, line, column, msg);
-      }
-    }
-    throwUnexpectedToken(token, message) {
-      throw this.unexpectedTokenError(token, message);
-    }
-    tolerateUnexpectedToken(token, message) {
-      this.errorHandler.tolerate(this.unexpectedTokenError(token, message));
-    }
-    tolerateInvalidLoopStatement() {
-      if (this.matchKeyword("class") || this.matchKeyword("function")) {
-        this.tolerateError(Messages.UnexpectedToken, this.lookahead);
-      }
-    }
-    collectComments() {
-      if (!this.config.comment) {
-        this.scanner.scanComments();
-      } else {
-        const comments = this.scanner.scanComments();
-        if (comments.length > 0 && this.delegate) {
-          for (let i = 0; i < comments.length; ++i) {
-            const e = comments[i];
-            const node = {
-              type: e.multiLine ? "BlockComment" : "LineComment",
-              value: this.scanner.source.slice(e.slice[0], e.slice[1])
-            };
-            if (this.config.range) {
-              node.range = e.range;
-            }
-            if (this.config.loc) {
-              node.loc = e.loc;
-            }
-            const metadata = {
-              start: {
-                line: e.loc.start.line,
-                column: e.loc.start.column,
-                offset: e.range[0]
-              },
-              end: {
-                line: e.loc.end.line,
-                column: e.loc.end.column,
-                offset: e.range[1]
-              }
-            };
-            this.delegate(node, metadata);
-          }
-        }
-      }
-    }
-    // From internal representation to an external structure
-    getTokenRaw(token) {
-      return this.scanner.source.slice(token.start, token.end);
-    }
-    convertToken(token) {
-      const t = {
-        type: TokenName[token.type],
-        value: this.getTokenRaw(token)
-      };
-      if (this.config.range) {
-        t.range = [token.start, token.end];
-      }
-      if (this.config.loc) {
-        t.loc = {
-          start: {
-            line: this.startMarker.line,
-            column: this.startMarker.column
-          },
-          end: {
-            line: this.scanner.lineNumber,
-            column: this.scanner.index - this.scanner.lineStart
-          }
-        };
-      }
-      if (token.type === 9 /* RegularExpression */) {
-        const pattern = token.pattern;
-        const flags = token.flags;
-        t.regex = { pattern, flags };
-      }
-      return t;
-    }
-    nextToken() {
-      const token = this.lookahead;
-      this.lastMarker.index = this.scanner.index;
-      this.lastMarker.line = this.scanner.lineNumber;
-      this.lastMarker.column = this.scanner.index - this.scanner.lineStart;
-      this.collectComments();
-      if (this.scanner.index !== this.startMarker.index) {
-        this.startMarker.index = this.scanner.index;
-        this.startMarker.line = this.scanner.lineNumber;
-        this.startMarker.column = this.scanner.index - this.scanner.lineStart;
-      }
-      const next = this.scanner.lex();
-      this.hasLineTerminator = token.lineNumber !== next.lineNumber;
-      if (next && this.context.strict && next.type === 3 /* Identifier */) {
-        if (this.scanner.isStrictModeReservedWord(next.value)) {
-          next.type = 4 /* Keyword */;
-        }
-      }
-      this.lookahead = next;
-      if (this.config.tokens && next.type !== 2 /* EOF */) {
-        this.tokens.push(this.convertToken(next));
-      }
-      return token;
-    }
-    nextRegexToken() {
-      this.collectComments();
-      const token = this.scanner.scanRegExp();
-      if (this.config.tokens) {
-        this.tokens.pop();
-        this.tokens.push(this.convertToken(token));
-      }
-      this.lookahead = token;
-      this.nextToken();
-      return token;
-    }
-    createNode() {
-      return {
-        index: this.startMarker.index,
-        line: this.startMarker.line,
-        column: this.startMarker.column
-      };
-    }
-    startNode(token, lastLineStart = 0) {
-      let column = token.start - token.lineStart;
-      let line = token.lineNumber;
-      if (column < 0) {
-        column += lastLineStart;
-        line--;
-      }
-      return {
-        index: token.start,
-        line,
-        column
-      };
-    }
-    finalize(marker, node) {
-      if (this.config.range) {
-        node.range = [marker.index, this.lastMarker.index];
-      }
-      if (this.config.loc) {
-        node.loc = {
-          start: {
-            line: marker.line,
-            column: marker.column
-          },
-          end: {
-            line: this.lastMarker.line,
-            column: this.lastMarker.column
-          }
-        };
-        if (this.config.source) {
-          node.loc.source = this.config.source;
-        }
-      }
-      if (this.delegate) {
-        const metadata = {
-          start: {
-            line: marker.line,
-            column: marker.column,
-            offset: marker.index
-          },
-          end: {
-            line: this.lastMarker.line,
-            column: this.lastMarker.column,
-            offset: this.lastMarker.index
-          }
-        };
-        this.delegate(node, metadata);
-      }
-      return node;
-    }
-    // Expect the next token to match the specified punctuator.
-    // If not, an exception will be thrown.
-    expect(value) {
-      const token = this.nextToken();
-      if (token.type !== 7 /* Punctuator */ || token.value !== value) {
-        this.throwUnexpectedToken(token);
-      }
-    }
-    // Quietly expect a comma when in tolerant mode, otherwise delegates to expect().
-    expectCommaSeparator() {
-      if (this.config.tolerant) {
-        const token = this.lookahead;
-        if (token.type === 7 /* Punctuator */ && token.value === ",") {
-          this.nextToken();
-        } else if (token.type === 7 /* Punctuator */ && token.value === ";") {
-          this.nextToken();
-          this.tolerateUnexpectedToken(token);
-        } else {
-          this.tolerateUnexpectedToken(token, Messages.UnexpectedToken);
-        }
-      } else {
-        this.expect(",");
-      }
-    }
-    // Expect the next token to match the specified keyword.
-    // If not, an exception will be thrown.
-    expectKeyword(keyword) {
-      const token = this.nextToken();
-      if (token.type !== 4 /* Keyword */ || token.value !== keyword) {
-        this.throwUnexpectedToken(token);
-      }
-    }
-    // Return true if the next token matches the specified punctuator.
-    match(value) {
-      return this.lookahead.type === 7 /* Punctuator */ && this.lookahead.value === value;
-    }
-    // Return true if the next token matches the specified keyword
-    matchKeyword(keyword) {
-      return this.lookahead.type === 4 /* Keyword */ && this.lookahead.value === keyword;
-    }
-    // Return true if the next token matches the specified contextual keyword
-    // (where an identifier is sometimes a keyword depending on the context)
-    matchContextualKeyword(keyword) {
-      return this.lookahead.type === 3 /* Identifier */ && this.lookahead.value === keyword;
-    }
-    // Return true if the next token is an assignment operator
-    matchAssign() {
-      if (this.lookahead.type !== 7 /* Punctuator */) {
-        return false;
-      }
-      const op = this.lookahead.value;
-      return op === "=" || op === "*=" || op === "**=" || op === "/=" || op === "%=" || op === "+=" || op === "-=" || op === "<<=" || op === ">>=" || op === ">>>=" || op === "&=" || op === "^=" || op === "|=" || op === "&&=" || op === "||=" || op === "??=";
-    }
-    // Cover grammar support.
-    //
-    // When an assignment expression position starts with an left parenthesis, the determination of the type
-    // of the syntax is to be deferred arbitrarily long until the end of the parentheses pair (plus a lookahead)
-    // or the first comma. This situation also defers the determination of all the expressions nested in the pair.
-    //
-    // There are three productions that can be parsed in a parentheses pair that needs to be determined
-    // after the outermost pair is closed. They are:
-    //
-    //   1. AssignmentExpression
-    //   2. BindingElements
-    //   3. AssignmentTargets
-    //
-    // In order to avoid exponential backtracking, we use two flags to denote if the production can be
-    // binding element or assignment target.
-    //
-    // The three productions have the relationship:
-    //
-    //   BindingElements ⊆ AssignmentTargets ⊆ AssignmentExpression
-    //
-    // with a single exception that CoverInitializedName when used directly in an Expression, generates
-    // an early error. Therefore, we need the third state, firstCoverInitializedNameError, to track the
-    // first usage of CoverInitializedName and report it when we reached the end of the parentheses pair.
-    //
-    // isolateCoverGrammar function runs the given parser function with a new cover grammar context, and it does not
-    // effect the current flags. This means the production the parser parses is only used as an expression. Therefore
-    // the CoverInitializedName check is conducted.
-    //
-    // inheritCoverGrammar function runs the given parse function with a new cover grammar context, and it propagates
-    // the flags outside of the parser. This means the production the parser parses is used as a part of a potential
-    // pattern. The CoverInitializedName check is deferred.
-    isolateCoverGrammar(parseFunction) {
-      const previousIsBindingElement = this.context.isBindingElement;
-      const previousIsAssignmentTarget = this.context.isAssignmentTarget;
-      const previousFirstCoverInitializedNameError = this.context.firstCoverInitializedNameError;
-      this.context.isBindingElement = true;
-      this.context.isAssignmentTarget = true;
-      this.context.firstCoverInitializedNameError = null;
-      const result = parseFunction.call(this);
-      if (this.context.firstCoverInitializedNameError !== null) {
-        this.throwUnexpectedToken(this.context.firstCoverInitializedNameError);
-      }
-      this.context.isBindingElement = previousIsBindingElement;
-      this.context.isAssignmentTarget = previousIsAssignmentTarget;
-      this.context.firstCoverInitializedNameError = previousFirstCoverInitializedNameError;
-      return result;
-    }
-    inheritCoverGrammar(parseFunction) {
-      const previousIsBindingElement = this.context.isBindingElement;
-      const previousIsAssignmentTarget = this.context.isAssignmentTarget;
-      const previousFirstCoverInitializedNameError = this.context.firstCoverInitializedNameError;
-      this.context.isBindingElement = true;
-      this.context.isAssignmentTarget = true;
-      this.context.firstCoverInitializedNameError = null;
-      const result = parseFunction.call(this);
-      this.context.isBindingElement = this.context.isBindingElement && previousIsBindingElement;
-      this.context.isAssignmentTarget = this.context.isAssignmentTarget && previousIsAssignmentTarget;
-      this.context.firstCoverInitializedNameError = previousFirstCoverInitializedNameError || this.context.firstCoverInitializedNameError;
-      return result;
-    }
-    consumeSemicolon() {
-      if (this.match(";")) {
-        this.nextToken();
-      } else if (!this.hasLineTerminator) {
-        if (this.lookahead.type !== 2 /* EOF */ && !this.match("}")) {
-          this.throwUnexpectedToken(this.lookahead);
-        }
-        this.lastMarker.index = this.startMarker.index;
-        this.lastMarker.line = this.startMarker.line;
-        this.lastMarker.column = this.startMarker.column;
-      }
-    }
-    // https://tc39.github.io/ecma262/#sec-primary-expression
-    parsePrimaryExpression() {
-      const node = this.createNode();
-      let expr;
-      let token, raw;
-      switch (this.lookahead.type) {
-        case 3 /* Identifier */:
-          if ((this.context.isModule || this.context.isAsync) && this.lookahead.value === "await") {
-            this.tolerateUnexpectedToken(this.lookahead);
-          }
-          expr = this.matchAsyncFunction() ? this.parseFunctionExpression() : this.finalize(node, new Identifier(this.nextToken().value));
-          break;
-        case 6 /* NumericLiteral */:
-        case 8 /* StringLiteral */:
-          if (this.context.strict && this.lookahead.octal) {
-            this.tolerateUnexpectedToken(this.lookahead, Messages.StrictOctalLiteral);
-          }
-          this.context.isAssignmentTarget = false;
-          this.context.isBindingElement = false;
-          token = this.nextToken();
-          raw = this.getTokenRaw(token);
-          if (typeof token.value === "bigint")
-            expr = this.finalize(node, new BigIntLiteral(token.value, raw, token.value.toString()));
-          else
-            expr = this.finalize(node, new Literal(token.value, raw));
-          break;
-        case 1 /* BooleanLiteral */:
-          this.context.isAssignmentTarget = false;
-          this.context.isBindingElement = false;
-          token = this.nextToken();
-          raw = this.getTokenRaw(token);
-          expr = this.finalize(node, new Literal(token.value === "true", raw));
-          break;
-        case 5 /* NullLiteral */:
-          this.context.isAssignmentTarget = false;
-          this.context.isBindingElement = false;
-          token = this.nextToken();
-          raw = this.getTokenRaw(token);
-          expr = this.finalize(node, new Literal(null, raw));
-          break;
-        case 10 /* Template */:
-          expr = this.parseTemplateLiteral({ isTagged: false });
-          break;
-        case 7 /* Punctuator */:
-          switch (this.lookahead.value) {
-            case "(":
-              this.context.isBindingElement = false;
-              expr = this.inheritCoverGrammar(this.parseGroupExpression);
-              break;
-            case "[":
-              expr = this.inheritCoverGrammar(this.parseArrayInitializer);
-              break;
-            case "{":
-              expr = this.inheritCoverGrammar(this.parseObjectInitializer);
-              break;
-            case "/":
-            case "/=":
-              this.context.isAssignmentTarget = false;
-              this.context.isBindingElement = false;
-              this.scanner.index = this.startMarker.index;
-              token = this.nextRegexToken();
-              raw = this.getTokenRaw(token);
-              expr = this.finalize(node, new RegexLiteral(token.regex, raw, token.pattern, token.flags));
-              break;
-            case "#":
-              this.nextToken();
-              expr = this.finalize(node, new PrivateIdentifier(this.nextToken().value));
-              break;
-            case "@":
-              let decorators = this.parseDecorators();
-              this.context.decorators = decorators;
-              let expression = this.parsePrimaryExpression();
-              this.context.decorators = null;
-              expr = this.finalize(node, new PrivateIdentifier(this.nextToken().value));
-              break;
-            default:
-              expr = this.throwUnexpectedToken(this.nextToken());
-          }
-          break;
-        case 4 /* Keyword */:
-          if (!this.context.strict && this.context.allowYield && this.matchKeyword("yield")) {
-            expr = this.parseIdentifierName();
-          } else if (!this.context.strict && this.matchKeyword("let")) {
-            expr = this.finalize(node, new Identifier(this.nextToken().value));
-          } else {
-            this.context.isAssignmentTarget = false;
-            this.context.isBindingElement = false;
-            if (this.matchKeyword("function")) {
-              expr = this.parseFunctionExpression();
-            } else if (this.matchKeyword("this")) {
-              this.nextToken();
-              expr = this.finalize(node, new ThisExpression());
-            } else if (this.matchKeyword("class")) {
-              expr = this.parseClassExpression();
-            } else if (this.matchKeyword("new")) {
-              expr = this.parseNewExpression();
-            } else if (this.matchImportCall()) {
-              expr = this.parseImportCall();
-            } else if (this.matchImportMeta()) {
-              if (!this.context.isModule) {
-                this.tolerateUnexpectedToken(this.lookahead, Messages.CannotUseImportMetaOutsideAModule);
-              }
-              expr = this.parseImportMeta();
-            } else {
-              expr = this.throwUnexpectedToken(this.nextToken());
-            }
-          }
-          break;
-        default:
-          expr = this.throwUnexpectedToken(this.nextToken());
-      }
-      return expr;
-    }
-    // https://tc39.github.io/ecma262/#sec-array-initializer
-    parseSpreadElement() {
-      const node = this.createNode();
-      this.expect("...");
-      const arg = this.inheritCoverGrammar(this.parseAssignmentExpression);
-      return this.finalize(node, new SpreadElement(arg));
-    }
-    parseArrayInitializer() {
-      const node = this.createNode();
-      const elements = [];
-      this.expect("[");
-      while (!this.match("]")) {
-        if (this.match(",")) {
-          this.nextToken();
-          elements.push(null);
-        } else if (this.match("...")) {
-          const element = this.parseSpreadElement();
-          if (!this.match("]")) {
-            this.context.isAssignmentTarget = false;
-            this.context.isBindingElement = false;
-            this.expect(",");
-          }
-          elements.push(element);
-        } else {
-          elements.push(this.inheritCoverGrammar(this.parseAssignmentExpression));
-          if (!this.match("]")) {
-            this.expect(",");
-          }
-        }
-      }
-      this.expect("]");
-      return this.finalize(node, new ArrayExpression(elements));
-    }
-    // https://tc39.github.io/ecma262/#sec-object-initializer
-    parsePropertyMethod(params) {
-      this.context.isAssignmentTarget = false;
-      this.context.isBindingElement = false;
-      const previousStrict = this.context.strict;
-      const previousAllowStrictDirective = this.context.allowStrictDirective;
-      this.context.allowStrictDirective = params.simple;
-      const body = this.isolateCoverGrammar(this.parseFunctionSourceElements);
-      if (this.context.strict && params.firstRestricted) {
-        this.tolerateUnexpectedToken(params.firstRestricted, params.message);
-      }
-      if (this.context.strict && params.stricted) {
-        this.tolerateUnexpectedToken(params.stricted, params.message);
-      }
-      this.context.strict = previousStrict;
-      this.context.allowStrictDirective = previousAllowStrictDirective;
-      return body;
-    }
-    parsePropertyMethodFunction(isGenerator) {
-      const node = this.createNode();
-      const previousAllowYield = this.context.allowYield;
-      this.context.allowYield = true;
-      const params = this.parseFormalParameters();
-      const method = this.parsePropertyMethod(params);
-      this.context.allowYield = previousAllowYield;
-      return this.finalize(node, new FunctionExpression(null, params.params, method, isGenerator, false));
-    }
-    parsePropertyMethodAsyncFunction(isGenerator) {
-      const node = this.createNode();
-      const previousAllowYield = this.context.allowYield;
-      const previousIsAsync = this.context.isAsync;
-      this.context.allowYield = false;
-      this.context.isAsync = true;
-      const params = this.parseFormalParameters();
-      const method = this.parsePropertyMethod(params);
-      this.context.allowYield = previousAllowYield;
-      this.context.isAsync = previousIsAsync;
-      return this.finalize(node, new FunctionExpression(null, params.params, method, isGenerator, true));
-    }
-    parseObjectPropertyKey(isPrivate = false) {
-      const node = this.createNode();
-      const token = this.nextToken();
-      let key;
-      switch (token.type) {
-        case 8 /* StringLiteral */:
-        case 6 /* NumericLiteral */:
-          if (this.context.strict && token.octal) {
-            this.tolerateUnexpectedToken(token, Messages.StrictOctalLiteral);
-          }
-          const raw = this.getTokenRaw(token);
-          if (typeof token.value === "bigint")
-            key = this.finalize(node, new BigIntLiteral(token.value, raw, token.value.toString()));
-          else
-            key = this.finalize(node, new Literal(token.value, raw));
-          break;
-        case 3 /* Identifier */:
-        case 1 /* BooleanLiteral */:
-        case 5 /* NullLiteral */:
-        case 4 /* Keyword */:
-          key = this.finalize(node, isPrivate ? new PrivateIdentifier(token.value) : new Identifier(token.value));
-          break;
-        case 7 /* Punctuator */:
-          if (token.value === "[") {
-            key = this.isolateCoverGrammar(this.parseAssignmentExpression);
-            this.expect("]");
-          } else {
-            key = this.throwUnexpectedToken(token);
-          }
-          break;
-        default:
-          key = this.throwUnexpectedToken(token);
-      }
-      return key;
-    }
-    isPropertyKey(key, value) {
-      return key.type === "Identifier" /* Identifier */ && key.name === value || key.type === "Literal" /* Literal */ && key.value === value;
-    }
-    parseObjectProperty(hasProto) {
-      const node = this.createNode();
-      const token = this.lookahead;
-      let kind;
-      let key = null;
-      let value = null;
-      let computed = false;
-      let method = false;
-      let shorthand = false;
-      let isAsync = false;
-      let isGenerator = false;
-      if (token.type === 3 /* Identifier */) {
-        const id = token.value;
-        this.nextToken();
-        computed = this.match("[");
-        isAsync = !this.hasLineTerminator && id === "async" && !this.match(":") && !this.match("(") && !this.match(",");
-        isGenerator = this.match("*");
-        if (isGenerator) {
-          this.nextToken();
-        }
-        key = isAsync ? this.parseObjectPropertyKey() : this.finalize(node, new Identifier(id));
-      } else if (this.match("*")) {
-        this.nextToken();
-      } else {
-        computed = this.match("[");
-        key = this.parseObjectPropertyKey();
-      }
-      const lookaheadPropertyKey = this.qualifiedPropertyName(this.lookahead);
-      if (token.type === 3 /* Identifier */ && !isAsync && token.value === "get" && lookaheadPropertyKey) {
-        kind = "get";
-        computed = this.match("[");
-        key = this.parseObjectPropertyKey();
-        this.context.allowYield = false;
-        value = this.parseGetterMethod();
-      } else if (token.type === 3 /* Identifier */ && !isAsync && token.value === "set" && lookaheadPropertyKey) {
-        kind = "set";
-        computed = this.match("[");
-        key = this.parseObjectPropertyKey();
-        value = this.parseSetterMethod();
-      } else if (token.type === 7 /* Punctuator */ && token.value === "*" && lookaheadPropertyKey) {
-        kind = "init";
-        computed = this.match("[");
-        key = this.parseObjectPropertyKey();
-        value = this.parseGeneratorMethod(false);
-        method = true;
-      } else {
-        if (!key) {
-          this.throwUnexpectedToken(this.lookahead);
-        }
-        kind = "init";
-        if (this.match(":") && !isAsync) {
-          if (!computed && this.isPropertyKey(key, "__proto__")) {
-            if (hasProto.value) {
-              this.tolerateError(Messages.DuplicateProtoProperty);
-            }
-            hasProto.value = true;
-          }
-          this.nextToken();
-          value = this.inheritCoverGrammar(this.parseAssignmentExpression);
-        } else if (this.match("(")) {
-          value = isAsync ? this.parsePropertyMethodAsyncFunction(isGenerator) : this.parsePropertyMethodFunction(isGenerator);
-          method = true;
-        } else if (token.type === 3 /* Identifier */) {
-          const id = this.finalize(node, new Identifier(token.value));
-          if (this.match("=")) {
-            this.context.firstCoverInitializedNameError = this.lookahead;
-            this.nextToken();
-            shorthand = true;
-            const init = this.isolateCoverGrammar(this.parseAssignmentExpression);
-            value = this.finalize(node, new AssignmentPattern(id, init));
-          } else {
-            shorthand = true;
-            value = id;
-          }
-        } else {
-          this.throwUnexpectedToken(this.nextToken());
-        }
-      }
-      return this.finalize(node, new Property(kind, key, computed, value, method, shorthand));
-    }
-    parseObjectInitializer() {
-      const node = this.createNode();
-      this.expect("{");
-      const properties = [];
-      const hasProto = { value: false };
-      while (!this.match("}")) {
-        const property = this.match("...") ? this.parseSpreadElement() : this.parseObjectProperty(hasProto);
-        properties.push(property);
-        if (!this.match("}") && (!property.method || this.match(","))) {
-          this.expectCommaSeparator();
-        }
-      }
-      this.expect("}");
-      return this.finalize(node, new ObjectExpression(properties));
-    }
-    // https://tc39.es/proposal-template-literal-revision/#sec-static-semantics-template-early-errors
-    throwTemplateLiteralEarlyErrors(token) {
-      switch (token.notEscapeSequenceHead) {
-        case "u":
-          return this.throwUnexpectedToken(token, Messages.InvalidUnicodeEscapeSequence);
-        case "x":
-          return this.throwUnexpectedToken(token, Messages.InvalidHexEscapeSequence);
-        case "8":
-        case "9":
-          return this.throwUnexpectedToken(token, Messages.TemplateEscape89);
-        default:
-          return this.throwUnexpectedToken(token, Messages.TemplateOctalLiteral);
-      }
-    }
-    // https://tc39.github.io/ecma262/#sec-template-literals
-    parseTemplateHead(options) {
-      assert(this.lookahead.head, "Template literal must start with a template head");
-      const node = this.createNode();
-      const token = this.nextToken();
-      if (!options.isTagged && token.notEscapeSequenceHead !== null) {
-        this.throwTemplateLiteralEarlyErrors(token);
-      }
-      const raw = token.value;
-      const cooked = token.cooked;
-      return this.finalize(node, new TemplateElement({ raw, cooked }, token.tail));
-    }
-    parseTemplateElement(options) {
-      if (this.lookahead.type !== 10 /* Template */) {
-        this.throwUnexpectedToken();
-      }
-      const node = this.createNode();
-      const token = this.nextToken();
-      if (!options.isTagged && token.notEscapeSequenceHead !== null) {
-        this.throwTemplateLiteralEarlyErrors(token);
-      }
-      const raw = token.value;
-      const cooked = token.cooked;
-      return this.finalize(node, new TemplateElement({ raw, cooked }, token.tail));
-    }
-    parseTemplateLiteral(options) {
-      const node = this.createNode();
-      const expressions = [];
-      const quasis = [];
-      let quasi = this.parseTemplateHead(options);
-      quasis.push(quasi);
-      while (!quasi.tail) {
-        expressions.push(this.parseExpression());
-        quasi = this.parseTemplateElement(options);
-        quasis.push(quasi);
-      }
-      return this.finalize(node, new TemplateLiteral(quasis, expressions));
-    }
-    // https://tc39.github.io/ecma262/#sec-grouping-operator
-    reinterpretExpressionAsPattern(expr) {
-      switch (expr.type) {
-        case "Identifier" /* Identifier */:
-        case "MemberExpression" /* MemberExpression */:
-        case "RestElement" /* RestElement */:
-        case "AssignmentPattern" /* AssignmentPattern */:
-          break;
-        case "SpreadElement" /* SpreadElement */:
-          expr.type = "RestElement" /* RestElement */;
-          this.reinterpretExpressionAsPattern(expr.argument);
-          break;
-        case "ArrayExpression" /* ArrayExpression */:
-          expr.type = "ArrayPattern" /* ArrayPattern */;
-          for (let i = 0; i < expr.elements.length; i++) {
-            if (expr.elements[i] !== null) {
-              this.reinterpretExpressionAsPattern(expr.elements[i]);
-            }
-          }
-          break;
-        case "ObjectExpression" /* ObjectExpression */:
-          expr.type = "ObjectPattern" /* ObjectPattern */;
-          for (let i = 0; i < expr.properties.length; i++) {
-            const property = expr.properties[i];
-            this.reinterpretExpressionAsPattern(property.type === "SpreadElement" /* SpreadElement */ ? property : property.value);
-          }
-          break;
-        case "AssignmentExpression" /* AssignmentExpression */:
-          expr.type = "AssignmentPattern" /* AssignmentPattern */;
-          delete expr.operator;
-          this.reinterpretExpressionAsPattern(expr.left);
-          break;
-        default:
-          break;
-      }
-    }
-    parseGroupExpression() {
-      let expr;
-      this.expect("(");
-      if (this.match(")")) {
-        this.nextToken();
-        if (!this.match("=>")) {
-          this.expect("=>");
-        }
-        expr = {
-          type: ArrowParameterPlaceHolder,
-          params: [],
-          async: false
-        };
-      } else {
-        const startToken = this.lookahead;
-        const params = [];
-        if (this.match("...")) {
-          expr = this.parseRestElement(params);
-          this.expect(")");
-          if (!this.match("=>")) {
-            this.expect("=>");
-          }
-          expr = {
-            type: ArrowParameterPlaceHolder,
-            params: [expr],
-            async: false
-          };
-        } else {
-          let arrow = false;
-          this.context.isBindingElement = true;
-          expr = this.inheritCoverGrammar(this.parseAssignmentExpression);
-          if (this.match(",")) {
-            const expressions = [];
-            this.context.isAssignmentTarget = false;
-            expressions.push(expr);
-            while (this.lookahead.type !== 2 /* EOF */) {
-              if (!this.match(",")) {
-                break;
-              }
-              this.nextToken();
-              if (this.match(")")) {
-                this.nextToken();
-                for (let i = 0; i < expressions.length; i++) {
-                  this.reinterpretExpressionAsPattern(expressions[i]);
-                }
-                arrow = true;
-                expr = {
-                  type: ArrowParameterPlaceHolder,
-                  params: expressions,
-                  async: false
-                };
-              } else if (this.match("...")) {
-                if (!this.context.isBindingElement) {
-                  this.throwUnexpectedToken(this.lookahead);
-                }
-                expressions.push(this.parseRestElement(params));
-                this.expect(")");
-                if (!this.match("=>")) {
-                  this.expect("=>");
-                }
-                this.context.isBindingElement = false;
-                for (let i = 0; i < expressions.length; i++) {
-                  this.reinterpretExpressionAsPattern(expressions[i]);
-                }
-                arrow = true;
-                expr = {
-                  type: ArrowParameterPlaceHolder,
-                  params: expressions,
-                  async: false
-                };
-              } else {
-                expressions.push(this.inheritCoverGrammar(this.parseAssignmentExpression));
-              }
-              if (arrow) {
-                break;
-              }
-            }
-            if (!arrow) {
-              expr = this.finalize(this.startNode(startToken), new SequenceExpression(expressions));
-            }
-          }
-          if (!arrow) {
-            this.expect(")");
-            if (this.match("=>")) {
-              if (expr.type === "Identifier" /* Identifier */ && expr.name === "yield") {
-                arrow = true;
-                expr = {
-                  type: ArrowParameterPlaceHolder,
-                  params: [expr],
-                  async: false
-                };
-              }
-              if (!arrow) {
-                if (!this.context.isBindingElement) {
-                  this.throwUnexpectedToken(this.lookahead);
-                }
-                if (expr.type === "SequenceExpression" /* SequenceExpression */) {
-                  for (let i = 0; i < expr.expressions.length; i++) {
-                    this.reinterpretExpressionAsPattern(expr.expressions[i]);
-                  }
-                } else {
-                  this.reinterpretExpressionAsPattern(expr);
-                }
-                const parameters = expr.type === "SequenceExpression" /* SequenceExpression */ ? expr.expressions : [expr];
-                expr = {
-                  type: ArrowParameterPlaceHolder,
-                  params: parameters,
-                  async: false
-                };
-              }
-            }
-            this.context.isBindingElement = false;
-          }
-        }
-      }
-      return expr;
-    }
-    // https://tc39.github.io/ecma262/#sec-left-hand-side-expressions
-    parseArguments() {
-      this.expect("(");
-      const args = [];
-      if (!this.match(")")) {
-        while (true) {
-          const expr = this.match("...") ? this.parseSpreadElement() : this.isolateCoverGrammar(this.parseAssignmentExpression);
-          args.push(expr);
-          if (this.match(")")) {
-            break;
-          }
-          this.expectCommaSeparator();
-          if (this.match(")")) {
-            break;
-          }
-        }
-      }
-      this.expect(")");
-      return args;
-    }
-    isIdentifierName(token) {
-      return token.type === 3 /* Identifier */ || token.type === 4 /* Keyword */ || token.type === 1 /* BooleanLiteral */ || token.type === 5 /* NullLiteral */;
-    }
-    parseIdentifierName(allowPrivateField = false) {
-      let isPrivateField = false;
-      let node = this.createNode();
-      let token = this.nextToken();
-      if (token.value === "#" && allowPrivateField) {
-        token = this.nextToken();
-        isPrivateField = true;
-      }
-      if (!this.isIdentifierName(token)) {
-        this.throwUnexpectedToken(token);
-      }
-      return this.finalize(node, isPrivateField ? new PrivateIdentifier(token.value) : new Identifier(token.value));
-    }
-    parseNewExpression() {
-      const node = this.createNode();
-      const id = this.parseIdentifierName();
-      assert(id.name === "new", "New expression must start with `new`");
-      let expr;
-      if (this.match(".")) {
-        this.nextToken();
-        if (this.lookahead.type === 3 /* Identifier */ && this.context.inFunctionBody && this.lookahead.value === "target") {
-          const property = this.parseIdentifierName();
-          expr = new MetaProperty(id, property);
-        } else {
-          this.throwUnexpectedToken(this.lookahead);
-        }
-      } else if (this.matchKeyword("import")) {
-        this.throwUnexpectedToken(this.lookahead);
-      } else {
-        const callee = this.isolateCoverGrammar(this.parseLeftHandSideExpression);
-        const args = this.match("(") ? this.parseArguments() : [];
-        expr = new NewExpression(callee, args);
-        this.context.isAssignmentTarget = false;
-        this.context.isBindingElement = false;
-      }
-      return this.finalize(node, expr);
-    }
-    parseAsyncArgument() {
-      const arg = this.parseAssignmentExpression();
-      this.context.firstCoverInitializedNameError = null;
-      return arg;
-    }
-    parseAsyncArguments() {
-      this.expect("(");
-      const args = [];
-      if (!this.match(")")) {
-        while (true) {
-          const expr = this.match("...") ? this.parseSpreadElement() : this.isolateCoverGrammar(this.parseAsyncArgument);
-          args.push(expr);
-          if (this.match(")")) {
-            break;
-          }
-          this.expectCommaSeparator();
-          if (this.match(")")) {
-            break;
-          }
-        }
-      }
-      this.expect(")");
-      return args;
-    }
-    matchImportCall() {
-      let match = this.matchKeyword("import");
-      if (match) {
-        const state = this.scanner.saveState();
-        this.scanner.scanComments();
-        const next = this.scanner.lex();
-        this.scanner.restoreState(state);
-        match = next.type === 7 /* Punctuator */ && next.value === "(";
-      }
-      return match;
-    }
-    parseImportCall() {
-      const node = this.createNode();
-      this.expectKeyword("import");
-      this.expect("(");
-      const source = this.parseAssignmentExpression();
-      let attributes = null;
-      if (this.match(",")) {
-        this.nextToken();
-        attributes = this.parseObjectInitializer();
-      }
-      if (!this.match(")") && this.config.tolerant) {
-        this.tolerateUnexpectedToken(this.nextToken());
-      } else {
-        this.expect(")");
-        if (this.match(";")) {
-          this.nextToken();
-        }
-      }
-      return this.finalize(node, new ImportExpression(source, attributes));
-    }
-    matchImportMeta() {
-      let match = this.matchKeyword("import");
-      if (match) {
-        const state = this.scanner.saveState();
-        this.scanner.scanComments();
-        const dot = this.scanner.lex();
-        if (dot.type === 7 /* Punctuator */ && dot.value === ".") {
-          this.scanner.scanComments();
-          const meta = this.scanner.lex();
-          match = meta.type === 3 /* Identifier */ && meta.value === "meta";
-          if (match) {
-            if (meta.end - meta.start !== "meta".length) {
-              this.tolerateUnexpectedToken(meta, Messages.InvalidEscapedReservedWord);
-            }
-          }
-        } else {
-          match = false;
-        }
-        this.scanner.restoreState(state);
-      }
-      return match;
-    }
-    parseImportMeta() {
-      const node = this.createNode();
-      const id = this.parseIdentifierName();
-      this.expect(".");
-      const property = this.parseIdentifierName();
-      this.context.isAssignmentTarget = false;
-      return this.finalize(node, new MetaProperty(id, property));
-    }
-    parseLeftHandSideExpressionAllowCall() {
-      const startToken = this.lookahead;
-      const maybeAsync = this.matchContextualKeyword("async");
-      const previousAllowIn = this.context.allowIn;
-      this.context.allowIn = true;
-      let expr;
-      const isSuper = this.matchKeyword("super");
-      if (isSuper && this.context.inFunctionBody) {
-        expr = this.createNode();
-        this.nextToken();
-        expr = this.finalize(expr, new Super());
-        if (!this.match("(") && !this.match(".") && !this.match("[")) {
-          this.throwUnexpectedToken(this.lookahead);
-        }
-      } else {
-        expr = this.inheritCoverGrammar(this.matchKeyword("new") ? this.parseNewExpression : this.parsePrimaryExpression);
-      }
-      if (isSuper && this.match("(") && (!this.context.inClassConstructor || !this.context.allowSuper)) {
-        this.tolerateError(Messages.UnexpectedSuper);
-      }
-      let hasOptional = false;
-      while (true) {
-        let optional = false;
-        if (this.match("?.")) {
-          optional = true;
-          hasOptional = true;
-          this.expect("?.");
-        }
-        if (this.match("(")) {
-          const asyncArrow = maybeAsync && startToken.lineNumber === this.lookahead.lineNumber;
-          this.context.isBindingElement = false;
-          this.context.isAssignmentTarget = false;
-          const args = asyncArrow ? this.parseAsyncArguments() : this.parseArguments();
-          if (expr.type === "ImportExpression" /* ImportExpression */ && args.length !== 1) {
-            this.tolerateError(Messages.BadImportCallArity);
-          }
-          expr = this.finalize(this.startNode(startToken), new CallExpression(expr, args, optional));
-          if (asyncArrow && this.match("=>")) {
-            for (let i = 0; i < args.length; ++i) {
-              this.reinterpretExpressionAsPattern(args[i]);
-            }
-            expr = {
-              type: ArrowParameterPlaceHolder,
-              params: args,
-              async: true
-            };
-          }
-        } else if (this.match("[")) {
-          this.context.isBindingElement = false;
-          this.context.isAssignmentTarget = !optional;
-          this.expect("[");
-          const property = this.isolateCoverGrammar(this.parseExpression);
-          this.expect("]");
-          expr = this.finalize(this.startNode(startToken), new MemberExpression(true, expr, property, optional));
-        } else if (this.lookahead.type === 10 /* Template */ && this.lookahead.head) {
-          if (optional) {
-            this.throwUnexpectedToken(this.lookahead);
-          }
-          if (hasOptional) {
-            this.throwError(Messages.InvalidTaggedTemplateOnOptionalChain);
-          }
-          const quasi = this.parseTemplateLiteral({ isTagged: true });
-          expr = this.finalize(this.startNode(startToken), new TaggedTemplateExpression(expr, quasi));
-        } else if (this.match(".") || optional) {
-          this.context.isBindingElement = false;
-          this.context.isAssignmentTarget = !optional;
-          if (!optional) {
-            this.expect(".");
-          }
-          const property = this.parseIdentifierName(true);
-          expr = this.finalize(this.startNode(startToken), new MemberExpression(false, expr, property, optional));
-        } else {
-          break;
-        }
-      }
-      this.context.allowIn = previousAllowIn;
-      if (hasOptional) {
-        return new ChainExpression(expr);
-      }
-      return expr;
-    }
-    parseSuper() {
-      const node = this.createNode();
-      this.expectKeyword("super");
-      if (!this.match("[") && !this.match(".")) {
-        this.throwUnexpectedToken(this.lookahead);
-      }
-      return this.finalize(node, new Super());
-    }
-    parseLeftHandSideExpression() {
-      assert(this.context.allowIn, "callee of new expression always allow in keyword.");
-      const node = this.startNode(this.lookahead);
-      let expr = this.matchKeyword("super") && this.context.inFunctionBody ? this.parseSuper() : this.inheritCoverGrammar(this.matchKeyword("new") ? this.parseNewExpression : this.parsePrimaryExpression);
-      let hasOptional = false;
-      while (true) {
-        let optional = false;
-        if (this.match("?.")) {
-          optional = true;
-          hasOptional = true;
-          this.expect("?.");
-        }
-        if (this.match("[")) {
-          this.context.isBindingElement = false;
-          this.context.isAssignmentTarget = !optional;
-          this.expect("[");
-          const property = this.isolateCoverGrammar(this.parseExpression);
-          this.expect("]");
-          expr = this.finalize(node, new MemberExpression(true, expr, property, optional));
-        } else if (this.lookahead.type === 10 /* Template */ && this.lookahead.head) {
-          if (optional) {
-            this.throwUnexpectedToken(this.lookahead);
-          }
-          if (hasOptional) {
-            this.throwError(Messages.InvalidTaggedTemplateOnOptionalChain);
-          }
-          const quasi = this.parseTemplateLiteral({ isTagged: true });
-          expr = this.finalize(node, new TaggedTemplateExpression(expr, quasi));
-        } else if (this.match(".") || optional) {
-          this.context.isBindingElement = false;
-          this.context.isAssignmentTarget = !optional;
-          if (!optional) {
-            this.expect(".");
-          }
-          const property = this.parseIdentifierName();
-          expr = this.finalize(node, new MemberExpression(false, expr, property, optional));
-        } else {
-          break;
-        }
-      }
-      if (hasOptional) {
-        return new ChainExpression(expr);
-      }
-      return expr;
-    }
-    // https://tc39.github.io/ecma262/#sec-update-expressions
-    parseUpdateExpression() {
-      let expr;
-      const startToken = this.lookahead;
-      if (this.match("++") || this.match("--")) {
-        const node = this.startNode(startToken);
-        const token = this.nextToken();
-        expr = this.inheritCoverGrammar(this.parseUnaryExpression);
-        if (this.context.strict && expr.type === "Identifier" /* Identifier */ && this.scanner.isRestrictedWord(expr.name)) {
-          this.tolerateError(Messages.StrictLHSPrefix);
-        }
-        if (!this.context.isAssignmentTarget) {
-          this.tolerateError(Messages.InvalidLHSInAssignment);
-        }
-        const prefix = true;
-        expr = this.finalize(node, new UpdateExpression(token.value, expr, prefix));
-        this.context.isAssignmentTarget = false;
-        this.context.isBindingElement = false;
-      } else {
-        expr = this.inheritCoverGrammar(this.parseLeftHandSideExpressionAllowCall);
-        if (!this.hasLineTerminator && this.lookahead.type === 7 /* Punctuator */) {
-          if (this.match("++") || this.match("--")) {
-            if (this.context.strict && expr.type === "Identifier" /* Identifier */ && this.scanner.isRestrictedWord(expr.name)) {
-              this.tolerateError(Messages.StrictLHSPostfix);
-            }
-            if (!this.context.isAssignmentTarget) {
-              this.tolerateError(Messages.InvalidLHSInAssignment);
-            }
-            this.context.isAssignmentTarget = false;
-            this.context.isBindingElement = false;
-            const operator = this.nextToken().value;
-            const prefix = false;
-            expr = this.finalize(this.startNode(startToken), new UpdateExpression(operator, expr, prefix));
-          }
-        }
-      }
-      return expr;
-    }
-    // https://tc39.github.io/ecma262/#sec-unary-operators
-    parseAwaitExpression() {
-      const node = this.createNode();
-      this.nextToken();
-      const argument = this.parseUnaryExpression();
-      return this.finalize(node, new AwaitExpression(argument));
-    }
-    parseUnaryExpression() {
-      let expr;
-      if (this.match("+") || this.match("-") || this.match("~") || this.match("!") || this.matchKeyword("delete") || this.matchKeyword("void") || this.matchKeyword("typeof")) {
-        const node = this.startNode(this.lookahead);
-        const token = this.nextToken();
-        expr = this.inheritCoverGrammar(this.parseUnaryExpression);
-        expr = this.finalize(node, new UnaryExpression(token.value, expr));
-        if (this.context.strict && expr.operator === "delete" && expr.argument.type === "Identifier" /* Identifier */) {
-          this.tolerateError(Messages.StrictDelete);
-        }
-        this.context.isAssignmentTarget = false;
-        this.context.isBindingElement = false;
-      } else if ((this.context.isModule && !this.context.inFunctionBody || this.context.isAsync) && this.matchContextualKeyword("await")) {
-        expr = this.parseAwaitExpression();
-      } else {
-        expr = this.parseUpdateExpression();
-      }
-      return expr;
-    }
-    parseExponentiationExpression() {
-      const startToken = this.lookahead;
-      const isLeftParenthesized = this.match("(");
-      let expr = this.inheritCoverGrammar(this.parseUnaryExpression);
-      const exponentAllowed = expr.type !== "UnaryExpression" /* UnaryExpression */ || isLeftParenthesized;
-      if (exponentAllowed && this.match("**")) {
-        this.nextToken();
-        this.context.isAssignmentTarget = false;
-        this.context.isBindingElement = false;
-        const left = expr;
-        const right = this.isolateCoverGrammar(this.parseExponentiationExpression);
-        expr = this.finalize(this.startNode(startToken), new BinaryExpression("**", left, right));
-      }
-      return expr;
-    }
-    // https://tc39.github.io/ecma262/#sec-exp-operator
-    // https://tc39.github.io/ecma262/#sec-multiplicative-operators
-    // https://tc39.github.io/ecma262/#sec-additive-operators
-    // https://tc39.github.io/ecma262/#sec-bitwise-shift-operators
-    // https://tc39.github.io/ecma262/#sec-relational-operators
-    // https://tc39.github.io/ecma262/#sec-equality-operators
-    // https://tc39.github.io/ecma262/#sec-binary-bitwise-operators
-    // https://tc39.github.io/ecma262/#sec-binary-logical-operators
-    binaryPrecedence(token) {
-      const op = token.value;
-      let precedence;
-      if (token.type === 7 /* Punctuator */) {
-        precedence = this.operatorPrecedence[op] || 0;
-      } else if (token.type === 4 /* Keyword */) {
-        precedence = op === "instanceof" || this.context.allowIn && op === "in" ? 12 : 0;
-      } else {
-        precedence = 0;
-      }
-      return precedence;
-    }
-    parseBinaryExpression() {
-      const startToken = this.lookahead;
-      let expr = this.inheritCoverGrammar(this.parseExponentiationExpression);
-      let allowAndOr = true;
-      let allowNullishCoalescing = true;
-      const updateNullishCoalescingRestrictions = (token2) => {
-        if (token2.value === "&&" || token2.value === "||") {
-          allowNullishCoalescing = false;
-        }
-        if (token2.value === "??") {
-          allowAndOr = false;
-        }
-      };
-      const token = this.lookahead;
-      let prec = this.binaryPrecedence(token);
-      if (prec > 0) {
-        updateNullishCoalescingRestrictions(token);
-        this.nextToken();
-        this.context.isAssignmentTarget = false;
-        this.context.isBindingElement = false;
-        const markers = [startToken, this.lookahead];
-        let left = expr;
-        let right = this.isolateCoverGrammar(this.parseExponentiationExpression);
-        const stack = [left, token.value, right];
-        const precedences = [prec];
-        while (true) {
-          prec = this.binaryPrecedence(this.lookahead);
-          if (prec <= 0) {
-            break;
-          }
-          if (!allowAndOr && (this.lookahead.value === "&&" || this.lookahead.value === "||") || !allowNullishCoalescing && this.lookahead.value === "??") {
-            this.throwUnexpectedToken(this.lookahead);
-          }
-          updateNullishCoalescingRestrictions(this.lookahead);
-          while (stack.length > 2 && prec <= precedences[precedences.length - 1]) {
-            right = stack.pop();
-            const operator = stack.pop();
-            precedences.pop();
-            left = stack.pop();
-            markers.pop();
-            const marker = markers[markers.length - 1];
-            const node = this.startNode(marker, marker.lineStart);
-            const logical = operator === "||" || operator === "&&" || operator === "??";
-            stack.push(this.finalize(node, logical ? new LogicalExpression(operator, left, right) : new BinaryExpression(operator, left, right)));
-          }
-          stack.push(this.nextToken().value);
-          precedences.push(prec);
-          markers.push(this.lookahead);
-          stack.push(this.isolateCoverGrammar(this.parseExponentiationExpression));
-        }
-        let i = stack.length - 1;
-        expr = stack[i];
-        let lastMarker = markers.pop();
-        while (i > 1) {
-          const marker = markers.pop();
-          const lastLineStart = lastMarker && lastMarker.lineStart;
-          const node = this.startNode(marker, lastLineStart);
-          const operator = stack[i - 1];
-          const logical = operator === "||" || operator === "&&" || operator === "??";
-          expr = this.finalize(node, logical ? new LogicalExpression(operator, stack[i - 2], expr) : new BinaryExpression(operator, stack[i - 2], expr));
-          i -= 2;
-          lastMarker = marker;
-        }
-      }
-      return expr;
-    }
-    // https://tc39.github.io/ecma262/#sec-conditional-operator
-    parseConditionalExpression() {
-      const startToken = this.lookahead;
-      let expr = this.inheritCoverGrammar(this.parseBinaryExpression);
-      if (this.match("?")) {
-        this.nextToken();
-        const previousAllowIn = this.context.allowIn;
-        this.context.allowIn = true;
-        const consequent = this.isolateCoverGrammar(this.parseAssignmentExpression);
-        this.context.allowIn = previousAllowIn;
-        this.expect(":");
-        const alternate = this.isolateCoverGrammar(this.parseAssignmentExpression);
-        expr = this.finalize(this.startNode(startToken), new ConditionalExpression(expr, consequent, alternate));
-        this.context.isAssignmentTarget = false;
-        this.context.isBindingElement = false;
-      }
-      return expr;
-    }
-    // https://tc39.github.io/ecma262/#sec-assignment-operators
-    checkPatternParam(options, param) {
-      switch (param.type) {
-        case "Identifier" /* Identifier */:
-          this.validateParam(options, param, param.name);
-          break;
-        case "RestElement" /* RestElement */:
-          this.checkPatternParam(options, param.argument);
-          break;
-        case "AssignmentPattern" /* AssignmentPattern */:
-          this.checkPatternParam(options, param.left);
-          break;
-        case "ArrayPattern" /* ArrayPattern */:
-          for (let i = 0; i < param.elements.length; i++) {
-            if (param.elements[i] !== null) {
-              this.checkPatternParam(options, param.elements[i]);
-            }
-          }
-          break;
-        case "ObjectPattern" /* ObjectPattern */:
-          for (let i = 0; i < param.properties.length; i++) {
-            const property = param.properties[i];
-            this.checkPatternParam(options, property.type === "RestElement" /* RestElement */ ? property : property.value);
-          }
-          break;
-        default:
-          break;
-      }
-      options.simple = options.simple && param instanceof Identifier;
-    }
-    reinterpretAsCoverFormalsList(expr) {
-      let params = [expr];
-      const options = {
-        simple: true,
-        paramSet: {}
-      };
-      let asyncArrow = false;
-      switch (expr.type) {
-        case "Identifier" /* Identifier */:
-          break;
-        case ArrowParameterPlaceHolder:
-          params = expr.params;
-          asyncArrow = expr.async;
-          break;
-        default:
-          return null;
-      }
-      for (let i = 0; i < params.length; ++i) {
-        const param = params[i];
-        if (param.type === "AssignmentPattern" /* AssignmentPattern */) {
-          if (param.right.type === "YieldExpression" /* YieldExpression */) {
-            if (param.right.argument) {
-              this.throwUnexpectedToken(this.lookahead);
-            }
-            param.right.type = "Identifier" /* Identifier */;
-            param.right.name = "yield";
-            delete param.right.argument;
-            delete param.right.delegate;
-          }
-        } else if (asyncArrow && param.type === "Identifier" /* Identifier */ && param.name === "await") {
-          this.throwUnexpectedToken(this.lookahead);
-        }
-        this.checkPatternParam(options, param);
-        params[i] = param;
-      }
-      if (this.context.strict || !this.context.allowYield) {
-        for (let i = 0; i < params.length; ++i) {
-          const param = params[i];
-          if (param.type === "YieldExpression" /* YieldExpression */) {
-            this.throwUnexpectedToken(this.lookahead);
-          }
-        }
-      }
-      if (options.hasDuplicateParameterNames) {
-        const token = this.context.strict ? options.stricted : options.firstRestricted;
-        this.throwUnexpectedToken(token, Messages.DuplicateParameter);
-      }
-      return {
-        simple: options.simple,
-        params,
-        stricted: options.stricted,
-        firstRestricted: options.firstRestricted,
-        message: options.message
-      };
-    }
-    parseAssignmentExpression() {
-      let expr;
-      if (!this.context.allowYield && this.matchKeyword("yield")) {
-        expr = this.parseYieldExpression();
-      } else {
-        const startToken = this.lookahead;
-        let token = startToken;
-        expr = this.parseConditionalExpression();
-        if (token.type === 3 /* Identifier */ && token.lineNumber === this.lookahead.lineNumber && token.value === "async") {
-          if (this.lookahead.type === 3 /* Identifier */ || this.matchKeyword("yield")) {
-            const arg = this.parsePrimaryExpression();
-            this.reinterpretExpressionAsPattern(arg);
-            expr = {
-              type: ArrowParameterPlaceHolder,
-              params: [arg],
-              async: true
-            };
-          }
-        }
-        if (expr.type === ArrowParameterPlaceHolder || this.match("=>")) {
-          this.context.isAssignmentTarget = false;
-          this.context.isBindingElement = false;
-          const isAsync = expr.async;
-          const list = this.reinterpretAsCoverFormalsList(expr);
-          if (list) {
-            if (this.hasLineTerminator) {
-              this.tolerateUnexpectedToken(this.lookahead);
-            }
-            this.context.firstCoverInitializedNameError = null;
-            const previousStrict = this.context.strict;
-            const previousAllowStrictDirective = this.context.allowStrictDirective;
-            this.context.allowStrictDirective = list.simple;
-            const previousAllowYield = this.context.allowYield;
-            const previousIsAsync = this.context.isAsync;
-            this.context.allowYield = true;
-            this.context.isAsync = isAsync;
-            const node = this.startNode(startToken);
-            this.expect("=>");
-            let body;
-            if (this.match("{")) {
-              const previousAllowIn = this.context.allowIn;
-              this.context.allowIn = true;
-              body = this.parseFunctionSourceElements();
-              this.context.allowIn = previousAllowIn;
-            } else {
-              body = this.isolateCoverGrammar(this.parseAssignmentExpression);
-            }
-            const expression = body.type !== "BlockStatement" /* BlockStatement */;
-            if (this.context.strict && list.firstRestricted) {
-              this.throwUnexpectedToken(list.firstRestricted, list.message);
-            }
-            if (this.context.strict && list.stricted) {
-              this.tolerateUnexpectedToken(list.stricted, list.message);
-            }
-            expr = this.finalize(node, new ArrowFunctionExpression(list.params, body, expression, isAsync));
-            this.context.strict = previousStrict;
-            this.context.allowStrictDirective = previousAllowStrictDirective;
-            this.context.allowYield = previousAllowYield;
-            this.context.isAsync = previousIsAsync;
-          }
-        } else {
-          if (this.matchAssign()) {
-            if (!this.context.isAssignmentTarget) {
-              this.tolerateError(Messages.InvalidLHSInAssignment);
-            }
-            if (this.context.strict && expr.type === "Identifier" /* Identifier */) {
-              const id = expr;
-              if (this.scanner.isRestrictedWord(id.name)) {
-                this.tolerateUnexpectedToken(token, Messages.StrictLHSAssignment);
-              }
-              if (this.scanner.isStrictModeReservedWord(id.name)) {
-                this.tolerateUnexpectedToken(token, Messages.StrictReservedWord);
-              }
-            }
-            if (!this.match("=")) {
-              this.context.isAssignmentTarget = false;
-              this.context.isBindingElement = false;
-            } else {
-              this.reinterpretExpressionAsPattern(expr);
-            }
-            token = this.nextToken();
-            const operator = token.value;
-            const right = this.isolateCoverGrammar(this.parseAssignmentExpression);
-            expr = this.finalize(this.startNode(startToken), new AssignmentExpression(operator, expr, right));
-            this.context.firstCoverInitializedNameError = null;
-          }
-        }
-      }
-      return expr;
-    }
-    // https://tc39.github.io/ecma262/#sec-comma-operator
-    parseExpression() {
-      const startToken = this.lookahead;
-      let expr = this.isolateCoverGrammar(this.parseAssignmentExpression);
-      if (this.match(",")) {
-        const expressions = [];
-        expressions.push(expr);
-        while (this.lookahead.type !== 2 /* EOF */) {
-          if (!this.match(",")) {
-            break;
-          }
-          this.nextToken();
-          expressions.push(this.isolateCoverGrammar(this.parseAssignmentExpression));
-        }
-        expr = this.finalize(this.startNode(startToken), new SequenceExpression(expressions));
-      }
-      return expr;
-    }
-    // https://tc39.github.io/ecma262/#sec-block
-    parseStatementListItem() {
-      let statement;
-      this.context.isAssignmentTarget = true;
-      this.context.isBindingElement = true;
-      if (this.lookahead.type === 4 /* Keyword */) {
-        switch (this.lookahead.value) {
-          case "export":
-            if (!this.context.isModule) {
-              this.tolerateUnexpectedToken(this.lookahead, Messages.IllegalExportDeclaration);
-            }
-            statement = this.parseExportDeclaration();
-            break;
-          case "import":
-            if (this.matchImportCall()) {
-              statement = this.parseExpressionStatement();
-            } else if (this.matchImportMeta()) {
-              statement = this.parseStatement();
-            } else {
-              if (!this.context.isModule) {
-                this.tolerateUnexpectedToken(this.lookahead, Messages.IllegalImportDeclaration);
-              }
-              statement = this.parseImportDeclaration();
-            }
-            break;
-          case "const":
-            statement = this.parseLexicalDeclaration({ inFor: false });
-            break;
-          case "function":
-            statement = this.parseFunctionDeclaration();
-            break;
-          case "class":
-            statement = this.parseClassDeclaration();
-            break;
-          case "let":
-            statement = this.isLexicalDeclaration() ? this.parseLexicalDeclaration({ inFor: false }) : this.parseStatement();
-            break;
-          default:
-            statement = this.parseStatement();
-            break;
-        }
-      } else {
-        statement = this.parseStatement();
-      }
-      return statement;
-    }
-    parseBlock() {
-      const node = this.createNode();
-      this.expect("{");
-      const block = [];
-      while (true) {
-        if (this.match("}")) {
-          break;
-        }
-        block.push(this.parseStatementListItem());
-      }
-      this.expect("}");
-      return this.finalize(node, new BlockStatement(block));
-    }
-    // https://tc39.github.io/ecma262/#sec-let-and-const-declarations
-    parseLexicalBinding(kind, options) {
-      const node = this.createNode();
-      const params = [];
-      const id = this.parsePattern(params, kind);
-      if (this.context.strict && id.type === "Identifier" /* Identifier */) {
-        if (this.scanner.isRestrictedWord(id.name)) {
-          this.tolerateError(Messages.StrictVarName);
-        }
-      }
-      let init = null;
-      if (kind === "const") {
-        if (!this.matchKeyword("in") && !this.matchContextualKeyword("of")) {
-          if (this.match("=")) {
-            this.nextToken();
-            init = this.isolateCoverGrammar(this.parseAssignmentExpression);
-          } else {
-            this.throwError(Messages.DeclarationMissingInitializer, "const");
-          }
-        }
-      } else if (!options.inFor && id.type !== "Identifier" /* Identifier */ || this.match("=")) {
-        this.expect("=");
-        init = this.isolateCoverGrammar(this.parseAssignmentExpression);
-      }
-      return this.finalize(node, new VariableDeclarator(id, init));
-    }
-    parseBindingList(kind, options) {
-      const list = [this.parseLexicalBinding(kind, options)];
-      while (this.match(",")) {
-        this.nextToken();
-        list.push(this.parseLexicalBinding(kind, options));
-      }
-      return list;
-    }
-    isLexicalDeclaration() {
-      const state = this.scanner.saveState();
-      this.scanner.scanComments();
-      const next = this.scanner.lex();
-      this.scanner.restoreState(state);
-      return next.type === 3 /* Identifier */ || next.type === 7 /* Punctuator */ && next.value === "[" || next.type === 7 /* Punctuator */ && next.value === "{" || next.type === 4 /* Keyword */ && next.value === "let" || next.type === 4 /* Keyword */ && next.value === "yield";
-    }
-    parseLexicalDeclaration(options) {
-      const node = this.createNode();
-      const kind = this.nextToken().value;
-      assert(kind === "let" || kind === "const", "Lexical declaration must be either let or const");
-      const declarations = this.parseBindingList(kind, options);
-      this.consumeSemicolon();
-      return this.finalize(node, new VariableDeclaration(declarations, kind));
-    }
-    /**
-     * This function checks to see if a property is initialized in a Class
-     * e.g.
-     * publicProp = 123;
-     * @returns {Boolean}
-     */
-    isInitializedProperty() {
-      let state = this.scanner.saveState();
-      this.scanner.scanComments();
-      let next = this.scanner.lex();
-      this.scanner.restoreState(state);
-      return this.lookahead.type === 3 && next.value === "=";
-    }
-    /**
-     * This function checks to see if a property is declared in a Class
-     * e.g.
-     * publicProp;
-     * @returns {Boolean}
-     */
-    isDeclaredProperty() {
-      let state = this.scanner.saveState();
-      this.scanner.scanComments();
-      let next = this.scanner.lex();
-      this.scanner.restoreState(state);
-      return this.lookahead.type === 3 && next.value === ";" || this.lookahead.type === 3 && next.lineNumber !== this.startMarker.line;
-    }
-    // https://tc39.github.io/ecma262/#sec-destructuring-binding-patterns
-    parseBindingRestElement(params, kind) {
-      const node = this.createNode();
-      this.expect("...");
-      const arg = this.parsePattern(params, kind);
-      return this.finalize(node, new RestElement(arg));
-    }
-    parseArrayPattern(params, kind) {
-      const node = this.createNode();
-      this.expect("[");
-      const elements = [];
-      while (!this.match("]")) {
-        if (this.match(",")) {
-          this.nextToken();
-          elements.push(null);
-        } else {
-          if (this.match("...")) {
-            elements.push(this.parseBindingRestElement(params, kind));
-            break;
-          } else {
-            elements.push(this.parsePatternWithDefault(params, kind));
-          }
-          if (!this.match("]")) {
-            this.expect(",");
-          }
-        }
-      }
-      this.expect("]");
-      return this.finalize(node, new ArrayPattern(elements));
-    }
-    parsePropertyPattern(params, kind) {
-      const node = this.createNode();
-      let computed = false;
-      let shorthand = false;
-      const method = false;
-      let key;
-      let value;
-      if (this.lookahead.type === 3 /* Identifier */) {
-        const keyToken = this.lookahead;
-        key = this.parseVariableIdentifier();
-        const init = this.finalize(node, new Identifier(keyToken.value));
-        if (this.match("=")) {
-          params.push(keyToken);
-          shorthand = true;
-          this.nextToken();
-          const expr = this.parseAssignmentExpression();
-          value = this.finalize(this.startNode(keyToken), new AssignmentPattern(init, expr));
-        } else if (!this.match(":")) {
-          params.push(keyToken);
-          shorthand = true;
-          value = init;
-        } else {
-          this.expect(":");
-          value = this.parsePatternWithDefault(params, kind);
-        }
-      } else {
-        computed = this.match("[");
-        key = this.parseObjectPropertyKey();
-        this.expect(":");
-        value = this.parsePatternWithDefault(params, kind);
-      }
-      return this.finalize(node, new Property("init", key, computed, value, method, shorthand));
-    }
-    parseRestProperty(params) {
-      const node = this.createNode();
-      this.expect("...");
-      const arg = this.parsePattern(params);
-      if (this.match("=")) {
-        this.throwError(Messages.DefaultRestProperty);
-      }
-      if (!this.match("}")) {
-        this.throwError(Messages.PropertyAfterRestProperty);
-      }
-      return this.finalize(node, new RestElement(arg));
-    }
-    parseObjectPattern(params, kind) {
-      const node = this.createNode();
-      const properties = [];
-      this.expect("{");
-      while (!this.match("}")) {
-        properties.push(this.match("...") ? this.parseRestProperty(params) : this.parsePropertyPattern(params, kind));
-        if (!this.match("}")) {
-          this.expect(",");
-        }
-      }
-      this.expect("}");
-      return this.finalize(node, new ObjectPattern(properties));
-    }
-    parsePattern(params, kind) {
-      let pattern;
-      if (this.match("[")) {
-        pattern = this.parseArrayPattern(params, kind);
-      } else if (this.match("{")) {
-        pattern = this.parseObjectPattern(params, kind);
-      } else {
-        if (this.matchKeyword("let") && (kind === "const" || kind === "let")) {
-          this.tolerateUnexpectedToken(this.lookahead, Messages.LetInLexicalBinding);
-        }
-        params.push(this.lookahead);
-        pattern = this.parseVariableIdentifier(kind);
-      }
-      return pattern;
-    }
-    parsePatternWithDefault(params, kind) {
-      const startToken = this.lookahead;
-      let pattern = this.parsePattern(params, kind);
-      if (this.match("=")) {
-        this.nextToken();
-        const previousAllowYield = this.context.allowYield;
-        this.context.allowYield = true;
-        const right = this.isolateCoverGrammar(this.parseAssignmentExpression);
-        this.context.allowYield = previousAllowYield;
-        pattern = this.finalize(this.startNode(startToken), new AssignmentPattern(pattern, right));
-      }
-      return pattern;
-    }
-    // https://tc39.github.io/ecma262/#sec-variable-statement
-    parseVariableIdentifier(kind) {
-      const node = this.createNode();
-      const token = this.nextToken();
-      if (token.type === 4 /* Keyword */ && token.value === "yield") {
-        if (this.context.strict) {
-          this.tolerateUnexpectedToken(token, Messages.StrictReservedWord);
-        } else if (!this.context.allowYield) {
-          this.throwUnexpectedToken(token);
-        }
-      } else if (token.type !== 3 /* Identifier */) {
-        if (this.context.strict && token.type === 4 /* Keyword */ && this.scanner.isStrictModeReservedWord(token.value)) {
-          this.tolerateUnexpectedToken(token, Messages.StrictReservedWord);
-        } else {
-          if (this.context.strict || token.value !== "let" || kind !== "var") {
-            this.throwUnexpectedToken(token);
-          }
-        }
-      } else if ((this.context.isModule || this.context.isAsync) && token.type === 3 /* Identifier */ && token.value === "await") {
-        this.tolerateUnexpectedToken(token);
-      }
-      return this.finalize(node, new Identifier(token.value));
-    }
-    parseVariableDeclaration(options) {
-      const node = this.createNode();
-      const params = [];
-      const id = this.parsePattern(params, "var");
-      if (this.context.strict && id.type === "Identifier" /* Identifier */) {
-        if (this.scanner.isRestrictedWord(id.name)) {
-          this.tolerateError(Messages.StrictVarName);
-        }
-      }
-      let init = null;
-      if (this.match("=")) {
-        this.nextToken();
-        init = this.isolateCoverGrammar(this.parseAssignmentExpression);
-      } else if (id.type !== "Identifier" /* Identifier */ && !options.inFor) {
-        this.expect("=");
-      }
-      return this.finalize(node, new VariableDeclarator(id, init));
-    }
-    parseVariableDeclarationList(options) {
-      const opt = { inFor: options.inFor };
-      const list = [];
-      list.push(this.parseVariableDeclaration(opt));
-      while (this.match(",")) {
-        this.nextToken();
-        list.push(this.parseVariableDeclaration(opt));
-      }
-      return list;
-    }
-    parseVariableStatement() {
-      const node = this.createNode();
-      this.expectKeyword("var");
-      const declarations = this.parseVariableDeclarationList({ inFor: false });
-      this.consumeSemicolon();
-      return this.finalize(node, new VariableDeclaration(declarations, "var"));
-    }
-    // https://tc39.github.io/ecma262/#sec-empty-statement
-    parseEmptyStatement() {
-      const node = this.createNode();
-      this.expect(";");
-      return this.finalize(node, new EmptyStatement());
-    }
-    // https://tc39.github.io/ecma262/#sec-expression-statement
-    parseExpressionStatement() {
-      const node = this.createNode();
-      const expr = this.parseExpression();
-      this.consumeSemicolon();
-      return this.finalize(node, new ExpressionStatement(expr));
-    }
-    // https://tc39.github.io/ecma262/#sec-if-statement
-    parseIfClause() {
-      if (this.context.strict && this.matchKeyword("function")) {
-        this.tolerateError(Messages.StrictFunction);
-      }
-      return this.parseStatement();
-    }
-    parseIfStatement() {
-      const node = this.createNode();
-      let consequent;
-      let alternate = null;
-      this.expectKeyword("if");
-      this.expect("(");
-      const test = this.parseExpression();
-      if (!this.match(")") && this.config.tolerant) {
-        this.tolerateUnexpectedToken(this.nextToken());
-        consequent = this.finalize(this.createNode(), new EmptyStatement());
-      } else {
-        this.expect(")");
-        consequent = this.parseIfClause();
-        if (this.matchKeyword("else")) {
-          this.nextToken();
-          alternate = this.parseIfClause();
-        }
-      }
-      return this.finalize(node, new IfStatement(test, consequent, alternate));
-    }
-    // https://tc39.github.io/ecma262/#sec-do-while-statement
-    parseDoWhileStatement() {
-      const node = this.createNode();
-      this.expectKeyword("do");
-      this.tolerateInvalidLoopStatement();
-      const previousInIteration = this.context.inIteration;
-      this.context.inIteration = true;
-      const body = this.parseStatement();
-      this.context.inIteration = previousInIteration;
-      this.expectKeyword("while");
-      this.expect("(");
-      const test = this.parseExpression();
-      if (!this.match(")") && this.config.tolerant) {
-        this.tolerateUnexpectedToken(this.nextToken());
-      } else {
-        this.expect(")");
-        if (this.match(";")) {
-          this.nextToken();
-        }
-      }
-      return this.finalize(node, new DoWhileStatement(body, test));
-    }
-    // https://tc39.github.io/ecma262/#sec-while-statement
-    parseWhileStatement() {
-      const node = this.createNode();
-      let body;
-      this.expectKeyword("while");
-      this.expect("(");
-      const test = this.parseExpression();
-      if (!this.match(")") && this.config.tolerant) {
-        this.tolerateUnexpectedToken(this.nextToken());
-        body = this.finalize(this.createNode(), new EmptyStatement());
-      } else {
-        this.expect(")");
-        const previousInIteration = this.context.inIteration;
-        this.context.inIteration = true;
-        body = this.parseStatement();
-        this.context.inIteration = previousInIteration;
-      }
-      return this.finalize(node, new WhileStatement(test, body));
-    }
-    // https://tc39.github.io/ecma262/#sec-for-statement
-    // https://tc39.github.io/ecma262/#sec-for-in-and-for-of-statements
-    parseForStatement() {
-      let init = null;
-      let test = null;
-      let update = null;
-      let forIn = true;
-      let left, right;
-      let _await = false;
-      const node = this.createNode();
-      this.expectKeyword("for");
-      if (this.matchContextualKeyword("await")) {
-        if (!this.context.isAsync) {
-          this.tolerateUnexpectedToken(this.lookahead);
-        }
-        _await = true;
-        this.nextToken();
-      }
-      this.expect("(");
-      if (this.match(";")) {
-        this.nextToken();
-      } else {
-        if (this.matchKeyword("var")) {
-          init = this.createNode();
-          this.nextToken();
-          const previousAllowIn = this.context.allowIn;
-          this.context.allowIn = false;
-          const declarations = this.parseVariableDeclarationList({ inFor: true });
-          this.context.allowIn = previousAllowIn;
-          if (!_await && declarations.length === 1 && this.matchKeyword("in")) {
-            const decl = declarations[0];
-            if (decl.init && (decl.id.type === "ArrayPattern" /* ArrayPattern */ || decl.id.type === "ObjectPattern" /* ObjectPattern */ || this.context.strict)) {
-              this.tolerateError(Messages.ForInOfLoopInitializer, "for-in");
-            }
-            init = this.finalize(init, new VariableDeclaration(declarations, "var"));
-            this.nextToken();
-            left = init;
-            right = this.parseExpression();
-            init = null;
-          } else if (declarations.length === 1 && declarations[0].init === null && this.matchContextualKeyword("of")) {
-            init = this.finalize(init, new VariableDeclaration(declarations, "var"));
-            this.nextToken();
-            left = init;
-            right = this.parseAssignmentExpression();
-            init = null;
-            forIn = false;
-          } else {
-            init = this.finalize(init, new VariableDeclaration(declarations, "var"));
-            this.expect(";");
-          }
-        } else if (this.matchKeyword("const") || this.matchKeyword("let")) {
-          init = this.createNode();
-          const kind = this.nextToken().value;
-          if (!this.context.strict && this.lookahead.value === "in") {
-            init = this.finalize(init, new Identifier(kind));
-            this.nextToken();
-            left = init;
-            right = this.parseExpression();
-            init = null;
-          } else {
-            const previousAllowIn = this.context.allowIn;
-            this.context.allowIn = false;
-            const declarations = this.parseBindingList(kind, { inFor: true });
-            this.context.allowIn = previousAllowIn;
-            if (declarations.length === 1 && declarations[0].init === null && this.matchKeyword("in")) {
-              init = this.finalize(init, new VariableDeclaration(declarations, kind));
-              this.nextToken();
-              left = init;
-              right = this.parseExpression();
-              init = null;
-            } else if (declarations.length === 1 && declarations[0].init === null && this.matchContextualKeyword("of")) {
-              init = this.finalize(init, new VariableDeclaration(declarations, kind));
-              this.nextToken();
-              left = init;
-              right = this.parseAssignmentExpression();
-              init = null;
-              forIn = false;
-            } else {
-              this.consumeSemicolon();
-              init = this.finalize(init, new VariableDeclaration(declarations, kind));
-            }
-          }
-        } else {
-          const initStartToken = this.lookahead;
-          const previousIsBindingElement = this.context.isBindingElement;
-          const previousIsAssignmentTarget = this.context.isAssignmentTarget;
-          const previousFirstCoverInitializedNameError = this.context.firstCoverInitializedNameError;
-          const previousAllowIn = this.context.allowIn;
-          this.context.allowIn = false;
-          init = this.inheritCoverGrammar(this.parseAssignmentExpression);
-          this.context.allowIn = previousAllowIn;
-          if (this.matchKeyword("in")) {
-            if (!this.context.isAssignmentTarget || init.type === "AssignmentExpression" /* AssignmentExpression */) {
-              this.tolerateError(Messages.InvalidLHSInForIn);
-            }
-            this.nextToken();
-            this.reinterpretExpressionAsPattern(init);
-            left = init;
-            right = this.parseExpression();
-            init = null;
-          } else if (this.matchContextualKeyword("of")) {
-            if (!this.context.isAssignmentTarget || init.type === "AssignmentExpression" /* AssignmentExpression */) {
-              this.tolerateError(Messages.InvalidLHSInForLoop);
-            }
-            this.nextToken();
-            this.reinterpretExpressionAsPattern(init);
-            left = init;
-            right = this.parseAssignmentExpression();
-            init = null;
-            forIn = false;
-          } else {
-            this.context.isBindingElement = previousIsBindingElement;
-            this.context.isAssignmentTarget = previousIsAssignmentTarget;
-            this.context.firstCoverInitializedNameError = previousFirstCoverInitializedNameError;
-            if (this.match(",")) {
-              const initSeq = [init];
-              while (this.match(",")) {
-                this.nextToken();
-                initSeq.push(this.isolateCoverGrammar(this.parseAssignmentExpression));
-              }
-              init = this.finalize(this.startNode(initStartToken), new SequenceExpression(initSeq));
-            }
-            this.expect(";");
-          }
-        }
-      }
-      if (typeof left === "undefined") {
-        if (!this.match(";")) {
-          test = this.isolateCoverGrammar(this.parseExpression);
-        }
-        this.expect(";");
-        if (!this.match(")")) {
-          update = this.isolateCoverGrammar(this.parseExpression);
-        }
-      }
-      let body;
-      if (!this.match(")") && this.config.tolerant) {
-        this.tolerateUnexpectedToken(this.nextToken());
-        body = this.finalize(this.createNode(), new EmptyStatement());
-      } else {
-        this.expect(")");
-        this.tolerateInvalidLoopStatement();
-        const previousInIteration = this.context.inIteration;
-        this.context.inIteration = true;
-        body = this.isolateCoverGrammar(this.parseStatement);
-        this.context.inIteration = previousInIteration;
-      }
-      return typeof left === "undefined" ? this.finalize(node, new ForStatement(init, test, update, body)) : forIn ? this.finalize(node, new ForInStatement(left, right, body)) : this.finalize(node, new ForOfStatement(left, right, body, _await));
-    }
-    // https://tc39.github.io/ecma262/#sec-continue-statement
-    parseContinueStatement() {
-      const node = this.createNode();
-      this.expectKeyword("continue");
-      let label = null;
-      if (this.lookahead.type === 3 /* Identifier */ && !this.hasLineTerminator) {
-        const id = this.parseVariableIdentifier();
-        label = id;
-        const key = "$" + id.name;
-        if (!Object.prototype.hasOwnProperty.call(this.context.labelSet, key)) {
-          this.throwError(Messages.UnknownLabel, id.name);
-        }
-      }
-      this.consumeSemicolon();
-      if (label === null && !this.context.inIteration) {
-        this.throwError(Messages.IllegalContinue);
-      }
-      return this.finalize(node, new ContinueStatement(label));
-    }
-    // https://tc39.github.io/ecma262/#sec-break-statement
-    parseBreakStatement() {
-      const node = this.createNode();
-      this.expectKeyword("break");
-      let label = null;
-      if (this.lookahead.type === 3 /* Identifier */ && !this.hasLineTerminator) {
-        const id = this.parseVariableIdentifier();
-        const key = "$" + id.name;
-        if (!Object.prototype.hasOwnProperty.call(this.context.labelSet, key)) {
-          this.throwError(Messages.UnknownLabel, id.name);
-        }
-        label = id;
-      }
-      this.consumeSemicolon();
-      if (label === null && !this.context.inIteration && !this.context.inSwitch) {
-        this.throwError(Messages.IllegalBreak);
-      }
-      return this.finalize(node, new BreakStatement(label));
-    }
-    // https://tc39.github.io/ecma262/#sec-return-statement
-    parseReturnStatement() {
-      if (!this.context.inFunctionBody) {
-        this.tolerateError(Messages.IllegalReturn);
-      }
-      const node = this.createNode();
-      this.expectKeyword("return");
-      const hasArgument = !this.match(";") && !this.match("}") && !this.hasLineTerminator && this.lookahead.type !== 2 /* EOF */ || this.lookahead.type === 8 /* StringLiteral */ || this.lookahead.type === 10 /* Template */;
-      const argument = hasArgument ? this.parseExpression() : null;
-      this.consumeSemicolon();
-      return this.finalize(node, new ReturnStatement(argument));
-    }
-    // https://tc39.github.io/ecma262/#sec-with-statement
-    parseWithStatement() {
-      if (this.context.strict) {
-        this.tolerateError(Messages.StrictModeWith);
-      }
-      const node = this.createNode();
-      let body;
-      this.expectKeyword("with");
-      this.expect("(");
-      const object = this.parseExpression();
-      if (!this.match(")") && this.config.tolerant) {
-        this.tolerateUnexpectedToken(this.nextToken());
-        body = this.finalize(this.createNode(), new EmptyStatement());
-      } else {
-        this.expect(")");
-        body = this.parseStatement();
-      }
-      return this.finalize(node, new WithStatement(object, body));
-    }
-    // https://tc39.github.io/ecma262/#sec-switch-statement
-    parseSwitchCase() {
-      const node = this.createNode();
-      let test;
-      if (this.matchKeyword("default")) {
-        this.nextToken();
-        test = null;
-      } else {
-        this.expectKeyword("case");
-        test = this.parseExpression();
-      }
-      this.expect(":");
-      const consequent = [];
-      while (true) {
-        if (this.match("}") || this.matchKeyword("default") || this.matchKeyword("case")) {
-          break;
-        }
-        consequent.push(this.parseStatementListItem());
-      }
-      return this.finalize(node, new SwitchCase(test, consequent));
-    }
-    parseSwitchStatement() {
-      const node = this.createNode();
-      this.expectKeyword("switch");
-      this.expect("(");
-      const discriminant = this.parseExpression();
-      this.expect(")");
-      const previousInSwitch = this.context.inSwitch;
-      this.context.inSwitch = true;
-      const cases = [];
-      let defaultFound = false;
-      this.expect("{");
-      while (true) {
-        if (this.match("}")) {
-          break;
-        }
-        const clause = this.parseSwitchCase();
-        if (clause.test === null) {
-          if (defaultFound) {
-            this.throwError(Messages.MultipleDefaultsInSwitch);
-          }
-          defaultFound = true;
-        }
-        cases.push(clause);
-      }
-      this.expect("}");
-      this.context.inSwitch = previousInSwitch;
-      return this.finalize(node, new SwitchStatement(discriminant, cases));
-    }
-    // https://tc39.github.io/ecma262/#sec-labelled-statements
-    parseLabelledStatement() {
-      const node = this.createNode();
-      const expr = this.parseExpression();
-      let statement;
-      if (expr.type === "Identifier" /* Identifier */ && this.match(":")) {
-        this.nextToken();
-        const id = expr;
-        const key = "$" + id.name;
-        if (Object.prototype.hasOwnProperty.call(this.context.labelSet, key)) {
-          this.throwError(Messages.Redeclaration, "Label", id.name);
-        }
-        this.context.labelSet[key] = true;
-        let body;
-        if (this.matchKeyword("class")) {
-          this.tolerateUnexpectedToken(this.lookahead);
-          body = this.parseClassDeclaration();
-        } else if (this.matchKeyword("function")) {
-          const token = this.lookahead;
-          const declaration = this.parseFunctionDeclaration();
-          if (this.context.strict) {
-            this.tolerateUnexpectedToken(token, Messages.StrictFunction);
-          } else if (declaration.generator) {
-            this.tolerateUnexpectedToken(token, Messages.GeneratorInLegacyContext);
-          }
-          body = declaration;
-        } else {
-          body = this.parseStatement();
-        }
-        delete this.context.labelSet[key];
-        statement = new LabeledStatement(id, body);
-      } else {
-        this.consumeSemicolon();
-        statement = new ExpressionStatement(expr);
-      }
-      return this.finalize(node, statement);
-    }
-    // https://tc39.github.io/ecma262/#sec-throw-statement
-    parseThrowStatement() {
-      const node = this.createNode();
-      this.expectKeyword("throw");
-      if (this.hasLineTerminator) {
-        this.throwError(Messages.NewlineAfterThrow);
-      }
-      const argument = this.parseExpression();
-      this.consumeSemicolon();
-      return this.finalize(node, new ThrowStatement(argument));
-    }
-    // https://tc39.github.io/ecma262/#sec-try-statement
-    parseCatchClause() {
-      const node = this.createNode();
-      this.expectKeyword("catch");
-      let param = null;
-      if (this.match("(")) {
-        this.expect("(");
-        if (this.match(")")) {
-          this.throwUnexpectedToken(this.lookahead);
-        }
-        const params = [];
-        param = this.parsePattern(params);
-        const paramMap = {};
-        for (let i = 0; i < params.length; i++) {
-          const key = "$" + params[i].value;
-          if (Object.prototype.hasOwnProperty.call(paramMap, key)) {
-            this.tolerateError(Messages.DuplicateBinding, params[i].value);
-          }
-          paramMap[key] = true;
-        }
-        if (this.context.strict && param.type === "Identifier" /* Identifier */) {
-          if (this.scanner.isRestrictedWord(param.name)) {
-            this.tolerateError(Messages.StrictCatchVariable);
-          }
-        }
-        this.expect(")");
-      }
-      const body = this.parseBlock();
-      return this.finalize(node, new CatchClause(param, body));
-    }
-    parseFinallyClause() {
-      this.expectKeyword("finally");
-      return this.parseBlock();
-    }
-    parseTryStatement() {
-      const node = this.createNode();
-      this.expectKeyword("try");
-      const block = this.parseBlock();
-      const handler = this.matchKeyword("catch") ? this.parseCatchClause() : null;
-      const finalizer = this.matchKeyword("finally") ? this.parseFinallyClause() : null;
-      if (!handler && !finalizer) {
-        this.throwError(Messages.NoCatchOrFinally);
-      }
-      return this.finalize(node, new TryStatement(block, handler, finalizer));
-    }
-    // https://tc39.github.io/ecma262/#sec-debugger-statement
-    parseDebuggerStatement() {
-      const node = this.createNode();
-      this.expectKeyword("debugger");
-      this.consumeSemicolon();
-      return this.finalize(node, new DebuggerStatement());
-    }
-    // https://tc39.github.io/ecma262/#sec-ecmascript-language-statements-and-declarations
-    parseStatement() {
-      let statement;
-      switch (this.lookahead.type) {
-        case 1 /* BooleanLiteral */:
-        case 5 /* NullLiteral */:
-        case 6 /* NumericLiteral */:
-        case 8 /* StringLiteral */:
-        case 10 /* Template */:
-        case 9 /* RegularExpression */:
-          statement = this.parseExpressionStatement();
-          break;
-        case 7 /* Punctuator */:
-          const value = this.lookahead.value;
-          if (value === "{") {
-            statement = this.parseBlock();
-          } else if (value === "(") {
-            statement = this.parseExpressionStatement();
-          } else if (value === ";") {
-            statement = this.parseEmptyStatement();
-          } else {
-            statement = this.parseExpressionStatement();
-          }
-          break;
-        case 3 /* Identifier */:
-          statement = this.matchAsyncFunction() ? this.parseFunctionDeclaration() : this.parseLabelledStatement();
-          break;
-        case 4 /* Keyword */:
-          switch (this.lookahead.value) {
-            case "break":
-              statement = this.parseBreakStatement();
-              break;
-            case "continue":
-              statement = this.parseContinueStatement();
-              break;
-            case "debugger":
-              statement = this.parseDebuggerStatement();
-              break;
-            case "do":
-              statement = this.parseDoWhileStatement();
-              break;
-            case "for":
-              statement = this.parseForStatement();
-              break;
-            case "function":
-              statement = this.parseFunctionDeclaration();
-              break;
-            case "if":
-              statement = this.parseIfStatement();
-              break;
-            case "return":
-              statement = this.parseReturnStatement();
-              break;
-            case "switch":
-              statement = this.parseSwitchStatement();
-              break;
-            case "throw":
-              statement = this.parseThrowStatement();
-              break;
-            case "try":
-              statement = this.parseTryStatement();
-              break;
-            case "var":
-              statement = this.parseVariableStatement();
-              break;
-            case "while":
-              statement = this.parseWhileStatement();
-              break;
-            case "with":
-              statement = this.parseWithStatement();
-              break;
-            default:
-              statement = this.parseExpressionStatement();
-              break;
-          }
-          break;
-        default:
-          statement = this.throwUnexpectedToken(this.lookahead);
-      }
-      return statement;
-    }
-    // https://tc39.github.io/ecma262/#sec-function-definitions
-    parseFunctionSourceElements() {
-      const node = this.createNode();
-      this.expect("{");
-      const body = this.parseDirectivePrologues();
-      const previousLabelSet = this.context.labelSet;
-      const previousInIteration = this.context.inIteration;
-      const previousInSwitch = this.context.inSwitch;
-      const previousInFunctionBody = this.context.inFunctionBody;
-      this.context.labelSet = {};
-      this.context.inIteration = false;
-      this.context.inSwitch = false;
-      this.context.inFunctionBody = true;
-      while (this.lookahead.type !== 2 /* EOF */) {
-        if (this.match("}")) {
-          break;
-        }
-        body.push(this.parseStatementListItem());
-      }
-      this.expect("}");
-      this.context.labelSet = previousLabelSet;
-      this.context.inIteration = previousInIteration;
-      this.context.inSwitch = previousInSwitch;
-      this.context.inFunctionBody = previousInFunctionBody;
-      return this.finalize(node, new BlockStatement(body));
-    }
-    validateParam(options, param, name) {
-      const key = "$" + name;
-      if (this.context.strict) {
-        if (this.scanner.isRestrictedWord(name)) {
-          options.stricted = param;
-          options.message = Messages.StrictParamName;
-        }
-        if (Object.prototype.hasOwnProperty.call(options.paramSet, key)) {
-          options.stricted = param;
-          options.hasDuplicateParameterNames = true;
-        }
-      } else if (!options.firstRestricted) {
-        if (this.scanner.isRestrictedWord(name)) {
-          options.firstRestricted = param;
-          options.message = Messages.StrictParamName;
-        } else if (this.scanner.isStrictModeReservedWord(name)) {
-          options.firstRestricted = param;
-          options.message = Messages.StrictReservedWord;
-        } else if (Object.prototype.hasOwnProperty.call(options.paramSet, key)) {
-          options.stricted = param;
-          options.hasDuplicateParameterNames = true;
-        }
-      }
-      if (typeof Object.defineProperty === "function") {
-        Object.defineProperty(options.paramSet, key, { value: true, enumerable: true, writable: true, configurable: true });
-      } else {
-        options.paramSet[key] = true;
-      }
-    }
-    parseRestElement(params) {
-      const node = this.createNode();
-      this.expect("...");
-      const arg = this.parsePattern(params);
-      if (this.match("=")) {
-        this.throwError(Messages.DefaultRestParameter);
-      }
-      if (!this.match(")")) {
-        this.throwError(Messages.ParameterAfterRestParameter);
-      }
-      return this.finalize(node, new RestElement(arg));
-    }
-    parseFormalParameter(options) {
-      const params = [];
-      const param = this.match("...") ? this.parseRestElement(params) : this.parsePatternWithDefault(params);
-      for (let i = 0; i < params.length; i++) {
-        this.validateParam(options, params[i], params[i].value);
-      }
-      options.simple = options.simple && param instanceof Identifier;
-      options.params.push(param);
-    }
-    parseFormalParameters(firstRestricted) {
-      const options = {
-        simple: true,
-        hasDuplicateParameterNames: false,
-        params: [],
-        firstRestricted
-      };
-      this.expect("(");
-      if (!this.match(")")) {
-        options.paramSet = {};
-        while (this.lookahead.type !== 2 /* EOF */) {
-          this.parseFormalParameter(options);
-          if (this.match(")")) {
-            break;
-          }
-          this.expect(",");
-          if (this.match(")")) {
-            break;
-          }
-        }
-      }
-      this.expect(")");
-      if (options.hasDuplicateParameterNames) {
-        if (this.context.strict || this.context.isAsync || !options.simple) {
-          this.throwError(Messages.DuplicateParameter);
-        }
-      }
-      return {
-        simple: options.simple,
-        params: options.params,
-        stricted: options.stricted,
-        firstRestricted: options.firstRestricted,
-        message: options.message
-      };
-    }
-    matchAsyncFunction() {
-      let match = this.matchContextualKeyword("async");
-      if (match) {
-        const state = this.scanner.saveState();
-        this.scanner.scanComments();
-        const next = this.scanner.lex();
-        this.scanner.restoreState(state);
-        match = state.lineNumber === next.lineNumber && next.type === 4 /* Keyword */ && next.value === "function";
-      }
-      return match;
-    }
-    parseFunctionDeclaration(identifierIsOptional) {
-      const node = this.createNode();
-      const isAsync = this.matchContextualKeyword("async");
-      if (isAsync) {
-        if (this.context.inIteration) {
-          this.tolerateError(Messages.AsyncFunctionInSingleStatementContext);
-        }
-        this.nextToken();
-      }
-      this.expectKeyword("function");
-      const isGenerator = this.match("*");
-      if (isGenerator) {
-        this.nextToken();
-      }
-      let message;
-      let id = null;
-      let firstRestricted = null;
-      if (!identifierIsOptional || !this.match("(")) {
-        const token = this.lookahead;
-        id = this.parseVariableIdentifier();
-        if (this.context.strict) {
-          if (this.scanner.isRestrictedWord(token.value)) {
-            this.tolerateUnexpectedToken(token, Messages.StrictFunctionName);
-          }
-        } else {
-          if (this.scanner.isRestrictedWord(token.value)) {
-            firstRestricted = token;
-            message = Messages.StrictFunctionName;
-          } else if (this.scanner.isStrictModeReservedWord(token.value)) {
-            firstRestricted = token;
-            message = Messages.StrictReservedWord;
-          }
-        }
-      }
-      const previousIsAsync = this.context.isAsync;
-      const previousAllowYield = this.context.allowYield;
-      this.context.isAsync = isAsync;
-      this.context.allowYield = !isGenerator;
-      const formalParameters = this.parseFormalParameters(firstRestricted);
-      const params = formalParameters.params;
-      const stricted = formalParameters.stricted;
-      firstRestricted = formalParameters.firstRestricted;
-      if (formalParameters.message) {
-        message = formalParameters.message;
-      }
-      const previousStrict = this.context.strict;
-      const previousAllowStrictDirective = this.context.allowStrictDirective;
-      this.context.allowStrictDirective = formalParameters.simple;
-      const body = this.parseFunctionSourceElements();
-      if (this.context.strict && firstRestricted) {
-        this.throwUnexpectedToken(firstRestricted, message);
-      }
-      if (this.context.strict && stricted) {
-        this.tolerateUnexpectedToken(stricted, message);
-      }
-      this.context.strict = previousStrict;
-      this.context.allowStrictDirective = previousAllowStrictDirective;
-      this.context.isAsync = previousIsAsync;
-      this.context.allowYield = previousAllowYield;
-      return isAsync ? this.finalize(node, new AsyncFunctionDeclaration(id, params, body, isGenerator)) : this.finalize(node, new FunctionDeclaration(id, params, body, isGenerator));
-    }
-    parseFunctionExpression() {
-      const node = this.createNode();
-      const isAsync = this.matchContextualKeyword("async");
-      if (isAsync) {
-        this.nextToken();
-      }
-      this.expectKeyword("function");
-      const isGenerator = this.match("*");
-      if (isGenerator) {
-        this.nextToken();
-      }
-      let message;
-      let id = null;
-      let firstRestricted;
-      const previousIsAsync = this.context.isAsync;
-      const previousAllowYield = this.context.allowYield;
-      this.context.isAsync = isAsync;
-      this.context.allowYield = !isGenerator;
-      if (!this.match("(")) {
-        const token = this.lookahead;
-        id = !this.context.strict && !isGenerator && this.matchKeyword("yield") ? this.parseIdentifierName() : this.parseVariableIdentifier();
-        if (this.context.strict) {
-          if (this.scanner.isRestrictedWord(token.value)) {
-            this.tolerateUnexpectedToken(token, Messages.StrictFunctionName);
-          }
-        } else {
-          if (this.scanner.isRestrictedWord(token.value)) {
-            firstRestricted = token;
-            message = Messages.StrictFunctionName;
-          } else if (this.scanner.isStrictModeReservedWord(token.value)) {
-            firstRestricted = token;
-            message = Messages.StrictReservedWord;
-          }
-        }
-      }
-      const formalParameters = this.parseFormalParameters(firstRestricted);
-      const params = formalParameters.params;
-      const stricted = formalParameters.stricted;
-      firstRestricted = formalParameters.firstRestricted;
-      if (formalParameters.message) {
-        message = formalParameters.message;
-      }
-      const previousStrict = this.context.strict;
-      const previousAllowStrictDirective = this.context.allowStrictDirective;
-      this.context.allowStrictDirective = formalParameters.simple;
-      const body = this.parseFunctionSourceElements();
-      if (this.context.strict && firstRestricted) {
-        this.throwUnexpectedToken(firstRestricted, message);
-      }
-      if (this.context.strict && stricted) {
-        this.tolerateUnexpectedToken(stricted, message);
-      }
-      this.context.strict = previousStrict;
-      this.context.allowStrictDirective = previousAllowStrictDirective;
-      this.context.isAsync = previousIsAsync;
-      this.context.allowYield = previousAllowYield;
-      return this.finalize(node, new FunctionExpression(id, params, body, isGenerator, isAsync));
-    }
-    // https://tc39.github.io/ecma262/#sec-directive-prologues-and-the-use-strict-directive
-    parseDirective() {
-      const token = this.lookahead;
-      const node = this.createNode();
-      const expr = this.parseExpression();
-      const directive = expr.type === "Literal" /* Literal */ ? this.getTokenRaw(token).slice(1, -1) : null;
-      this.consumeSemicolon();
-      return this.finalize(node, directive ? new Directive(expr, directive) : new ExpressionStatement(expr));
-    }
-    parseDirectivePrologues() {
-      let firstRestricted = null;
-      const body = [];
-      while (true) {
-        const token = this.lookahead;
-        if (token.type !== 8 /* StringLiteral */) {
-          break;
-        }
-        const statement = this.parseDirective();
-        body.push(statement);
-        const directive = statement.directive;
-        if (typeof directive !== "string") {
-          break;
-        }
-        if (directive === "use strict") {
-          this.context.strict = true;
-          if (firstRestricted) {
-            this.tolerateUnexpectedToken(firstRestricted, Messages.StrictOctalLiteral);
-          }
-          if (!this.context.allowStrictDirective) {
-            this.tolerateUnexpectedToken(token, Messages.IllegalLanguageModeDirective);
-          }
-        } else {
-          if (!firstRestricted && token.octal) {
-            firstRestricted = token;
-          }
-        }
-      }
-      return body;
-    }
-    // https://tc39.github.io/ecma262/#sec-method-definitions
-    qualifiedPropertyName(token) {
-      switch (token.type) {
-        case 3 /* Identifier */:
-        case 8 /* StringLiteral */:
-        case 1 /* BooleanLiteral */:
-        case 5 /* NullLiteral */:
-        case 6 /* NumericLiteral */:
-        case 4 /* Keyword */:
-          return true;
-        case 7 /* Punctuator */:
-          return token.value === "[" || token.value === "#";
-        default:
-          break;
-      }
+function is_array(mode) {
+  return mode === MODE.ArrayLiteral;
+}
+
+function is_expression(mode) {
+  return in_array(mode, [MODE.Expression, MODE.ForInitializer, MODE.Conditional]);
+}
+
+function all_lines_start_with(lines, c) {
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i].trim();
+    if (line.charAt(0) !== c) {
       return false;
     }
-    parseGetterMethod() {
-      const node = this.createNode();
-      const isGenerator = false;
-      const previousAllowYield = this.context.allowYield;
-      this.context.allowYield = !isGenerator;
-      const formalParameters = this.parseFormalParameters();
-      if (formalParameters.params.length > 0) {
-        this.tolerateError(Messages.BadGetterArity);
-      }
-      const method = this.parsePropertyMethod(formalParameters);
-      this.context.allowYield = previousAllowYield;
-      return this.finalize(node, new FunctionExpression(null, formalParameters.params, method, isGenerator, false));
-    }
-    parseSetterMethod() {
-      const node = this.createNode();
-      const isGenerator = false;
-      const previousAllowYield = this.context.allowYield;
-      this.context.allowYield = !isGenerator;
-      const formalParameters = this.parseFormalParameters();
-      if (formalParameters.params.length !== 1) {
-        this.tolerateError(Messages.BadSetterArity);
-      } else if (formalParameters.params[0] instanceof RestElement) {
-        this.tolerateError(Messages.BadSetterRestParameter);
-      }
-      const method = this.parsePropertyMethod(formalParameters);
-      this.context.allowYield = previousAllowYield;
-      return this.finalize(node, new FunctionExpression(null, formalParameters.params, method, isGenerator, false));
-    }
-    parseGeneratorMethod(isAsync) {
-      const node = this.createNode();
-      const isGenerator = true;
-      const previousAllowYield = this.context.allowYield;
-      this.context.allowYield = true;
-      const params = this.parseFormalParameters();
-      this.context.allowYield = false;
-      const method = this.parsePropertyMethod(params);
-      this.context.allowYield = previousAllowYield;
-      return this.finalize(node, new FunctionExpression(null, params.params, method, isGenerator, isAsync));
-    }
-    // https://tc39.github.io/ecma262/#sec-generator-function-definitions
-    isStartOfExpression() {
-      let start = true;
-      const value = this.lookahead.value;
-      switch (this.lookahead.type) {
-        case 7 /* Punctuator */:
-          start = value === "[" || value === "(" || value === "{" || value === "+" || value === "-" || value === "!" || value === "~" || value === "++" || value === "--" || value === "/" || value === "/=";
-          break;
-        case 4 /* Keyword */:
-          start = value === "class" || value === "delete" || value === "function" || value === "let" || value === "new" || value === "super" || value === "this" || value === "typeof" || value === "void" || value === "yield";
-          break;
-        default:
-          break;
-      }
-      return start;
-    }
-    parseYieldExpression() {
-      const node = this.createNode();
-      this.expectKeyword("yield");
-      let argument = null;
-      let delegate = false;
-      if (!this.hasLineTerminator) {
-        const previousAllowYield = this.context.allowYield;
-        this.context.allowYield = false;
-        delegate = this.match("*");
-        if (delegate) {
-          this.nextToken();
-          argument = this.parseAssignmentExpression();
-        } else if (this.isStartOfExpression()) {
-          argument = this.parseAssignmentExpression();
-        }
-        this.context.allowYield = previousAllowYield;
-      }
-      return this.finalize(node, new YieldExpression(argument, delegate));
-    }
-    // https://tc39.github.io/ecma262/#sec-class-definitions
-    parseStaticBlock() {
-      const node = this.createNode();
-      this.expect("{");
-      const block = [];
-      while (true) {
-        if (this.match("}")) {
-          break;
-        }
-        block.push(this.parseStatementListItem());
-      }
-      this.expect("}");
-      return this.finalize(node, new StaticBlock(block));
-    }
-    parseDecorator() {
-      const node = this.createNode();
-      this.expect("@");
-      const previousStrict = this.context.strict;
-      const previousAllowYield = this.context.allowYield;
-      const previousIsAsync = this.context.isAsync;
-      this.context.strict = false;
-      this.context.allowYield = true;
-      this.context.isAsync = false;
-      const expression = this.isolateCoverGrammar(this.parseLeftHandSideExpressionAllowCall);
-      this.context.strict = previousStrict;
-      this.context.allowYield = previousAllowYield;
-      this.context.isAsync = previousIsAsync;
-      if (this.match(";")) {
-        this.throwError(Messages.NoSemicolonAfterDecorator);
-      }
-      return this.finalize(node, new Decorator(expression));
-    }
-    parseDecorators() {
-      let decorators = null;
-      while (this.match("@")) {
-        if (decorators == null)
-          decorators = [];
-        decorators.push(this.parseDecorator());
-      }
-      return decorators;
-    }
-    parseClassElement(hasConstructor) {
-      let token = this.lookahead;
-      const node = this.createNode();
-      const previousInConstructor = this.context.inConstructor;
-      let kind = "";
-      let key = null;
-      let value = null;
-      let computed = false;
-      let method = false;
-      let isStatic = false;
-      let isAsync = false;
-      let isGenerator = false;
-      let isPrivate = false;
-      const decorators = this.parseDecorators();
-      if (decorators) {
-        token = this.lookahead;
-      }
-      if (this.match("*")) {
-        this.nextToken();
-      } else {
-        computed = this.match("[");
-        if (this.match("#")) {
-          isPrivate = true;
-          this.nextToken();
-          token = this.lookahead;
-        }
-        key = this.parseObjectPropertyKey(isPrivate);
-        const id = key;
-        this.context.inConstructor = token.type === 3 /* Identifier */ && token.value === "constructor";
-        if (id.name === "static" && (this.qualifiedPropertyName(this.lookahead) || this.match("*"))) {
-          token = this.lookahead;
-          isStatic = true;
-          computed = this.match("[");
-          if (this.match("*")) {
-            this.nextToken();
-            if (this.match("#")) {
-              isPrivate = true;
-              this.nextToken();
-              token = this.lookahead;
-            }
-          } else {
-            if (this.match("#")) {
-              isPrivate = true;
-              this.nextToken();
-              token = this.lookahead;
-            }
-            key = this.parseObjectPropertyKey(isPrivate);
-          }
-        }
-        if (id.name === "static" && this.match("{")) {
-          return this.parseStaticBlock();
-        }
-        if (token.type === 3 /* Identifier */ && !this.hasLineTerminator && token.value === "async") {
-          const punctuator = this.lookahead.value;
-          if (punctuator !== ":" && punctuator !== "(") {
-            isAsync = true;
-            isGenerator = this.match("*");
-            if (isGenerator) {
-              this.nextToken();
-            }
-            token = this.lookahead;
-            computed = this.match("[");
-            if (this.match("*")) {
-              this.nextToken();
-              if (this.match("#")) {
-                isPrivate = true;
-                this.nextToken();
-              }
-            } else {
-              if (this.match("#")) {
-                isPrivate = true;
-                this.nextToken();
-                token = this.lookahead;
-              }
-              key = this.parseObjectPropertyKey(isPrivate);
-            }
-            if (token.type === 3 /* Identifier */ && token.value === "constructor" && !isStatic) {
-              this.tolerateUnexpectedToken(token, Messages.ConstructorIsAsync);
-            }
-          }
-        }
-      }
-      if (token.type === 3 /* Identifier */ && token.value === "constructor" && isPrivate) {
-        this.tolerateUnexpectedToken(token, Messages.ConstructorIsPrivate);
-      }
-      const lookaheadPropertyKey = this.qualifiedPropertyName(this.lookahead);
-      if (token.type === 3 /* Identifier */ || token.type === 8 /* StringLiteral */) {
-        if (token.value === "get" && lookaheadPropertyKey) {
-          kind = "get";
-          if (this.match("#")) {
-            isPrivate = true;
-            this.nextToken();
-            token = this.lookahead;
-          }
-          computed = this.match("[");
-          key = this.parseObjectPropertyKey(isPrivate);
-          this.context.allowYield = false;
-          value = this.parseGetterMethod();
-        } else if (token.value === "set" && lookaheadPropertyKey) {
-          kind = "set";
-          if (this.match("#")) {
-            isPrivate = true;
-            this.nextToken();
-            token = this.lookahead;
-          }
-          computed = this.match("[");
-          key = this.parseObjectPropertyKey(isPrivate);
-          value = this.parseSetterMethod();
-        } else if (!this.match("(")) {
-          kind = "property";
-          computed = false;
-          if (this.match("=")) {
-            this.nextToken();
-            value = this.isolateCoverGrammar(this.parseAssignmentExpression);
-          }
-        }
-      } else if (token.type === 7 /* Punctuator */ && token.value === "*" && lookaheadPropertyKey) {
-        kind = "init";
-        computed = this.match("[");
-        key = this.parseObjectPropertyKey(isPrivate);
-        value = this.parseGeneratorMethod(isAsync);
-        method = true;
-      } else if (token.type === 7 /* Punctuator */ && token.value === "[" && !this.match("(")) {
-        kind = "property";
-        computed = true;
-        if (this.match("=")) {
-          this.nextToken();
-          value = this.isolateCoverGrammar(this.parseAssignmentExpression);
-        }
-      }
-      if (!kind && key && this.match("(")) {
-        const previousInClassConstructor = this.context.inClassConstructor;
-        this.context.inClassConstructor = token.value === "constructor";
-        kind = "init";
-        value = isAsync ? this.parsePropertyMethodAsyncFunction(isGenerator) : this.parsePropertyMethodFunction(isGenerator);
-        this.context.inClassConstructor = previousInClassConstructor;
-        method = true;
-      }
-      if (!kind) {
-        this.throwUnexpectedToken(this.lookahead);
-      }
-      if (kind === "init") {
-        kind = "method";
-      }
-      if (!computed) {
-        if (isStatic && this.isPropertyKey(key, "prototype")) {
-          this.throwUnexpectedToken(token, Messages.StaticPrototype);
-        }
-        if (!isStatic && this.isPropertyKey(key, "constructor")) {
-          if (kind !== "method" || !method || value && value.generator) {
-            this.throwUnexpectedToken(token, Messages.ConstructorSpecialMethod);
-          }
-          if (hasConstructor.value) {
-            this.throwUnexpectedToken(token, Messages.DuplicateConstructor);
-          } else {
-            hasConstructor.value = true;
-          }
-          kind = "constructor";
-        }
-      }
-      this.context.inConstructor = previousInConstructor;
-      if (kind === "property") {
-        this.consumeSemicolon();
-        return this.finalize(node, new PropertyDefinition(key, computed, value, isStatic, decorators));
-      } else
-        return this.finalize(node, new MethodDefinition(key, computed, value, kind, isStatic, decorators));
-    }
-    parseClassElementList() {
-      const body = [];
-      const hasConstructor = { value: false };
-      this.expect("{");
-      while (!this.match("}")) {
-        if (this.match(";")) {
-          this.nextToken();
-        } else {
-          body.push(this.parseClassElement(hasConstructor));
-        }
-      }
-      this.expect("}");
-      return body;
-    }
-    parseClassBody() {
-      const node = this.createNode();
-      const elementList = this.parseClassElementList();
-      return this.finalize(node, new ClassBody(elementList));
-    }
-    parseClassDeclaration(identifierIsOptional) {
-      const node = this.createNode();
-      const previousStrict = this.context.strict;
-      const previousAllowSuper = this.context.allowSuper;
-      this.context.strict = true;
-      this.expectKeyword("class");
-      const id = identifierIsOptional && this.lookahead.type !== 3 /* Identifier */ ? null : this.parseVariableIdentifier();
-      let superClass = null;
-      if (this.matchKeyword("extends")) {
-        this.nextToken();
-        superClass = this.isolateCoverGrammar(this.parseLeftHandSideExpressionAllowCall);
-        this.context.allowSuper = true;
-      }
-      const classBody = this.parseClassBody();
-      this.context.allowSuper = previousAllowSuper;
-      this.context.strict = previousStrict;
-      return this.finalize(node, new ClassDeclaration(id, superClass, classBody, this.context.decorators));
-    }
-    parseClassExpression() {
-      const node = this.createNode();
-      const previousStrict = this.context.strict;
-      this.context.strict = true;
-      this.expectKeyword("class");
-      const id = this.lookahead.type === 3 /* Identifier */ ? this.parseVariableIdentifier() : null;
-      let superClass = null;
-      if (this.matchKeyword("extends")) {
-        this.nextToken();
-        superClass = this.isolateCoverGrammar(this.parseLeftHandSideExpressionAllowCall);
-        this.context.allowSuper = true;
-      }
-      const classBody = this.parseClassBody();
-      this.context.strict = previousStrict;
-      return this.finalize(node, new ClassExpression(id, superClass, classBody, this.context.decorators));
-    }
-    // https://tc39.github.io/ecma262/#sec-scripts
-    // https://tc39.github.io/ecma262/#sec-modules
-    parseModule() {
-      this.context.strict = true;
-      this.context.isModule = true;
-      this.scanner.isModule = true;
-      const node = this.createNode();
-      const body = this.parseDirectivePrologues();
-      while (this.lookahead.type !== 2 /* EOF */) {
-        body.push(this.parseStatementListItem());
-      }
-      return this.finalize(node, new Module(body));
-    }
-    parseScript() {
-      const node = this.createNode();
-      const body = this.parseDirectivePrologues();
-      while (this.lookahead.type !== 2 /* EOF */) {
-        body.push(this.parseStatementListItem());
-      }
-      return this.finalize(node, new Script(body));
-    }
-    // https://tc39.github.io/ecma262/#sec-imports
-    parseImportAttributes() {
-      if (this.lookahead.value === "assert") {
-        this.nextToken();
-        this.expect("{");
-        const attributes = [];
-        while (!this.match("}")) {
-          attributes.push(this.parseImportAttribute());
-          if (!this.match("}")) {
-            this.expectCommaSeparator();
-          }
-        }
-        this.expect("}");
-        return attributes;
-      }
-      return null;
-    }
-    parseImportAttribute() {
-      const node = this.createNode();
-      if (this.lookahead.type !== 3 /* Identifier */) {
-        this.throwUnexpectedToken(this.nextToken());
-      }
-      const key = this.parseIdentifierName();
-      if (!this.match(":")) {
-        this.throwUnexpectedToken(this.nextToken());
-      }
-      this.nextToken();
-      const literalToken = this.nextToken();
-      const raw = this.getTokenRaw(literalToken);
-      const value = this.finalize(node, new Literal(literalToken.value, raw));
-      return this.finalize(node, new ImportAttribute(key, value));
-    }
-    parseModuleSpecifier() {
-      const node = this.createNode();
-      if (this.lookahead.type !== 8 /* StringLiteral */) {
-        this.throwError(Messages.InvalidModuleSpecifier);
-      }
-      const token = this.nextToken();
-      const raw = this.getTokenRaw(token);
-      if (!Character.isStringWellFormedUnicode(token.value)) {
-        this.throwError(Messages.InvalidModuleSpecifier);
-      }
-      return this.finalize(node, new Literal(token.value, raw));
-    }
-    // import {<foo as bar>} ...;
-    parseImportSpecifier() {
-      const node = this.createNode();
-      let imported;
-      let local;
-      if (this.lookahead.type === 3 /* Identifier */) {
-        imported = this.parseVariableIdentifier();
-        local = imported;
-        if (this.matchContextualKeyword("as")) {
-          this.nextToken();
-          local = this.parseVariableIdentifier();
-        }
-      } else {
-        imported = this.lookahead.type == 8 /* StringLiteral */ ? this.parseModuleSpecifier() : this.parseIdentifierName();
-        local = imported;
-        if (this.matchContextualKeyword("as")) {
-          this.nextToken();
-          local = this.parseVariableIdentifier();
-        } else {
-          this.throwUnexpectedToken(this.nextToken());
-        }
-      }
-      return this.finalize(node, new ImportSpecifier(local, imported));
-    }
-    // {foo, bar as bas}
-    parseNamedImports() {
-      this.expect("{");
-      const specifiers = [];
-      while (!this.match("}")) {
-        specifiers.push(this.parseImportSpecifier());
-        if (!this.match("}")) {
-          this.expect(",");
-        }
-      }
-      this.expect("}");
-      return specifiers;
-    }
-    // import <foo> ...;
-    parseImportDefaultSpecifier() {
-      const node = this.createNode();
-      const local = this.parseIdentifierName();
-      return this.finalize(node, new ImportDefaultSpecifier(local));
-    }
-    // import <* as foo> ...;
-    parseImportNamespaceSpecifier() {
-      const node = this.createNode();
-      this.expect("*");
-      if (!this.matchContextualKeyword("as")) {
-        this.throwError(Messages.NoAsAfterImportNamespace);
-      }
-      if (this.lookahead.escaped) {
-        this.throwError(Messages.NoAsAndFromEscapeSequences);
-      }
-      this.nextToken();
-      const local = this.parseIdentifierName();
-      return this.finalize(node, new ImportNamespaceSpecifier(local));
-    }
-    parseImportDeclaration() {
-      if (this.context.inFunctionBody) {
-        this.throwError(Messages.IllegalImportDeclaration);
-      }
-      const node = this.createNode();
-      this.expectKeyword("import");
-      let src;
-      let specifiers = [];
-      if (this.lookahead.type === 8 /* StringLiteral */) {
-        src = this.parseModuleSpecifier();
-      } else {
-        if (this.match("{")) {
-          specifiers = specifiers.concat(this.parseNamedImports());
-        } else if (this.match("*")) {
-          specifiers.push(this.parseImportNamespaceSpecifier());
-        } else if (this.isIdentifierName(this.lookahead) && !this.matchKeyword("default")) {
-          specifiers.push(this.parseImportDefaultSpecifier());
-          if (this.match(",")) {
-            this.nextToken();
-            if (this.match("*")) {
-              specifiers.push(this.parseImportNamespaceSpecifier());
-            } else if (this.match("{")) {
-              specifiers = specifiers.concat(this.parseNamedImports());
-            } else {
-              this.throwUnexpectedToken(this.lookahead);
-            }
-          }
-        } else {
-          this.throwUnexpectedToken(this.nextToken());
-        }
-        if (!this.matchContextualKeyword("from")) {
-          const message = this.lookahead.value ? Messages.UnexpectedToken : Messages.MissingFromClause;
-          this.throwError(message, this.lookahead.value);
-        }
-        this.nextToken();
-        src = this.parseModuleSpecifier();
-      }
-      const attributes = this.parseImportAttributes();
-      this.consumeSemicolon();
-      return this.finalize(node, new ImportDeclaration(specifiers, src, attributes));
-    }
-    // https://tc39.github.io/ecma262/#sec-exports
-    parseExportSpecifier() {
-      const node = this.createNode();
-      const local = this.lookahead.type == 8 /* StringLiteral */ ? this.parseModuleSpecifier() : this.parseIdentifierName();
-      let exported = local;
-      if (this.matchContextualKeyword("as")) {
-        if (this.lookahead.escaped) {
-          this.throwError(Messages.NoAsAndFromEscapeSequences);
-        }
-        this.nextToken();
-        exported = this.lookahead.type == 8 /* StringLiteral */ ? this.parseModuleSpecifier() : this.parseIdentifierName();
-      }
-      return this.finalize(node, new ExportSpecifier(local, exported));
-    }
-    parseExportDeclaration() {
-      if (this.context.inFunctionBody) {
-        this.throwError(Messages.IllegalExportDeclaration);
-      }
-      const node = this.createNode();
-      this.expectKeyword("export");
-      let exportDeclaration;
-      if (this.matchKeyword("default")) {
-        this.nextToken();
-        if (this.matchKeyword("function")) {
-          const declaration = this.parseFunctionDeclaration(true);
-          exportDeclaration = this.finalize(node, new ExportDefaultDeclaration(declaration));
-        } else if (this.matchKeyword("class")) {
-          const declaration = this.parseClassDeclaration(true);
-          exportDeclaration = this.finalize(node, new ExportDefaultDeclaration(declaration));
-        } else if (this.matchContextualKeyword("async")) {
-          const declaration = this.matchAsyncFunction() ? this.parseFunctionDeclaration(true) : this.parseAssignmentExpression();
-          exportDeclaration = this.finalize(node, new ExportDefaultDeclaration(declaration));
-        } else {
-          if (this.matchContextualKeyword("from")) {
-            this.throwError(Messages.UnexpectedToken, this.lookahead.value);
-          }
-          const declaration = this.match("{") ? this.parseObjectInitializer() : this.match("[") ? this.parseArrayInitializer() : this.parseAssignmentExpression();
-          this.consumeSemicolon();
-          exportDeclaration = this.finalize(node, new ExportDefaultDeclaration(declaration));
-        }
-      } else if (this.match("*")) {
-        this.nextToken();
-        let exported = null;
-        if (this.matchContextualKeyword("as")) {
-          if (this.lookahead.escaped) {
-            this.throwError(Messages.NoAsAndFromEscapeSequences);
-          }
-          this.nextToken();
-          exported = this.lookahead.type == 8 /* StringLiteral */ ? this.parseModuleSpecifier() : this.parseIdentifierName();
-        }
-        if (!this.matchContextualKeyword("from")) {
-          const message = this.lookahead.value ? Messages.UnexpectedToken : Messages.MissingFromClause;
-          this.throwError(message, this.lookahead.value);
-        }
-        if (this.lookahead.escaped) {
-          this.throwError(Messages.NoAsAndFromEscapeSequences);
-        }
-        this.nextToken();
-        const src = this.parseModuleSpecifier();
-        const attributes = this.parseImportAttributes();
-        this.consumeSemicolon();
-        exportDeclaration = this.finalize(node, new ExportAllDeclaration(src, exported, attributes));
-      } else if (this.lookahead.type === 4 /* Keyword */) {
-        let declaration;
-        switch (this.lookahead.value) {
-          case "let":
-          case "const":
-            declaration = this.parseLexicalDeclaration({ inFor: false });
-            break;
-          case "var":
-          case "class":
-          case "function":
-            declaration = this.parseStatementListItem();
-            break;
-          default:
-            this.throwUnexpectedToken(this.lookahead);
-        }
-        exportDeclaration = this.finalize(node, new ExportNamedDeclaration(declaration, [], null, null));
-      } else if (this.matchAsyncFunction()) {
-        const declaration = this.parseFunctionDeclaration();
-        exportDeclaration = this.finalize(node, new ExportNamedDeclaration(declaration, [], null, null));
-      } else {
-        const specifiers = [];
-        let source = null;
-        let isExportFromIdentifier = false;
-        let attributes = null;
-        this.expect("{");
-        while (!this.match("}")) {
-          isExportFromIdentifier = isExportFromIdentifier || this.matchKeyword("default");
-          specifiers.push(this.parseExportSpecifier());
-          if (!this.match("}")) {
-            this.expect(",");
-          }
-        }
-        this.expect("}");
-        if (this.matchContextualKeyword("from")) {
-          if (this.lookahead.escaped) {
-            this.throwError(Messages.NoAsAndFromEscapeSequences);
-          }
-          this.nextToken();
-          source = this.parseModuleSpecifier();
-          attributes = this.parseImportAttributes();
-          this.consumeSemicolon();
-        } else if (isExportFromIdentifier) {
-          const message = this.lookahead.value ? Messages.UnexpectedToken : Messages.MissingFromClause;
-          this.throwError(message, this.lookahead.value);
-        } else {
-          attributes = this.parseImportAttributes();
-          this.consumeSemicolon();
-        }
-        exportDeclaration = this.finalize(node, new ExportNamedDeclaration(null, specifiers, source, attributes));
-      }
-      return exportDeclaration;
-    }
-  };
-
-  // xhtml-entities.ts
-  var XHTMLEntities = {
-    quot: '"',
-    amp: "&",
-    apos: "'",
-    gt: ">",
-    nbsp: "\xA0",
-    iexcl: "\xA1",
-    cent: "\xA2",
-    pound: "\xA3",
-    curren: "\xA4",
-    yen: "\xA5",
-    brvbar: "\xA6",
-    sect: "\xA7",
-    uml: "\xA8",
-    copy: "\xA9",
-    ordf: "\xAA",
-    laquo: "\xAB",
-    not: "\xAC",
-    shy: "\xAD",
-    reg: "\xAE",
-    macr: "\xAF",
-    deg: "\xB0",
-    plusmn: "\xB1",
-    sup2: "\xB2",
-    sup3: "\xB3",
-    acute: "\xB4",
-    micro: "\xB5",
-    para: "\xB6",
-    middot: "\xB7",
-    cedil: "\xB8",
-    sup1: "\xB9",
-    ordm: "\xBA",
-    raquo: "\xBB",
-    frac14: "\xBC",
-    frac12: "\xBD",
-    frac34: "\xBE",
-    iquest: "\xBF",
-    Agrave: "\xC0",
-    Aacute: "\xC1",
-    Acirc: "\xC2",
-    Atilde: "\xC3",
-    Auml: "\xC4",
-    Aring: "\xC5",
-    AElig: "\xC6",
-    Ccedil: "\xC7",
-    Egrave: "\xC8",
-    Eacute: "\xC9",
-    Ecirc: "\xCA",
-    Euml: "\xCB",
-    Igrave: "\xCC",
-    Iacute: "\xCD",
-    Icirc: "\xCE",
-    Iuml: "\xCF",
-    ETH: "\xD0",
-    Ntilde: "\xD1",
-    Ograve: "\xD2",
-    Oacute: "\xD3",
-    Ocirc: "\xD4",
-    Otilde: "\xD5",
-    Ouml: "\xD6",
-    times: "\xD7",
-    Oslash: "\xD8",
-    Ugrave: "\xD9",
-    Uacute: "\xDA",
-    Ucirc: "\xDB",
-    Uuml: "\xDC",
-    Yacute: "\xDD",
-    THORN: "\xDE",
-    szlig: "\xDF",
-    agrave: "\xE0",
-    aacute: "\xE1",
-    acirc: "\xE2",
-    atilde: "\xE3",
-    auml: "\xE4",
-    aring: "\xE5",
-    aelig: "\xE6",
-    ccedil: "\xE7",
-    egrave: "\xE8",
-    eacute: "\xE9",
-    ecirc: "\xEA",
-    euml: "\xEB",
-    igrave: "\xEC",
-    iacute: "\xED",
-    icirc: "\xEE",
-    iuml: "\xEF",
-    eth: "\xF0",
-    ntilde: "\xF1",
-    ograve: "\xF2",
-    oacute: "\xF3",
-    ocirc: "\xF4",
-    otilde: "\xF5",
-    ouml: "\xF6",
-    divide: "\xF7",
-    oslash: "\xF8",
-    ugrave: "\xF9",
-    uacute: "\xFA",
-    ucirc: "\xFB",
-    uuml: "\xFC",
-    yacute: "\xFD",
-    thorn: "\xFE",
-    yuml: "\xFF",
-    OElig: "\u0152",
-    oelig: "\u0153",
-    Scaron: "\u0160",
-    scaron: "\u0161",
-    Yuml: "\u0178",
-    fnof: "\u0192",
-    circ: "\u02C6",
-    tilde: "\u02DC",
-    Alpha: "\u0391",
-    Beta: "\u0392",
-    Gamma: "\u0393",
-    Delta: "\u0394",
-    Epsilon: "\u0395",
-    Zeta: "\u0396",
-    Eta: "\u0397",
-    Theta: "\u0398",
-    Iota: "\u0399",
-    Kappa: "\u039A",
-    Lambda: "\u039B",
-    Mu: "\u039C",
-    Nu: "\u039D",
-    Xi: "\u039E",
-    Omicron: "\u039F",
-    Pi: "\u03A0",
-    Rho: "\u03A1",
-    Sigma: "\u03A3",
-    Tau: "\u03A4",
-    Upsilon: "\u03A5",
-    Phi: "\u03A6",
-    Chi: "\u03A7",
-    Psi: "\u03A8",
-    Omega: "\u03A9",
-    alpha: "\u03B1",
-    beta: "\u03B2",
-    gamma: "\u03B3",
-    delta: "\u03B4",
-    epsilon: "\u03B5",
-    zeta: "\u03B6",
-    eta: "\u03B7",
-    theta: "\u03B8",
-    iota: "\u03B9",
-    kappa: "\u03BA",
-    lambda: "\u03BB",
-    mu: "\u03BC",
-    nu: "\u03BD",
-    xi: "\u03BE",
-    omicron: "\u03BF",
-    pi: "\u03C0",
-    rho: "\u03C1",
-    sigmaf: "\u03C2",
-    sigma: "\u03C3",
-    tau: "\u03C4",
-    upsilon: "\u03C5",
-    phi: "\u03C6",
-    chi: "\u03C7",
-    psi: "\u03C8",
-    omega: "\u03C9",
-    thetasym: "\u03D1",
-    upsih: "\u03D2",
-    piv: "\u03D6",
-    ensp: "\u2002",
-    emsp: "\u2003",
-    thinsp: "\u2009",
-    zwnj: "\u200C",
-    zwj: "\u200D",
-    lrm: "\u200E",
-    rlm: "\u200F",
-    ndash: "\u2013",
-    mdash: "\u2014",
-    lsquo: "\u2018",
-    rsquo: "\u2019",
-    sbquo: "\u201A",
-    ldquo: "\u201C",
-    rdquo: "\u201D",
-    bdquo: "\u201E",
-    dagger: "\u2020",
-    Dagger: "\u2021",
-    bull: "\u2022",
-    hellip: "\u2026",
-    permil: "\u2030",
-    prime: "\u2032",
-    Prime: "\u2033",
-    lsaquo: "\u2039",
-    rsaquo: "\u203A",
-    oline: "\u203E",
-    frasl: "\u2044",
-    euro: "\u20AC",
-    image: "\u2111",
-    weierp: "\u2118",
-    real: "\u211C",
-    trade: "\u2122",
-    alefsym: "\u2135",
-    larr: "\u2190",
-    uarr: "\u2191",
-    rarr: "\u2192",
-    darr: "\u2193",
-    harr: "\u2194",
-    crarr: "\u21B5",
-    lArr: "\u21D0",
-    uArr: "\u21D1",
-    rArr: "\u21D2",
-    dArr: "\u21D3",
-    hArr: "\u21D4",
-    forall: "\u2200",
-    part: "\u2202",
-    exist: "\u2203",
-    empty: "\u2205",
-    nabla: "\u2207",
-    isin: "\u2208",
-    notin: "\u2209",
-    ni: "\u220B",
-    prod: "\u220F",
-    sum: "\u2211",
-    minus: "\u2212",
-    lowast: "\u2217",
-    radic: "\u221A",
-    prop: "\u221D",
-    infin: "\u221E",
-    ang: "\u2220",
-    and: "\u2227",
-    or: "\u2228",
-    cap: "\u2229",
-    cup: "\u222A",
-    int: "\u222B",
-    there4: "\u2234",
-    sim: "\u223C",
-    cong: "\u2245",
-    asymp: "\u2248",
-    ne: "\u2260",
-    equiv: "\u2261",
-    le: "\u2264",
-    ge: "\u2265",
-    sub: "\u2282",
-    sup: "\u2283",
-    nsub: "\u2284",
-    sube: "\u2286",
-    supe: "\u2287",
-    oplus: "\u2295",
-    otimes: "\u2297",
-    perp: "\u22A5",
-    sdot: "\u22C5",
-    lceil: "\u2308",
-    rceil: "\u2309",
-    lfloor: "\u230A",
-    rfloor: "\u230B",
-    loz: "\u25CA",
-    spades: "\u2660",
-    clubs: "\u2663",
-    hearts: "\u2665",
-    diams: "\u2666",
-    lang: "\u27E8",
-    rang: "\u27E9"
-  };
-
-  // jsx-parser.ts
-  TokenName[100 /* Identifier */] = "JSXIdentifier";
-  TokenName[101 /* Text */] = "JSXText";
-  function getQualifiedElementName(elementName) {
-    let qualifiedName;
-    switch (elementName.type) {
-      case "JSXIdentifier" /* JSXIdentifier */:
-        const id = elementName;
-        qualifiedName = id.name;
-        break;
-      case "JSXNamespacedName" /* JSXNamespacedName */:
-        const ns = elementName;
-        qualifiedName = getQualifiedElementName(ns.namespace) + ":" + getQualifiedElementName(ns.name);
-        break;
-      case "JSXMemberExpression" /* JSXMemberExpression */:
-        const expr = elementName;
-        qualifiedName = getQualifiedElementName(expr.object) + "." + getQualifiedElementName(expr.property);
-        break;
-      default:
-        break;
-    }
-    return qualifiedName;
   }
-  var JSXParser = class extends Parser {
-    constructor(code, options, delegate) {
-      super(code, options, delegate);
-    }
-    //@ts-ignore
-    parsePrimaryExpression() {
-      return this.match("<") ? this.parseJSXRoot() : super.parsePrimaryExpression();
-    }
-    startJSX() {
-      this.scanner.index = this.startMarker.index;
-      this.scanner.lineNumber = this.startMarker.line;
-      this.scanner.lineStart = this.startMarker.index - this.startMarker.column;
-    }
-    finishJSX() {
-      this.nextToken();
-    }
-    reenterJSX() {
-      this.startJSX();
-      this.expectJSX("}");
-      if (this.config.tokens) {
-        this.tokens.pop();
-      }
-    }
-    createJSXNode() {
-      this.collectComments();
-      return {
-        index: this.scanner.index,
-        line: this.scanner.lineNumber,
-        column: this.scanner.index - this.scanner.lineStart
-      };
-    }
-    createJSXChildNode() {
-      return {
-        index: this.scanner.index,
-        line: this.scanner.lineNumber,
-        column: this.scanner.index - this.scanner.lineStart
-      };
-    }
-    scanXHTMLEntity(quote) {
-      let result = "&";
-      let valid = true;
-      let terminated = false;
-      let numeric = false;
-      let hex = false;
-      while (!this.scanner.eof() && valid && !terminated) {
-        const ch = this.scanner.source[this.scanner.index];
-        if (ch === quote) {
-          break;
-        }
-        terminated = ch === ";";
-        result += ch;
-        ++this.scanner.index;
-        if (!terminated) {
-          switch (result.length) {
-            case 2:
-              numeric = ch === "#";
-              break;
-            case 3:
-              if (numeric) {
-                hex = ch === "x";
-                valid = hex || Character.isDecimalDigit(ch.charCodeAt(0));
-                numeric = numeric && !hex;
-              }
-              break;
-            default:
-              valid = valid && !(numeric && !Character.isDecimalDigit(ch.charCodeAt(0)));
-              valid = valid && !(hex && !Character.isHexDigit(ch.charCodeAt(0)));
-              break;
-          }
-        }
-      }
-      if (valid && terminated && result.length > 2) {
-        const str = result.substr(1, result.length - 2);
-        if (numeric && str.length > 1) {
-          result = String.fromCharCode(parseInt(str.substr(1), 10));
-        } else if (hex && str.length > 2) {
-          result = String.fromCharCode(parseInt("0" + str.substr(1), 16));
-        } else if (!numeric && !hex && XHTMLEntities[str]) {
-          result = XHTMLEntities[str];
-        }
-      }
-      return result;
-    }
-    // Scan the next JSX token. This replaces Scanner#lex when in JSX mode.
-    lexJSX() {
-      const cp = this.scanner.source.charCodeAt(this.scanner.index);
-      if (cp === 60 || cp === 62 || cp === 47 || cp === 58 || cp === 61 || cp === 123 || cp === 125) {
-        const value = this.scanner.source[this.scanner.index++];
-        return {
-          type: 7 /* Punctuator */,
-          value,
-          lineNumber: this.scanner.lineNumber,
-          lineStart: this.scanner.lineStart,
-          start: this.scanner.index - 1,
-          end: this.scanner.index
-        };
-      }
-      if (cp === 34 || cp === 39) {
-        const start = this.scanner.index;
-        const quote = this.scanner.source[this.scanner.index++];
-        let str = "";
-        while (!this.scanner.eof()) {
-          const ch = this.scanner.source[this.scanner.index++];
-          if (ch === quote) {
-            break;
-          } else if (ch === "&") {
-            str += this.scanXHTMLEntity(quote);
-          } else {
-            str += ch;
-          }
-        }
-        return {
-          type: 8 /* StringLiteral */,
-          value: str,
-          lineNumber: this.scanner.lineNumber,
-          lineStart: this.scanner.lineStart,
-          start,
-          end: this.scanner.index
-        };
-      }
-      if (cp === 46) {
-        const n1 = this.scanner.source.charCodeAt(this.scanner.index + 1);
-        const n2 = this.scanner.source.charCodeAt(this.scanner.index + 2);
-        const value = n1 === 46 && n2 === 46 ? "..." : ".";
-        const start = this.scanner.index;
-        this.scanner.index += value.length;
-        return {
-          type: 7 /* Punctuator */,
-          value,
-          lineNumber: this.scanner.lineNumber,
-          lineStart: this.scanner.lineStart,
-          start,
-          end: this.scanner.index
-        };
-      }
-      if (cp === 96) {
-        return {
-          type: 10 /* Template */,
-          value: "",
-          lineNumber: this.scanner.lineNumber,
-          lineStart: this.scanner.lineStart,
-          start: this.scanner.index,
-          end: this.scanner.index
-        };
-      }
-      if (Character.isIdentifierStart(cp) && cp !== 92) {
-        const start = this.scanner.index;
-        ++this.scanner.index;
-        while (!this.scanner.eof()) {
-          const ch = this.scanner.source.charCodeAt(this.scanner.index);
-          if (Character.isIdentifierPart(ch) && ch !== 92) {
-            ++this.scanner.index;
-          } else if (ch === 45) {
-            ++this.scanner.index;
-          } else {
-            break;
-          }
-        }
-        const id = this.scanner.source.slice(start, this.scanner.index);
-        return {
-          type: 100 /* Identifier */,
-          value: id,
-          lineNumber: this.scanner.lineNumber,
-          lineStart: this.scanner.lineStart,
-          start,
-          end: this.scanner.index
-        };
-      }
-      return this.scanner.lex();
-    }
-    nextJSXToken() {
-      this.collectComments();
-      this.startMarker.index = this.scanner.index;
-      this.startMarker.line = this.scanner.lineNumber;
-      this.startMarker.column = this.scanner.index - this.scanner.lineStart;
-      const token = this.lexJSX();
-      this.lastMarker.index = this.scanner.index;
-      this.lastMarker.line = this.scanner.lineNumber;
-      this.lastMarker.column = this.scanner.index - this.scanner.lineStart;
-      if (this.config.tokens) {
-        this.tokens.push(this.convertToken(token));
-      }
-      return token;
-    }
-    nextJSXText() {
-      this.startMarker.index = this.scanner.index;
-      this.startMarker.line = this.scanner.lineNumber;
-      this.startMarker.column = this.scanner.index - this.scanner.lineStart;
-      const start = this.scanner.index;
-      let text = "";
-      while (!this.scanner.eof()) {
-        const ch = this.scanner.source[this.scanner.index];
-        if (ch === "{" || ch === "<") {
-          break;
-        }
-        ++this.scanner.index;
-        text += ch;
-        if (Character.isLineTerminator(ch.charCodeAt(0))) {
-          ++this.scanner.lineNumber;
-          if (ch === "\r" && this.scanner.source[this.scanner.index] === "\n") {
-            ++this.scanner.index;
-          }
-          this.scanner.lineStart = this.scanner.index;
-        }
-      }
-      this.lastMarker.index = this.scanner.index;
-      this.lastMarker.line = this.scanner.lineNumber;
-      this.lastMarker.column = this.scanner.index - this.scanner.lineStart;
-      const token = {
-        type: 101 /* Text */,
-        value: text,
-        lineNumber: this.scanner.lineNumber,
-        lineStart: this.scanner.lineStart,
-        start,
-        end: this.scanner.index
-      };
-      if (text.length > 0 && this.config.tokens) {
-        this.tokens.push(this.convertToken(token));
-      }
-      return token;
-    }
-    peekJSXToken() {
-      const state = this.scanner.saveState();
-      this.scanner.scanComments();
-      const next = this.lexJSX();
-      this.scanner.restoreState(state);
-      return next;
-    }
-    // Expect the next JSX token to match the specified punctuator.
-    // If not, an exception will be thrown.
-    expectJSX(value) {
-      const token = this.nextJSXToken();
-      if (token.type !== 7 /* Punctuator */ || token.value !== value) {
-        this.throwUnexpectedToken(token);
-      }
-    }
-    // Return true if the next JSX token matches the specified punctuator.
-    matchJSX(value) {
-      const next = this.peekJSXToken();
-      return next.type === 7 /* Punctuator */ && next.value === value;
-    }
-    parseJSXIdentifier() {
-      const node = this.createJSXNode();
-      const token = this.nextJSXToken();
-      if (token.type !== 100 /* Identifier */) {
-        this.throwUnexpectedToken(token);
-      }
-      return this.finalize(node, new JSXIdentifier(token.value));
-    }
-    parseJSXElementName() {
-      const node = this.createJSXNode();
-      let elementName = this.parseJSXIdentifier();
-      if (this.matchJSX(":")) {
-        const namespace = elementName;
-        this.expectJSX(":");
-        const name = this.parseJSXIdentifier();
-        elementName = this.finalize(node, new JSXNamespacedName(namespace, name));
-      } else if (this.matchJSX(".")) {
-        while (this.matchJSX(".")) {
-          const object = elementName;
-          this.expectJSX(".");
-          const property = this.parseJSXIdentifier();
-          elementName = this.finalize(node, new JSXMemberExpression(object, property));
-        }
-      }
-      return elementName;
-    }
-    parseJSXAttributeName() {
-      const node = this.createJSXNode();
-      let attributeName;
-      const identifier = this.parseJSXIdentifier();
-      if (this.matchJSX(":")) {
-        const namespace = identifier;
-        this.expectJSX(":");
-        const name = this.parseJSXIdentifier();
-        attributeName = this.finalize(node, new JSXNamespacedName(namespace, name));
-      } else {
-        attributeName = identifier;
-      }
-      return attributeName;
-    }
-    parseJSXStringLiteralAttribute() {
-      const node = this.createJSXNode();
-      const token = this.nextJSXToken();
-      if (token.type !== 8 /* StringLiteral */) {
-        this.throwUnexpectedToken(token);
-      }
-      const raw = this.getTokenRaw(token);
-      return this.finalize(node, new Literal(token.value, raw));
-    }
-    parseJSXExpressionAttribute() {
-      const node = this.createJSXNode();
-      this.expectJSX("{");
-      this.finishJSX();
-      if (this.match("}")) {
-        this.tolerateError("JSX attributes must only be assigned a non-empty expression");
-      }
-      const expression = this.parseAssignmentExpression();
-      this.reenterJSX();
-      return this.finalize(node, new JSXExpressionContainer(expression));
-    }
-    parseJSXAttributeValue() {
-      return this.matchJSX("{") ? this.parseJSXExpressionAttribute() : this.matchJSX("<") ? this.parseJSXElement() : this.parseJSXStringLiteralAttribute();
-    }
-    parseJSXNameValueAttribute() {
-      const node = this.createJSXNode();
-      const name = this.parseJSXAttributeName();
-      let value = null;
-      if (this.matchJSX("=")) {
-        this.expectJSX("=");
-        value = this.parseJSXAttributeValue();
-      }
-      return this.finalize(node, new JSXAttribute(name, value));
-    }
-    parseJSXSpreadAttribute() {
-      const node = this.createJSXNode();
-      this.expectJSX("{");
-      this.expectJSX("...");
-      this.finishJSX();
-      const argument = this.parseAssignmentExpression();
-      this.reenterJSX();
-      return this.finalize(node, new JSXSpreadAttribute(argument));
-    }
-    parseJSXAttributes() {
-      const attributes = [];
-      while (!this.matchJSX("/") && !this.matchJSX(">")) {
-        const attribute = this.matchJSX("{") ? this.parseJSXSpreadAttribute() : this.parseJSXNameValueAttribute();
-        attributes.push(attribute);
-      }
-      return attributes;
-    }
-    parseJSXOpeningElement() {
-      const node = this.createJSXNode();
-      this.expectJSX("<");
-      if (this.matchJSX(">")) {
-        this.expectJSX(">");
-        return this.finalize(node, new JSXOpeningFragment(false));
-      }
-      const name = this.parseJSXElementName();
-      const attributes = this.parseJSXAttributes();
-      const selfClosing = this.matchJSX("/");
-      if (selfClosing) {
-        this.expectJSX("/");
-      }
-      this.expectJSX(">");
-      return this.finalize(node, new JSXOpeningElement(name, selfClosing, attributes));
-    }
-    parseJSXBoundaryElement() {
-      const node = this.createJSXNode();
-      this.expectJSX("<");
-      if (this.matchJSX("/")) {
-        this.expectJSX("/");
-        if (this.matchJSX(">")) {
-          this.expectJSX(">");
-          return this.finalize(node, new JSXClosingFragment());
-        }
-        const elementName = this.parseJSXElementName();
-        this.expectJSX(">");
-        return this.finalize(node, new JSXClosingElement(elementName));
-      }
-      const name = this.parseJSXElementName();
-      const attributes = this.parseJSXAttributes();
-      const selfClosing = this.matchJSX("/");
-      if (selfClosing) {
-        this.expectJSX("/");
-      }
-      this.expectJSX(">");
-      return this.finalize(node, new JSXOpeningElement(name, selfClosing, attributes));
-    }
-    parseJSXEmptyExpression() {
-      const node = this.createJSXChildNode();
-      this.collectComments();
-      this.lastMarker.index = this.scanner.index;
-      this.lastMarker.line = this.scanner.lineNumber;
-      this.lastMarker.column = this.scanner.index - this.scanner.lineStart;
-      return this.finalize(node, new JSXEmptyExpression());
-    }
-    parseJSXExpressionContainer() {
-      const node = this.createJSXNode();
-      this.expectJSX("{");
-      let expression;
-      if (this.matchJSX("}")) {
-        expression = this.parseJSXEmptyExpression();
-        this.expectJSX("}");
-      } else {
-        this.finishJSX();
-        expression = this.parseAssignmentExpression();
-        this.reenterJSX();
-      }
-      return this.finalize(node, new JSXExpressionContainer(expression));
-    }
-    parseJSXChildren() {
-      const children = [];
-      while (!this.scanner.eof()) {
-        const node = this.createJSXChildNode();
-        const token = this.nextJSXText();
-        if (token.start < token.end) {
-          const raw = this.getTokenRaw(token);
-          const child = this.finalize(node, new JSXText(token.value, raw));
-          children.push(child);
-        }
-        if (this.scanner.source[this.scanner.index] === "{") {
-          const container = this.parseJSXExpressionContainer();
-          children.push(container);
-        } else {
-          break;
-        }
-      }
-      return children;
-    }
-    parseComplexJSXElement(el) {
-      const stack = [];
-      while (!this.scanner.eof()) {
-        el.children = el.children.concat(this.parseJSXChildren());
-        const node = this.createJSXChildNode();
-        const element = this.parseJSXBoundaryElement();
-        if (element.type === "JSXOpeningElement" /* JSXOpeningElement */) {
-          const opening = element;
-          if (opening.selfClosing) {
-            const child = this.finalize(node, new JSXElement(opening, [], null));
-            el.children.push(child);
-          } else {
-            stack.push(el);
-            el = { node, opening, closing: null, children: [] };
-          }
-        }
-        if (element.type === "JSXClosingElement" /* JSXClosingElement */) {
-          el.closing = element;
-          const open = getQualifiedElementName(el.opening.name);
-          const close = getQualifiedElementName(el.closing.name);
-          if (open !== close) {
-            this.tolerateError("Expected corresponding JSX closing tag for %0", open);
-          }
-          if (stack.length > 0) {
-            const child = this.finalize(el.node, new JSXElement(el.opening, el.children, el.closing));
-            el = stack[stack.length - 1];
-            el.children.push(child);
-            stack.pop();
-          } else {
-            break;
-          }
-        }
-        if (element.type === "JSXClosingFragment" /* JSXClosingFragment */) {
-          el.closing = element;
-          if (el.opening.type !== "JSXOpeningFragment" /* JSXOpeningFragment */) {
-            this.tolerateError("Expected corresponding JSX closing tag for jsx fragment");
-          } else {
-            break;
-          }
-        }
-      }
-      return el;
-    }
-    parseJSXElement() {
-      const node = this.createJSXNode();
-      const opening = this.parseJSXOpeningElement();
-      let children = [];
-      let closing = null;
-      if (!opening.selfClosing) {
-        const el = this.parseComplexJSXElement({ node, opening, closing, children });
-        children = el.children;
-        closing = el.closing;
-      }
-      return this.finalize(node, new JSXElement(opening, children, closing));
-    }
-    parseJSXRoot() {
-      if (this.config.tokens) {
-        this.tokens.pop();
-      }
-      this.startJSX();
-      const element = this.parseJSXElement();
-      this.finishJSX();
-      return element;
-    }
-    isStartOfExpression() {
-      return super.isStartOfExpression() || this.match("<");
-    }
-  };
+  return true;
+}
 
-  // tokenizer.ts
-  var beforeFunctionExpressionTokens = [
-    "(",
-    "{",
-    "[",
-    "in",
-    "typeof",
-    "instanceof",
-    "new",
-    "return",
-    "case",
-    "delete",
-    "throw",
-    "void",
-    // assignment operators
-    "=",
-    "+=",
-    "-=",
-    "*=",
-    "**=",
-    "/=",
-    "%=",
-    "<<=",
-    ">>=",
-    ">>>=",
-    "&=",
-    "|=",
-    "^=",
-    ",",
-    // binary/unary operators
-    "+",
-    "-",
-    "*",
-    "**",
-    "/",
-    "%",
-    "++",
-    "--",
-    "<<",
-    ">>",
-    ">>>",
-    "&",
-    "|",
-    "^",
-    "!",
-    "~",
-    "&&",
-    "||",
-    "??",
-    "?",
-    ":",
-    "===",
-    "==",
-    ">=",
-    "<=",
-    "<",
-    ">",
-    "!=",
-    "!=="
-  ];
-  var Reader = class {
-    values;
-    curly;
-    paren;
-    constructor() {
-      this.values = [];
-      this.curly = this.paren = -1;
+function each_line_matches_indent(lines, indent) {
+  var i = 0,
+    len = lines.length,
+    line;
+  for (; i < len; i++) {
+    line = lines[i];
+    // allow empty lines to pass through
+    if (line && line.indexOf(indent) !== 0) {
+      return false;
     }
-    // A function following one of those tokens is an expression.
-    beforeFunctionExpression(t) {
-      return beforeFunctionExpressionTokens.includes(t);
-    }
-    // Determine if forward slash (/) is an operator or part of a regular expression
-    // https://github.com/mozilla/sweet.js/wiki/design
-    isRegexStart() {
-      const previous = this.values[this.values.length - 1];
-      let regex = previous !== null;
-      switch (previous) {
-        case "this":
-        case "]":
-          regex = false;
-          break;
-        case ")":
-          const keyword = this.values[this.paren - 1];
-          regex = keyword === "if" || keyword === "while" || keyword === "for" || keyword === "with";
-          break;
-        case "}":
-          regex = true;
-          if (this.values[this.curly - 3] === "function") {
-            const check = this.values[this.curly - 4];
-            regex = check ? !this.beforeFunctionExpression(check) : false;
-          } else if (this.values[this.curly - 4] === "function") {
-            const check = this.values[this.curly - 5];
-            regex = check ? !this.beforeFunctionExpression(check) : true;
-          }
-          break;
-        default:
-          break;
-      }
-      return regex;
-    }
-    push(token) {
-      if (token.type === 7 /* Punctuator */ || token.type === 4 /* Keyword */) {
-        if (token.value === "{") {
-          this.curly = this.values.length;
-        } else if (token.value === "(") {
-          this.paren = this.values.length;
-        }
-        this.values.push(token.value);
-      } else {
-        this.values.push(null);
-      }
-    }
-  };
-  var Tokenizer = class {
-    errorHandler;
-    scanner;
-    trackRange;
-    trackLoc;
-    buffer;
-    reader;
-    constructor(code, config) {
-      this.errorHandler = new ErrorHandler();
-      this.errorHandler.tolerant = config ? typeof config.tolerant === "boolean" && config.tolerant : false;
-      this.scanner = new Scanner(code, this.errorHandler);
-      this.scanner.trackComment = config ? typeof config.comment === "boolean" && config.comment : false;
-      this.trackRange = config ? typeof config.range === "boolean" && config.range : false;
-      this.trackLoc = config ? typeof config.loc === "boolean" && config.loc : false;
-      this.buffer = [];
-      this.reader = new Reader();
-    }
-    errors() {
-      return this.errorHandler.errors;
-    }
-    getNextToken() {
-      if (this.buffer.length === 0) {
-        const comments = this.scanner.scanComments();
-        if (this.scanner.trackComment) {
-          for (let i = 0; i < comments.length; ++i) {
-            const e = comments[i];
-            const value = this.scanner.source.slice(e.slice[0], e.slice[1]);
-            const comment = {
-              type: e.multiLine ? "BlockComment" : "LineComment",
-              value
-            };
-            if (this.trackRange) {
-              comment.range = e.range;
-            }
-            if (this.trackLoc) {
-              comment.loc = e.loc;
-            }
-            this.buffer.push(comment);
-          }
-        }
-        if (!this.scanner.eof()) {
-          let loc;
-          if (this.trackLoc) {
-            loc = {
-              start: {
-                line: this.scanner.lineNumber,
-                column: this.scanner.index - this.scanner.lineStart
-              },
-              end: {}
-            };
-          }
-          const maybeRegex = this.scanner.source[this.scanner.index] === "/" && this.reader.isRegexStart();
-          let token;
-          if (maybeRegex) {
-            const state = this.scanner.saveState();
-            try {
-              token = this.scanner.scanRegExp();
-            } catch (e) {
-              this.scanner.restoreState(state);
-              token = this.scanner.lex();
-            }
-          } else {
-            token = this.scanner.lex();
-          }
-          this.reader.push(token);
-          const entry = {
-            type: TokenName[token.type],
-            value: this.scanner.source.slice(token.start, token.end)
-          };
-          if (this.trackRange) {
-            entry.range = [token.start, token.end];
-          }
-          if (this.trackLoc) {
-            loc.end = {
-              line: this.scanner.lineNumber,
-              column: this.scanner.index - this.scanner.lineStart
-            };
-            entry.loc = loc;
-          }
-          if (token.type === 9 /* RegularExpression */) {
-            const pattern = token.pattern;
-            const flags = token.flags;
-            entry.regex = { pattern, flags };
-          }
-          this.buffer.push(entry);
-        }
-      }
-      return this.buffer.shift();
-    }
-  };
+  }
+  return true;
+}
 
-  // esprima.ts
-  function parse(code, options, delegate) {
-    let commentHandler = null;
-    const proxyDelegate = (node, metadata) => {
-      if (delegate) {
-        delegate(node, metadata);
-      }
-      if (commentHandler) {
-        commentHandler.visit(node, metadata);
-      }
-    };
-    let parserDelegate = typeof delegate === "function" ? proxyDelegate : null;
-    let collectComment = false;
-    if (options) {
-      collectComment = typeof options.comment === "boolean" && options.comment;
-      const attachComment = typeof options.attachComment === "boolean" && options.attachComment;
-      if (collectComment || attachComment) {
-        commentHandler = new CommentHandler();
-        commentHandler.attach = attachComment;
-        options.comment = true;
-        parserDelegate = proxyDelegate;
+
+function Beautifier(source_text, options) {
+  options = options || {};
+  this._source_text = source_text || '';
+
+  this._output = null;
+  this._tokens = null;
+  this._last_last_text = null;
+  this._flags = null;
+  this._previous_flags = null;
+
+  this._flag_store = null;
+  this._options = new Options(options);
+}
+
+Beautifier.prototype.create_flags = function(flags_base, mode) {
+  var next_indent_level = 0;
+  if (flags_base) {
+    next_indent_level = flags_base.indentation_level;
+    if (!this._output.just_added_newline() &&
+      flags_base.line_indent_level > next_indent_level) {
+      next_indent_level = flags_base.line_indent_level;
+    }
+  }
+
+  var next_flags = {
+    mode: mode,
+    parent: flags_base,
+    last_token: flags_base ? flags_base.last_token : new Token(TOKEN.START_BLOCK, ''), // last token text
+    last_word: flags_base ? flags_base.last_word : '', // last TOKEN.WORD passed
+    declaration_statement: false,
+    declaration_assignment: false,
+    multiline_frame: false,
+    inline_frame: false,
+    if_block: false,
+    else_block: false,
+    class_start_block: false, // class A { INSIDE HERE } or class B extends C { INSIDE HERE }
+    do_block: false,
+    do_while: false,
+    import_block: false,
+    in_case_statement: false, // switch(..){ INSIDE HERE }
+    in_case: false, // we're on the exact line with "case 0:"
+    case_body: false, // the indented case-action block
+    case_block: false, // the indented case-action block is wrapped with {}
+    indentation_level: next_indent_level,
+    alignment: 0,
+    line_indent_level: flags_base ? flags_base.line_indent_level : next_indent_level,
+    start_line_index: this._output.get_line_number(),
+    ternary_depth: 0
+  };
+  return next_flags;
+};
+
+Beautifier.prototype._reset = function(source_text) {
+  var baseIndentString = source_text.match(/^[\t ]*/)[0];
+
+  this._last_last_text = ''; // pre-last token text
+  this._output = new Output(this._options, baseIndentString);
+
+  // If testing the ignore directive, start with output disable set to true
+  this._output.raw = this._options.test_output_raw;
+
+
+  // Stack of parsing/formatting states, including MODE.
+  // We tokenize, parse, and output in an almost purely a forward-only stream of token input
+  // and formatted output.  This makes the beautifier less accurate than full parsers
+  // but also far more tolerant of syntax errors.
+  //
+  // For example, the default mode is MODE.BlockStatement. If we see a '{' we push a new frame of type
+  // MODE.BlockStatement on the the stack, even though it could be object literal.  If we later
+  // encounter a ":", we'll switch to to MODE.ObjectLiteral.  If we then see a ";",
+  // most full parsers would die, but the beautifier gracefully falls back to
+  // MODE.BlockStatement and continues on.
+  this._flag_store = [];
+  this.set_mode(MODE.BlockStatement);
+  var tokenizer = new Tokenizer(source_text, this._options);
+  this._tokens = tokenizer.tokenize();
+  return source_text;
+};
+
+Beautifier.prototype.beautify = function() {
+  // if disabled, return the input unchanged.
+  if (this._options.disabled) {
+    return this._source_text;
+  }
+
+  var sweet_code;
+  var source_text = this._reset(this._source_text);
+
+  var eol = this._options.eol;
+  if (this._options.eol === 'auto') {
+    eol = '\n';
+    if (source_text && acorn.lineBreak.test(source_text || '')) {
+      eol = source_text.match(acorn.lineBreak)[0];
+    }
+  }
+
+  var current_token = this._tokens.next();
+  while (current_token) {
+    this.handle_token(current_token);
+
+    this._last_last_text = this._flags.last_token.text;
+    this._flags.last_token = current_token;
+
+    current_token = this._tokens.next();
+  }
+
+  sweet_code = this._output.get_code(eol);
+
+  return sweet_code;
+};
+
+Beautifier.prototype.handle_token = function(current_token, preserve_statement_flags) {
+  if (current_token.type === TOKEN.START_EXPR) {
+    this.handle_start_expr(current_token);
+  } else if (current_token.type === TOKEN.END_EXPR) {
+    this.handle_end_expr(current_token);
+  } else if (current_token.type === TOKEN.START_BLOCK) {
+    this.handle_start_block(current_token);
+  } else if (current_token.type === TOKEN.END_BLOCK) {
+    this.handle_end_block(current_token);
+  } else if (current_token.type === TOKEN.WORD) {
+    this.handle_word(current_token);
+  } else if (current_token.type === TOKEN.RESERVED) {
+    this.handle_word(current_token);
+  } else if (current_token.type === TOKEN.SEMICOLON) {
+    this.handle_semicolon(current_token);
+  } else if (current_token.type === TOKEN.STRING) {
+    this.handle_string(current_token);
+  } else if (current_token.type === TOKEN.EQUALS) {
+    this.handle_equals(current_token);
+  } else if (current_token.type === TOKEN.OPERATOR) {
+    this.handle_operator(current_token);
+  } else if (current_token.type === TOKEN.COMMA) {
+    this.handle_comma(current_token);
+  } else if (current_token.type === TOKEN.BLOCK_COMMENT) {
+    this.handle_block_comment(current_token, preserve_statement_flags);
+  } else if (current_token.type === TOKEN.COMMENT) {
+    this.handle_comment(current_token, preserve_statement_flags);
+  } else if (current_token.type === TOKEN.DOT) {
+    this.handle_dot(current_token);
+  } else if (current_token.type === TOKEN.EOF) {
+    this.handle_eof(current_token);
+  } else if (current_token.type === TOKEN.UNKNOWN) {
+    this.handle_unknown(current_token, preserve_statement_flags);
+  } else {
+    this.handle_unknown(current_token, preserve_statement_flags);
+  }
+};
+
+Beautifier.prototype.handle_whitespace_and_comments = function(current_token, preserve_statement_flags) {
+  var newlines = current_token.newlines;
+  var keep_whitespace = this._options.keep_array_indentation && is_array(this._flags.mode);
+
+  if (current_token.comments_before) {
+    var comment_token = current_token.comments_before.next();
+    while (comment_token) {
+      // The cleanest handling of inline comments is to treat them as though they aren't there.
+      // Just continue formatting and the behavior should be logical.
+      // Also ignore unknown tokens.  Again, this should result in better behavior.
+      this.handle_whitespace_and_comments(comment_token, preserve_statement_flags);
+      this.handle_token(comment_token, preserve_statement_flags);
+      comment_token = current_token.comments_before.next();
+    }
+  }
+
+  if (keep_whitespace) {
+    for (var i = 0; i < newlines; i += 1) {
+      this.print_newline(i > 0, preserve_statement_flags);
+    }
+  } else {
+    if (this._options.max_preserve_newlines && newlines > this._options.max_preserve_newlines) {
+      newlines = this._options.max_preserve_newlines;
+    }
+
+    if (this._options.preserve_newlines) {
+      if (newlines > 1) {
+        this.print_newline(false, preserve_statement_flags);
+        for (var j = 1; j < newlines; j += 1) {
+          this.print_newline(true, preserve_statement_flags);
+        }
       }
     }
-    let isModule = false;
-    if (options && typeof options.sourceType === "string") {
-      isModule = options.sourceType === "module";
+  }
+
+};
+
+var newline_restricted_tokens = ['async', 'break', 'continue', 'return', 'throw', 'yield'];
+
+Beautifier.prototype.allow_wrap_or_preserved_newline = function(current_token, force_linewrap) {
+  force_linewrap = (force_linewrap === undefined) ? false : force_linewrap;
+
+  // Never wrap the first token on a line
+  if (this._output.just_added_newline()) {
+    return;
+  }
+
+  var shouldPreserveOrForce = (this._options.preserve_newlines && current_token.newlines) || force_linewrap;
+  var operatorLogicApplies = in_array(this._flags.last_token.text, positionable_operators) ||
+    in_array(current_token.text, positionable_operators);
+
+  if (operatorLogicApplies) {
+    var shouldPrintOperatorNewline = (
+        in_array(this._flags.last_token.text, positionable_operators) &&
+        in_array(this._options.operator_position, OPERATOR_POSITION_BEFORE_OR_PRESERVE)
+      ) ||
+      in_array(current_token.text, positionable_operators);
+    shouldPreserveOrForce = shouldPreserveOrForce && shouldPrintOperatorNewline;
+  }
+
+  if (shouldPreserveOrForce) {
+    this.print_newline(false, true);
+  } else if (this._options.wrap_line_length) {
+    if (reserved_array(this._flags.last_token, newline_restricted_tokens)) {
+      // These tokens should never have a newline inserted
+      // between them and the following expression.
+      return;
     }
-    let parser;
-    if (options && typeof options.jsx === "boolean" && options.jsx) {
-      parser = new JSXParser(code, options, parserDelegate);
+    this._output.set_wrap_point();
+  }
+};
+
+Beautifier.prototype.print_newline = function(force_newline, preserve_statement_flags) {
+  if (!preserve_statement_flags) {
+    if (this._flags.last_token.text !== ';' && this._flags.last_token.text !== ',' && this._flags.last_token.text !== '=' && (this._flags.last_token.type !== TOKEN.OPERATOR || this._flags.last_token.text === '--' || this._flags.last_token.text === '++')) {
+      var next_token = this._tokens.peek();
+      while (this._flags.mode === MODE.Statement &&
+        !(this._flags.if_block && reserved_word(next_token, 'else')) &&
+        !this._flags.do_block) {
+        this.restore_mode();
+      }
+    }
+  }
+
+  if (this._output.add_new_line(force_newline)) {
+    this._flags.multiline_frame = true;
+  }
+};
+
+Beautifier.prototype.print_token_line_indentation = function(current_token) {
+  if (this._output.just_added_newline()) {
+    if (this._options.keep_array_indentation &&
+      current_token.newlines &&
+      (current_token.text === '[' || is_array(this._flags.mode))) {
+      this._output.current_line.set_indent(-1);
+      this._output.current_line.push(current_token.whitespace_before);
+      this._output.space_before_token = false;
+    } else if (this._output.set_indent(this._flags.indentation_level, this._flags.alignment)) {
+      this._flags.line_indent_level = this._flags.indentation_level;
+    }
+  }
+};
+
+Beautifier.prototype.print_token = function(current_token) {
+  if (this._output.raw) {
+    this._output.add_raw_token(current_token);
+    return;
+  }
+
+  if (this._options.comma_first && current_token.previous && current_token.previous.type === TOKEN.COMMA &&
+    this._output.just_added_newline()) {
+    if (this._output.previous_line.last() === ',') {
+      var popped = this._output.previous_line.pop();
+      // if the comma was already at the start of the line,
+      // pull back onto that line and reprint the indentation
+      if (this._output.previous_line.is_empty()) {
+        this._output.previous_line.push(popped);
+        this._output.trim(true);
+        this._output.current_line.pop();
+        this._output.trim();
+      }
+
+      // add the comma in front of the next token
+      this.print_token_line_indentation(current_token);
+      this._output.add_token(',');
+      this._output.space_before_token = true;
+    }
+  }
+
+  this.print_token_line_indentation(current_token);
+  this._output.non_breaking_space = true;
+  this._output.add_token(current_token.text);
+  if (this._output.previous_token_wrapped) {
+    this._flags.multiline_frame = true;
+  }
+};
+
+Beautifier.prototype.indent = function() {
+  this._flags.indentation_level += 1;
+  this._output.set_indent(this._flags.indentation_level, this._flags.alignment);
+};
+
+Beautifier.prototype.deindent = function() {
+  if (this._flags.indentation_level > 0 &&
+    ((!this._flags.parent) || this._flags.indentation_level > this._flags.parent.indentation_level)) {
+    this._flags.indentation_level -= 1;
+    this._output.set_indent(this._flags.indentation_level, this._flags.alignment);
+  }
+};
+
+Beautifier.prototype.set_mode = function(mode) {
+  if (this._flags) {
+    this._flag_store.push(this._flags);
+    this._previous_flags = this._flags;
+  } else {
+    this._previous_flags = this.create_flags(null, mode);
+  }
+
+  this._flags = this.create_flags(this._previous_flags, mode);
+  this._output.set_indent(this._flags.indentation_level, this._flags.alignment);
+};
+
+
+Beautifier.prototype.restore_mode = function() {
+  if (this._flag_store.length > 0) {
+    this._previous_flags = this._flags;
+    this._flags = this._flag_store.pop();
+    if (this._previous_flags.mode === MODE.Statement) {
+      remove_redundant_indentation(this._output, this._previous_flags);
+    }
+    this._output.set_indent(this._flags.indentation_level, this._flags.alignment);
+  }
+};
+
+Beautifier.prototype.start_of_object_property = function() {
+  return this._flags.parent.mode === MODE.ObjectLiteral && this._flags.mode === MODE.Statement && (
+    (this._flags.last_token.text === ':' && this._flags.ternary_depth === 0) || (reserved_array(this._flags.last_token, ['get', 'set'])));
+};
+
+Beautifier.prototype.start_of_statement = function(current_token) {
+  var start = false;
+  start = start || reserved_array(this._flags.last_token, ['var', 'let', 'const']) && current_token.type === TOKEN.WORD;
+  start = start || reserved_word(this._flags.last_token, 'do');
+  start = start || (!(this._flags.parent.mode === MODE.ObjectLiteral && this._flags.mode === MODE.Statement)) && reserved_array(this._flags.last_token, newline_restricted_tokens) && !current_token.newlines;
+  start = start || reserved_word(this._flags.last_token, 'else') &&
+    !(reserved_word(current_token, 'if') && !current_token.comments_before);
+  start = start || (this._flags.last_token.type === TOKEN.END_EXPR && (this._previous_flags.mode === MODE.ForInitializer || this._previous_flags.mode === MODE.Conditional));
+  start = start || (this._flags.last_token.type === TOKEN.WORD && this._flags.mode === MODE.BlockStatement &&
+    !this._flags.in_case &&
+    !(current_token.text === '--' || current_token.text === '++') &&
+    this._last_last_text !== 'function' &&
+    current_token.type !== TOKEN.WORD && current_token.type !== TOKEN.RESERVED);
+  start = start || (this._flags.mode === MODE.ObjectLiteral && (
+    (this._flags.last_token.text === ':' && this._flags.ternary_depth === 0) || reserved_array(this._flags.last_token, ['get', 'set'])));
+
+  if (start) {
+    this.set_mode(MODE.Statement);
+    this.indent();
+
+    this.handle_whitespace_and_comments(current_token, true);
+
+    // Issue #276:
+    // If starting a new statement with [if, for, while, do], push to a new line.
+    // if (a) if (b) if(c) d(); else e(); else f();
+    if (!this.start_of_object_property()) {
+      this.allow_wrap_or_preserved_newline(current_token,
+        reserved_array(current_token, ['do', 'for', 'if', 'while']));
+    }
+    return true;
+  }
+  return false;
+};
+
+Beautifier.prototype.handle_start_expr = function(current_token) {
+  // The conditional starts the statement if appropriate.
+  if (!this.start_of_statement(current_token)) {
+    this.handle_whitespace_and_comments(current_token);
+  }
+
+  var next_mode = MODE.Expression;
+  if (current_token.text === '[') {
+
+    if (this._flags.last_token.type === TOKEN.WORD || this._flags.last_token.text === ')') {
+      // this is array index specifier, break immediately
+      // a[x], fn()[x]
+      if (reserved_array(this._flags.last_token, line_starters)) {
+        this._output.space_before_token = true;
+      }
+      this.print_token(current_token);
+      this.set_mode(next_mode);
+      this.indent();
+      if (this._options.space_in_paren) {
+        this._output.space_before_token = true;
+      }
+      return;
+    }
+
+    next_mode = MODE.ArrayLiteral;
+    if (is_array(this._flags.mode)) {
+      if (this._flags.last_token.text === '[' ||
+        (this._flags.last_token.text === ',' && (this._last_last_text === ']' || this._last_last_text === '}'))) {
+        // ], [ goes to new line
+        // }, [ goes to new line
+        if (!this._options.keep_array_indentation) {
+          this.print_newline();
+        }
+      }
+    }
+
+    if (!in_array(this._flags.last_token.type, [TOKEN.START_EXPR, TOKEN.END_EXPR, TOKEN.WORD, TOKEN.OPERATOR, TOKEN.DOT])) {
+      this._output.space_before_token = true;
+    }
+  } else {
+    if (this._flags.last_token.type === TOKEN.RESERVED) {
+      if (this._flags.last_token.text === 'for') {
+        this._output.space_before_token = this._options.space_before_conditional;
+        next_mode = MODE.ForInitializer;
+      } else if (in_array(this._flags.last_token.text, ['if', 'while', 'switch'])) {
+        this._output.space_before_token = this._options.space_before_conditional;
+        next_mode = MODE.Conditional;
+      } else if (in_array(this._flags.last_word, ['await', 'async'])) {
+        // Should be a space between await and an IIFE, or async and an arrow function
+        this._output.space_before_token = true;
+      } else if (this._flags.last_token.text === 'import' && current_token.whitespace_before === '') {
+        this._output.space_before_token = false;
+      } else if (in_array(this._flags.last_token.text, line_starters) || this._flags.last_token.text === 'catch') {
+        this._output.space_before_token = true;
+      }
+    } else if (this._flags.last_token.type === TOKEN.EQUALS || this._flags.last_token.type === TOKEN.OPERATOR) {
+      // Support of this kind of newline preservation.
+      // a = (b &&
+      //     (c || d));
+      if (!this.start_of_object_property()) {
+        this.allow_wrap_or_preserved_newline(current_token);
+      }
+    } else if (this._flags.last_token.type === TOKEN.WORD) {
+      this._output.space_before_token = false;
+
+      // function name() vs function name ()
+      // function* name() vs function* name ()
+      // async name() vs async name ()
+      // In ES6, you can also define the method properties of an object
+      // var obj = {a: function() {}}
+      // It can be abbreviated
+      // var obj = {a() {}}
+      // var obj = { a() {}} vs var obj = { a () {}}
+      // var obj = { * a() {}} vs var obj = { * a () {}}
+      var peek_back_two = this._tokens.peek(-3);
+      if (this._options.space_after_named_function && peek_back_two) {
+        // peek starts at next character so -1 is current token
+        var peek_back_three = this._tokens.peek(-4);
+        if (reserved_array(peek_back_two, ['async', 'function']) ||
+          (peek_back_two.text === '*' && reserved_array(peek_back_three, ['async', 'function']))) {
+          this._output.space_before_token = true;
+        } else if (this._flags.mode === MODE.ObjectLiteral) {
+          if ((peek_back_two.text === '{' || peek_back_two.text === ',') ||
+            (peek_back_two.text === '*' && (peek_back_three.text === '{' || peek_back_three.text === ','))) {
+            this._output.space_before_token = true;
+          }
+        } else if (this._flags.parent && this._flags.parent.class_start_block) {
+          this._output.space_before_token = true;
+        }
+      }
     } else {
-      parser = new Parser(code, options, parserDelegate);
+      // Support preserving wrapped arrow function expressions
+      // a.b('c',
+      //     () => d.e
+      // )
+      this.allow_wrap_or_preserved_newline(current_token);
     }
-    const program = isModule ? parser.parseModule() : parser.parseScript();
-    const ast = program;
-    if (collectComment && commentHandler) {
-      ast.comments = commentHandler.comments;
+
+    // function() vs function ()
+    // yield*() vs yield* ()
+    // function*() vs function* ()
+    if ((this._flags.last_token.type === TOKEN.RESERVED && (this._flags.last_word === 'function' || this._flags.last_word === 'typeof')) ||
+      (this._flags.last_token.text === '*' &&
+        (in_array(this._last_last_text, ['function', 'yield']) ||
+          (this._flags.mode === MODE.ObjectLiteral && in_array(this._last_last_text, ['{', ',']))))) {
+      this._output.space_before_token = this._options.space_after_anon_function;
     }
-    if (parser.config.tokens) {
-      ast.tokens = parser.tokens;
-    }
-    if (parser.config.tolerant) {
-      ast.errors = parser.errorHandler.errors;
-    }
-    return ast;
   }
-  function parseModule(code, options, delegate) {
-    const parsingOptions = options || {};
-    parsingOptions.sourceType = "module";
-    return parse(code, parsingOptions, delegate);
+
+  if (this._flags.last_token.text === ';' || this._flags.last_token.type === TOKEN.START_BLOCK) {
+    this.print_newline();
+  } else if (this._flags.last_token.type === TOKEN.END_EXPR || this._flags.last_token.type === TOKEN.START_EXPR || this._flags.last_token.type === TOKEN.END_BLOCK || this._flags.last_token.text === '.' || this._flags.last_token.type === TOKEN.COMMA) {
+    // do nothing on (( and )( and ][ and ]( and .(
+    // TODO: Consider whether forcing this is required.  Review failing tests when removed.
+    this.allow_wrap_or_preserved_newline(current_token, current_token.newlines);
   }
-  function parseScript(code, options, delegate) {
-    const parsingOptions = options || {};
-    parsingOptions.sourceType = "script";
-    return parse(code, parsingOptions, delegate);
+
+  this.print_token(current_token);
+  this.set_mode(next_mode);
+  if (this._options.space_in_paren) {
+    this._output.space_before_token = true;
   }
-  function tokenize(code, options, delegate) {
-    const tokenizer = new Tokenizer(code, options);
-    const tokens = [];
-    try {
-      while (true) {
-        let token = tokenizer.getNextToken();
-        if (!token) {
-          break;
-        }
-        if (delegate) {
-          token = delegate(token);
-        }
-        tokens.push(token);
+
+  // In all cases, if we newline while inside an expression it should be indented.
+  this.indent();
+};
+
+Beautifier.prototype.handle_end_expr = function(current_token) {
+  // statements inside expressions are not valid syntax, but...
+  // statements must all be closed when their container closes
+  while (this._flags.mode === MODE.Statement) {
+    this.restore_mode();
+  }
+
+  this.handle_whitespace_and_comments(current_token);
+
+  if (this._flags.multiline_frame) {
+    this.allow_wrap_or_preserved_newline(current_token,
+      current_token.text === ']' && is_array(this._flags.mode) && !this._options.keep_array_indentation);
+  }
+
+  if (this._options.space_in_paren) {
+    if (this._flags.last_token.type === TOKEN.START_EXPR && !this._options.space_in_empty_paren) {
+      // () [] no inner space in empty parens like these, ever, ref #320
+      this._output.trim();
+      this._output.space_before_token = false;
+    } else {
+      this._output.space_before_token = true;
+    }
+  }
+  this.deindent();
+  this.print_token(current_token);
+  this.restore_mode();
+
+  remove_redundant_indentation(this._output, this._previous_flags);
+
+  // do {} while () // no statement required after
+  if (this._flags.do_while && this._previous_flags.mode === MODE.Conditional) {
+    this._previous_flags.mode = MODE.Expression;
+    this._flags.do_block = false;
+    this._flags.do_while = false;
+
+  }
+};
+
+Beautifier.prototype.handle_start_block = function(current_token) {
+  this.handle_whitespace_and_comments(current_token);
+
+  // Check if this is should be treated as a ObjectLiteral
+  var next_token = this._tokens.peek();
+  var second_token = this._tokens.peek(1);
+  if (this._flags.last_word === 'switch' && this._flags.last_token.type === TOKEN.END_EXPR) {
+    this.set_mode(MODE.BlockStatement);
+    this._flags.in_case_statement = true;
+  } else if (this._flags.case_body) {
+    this.set_mode(MODE.BlockStatement);
+  } else if (second_token && (
+      (in_array(second_token.text, [':', ',']) && in_array(next_token.type, [TOKEN.STRING, TOKEN.WORD, TOKEN.RESERVED])) ||
+      (in_array(next_token.text, ['get', 'set', '...']) && in_array(second_token.type, [TOKEN.WORD, TOKEN.RESERVED]))
+    )) {
+    // We don't support TypeScript,but we didn't break it for a very long time.
+    // We'll try to keep not breaking it.
+    if (in_array(this._last_last_text, ['class', 'interface']) && !in_array(second_token.text, [':', ','])) {
+      this.set_mode(MODE.BlockStatement);
+    } else {
+      this.set_mode(MODE.ObjectLiteral);
+    }
+  } else if (this._flags.last_token.type === TOKEN.OPERATOR && this._flags.last_token.text === '=>') {
+    // arrow function: (param1, paramN) => { statements }
+    this.set_mode(MODE.BlockStatement);
+  } else if (in_array(this._flags.last_token.type, [TOKEN.EQUALS, TOKEN.START_EXPR, TOKEN.COMMA, TOKEN.OPERATOR]) ||
+    reserved_array(this._flags.last_token, ['return', 'throw', 'import', 'default'])
+  ) {
+    // Detecting shorthand function syntax is difficult by scanning forward,
+    //     so check the surrounding context.
+    // If the block is being returned, imported, export default, passed as arg,
+    //     assigned with = or assigned in a nested object, treat as an ObjectLiteral.
+    this.set_mode(MODE.ObjectLiteral);
+  } else {
+    this.set_mode(MODE.BlockStatement);
+  }
+
+  if (this._flags.last_token) {
+    if (reserved_array(this._flags.last_token.previous, ['class', 'extends'])) {
+      this._flags.class_start_block = true;
+    }
+  }
+
+  var empty_braces = !next_token.comments_before && next_token.text === '}';
+  var empty_anonymous_function = empty_braces && this._flags.last_word === 'function' &&
+    this._flags.last_token.type === TOKEN.END_EXPR;
+
+  if (this._options.brace_preserve_inline) // check for inline, set inline_frame if so
+  {
+    // search forward for a newline wanted inside this block
+    var index = 0;
+    var check_token = null;
+    this._flags.inline_frame = true;
+    do {
+      index += 1;
+      check_token = this._tokens.peek(index - 1);
+      if (check_token.newlines) {
+        this._flags.inline_frame = false;
+        break;
       }
-    } catch (e) {
-      tokenizer.errorHandler.tolerate(e);
-    }
-    if (tokenizer.errorHandler.tolerant) {
-      tokens.errors = tokenizer.errors();
-    }
-    return tokens;
+    } while (check_token.type !== TOKEN.EOF &&
+      !(check_token.type === TOKEN.END_BLOCK && check_token.opened === current_token));
   }
-  var version = "5.7.1";
-  var esprima_default = {
-    parse,
-    parseModule,
-    parseScript,
-    tokenize,
-    Syntax,
-    version
-  };
+
+  if ((this._options.brace_style === "expand" ||
+      (this._options.brace_style === "none" && current_token.newlines)) &&
+    !this._flags.inline_frame) {
+    if (this._flags.last_token.type !== TOKEN.OPERATOR &&
+      (empty_anonymous_function ||
+        this._flags.last_token.type === TOKEN.EQUALS ||
+        (reserved_array(this._flags.last_token, special_words) && this._flags.last_token.text !== 'else'))) {
+      this._output.space_before_token = true;
+    } else {
+      this.print_newline(false, true);
+    }
+  } else { // collapse || inline_frame
+    if (is_array(this._previous_flags.mode) && (this._flags.last_token.type === TOKEN.START_EXPR || this._flags.last_token.type === TOKEN.COMMA)) {
+      if (this._flags.last_token.type === TOKEN.COMMA || this._options.space_in_paren) {
+        this._output.space_before_token = true;
+      }
+
+      if (this._flags.last_token.type === TOKEN.COMMA || (this._flags.last_token.type === TOKEN.START_EXPR && this._flags.inline_frame)) {
+        this.allow_wrap_or_preserved_newline(current_token);
+        this._previous_flags.multiline_frame = this._previous_flags.multiline_frame || this._flags.multiline_frame;
+        this._flags.multiline_frame = false;
+      }
+    }
+    if (this._flags.last_token.type !== TOKEN.OPERATOR && this._flags.last_token.type !== TOKEN.START_EXPR) {
+      if (in_array(this._flags.last_token.type, [TOKEN.START_BLOCK, TOKEN.SEMICOLON]) && !this._flags.inline_frame) {
+        this.print_newline();
+      } else {
+        this._output.space_before_token = true;
+      }
+    }
+  }
+  this.print_token(current_token);
+  this.indent();
+
+  // Except for specific cases, open braces are followed by a new line.
+  if (!empty_braces && !(this._options.brace_preserve_inline && this._flags.inline_frame)) {
+    this.print_newline();
+  }
+};
+
+Beautifier.prototype.handle_end_block = function(current_token) {
+  // statements must all be closed when their container closes
+  this.handle_whitespace_and_comments(current_token);
+
+  while (this._flags.mode === MODE.Statement) {
+    this.restore_mode();
+  }
+
+  var empty_braces = this._flags.last_token.type === TOKEN.START_BLOCK;
+
+  if (this._flags.inline_frame && !empty_braces) { // try inline_frame (only set if this._options.braces-preserve-inline) first
+    this._output.space_before_token = true;
+  } else if (this._options.brace_style === "expand") {
+    if (!empty_braces) {
+      this.print_newline();
+    }
+  } else {
+    // skip {}
+    if (!empty_braces) {
+      if (is_array(this._flags.mode) && this._options.keep_array_indentation) {
+        // we REALLY need a newline here, but newliner would skip that
+        this._options.keep_array_indentation = false;
+        this.print_newline();
+        this._options.keep_array_indentation = true;
+
+      } else {
+        this.print_newline();
+      }
+    }
+  }
+  this.restore_mode();
+  this.print_token(current_token);
+};
+
+Beautifier.prototype.handle_word = function(current_token) {
+  if (current_token.type === TOKEN.RESERVED) {
+    if (in_array(current_token.text, ['set', 'get']) && this._flags.mode !== MODE.ObjectLiteral) {
+      current_token.type = TOKEN.WORD;
+    } else if (current_token.text === 'import' && in_array(this._tokens.peek().text, ['(', '.'])) {
+      current_token.type = TOKEN.WORD;
+    } else if (in_array(current_token.text, ['as', 'from']) && !this._flags.import_block) {
+      current_token.type = TOKEN.WORD;
+    } else if (this._flags.mode === MODE.ObjectLiteral) {
+      var next_token = this._tokens.peek();
+      if (next_token.text === ':') {
+        current_token.type = TOKEN.WORD;
+      }
+    }
+  }
+
+  if (this.start_of_statement(current_token)) {
+    // The conditional starts the statement if appropriate.
+    if (reserved_array(this._flags.last_token, ['var', 'let', 'const']) && current_token.type === TOKEN.WORD) {
+      this._flags.declaration_statement = true;
+    }
+  } else if (current_token.newlines && !is_expression(this._flags.mode) &&
+    (this._flags.last_token.type !== TOKEN.OPERATOR || (this._flags.last_token.text === '--' || this._flags.last_token.text === '++')) &&
+    this._flags.last_token.type !== TOKEN.EQUALS &&
+    (this._options.preserve_newlines || !reserved_array(this._flags.last_token, ['var', 'let', 'const', 'set', 'get']))) {
+    this.handle_whitespace_and_comments(current_token);
+    this.print_newline();
+  } else {
+    this.handle_whitespace_and_comments(current_token);
+  }
+
+  if (this._flags.do_block && !this._flags.do_while) {
+    if (reserved_word(current_token, 'while')) {
+      // do {} ## while ()
+      this._output.space_before_token = true;
+      this.print_token(current_token);
+      this._output.space_before_token = true;
+      this._flags.do_while = true;
+      return;
+    } else {
+      // do {} should always have while as the next word.
+      // if we don't see the expected while, recover
+      this.print_newline();
+      this._flags.do_block = false;
+    }
+  }
+
+  // if may be followed by else, or not
+  // Bare/inline ifs are tricky
+  // Need to unwind the modes correctly: if (a) if (b) c(); else d(); else e();
+  if (this._flags.if_block) {
+    if (!this._flags.else_block && reserved_word(current_token, 'else')) {
+      this._flags.else_block = true;
+    } else {
+      while (this._flags.mode === MODE.Statement) {
+        this.restore_mode();
+      }
+      this._flags.if_block = false;
+      this._flags.else_block = false;
+    }
+  }
+
+  if (this._flags.in_case_statement && reserved_array(current_token, ['case', 'default'])) {
+    this.print_newline();
+    if (!this._flags.case_block && (this._flags.case_body || this._options.jslint_happy)) {
+      // switch cases following one another
+      this.deindent();
+    }
+    this._flags.case_body = false;
+
+    this.print_token(current_token);
+    this._flags.in_case = true;
+    return;
+  }
+
+  if (this._flags.last_token.type === TOKEN.COMMA || this._flags.last_token.type === TOKEN.START_EXPR || this._flags.last_token.type === TOKEN.EQUALS || this._flags.last_token.type === TOKEN.OPERATOR) {
+    if (!this.start_of_object_property() && !(
+        // start of object property is different for numeric values with +/- prefix operators
+        in_array(this._flags.last_token.text, ['+', '-']) && this._last_last_text === ':' && this._flags.parent.mode === MODE.ObjectLiteral)) {
+      this.allow_wrap_or_preserved_newline(current_token);
+    }
+  }
+
+  if (reserved_word(current_token, 'function')) {
+    if (in_array(this._flags.last_token.text, ['}', ';']) ||
+      (this._output.just_added_newline() && !(in_array(this._flags.last_token.text, ['(', '[', '{', ':', '=', ',']) || this._flags.last_token.type === TOKEN.OPERATOR))) {
+      // make sure there is a nice clean space of at least one blank line
+      // before a new function definition
+      if (!this._output.just_added_blankline() && !current_token.comments_before) {
+        this.print_newline();
+        this.print_newline(true);
+      }
+    }
+    if (this._flags.last_token.type === TOKEN.RESERVED || this._flags.last_token.type === TOKEN.WORD) {
+      if (reserved_array(this._flags.last_token, ['get', 'set', 'new', 'export']) ||
+        reserved_array(this._flags.last_token, newline_restricted_tokens)) {
+        this._output.space_before_token = true;
+      } else if (reserved_word(this._flags.last_token, 'default') && this._last_last_text === 'export') {
+        this._output.space_before_token = true;
+      } else if (this._flags.last_token.text === 'declare') {
+        // accomodates Typescript declare function formatting
+        this._output.space_before_token = true;
+      } else {
+        this.print_newline();
+      }
+    } else if (this._flags.last_token.type === TOKEN.OPERATOR || this._flags.last_token.text === '=') {
+      // foo = function
+      this._output.space_before_token = true;
+    } else if (!this._flags.multiline_frame && (is_expression(this._flags.mode) || is_array(this._flags.mode))) {
+      // (function
+    } else {
+      this.print_newline();
+    }
+
+    this.print_token(current_token);
+    this._flags.last_word = current_token.text;
+    return;
+  }
+
+  var prefix = 'NONE';
+
+  if (this._flags.last_token.type === TOKEN.END_BLOCK) {
+
+    if (this._previous_flags.inline_frame) {
+      prefix = 'SPACE';
+    } else if (!reserved_array(current_token, ['else', 'catch', 'finally', 'from'])) {
+      prefix = 'NEWLINE';
+    } else {
+      if (this._options.brace_style === "expand" ||
+        this._options.brace_style === "end-expand" ||
+        (this._options.brace_style === "none" && current_token.newlines)) {
+        prefix = 'NEWLINE';
+      } else {
+        prefix = 'SPACE';
+        this._output.space_before_token = true;
+      }
+    }
+  } else if (this._flags.last_token.type === TOKEN.SEMICOLON && this._flags.mode === MODE.BlockStatement) {
+    // TODO: Should this be for STATEMENT as well?
+    prefix = 'NEWLINE';
+  } else if (this._flags.last_token.type === TOKEN.SEMICOLON && is_expression(this._flags.mode)) {
+    prefix = 'SPACE';
+  } else if (this._flags.last_token.type === TOKEN.STRING) {
+    prefix = 'NEWLINE';
+  } else if (this._flags.last_token.type === TOKEN.RESERVED || this._flags.last_token.type === TOKEN.WORD ||
+    (this._flags.last_token.text === '*' &&
+      (in_array(this._last_last_text, ['function', 'yield']) ||
+        (this._flags.mode === MODE.ObjectLiteral && in_array(this._last_last_text, ['{', ',']))))) {
+    prefix = 'SPACE';
+  } else if (this._flags.last_token.type === TOKEN.START_BLOCK) {
+    if (this._flags.inline_frame) {
+      prefix = 'SPACE';
+    } else {
+      prefix = 'NEWLINE';
+    }
+  } else if (this._flags.last_token.type === TOKEN.END_EXPR) {
+    this._output.space_before_token = true;
+    prefix = 'NEWLINE';
+  }
+
+  if (reserved_array(current_token, line_starters) && this._flags.last_token.text !== ')') {
+    if (this._flags.inline_frame || this._flags.last_token.text === 'else' || this._flags.last_token.text === 'export') {
+      prefix = 'SPACE';
+    } else {
+      prefix = 'NEWLINE';
+    }
+
+  }
+
+  if (reserved_array(current_token, ['else', 'catch', 'finally'])) {
+    if ((!(this._flags.last_token.type === TOKEN.END_BLOCK && this._previous_flags.mode === MODE.BlockStatement) ||
+        this._options.brace_style === "expand" ||
+        this._options.brace_style === "end-expand" ||
+        (this._options.brace_style === "none" && current_token.newlines)) &&
+      !this._flags.inline_frame) {
+      this.print_newline();
+    } else {
+      this._output.trim(true);
+      var line = this._output.current_line;
+      // If we trimmed and there's something other than a close block before us
+      // put a newline back in.  Handles '} // comment' scenario.
+      if (line.last() !== '}') {
+        this.print_newline();
+      }
+      this._output.space_before_token = true;
+    }
+  } else if (prefix === 'NEWLINE') {
+    if (reserved_array(this._flags.last_token, special_words)) {
+      // no newline between 'return nnn'
+      this._output.space_before_token = true;
+    } else if (this._flags.last_token.text === 'declare' && reserved_array(current_token, ['var', 'let', 'const'])) {
+      // accomodates Typescript declare formatting
+      this._output.space_before_token = true;
+    } else if (this._flags.last_token.type !== TOKEN.END_EXPR) {
+      if ((this._flags.last_token.type !== TOKEN.START_EXPR || !reserved_array(current_token, ['var', 'let', 'const'])) && this._flags.last_token.text !== ':') {
+        // no need to force newline on 'var': for (var x = 0...)
+        if (reserved_word(current_token, 'if') && reserved_word(current_token.previous, 'else')) {
+          // no newline for } else if {
+          this._output.space_before_token = true;
+        } else {
+          this.print_newline();
+        }
+      }
+    } else if (reserved_array(current_token, line_starters) && this._flags.last_token.text !== ')') {
+      this.print_newline();
+    }
+  } else if (this._flags.multiline_frame && is_array(this._flags.mode) && this._flags.last_token.text === ',' && this._last_last_text === '}') {
+    this.print_newline(); // }, in lists get a newline treatment
+  } else if (prefix === 'SPACE') {
+    this._output.space_before_token = true;
+  }
+  if (current_token.previous && (current_token.previous.type === TOKEN.WORD || current_token.previous.type === TOKEN.RESERVED)) {
+    this._output.space_before_token = true;
+  }
+  this.print_token(current_token);
+  this._flags.last_word = current_token.text;
+
+  if (current_token.type === TOKEN.RESERVED) {
+    if (current_token.text === 'do') {
+      this._flags.do_block = true;
+    } else if (current_token.text === 'if') {
+      this._flags.if_block = true;
+    } else if (current_token.text === 'import') {
+      this._flags.import_block = true;
+    } else if (this._flags.import_block && reserved_word(current_token, 'from')) {
+      this._flags.import_block = false;
+    }
+  }
+};
+
+Beautifier.prototype.handle_semicolon = function(current_token) {
+  if (this.start_of_statement(current_token)) {
+    // The conditional starts the statement if appropriate.
+    // Semicolon can be the start (and end) of a statement
+    this._output.space_before_token = false;
+  } else {
+    this.handle_whitespace_and_comments(current_token);
+  }
+
+  var next_token = this._tokens.peek();
+  while (this._flags.mode === MODE.Statement &&
+    !(this._flags.if_block && reserved_word(next_token, 'else')) &&
+    !this._flags.do_block) {
+    this.restore_mode();
+  }
+
+  // hacky but effective for the moment
+  if (this._flags.import_block) {
+    this._flags.import_block = false;
+  }
+  this.print_token(current_token);
+};
+
+Beautifier.prototype.handle_string = function(current_token) {
+  if (current_token.text.startsWith("`") && current_token.newlines === 0 && current_token.whitespace_before === '' && (current_token.previous.text === ')' || this._flags.last_token.type === TOKEN.WORD)) {
+    //Conditional for detectign backtick strings
+  } else if (this.start_of_statement(current_token)) {
+    // The conditional starts the statement if appropriate.
+    // One difference - strings want at least a space before
+    this._output.space_before_token = true;
+  } else {
+    this.handle_whitespace_and_comments(current_token);
+    if (this._flags.last_token.type === TOKEN.RESERVED || this._flags.last_token.type === TOKEN.WORD || this._flags.inline_frame) {
+      this._output.space_before_token = true;
+    } else if (this._flags.last_token.type === TOKEN.COMMA || this._flags.last_token.type === TOKEN.START_EXPR || this._flags.last_token.type === TOKEN.EQUALS || this._flags.last_token.type === TOKEN.OPERATOR) {
+      if (!this.start_of_object_property()) {
+        this.allow_wrap_or_preserved_newline(current_token);
+      }
+    } else if ((current_token.text.startsWith("`") && this._flags.last_token.type === TOKEN.END_EXPR && (current_token.previous.text === ']' || current_token.previous.text === ')') && current_token.newlines === 0)) {
+      this._output.space_before_token = true;
+    } else {
+      this.print_newline();
+    }
+  }
+  this.print_token(current_token);
+};
+
+Beautifier.prototype.handle_equals = function(current_token) {
+  if (this.start_of_statement(current_token)) {
+    // The conditional starts the statement if appropriate.
+  } else {
+    this.handle_whitespace_and_comments(current_token);
+  }
+
+  if (this._flags.declaration_statement) {
+    // just got an '=' in a var-line, different formatting/line-breaking, etc will now be done
+    this._flags.declaration_assignment = true;
+  }
+  this._output.space_before_token = true;
+  this.print_token(current_token);
+  this._output.space_before_token = true;
+};
+
+Beautifier.prototype.handle_comma = function(current_token) {
+  this.handle_whitespace_and_comments(current_token, true);
+
+  this.print_token(current_token);
+  this._output.space_before_token = true;
+  if (this._flags.declaration_statement) {
+    if (is_expression(this._flags.parent.mode)) {
+      // do not break on comma, for(var a = 1, b = 2)
+      this._flags.declaration_assignment = false;
+    }
+
+    if (this._flags.declaration_assignment) {
+      this._flags.declaration_assignment = false;
+      this.print_newline(false, true);
+    } else if (this._options.comma_first) {
+      // for comma-first, we want to allow a newline before the comma
+      // to turn into a newline after the comma, which we will fixup later
+      this.allow_wrap_or_preserved_newline(current_token);
+    }
+  } else if (this._flags.mode === MODE.ObjectLiteral ||
+    (this._flags.mode === MODE.Statement && this._flags.parent.mode === MODE.ObjectLiteral)) {
+    if (this._flags.mode === MODE.Statement) {
+      this.restore_mode();
+    }
+
+    if (!this._flags.inline_frame) {
+      this.print_newline();
+    }
+  } else if (this._options.comma_first) {
+    // EXPR or DO_BLOCK
+    // for comma-first, we want to allow a newline before the comma
+    // to turn into a newline after the comma, which we will fixup later
+    this.allow_wrap_or_preserved_newline(current_token);
+  }
+};
+
+Beautifier.prototype.handle_operator = function(current_token) {
+  var isGeneratorAsterisk = current_token.text === '*' &&
+    (reserved_array(this._flags.last_token, ['function', 'yield']) ||
+      (in_array(this._flags.last_token.type, [TOKEN.START_BLOCK, TOKEN.COMMA, TOKEN.END_BLOCK, TOKEN.SEMICOLON]))
+    );
+  var isUnary = in_array(current_token.text, ['-', '+']) && (
+    in_array(this._flags.last_token.type, [TOKEN.START_BLOCK, TOKEN.START_EXPR, TOKEN.EQUALS, TOKEN.OPERATOR]) ||
+    in_array(this._flags.last_token.text, line_starters) ||
+    this._flags.last_token.text === ','
+  );
+
+  if (this.start_of_statement(current_token)) {
+    // The conditional starts the statement if appropriate.
+  } else {
+    var preserve_statement_flags = !isGeneratorAsterisk;
+    this.handle_whitespace_and_comments(current_token, preserve_statement_flags);
+  }
+
+  // hack for actionscript's import .*;
+  if (current_token.text === '*' && this._flags.last_token.type === TOKEN.DOT) {
+    this.print_token(current_token);
+    return;
+  }
+
+  if (current_token.text === '::') {
+    // no spaces around exotic namespacing syntax operator
+    this.print_token(current_token);
+    return;
+  }
+
+  if (in_array(current_token.text, ['-', '+']) && this.start_of_object_property()) {
+    // numeric value with +/- symbol in front as a property
+    this.print_token(current_token);
+    return;
+  }
+
+  // Allow line wrapping between operators when operator_position is
+  //   set to before or preserve
+  if (this._flags.last_token.type === TOKEN.OPERATOR && in_array(this._options.operator_position, OPERATOR_POSITION_BEFORE_OR_PRESERVE)) {
+    this.allow_wrap_or_preserved_newline(current_token);
+  }
+
+  if (current_token.text === ':' && this._flags.in_case) {
+    this.print_token(current_token);
+
+    this._flags.in_case = false;
+    this._flags.case_body = true;
+    if (this._tokens.peek().type !== TOKEN.START_BLOCK) {
+      this.indent();
+      this.print_newline();
+      this._flags.case_block = false;
+    } else {
+      this._flags.case_block = true;
+      this._output.space_before_token = true;
+    }
+    return;
+  }
+
+  var space_before = true;
+  var space_after = true;
+  var in_ternary = false;
+  if (current_token.text === ':') {
+    if (this._flags.ternary_depth === 0) {
+      // Colon is invalid javascript outside of ternary and object, but do our best to guess what was meant.
+      space_before = false;
+    } else {
+      this._flags.ternary_depth -= 1;
+      in_ternary = true;
+    }
+  } else if (current_token.text === '?') {
+    this._flags.ternary_depth += 1;
+  }
+
+  // let's handle the operator_position option prior to any conflicting logic
+  if (!isUnary && !isGeneratorAsterisk && this._options.preserve_newlines && in_array(current_token.text, positionable_operators)) {
+    var isColon = current_token.text === ':';
+    var isTernaryColon = (isColon && in_ternary);
+    var isOtherColon = (isColon && !in_ternary);
+
+    switch (this._options.operator_position) {
+      case OPERATOR_POSITION.before_newline:
+        // if the current token is : and it's not a ternary statement then we set space_before to false
+        this._output.space_before_token = !isOtherColon;
+
+        this.print_token(current_token);
+
+        if (!isColon || isTernaryColon) {
+          this.allow_wrap_or_preserved_newline(current_token);
+        }
+
+        this._output.space_before_token = true;
+        return;
+
+      case OPERATOR_POSITION.after_newline:
+        // if the current token is anything but colon, or (via deduction) it's a colon and in a ternary statement,
+        //   then print a newline.
+
+        this._output.space_before_token = true;
+
+        if (!isColon || isTernaryColon) {
+          if (this._tokens.peek().newlines) {
+            this.print_newline(false, true);
+          } else {
+            this.allow_wrap_or_preserved_newline(current_token);
+          }
+        } else {
+          this._output.space_before_token = false;
+        }
+
+        this.print_token(current_token);
+
+        this._output.space_before_token = true;
+        return;
+
+      case OPERATOR_POSITION.preserve_newline:
+        if (!isOtherColon) {
+          this.allow_wrap_or_preserved_newline(current_token);
+        }
+
+        // if we just added a newline, or the current token is : and it's not a ternary statement,
+        //   then we set space_before to false
+        space_before = !(this._output.just_added_newline() || isOtherColon);
+
+        this._output.space_before_token = space_before;
+        this.print_token(current_token);
+        this._output.space_before_token = true;
+        return;
+    }
+  }
+
+  if (isGeneratorAsterisk) {
+    this.allow_wrap_or_preserved_newline(current_token);
+    space_before = false;
+    var next_token = this._tokens.peek();
+    space_after = next_token && in_array(next_token.type, [TOKEN.WORD, TOKEN.RESERVED]);
+  } else if (current_token.text === '...') {
+    this.allow_wrap_or_preserved_newline(current_token);
+    space_before = this._flags.last_token.type === TOKEN.START_BLOCK;
+    space_after = false;
+  } else if (in_array(current_token.text, ['--', '++', '!', '~']) || isUnary) {
+    // unary operators (and binary +/- pretending to be unary) special cases
+    if (this._flags.last_token.type === TOKEN.COMMA || this._flags.last_token.type === TOKEN.START_EXPR) {
+      this.allow_wrap_or_preserved_newline(current_token);
+    }
+
+    space_before = false;
+    space_after = false;
+
+    // http://www.ecma-international.org/ecma-262/5.1/#sec-7.9.1
+    // if there is a newline between -- or ++ and anything else we should preserve it.
+    if (current_token.newlines && (current_token.text === '--' || current_token.text === '++' || current_token.text === '~')) {
+      var new_line_needed = reserved_array(this._flags.last_token, special_words) && current_token.newlines;
+      if (new_line_needed && (this._previous_flags.if_block || this._previous_flags.else_block)) {
+        this.restore_mode();
+      }
+      this.print_newline(new_line_needed, true);
+    }
+
+    if (this._flags.last_token.text === ';' && is_expression(this._flags.mode)) {
+      // for (;; ++i)
+      //        ^^^
+      space_before = true;
+    }
+
+    if (this._flags.last_token.type === TOKEN.RESERVED) {
+      space_before = true;
+    } else if (this._flags.last_token.type === TOKEN.END_EXPR) {
+      space_before = !(this._flags.last_token.text === ']' && (current_token.text === '--' || current_token.text === '++'));
+    } else if (this._flags.last_token.type === TOKEN.OPERATOR) {
+      // a++ + ++b;
+      // a - -b
+      space_before = in_array(current_token.text, ['--', '-', '++', '+']) && in_array(this._flags.last_token.text, ['--', '-', '++', '+']);
+      // + and - are not unary when preceeded by -- or ++ operator
+      // a-- + b
+      // a * +b
+      // a - -b
+      if (in_array(current_token.text, ['+', '-']) && in_array(this._flags.last_token.text, ['--', '++'])) {
+        space_after = true;
+      }
+    }
 
 
-// patch by Kevin Carhart
-this.esprima = esprima_default;
-})();
+    if (((this._flags.mode === MODE.BlockStatement && !this._flags.inline_frame) || this._flags.mode === MODE.Statement) &&
+      (this._flags.last_token.text === '{' || this._flags.last_token.text === ';')) {
+      // { foo; --i }
+      // foo(); --bar;
+      this.print_newline();
+    }
+  }
 
-/* ---------------------------------------------
+  this._output.space_before_token = this._output.space_before_token || space_before;
+  this.print_token(current_token);
+  this._output.space_before_token = space_after;
+};
 
-Next third-party libraries: Escodegen
-Last update for this section: 20231217
+Beautifier.prototype.handle_block_comment = function(current_token, preserve_statement_flags) {
+  if (this._output.raw) {
+    this._output.add_raw_token(current_token);
+    if (current_token.directives && current_token.directives.preserve === 'end') {
+      // If we're testing the raw output behavior, do not allow a directive to turn it off.
+      this._output.raw = this._options.test_output_raw;
+    }
+    return;
+  }
 
-Link for Escodegen: https://github.com/estools/escodegen.git
-This code comes from escodegen.browser.js, which includes its dependencies
-in a bundle.
-To generate escodegen.browser.js:
-(1) git clone https://github.com/estools/escodegen.git
-(2) cd to escodegen, the folder containing the json file
-(3) get npm and nodejs-legacy with a package manager if necessary
-(4) npm install
-(5) npm run-script build
+  if (current_token.directives) {
+    this.print_newline(false, preserve_statement_flags);
+    this.print_token(current_token);
+    if (current_token.directives.preserve === 'start') {
+      this._output.raw = true;
+    }
+    this.print_newline(false, true);
+    return;
+  }
 
-License for Escodegen: LICENSE.BSD is found at the provided
-escodegen.git location as of 20231217.  Previously there was also
-a LICENSE.source-map, but this is apparently no longer present.
+  // inline block
+  if (!acorn.newline.test(current_token.text) && !current_token.newlines) {
+    this._output.space_before_token = true;
+    this.print_token(current_token);
+    this._output.space_before_token = true;
+    return;
+  } else {
+    this.print_block_commment(current_token, preserve_statement_flags);
+  }
+};
 
-LICENSE.BSD:
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+Beautifier.prototype.print_block_commment = function(current_token, preserve_statement_flags) {
+  var lines = split_linebreaks(current_token.text);
+  var j; // iterator for this case
+  var javadoc = false;
+  var starless = false;
+  var lastIndent = current_token.whitespace_before;
+  var lastIndentLength = lastIndent.length;
 
-  * Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
-  * Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in the
-    documentation and/or other materials provided with the distribution.
+  // block comment starts with a new line
+  this.print_newline(false, preserve_statement_flags);
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
----------------------------------------------------------
+  // first line always indented
+  this.print_token_line_indentation(current_token);
+  this._output.add_token(lines[0]);
+  this.print_newline(false, preserve_statement_flags);
+
+
+  if (lines.length > 1) {
+    lines = lines.slice(1);
+    javadoc = all_lines_start_with(lines, '*');
+    starless = each_line_matches_indent(lines, lastIndent);
+
+    if (javadoc) {
+      this._flags.alignment = 1;
+    }
+
+    for (j = 0; j < lines.length; j++) {
+      if (javadoc) {
+        // javadoc: reformat and re-indent
+        this.print_token_line_indentation(current_token);
+        this._output.add_token(ltrim(lines[j]));
+      } else if (starless && lines[j]) {
+        // starless: re-indent non-empty content, avoiding trim
+        this.print_token_line_indentation(current_token);
+        this._output.add_token(lines[j].substring(lastIndentLength));
+      } else {
+        // normal comments output raw
+        this._output.current_line.set_indent(-1);
+        this._output.add_token(lines[j]);
+      }
+
+      // for comments on their own line or  more than one line, make sure there's a new line after
+      this.print_newline(false, preserve_statement_flags);
+    }
+
+    this._flags.alignment = 0;
+  }
+};
+
+
+Beautifier.prototype.handle_comment = function(current_token, preserve_statement_flags) {
+  if (current_token.newlines) {
+    this.print_newline(false, preserve_statement_flags);
+  } else {
+    this._output.trim(true);
+  }
+
+  this._output.space_before_token = true;
+  this.print_token(current_token);
+  this.print_newline(false, preserve_statement_flags);
+};
+
+Beautifier.prototype.handle_dot = function(current_token) {
+  if (this.start_of_statement(current_token)) {
+    // The conditional starts the statement if appropriate.
+  } else {
+    this.handle_whitespace_and_comments(current_token, true);
+  }
+
+  if (this._flags.last_token.text.match('^[0-9]+$')) {
+    this._output.space_before_token = true;
+  }
+
+  if (reserved_array(this._flags.last_token, special_words)) {
+    this._output.space_before_token = false;
+  } else {
+    // allow preserved newlines before dots in general
+    // force newlines on dots after close paren when break_chained - for bar().baz()
+    this.allow_wrap_or_preserved_newline(current_token,
+      this._flags.last_token.text === ')' && this._options.break_chained_methods);
+  }
+
+  // Only unindent chained method dot if this dot starts a new line.
+  // Otherwise the automatic extra indentation removal will handle the over indent
+  if (this._options.unindent_chained_methods && this._output.just_added_newline()) {
+    this.deindent();
+  }
+
+  this.print_token(current_token);
+};
+
+Beautifier.prototype.handle_unknown = function(current_token, preserve_statement_flags) {
+  this.print_token(current_token);
+
+  if (current_token.text[current_token.text.length - 1] === '\n') {
+    this.print_newline(false, preserve_statement_flags);
+  }
+};
+
+Beautifier.prototype.handle_eof = function(current_token) {
+  // Unwind any open statements
+  while (this._flags.mode === MODE.Statement) {
+    this.restore_mode();
+  }
+  this.handle_whitespace_and_comments(current_token);
+};
+
+module.exports.Beautifier = Beautifier;
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module) {
+
+/*jshint node:true */
+/*
+  The MIT License (MIT)
+
+  Copyright (c) 2007-2018 Einar Lielmanis, Liam Newman, and contributors.
+
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation files
+  (the "Software"), to deal in the Software without restriction,
+  including without limitation the rights to use, copy, modify, merge,
+  publish, distribute, sublicense, and/or sell copies of the Software,
+  and to permit persons to whom the Software is furnished to do so,
+  subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
 */
 
 
-// Generated by CommonJS Everywhere 0.9.7
-(function (global) {
-  function require(file, parentModule) {
-    if ({}.hasOwnProperty.call(require.cache, file))
-      return require.cache[file];
-    var resolved = require.resolve(file);
-    if (!resolved)
-      throw new Error('Failed to resolve module ' + file);
-    var module$ = {
-        id: file,
-        require: require,
-        filename: file,
-        exports: {},
-        loaded: false,
-        parent: parentModule,
-        children: []
-      };
-    if (parentModule)
-      parentModule.children.push(module$);
-    var dirname = file.slice(0, file.lastIndexOf('/') + 1);
-    require.cache[file] = module$.exports;
-    resolved.call(module$.exports, module$, module$.exports, dirname, file);
-    module$.loaded = true;
-    return require.cache[file] = module$.exports;
+
+function OutputLine(parent) {
+  this.__parent = parent;
+  this.__character_count = 0;
+  // use indent_count as a marker for this.__lines that have preserved indentation
+  this.__indent_count = -1;
+  this.__alignment_count = 0;
+  this.__wrap_point_index = 0;
+  this.__wrap_point_character_count = 0;
+  this.__wrap_point_indent_count = -1;
+  this.__wrap_point_alignment_count = 0;
+
+  this.__items = [];
+}
+
+OutputLine.prototype.clone_empty = function() {
+  var line = new OutputLine(this.__parent);
+  line.set_indent(this.__indent_count, this.__alignment_count);
+  return line;
+};
+
+OutputLine.prototype.item = function(index) {
+  if (index < 0) {
+    return this.__items[this.__items.length + index];
+  } else {
+    return this.__items[index];
   }
-  require.modules = {};
-  require.cache = {};
-  require.resolve = function (file) {
-    return {}.hasOwnProperty.call(require.modules, file) ? require.modules[file] : void 0;
-  };
-  require.define = function (file, fn) {
-    require.modules[file] = fn;
-  };
-  var process = function () {
-      var cwd = '/';
-      return {
-        title: 'browser',
-        version: 'v16.13.2',
-        browser: true,
-        env: {},
-        argv: [],
-        nextTick: global.setImmediate || function (fn) {
-          setTimeout(fn, 0);
-        },
-        cwd: function () {
-          return cwd;
-        },
-        chdir: function (dir) {
-          cwd = dir;
-        }
-      };
-    }();
-  require.define('/tools/entry-point.js', function (module, exports, __dirname, __filename) {
-    (function () {
-      'use strict';
-      global.escodegen = require('/escodegen.js', module);
-      escodegen.browser = true;
-    }());
-  });
-  require.define('/escodegen.js', function (module, exports, __dirname, __filename) {
-    (function () {
-      'use strict';
-      var Syntax, Precedence, BinaryPrecedence, SourceNode, estraverse, esutils, base, indent, json, renumber, hexadecimal, quotes, escapeless, newline, space, parentheses, semicolons, safeConcatenation, directive, extra, parse, sourceMap, sourceCode, preserveBlankLines, FORMAT_MINIFY, FORMAT_DEFAULTS;
-      estraverse = require('/node_modules/estraverse/estraverse.js', module);
-      esutils = require('/node_modules/esutils/lib/utils.js', module);
-      Syntax = estraverse.Syntax;
-      function isExpression(node) {
-        return CodeGenerator.Expression.hasOwnProperty(node.type);
-      }
-      function isStatement(node) {
-        return CodeGenerator.Statement.hasOwnProperty(node.type);
-      }
-      Precedence = {
-        Sequence: 0,
-        Yield: 1,
-        Assignment: 1,
-        Conditional: 2,
-        ArrowFunction: 2,
-        Coalesce: 3,
-        LogicalOR: 4,
-        LogicalAND: 5,
-        BitwiseOR: 6,
-        BitwiseXOR: 7,
-        BitwiseAND: 8,
-        Equality: 9,
-        Relational: 10,
-        BitwiseSHIFT: 11,
-        Additive: 12,
-        Multiplicative: 13,
-        Exponentiation: 14,
-        Await: 15,
-        Unary: 15,
-        Postfix: 16,
-        OptionalChaining: 17,
-        Call: 18,
-        New: 19,
-        TaggedTemplate: 20,
-        Member: 21,
-        Primary: 22
-      };
-      BinaryPrecedence = {
-        '??': Precedence.Coalesce,
-        '||': Precedence.LogicalOR,
-        '&&': Precedence.LogicalAND,
-        '|': Precedence.BitwiseOR,
-        '^': Precedence.BitwiseXOR,
-        '&': Precedence.BitwiseAND,
-        '==': Precedence.Equality,
-        '!=': Precedence.Equality,
-        '===': Precedence.Equality,
-        '!==': Precedence.Equality,
-        'is': Precedence.Equality,
-        'isnt': Precedence.Equality,
-        '<': Precedence.Relational,
-        '>': Precedence.Relational,
-        '<=': Precedence.Relational,
-        '>=': Precedence.Relational,
-        'in': Precedence.Relational,
-        'instanceof': Precedence.Relational,
-        '<<': Precedence.BitwiseSHIFT,
-        '>>': Precedence.BitwiseSHIFT,
-        '>>>': Precedence.BitwiseSHIFT,
-        '+': Precedence.Additive,
-        '-': Precedence.Additive,
-        '*': Precedence.Multiplicative,
-        '%': Precedence.Multiplicative,
-        '/': Precedence.Multiplicative,
-        '**': Precedence.Exponentiation
-      };
-      var F_ALLOW_IN = 1, F_ALLOW_CALL = 1 << 1, F_ALLOW_UNPARATH_NEW = 1 << 2, F_FUNC_BODY = 1 << 3, F_DIRECTIVE_CTX = 1 << 4, F_SEMICOLON_OPT = 1 << 5, F_FOUND_COALESCE = 1 << 6;
-      var E_FTT = F_ALLOW_CALL | F_ALLOW_UNPARATH_NEW, E_TTF = F_ALLOW_IN | F_ALLOW_CALL, E_TTT = F_ALLOW_IN | F_ALLOW_CALL | F_ALLOW_UNPARATH_NEW, E_TFF = F_ALLOW_IN, E_FFT = F_ALLOW_UNPARATH_NEW, E_TFT = F_ALLOW_IN | F_ALLOW_UNPARATH_NEW;
-      var S_TFFF = F_ALLOW_IN, S_TFFT = F_ALLOW_IN | F_SEMICOLON_OPT, S_FFFF = 0, S_TFTF = F_ALLOW_IN | F_DIRECTIVE_CTX, S_TTFF = F_ALLOW_IN | F_FUNC_BODY;
-      function getDefaultOptions() {
-        return {
-          indent: null,
-          base: null,
-          parse: null,
-          comment: false,
-          format: {
-            indent: {
-              style: '    ',
-              base: 0,
-              adjustMultilineComment: false
-            },
-            newline: '\n',
-            space: ' ',
-            json: false,
-            renumber: false,
-            hexadecimal: false,
-            quotes: 'single',
-            escapeless: false,
-            compact: false,
-            parentheses: true,
-            semicolons: true,
-            safeConcatenation: false,
-            preserveBlankLines: false
-          },
-          moz: {
-            comprehensionExpressionStartsWithAssignment: false,
-            starlessGenerator: false
-          },
-          sourceMap: null,
-          sourceMapRoot: null,
-          sourceMapWithCode: false,
-          directive: false,
-          raw: true,
-          verbatim: null,
-          sourceCode: null
-        };
-      }
-      function stringRepeat(str, num) {
-        var result = '';
-        for (num |= 0; num > 0; num >>>= 1, str += str) {
-          if (num & 1) {
-            result += str;
-          }
-        }
-        return result;
-      }
-      function hasLineTerminator(str) {
-        return /[\r\n]/g.test(str);
-      }
-      function endsWithLineTerminator(str) {
-        var len = str.length;
-        return len && esutils.code.isLineTerminator(str.charCodeAt(len - 1));
-      }
-      function merge(target, override) {
-        var key;
-        for (key in override) {
-          if (override.hasOwnProperty(key)) {
-            target[key] = override[key];
-          }
-        }
-        return target;
-      }
-      function updateDeeply(target, override) {
-        var key, val;
-        function isHashObject(target) {
-          return typeof target === 'object' && target instanceof Object && !(target instanceof RegExp);
-        }
-        for (key in override) {
-          if (override.hasOwnProperty(key)) {
-            val = override[key];
-            if (isHashObject(val)) {
-              if (isHashObject(target[key])) {
-                updateDeeply(target[key], val);
-              } else {
-                target[key] = updateDeeply({}, val);
-              }
-            } else {
-              target[key] = val;
-            }
-          }
-        }
-        return target;
-      }
-      function generateNumber(value) {
-        var result, point, temp, exponent, pos;
-        if (value !== value) {
-          throw new Error('Numeric literal whose value is NaN');
-        }
-        if (value < 0 || value === 0 && 1 / value < 0) {
-          throw new Error('Numeric literal whose value is negative');
-        }
-        if (value === 1 / 0) {
-          return json ? 'null' : renumber ? '1e400' : '1e+400';
-        }
-        result = '' + value;
-        if (!renumber || result.length < 3) {
-          return result;
-        }
-        point = result.indexOf('.');
-        if (!json && result.charCodeAt(0) === 48 && point === 1) {
-          point = 0;
-          result = result.slice(1);
-        }
-        temp = result;
-        result = result.replace('e+', 'e');
-        exponent = 0;
-        if ((pos = temp.indexOf('e')) > 0) {
-          exponent = +temp.slice(pos + 1);
-          temp = temp.slice(0, pos);
-        }
-        if (point >= 0) {
-          exponent -= temp.length - point - 1;
-          temp = +(temp.slice(0, point) + temp.slice(point + 1)) + '';
-        }
-        pos = 0;
-        while (temp.charCodeAt(temp.length + pos - 1) === 48) {
-          --pos;
-        }
-        if (pos !== 0) {
-          exponent -= pos;
-          temp = temp.slice(0, pos);
-        }
-        if (exponent !== 0) {
-          temp += 'e' + exponent;
-        }
-        if ((temp.length < result.length || hexadecimal && value > 1e12 && Math.floor(value) === value && (temp = '0x' + value.toString(16)).length < result.length) && +temp === value) {
-          result = temp;
-        }
-        return result;
-      }
-      function escapeRegExpCharacter(ch, previousIsBackslash) {
-        if ((ch & ~1) === 8232) {
-          return (previousIsBackslash ? 'u' : '\\u') + (ch === 8232 ? '2028' : '2029');
-        } else if (ch === 10 || ch === 13) {
-          return (previousIsBackslash ? '' : '\\') + (ch === 10 ? 'n' : 'r');
-        }
-        return String.fromCharCode(ch);
-      }
-      function generateRegExp(reg) {
-        var match, result, flags, i, iz, ch, characterInBrack, previousIsBackslash;
-        result = reg.toString();
-        if (reg.source) {
-          match = result.match(/\/([^/]*)$/);
-          if (!match) {
-            return result;
-          }
-          flags = match[1];
-          result = '';
-          characterInBrack = false;
-          previousIsBackslash = false;
-          for (i = 0, iz = reg.source.length; i < iz; ++i) {
-            ch = reg.source.charCodeAt(i);
-            if (!previousIsBackslash) {
-              if (characterInBrack) {
-                if (ch === 93) {
-                  characterInBrack = false;
-                }
-              } else {
-                if (ch === 47) {
-                  result += '\\';
-                } else if (ch === 91) {
-                  characterInBrack = true;
-                }
-              }
-              result += escapeRegExpCharacter(ch, previousIsBackslash);
-              previousIsBackslash = ch === 92;
-            } else {
-              result += escapeRegExpCharacter(ch, previousIsBackslash);
-              previousIsBackslash = false;
-            }
-          }
-          return '/' + result + '/' + flags;
-        }
-        return result;
-      }
-      function escapeAllowedCharacter(code, next) {
-        var hex;
-        if (code === 8) {
-          return '\\b';
-        }
-        if (code === 12) {
-          return '\\f';
-        }
-        if (code === 9) {
-          return '\\t';
-        }
-        hex = code.toString(16).toUpperCase();
-        if (json || code > 255) {
-          return '\\u' + '0000'.slice(hex.length) + hex;
-        } else if (code === 0 && !esutils.code.isDecimalDigit(next)) {
-          return '\\0';
-        } else if (code === 11) {
-          return '\\x0B';
-        } else {
-          return '\\x' + '00'.slice(hex.length) + hex;
-        }
-      }
-      function escapeDisallowedCharacter(code) {
-        if (code === 92) {
-          return '\\\\';
-        }
-        if (code === 10) {
-          return '\\n';
-        }
-        if (code === 13) {
-          return '\\r';
-        }
-        if (code === 8232) {
-          return '\\u2028';
-        }
-        if (code === 8233) {
-          return '\\u2029';
-        }
-        throw new Error('Incorrectly classified character');
-      }
-      function escapeDirective(str) {
-        var i, iz, code, quote;
-        quote = quotes === 'double' ? '"' : "'";
-        for (i = 0, iz = str.length; i < iz; ++i) {
-          code = str.charCodeAt(i);
-          if (code === 39) {
-            quote = '"';
-            break;
-          } else if (code === 34) {
-            quote = "'";
-            break;
-          } else if (code === 92) {
-            ++i;
-          }
-        }
-        return quote + str + quote;
-      }
-      function escapeString(str) {
-        var result = '', i, len, code, singleQuotes = 0, doubleQuotes = 0, single, quote;
-        for (i = 0, len = str.length; i < len; ++i) {
-          code = str.charCodeAt(i);
-          if (code === 39) {
-            ++singleQuotes;
-          } else if (code === 34) {
-            ++doubleQuotes;
-          } else if (code === 47 && json) {
-            result += '\\';
-          } else if (esutils.code.isLineTerminator(code) || code === 92) {
-            result += escapeDisallowedCharacter(code);
-            continue;
-          } else if (!esutils.code.isIdentifierPartES5(code) && (json && code < 32 || !json && !escapeless && (code < 32 || code > 126))) {
-            result += escapeAllowedCharacter(code, str.charCodeAt(i + 1));
-            continue;
-          }
-          result += String.fromCharCode(code);
-        }
-        single = !(quotes === 'double' || quotes === 'auto' && doubleQuotes < singleQuotes);
-        quote = single ? "'" : '"';
-        if (!(single ? singleQuotes : doubleQuotes)) {
-          return quote + result + quote;
-        }
-        str = result;
-        result = quote;
-        for (i = 0, len = str.length; i < len; ++i) {
-          code = str.charCodeAt(i);
-          if (code === 39 && single || code === 34 && !single) {
-            result += '\\';
-          }
-          result += String.fromCharCode(code);
-        }
-        return result + quote;
-      }
-      function flattenToString(arr) {
-        var i, iz, elem, result = '';
-        for (i = 0, iz = arr.length; i < iz; ++i) {
-          elem = arr[i];
-          result += Array.isArray(elem) ? flattenToString(elem) : elem;
-        }
-        return result;
-      }
-      function toSourceNodeWhenNeeded(generated, node) {
-        if (!sourceMap) {
-          if (Array.isArray(generated)) {
-            return flattenToString(generated);
-          } else {
-            return generated;
-          }
-        }
-        if (node == null) {
-          if (generated instanceof SourceNode) {
-            return generated;
-          } else {
-            node = {};
-          }
-        }
-        if (node.loc == null) {
-          return new SourceNode(null, null, sourceMap, generated, node.name || null);
-        }
-        return new SourceNode(node.loc.start.line, node.loc.start.column, sourceMap === true ? node.loc.source || null : sourceMap, generated, node.name || null);
-      }
-      function noEmptySpace() {
-        return space ? space : ' ';
-      }
-      function join(left, right) {
-        var leftSource, rightSource, leftCharCode, rightCharCode;
-        leftSource = toSourceNodeWhenNeeded(left).toString();
-        if (leftSource.length === 0) {
-          return [right];
-        }
-        rightSource = toSourceNodeWhenNeeded(right).toString();
-        if (rightSource.length === 0) {
-          return [left];
-        }
-        leftCharCode = leftSource.charCodeAt(leftSource.length - 1);
-        rightCharCode = rightSource.charCodeAt(0);
-        if ((leftCharCode === 43 || leftCharCode === 45) && leftCharCode === rightCharCode || esutils.code.isIdentifierPartES5(leftCharCode) && esutils.code.isIdentifierPartES5(rightCharCode) || leftCharCode === 47 && rightCharCode === 105) {
-          return [
-            left,
-            noEmptySpace(),
-            right
-          ];
-        } else if (esutils.code.isWhiteSpace(leftCharCode) || esutils.code.isLineTerminator(leftCharCode) || esutils.code.isWhiteSpace(rightCharCode) || esutils.code.isLineTerminator(rightCharCode)) {
-          return [
-            left,
-            right
-          ];
-        }
-        return [
-          left,
-          space,
-          right
-        ];
-      }
-      function addIndent(stmt) {
-        return [
-          base,
-          stmt
-        ];
-      }
-      function withIndent(fn) {
-        var previousBase;
-        previousBase = base;
-        base += indent;
-        fn(base);
-        base = previousBase;
-      }
-      function calculateSpaces(str) {
-        var i;
-        for (i = str.length - 1; i >= 0; --i) {
-          if (esutils.code.isLineTerminator(str.charCodeAt(i))) {
-            break;
-          }
-        }
-        return str.length - 1 - i;
-      }
-      function adjustMultilineComment(value, specialBase) {
-        var array, i, len, line, j, spaces, previousBase, sn;
-        array = value.split(/\r\n|[\r\n]/);
-        spaces = Number.MAX_VALUE;
-        for (i = 1, len = array.length; i < len; ++i) {
-          line = array[i];
-          j = 0;
-          while (j < line.length && esutils.code.isWhiteSpace(line.charCodeAt(j))) {
-            ++j;
-          }
-          if (spaces > j) {
-            spaces = j;
-          }
-        }
-        if (typeof specialBase !== 'undefined') {
-          previousBase = base;
-          if (array[1][spaces] === '*') {
-            specialBase += ' ';
-          }
-          base = specialBase;
-        } else {
-          if (spaces & 1) {
-            --spaces;
-          }
-          previousBase = base;
-        }
-        for (i = 1, len = array.length; i < len; ++i) {
-          sn = toSourceNodeWhenNeeded(addIndent(array[i].slice(spaces)));
-          array[i] = sourceMap ? sn.join('') : sn;
-        }
-        base = previousBase;
-        return array.join('\n');
-      }
-      function generateComment(comment, specialBase) {
-        if (comment.type === 'Line') {
-          if (endsWithLineTerminator(comment.value)) {
-            return '//' + comment.value;
-          } else {
-            var result = '//' + comment.value;
-            if (!preserveBlankLines) {
-              result += '\n';
-            }
-            return result;
-          }
-        }
-        if (extra.format.indent.adjustMultilineComment && /[\n\r]/.test(comment.value)) {
-          return adjustMultilineComment('/*' + comment.value + '*/', specialBase);
-        }
-        return '/*' + comment.value + '*/';
-      }
-      function addComments(stmt, result) {
-        var i, len, comment, save, tailingToStatement, specialBase, fragment, extRange, range, prevRange, prefix, infix, suffix, count;
-        if (stmt.leadingComments && stmt.leadingComments.length > 0) {
-          save = result;
-          if (preserveBlankLines) {
-            comment = stmt.leadingComments[0];
-            result = [];
-            extRange = comment.extendedRange;
-            range = comment.range;
-            prefix = sourceCode.substring(extRange[0], range[0]);
-            count = (prefix.match(/\n/g) || []).length;
-            if (count > 0) {
-              result.push(stringRepeat('\n', count));
-              result.push(addIndent(generateComment(comment)));
-            } else {
-              result.push(prefix);
-              result.push(generateComment(comment));
-            }
-            prevRange = range;
-            for (i = 1, len = stmt.leadingComments.length; i < len; i++) {
-              comment = stmt.leadingComments[i];
-              range = comment.range;
-              infix = sourceCode.substring(prevRange[1], range[0]);
-              count = (infix.match(/\n/g) || []).length;
-              result.push(stringRepeat('\n', count));
-              result.push(addIndent(generateComment(comment)));
-              prevRange = range;
-            }
-            suffix = sourceCode.substring(range[1], extRange[1]);
-            count = (suffix.match(/\n/g) || []).length;
-            result.push(stringRepeat('\n', count));
-          } else {
-            comment = stmt.leadingComments[0];
-            result = [];
-            if (safeConcatenation && stmt.type === Syntax.Program && stmt.body.length === 0) {
-              result.push('\n');
-            }
-            result.push(generateComment(comment));
-            if (!endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString())) {
-              result.push('\n');
-            }
-            for (i = 1, len = stmt.leadingComments.length; i < len; ++i) {
-              comment = stmt.leadingComments[i];
-              fragment = [generateComment(comment)];
-              if (!endsWithLineTerminator(toSourceNodeWhenNeeded(fragment).toString())) {
-                fragment.push('\n');
-              }
-              result.push(addIndent(fragment));
-            }
-          }
-          result.push(addIndent(save));
-        }
-        if (stmt.trailingComments) {
-          if (preserveBlankLines) {
-            comment = stmt.trailingComments[0];
-            extRange = comment.extendedRange;
-            range = comment.range;
-            prefix = sourceCode.substring(extRange[0], range[0]);
-            count = (prefix.match(/\n/g) || []).length;
-            if (count > 0) {
-              result.push(stringRepeat('\n', count));
-              result.push(addIndent(generateComment(comment)));
-            } else {
-              result.push(prefix);
-              result.push(generateComment(comment));
-            }
-          } else {
-            tailingToStatement = !endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString());
-            specialBase = stringRepeat(' ', calculateSpaces(toSourceNodeWhenNeeded([
-              base,
-              result,
-              indent
-            ]).toString()));
-            for (i = 0, len = stmt.trailingComments.length; i < len; ++i) {
-              comment = stmt.trailingComments[i];
-              if (tailingToStatement) {
-                if (i === 0) {
-                  result = [
-                    result,
-                    indent
-                  ];
-                } else {
-                  result = [
-                    result,
-                    specialBase
-                  ];
-                }
-                result.push(generateComment(comment, specialBase));
-              } else {
-                result = [
-                  result,
-                  addIndent(generateComment(comment))
-                ];
-              }
-              if (i !== len - 1 && !endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString())) {
-                result = [
-                  result,
-                  '\n'
-                ];
-              }
-            }
-          }
-        }
-        return result;
-      }
-      function generateBlankLines(start, end, result) {
-        var j, newlineCount = 0;
-        for (j = start; j < end; j++) {
-          if (sourceCode[j] === '\n') {
-            newlineCount++;
-          }
-        }
-        for (j = 1; j < newlineCount; j++) {
-          result.push(newline);
-        }
-      }
-      function parenthesize(text, current, should) {
-        if (current < should) {
-          return [
-            '(',
-            text,
-            ')'
-          ];
-        }
-        return text;
-      }
-      function generateVerbatimString(string) {
-        var i, iz, result;
-        result = string.split(/\r\n|\n/);
-        for (i = 1, iz = result.length; i < iz; i++) {
-          result[i] = newline + base + result[i];
-        }
-        return result;
-      }
-      function generateVerbatim(expr, precedence) {
-        var verbatim, result, prec;
-        verbatim = expr[extra.verbatim];
-        if (typeof verbatim === 'string') {
-          result = parenthesize(generateVerbatimString(verbatim), Precedence.Sequence, precedence);
-        } else {
-          result = generateVerbatimString(verbatim.content);
-          prec = verbatim.precedence != null ? verbatim.precedence : Precedence.Sequence;
-          result = parenthesize(result, prec, precedence);
-        }
-        return toSourceNodeWhenNeeded(result, expr);
-      }
-      function CodeGenerator() {
-      }
-      CodeGenerator.prototype.maybeBlock = function (stmt, flags) {
-        var result, noLeadingComment, that = this;
-        noLeadingComment = !extra.comment || !stmt.leadingComments;
-        if (stmt.type === Syntax.BlockStatement && noLeadingComment) {
-          return [
-            space,
-            this.generateStatement(stmt, flags)
-          ];
-        }
-        if (stmt.type === Syntax.EmptyStatement && noLeadingComment) {
-          return ';';
-        }
-        withIndent(function () {
-          result = [
-            newline,
-            addIndent(that.generateStatement(stmt, flags))
-          ];
-        });
-        return result;
-      };
-      CodeGenerator.prototype.maybeBlockSuffix = function (stmt, result) {
-        var ends = endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString());
-        if (stmt.type === Syntax.BlockStatement && (!extra.comment || !stmt.leadingComments) && !ends) {
-          return [
-            result,
-            space
-          ];
-        }
-        if (ends) {
-          return [
-            result,
-            base
-          ];
-        }
-        return [
-          result,
-          newline,
-          base
-        ];
-      };
-      function generateIdentifier(node) {
-        return toSourceNodeWhenNeeded(node.name, node);
-      }
-      function generateAsyncPrefix(node, spaceRequired) {
-        return node.async ? 'async' + (spaceRequired ? noEmptySpace() : space) : '';
-      }
-      function generateStarSuffix(node) {
-        var isGenerator = node.generator && !extra.moz.starlessGenerator;
-        return isGenerator ? '*' + space : '';
-      }
-      function generateMethodPrefix(prop) {
-        var func = prop.value, prefix = '';
-        if (func.async) {
-          prefix += generateAsyncPrefix(func, !prop.computed);
-        }
-        if (func.generator) {
-          prefix += generateStarSuffix(func) ? '*' : '';
-        }
-        return prefix;
-      }
-      CodeGenerator.prototype.generatePattern = function (node, precedence, flags) {
-        if (node.type === Syntax.Identifier) {
-          return generateIdentifier(node);
-        }
-        return this.generateExpression(node, precedence, flags);
-      };
-      CodeGenerator.prototype.generateFunctionParams = function (node) {
-        var i, iz, result, hasDefault;
-        hasDefault = false;
-        if (node.type === Syntax.ArrowFunctionExpression && !node.rest && (!node.defaults || node.defaults.length === 0) && node.params.length === 1 && node.params[0].type === Syntax.Identifier) {
-          result = [
-            generateAsyncPrefix(node, true),
-            generateIdentifier(node.params[0])
-          ];
-        } else {
-          result = node.type === Syntax.ArrowFunctionExpression ? [generateAsyncPrefix(node, false)] : [];
-          result.push('(');
-          if (node.defaults) {
-            hasDefault = true;
-          }
-          for (i = 0, iz = node.params.length; i < iz; ++i) {
-            if (hasDefault && node.defaults[i]) {
-              result.push(this.generateAssignment(node.params[i], node.defaults[i], '=', Precedence.Assignment, E_TTT));
-            } else {
-              result.push(this.generatePattern(node.params[i], Precedence.Assignment, E_TTT));
-            }
-            if (i + 1 < iz) {
-              result.push(',' + space);
-            }
-          }
-          if (node.rest) {
-            if (node.params.length) {
-              result.push(',' + space);
-            }
-            result.push('...');
-            result.push(generateIdentifier(node.rest));
-          }
-          result.push(')');
-        }
-        return result;
-      };
-      CodeGenerator.prototype.generateFunctionBody = function (node) {
-        var result, expr;
-        result = this.generateFunctionParams(node);
-        if (node.type === Syntax.ArrowFunctionExpression) {
-          result.push(space);
-          result.push('=>');
-        }
-        if (node.expression) {
-          result.push(space);
-          expr = this.generateExpression(node.body, Precedence.Assignment, E_TTT);
-          if (expr.toString().charAt(0) === '{') {
-            expr = [
-              '(',
-              expr,
-              ')'
-            ];
-          }
-          result.push(expr);
-        } else {
-          result.push(this.maybeBlock(node.body, S_TTFF));
-        }
-        return result;
-      };
-      CodeGenerator.prototype.generateIterationForStatement = function (operator, stmt, flags) {
-        var result = ['for' + (stmt.await ? noEmptySpace() + 'await' : '') + space + '('], that = this;
-        withIndent(function () {
-          if (stmt.left.type === Syntax.VariableDeclaration) {
-            withIndent(function () {
-              result.push(stmt.left.kind + noEmptySpace());
-              result.push(that.generateStatement(stmt.left.declarations[0], S_FFFF));
-            });
-          } else {
-            result.push(that.generateExpression(stmt.left, Precedence.Call, E_TTT));
-          }
-          result = join(result, operator);
-          result = [
-            join(result, that.generateExpression(stmt.right, Precedence.Assignment, E_TTT)),
-            ')'
-          ];
-        });
-        result.push(this.maybeBlock(stmt.body, flags));
-        return result;
-      };
-      CodeGenerator.prototype.generatePropertyKey = function (expr, computed) {
-        var result = [];
-        if (computed) {
-          result.push('[');
-        }
-        result.push(this.generateExpression(expr, Precedence.Assignment, E_TTT));
-        if (computed) {
-          result.push(']');
-        }
-        return result;
-      };
-      CodeGenerator.prototype.generateAssignment = function (left, right, operator, precedence, flags) {
-        if (Precedence.Assignment < precedence) {
-          flags |= F_ALLOW_IN;
-        }
-        return parenthesize([
-          this.generateExpression(left, Precedence.Call, flags),
-          space + operator + space,
-          this.generateExpression(right, Precedence.Assignment, flags)
-        ], Precedence.Assignment, precedence);
-      };
-      CodeGenerator.prototype.semicolon = function (flags) {
-        if (!semicolons && flags & F_SEMICOLON_OPT) {
-          return '';
-        }
-        return ';';
-      };
-      CodeGenerator.Statement = {
-        BlockStatement: function (stmt, flags) {
-          var range, content, result = [
-              '{',
-              newline
-            ], that = this;
-          withIndent(function () {
-            if (stmt.body.length === 0 && preserveBlankLines) {
-              range = stmt.range;
-              if (range[1] - range[0] > 2) {
-                content = sourceCode.substring(range[0] + 1, range[1] - 1);
-                if (content[0] === '\n') {
-                  result = ['{'];
-                }
-                result.push(content);
-              }
-            }
-            var i, iz, fragment, bodyFlags;
-            bodyFlags = S_TFFF;
-            if (flags & F_FUNC_BODY) {
-              bodyFlags |= F_DIRECTIVE_CTX;
-            }
-            for (i = 0, iz = stmt.body.length; i < iz; ++i) {
-              if (preserveBlankLines) {
-                if (i === 0) {
-                  if (stmt.body[0].leadingComments) {
-                    range = stmt.body[0].leadingComments[0].extendedRange;
-                    content = sourceCode.substring(range[0], range[1]);
-                    if (content[0] === '\n') {
-                      result = ['{'];
-                    }
-                  }
-                  if (!stmt.body[0].leadingComments) {
-                    generateBlankLines(stmt.range[0], stmt.body[0].range[0], result);
-                  }
-                }
-                if (i > 0) {
-                  if (!stmt.body[i - 1].trailingComments && !stmt.body[i].leadingComments) {
-                    generateBlankLines(stmt.body[i - 1].range[1], stmt.body[i].range[0], result);
-                  }
-                }
-              }
-              if (i === iz - 1) {
-                bodyFlags |= F_SEMICOLON_OPT;
-              }
-              if (stmt.body[i].leadingComments && preserveBlankLines) {
-                fragment = that.generateStatement(stmt.body[i], bodyFlags);
-              } else {
-                fragment = addIndent(that.generateStatement(stmt.body[i], bodyFlags));
-              }
-              result.push(fragment);
-              if (!endsWithLineTerminator(toSourceNodeWhenNeeded(fragment).toString())) {
-                if (preserveBlankLines && i < iz - 1) {
-                  if (!stmt.body[i + 1].leadingComments) {
-                    result.push(newline);
-                  }
-                } else {
-                  result.push(newline);
-                }
-              }
-              if (preserveBlankLines) {
-                if (i === iz - 1) {
-                  if (!stmt.body[i].trailingComments) {
-                    generateBlankLines(stmt.body[i].range[1], stmt.range[1], result);
-                  }
-                }
-              }
-            }
-          });
-          result.push(addIndent('}'));
-          return result;
-        },
-        BreakStatement: function (stmt, flags) {
-          if (stmt.label) {
-            return 'break ' + stmt.label.name + this.semicolon(flags);
-          }
-          return 'break' + this.semicolon(flags);
-        },
-        ContinueStatement: function (stmt, flags) {
-          if (stmt.label) {
-            return 'continue ' + stmt.label.name + this.semicolon(flags);
-          }
-          return 'continue' + this.semicolon(flags);
-        },
-        ClassBody: function (stmt, flags) {
-          var result = [
-              '{',
-              newline
-            ], that = this;
-          withIndent(function (indent) {
-            var i, iz;
-            for (i = 0, iz = stmt.body.length; i < iz; ++i) {
-              result.push(indent);
-              result.push(that.generateExpression(stmt.body[i], Precedence.Sequence, E_TTT));
-              if (i + 1 < iz) {
-                result.push(newline);
-              }
-            }
-          });
-          if (!endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString())) {
-            result.push(newline);
-          }
-          result.push(base);
-          result.push('}');
-          return result;
-        },
-        ClassDeclaration: function (stmt, flags) {
-          var result, fragment;
-          result = ['class'];
-          if (stmt.id) {
-            result = join(result, this.generateExpression(stmt.id, Precedence.Sequence, E_TTT));
-          }
-          if (stmt.superClass) {
-            fragment = join('extends', this.generateExpression(stmt.superClass, Precedence.Unary, E_TTT));
-            result = join(result, fragment);
-          }
-          result.push(space);
-          result.push(this.generateStatement(stmt.body, S_TFFT));
-          return result;
-        },
-        DirectiveStatement: function (stmt, flags) {
-          if (extra.raw && stmt.raw) {
-            return stmt.raw + this.semicolon(flags);
-          }
-          return escapeDirective(stmt.directive) + this.semicolon(flags);
-        },
-        DoWhileStatement: function (stmt, flags) {
-          var result = join('do', this.maybeBlock(stmt.body, S_TFFF));
-          result = this.maybeBlockSuffix(stmt.body, result);
-          return join(result, [
-            'while' + space + '(',
-            this.generateExpression(stmt.test, Precedence.Sequence, E_TTT),
-            ')' + this.semicolon(flags)
-          ]);
-        },
-        CatchClause: function (stmt, flags) {
-          var result, that = this;
-          withIndent(function () {
-            var guard;
-            if (stmt.param) {
-              result = [
-                'catch' + space + '(',
-                that.generateExpression(stmt.param, Precedence.Sequence, E_TTT),
-                ')'
-              ];
-              if (stmt.guard) {
-                guard = that.generateExpression(stmt.guard, Precedence.Sequence, E_TTT);
-                result.splice(2, 0, ' if ', guard);
-              }
-            } else {
-              result = ['catch'];
-            }
-          });
-          result.push(this.maybeBlock(stmt.body, S_TFFF));
-          return result;
-        },
-        DebuggerStatement: function (stmt, flags) {
-          return 'debugger' + this.semicolon(flags);
-        },
-        EmptyStatement: function (stmt, flags) {
-          return ';';
-        },
-        ExportDefaultDeclaration: function (stmt, flags) {
-          var result = ['export'], bodyFlags;
-          bodyFlags = flags & F_SEMICOLON_OPT ? S_TFFT : S_TFFF;
-          result = join(result, 'default');
-          if (isStatement(stmt.declaration)) {
-            result = join(result, this.generateStatement(stmt.declaration, bodyFlags));
-          } else {
-            result = join(result, this.generateExpression(stmt.declaration, Precedence.Assignment, E_TTT) + this.semicolon(flags));
-          }
-          return result;
-        },
-        ExportNamedDeclaration: function (stmt, flags) {
-          var result = ['export'], bodyFlags, that = this;
-          bodyFlags = flags & F_SEMICOLON_OPT ? S_TFFT : S_TFFF;
-          if (stmt.declaration) {
-            return join(result, this.generateStatement(stmt.declaration, bodyFlags));
-          }
-          if (stmt.specifiers) {
-            if (stmt.specifiers.length === 0) {
-              result = join(result, '{' + space + '}');
-            } else if (stmt.specifiers[0].type === Syntax.ExportBatchSpecifier) {
-              result = join(result, this.generateExpression(stmt.specifiers[0], Precedence.Sequence, E_TTT));
-            } else {
-              result = join(result, '{');
-              withIndent(function (indent) {
-                var i, iz;
-                result.push(newline);
-                for (i = 0, iz = stmt.specifiers.length; i < iz; ++i) {
-                  result.push(indent);
-                  result.push(that.generateExpression(stmt.specifiers[i], Precedence.Sequence, E_TTT));
-                  if (i + 1 < iz) {
-                    result.push(',' + newline);
-                  }
-                }
-              });
-              if (!endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString())) {
-                result.push(newline);
-              }
-              result.push(base + '}');
-            }
-            if (stmt.source) {
-              result = join(result, [
-                'from' + space,
-                this.generateExpression(stmt.source, Precedence.Sequence, E_TTT),
-                this.semicolon(flags)
-              ]);
-            } else {
-              result.push(this.semicolon(flags));
-            }
-          }
-          return result;
-        },
-        ExportAllDeclaration: function (stmt, flags) {
-          return [
-            'export' + space,
-            '*' + space,
-            'from' + space,
-            this.generateExpression(stmt.source, Precedence.Sequence, E_TTT),
-            this.semicolon(flags)
-          ];
-        },
-        ExpressionStatement: function (stmt, flags) {
-          var result, fragment;
-          function isClassPrefixed(fragment) {
-            var code;
-            if (fragment.slice(0, 5) !== 'class') {
-              return false;
-            }
-            code = fragment.charCodeAt(5);
-            return code === 123 || esutils.code.isWhiteSpace(code) || esutils.code.isLineTerminator(code);
-          }
-          function isFunctionPrefixed(fragment) {
-            var code;
-            if (fragment.slice(0, 8) !== 'function') {
-              return false;
-            }
-            code = fragment.charCodeAt(8);
-            return code === 40 || esutils.code.isWhiteSpace(code) || code === 42 || esutils.code.isLineTerminator(code);
-          }
-          function isAsyncPrefixed(fragment) {
-            var code, i, iz;
-            if (fragment.slice(0, 5) !== 'async') {
-              return false;
-            }
-            if (!esutils.code.isWhiteSpace(fragment.charCodeAt(5))) {
-              return false;
-            }
-            for (i = 6, iz = fragment.length; i < iz; ++i) {
-              if (!esutils.code.isWhiteSpace(fragment.charCodeAt(i))) {
-                break;
-              }
-            }
-            if (i === iz) {
-              return false;
-            }
-            if (fragment.slice(i, i + 8) !== 'function') {
-              return false;
-            }
-            code = fragment.charCodeAt(i + 8);
-            return code === 40 || esutils.code.isWhiteSpace(code) || code === 42 || esutils.code.isLineTerminator(code);
-          }
-          result = [this.generateExpression(stmt.expression, Precedence.Sequence, E_TTT)];
-          fragment = toSourceNodeWhenNeeded(result).toString();
-          if (fragment.charCodeAt(0) === 123 || isClassPrefixed(fragment) || isFunctionPrefixed(fragment) || isAsyncPrefixed(fragment) || directive && flags & F_DIRECTIVE_CTX && stmt.expression.type === Syntax.Literal && typeof stmt.expression.value === 'string') {
-            result = [
-              '(',
-              result,
-              ')' + this.semicolon(flags)
-            ];
-          } else {
-            result.push(this.semicolon(flags));
-          }
-          return result;
-        },
-        ImportDeclaration: function (stmt, flags) {
-          var result, cursor, that = this;
-          if (stmt.specifiers.length === 0) {
-            return [
-              'import',
-              space,
-              this.generateExpression(stmt.source, Precedence.Sequence, E_TTT),
-              this.semicolon(flags)
-            ];
-          }
-          result = ['import'];
-          cursor = 0;
-          if (stmt.specifiers[cursor].type === Syntax.ImportDefaultSpecifier) {
-            result = join(result, [this.generateExpression(stmt.specifiers[cursor], Precedence.Sequence, E_TTT)]);
-            ++cursor;
-          }
-          if (stmt.specifiers[cursor]) {
-            if (cursor !== 0) {
-              result.push(',');
-            }
-            if (stmt.specifiers[cursor].type === Syntax.ImportNamespaceSpecifier) {
-              result = join(result, [
-                space,
-                this.generateExpression(stmt.specifiers[cursor], Precedence.Sequence, E_TTT)
-              ]);
-            } else {
-              result.push(space + '{');
-              if (stmt.specifiers.length - cursor === 1) {
-                result.push(space);
-                result.push(this.generateExpression(stmt.specifiers[cursor], Precedence.Sequence, E_TTT));
-                result.push(space + '}' + space);
-              } else {
-                withIndent(function (indent) {
-                  var i, iz;
-                  result.push(newline);
-                  for (i = cursor, iz = stmt.specifiers.length; i < iz; ++i) {
-                    result.push(indent);
-                    result.push(that.generateExpression(stmt.specifiers[i], Precedence.Sequence, E_TTT));
-                    if (i + 1 < iz) {
-                      result.push(',' + newline);
-                    }
-                  }
-                });
-                if (!endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString())) {
-                  result.push(newline);
-                }
-                result.push(base + '}' + space);
-              }
-            }
-          }
-          result = join(result, [
-            'from' + space,
-            this.generateExpression(stmt.source, Precedence.Sequence, E_TTT),
-            this.semicolon(flags)
-          ]);
-          return result;
-        },
-        VariableDeclarator: function (stmt, flags) {
-          var itemFlags = flags & F_ALLOW_IN ? E_TTT : E_FTT;
-          if (stmt.init) {
-            return [
-              this.generateExpression(stmt.id, Precedence.Assignment, itemFlags),
-              space,
-              '=',
-              space,
-              this.generateExpression(stmt.init, Precedence.Assignment, itemFlags)
-            ];
-          }
-          return this.generatePattern(stmt.id, Precedence.Assignment, itemFlags);
-        },
-        VariableDeclaration: function (stmt, flags) {
-          var result, i, iz, node, bodyFlags, that = this;
-          result = [stmt.kind];
-          bodyFlags = flags & F_ALLOW_IN ? S_TFFF : S_FFFF;
-          function block() {
-            node = stmt.declarations[0];
-            if (extra.comment && node.leadingComments) {
-              result.push('\n');
-              result.push(addIndent(that.generateStatement(node, bodyFlags)));
-            } else {
-              result.push(noEmptySpace());
-              result.push(that.generateStatement(node, bodyFlags));
-            }
-            for (i = 1, iz = stmt.declarations.length; i < iz; ++i) {
-              node = stmt.declarations[i];
-              if (extra.comment && node.leadingComments) {
-                result.push(',' + newline);
-                result.push(addIndent(that.generateStatement(node, bodyFlags)));
-              } else {
-                result.push(',' + space);
-                result.push(that.generateStatement(node, bodyFlags));
-              }
-            }
-          }
-          if (stmt.declarations.length > 1) {
-            withIndent(block);
-          } else {
-            block();
-          }
-          result.push(this.semicolon(flags));
-          return result;
-        },
-        ThrowStatement: function (stmt, flags) {
-          return [
-            join('throw', this.generateExpression(stmt.argument, Precedence.Sequence, E_TTT)),
-            this.semicolon(flags)
-          ];
-        },
-        TryStatement: function (stmt, flags) {
-          var result, i, iz, guardedHandlers;
-          result = [
-            'try',
-            this.maybeBlock(stmt.block, S_TFFF)
-          ];
-          result = this.maybeBlockSuffix(stmt.block, result);
-          if (stmt.handlers) {
-            for (i = 0, iz = stmt.handlers.length; i < iz; ++i) {
-              result = join(result, this.generateStatement(stmt.handlers[i], S_TFFF));
-              if (stmt.finalizer || i + 1 !== iz) {
-                result = this.maybeBlockSuffix(stmt.handlers[i].body, result);
-              }
-            }
-          } else {
-            guardedHandlers = stmt.guardedHandlers || [];
-            for (i = 0, iz = guardedHandlers.length; i < iz; ++i) {
-              result = join(result, this.generateStatement(guardedHandlers[i], S_TFFF));
-              if (stmt.finalizer || i + 1 !== iz) {
-                result = this.maybeBlockSuffix(guardedHandlers[i].body, result);
-              }
-            }
-            if (stmt.handler) {
-              if (Array.isArray(stmt.handler)) {
-                for (i = 0, iz = stmt.handler.length; i < iz; ++i) {
-                  result = join(result, this.generateStatement(stmt.handler[i], S_TFFF));
-                  if (stmt.finalizer || i + 1 !== iz) {
-                    result = this.maybeBlockSuffix(stmt.handler[i].body, result);
-                  }
-                }
-              } else {
-                result = join(result, this.generateStatement(stmt.handler, S_TFFF));
-                if (stmt.finalizer) {
-                  result = this.maybeBlockSuffix(stmt.handler.body, result);
-                }
-              }
-            }
-          }
-          if (stmt.finalizer) {
-            result = join(result, [
-              'finally',
-              this.maybeBlock(stmt.finalizer, S_TFFF)
-            ]);
-          }
-          return result;
-        },
-        SwitchStatement: function (stmt, flags) {
-          var result, fragment, i, iz, bodyFlags, that = this;
-          withIndent(function () {
-            result = [
-              'switch' + space + '(',
-              that.generateExpression(stmt.discriminant, Precedence.Sequence, E_TTT),
-              ')' + space + '{' + newline
-            ];
-          });
-          if (stmt.cases) {
-            bodyFlags = S_TFFF;
-            for (i = 0, iz = stmt.cases.length; i < iz; ++i) {
-              if (i === iz - 1) {
-                bodyFlags |= F_SEMICOLON_OPT;
-              }
-              fragment = addIndent(this.generateStatement(stmt.cases[i], bodyFlags));
-              result.push(fragment);
-              if (!endsWithLineTerminator(toSourceNodeWhenNeeded(fragment).toString())) {
-                result.push(newline);
-              }
-            }
-          }
-          result.push(addIndent('}'));
-          return result;
-        },
-        SwitchCase: function (stmt, flags) {
-          var result, fragment, i, iz, bodyFlags, that = this;
-          withIndent(function () {
-            if (stmt.test) {
-              result = [
-                join('case', that.generateExpression(stmt.test, Precedence.Sequence, E_TTT)),
-                ':'
-              ];
-            } else {
-              result = ['default:'];
-            }
-            i = 0;
-            iz = stmt.consequent.length;
-            if (iz && stmt.consequent[0].type === Syntax.BlockStatement) {
-              fragment = that.maybeBlock(stmt.consequent[0], S_TFFF);
-              result.push(fragment);
-              i = 1;
-            }
-            if (i !== iz && !endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString())) {
-              result.push(newline);
-            }
-            bodyFlags = S_TFFF;
-            for (; i < iz; ++i) {
-              if (i === iz - 1 && flags & F_SEMICOLON_OPT) {
-                bodyFlags |= F_SEMICOLON_OPT;
-              }
-              fragment = addIndent(that.generateStatement(stmt.consequent[i], bodyFlags));
-              result.push(fragment);
-              if (i + 1 !== iz && !endsWithLineTerminator(toSourceNodeWhenNeeded(fragment).toString())) {
-                result.push(newline);
-              }
-            }
-          });
-          return result;
-        },
-        IfStatement: function (stmt, flags) {
-          var result, bodyFlags, semicolonOptional, that = this;
-          withIndent(function () {
-            result = [
-              'if' + space + '(',
-              that.generateExpression(stmt.test, Precedence.Sequence, E_TTT),
-              ')'
-            ];
-          });
-          semicolonOptional = flags & F_SEMICOLON_OPT;
-          bodyFlags = S_TFFF;
-          if (semicolonOptional) {
-            bodyFlags |= F_SEMICOLON_OPT;
-          }
-          if (stmt.alternate) {
-            result.push(this.maybeBlock(stmt.consequent, S_TFFF));
-            result = this.maybeBlockSuffix(stmt.consequent, result);
-            if (stmt.alternate.type === Syntax.IfStatement) {
-              result = join(result, [
-                'else ',
-                this.generateStatement(stmt.alternate, bodyFlags)
-              ]);
-            } else {
-              result = join(result, join('else', this.maybeBlock(stmt.alternate, bodyFlags)));
-            }
-          } else {
-            result.push(this.maybeBlock(stmt.consequent, bodyFlags));
-          }
-          return result;
-        },
-        ForStatement: function (stmt, flags) {
-          var result, that = this;
-          withIndent(function () {
-            result = ['for' + space + '('];
-            if (stmt.init) {
-              if (stmt.init.type === Syntax.VariableDeclaration) {
-                result.push(that.generateStatement(stmt.init, S_FFFF));
-              } else {
-                result.push(that.generateExpression(stmt.init, Precedence.Sequence, E_FTT));
-                result.push(';');
-              }
-            } else {
-              result.push(';');
-            }
-            if (stmt.test) {
-              result.push(space);
-              result.push(that.generateExpression(stmt.test, Precedence.Sequence, E_TTT));
-              result.push(';');
-            } else {
-              result.push(';');
-            }
-            if (stmt.update) {
-              result.push(space);
-              result.push(that.generateExpression(stmt.update, Precedence.Sequence, E_TTT));
-              result.push(')');
-            } else {
-              result.push(')');
-            }
-          });
-          result.push(this.maybeBlock(stmt.body, flags & F_SEMICOLON_OPT ? S_TFFT : S_TFFF));
-          return result;
-        },
-        ForInStatement: function (stmt, flags) {
-          return this.generateIterationForStatement('in', stmt, flags & F_SEMICOLON_OPT ? S_TFFT : S_TFFF);
-        },
-        ForOfStatement: function (stmt, flags) {
-          return this.generateIterationForStatement('of', stmt, flags & F_SEMICOLON_OPT ? S_TFFT : S_TFFF);
-        },
-        LabeledStatement: function (stmt, flags) {
-          return [
-            stmt.label.name + ':',
-            this.maybeBlock(stmt.body, flags & F_SEMICOLON_OPT ? S_TFFT : S_TFFF)
-          ];
-        },
-        Program: function (stmt, flags) {
-          var result, fragment, i, iz, bodyFlags;
-          iz = stmt.body.length;
-          result = [safeConcatenation && iz > 0 ? '\n' : ''];
-          bodyFlags = S_TFTF;
-          for (i = 0; i < iz; ++i) {
-            if (!safeConcatenation && i === iz - 1) {
-              bodyFlags |= F_SEMICOLON_OPT;
-            }
-            if (preserveBlankLines) {
-              if (i === 0) {
-                if (!stmt.body[0].leadingComments) {
-                  generateBlankLines(stmt.range[0], stmt.body[i].range[0], result);
-                }
-              }
-              if (i > 0) {
-                if (!stmt.body[i - 1].trailingComments && !stmt.body[i].leadingComments) {
-                  generateBlankLines(stmt.body[i - 1].range[1], stmt.body[i].range[0], result);
-                }
-              }
-            }
-            fragment = addIndent(this.generateStatement(stmt.body[i], bodyFlags));
-            result.push(fragment);
-            if (i + 1 < iz && !endsWithLineTerminator(toSourceNodeWhenNeeded(fragment).toString())) {
-              if (preserveBlankLines) {
-                if (!stmt.body[i + 1].leadingComments) {
-                  result.push(newline);
-                }
-              } else {
-                result.push(newline);
-              }
-            }
-            if (preserveBlankLines) {
-              if (i === iz - 1) {
-                if (!stmt.body[i].trailingComments) {
-                  generateBlankLines(stmt.body[i].range[1], stmt.range[1], result);
-                }
-              }
-            }
-          }
-          return result;
-        },
-        FunctionDeclaration: function (stmt, flags) {
-          return [
-            generateAsyncPrefix(stmt, true),
-            'function',
-            generateStarSuffix(stmt) || noEmptySpace(),
-            stmt.id ? generateIdentifier(stmt.id) : '',
-            this.generateFunctionBody(stmt)
-          ];
-        },
-        ReturnStatement: function (stmt, flags) {
-          if (stmt.argument) {
-            return [
-              join('return', this.generateExpression(stmt.argument, Precedence.Sequence, E_TTT)),
-              this.semicolon(flags)
-            ];
-          }
-          return ['return' + this.semicolon(flags)];
-        },
-        WhileStatement: function (stmt, flags) {
-          var result, that = this;
-          withIndent(function () {
-            result = [
-              'while' + space + '(',
-              that.generateExpression(stmt.test, Precedence.Sequence, E_TTT),
-              ')'
-            ];
-          });
-          result.push(this.maybeBlock(stmt.body, flags & F_SEMICOLON_OPT ? S_TFFT : S_TFFF));
-          return result;
-        },
-        WithStatement: function (stmt, flags) {
-          var result, that = this;
-          withIndent(function () {
-            result = [
-              'with' + space + '(',
-              that.generateExpression(stmt.object, Precedence.Sequence, E_TTT),
-              ')'
-            ];
-          });
-          result.push(this.maybeBlock(stmt.body, flags & F_SEMICOLON_OPT ? S_TFFT : S_TFFF));
-          return result;
-        }
-      };
-      merge(CodeGenerator.prototype, CodeGenerator.Statement);
-      CodeGenerator.Expression = {
-        SequenceExpression: function (expr, precedence, flags) {
-          var result, i, iz;
-          if (Precedence.Sequence < precedence) {
-            flags |= F_ALLOW_IN;
-          }
-          result = [];
-          for (i = 0, iz = expr.expressions.length; i < iz; ++i) {
-            result.push(this.generateExpression(expr.expressions[i], Precedence.Assignment, flags));
-            if (i + 1 < iz) {
-              result.push(',' + space);
-            }
-          }
-          return parenthesize(result, Precedence.Sequence, precedence);
-        },
-        AssignmentExpression: function (expr, precedence, flags) {
-          return this.generateAssignment(expr.left, expr.right, expr.operator, precedence, flags);
-        },
-        ArrowFunctionExpression: function (expr, precedence, flags) {
-          return parenthesize(this.generateFunctionBody(expr), Precedence.ArrowFunction, precedence);
-        },
-        ConditionalExpression: function (expr, precedence, flags) {
-          if (Precedence.Conditional < precedence) {
-            flags |= F_ALLOW_IN;
-          }
-          return parenthesize([
-            this.generateExpression(expr.test, Precedence.Coalesce, flags),
-            space + '?' + space,
-            this.generateExpression(expr.consequent, Precedence.Assignment, flags),
-            space + ':' + space,
-            this.generateExpression(expr.alternate, Precedence.Assignment, flags)
-          ], Precedence.Conditional, precedence);
-        },
-        LogicalExpression: function (expr, precedence, flags) {
-          if (expr.operator === '??') {
-            flags |= F_FOUND_COALESCE;
-          }
-          return this.BinaryExpression(expr, precedence, flags);
-        },
-        BinaryExpression: function (expr, precedence, flags) {
-          var result, leftPrecedence, rightPrecedence, currentPrecedence, fragment, leftSource;
-          currentPrecedence = BinaryPrecedence[expr.operator];
-          leftPrecedence = expr.operator === '**' ? Precedence.Postfix : currentPrecedence;
-          rightPrecedence = expr.operator === '**' ? currentPrecedence : currentPrecedence + 1;
-          if (currentPrecedence < precedence) {
-            flags |= F_ALLOW_IN;
-          }
-          fragment = this.generateExpression(expr.left, leftPrecedence, flags);
-          leftSource = fragment.toString();
-          if (leftSource.charCodeAt(leftSource.length - 1) === 47 && esutils.code.isIdentifierPartES5(expr.operator.charCodeAt(0))) {
-            result = [
-              fragment,
-              noEmptySpace(),
-              expr.operator
-            ];
-          } else {
-            result = join(fragment, expr.operator);
-          }
-          fragment = this.generateExpression(expr.right, rightPrecedence, flags);
-          if (expr.operator === '/' && fragment.toString().charAt(0) === '/' || expr.operator.slice(-1) === '<' && fragment.toString().slice(0, 3) === '!--') {
-            result.push(noEmptySpace());
-            result.push(fragment);
-          } else {
-            result = join(result, fragment);
-          }
-          if (expr.operator === 'in' && !(flags & F_ALLOW_IN)) {
-            return [
-              '(',
-              result,
-              ')'
-            ];
-          }
-          if ((expr.operator === '||' || expr.operator === '&&') && flags & F_FOUND_COALESCE) {
-            return [
-              '(',
-              result,
-              ')'
-            ];
-          }
-          return parenthesize(result, currentPrecedence, precedence);
-        },
-        CallExpression: function (expr, precedence, flags) {
-          var result, i, iz;
-          result = [this.generateExpression(expr.callee, Precedence.Call, E_TTF)];
-          if (expr.optional) {
-            result.push('?.');
-          }
-          result.push('(');
-          for (i = 0, iz = expr['arguments'].length; i < iz; ++i) {
-            result.push(this.generateExpression(expr['arguments'][i], Precedence.Assignment, E_TTT));
-            if (i + 1 < iz) {
-              result.push(',' + space);
-            }
-          }
-          result.push(')');
-          if (!(flags & F_ALLOW_CALL)) {
-            return [
-              '(',
-              result,
-              ')'
-            ];
-          }
-          return parenthesize(result, Precedence.Call, precedence);
-        },
-        ChainExpression: function (expr, precedence, flags) {
-          if (Precedence.OptionalChaining < precedence) {
-            flags |= F_ALLOW_CALL;
-          }
-          var result = this.generateExpression(expr.expression, Precedence.OptionalChaining, flags);
-          return parenthesize(result, Precedence.OptionalChaining, precedence);
-        },
-        NewExpression: function (expr, precedence, flags) {
-          var result, length, i, iz, itemFlags;
-          length = expr['arguments'].length;
-          itemFlags = flags & F_ALLOW_UNPARATH_NEW && !parentheses && length === 0 ? E_TFT : E_TFF;
-          result = join('new', this.generateExpression(expr.callee, Precedence.New, itemFlags));
-          if (!(flags & F_ALLOW_UNPARATH_NEW) || parentheses || length > 0) {
-            result.push('(');
-            for (i = 0, iz = length; i < iz; ++i) {
-              result.push(this.generateExpression(expr['arguments'][i], Precedence.Assignment, E_TTT));
-              if (i + 1 < iz) {
-                result.push(',' + space);
-              }
-            }
-            result.push(')');
-          }
-          return parenthesize(result, Precedence.New, precedence);
-        },
-        MemberExpression: function (expr, precedence, flags) {
-          var result, fragment;
-          result = [this.generateExpression(expr.object, Precedence.Call, flags & F_ALLOW_CALL ? E_TTF : E_TFF)];
-          if (expr.computed) {
-            if (expr.optional) {
-              result.push('?.');
-            }
-            result.push('[');
-            result.push(this.generateExpression(expr.property, Precedence.Sequence, flags & F_ALLOW_CALL ? E_TTT : E_TFT));
-            result.push(']');
-          } else {
-            if (!expr.optional && expr.object.type === Syntax.Literal && typeof expr.object.value === 'number') {
-              fragment = toSourceNodeWhenNeeded(result).toString();
-              if (fragment.indexOf('.') < 0 && !/[eExX]/.test(fragment) && esutils.code.isDecimalDigit(fragment.charCodeAt(fragment.length - 1)) && !(fragment.length >= 2 && fragment.charCodeAt(0) === 48)) {
-                result.push(' ');
-              }
-            }
-            result.push(expr.optional ? '?.' : '.');
-            result.push(generateIdentifier(expr.property));
-          }
-          return parenthesize(result, Precedence.Member, precedence);
-        },
-        MetaProperty: function (expr, precedence, flags) {
-          var result;
-          result = [];
-          result.push(typeof expr.meta === 'string' ? expr.meta : generateIdentifier(expr.meta));
-          result.push('.');
-          result.push(typeof expr.property === 'string' ? expr.property : generateIdentifier(expr.property));
-          return parenthesize(result, Precedence.Member, precedence);
-        },
-        UnaryExpression: function (expr, precedence, flags) {
-          var result, fragment, rightCharCode, leftSource, leftCharCode;
-          fragment = this.generateExpression(expr.argument, Precedence.Unary, E_TTT);
-          if (space === '') {
-            result = join(expr.operator, fragment);
-          } else {
-            result = [expr.operator];
-            if (expr.operator.length > 2) {
-              result = join(result, fragment);
-            } else {
-              leftSource = toSourceNodeWhenNeeded(result).toString();
-              leftCharCode = leftSource.charCodeAt(leftSource.length - 1);
-              rightCharCode = fragment.toString().charCodeAt(0);
-              if ((leftCharCode === 43 || leftCharCode === 45) && leftCharCode === rightCharCode || esutils.code.isIdentifierPartES5(leftCharCode) && esutils.code.isIdentifierPartES5(rightCharCode)) {
-                result.push(noEmptySpace());
-                result.push(fragment);
-              } else {
-                result.push(fragment);
-              }
-            }
-          }
-          return parenthesize(result, Precedence.Unary, precedence);
-        },
-        YieldExpression: function (expr, precedence, flags) {
-          var result;
-          if (expr.delegate) {
-            result = 'yield*';
-          } else {
-            result = 'yield';
-          }
-          if (expr.argument) {
-            result = join(result, this.generateExpression(expr.argument, Precedence.Yield, E_TTT));
-          }
-          return parenthesize(result, Precedence.Yield, precedence);
-        },
-        AwaitExpression: function (expr, precedence, flags) {
-          var result = join(expr.all ? 'await*' : 'await', this.generateExpression(expr.argument, Precedence.Await, E_TTT));
-          return parenthesize(result, Precedence.Await, precedence);
-        },
-        UpdateExpression: function (expr, precedence, flags) {
-          if (expr.prefix) {
-            return parenthesize([
-              expr.operator,
-              this.generateExpression(expr.argument, Precedence.Unary, E_TTT)
-            ], Precedence.Unary, precedence);
-          }
-          return parenthesize([
-            this.generateExpression(expr.argument, Precedence.Postfix, E_TTT),
-            expr.operator
-          ], Precedence.Postfix, precedence);
-        },
-        FunctionExpression: function (expr, precedence, flags) {
-          var result = [
-              generateAsyncPrefix(expr, true),
-              'function'
-            ];
-          if (expr.id) {
-            result.push(generateStarSuffix(expr) || noEmptySpace());
-            result.push(generateIdentifier(expr.id));
-          } else {
-            result.push(generateStarSuffix(expr) || space);
-          }
-          result.push(this.generateFunctionBody(expr));
-          return result;
-        },
-        ArrayPattern: function (expr, precedence, flags) {
-          return this.ArrayExpression(expr, precedence, flags, true);
-        },
-        ArrayExpression: function (expr, precedence, flags, isPattern) {
-          var result, multiline, that = this;
-          if (!expr.elements.length) {
-            return '[]';
-          }
-          multiline = isPattern ? false : expr.elements.length > 1;
-          result = [
-            '[',
-            multiline ? newline : ''
-          ];
-          withIndent(function (indent) {
-            var i, iz;
-            for (i = 0, iz = expr.elements.length; i < iz; ++i) {
-              if (!expr.elements[i]) {
-                if (multiline) {
-                  result.push(indent);
-                }
-                if (i + 1 === iz) {
-                  result.push(',');
-                }
-              } else {
-                result.push(multiline ? indent : '');
-                result.push(that.generateExpression(expr.elements[i], Precedence.Assignment, E_TTT));
-              }
-              if (i + 1 < iz) {
-                result.push(',' + (multiline ? newline : space));
-              }
-            }
-          });
-          if (multiline && !endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString())) {
-            result.push(newline);
-          }
-          result.push(multiline ? base : '');
-          result.push(']');
-          return result;
-        },
-        RestElement: function (expr, precedence, flags) {
-          return '...' + this.generatePattern(expr.argument);
-        },
-        ClassExpression: function (expr, precedence, flags) {
-          var result, fragment;
-          result = ['class'];
-          if (expr.id) {
-            result = join(result, this.generateExpression(expr.id, Precedence.Sequence, E_TTT));
-          }
-          if (expr.superClass) {
-            fragment = join('extends', this.generateExpression(expr.superClass, Precedence.Unary, E_TTT));
-            result = join(result, fragment);
-          }
-          result.push(space);
-          result.push(this.generateStatement(expr.body, S_TFFT));
-          return result;
-        },
-        MethodDefinition: function (expr, precedence, flags) {
-          var result, fragment;
-          if (expr['static']) {
-            result = ['static' + space];
-          } else {
-            result = [];
-          }
-          if (expr.kind === 'get' || expr.kind === 'set') {
-            fragment = [
-              join(expr.kind, this.generatePropertyKey(expr.key, expr.computed)),
-              this.generateFunctionBody(expr.value)
-            ];
-          } else {
-            fragment = [
-              generateMethodPrefix(expr),
-              this.generatePropertyKey(expr.key, expr.computed),
-              this.generateFunctionBody(expr.value)
-            ];
-          }
-          return join(result, fragment);
-        },
-        Property: function (expr, precedence, flags) {
-          if (expr.kind === 'get' || expr.kind === 'set') {
-            return [
-              expr.kind,
-              noEmptySpace(),
-              this.generatePropertyKey(expr.key, expr.computed),
-              this.generateFunctionBody(expr.value)
-            ];
-          }
-          if (expr.shorthand) {
-            if (expr.value.type === 'AssignmentPattern') {
-              return this.AssignmentPattern(expr.value, Precedence.Sequence, E_TTT);
-            }
-            return this.generatePropertyKey(expr.key, expr.computed);
-          }
-          if (expr.method) {
-            return [
-              generateMethodPrefix(expr),
-              this.generatePropertyKey(expr.key, expr.computed),
-              this.generateFunctionBody(expr.value)
-            ];
-          }
-          return [
-            this.generatePropertyKey(expr.key, expr.computed),
-            ':' + space,
-            this.generateExpression(expr.value, Precedence.Assignment, E_TTT)
-          ];
-        },
-        ObjectExpression: function (expr, precedence, flags) {
-          var multiline, result, fragment, that = this;
-          if (!expr.properties.length) {
-            return '{}';
-          }
-          multiline = expr.properties.length > 1;
-          withIndent(function () {
-            fragment = that.generateExpression(expr.properties[0], Precedence.Sequence, E_TTT);
-          });
-          if (!multiline) {
-            if (!hasLineTerminator(toSourceNodeWhenNeeded(fragment).toString())) {
-              return [
-                '{',
-                space,
-                fragment,
-                space,
-                '}'
-              ];
-            }
-          }
-          withIndent(function (indent) {
-            var i, iz;
-            result = [
-              '{',
-              newline,
-              indent,
-              fragment
-            ];
-            if (multiline) {
-              result.push(',' + newline);
-              for (i = 1, iz = expr.properties.length; i < iz; ++i) {
-                result.push(indent);
-                result.push(that.generateExpression(expr.properties[i], Precedence.Sequence, E_TTT));
-                if (i + 1 < iz) {
-                  result.push(',' + newline);
-                }
-              }
-            }
-          });
-          if (!endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString())) {
-            result.push(newline);
-          }
-          result.push(base);
-          result.push('}');
-          return result;
-        },
-        AssignmentPattern: function (expr, precedence, flags) {
-          return this.generateAssignment(expr.left, expr.right, '=', precedence, flags);
-        },
-        ObjectPattern: function (expr, precedence, flags) {
-          var result, i, iz, multiline, property, that = this;
-          if (!expr.properties.length) {
-            return '{}';
-          }
-          multiline = false;
-          if (expr.properties.length === 1) {
-            property = expr.properties[0];
-            if (property.type === Syntax.Property && property.value.type !== Syntax.Identifier) {
-              multiline = true;
-            }
-          } else {
-            for (i = 0, iz = expr.properties.length; i < iz; ++i) {
-              property = expr.properties[i];
-              if (property.type === Syntax.Property && !property.shorthand) {
-                multiline = true;
-                break;
-              }
-            }
-          }
-          result = [
-            '{',
-            multiline ? newline : ''
-          ];
-          withIndent(function (indent) {
-            var i, iz;
-            for (i = 0, iz = expr.properties.length; i < iz; ++i) {
-              result.push(multiline ? indent : '');
-              result.push(that.generateExpression(expr.properties[i], Precedence.Sequence, E_TTT));
-              if (i + 1 < iz) {
-                result.push(',' + (multiline ? newline : space));
-              }
-            }
-          });
-          if (multiline && !endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString())) {
-            result.push(newline);
-          }
-          result.push(multiline ? base : '');
-          result.push('}');
-          return result;
-        },
-        ThisExpression: function (expr, precedence, flags) {
-          return 'this';
-        },
-        Super: function (expr, precedence, flags) {
-          return 'super';
-        },
-        Identifier: function (expr, precedence, flags) {
-          return generateIdentifier(expr);
-        },
-        ImportDefaultSpecifier: function (expr, precedence, flags) {
-          return generateIdentifier(expr.id || expr.local);
-        },
-        ImportNamespaceSpecifier: function (expr, precedence, flags) {
-          var result = ['*'];
-          var id = expr.id || expr.local;
-          if (id) {
-            result.push(space + 'as' + noEmptySpace() + generateIdentifier(id));
-          }
-          return result;
-        },
-        ImportSpecifier: function (expr, precedence, flags) {
-          var imported = expr.imported;
-          var result = [imported.name];
-          var local = expr.local;
-          if (local && local.name !== imported.name) {
-            result.push(noEmptySpace() + 'as' + noEmptySpace() + generateIdentifier(local));
-          }
-          return result;
-        },
-        ExportSpecifier: function (expr, precedence, flags) {
-          var local = expr.local;
-          var result = [local.name];
-          var exported = expr.exported;
-          if (exported && exported.name !== local.name) {
-            result.push(noEmptySpace() + 'as' + noEmptySpace() + generateIdentifier(exported));
-          }
-          return result;
-        },
-        Literal: function (expr, precedence, flags) {
-          var raw;
-          if (expr.hasOwnProperty('raw') && parse && extra.raw) {
-            try {
-              raw = parse(expr.raw).body[0].expression;
-              if (raw.type === Syntax.Literal) {
-                if (raw.value === expr.value) {
-                  return expr.raw;
-                }
-              }
-            } catch (e) {
-            }
-          }
-          if (expr.regex) {
-            return '/' + expr.regex.pattern + '/' + expr.regex.flags;
-          }
-          if (typeof expr.value === 'bigint') {
-            return expr.value.toString() + 'n';
-          }
-          if (expr.bigint) {
-            return expr.bigint + 'n';
-          }
-          if (expr.value === null) {
-            return 'null';
-          }
-          if (typeof expr.value === 'string') {
-            return escapeString(expr.value);
-          }
-          if (typeof expr.value === 'number') {
-            return generateNumber(expr.value);
-          }
-          if (typeof expr.value === 'boolean') {
-            return expr.value ? 'true' : 'false';
-          }
-          return generateRegExp(expr.value);
-        },
-        GeneratorExpression: function (expr, precedence, flags) {
-          return this.ComprehensionExpression(expr, precedence, flags);
-        },
-        ComprehensionExpression: function (expr, precedence, flags) {
-          var result, i, iz, fragment, that = this;
-          result = expr.type === Syntax.GeneratorExpression ? ['('] : ['['];
-          if (extra.moz.comprehensionExpressionStartsWithAssignment) {
-            fragment = this.generateExpression(expr.body, Precedence.Assignment, E_TTT);
-            result.push(fragment);
-          }
-          if (expr.blocks) {
-            withIndent(function () {
-              for (i = 0, iz = expr.blocks.length; i < iz; ++i) {
-                fragment = that.generateExpression(expr.blocks[i], Precedence.Sequence, E_TTT);
-                if (i > 0 || extra.moz.comprehensionExpressionStartsWithAssignment) {
-                  result = join(result, fragment);
-                } else {
-                  result.push(fragment);
-                }
-              }
-            });
-          }
-          if (expr.filter) {
-            result = join(result, 'if' + space);
-            fragment = this.generateExpression(expr.filter, Precedence.Sequence, E_TTT);
-            result = join(result, [
-              '(',
-              fragment,
-              ')'
-            ]);
-          }
-          if (!extra.moz.comprehensionExpressionStartsWithAssignment) {
-            fragment = this.generateExpression(expr.body, Precedence.Assignment, E_TTT);
-            result = join(result, fragment);
-          }
-          result.push(expr.type === Syntax.GeneratorExpression ? ')' : ']');
-          return result;
-        },
-        ComprehensionBlock: function (expr, precedence, flags) {
-          var fragment;
-          if (expr.left.type === Syntax.VariableDeclaration) {
-            fragment = [
-              expr.left.kind,
-              noEmptySpace(),
-              this.generateStatement(expr.left.declarations[0], S_FFFF)
-            ];
-          } else {
-            fragment = this.generateExpression(expr.left, Precedence.Call, E_TTT);
-          }
-          fragment = join(fragment, expr.of ? 'of' : 'in');
-          fragment = join(fragment, this.generateExpression(expr.right, Precedence.Sequence, E_TTT));
-          return [
-            'for' + space + '(',
-            fragment,
-            ')'
-          ];
-        },
-        SpreadElement: function (expr, precedence, flags) {
-          return [
-            '...',
-            this.generateExpression(expr.argument, Precedence.Assignment, E_TTT)
-          ];
-        },
-        TaggedTemplateExpression: function (expr, precedence, flags) {
-          var itemFlags = E_TTF;
-          if (!(flags & F_ALLOW_CALL)) {
-            itemFlags = E_TFF;
-          }
-          var result = [
-              this.generateExpression(expr.tag, Precedence.Call, itemFlags),
-              this.generateExpression(expr.quasi, Precedence.Primary, E_FFT)
-            ];
-          return parenthesize(result, Precedence.TaggedTemplate, precedence);
-        },
-        TemplateElement: function (expr, precedence, flags) {
-          return expr.value.raw;
-        },
-        TemplateLiteral: function (expr, precedence, flags) {
-          var result, i, iz;
-          result = ['`'];
-          for (i = 0, iz = expr.quasis.length; i < iz; ++i) {
-            result.push(this.generateExpression(expr.quasis[i], Precedence.Primary, E_TTT));
-            if (i + 1 < iz) {
-              result.push('${' + space);
-              result.push(this.generateExpression(expr.expressions[i], Precedence.Sequence, E_TTT));
-              result.push(space + '}');
-            }
-          }
-          result.push('`');
-          return result;
-        },
-        ModuleSpecifier: function (expr, precedence, flags) {
-          return this.Literal(expr, precedence, flags);
-        },
-        ImportExpression: function (expr, precedence, flag) {
-          return parenthesize([
-            'import(',
-            this.generateExpression(expr.source, Precedence.Assignment, E_TTT),
-            ')'
-          ], Precedence.Call, precedence);
-        }
-      };
-      merge(CodeGenerator.prototype, CodeGenerator.Expression);
-      CodeGenerator.prototype.generateExpression = function (expr, precedence, flags) {
-        var result, type;
-// patch by Karl Dahlke
-  if(expr === null) return "18392748934";
-        type = expr.type || Syntax.Property;
-        if (extra.verbatim && expr.hasOwnProperty(extra.verbatim)) {
-          return generateVerbatim(expr, precedence);
-        }
-        result = this[type](expr, precedence, flags);
-        if (extra.comment) {
-          result = addComments(expr, result);
-        }
-        return toSourceNodeWhenNeeded(result, expr);
-      };
-      CodeGenerator.prototype.generateStatement = function (stmt, flags) {
-        var result, fragment;
-        result = this[stmt.type](stmt, flags);
-        if (extra.comment) {
-          result = addComments(stmt, result);
-        }
-        fragment = toSourceNodeWhenNeeded(result).toString();
-        if (stmt.type === Syntax.Program && !safeConcatenation && newline === '' && fragment.charAt(fragment.length - 1) === '\n') {
-          result = sourceMap ? toSourceNodeWhenNeeded(result).replaceRight(/\s+$/, '') : fragment.replace(/\s+$/, '');
-        }
-        return toSourceNodeWhenNeeded(result, stmt);
-      };
-      function generateInternal(node) {
-        var codegen;
-        codegen = new CodeGenerator;
-        if (isStatement(node)) {
-          return codegen.generateStatement(node, S_TFFF);
-        }
-        if (isExpression(node)) {
-          return codegen.generateExpression(node, Precedence.Sequence, E_TTT);
-        }
-        throw new Error('Unknown node type: ' + node.type);
-      }
-      function generate(node, options) {
-        var defaultOptions = getDefaultOptions(), result, pair;
-        if (options != null) {
-          if (typeof options.indent === 'string') {
-            defaultOptions.format.indent.style = options.indent;
-          }
-          if (typeof options.base === 'number') {
-            defaultOptions.format.indent.base = options.base;
-          }
-          options = updateDeeply(defaultOptions, options);
-          indent = options.format.indent.style;
-          if (typeof options.base === 'string') {
-            base = options.base;
-          } else {
-            base = stringRepeat(indent, options.format.indent.base);
-          }
-        } else {
-          options = defaultOptions;
-          indent = options.format.indent.style;
-          base = stringRepeat(indent, options.format.indent.base);
-        }
-        json = options.format.json;
-        renumber = options.format.renumber;
-        hexadecimal = json ? false : options.format.hexadecimal;
-        quotes = json ? 'double' : options.format.quotes;
-        escapeless = options.format.escapeless;
-        newline = options.format.newline;
-        space = options.format.space;
-        if (options.format.compact) {
-          newline = space = indent = base = '';
-        }
-        parentheses = options.format.parentheses;
-        semicolons = options.format.semicolons;
-        safeConcatenation = options.format.safeConcatenation;
-        directive = options.directive;
-        parse = json ? null : options.parse;
-        sourceMap = options.sourceMap;
-        sourceCode = options.sourceCode;
-        preserveBlankLines = options.format.preserveBlankLines && sourceCode !== null;
-        extra = options;
-        if (sourceMap) {
-          if (!exports.browser) {
-            SourceNode = require('/node_modules/source-map/source-map.js', module).SourceNode;
-          } else {
-            SourceNode = global.sourceMap.SourceNode;
-          }
-        }
-        result = generateInternal(node);
-        if (!sourceMap) {
-          pair = {
-            code: result.toString(),
-            map: null
-          };
-          return options.sourceMapWithCode ? pair : pair.code;
-        }
-        pair = result.toStringWithSourceMap({
-          file: options.file,
-          sourceRoot: options.sourceMapRoot
-        });
-        if (options.sourceContent) {
-          pair.map.setSourceContent(options.sourceMap, options.sourceContent);
-        }
-        if (options.sourceMapWithCode) {
-          return pair;
-        }
-        return pair.map.toString();
-      }
-      FORMAT_MINIFY = {
-        indent: {
-          style: '',
-          base: 0
-        },
-        renumber: true,
-        hexadecimal: true,
-        quotes: 'auto',
-        escapeless: true,
-        compact: true,
-        parentheses: false,
-        semicolons: false
-      };
-      FORMAT_DEFAULTS = getDefaultOptions().format;
-      exports.version = require('/package.json', module).version;
-      exports.generate = generate;
-      exports.attachComments = estraverse.attachComments;
-      exports.Precedence = updateDeeply({}, Precedence);
-      exports.browser = false;
-      exports.FORMAT_MINIFY = FORMAT_MINIFY;
-      exports.FORMAT_DEFAULTS = FORMAT_DEFAULTS;
-    }());
-  });
-  require.define('/package.json', function (module, exports, __dirname, __filename) {
-    module.exports = {
-      'name': 'escodegen',
-      'description': 'ECMAScript code generator',
-      'homepage': 'http://github.com/estools/escodegen',
-      'main': 'escodegen.js',
-      'bin': {
-        'esgenerate': './bin/esgenerate.js',
-        'escodegen': './bin/escodegen.js'
-      },
-      'files': [
-        'LICENSE.BSD',
-        'README.md',
-        'bin',
-        'escodegen.js',
-        'package.json'
-      ],
-      'version': '2.1.0',
-      'engines': { 'node': '>=6.0' },
-      'maintainers': [{
-          'name': 'Yusuke Suzuki',
-          'email': 'utatane.tea@gmail.com',
-          'web': 'http://github.com/Constellation'
-        }],
-      'repository': {
-        'type': 'git',
-        'url': 'http://github.com/estools/escodegen.git'
-      },
-      'dependencies': {
-        'estraverse': '^5.2.0',
-        'esutils': '^2.0.2',
-        'esprima': '^4.0.1'
-      },
-      'optionalDependencies': { 'source-map': '~0.6.1' },
-      'devDependencies': {
-        'acorn': '^8.0.4',
-        'bluebird': '^3.4.7',
-        'bower-registry-client': '^1.0.0',
-        'chai': '^4.2.0',
-        'chai-exclude': '^2.0.2',
-        'commonjs-everywhere': '^0.9.7',
-        'gulp': '^4.0.2',
-        'gulp-eslint': '^6.0.0',
-        'gulp-mocha': '^7.0.2',
-        'minimist': '^1.2.5',
-        'optionator': '^0.9.1',
-        'semver': '^7.3.4'
-      },
-      'license': 'BSD-2-Clause',
-      'scripts': {
-        'test': 'gulp travis',
-        'unit-test': 'gulp test',
-        'lint': 'gulp lint',
-        'release': 'node tools/release.js',
-        'build-min': './node_modules/.bin/cjsify -ma path: tools/entry-point.js > escodegen.browser.min.js',
-        'build': './node_modules/.bin/cjsify -a path: tools/entry-point.js > escodegen.browser.js'
-      }
-    };
-  });
-  require.define('/node_modules/source-map/source-map.js', function (module, exports, __dirname, __filename) {
-    exports.SourceMapGenerator = require('/node_modules/source-map/lib/source-map-generator.js', module).SourceMapGenerator;
-    exports.SourceMapConsumer = require('/node_modules/source-map/lib/source-map-consumer.js', module).SourceMapConsumer;
-    exports.SourceNode = require('/node_modules/source-map/lib/source-node.js', module).SourceNode;
-  });
-  require.define('/node_modules/source-map/lib/source-node.js', function (module, exports, __dirname, __filename) {
-    var SourceMapGenerator = require('/node_modules/source-map/lib/source-map-generator.js', module).SourceMapGenerator;
-    var util = require('/node_modules/source-map/lib/util.js', module);
-    var REGEX_NEWLINE = /(\r?\n)/;
-    var NEWLINE_CODE = 10;
-    var isSourceNode = '$$$isSourceNode$$$';
-    function SourceNode(aLine, aColumn, aSource, aChunks, aName) {
-      this.children = [];
-      this.sourceContents = {};
-      this.line = aLine == null ? null : aLine;
-      this.column = aColumn == null ? null : aColumn;
-      this.source = aSource == null ? null : aSource;
-      this.name = aName == null ? null : aName;
-      this[isSourceNode] = true;
-      if (aChunks != null)
-        this.add(aChunks);
-    }
-    SourceNode.fromStringWithSourceMap = function SourceNode_fromStringWithSourceMap(aGeneratedCode, aSourceMapConsumer, aRelativePath) {
-      var node = new SourceNode;
-      var remainingLines = aGeneratedCode.split(REGEX_NEWLINE);
-      var remainingLinesIndex = 0;
-      var shiftNextLine = function () {
-        var lineContents = getNextLine();
-        var newLine = getNextLine() || '';
-        return lineContents + newLine;
-        function getNextLine() {
-          return remainingLinesIndex < remainingLines.length ? remainingLines[remainingLinesIndex++] : undefined;
-        }
-      };
-      var lastGeneratedLine = 1, lastGeneratedColumn = 0;
-      var lastMapping = null;
-      aSourceMapConsumer.eachMapping(function (mapping) {
-        if (lastMapping !== null) {
-          if (lastGeneratedLine < mapping.generatedLine) {
-            addMappingWithCode(lastMapping, shiftNextLine());
-            lastGeneratedLine++;
-            lastGeneratedColumn = 0;
-          } else {
-            var nextLine = remainingLines[remainingLinesIndex] || '';
-            var code = nextLine.substr(0, mapping.generatedColumn - lastGeneratedColumn);
-            remainingLines[remainingLinesIndex] = nextLine.substr(mapping.generatedColumn - lastGeneratedColumn);
-            lastGeneratedColumn = mapping.generatedColumn;
-            addMappingWithCode(lastMapping, code);
-            lastMapping = mapping;
-            return;
-          }
-        }
-        while (lastGeneratedLine < mapping.generatedLine) {
-          node.add(shiftNextLine());
-          lastGeneratedLine++;
-        }
-        if (lastGeneratedColumn < mapping.generatedColumn) {
-          var nextLine = remainingLines[remainingLinesIndex] || '';
-          node.add(nextLine.substr(0, mapping.generatedColumn));
-          remainingLines[remainingLinesIndex] = nextLine.substr(mapping.generatedColumn);
-          lastGeneratedColumn = mapping.generatedColumn;
-        }
-        lastMapping = mapping;
-      }, this);
-      if (remainingLinesIndex < remainingLines.length) {
-        if (lastMapping) {
-          addMappingWithCode(lastMapping, shiftNextLine());
-        }
-        node.add(remainingLines.splice(remainingLinesIndex).join(''));
-      }
-      aSourceMapConsumer.sources.forEach(function (sourceFile) {
-        var content = aSourceMapConsumer.sourceContentFor(sourceFile);
-        if (content != null) {
-          if (aRelativePath != null) {
-            sourceFile = util.join(aRelativePath, sourceFile);
-          }
-          node.setSourceContent(sourceFile, content);
-        }
-      });
-      return node;
-      function addMappingWithCode(mapping, code) {
-        if (mapping === null || mapping.source === undefined) {
-          node.add(code);
-        } else {
-          var source = aRelativePath ? util.join(aRelativePath, mapping.source) : mapping.source;
-          node.add(new SourceNode(mapping.originalLine, mapping.originalColumn, source, code, mapping.name));
-        }
-      }
-    };
-    SourceNode.prototype.add = function SourceNode_add(aChunk) {
-      if (Array.isArray(aChunk)) {
-        aChunk.forEach(function (chunk) {
-          this.add(chunk);
-        }, this);
-      } else if (aChunk[isSourceNode] || typeof aChunk === 'string') {
-        if (aChunk) {
-          this.children.push(aChunk);
-        }
-      } else {
-        throw new TypeError('Expected a SourceNode, string, or an array of SourceNodes and strings. Got ' + aChunk);
-      }
-      return this;
-    };
-    SourceNode.prototype.prepend = function SourceNode_prepend(aChunk) {
-      if (Array.isArray(aChunk)) {
-        for (var i = aChunk.length - 1; i >= 0; i--) {
-          this.prepend(aChunk[i]);
-        }
-      } else if (aChunk[isSourceNode] || typeof aChunk === 'string') {
-        this.children.unshift(aChunk);
-      } else {
-        throw new TypeError('Expected a SourceNode, string, or an array of SourceNodes and strings. Got ' + aChunk);
-      }
-      return this;
-    };
-    SourceNode.prototype.walk = function SourceNode_walk(aFn) {
-      var chunk;
-      for (var i = 0, len = this.children.length; i < len; i++) {
-        chunk = this.children[i];
-        if (chunk[isSourceNode]) {
-          chunk.walk(aFn);
-        } else {
-          if (chunk !== '') {
-            aFn(chunk, {
-              source: this.source,
-              line: this.line,
-              column: this.column,
-              name: this.name
-            });
-          }
-        }
-      }
-    };
-    SourceNode.prototype.join = function SourceNode_join(aSep) {
-      var newChildren;
-      var i;
-      var len = this.children.length;
-      if (len > 0) {
-        newChildren = [];
-        for (i = 0; i < len - 1; i++) {
-          newChildren.push(this.children[i]);
-          newChildren.push(aSep);
-        }
-        newChildren.push(this.children[i]);
-        this.children = newChildren;
-      }
-      return this;
-    };
-    SourceNode.prototype.replaceRight = function SourceNode_replaceRight(aPattern, aReplacement) {
-      var lastChild = this.children[this.children.length - 1];
-      if (lastChild[isSourceNode]) {
-        lastChild.replaceRight(aPattern, aReplacement);
-      } else if (typeof lastChild === 'string') {
-        this.children[this.children.length - 1] = lastChild.replace(aPattern, aReplacement);
-      } else {
-        this.children.push(''.replace(aPattern, aReplacement));
-      }
-      return this;
-    };
-    SourceNode.prototype.setSourceContent = function SourceNode_setSourceContent(aSourceFile, aSourceContent) {
-      this.sourceContents[util.toSetString(aSourceFile)] = aSourceContent;
-    };
-    SourceNode.prototype.walkSourceContents = function SourceNode_walkSourceContents(aFn) {
-      for (var i = 0, len = this.children.length; i < len; i++) {
-        if (this.children[i][isSourceNode]) {
-          this.children[i].walkSourceContents(aFn);
-        }
-      }
-      var sources = Object.keys(this.sourceContents);
-      for (var i = 0, len = sources.length; i < len; i++) {
-        aFn(util.fromSetString(sources[i]), this.sourceContents[sources[i]]);
-      }
-    };
-    SourceNode.prototype.toString = function SourceNode_toString() {
-      var str = '';
-      this.walk(function (chunk) {
-        str += chunk;
-      });
-      return str;
-    };
-    SourceNode.prototype.toStringWithSourceMap = function SourceNode_toStringWithSourceMap(aArgs) {
-      var generated = {
-          code: '',
-          line: 1,
-          column: 0
-        };
-      var map = new SourceMapGenerator(aArgs);
-      var sourceMappingActive = false;
-      var lastOriginalSource = null;
-      var lastOriginalLine = null;
-      var lastOriginalColumn = null;
-      var lastOriginalName = null;
-      this.walk(function (chunk, original) {
-        generated.code += chunk;
-        if (original.source !== null && original.line !== null && original.column !== null) {
-          if (lastOriginalSource !== original.source || lastOriginalLine !== original.line || lastOriginalColumn !== original.column || lastOriginalName !== original.name) {
-            map.addMapping({
-              source: original.source,
-              original: {
-                line: original.line,
-                column: original.column
-              },
-              generated: {
-                line: generated.line,
-                column: generated.column
-              },
-              name: original.name
-            });
-          }
-          lastOriginalSource = original.source;
-          lastOriginalLine = original.line;
-          lastOriginalColumn = original.column;
-          lastOriginalName = original.name;
-          sourceMappingActive = true;
-        } else if (sourceMappingActive) {
-          map.addMapping({
-            generated: {
-              line: generated.line,
-              column: generated.column
-            }
-          });
-          lastOriginalSource = null;
-          sourceMappingActive = false;
-        }
-        for (var idx = 0, length = chunk.length; idx < length; idx++) {
-          if (chunk.charCodeAt(idx) === NEWLINE_CODE) {
-            generated.line++;
-            generated.column = 0;
-            if (idx + 1 === length) {
-              lastOriginalSource = null;
-              sourceMappingActive = false;
-            } else if (sourceMappingActive) {
-              map.addMapping({
-                source: original.source,
-                original: {
-                  line: original.line,
-                  column: original.column
-                },
-                generated: {
-                  line: generated.line,
-                  column: generated.column
-                },
-                name: original.name
-              });
-            }
-          } else {
-            generated.column++;
-          }
-        }
-      });
-      this.walkSourceContents(function (sourceFile, sourceContent) {
-        map.setSourceContent(sourceFile, sourceContent);
-      });
-      return {
-        code: generated.code,
-        map: map
-      };
-    };
-    exports.SourceNode = SourceNode;
-  });
-  require.define('/node_modules/source-map/lib/util.js', function (module, exports, __dirname, __filename) {
-    function getArg(aArgs, aName, aDefaultValue) {
-      if (aName in aArgs) {
-        return aArgs[aName];
-      } else if (arguments.length === 3) {
-        return aDefaultValue;
-      } else {
-        throw new Error('"' + aName + '" is a required argument.');
-      }
-    }
-    exports.getArg = getArg;
-    var urlRegexp = /^(?:([\w+\-.]+):)?\/\/(?:(\w+:\w+)@)?([\w.-]*)(?::(\d+))?(.*)$/;
-    var dataUrlRegexp = /^data:.+\,.+$/;
-    function urlParse(aUrl) {
-      var match = aUrl.match(urlRegexp);
-      if (!match) {
-        return null;
-      }
-      return {
-        scheme: match[1],
-        auth: match[2],
-        host: match[3],
-        port: match[4],
-        path: match[5]
-      };
-    }
-    exports.urlParse = urlParse;
-    function urlGenerate(aParsedUrl) {
-      var url = '';
-      if (aParsedUrl.scheme) {
-        url += aParsedUrl.scheme + ':';
-      }
-      url += '//';
-      if (aParsedUrl.auth) {
-        url += aParsedUrl.auth + '@';
-      }
-      if (aParsedUrl.host) {
-        url += aParsedUrl.host;
-      }
-      if (aParsedUrl.port) {
-        url += ':' + aParsedUrl.port;
-      }
-      if (aParsedUrl.path) {
-        url += aParsedUrl.path;
-      }
-      return url;
-    }
-    exports.urlGenerate = urlGenerate;
-    function normalize(aPath) {
-      var path = aPath;
-      var url = urlParse(aPath);
-      if (url) {
-        if (!url.path) {
-          return aPath;
-        }
-        path = url.path;
-      }
-      var isAbsolute = exports.isAbsolute(path);
-      var parts = path.split(/\/+/);
-      for (var part, up = 0, i = parts.length - 1; i >= 0; i--) {
-        part = parts[i];
-        if (part === '.') {
-          parts.splice(i, 1);
-        } else if (part === '..') {
-          up++;
-        } else if (up > 0) {
-          if (part === '') {
-            parts.splice(i + 1, up);
-            up = 0;
-          } else {
-            parts.splice(i, 2);
-            up--;
-          }
-        }
-      }
-      path = parts.join('/');
-      if (path === '') {
-        path = isAbsolute ? '/' : '.';
-      }
-      if (url) {
-        url.path = path;
-        return urlGenerate(url);
-      }
-      return path;
-    }
-    exports.normalize = normalize;
-    function join(aRoot, aPath) {
-      if (aRoot === '') {
-        aRoot = '.';
-      }
-      if (aPath === '') {
-        aPath = '.';
-      }
-      var aPathUrl = urlParse(aPath);
-      var aRootUrl = urlParse(aRoot);
-      if (aRootUrl) {
-        aRoot = aRootUrl.path || '/';
-      }
-      if (aPathUrl && !aPathUrl.scheme) {
-        if (aRootUrl) {
-          aPathUrl.scheme = aRootUrl.scheme;
-        }
-        return urlGenerate(aPathUrl);
-      }
-      if (aPathUrl || aPath.match(dataUrlRegexp)) {
-        return aPath;
-      }
-      if (aRootUrl && !aRootUrl.host && !aRootUrl.path) {
-        aRootUrl.host = aPath;
-        return urlGenerate(aRootUrl);
-      }
-      var joined = aPath.charAt(0) === '/' ? aPath : normalize(aRoot.replace(/\/+$/, '') + '/' + aPath);
-      if (aRootUrl) {
-        aRootUrl.path = joined;
-        return urlGenerate(aRootUrl);
-      }
-      return joined;
-    }
-    exports.join = join;
-    exports.isAbsolute = function (aPath) {
-      return aPath.charAt(0) === '/' || urlRegexp.test(aPath);
-    };
-    function relative(aRoot, aPath) {
-      if (aRoot === '') {
-        aRoot = '.';
-      }
-      aRoot = aRoot.replace(/\/$/, '');
-      var level = 0;
-      while (aPath.indexOf(aRoot + '/') !== 0) {
-        var index = aRoot.lastIndexOf('/');
-        if (index < 0) {
-          return aPath;
-        }
-        aRoot = aRoot.slice(0, index);
-        if (aRoot.match(/^([^\/]+:\/)?\/*$/)) {
-          return aPath;
-        }
-        ++level;
-      }
-      return Array(level + 1).join('../') + aPath.substr(aRoot.length + 1);
-    }
-    exports.relative = relative;
-    var supportsNullProto = function () {
-        var obj = Object.create(null);
-        return !('__proto__' in obj);
-      }();
-    function identity(s) {
-      return s;
-    }
-    function toSetString(aStr) {
-      if (isProtoString(aStr)) {
-        return '$' + aStr;
-      }
-      return aStr;
-    }
-    exports.toSetString = supportsNullProto ? identity : toSetString;
-    function fromSetString(aStr) {
-      if (isProtoString(aStr)) {
-        return aStr.slice(1);
-      }
-      return aStr;
-    }
-    exports.fromSetString = supportsNullProto ? identity : fromSetString;
-    function isProtoString(s) {
-      if (!s) {
-        return false;
-      }
-      var length = s.length;
-      if (length < 9) {
-        return false;
-      }
-      if (s.charCodeAt(length - 1) !== 95 || s.charCodeAt(length - 2) !== 95 || s.charCodeAt(length - 3) !== 111 || s.charCodeAt(length - 4) !== 116 || s.charCodeAt(length - 5) !== 111 || s.charCodeAt(length - 6) !== 114 || s.charCodeAt(length - 7) !== 112 || s.charCodeAt(length - 8) !== 95 || s.charCodeAt(length - 9) !== 95) {
-        return false;
-      }
-      for (var i = length - 10; i >= 0; i--) {
-        if (s.charCodeAt(i) !== 36) {
-          return false;
-        }
-      }
+};
+
+OutputLine.prototype.has_match = function(pattern) {
+  for (var lastCheckedOutput = this.__items.length - 1; lastCheckedOutput >= 0; lastCheckedOutput--) {
+    if (this.__items[lastCheckedOutput].match(pattern)) {
       return true;
     }
-    function compareByOriginalPositions(mappingA, mappingB, onlyCompareOriginal) {
-      var cmp = strcmp(mappingA.source, mappingB.source);
-      if (cmp !== 0) {
-        return cmp;
-      }
-      cmp = mappingA.originalLine - mappingB.originalLine;
-      if (cmp !== 0) {
-        return cmp;
-      }
-      cmp = mappingA.originalColumn - mappingB.originalColumn;
-      if (cmp !== 0 || onlyCompareOriginal) {
-        return cmp;
-      }
-      cmp = mappingA.generatedColumn - mappingB.generatedColumn;
-      if (cmp !== 0) {
-        return cmp;
-      }
-      cmp = mappingA.generatedLine - mappingB.generatedLine;
-      if (cmp !== 0) {
-        return cmp;
-      }
-      return strcmp(mappingA.name, mappingB.name);
+  }
+  return false;
+};
+
+OutputLine.prototype.set_indent = function(indent, alignment) {
+  if (this.is_empty()) {
+    this.__indent_count = indent || 0;
+    this.__alignment_count = alignment || 0;
+    this.__character_count = this.__parent.get_indent_size(this.__indent_count, this.__alignment_count);
+  }
+};
+
+OutputLine.prototype._set_wrap_point = function() {
+  if (this.__parent.wrap_line_length) {
+    this.__wrap_point_index = this.__items.length;
+    this.__wrap_point_character_count = this.__character_count;
+    this.__wrap_point_indent_count = this.__parent.next_line.__indent_count;
+    this.__wrap_point_alignment_count = this.__parent.next_line.__alignment_count;
+  }
+};
+
+OutputLine.prototype._should_wrap = function() {
+  return this.__wrap_point_index &&
+    this.__character_count > this.__parent.wrap_line_length &&
+    this.__wrap_point_character_count > this.__parent.next_line.__character_count;
+};
+
+OutputLine.prototype._allow_wrap = function() {
+  if (this._should_wrap()) {
+    this.__parent.add_new_line();
+    var next = this.__parent.current_line;
+    next.set_indent(this.__wrap_point_indent_count, this.__wrap_point_alignment_count);
+    next.__items = this.__items.slice(this.__wrap_point_index);
+    this.__items = this.__items.slice(0, this.__wrap_point_index);
+
+    next.__character_count += this.__character_count - this.__wrap_point_character_count;
+    this.__character_count = this.__wrap_point_character_count;
+
+    if (next.__items[0] === " ") {
+      next.__items.splice(0, 1);
+      next.__character_count -= 1;
     }
-    exports.compareByOriginalPositions = compareByOriginalPositions;
-    function compareByGeneratedPositionsDeflated(mappingA, mappingB, onlyCompareGenerated) {
-      var cmp = mappingA.generatedLine - mappingB.generatedLine;
-      if (cmp !== 0) {
-        return cmp;
-      }
-      cmp = mappingA.generatedColumn - mappingB.generatedColumn;
-      if (cmp !== 0 || onlyCompareGenerated) {
-        return cmp;
-      }
-      cmp = strcmp(mappingA.source, mappingB.source);
-      if (cmp !== 0) {
-        return cmp;
-      }
-      cmp = mappingA.originalLine - mappingB.originalLine;
-      if (cmp !== 0) {
-        return cmp;
-      }
-      cmp = mappingA.originalColumn - mappingB.originalColumn;
-      if (cmp !== 0) {
-        return cmp;
-      }
-      return strcmp(mappingA.name, mappingB.name);
+    return true;
+  }
+  return false;
+};
+
+OutputLine.prototype.is_empty = function() {
+  return this.__items.length === 0;
+};
+
+OutputLine.prototype.last = function() {
+  if (!this.is_empty()) {
+    return this.__items[this.__items.length - 1];
+  } else {
+    return null;
+  }
+};
+
+OutputLine.prototype.push = function(item) {
+  this.__items.push(item);
+  var last_newline_index = item.lastIndexOf('\n');
+  if (last_newline_index !== -1) {
+    this.__character_count = item.length - last_newline_index;
+  } else {
+    this.__character_count += item.length;
+  }
+};
+
+OutputLine.prototype.pop = function() {
+  var item = null;
+  if (!this.is_empty()) {
+    item = this.__items.pop();
+    this.__character_count -= item.length;
+  }
+  return item;
+};
+
+
+OutputLine.prototype._remove_indent = function() {
+  if (this.__indent_count > 0) {
+    this.__indent_count -= 1;
+    this.__character_count -= this.__parent.indent_size;
+  }
+};
+
+OutputLine.prototype._remove_wrap_indent = function() {
+  if (this.__wrap_point_indent_count > 0) {
+    this.__wrap_point_indent_count -= 1;
+  }
+};
+OutputLine.prototype.trim = function() {
+  while (this.last() === ' ') {
+    this.__items.pop();
+    this.__character_count -= 1;
+  }
+};
+
+OutputLine.prototype.toString = function() {
+  var result = '';
+  if (this.is_empty()) {
+    if (this.__parent.indent_empty_lines) {
+      result = this.__parent.get_indent_string(this.__indent_count);
     }
-    exports.compareByGeneratedPositionsDeflated = compareByGeneratedPositionsDeflated;
-    function strcmp(aStr1, aStr2) {
-      if (aStr1 === aStr2) {
-        return 0;
-      }
-      if (aStr1 === null) {
-        return 1;
-      }
-      if (aStr2 === null) {
-        return -1;
-      }
-      if (aStr1 > aStr2) {
-        return 1;
-      }
-      return -1;
+  } else {
+    result = this.__parent.get_indent_string(this.__indent_count, this.__alignment_count);
+    result += this.__items.join('');
+  }
+  return result;
+};
+
+function IndentStringCache(options, baseIndentString) {
+  this.__cache = [''];
+  this.__indent_size = options.indent_size;
+  this.__indent_string = options.indent_char;
+  if (!options.indent_with_tabs) {
+    this.__indent_string = new Array(options.indent_size + 1).join(options.indent_char);
+  }
+
+  // Set to null to continue support for auto detection of base indent
+  baseIndentString = baseIndentString || '';
+  if (options.indent_level > 0) {
+    baseIndentString = new Array(options.indent_level + 1).join(this.__indent_string);
+  }
+
+  this.__base_string = baseIndentString;
+  this.__base_string_length = baseIndentString.length;
+}
+
+IndentStringCache.prototype.get_indent_size = function(indent, column) {
+  var result = this.__base_string_length;
+  column = column || 0;
+  if (indent < 0) {
+    result = 0;
+  }
+  result += indent * this.__indent_size;
+  result += column;
+  return result;
+};
+
+IndentStringCache.prototype.get_indent_string = function(indent_level, column) {
+  var result = this.__base_string;
+  column = column || 0;
+  if (indent_level < 0) {
+    indent_level = 0;
+    result = '';
+  }
+  column += indent_level * this.__indent_size;
+  this.__ensure_cache(column);
+  result += this.__cache[column];
+  return result;
+};
+
+IndentStringCache.prototype.__ensure_cache = function(column) {
+  while (column >= this.__cache.length) {
+    this.__add_column();
+  }
+};
+
+IndentStringCache.prototype.__add_column = function() {
+  var column = this.__cache.length;
+  var indent = 0;
+  var result = '';
+  if (this.__indent_size && column >= this.__indent_size) {
+    indent = Math.floor(column / this.__indent_size);
+    column -= indent * this.__indent_size;
+    result = new Array(indent + 1).join(this.__indent_string);
+  }
+  if (column) {
+    result += new Array(column + 1).join(' ');
+  }
+
+  this.__cache.push(result);
+};
+
+function Output(options, baseIndentString) {
+  this.__indent_cache = new IndentStringCache(options, baseIndentString);
+  this.raw = false;
+  this._end_with_newline = options.end_with_newline;
+  this.indent_size = options.indent_size;
+  this.wrap_line_length = options.wrap_line_length;
+  this.indent_empty_lines = options.indent_empty_lines;
+  this.__lines = [];
+  this.previous_line = null;
+  this.current_line = null;
+  this.next_line = new OutputLine(this);
+  this.space_before_token = false;
+  this.non_breaking_space = false;
+  this.previous_token_wrapped = false;
+  // initialize
+  this.__add_outputline();
+}
+
+Output.prototype.__add_outputline = function() {
+  this.previous_line = this.current_line;
+  this.current_line = this.next_line.clone_empty();
+  this.__lines.push(this.current_line);
+};
+
+Output.prototype.get_line_number = function() {
+  return this.__lines.length;
+};
+
+Output.prototype.get_indent_string = function(indent, column) {
+  return this.__indent_cache.get_indent_string(indent, column);
+};
+
+Output.prototype.get_indent_size = function(indent, column) {
+  return this.__indent_cache.get_indent_size(indent, column);
+};
+
+Output.prototype.is_empty = function() {
+  return !this.previous_line && this.current_line.is_empty();
+};
+
+Output.prototype.add_new_line = function(force_newline) {
+  // never newline at the start of file
+  // otherwise, newline only if we didn't just add one or we're forced
+  if (this.is_empty() ||
+    (!force_newline && this.just_added_newline())) {
+    return false;
+  }
+
+  // if raw output is enabled, don't print additional newlines,
+  // but still return True as though you had
+  if (!this.raw) {
+    this.__add_outputline();
+  }
+  return true;
+};
+
+Output.prototype.get_code = function(eol) {
+  this.trim(true);
+
+  // handle some edge cases where the last tokens
+  // has text that ends with newline(s)
+  var last_item = this.current_line.pop();
+  if (last_item) {
+    if (last_item[last_item.length - 1] === '\n') {
+      last_item = last_item.replace(/\n+$/g, '');
     }
-    function compareByGeneratedPositionsInflated(mappingA, mappingB) {
-      var cmp = mappingA.generatedLine - mappingB.generatedLine;
-      if (cmp !== 0) {
-        return cmp;
-      }
-      cmp = mappingA.generatedColumn - mappingB.generatedColumn;
-      if (cmp !== 0) {
-        return cmp;
-      }
-      cmp = strcmp(mappingA.source, mappingB.source);
-      if (cmp !== 0) {
-        return cmp;
-      }
-      cmp = mappingA.originalLine - mappingB.originalLine;
-      if (cmp !== 0) {
-        return cmp;
-      }
-      cmp = mappingA.originalColumn - mappingB.originalColumn;
-      if (cmp !== 0) {
-        return cmp;
-      }
-      return strcmp(mappingA.name, mappingB.name);
+    this.current_line.push(last_item);
+  }
+
+  if (this._end_with_newline) {
+    this.__add_outputline();
+  }
+
+  var sweet_code = this.__lines.join('\n');
+
+  if (eol !== '\n') {
+    sweet_code = sweet_code.replace(/[\n]/g, eol);
+  }
+  return sweet_code;
+};
+
+Output.prototype.set_wrap_point = function() {
+  this.current_line._set_wrap_point();
+};
+
+Output.prototype.set_indent = function(indent, alignment) {
+  indent = indent || 0;
+  alignment = alignment || 0;
+
+  // Next line stores alignment values
+  this.next_line.set_indent(indent, alignment);
+
+  // Never indent your first output indent at the start of the file
+  if (this.__lines.length > 1) {
+    this.current_line.set_indent(indent, alignment);
+    return true;
+  }
+
+  this.current_line.set_indent();
+  return false;
+};
+
+Output.prototype.add_raw_token = function(token) {
+  for (var x = 0; x < token.newlines; x++) {
+    this.__add_outputline();
+  }
+  this.current_line.set_indent(-1);
+  this.current_line.push(token.whitespace_before);
+  this.current_line.push(token.text);
+  this.space_before_token = false;
+  this.non_breaking_space = false;
+  this.previous_token_wrapped = false;
+};
+
+Output.prototype.add_token = function(printable_token) {
+  this.__add_space_before_token();
+  this.current_line.push(printable_token);
+  this.space_before_token = false;
+  this.non_breaking_space = false;
+  this.previous_token_wrapped = this.current_line._allow_wrap();
+};
+
+Output.prototype.__add_space_before_token = function() {
+  if (this.space_before_token && !this.just_added_newline()) {
+    if (!this.non_breaking_space) {
+      this.set_wrap_point();
     }
-    exports.compareByGeneratedPositionsInflated = compareByGeneratedPositionsInflated;
-    function parseSourceMapInput(str) {
-      return JSON.parse(str.replace(/^\)]}'[^\n]*\n/, ''));
+    this.current_line.push(' ');
+  }
+};
+
+Output.prototype.remove_indent = function(index) {
+  var output_length = this.__lines.length;
+  while (index < output_length) {
+    this.__lines[index]._remove_indent();
+    index++;
+  }
+  this.current_line._remove_wrap_indent();
+};
+
+Output.prototype.trim = function(eat_newlines) {
+  eat_newlines = (eat_newlines === undefined) ? false : eat_newlines;
+
+  this.current_line.trim();
+
+  while (eat_newlines && this.__lines.length > 1 &&
+    this.current_line.is_empty()) {
+    this.__lines.pop();
+    this.current_line = this.__lines[this.__lines.length - 1];
+    this.current_line.trim();
+  }
+
+  this.previous_line = this.__lines.length > 1 ?
+    this.__lines[this.__lines.length - 2] : null;
+};
+
+Output.prototype.just_added_newline = function() {
+  return this.current_line.is_empty();
+};
+
+Output.prototype.just_added_blankline = function() {
+  return this.is_empty() ||
+    (this.current_line.is_empty() && this.previous_line.is_empty());
+};
+
+Output.prototype.ensure_empty_line_above = function(starts_with, ends_with) {
+  var index = this.__lines.length - 2;
+  while (index >= 0) {
+    var potentialEmptyLine = this.__lines[index];
+    if (potentialEmptyLine.is_empty()) {
+      break;
+    } else if (potentialEmptyLine.item(0).indexOf(starts_with) !== 0 &&
+      potentialEmptyLine.item(-1) !== ends_with) {
+      this.__lines.splice(index + 1, 0, new OutputLine(this));
+      this.previous_line = this.__lines[this.__lines.length - 2];
+      break;
     }
-    exports.parseSourceMapInput = parseSourceMapInput;
-    function computeSourceURL(sourceRoot, sourceURL, sourceMapURL) {
-      sourceURL = sourceURL || '';
-      if (sourceRoot) {
-        if (sourceRoot[sourceRoot.length - 1] !== '/' && sourceURL[0] !== '/') {
-          sourceRoot += '/';
-        }
-        sourceURL = sourceRoot + sourceURL;
-      }
-      if (sourceMapURL) {
-        var parsed = urlParse(sourceMapURL);
-        if (!parsed) {
-          throw new Error('sourceMapURL could not be parsed');
-        }
-        if (parsed.path) {
-          var index = parsed.path.lastIndexOf('/');
-          if (index >= 0) {
-            parsed.path = parsed.path.substring(0, index + 1);
-          }
-        }
-        sourceURL = join(urlGenerate(parsed), sourceURL);
-      }
-      return normalize(sourceURL);
+    index--;
+  }
+};
+
+module.exports.Output = Output;
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module) {
+
+/*jshint node:true */
+/*
+
+  The MIT License (MIT)
+
+  Copyright (c) 2007-2018 Einar Lielmanis, Liam Newman, and contributors.
+
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation files
+  (the "Software"), to deal in the Software without restriction,
+  including without limitation the rights to use, copy, modify, merge,
+  publish, distribute, sublicense, and/or sell copies of the Software,
+  and to permit persons to whom the Software is furnished to do so,
+  subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
+
+
+function Token(type, text, newlines, whitespace_before) {
+  this.type = type;
+  this.text = text;
+
+  // comments_before are
+  // comments that have a new line before them
+  // and may or may not have a newline after
+  // this is a set of comments before
+  this.comments_before = null; /* inline comment*/
+
+
+  // this.comments_after =  new TokenStream(); // no new line before and newline after
+  this.newlines = newlines || 0;
+  this.whitespace_before = whitespace_before || '';
+  this.parent = null;
+  this.next = null;
+  this.previous = null;
+  this.opened = null;
+  this.closed = null;
+  this.directives = null;
+}
+
+
+module.exports.Token = Token;
+
+
+/***/ }),
+/* 4 */
+/***/ (function(__unused_webpack_module, exports) {
+
+/* jshint node: true, curly: false */
+// Parts of this section of code is taken from acorn.
+//
+// Acorn was written by Marijn Haverbeke and released under an MIT
+// license. The Unicode regexps (for identifiers and whitespace) were
+// taken from [Esprima](http://esprima.org) by Ariya Hidayat.
+//
+// Git repositories for Acorn are available at
+//
+//     http://marijnhaverbeke.nl/git/acorn
+//     https://github.com/marijnh/acorn.git
+
+// ## Character categories
+
+
+
+
+// acorn used char codes to squeeze the last bit of performance out
+// Beautifier is okay without that, so we're using regex
+// permit # (23), $ (36), and @ (64). @ is used in ES7 decorators.
+// 65 through 91 are uppercase letters.
+// permit _ (95).
+// 97 through 123 are lowercase letters.
+var baseASCIIidentifierStartChars = "\\x23\\x24\\x40\\x41-\\x5a\\x5f\\x61-\\x7a";
+
+// inside an identifier @ is not allowed but 0-9 are.
+var baseASCIIidentifierChars = "\\x24\\x30-\\x39\\x41-\\x5a\\x5f\\x61-\\x7a";
+
+// Big ugly regular expressions that match characters in the
+// whitespace, identifier, and identifier-start categories. These
+// are only applied when a character is found to actually have a
+// code point above 128.
+var nonASCIIidentifierStartChars = "\\xaa\\xb5\\xba\\xc0-\\xd6\\xd8-\\xf6\\xf8-\\u02c1\\u02c6-\\u02d1\\u02e0-\\u02e4\\u02ec\\u02ee\\u0370-\\u0374\\u0376\\u0377\\u037a-\\u037d\\u0386\\u0388-\\u038a\\u038c\\u038e-\\u03a1\\u03a3-\\u03f5\\u03f7-\\u0481\\u048a-\\u0527\\u0531-\\u0556\\u0559\\u0561-\\u0587\\u05d0-\\u05ea\\u05f0-\\u05f2\\u0620-\\u064a\\u066e\\u066f\\u0671-\\u06d3\\u06d5\\u06e5\\u06e6\\u06ee\\u06ef\\u06fa-\\u06fc\\u06ff\\u0710\\u0712-\\u072f\\u074d-\\u07a5\\u07b1\\u07ca-\\u07ea\\u07f4\\u07f5\\u07fa\\u0800-\\u0815\\u081a\\u0824\\u0828\\u0840-\\u0858\\u08a0\\u08a2-\\u08ac\\u0904-\\u0939\\u093d\\u0950\\u0958-\\u0961\\u0971-\\u0977\\u0979-\\u097f\\u0985-\\u098c\\u098f\\u0990\\u0993-\\u09a8\\u09aa-\\u09b0\\u09b2\\u09b6-\\u09b9\\u09bd\\u09ce\\u09dc\\u09dd\\u09df-\\u09e1\\u09f0\\u09f1\\u0a05-\\u0a0a\\u0a0f\\u0a10\\u0a13-\\u0a28\\u0a2a-\\u0a30\\u0a32\\u0a33\\u0a35\\u0a36\\u0a38\\u0a39\\u0a59-\\u0a5c\\u0a5e\\u0a72-\\u0a74\\u0a85-\\u0a8d\\u0a8f-\\u0a91\\u0a93-\\u0aa8\\u0aaa-\\u0ab0\\u0ab2\\u0ab3\\u0ab5-\\u0ab9\\u0abd\\u0ad0\\u0ae0\\u0ae1\\u0b05-\\u0b0c\\u0b0f\\u0b10\\u0b13-\\u0b28\\u0b2a-\\u0b30\\u0b32\\u0b33\\u0b35-\\u0b39\\u0b3d\\u0b5c\\u0b5d\\u0b5f-\\u0b61\\u0b71\\u0b83\\u0b85-\\u0b8a\\u0b8e-\\u0b90\\u0b92-\\u0b95\\u0b99\\u0b9a\\u0b9c\\u0b9e\\u0b9f\\u0ba3\\u0ba4\\u0ba8-\\u0baa\\u0bae-\\u0bb9\\u0bd0\\u0c05-\\u0c0c\\u0c0e-\\u0c10\\u0c12-\\u0c28\\u0c2a-\\u0c33\\u0c35-\\u0c39\\u0c3d\\u0c58\\u0c59\\u0c60\\u0c61\\u0c85-\\u0c8c\\u0c8e-\\u0c90\\u0c92-\\u0ca8\\u0caa-\\u0cb3\\u0cb5-\\u0cb9\\u0cbd\\u0cde\\u0ce0\\u0ce1\\u0cf1\\u0cf2\\u0d05-\\u0d0c\\u0d0e-\\u0d10\\u0d12-\\u0d3a\\u0d3d\\u0d4e\\u0d60\\u0d61\\u0d7a-\\u0d7f\\u0d85-\\u0d96\\u0d9a-\\u0db1\\u0db3-\\u0dbb\\u0dbd\\u0dc0-\\u0dc6\\u0e01-\\u0e30\\u0e32\\u0e33\\u0e40-\\u0e46\\u0e81\\u0e82\\u0e84\\u0e87\\u0e88\\u0e8a\\u0e8d\\u0e94-\\u0e97\\u0e99-\\u0e9f\\u0ea1-\\u0ea3\\u0ea5\\u0ea7\\u0eaa\\u0eab\\u0ead-\\u0eb0\\u0eb2\\u0eb3\\u0ebd\\u0ec0-\\u0ec4\\u0ec6\\u0edc-\\u0edf\\u0f00\\u0f40-\\u0f47\\u0f49-\\u0f6c\\u0f88-\\u0f8c\\u1000-\\u102a\\u103f\\u1050-\\u1055\\u105a-\\u105d\\u1061\\u1065\\u1066\\u106e-\\u1070\\u1075-\\u1081\\u108e\\u10a0-\\u10c5\\u10c7\\u10cd\\u10d0-\\u10fa\\u10fc-\\u1248\\u124a-\\u124d\\u1250-\\u1256\\u1258\\u125a-\\u125d\\u1260-\\u1288\\u128a-\\u128d\\u1290-\\u12b0\\u12b2-\\u12b5\\u12b8-\\u12be\\u12c0\\u12c2-\\u12c5\\u12c8-\\u12d6\\u12d8-\\u1310\\u1312-\\u1315\\u1318-\\u135a\\u1380-\\u138f\\u13a0-\\u13f4\\u1401-\\u166c\\u166f-\\u167f\\u1681-\\u169a\\u16a0-\\u16ea\\u16ee-\\u16f0\\u1700-\\u170c\\u170e-\\u1711\\u1720-\\u1731\\u1740-\\u1751\\u1760-\\u176c\\u176e-\\u1770\\u1780-\\u17b3\\u17d7\\u17dc\\u1820-\\u1877\\u1880-\\u18a8\\u18aa\\u18b0-\\u18f5\\u1900-\\u191c\\u1950-\\u196d\\u1970-\\u1974\\u1980-\\u19ab\\u19c1-\\u19c7\\u1a00-\\u1a16\\u1a20-\\u1a54\\u1aa7\\u1b05-\\u1b33\\u1b45-\\u1b4b\\u1b83-\\u1ba0\\u1bae\\u1baf\\u1bba-\\u1be5\\u1c00-\\u1c23\\u1c4d-\\u1c4f\\u1c5a-\\u1c7d\\u1ce9-\\u1cec\\u1cee-\\u1cf1\\u1cf5\\u1cf6\\u1d00-\\u1dbf\\u1e00-\\u1f15\\u1f18-\\u1f1d\\u1f20-\\u1f45\\u1f48-\\u1f4d\\u1f50-\\u1f57\\u1f59\\u1f5b\\u1f5d\\u1f5f-\\u1f7d\\u1f80-\\u1fb4\\u1fb6-\\u1fbc\\u1fbe\\u1fc2-\\u1fc4\\u1fc6-\\u1fcc\\u1fd0-\\u1fd3\\u1fd6-\\u1fdb\\u1fe0-\\u1fec\\u1ff2-\\u1ff4\\u1ff6-\\u1ffc\\u2071\\u207f\\u2090-\\u209c\\u2102\\u2107\\u210a-\\u2113\\u2115\\u2119-\\u211d\\u2124\\u2126\\u2128\\u212a-\\u212d\\u212f-\\u2139\\u213c-\\u213f\\u2145-\\u2149\\u214e\\u2160-\\u2188\\u2c00-\\u2c2e\\u2c30-\\u2c5e\\u2c60-\\u2ce4\\u2ceb-\\u2cee\\u2cf2\\u2cf3\\u2d00-\\u2d25\\u2d27\\u2d2d\\u2d30-\\u2d67\\u2d6f\\u2d80-\\u2d96\\u2da0-\\u2da6\\u2da8-\\u2dae\\u2db0-\\u2db6\\u2db8-\\u2dbe\\u2dc0-\\u2dc6\\u2dc8-\\u2dce\\u2dd0-\\u2dd6\\u2dd8-\\u2dde\\u2e2f\\u3005-\\u3007\\u3021-\\u3029\\u3031-\\u3035\\u3038-\\u303c\\u3041-\\u3096\\u309d-\\u309f\\u30a1-\\u30fa\\u30fc-\\u30ff\\u3105-\\u312d\\u3131-\\u318e\\u31a0-\\u31ba\\u31f0-\\u31ff\\u3400-\\u4db5\\u4e00-\\u9fcc\\ua000-\\ua48c\\ua4d0-\\ua4fd\\ua500-\\ua60c\\ua610-\\ua61f\\ua62a\\ua62b\\ua640-\\ua66e\\ua67f-\\ua697\\ua6a0-\\ua6ef\\ua717-\\ua71f\\ua722-\\ua788\\ua78b-\\ua78e\\ua790-\\ua793\\ua7a0-\\ua7aa\\ua7f8-\\ua801\\ua803-\\ua805\\ua807-\\ua80a\\ua80c-\\ua822\\ua840-\\ua873\\ua882-\\ua8b3\\ua8f2-\\ua8f7\\ua8fb\\ua90a-\\ua925\\ua930-\\ua946\\ua960-\\ua97c\\ua984-\\ua9b2\\ua9cf\\uaa00-\\uaa28\\uaa40-\\uaa42\\uaa44-\\uaa4b\\uaa60-\\uaa76\\uaa7a\\uaa80-\\uaaaf\\uaab1\\uaab5\\uaab6\\uaab9-\\uaabd\\uaac0\\uaac2\\uaadb-\\uaadd\\uaae0-\\uaaea\\uaaf2-\\uaaf4\\uab01-\\uab06\\uab09-\\uab0e\\uab11-\\uab16\\uab20-\\uab26\\uab28-\\uab2e\\uabc0-\\uabe2\\uac00-\\ud7a3\\ud7b0-\\ud7c6\\ud7cb-\\ud7fb\\uf900-\\ufa6d\\ufa70-\\ufad9\\ufb00-\\ufb06\\ufb13-\\ufb17\\ufb1d\\ufb1f-\\ufb28\\ufb2a-\\ufb36\\ufb38-\\ufb3c\\ufb3e\\ufb40\\ufb41\\ufb43\\ufb44\\ufb46-\\ufbb1\\ufbd3-\\ufd3d\\ufd50-\\ufd8f\\ufd92-\\ufdc7\\ufdf0-\\ufdfb\\ufe70-\\ufe74\\ufe76-\\ufefc\\uff21-\\uff3a\\uff41-\\uff5a\\uff66-\\uffbe\\uffc2-\\uffc7\\uffca-\\uffcf\\uffd2-\\uffd7\\uffda-\\uffdc";
+var nonASCIIidentifierChars = "\\u0300-\\u036f\\u0483-\\u0487\\u0591-\\u05bd\\u05bf\\u05c1\\u05c2\\u05c4\\u05c5\\u05c7\\u0610-\\u061a\\u0620-\\u0649\\u0672-\\u06d3\\u06e7-\\u06e8\\u06fb-\\u06fc\\u0730-\\u074a\\u0800-\\u0814\\u081b-\\u0823\\u0825-\\u0827\\u0829-\\u082d\\u0840-\\u0857\\u08e4-\\u08fe\\u0900-\\u0903\\u093a-\\u093c\\u093e-\\u094f\\u0951-\\u0957\\u0962-\\u0963\\u0966-\\u096f\\u0981-\\u0983\\u09bc\\u09be-\\u09c4\\u09c7\\u09c8\\u09d7\\u09df-\\u09e0\\u0a01-\\u0a03\\u0a3c\\u0a3e-\\u0a42\\u0a47\\u0a48\\u0a4b-\\u0a4d\\u0a51\\u0a66-\\u0a71\\u0a75\\u0a81-\\u0a83\\u0abc\\u0abe-\\u0ac5\\u0ac7-\\u0ac9\\u0acb-\\u0acd\\u0ae2-\\u0ae3\\u0ae6-\\u0aef\\u0b01-\\u0b03\\u0b3c\\u0b3e-\\u0b44\\u0b47\\u0b48\\u0b4b-\\u0b4d\\u0b56\\u0b57\\u0b5f-\\u0b60\\u0b66-\\u0b6f\\u0b82\\u0bbe-\\u0bc2\\u0bc6-\\u0bc8\\u0bca-\\u0bcd\\u0bd7\\u0be6-\\u0bef\\u0c01-\\u0c03\\u0c46-\\u0c48\\u0c4a-\\u0c4d\\u0c55\\u0c56\\u0c62-\\u0c63\\u0c66-\\u0c6f\\u0c82\\u0c83\\u0cbc\\u0cbe-\\u0cc4\\u0cc6-\\u0cc8\\u0cca-\\u0ccd\\u0cd5\\u0cd6\\u0ce2-\\u0ce3\\u0ce6-\\u0cef\\u0d02\\u0d03\\u0d46-\\u0d48\\u0d57\\u0d62-\\u0d63\\u0d66-\\u0d6f\\u0d82\\u0d83\\u0dca\\u0dcf-\\u0dd4\\u0dd6\\u0dd8-\\u0ddf\\u0df2\\u0df3\\u0e34-\\u0e3a\\u0e40-\\u0e45\\u0e50-\\u0e59\\u0eb4-\\u0eb9\\u0ec8-\\u0ecd\\u0ed0-\\u0ed9\\u0f18\\u0f19\\u0f20-\\u0f29\\u0f35\\u0f37\\u0f39\\u0f41-\\u0f47\\u0f71-\\u0f84\\u0f86-\\u0f87\\u0f8d-\\u0f97\\u0f99-\\u0fbc\\u0fc6\\u1000-\\u1029\\u1040-\\u1049\\u1067-\\u106d\\u1071-\\u1074\\u1082-\\u108d\\u108f-\\u109d\\u135d-\\u135f\\u170e-\\u1710\\u1720-\\u1730\\u1740-\\u1750\\u1772\\u1773\\u1780-\\u17b2\\u17dd\\u17e0-\\u17e9\\u180b-\\u180d\\u1810-\\u1819\\u1920-\\u192b\\u1930-\\u193b\\u1951-\\u196d\\u19b0-\\u19c0\\u19c8-\\u19c9\\u19d0-\\u19d9\\u1a00-\\u1a15\\u1a20-\\u1a53\\u1a60-\\u1a7c\\u1a7f-\\u1a89\\u1a90-\\u1a99\\u1b46-\\u1b4b\\u1b50-\\u1b59\\u1b6b-\\u1b73\\u1bb0-\\u1bb9\\u1be6-\\u1bf3\\u1c00-\\u1c22\\u1c40-\\u1c49\\u1c5b-\\u1c7d\\u1cd0-\\u1cd2\\u1d00-\\u1dbe\\u1e01-\\u1f15\\u200c\\u200d\\u203f\\u2040\\u2054\\u20d0-\\u20dc\\u20e1\\u20e5-\\u20f0\\u2d81-\\u2d96\\u2de0-\\u2dff\\u3021-\\u3028\\u3099\\u309a\\ua640-\\ua66d\\ua674-\\ua67d\\ua69f\\ua6f0-\\ua6f1\\ua7f8-\\ua800\\ua806\\ua80b\\ua823-\\ua827\\ua880-\\ua881\\ua8b4-\\ua8c4\\ua8d0-\\ua8d9\\ua8f3-\\ua8f7\\ua900-\\ua909\\ua926-\\ua92d\\ua930-\\ua945\\ua980-\\ua983\\ua9b3-\\ua9c0\\uaa00-\\uaa27\\uaa40-\\uaa41\\uaa4c-\\uaa4d\\uaa50-\\uaa59\\uaa7b\\uaae0-\\uaae9\\uaaf2-\\uaaf3\\uabc0-\\uabe1\\uabec\\uabed\\uabf0-\\uabf9\\ufb20-\\ufb28\\ufe00-\\ufe0f\\ufe20-\\ufe26\\ufe33\\ufe34\\ufe4d-\\ufe4f\\uff10-\\uff19\\uff3f";
+//var nonASCIIidentifierStart = new RegExp("[" + nonASCIIidentifierStartChars + "]");
+//var nonASCIIidentifier = new RegExp("[" + nonASCIIidentifierStartChars + nonASCIIidentifierChars + "]");
+
+var unicodeEscapeOrCodePoint = "\\\\u[0-9a-fA-F]{4}|\\\\u\\{[0-9a-fA-F]+\\}";
+var identifierStart = "(?:" + unicodeEscapeOrCodePoint + "|[" + baseASCIIidentifierStartChars + nonASCIIidentifierStartChars + "])";
+var identifierChars = "(?:" + unicodeEscapeOrCodePoint + "|[" + baseASCIIidentifierChars + nonASCIIidentifierStartChars + nonASCIIidentifierChars + "])*";
+
+exports.identifier = new RegExp(identifierStart + identifierChars, 'g');
+exports.identifierStart = new RegExp(identifierStart);
+exports.identifierMatch = new RegExp("(?:" + unicodeEscapeOrCodePoint + "|[" + baseASCIIidentifierChars + nonASCIIidentifierStartChars + nonASCIIidentifierChars + "])+");
+
+var nonASCIIwhitespace = /[\u1680\u180e\u2000-\u200a\u202f\u205f\u3000\ufeff]/; // jshint ignore:line
+
+// Whether a single character denotes a newline.
+
+exports.newline = /[\n\r\u2028\u2029]/;
+
+// Matches a whole line break (where CRLF is considered a single
+// line break). Used to count lines.
+
+// in javascript, these two differ
+// in python they are the same, different methods are called on them
+exports.lineBreak = new RegExp('\r\n|' + exports.newline.source);
+exports.allLineBreaks = new RegExp(exports.lineBreak.source, 'g');
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+/*jshint node:true */
+/*
+
+  The MIT License (MIT)
+
+  Copyright (c) 2007-2018 Einar Lielmanis, Liam Newman, and contributors.
+
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation files
+  (the "Software"), to deal in the Software without restriction,
+  including without limitation the rights to use, copy, modify, merge,
+  publish, distribute, sublicense, and/or sell copies of the Software,
+  and to permit persons to whom the Software is furnished to do so,
+  subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
+
+
+var BaseOptions = (__webpack_require__(6).Options);
+
+var validPositionValues = ['before-newline', 'after-newline', 'preserve-newline'];
+
+function Options(options) {
+  BaseOptions.call(this, options, 'js');
+
+  // compatibility, re
+  var raw_brace_style = this.raw_options.brace_style || null;
+  if (raw_brace_style === "expand-strict") { //graceful handling of deprecated option
+    this.raw_options.brace_style = "expand";
+  } else if (raw_brace_style === "collapse-preserve-inline") { //graceful handling of deprecated option
+    this.raw_options.brace_style = "collapse,preserve-inline";
+  } else if (this.raw_options.braces_on_own_line !== undefined) { //graceful handling of deprecated option
+    this.raw_options.brace_style = this.raw_options.braces_on_own_line ? "expand" : "collapse";
+    // } else if (!raw_brace_style) { //Nothing exists to set it
+    //   raw_brace_style = "collapse";
+  }
+
+  //preserve-inline in delimited string will trigger brace_preserve_inline, everything
+  //else is considered a brace_style and the last one only will have an effect
+
+  var brace_style_split = this._get_selection_list('brace_style', ['collapse', 'expand', 'end-expand', 'none', 'preserve-inline']);
+
+  this.brace_preserve_inline = false; //Defaults in case one or other was not specified in meta-option
+  this.brace_style = "collapse";
+
+  for (var bs = 0; bs < brace_style_split.length; bs++) {
+    if (brace_style_split[bs] === "preserve-inline") {
+      this.brace_preserve_inline = true;
+    } else {
+      this.brace_style = brace_style_split[bs];
     }
-    exports.computeSourceURL = computeSourceURL;
-  });
-  require.define('/node_modules/source-map/lib/source-map-generator.js', function (module, exports, __dirname, __filename) {
-    var base64VLQ = require('/node_modules/source-map/lib/base64-vlq.js', module);
-    var util = require('/node_modules/source-map/lib/util.js', module);
-    var ArraySet = require('/node_modules/source-map/lib/array-set.js', module).ArraySet;
-    var MappingList = require('/node_modules/source-map/lib/mapping-list.js', module).MappingList;
-    function SourceMapGenerator(aArgs) {
-      if (!aArgs) {
-        aArgs = {};
-      }
-      this._file = util.getArg(aArgs, 'file', null);
-      this._sourceRoot = util.getArg(aArgs, 'sourceRoot', null);
-      this._skipValidation = util.getArg(aArgs, 'skipValidation', false);
-      this._sources = new ArraySet;
-      this._names = new ArraySet;
-      this._mappings = new MappingList;
-      this._sourcesContents = null;
+  }
+
+  this.unindent_chained_methods = this._get_boolean('unindent_chained_methods');
+  this.break_chained_methods = this._get_boolean('break_chained_methods');
+  this.space_in_paren = this._get_boolean('space_in_paren');
+  this.space_in_empty_paren = this._get_boolean('space_in_empty_paren');
+  this.jslint_happy = this._get_boolean('jslint_happy');
+  this.space_after_anon_function = this._get_boolean('space_after_anon_function');
+  this.space_after_named_function = this._get_boolean('space_after_named_function');
+  this.keep_array_indentation = this._get_boolean('keep_array_indentation');
+  this.space_before_conditional = this._get_boolean('space_before_conditional', true);
+  this.unescape_strings = this._get_boolean('unescape_strings');
+  this.e4x = this._get_boolean('e4x');
+  this.comma_first = this._get_boolean('comma_first');
+  this.operator_position = this._get_selection('operator_position', validPositionValues);
+
+  // For testing of beautify preserve:start directive
+  this.test_output_raw = this._get_boolean('test_output_raw');
+
+  // force this._options.space_after_anon_function to true if this._options.jslint_happy
+  if (this.jslint_happy) {
+    this.space_after_anon_function = true;
+  }
+
+}
+Options.prototype = new BaseOptions();
+
+
+
+module.exports.Options = Options;
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module) {
+
+/*jshint node:true */
+/*
+
+  The MIT License (MIT)
+
+  Copyright (c) 2007-2018 Einar Lielmanis, Liam Newman, and contributors.
+
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation files
+  (the "Software"), to deal in the Software without restriction,
+  including without limitation the rights to use, copy, modify, merge,
+  publish, distribute, sublicense, and/or sell copies of the Software,
+  and to permit persons to whom the Software is furnished to do so,
+  subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
+
+
+function Options(options, merge_child_field) {
+  this.raw_options = _mergeOpts(options, merge_child_field);
+
+  // Support passing the source text back with no change
+  this.disabled = this._get_boolean('disabled');
+
+  this.eol = this._get_characters('eol', 'auto');
+  this.end_with_newline = this._get_boolean('end_with_newline');
+  this.indent_size = this._get_number('indent_size', 4);
+  this.indent_char = this._get_characters('indent_char', ' ');
+  this.indent_level = this._get_number('indent_level');
+
+  this.preserve_newlines = this._get_boolean('preserve_newlines', true);
+  this.max_preserve_newlines = this._get_number('max_preserve_newlines', 32786);
+  if (!this.preserve_newlines) {
+    this.max_preserve_newlines = 0;
+  }
+
+  this.indent_with_tabs = this._get_boolean('indent_with_tabs', this.indent_char === '\t');
+  if (this.indent_with_tabs) {
+    this.indent_char = '\t';
+
+    // indent_size behavior changed after 1.8.6
+    // It used to be that indent_size would be
+    // set to 1 for indent_with_tabs. That is no longer needed and
+    // actually doesn't make sense - why not use spaces? Further,
+    // that might produce unexpected behavior - tabs being used
+    // for single-column alignment. So, when indent_with_tabs is true
+    // and indent_size is 1, reset indent_size to 4.
+    if (this.indent_size === 1) {
+      this.indent_size = 4;
     }
-    SourceMapGenerator.prototype._version = 3;
-    SourceMapGenerator.fromSourceMap = function SourceMapGenerator_fromSourceMap(aSourceMapConsumer) {
-      var sourceRoot = aSourceMapConsumer.sourceRoot;
-      var generator = new SourceMapGenerator({
-          file: aSourceMapConsumer.file,
-          sourceRoot: sourceRoot
-        });
-      aSourceMapConsumer.eachMapping(function (mapping) {
-        var newMapping = {
-            generated: {
-              line: mapping.generatedLine,
-              column: mapping.generatedColumn
-            }
-          };
-        if (mapping.source != null) {
-          newMapping.source = mapping.source;
-          if (sourceRoot != null) {
-            newMapping.source = util.relative(sourceRoot, newMapping.source);
-          }
-          newMapping.original = {
-            line: mapping.originalLine,
-            column: mapping.originalColumn
-          };
-          if (mapping.name != null) {
-            newMapping.name = mapping.name;
-          }
-        }
-        generator.addMapping(newMapping);
-      });
-      aSourceMapConsumer.sources.forEach(function (sourceFile) {
-        var sourceRelative = sourceFile;
-        if (sourceRoot !== null) {
-          sourceRelative = util.relative(sourceRoot, sourceFile);
-        }
-        if (!generator._sources.has(sourceRelative)) {
-          generator._sources.add(sourceRelative);
-        }
-        var content = aSourceMapConsumer.sourceContentFor(sourceFile);
-        if (content != null) {
-          generator.setSourceContent(sourceFile, content);
-        }
-      });
-      return generator;
-    };
-    SourceMapGenerator.prototype.addMapping = function SourceMapGenerator_addMapping(aArgs) {
-      var generated = util.getArg(aArgs, 'generated');
-      var original = util.getArg(aArgs, 'original', null);
-      var source = util.getArg(aArgs, 'source', null);
-      var name = util.getArg(aArgs, 'name', null);
-      if (!this._skipValidation) {
-        this._validateMapping(generated, original, source, name);
-      }
-      if (source != null) {
-        source = String(source);
-        if (!this._sources.has(source)) {
-          this._sources.add(source);
-        }
-      }
-      if (name != null) {
-        name = String(name);
-        if (!this._names.has(name)) {
-          this._names.add(name);
-        }
-      }
-      this._mappings.add({
-        generatedLine: generated.line,
-        generatedColumn: generated.column,
-        originalLine: original != null && original.line,
-        originalColumn: original != null && original.column,
-        source: source,
-        name: name
-      });
-    };
-    SourceMapGenerator.prototype.setSourceContent = function SourceMapGenerator_setSourceContent(aSourceFile, aSourceContent) {
-      var source = aSourceFile;
-      if (this._sourceRoot != null) {
-        source = util.relative(this._sourceRoot, source);
-      }
-      if (aSourceContent != null) {
-        if (!this._sourcesContents) {
-          this._sourcesContents = Object.create(null);
-        }
-        this._sourcesContents[util.toSetString(source)] = aSourceContent;
-      } else if (this._sourcesContents) {
-        delete this._sourcesContents[util.toSetString(source)];
-        if (Object.keys(this._sourcesContents).length === 0) {
-          this._sourcesContents = null;
-        }
-      }
-    };
-    SourceMapGenerator.prototype.applySourceMap = function SourceMapGenerator_applySourceMap(aSourceMapConsumer, aSourceFile, aSourceMapPath) {
-      var sourceFile = aSourceFile;
-      if (aSourceFile == null) {
-        if (aSourceMapConsumer.file == null) {
-          throw new Error('SourceMapGenerator.prototype.applySourceMap requires either an explicit source file, ' + 'or the source map\'s "file" property. Both were omitted.');
-        }
-        sourceFile = aSourceMapConsumer.file;
-      }
-      var sourceRoot = this._sourceRoot;
-      if (sourceRoot != null) {
-        sourceFile = util.relative(sourceRoot, sourceFile);
-      }
-      var newSources = new ArraySet;
-      var newNames = new ArraySet;
-      this._mappings.unsortedForEach(function (mapping) {
-        if (mapping.source === sourceFile && mapping.originalLine != null) {
-          var original = aSourceMapConsumer.originalPositionFor({
-              line: mapping.originalLine,
-              column: mapping.originalColumn
-            });
-          if (original.source != null) {
-            mapping.source = original.source;
-            if (aSourceMapPath != null) {
-              mapping.source = util.join(aSourceMapPath, mapping.source);
-            }
-            if (sourceRoot != null) {
-              mapping.source = util.relative(sourceRoot, mapping.source);
-            }
-            mapping.originalLine = original.line;
-            mapping.originalColumn = original.column;
-            if (original.name != null) {
-              mapping.name = original.name;
-            }
-          }
-        }
-        var source = mapping.source;
-        if (source != null && !newSources.has(source)) {
-          newSources.add(source);
-        }
-        var name = mapping.name;
-        if (name != null && !newNames.has(name)) {
-          newNames.add(name);
-        }
-      }, this);
-      this._sources = newSources;
-      this._names = newNames;
-      aSourceMapConsumer.sources.forEach(function (sourceFile) {
-        var content = aSourceMapConsumer.sourceContentFor(sourceFile);
-        if (content != null) {
-          if (aSourceMapPath != null) {
-            sourceFile = util.join(aSourceMapPath, sourceFile);
-          }
-          if (sourceRoot != null) {
-            sourceFile = util.relative(sourceRoot, sourceFile);
-          }
-          this.setSourceContent(sourceFile, content);
-        }
-      }, this);
-    };
-    SourceMapGenerator.prototype._validateMapping = function SourceMapGenerator_validateMapping(aGenerated, aOriginal, aSource, aName) {
-      if (aOriginal && typeof aOriginal.line !== 'number' && typeof aOriginal.column !== 'number') {
-        throw new Error('original.line and original.column are not numbers -- you probably meant to omit ' + 'the original mapping entirely and only map the generated position. If so, pass ' + 'null for the original mapping instead of an object with empty or null values.');
-      }
-      if (aGenerated && 'line' in aGenerated && 'column' in aGenerated && aGenerated.line > 0 && aGenerated.column >= 0 && !aOriginal && !aSource && !aName) {
-        return;
-      } else if (aGenerated && 'line' in aGenerated && 'column' in aGenerated && aOriginal && 'line' in aOriginal && 'column' in aOriginal && aGenerated.line > 0 && aGenerated.column >= 0 && aOriginal.line > 0 && aOriginal.column >= 0 && aSource) {
-        return;
-      } else {
-        throw new Error('Invalid mapping: ' + JSON.stringify({
-          generated: aGenerated,
-          source: aSource,
-          original: aOriginal,
-          name: aName
-        }));
-      }
-    };
-    SourceMapGenerator.prototype._serializeMappings = function SourceMapGenerator_serializeMappings() {
-      var previousGeneratedColumn = 0;
-      var previousGeneratedLine = 1;
-      var previousOriginalColumn = 0;
-      var previousOriginalLine = 0;
-      var previousName = 0;
-      var previousSource = 0;
-      var result = '';
-      var next;
-      var mapping;
-      var nameIdx;
-      var sourceIdx;
-      var mappings = this._mappings.toArray();
-      for (var i = 0, len = mappings.length; i < len; i++) {
-        mapping = mappings[i];
-        next = '';
-        if (mapping.generatedLine !== previousGeneratedLine) {
-          previousGeneratedColumn = 0;
-          while (mapping.generatedLine !== previousGeneratedLine) {
-            next += ';';
-            previousGeneratedLine++;
-          }
-        } else {
-          if (i > 0) {
-            if (!util.compareByGeneratedPositionsInflated(mapping, mappings[i - 1])) {
-              continue;
-            }
-            next += ',';
-          }
-        }
-        next += base64VLQ.encode(mapping.generatedColumn - previousGeneratedColumn);
-        previousGeneratedColumn = mapping.generatedColumn;
-        if (mapping.source != null) {
-          sourceIdx = this._sources.indexOf(mapping.source);
-          next += base64VLQ.encode(sourceIdx - previousSource);
-          previousSource = sourceIdx;
-          next += base64VLQ.encode(mapping.originalLine - 1 - previousOriginalLine);
-          previousOriginalLine = mapping.originalLine - 1;
-          next += base64VLQ.encode(mapping.originalColumn - previousOriginalColumn);
-          previousOriginalColumn = mapping.originalColumn;
-          if (mapping.name != null) {
-            nameIdx = this._names.indexOf(mapping.name);
-            next += base64VLQ.encode(nameIdx - previousName);
-            previousName = nameIdx;
-          }
-        }
-        result += next;
-      }
-      return result;
-    };
-    SourceMapGenerator.prototype._generateSourcesContent = function SourceMapGenerator_generateSourcesContent(aSources, aSourceRoot) {
-      return aSources.map(function (source) {
-        if (!this._sourcesContents) {
-          return null;
-        }
-        if (aSourceRoot != null) {
-          source = util.relative(aSourceRoot, source);
-        }
-        var key = util.toSetString(source);
-        return Object.prototype.hasOwnProperty.call(this._sourcesContents, key) ? this._sourcesContents[key] : null;
-      }, this);
-    };
-    SourceMapGenerator.prototype.toJSON = function SourceMapGenerator_toJSON() {
-      var map = {
-          version: this._version,
-          sources: this._sources.toArray(),
-          names: this._names.toArray(),
-          mappings: this._serializeMappings()
-        };
-      if (this._file != null) {
-        map.file = this._file;
-      }
-      if (this._sourceRoot != null) {
-        map.sourceRoot = this._sourceRoot;
-      }
-      if (this._sourcesContents) {
-        map.sourcesContent = this._generateSourcesContent(map.sources, map.sourceRoot);
-      }
-      return map;
-    };
-    SourceMapGenerator.prototype.toString = function SourceMapGenerator_toString() {
-      return JSON.stringify(this.toJSON());
-    };
-    exports.SourceMapGenerator = SourceMapGenerator;
-  });
-  require.define('/node_modules/source-map/lib/mapping-list.js', function (module, exports, __dirname, __filename) {
-    var util = require('/node_modules/source-map/lib/util.js', module);
-    function generatedPositionAfter(mappingA, mappingB) {
-      var lineA = mappingA.generatedLine;
-      var lineB = mappingB.generatedLine;
-      var columnA = mappingA.generatedColumn;
-      var columnB = mappingB.generatedColumn;
-      return lineB > lineA || lineB == lineA && columnB >= columnA || util.compareByGeneratedPositionsInflated(mappingA, mappingB) <= 0;
+  }
+
+  // Backwards compat with 1.3.x
+  this.wrap_line_length = this._get_number('wrap_line_length', this._get_number('max_char'));
+
+  this.indent_empty_lines = this._get_boolean('indent_empty_lines');
+
+  // valid templating languages ['django', 'erb', 'handlebars', 'php', 'smarty', 'angular']
+  // For now, 'auto' = all off for javascript, all except angular on for html (and inline javascript/css).
+  // other values ignored
+  this.templating = this._get_selection_list('templating', ['auto', 'none', 'angular', 'django', 'erb', 'handlebars', 'php', 'smarty'], ['auto']);
+}
+
+Options.prototype._get_array = function(name, default_value) {
+  var option_value = this.raw_options[name];
+  var result = default_value || [];
+  if (typeof option_value === 'object') {
+    if (option_value !== null && typeof option_value.concat === 'function') {
+      result = option_value.concat();
     }
-    function MappingList() {
-      this._array = [];
-      this._sorted = true;
-      this._last = {
-        generatedLine: -1,
-        generatedColumn: 0
-      };
+  } else if (typeof option_value === 'string') {
+    result = option_value.split(/[^a-zA-Z0-9_\/\-]+/);
+  }
+  return result;
+};
+
+Options.prototype._get_boolean = function(name, default_value) {
+  var option_value = this.raw_options[name];
+  var result = option_value === undefined ? !!default_value : !!option_value;
+  return result;
+};
+
+Options.prototype._get_characters = function(name, default_value) {
+  var option_value = this.raw_options[name];
+  var result = default_value || '';
+  if (typeof option_value === 'string') {
+    result = option_value.replace(/\\r/, '\r').replace(/\\n/, '\n').replace(/\\t/, '\t');
+  }
+  return result;
+};
+
+Options.prototype._get_number = function(name, default_value) {
+  var option_value = this.raw_options[name];
+  default_value = parseInt(default_value, 10);
+  if (isNaN(default_value)) {
+    default_value = 0;
+  }
+  var result = parseInt(option_value, 10);
+  if (isNaN(result)) {
+    result = default_value;
+  }
+  return result;
+};
+
+Options.prototype._get_selection = function(name, selection_list, default_value) {
+  var result = this._get_selection_list(name, selection_list, default_value);
+  if (result.length !== 1) {
+    throw new Error(
+      "Invalid Option Value: The option '" + name + "' can only be one of the following values:\n" +
+      selection_list + "\nYou passed in: '" + this.raw_options[name] + "'");
+  }
+
+  return result[0];
+};
+
+
+Options.prototype._get_selection_list = function(name, selection_list, default_value) {
+  if (!selection_list || selection_list.length === 0) {
+    throw new Error("Selection list cannot be empty.");
+  }
+
+  default_value = default_value || [selection_list[0]];
+  if (!this._is_valid_selection(default_value, selection_list)) {
+    throw new Error("Invalid Default Value!");
+  }
+
+  var result = this._get_array(name, default_value);
+  if (!this._is_valid_selection(result, selection_list)) {
+    throw new Error(
+      "Invalid Option Value: The option '" + name + "' can contain only the following values:\n" +
+      selection_list + "\nYou passed in: '" + this.raw_options[name] + "'");
+  }
+
+  return result;
+};
+
+Options.prototype._is_valid_selection = function(result, selection_list) {
+  return result.length && selection_list.length &&
+    !result.some(function(item) { return selection_list.indexOf(item) === -1; });
+};
+
+
+// merges child options up with the parent options object
+// Example: obj = {a: 1, b: {a: 2}}
+//          mergeOpts(obj, 'b')
+//
+//          Returns: {a: 2}
+function _mergeOpts(allOptions, childFieldName) {
+  var finalOpts = {};
+  allOptions = _normalizeOpts(allOptions);
+  var name;
+
+  for (name in allOptions) {
+    if (name !== childFieldName) {
+      finalOpts[name] = allOptions[name];
     }
-    MappingList.prototype.unsortedForEach = function MappingList_forEach(aCallback, aThisArg) {
-      this._array.forEach(aCallback, aThisArg);
-    };
-    MappingList.prototype.add = function MappingList_add(aMapping) {
-      if (generatedPositionAfter(this._last, aMapping)) {
-        this._last = aMapping;
-        this._array.push(aMapping);
-      } else {
-        this._sorted = false;
-        this._array.push(aMapping);
-      }
-    };
-    MappingList.prototype.toArray = function MappingList_toArray() {
-      if (!this._sorted) {
-        this._array.sort(util.compareByGeneratedPositionsInflated);
-        this._sorted = true;
-      }
-      return this._array;
-    };
-    exports.MappingList = MappingList;
-  });
-  require.define('/node_modules/source-map/lib/array-set.js', function (module, exports, __dirname, __filename) {
-    var util = require('/node_modules/source-map/lib/util.js', module);
-    var has = Object.prototype.hasOwnProperty;
-    var hasNativeMap = typeof Map !== 'undefined';
-    function ArraySet() {
-      this._array = [];
-      this._set = hasNativeMap ? new Map : Object.create(null);
+  }
+
+  //merge in the per type settings for the childFieldName
+  if (childFieldName && allOptions[childFieldName]) {
+    for (name in allOptions[childFieldName]) {
+      finalOpts[name] = allOptions[childFieldName][name];
     }
-    ArraySet.fromArray = function ArraySet_fromArray(aArray, aAllowDuplicates) {
-      var set = new ArraySet;
-      for (var i = 0, len = aArray.length; i < len; i++) {
-        set.add(aArray[i], aAllowDuplicates);
+  }
+  return finalOpts;
+}
+
+function _normalizeOpts(options) {
+  var convertedOpts = {};
+  var key;
+
+  for (key in options) {
+    var newKey = key.replace(/-/g, "_");
+    convertedOpts[newKey] = options[key];
+  }
+  return convertedOpts;
+}
+
+module.exports.Options = Options;
+module.exports.normalizeOpts = _normalizeOpts;
+module.exports.mergeOpts = _mergeOpts;
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+/*jshint node:true */
+/*
+
+  The MIT License (MIT)
+
+  Copyright (c) 2007-2018 Einar Lielmanis, Liam Newman, and contributors.
+
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation files
+  (the "Software"), to deal in the Software without restriction,
+  including without limitation the rights to use, copy, modify, merge,
+  publish, distribute, sublicense, and/or sell copies of the Software,
+  and to permit persons to whom the Software is furnished to do so,
+  subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
+
+
+var InputScanner = (__webpack_require__(8).InputScanner);
+var BaseTokenizer = (__webpack_require__(9).Tokenizer);
+var BASETOKEN = (__webpack_require__(9).TOKEN);
+var Directives = (__webpack_require__(13).Directives);
+var acorn = __webpack_require__(4);
+var Pattern = (__webpack_require__(12).Pattern);
+var TemplatablePattern = (__webpack_require__(14).TemplatablePattern);
+
+
+function in_array(what, arr) {
+  return arr.indexOf(what) !== -1;
+}
+
+
+var TOKEN = {
+  START_EXPR: 'TK_START_EXPR',
+  END_EXPR: 'TK_END_EXPR',
+  START_BLOCK: 'TK_START_BLOCK',
+  END_BLOCK: 'TK_END_BLOCK',
+  WORD: 'TK_WORD',
+  RESERVED: 'TK_RESERVED',
+  SEMICOLON: 'TK_SEMICOLON',
+  STRING: 'TK_STRING',
+  EQUALS: 'TK_EQUALS',
+  OPERATOR: 'TK_OPERATOR',
+  COMMA: 'TK_COMMA',
+  BLOCK_COMMENT: 'TK_BLOCK_COMMENT',
+  COMMENT: 'TK_COMMENT',
+  DOT: 'TK_DOT',
+  UNKNOWN: 'TK_UNKNOWN',
+  START: BASETOKEN.START,
+  RAW: BASETOKEN.RAW,
+  EOF: BASETOKEN.EOF
+};
+
+
+var directives_core = new Directives(/\/\*/, /\*\//);
+
+var number_pattern = /0[xX][0123456789abcdefABCDEF_]*n?|0[oO][01234567_]*n?|0[bB][01_]*n?|\d[\d_]*n|(?:\.\d[\d_]*|\d[\d_]*\.?[\d_]*)(?:[eE][+-]?[\d_]+)?/;
+
+var digit = /[0-9]/;
+
+// Dot "." must be distinguished from "..." and decimal
+var dot_pattern = /[^\d\.]/;
+
+var positionable_operators = (
+  ">>> === !== &&= ??= ||= " +
+  "<< && >= ** != == <= >> || ?? |> " +
+  "< / - + > : & % ? ^ | *").split(' ');
+
+// IMPORTANT: this must be sorted longest to shortest or tokenizing many not work.
+// Also, you must update possitionable operators separately from punct
+var punct =
+  ">>>= " +
+  "... >>= <<= === >>> !== **= &&= ??= ||= " +
+  "=> ^= :: /= << <= == && -= >= >> != -- += ** || ?? ++ %= &= *= |= |> " +
+  "= ! ? > < : / ^ - + * & % ~ |";
+
+punct = punct.replace(/[-[\]{}()*+?.,\\^$|#]/g, "\\$&");
+// ?. but not if followed by a number 
+punct = '\\?\\.(?!\\d) ' + punct;
+punct = punct.replace(/ /g, '|');
+
+var punct_pattern = new RegExp(punct);
+
+// words which should always start on new line.
+var line_starters = 'continue,try,throw,return,var,let,const,if,switch,case,default,for,while,break,function,import,export'.split(',');
+var reserved_words = line_starters.concat(['do', 'in', 'of', 'else', 'get', 'set', 'new', 'catch', 'finally', 'typeof', 'yield', 'async', 'await', 'from', 'as', 'class', 'extends']);
+var reserved_word_pattern = new RegExp('^(?:' + reserved_words.join('|') + ')$');
+
+// var template_pattern = /(?:(?:<\?php|<\?=)[\s\S]*?\?>)|(?:<%[\s\S]*?%>)/g;
+
+var in_html_comment;
+
+var Tokenizer = function(input_string, options) {
+  BaseTokenizer.call(this, input_string, options);
+
+  this._patterns.whitespace = this._patterns.whitespace.matching(
+    /\u00A0\u1680\u180e\u2000-\u200a\u202f\u205f\u3000\ufeff/.source,
+    /\u2028\u2029/.source);
+
+  var pattern_reader = new Pattern(this._input);
+  var templatable = new TemplatablePattern(this._input)
+    .read_options(this._options);
+
+  this.__patterns = {
+    template: templatable,
+    identifier: templatable.starting_with(acorn.identifier).matching(acorn.identifierMatch),
+    number: pattern_reader.matching(number_pattern),
+    punct: pattern_reader.matching(punct_pattern),
+    // comment ends just before nearest linefeed or end of file
+    comment: pattern_reader.starting_with(/\/\//).until(/[\n\r\u2028\u2029]/),
+    //  /* ... */ comment ends with nearest */ or end of file
+    block_comment: pattern_reader.starting_with(/\/\*/).until_after(/\*\//),
+    html_comment_start: pattern_reader.matching(/<!--/),
+    html_comment_end: pattern_reader.matching(/-->/),
+    include: pattern_reader.starting_with(/#include/).until_after(acorn.lineBreak),
+    shebang: pattern_reader.starting_with(/#!/).until_after(acorn.lineBreak),
+    xml: pattern_reader.matching(/[\s\S]*?<(\/?)([-a-zA-Z:0-9_.]+|{[^}]+?}|!\[CDATA\[[^\]]*?\]\]|)(\s*{[^}]+?}|\s+[-a-zA-Z:0-9_.]+|\s+[-a-zA-Z:0-9_.]+\s*=\s*('[^']*'|"[^"]*"|{([^{}]|{[^}]+?})+?}))*\s*(\/?)\s*>/),
+    single_quote: templatable.until(/['\\\n\r\u2028\u2029]/),
+    double_quote: templatable.until(/["\\\n\r\u2028\u2029]/),
+    template_text: templatable.until(/[`\\$]/),
+    template_expression: templatable.until(/[`}\\]/)
+  };
+
+};
+Tokenizer.prototype = new BaseTokenizer();
+
+Tokenizer.prototype._is_comment = function(current_token) {
+  return current_token.type === TOKEN.COMMENT || current_token.type === TOKEN.BLOCK_COMMENT || current_token.type === TOKEN.UNKNOWN;
+};
+
+Tokenizer.prototype._is_opening = function(current_token) {
+  return current_token.type === TOKEN.START_BLOCK || current_token.type === TOKEN.START_EXPR;
+};
+
+Tokenizer.prototype._is_closing = function(current_token, open_token) {
+  return (current_token.type === TOKEN.END_BLOCK || current_token.type === TOKEN.END_EXPR) &&
+    (open_token && (
+      (current_token.text === ']' && open_token.text === '[') ||
+      (current_token.text === ')' && open_token.text === '(') ||
+      (current_token.text === '}' && open_token.text === '{')));
+};
+
+Tokenizer.prototype._reset = function() {
+  in_html_comment = false;
+};
+
+Tokenizer.prototype._get_next_token = function(previous_token, open_token) { // jshint unused:false
+  var token = null;
+  this._readWhitespace();
+  var c = this._input.peek();
+
+  if (c === null) {
+    return this._create_token(TOKEN.EOF, '');
+  }
+
+  token = token || this._read_non_javascript(c);
+  token = token || this._read_string(c);
+  token = token || this._read_pair(c, this._input.peek(1)); // Issue #2062 hack for record type '#{'
+  token = token || this._read_word(previous_token);
+  token = token || this._read_singles(c);
+  token = token || this._read_comment(c);
+  token = token || this._read_regexp(c, previous_token);
+  token = token || this._read_xml(c, previous_token);
+  token = token || this._read_punctuation();
+  token = token || this._create_token(TOKEN.UNKNOWN, this._input.next());
+
+  return token;
+};
+
+Tokenizer.prototype._read_word = function(previous_token) {
+  var resulting_string;
+  resulting_string = this.__patterns.identifier.read();
+  if (resulting_string !== '') {
+    resulting_string = resulting_string.replace(acorn.allLineBreaks, '\n');
+    if (!(previous_token.type === TOKEN.DOT ||
+        (previous_token.type === TOKEN.RESERVED && (previous_token.text === 'set' || previous_token.text === 'get'))) &&
+      reserved_word_pattern.test(resulting_string)) {
+      if ((resulting_string === 'in' || resulting_string === 'of') &&
+        (previous_token.type === TOKEN.WORD || previous_token.type === TOKEN.STRING)) { // hack for 'in' and 'of' operators
+        return this._create_token(TOKEN.OPERATOR, resulting_string);
       }
-      return set;
-    };
-    ArraySet.prototype.size = function ArraySet_size() {
-      return hasNativeMap ? this._set.size : Object.getOwnPropertyNames(this._set).length;
-    };
-    ArraySet.prototype.add = function ArraySet_add(aStr, aAllowDuplicates) {
-      var sStr = hasNativeMap ? aStr : util.toSetString(aStr);
-      var isDuplicate = hasNativeMap ? this.has(aStr) : has.call(this._set, sStr);
-      var idx = this._array.length;
-      if (!isDuplicate || aAllowDuplicates) {
-        this._array.push(aStr);
-      }
-      if (!isDuplicate) {
-        if (hasNativeMap) {
-          this._set.set(aStr, idx);
-        } else {
-          this._set[sStr] = idx;
-        }
-      }
-    };
-    ArraySet.prototype.has = function ArraySet_has(aStr) {
-      if (hasNativeMap) {
-        return this._set.has(aStr);
-      } else {
-        var sStr = util.toSetString(aStr);
-        return has.call(this._set, sStr);
-      }
-    };
-    ArraySet.prototype.indexOf = function ArraySet_indexOf(aStr) {
-      if (hasNativeMap) {
-        var idx = this._set.get(aStr);
-        if (idx >= 0) {
-          return idx;
-        }
-      } else {
-        var sStr = util.toSetString(aStr);
-        if (has.call(this._set, sStr)) {
-          return this._set[sStr];
-        }
-      }
-      throw new Error('"' + aStr + '" is not in the set.');
-    };
-    ArraySet.prototype.at = function ArraySet_at(aIdx) {
-      if (aIdx >= 0 && aIdx < this._array.length) {
-        return this._array[aIdx];
-      }
-      throw new Error('No element indexed by ' + aIdx);
-    };
-    ArraySet.prototype.toArray = function ArraySet_toArray() {
-      return this._array.slice();
-    };
-    exports.ArraySet = ArraySet;
-  });
-  require.define('/node_modules/source-map/lib/base64-vlq.js', function (module, exports, __dirname, __filename) {
-    var base64 = require('/node_modules/source-map/lib/base64.js', module);
-    var VLQ_BASE_SHIFT = 5;
-    var VLQ_BASE = 1 << VLQ_BASE_SHIFT;
-    var VLQ_BASE_MASK = VLQ_BASE - 1;
-    var VLQ_CONTINUATION_BIT = VLQ_BASE;
-    function toVLQSigned(aValue) {
-      return aValue < 0 ? (-aValue << 1) + 1 : (aValue << 1) + 0;
+      return this._create_token(TOKEN.RESERVED, resulting_string);
     }
-    function fromVLQSigned(aValue) {
-      var isNegative = (aValue & 1) === 1;
-      var shifted = aValue >> 1;
-      return isNegative ? -shifted : shifted;
+    return this._create_token(TOKEN.WORD, resulting_string);
+  }
+
+  resulting_string = this.__patterns.number.read();
+  if (resulting_string !== '') {
+    return this._create_token(TOKEN.WORD, resulting_string);
+  }
+};
+
+Tokenizer.prototype._read_singles = function(c) {
+  var token = null;
+  if (c === '(' || c === '[') {
+    token = this._create_token(TOKEN.START_EXPR, c);
+  } else if (c === ')' || c === ']') {
+    token = this._create_token(TOKEN.END_EXPR, c);
+  } else if (c === '{') {
+    token = this._create_token(TOKEN.START_BLOCK, c);
+  } else if (c === '}') {
+    token = this._create_token(TOKEN.END_BLOCK, c);
+  } else if (c === ';') {
+    token = this._create_token(TOKEN.SEMICOLON, c);
+  } else if (c === '.' && dot_pattern.test(this._input.peek(1))) {
+    token = this._create_token(TOKEN.DOT, c);
+  } else if (c === ',') {
+    token = this._create_token(TOKEN.COMMA, c);
+  }
+
+  if (token) {
+    this._input.next();
+  }
+  return token;
+};
+
+Tokenizer.prototype._read_pair = function(c, d) {
+  var token = null;
+  if (c === '#' && d === '{') {
+    token = this._create_token(TOKEN.START_BLOCK, c + d);
+  }
+
+  if (token) {
+    this._input.next();
+    this._input.next();
+  }
+  return token;
+};
+
+Tokenizer.prototype._read_punctuation = function() {
+  var resulting_string = this.__patterns.punct.read();
+
+  if (resulting_string !== '') {
+    if (resulting_string === '=') {
+      return this._create_token(TOKEN.EQUALS, resulting_string);
+    } else if (resulting_string === '?.') {
+      return this._create_token(TOKEN.DOT, resulting_string);
+    } else {
+      return this._create_token(TOKEN.OPERATOR, resulting_string);
     }
-    exports.encode = function base64VLQ_encode(aValue) {
-      var encoded = '';
-      var digit;
-      var vlq = toVLQSigned(aValue);
+  }
+};
+
+Tokenizer.prototype._read_non_javascript = function(c) {
+  var resulting_string = '';
+
+  if (c === '#') {
+    if (this._is_first_token()) {
+      resulting_string = this.__patterns.shebang.read();
+
+      if (resulting_string) {
+        return this._create_token(TOKEN.UNKNOWN, resulting_string.trim() + '\n');
+      }
+    }
+
+    // handles extendscript #includes
+    resulting_string = this.__patterns.include.read();
+
+    if (resulting_string) {
+      return this._create_token(TOKEN.UNKNOWN, resulting_string.trim() + '\n');
+    }
+
+    c = this._input.next();
+
+    // Spidermonkey-specific sharp variables for circular references. Considered obsolete.
+    var sharp = '#';
+    if (this._input.hasNext() && this._input.testChar(digit)) {
       do {
-        digit = vlq & VLQ_BASE_MASK;
-        vlq >>>= VLQ_BASE_SHIFT;
-        if (vlq > 0) {
-          digit |= VLQ_CONTINUATION_BIT;
-        }
-        encoded += base64.encode(digit);
-      } while (vlq > 0);
-      return encoded;
-    };
-    exports.decode = function base64VLQ_decode(aStr, aIndex, aOutParam) {
-      var strLen = aStr.length;
-      var result = 0;
-      var shift = 0;
-      var continuation, digit;
-      do {
-        if (aIndex >= strLen) {
-          throw new Error('Expected more digits in base 64 VLQ value.');
-        }
-        digit = base64.decode(aStr.charCodeAt(aIndex++));
-        if (digit === -1) {
-          throw new Error('Invalid base64 digit: ' + aStr.charAt(aIndex - 1));
-        }
-        continuation = !!(digit & VLQ_CONTINUATION_BIT);
-        digit &= VLQ_BASE_MASK;
-        result = result + (digit << shift);
-        shift += VLQ_BASE_SHIFT;
-      } while (continuation);
-      aOutParam.value = fromVLQSigned(result);
-      aOutParam.rest = aIndex;
-    };
-  });
-  require.define('/node_modules/source-map/lib/base64.js', function (module, exports, __dirname, __filename) {
-    var intToCharMap = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'.split('');
-    exports.encode = function (number) {
-      if (0 <= number && number < intToCharMap.length) {
-        return intToCharMap[number];
+        c = this._input.next();
+        sharp += c;
+      } while (this._input.hasNext() && c !== '#' && c !== '=');
+      if (c === '#') {
+        //
+      } else if (this._input.peek() === '[' && this._input.peek(1) === ']') {
+        sharp += '[]';
+        this._input.next();
+        this._input.next();
+      } else if (this._input.peek() === '{' && this._input.peek(1) === '}') {
+        sharp += '{}';
+        this._input.next();
+        this._input.next();
       }
-      throw new TypeError('Must be between 0 and 63: ' + number);
-    };
-    exports.decode = function (charCode) {
-      var bigA = 65;
-      var bigZ = 90;
-      var littleA = 97;
-      var littleZ = 122;
-      var zero = 48;
-      var nine = 57;
-      var plus = 43;
-      var slash = 47;
-      var littleOffset = 26;
-      var numberOffset = 52;
-      if (bigA <= charCode && charCode <= bigZ) {
-        return charCode - bigA;
-      }
-      if (littleA <= charCode && charCode <= littleZ) {
-        return charCode - littleA + littleOffset;
-      }
-      if (zero <= charCode && charCode <= nine) {
-        return charCode - zero + numberOffset;
-      }
-      if (charCode == plus) {
-        return 62;
-      }
-      if (charCode == slash) {
-        return 63;
-      }
-      return -1;
-    };
-  });
-  require.define('/node_modules/source-map/lib/source-map-consumer.js', function (module, exports, __dirname, __filename) {
-    var util = require('/node_modules/source-map/lib/util.js', module);
-    var binarySearch = require('/node_modules/source-map/lib/binary-search.js', module);
-    var ArraySet = require('/node_modules/source-map/lib/array-set.js', module).ArraySet;
-    var base64VLQ = require('/node_modules/source-map/lib/base64-vlq.js', module);
-    var quickSort = require('/node_modules/source-map/lib/quick-sort.js', module).quickSort;
-    function SourceMapConsumer(aSourceMap, aSourceMapURL) {
-      var sourceMap = aSourceMap;
-      if (typeof aSourceMap === 'string') {
-        sourceMap = util.parseSourceMapInput(aSourceMap);
-      }
-      return sourceMap.sections != null ? new IndexedSourceMapConsumer(sourceMap, aSourceMapURL) : new BasicSourceMapConsumer(sourceMap, aSourceMapURL);
+      return this._create_token(TOKEN.WORD, sharp);
     }
-    SourceMapConsumer.fromSourceMap = function (aSourceMap, aSourceMapURL) {
-      return BasicSourceMapConsumer.fromSourceMap(aSourceMap, aSourceMapURL);
-    };
-    SourceMapConsumer.prototype._version = 3;
-    SourceMapConsumer.prototype.__generatedMappings = null;
-    Object.defineProperty(SourceMapConsumer.prototype, '_generatedMappings', {
-      configurable: true,
-      enumerable: true,
-      get: function () {
-        if (!this.__generatedMappings) {
-          this._parseMappings(this._mappings, this.sourceRoot);
-        }
-        return this.__generatedMappings;
+
+    this._input.back();
+
+  } else if (c === '<' && this._is_first_token()) {
+    resulting_string = this.__patterns.html_comment_start.read();
+    if (resulting_string) {
+      while (this._input.hasNext() && !this._input.testChar(acorn.newline)) {
+        resulting_string += this._input.next();
       }
-    });
-    SourceMapConsumer.prototype.__originalMappings = null;
-    Object.defineProperty(SourceMapConsumer.prototype, '_originalMappings', {
-      configurable: true,
-      enumerable: true,
-      get: function () {
-        if (!this.__originalMappings) {
-          this._parseMappings(this._mappings, this.sourceRoot);
-        }
-        return this.__originalMappings;
-      }
-    });
-    SourceMapConsumer.prototype._charIsMappingSeparator = function SourceMapConsumer_charIsMappingSeparator(aStr, index) {
-      var c = aStr.charAt(index);
-      return c === ';' || c === ',';
-    };
-    SourceMapConsumer.prototype._parseMappings = function SourceMapConsumer_parseMappings(aStr, aSourceRoot) {
-      throw new Error('Subclasses must implement _parseMappings');
-    };
-    SourceMapConsumer.GENERATED_ORDER = 1;
-    SourceMapConsumer.ORIGINAL_ORDER = 2;
-    SourceMapConsumer.GREATEST_LOWER_BOUND = 1;
-    SourceMapConsumer.LEAST_UPPER_BOUND = 2;
-    SourceMapConsumer.prototype.eachMapping = function SourceMapConsumer_eachMapping(aCallback, aContext, aOrder) {
-      var context = aContext || null;
-      var order = aOrder || SourceMapConsumer.GENERATED_ORDER;
-      var mappings;
-      switch (order) {
-      case SourceMapConsumer.GENERATED_ORDER:
-        mappings = this._generatedMappings;
-        break;
-      case SourceMapConsumer.ORIGINAL_ORDER:
-        mappings = this._originalMappings;
-        break;
-      default:
-        throw new Error('Unknown order of iteration.');
-      }
-      var sourceRoot = this.sourceRoot;
-      mappings.map(function (mapping) {
-        var source = mapping.source === null ? null : this._sources.at(mapping.source);
-        source = util.computeSourceURL(sourceRoot, source, this._sourceMapURL);
-        return {
-          source: source,
-          generatedLine: mapping.generatedLine,
-          generatedColumn: mapping.generatedColumn,
-          originalLine: mapping.originalLine,
-          originalColumn: mapping.originalColumn,
-          name: mapping.name === null ? null : this._names.at(mapping.name)
-        };
-      }, this).forEach(aCallback, context);
-    };
-    SourceMapConsumer.prototype.allGeneratedPositionsFor = function SourceMapConsumer_allGeneratedPositionsFor(aArgs) {
-      var line = util.getArg(aArgs, 'line');
-      var needle = {
-          source: util.getArg(aArgs, 'source'),
-          originalLine: line,
-          originalColumn: util.getArg(aArgs, 'column', 0)
-        };
-      needle.source = this._findSourceIndex(needle.source);
-      if (needle.source < 0) {
-        return [];
-      }
-      var mappings = [];
-      var index = this._findMapping(needle, this._originalMappings, 'originalLine', 'originalColumn', util.compareByOriginalPositions, binarySearch.LEAST_UPPER_BOUND);
-      if (index >= 0) {
-        var mapping = this._originalMappings[index];
-        if (aArgs.column === undefined) {
-          var originalLine = mapping.originalLine;
-          while (mapping && mapping.originalLine === originalLine) {
-            mappings.push({
-              line: util.getArg(mapping, 'generatedLine', null),
-              column: util.getArg(mapping, 'generatedColumn', null),
-              lastColumn: util.getArg(mapping, 'lastGeneratedColumn', null)
-            });
-            mapping = this._originalMappings[++index];
-          }
-        } else {
-          var originalColumn = mapping.originalColumn;
-          while (mapping && mapping.originalLine === line && mapping.originalColumn == originalColumn) {
-            mappings.push({
-              line: util.getArg(mapping, 'generatedLine', null),
-              column: util.getArg(mapping, 'generatedColumn', null),
-              lastColumn: util.getArg(mapping, 'lastGeneratedColumn', null)
-            });
-            mapping = this._originalMappings[++index];
-          }
-        }
-      }
-      return mappings;
-    };
-    exports.SourceMapConsumer = SourceMapConsumer;
-    function BasicSourceMapConsumer(aSourceMap, aSourceMapURL) {
-      var sourceMap = aSourceMap;
-      if (typeof aSourceMap === 'string') {
-        sourceMap = util.parseSourceMapInput(aSourceMap);
-      }
-      var version = util.getArg(sourceMap, 'version');
-      var sources = util.getArg(sourceMap, 'sources');
-      var names = util.getArg(sourceMap, 'names', []);
-      var sourceRoot = util.getArg(sourceMap, 'sourceRoot', null);
-      var sourcesContent = util.getArg(sourceMap, 'sourcesContent', null);
-      var mappings = util.getArg(sourceMap, 'mappings');
-      var file = util.getArg(sourceMap, 'file', null);
-      if (version != this._version) {
-        throw new Error('Unsupported version: ' + version);
-      }
-      if (sourceRoot) {
-        sourceRoot = util.normalize(sourceRoot);
-      }
-      sources = sources.map(String).map(util.normalize).map(function (source) {
-        return sourceRoot && util.isAbsolute(sourceRoot) && util.isAbsolute(source) ? util.relative(sourceRoot, source) : source;
-      });
-      this._names = ArraySet.fromArray(names.map(String), true);
-      this._sources = ArraySet.fromArray(sources, true);
-      this._absoluteSources = this._sources.toArray().map(function (s) {
-        return util.computeSourceURL(sourceRoot, s, aSourceMapURL);
-      });
-      this.sourceRoot = sourceRoot;
-      this.sourcesContent = sourcesContent;
-      this._mappings = mappings;
-      this._sourceMapURL = aSourceMapURL;
-      this.file = file;
+      in_html_comment = true;
+      return this._create_token(TOKEN.COMMENT, resulting_string);
     }
-    BasicSourceMapConsumer.prototype = Object.create(SourceMapConsumer.prototype);
-    BasicSourceMapConsumer.prototype.consumer = SourceMapConsumer;
-    BasicSourceMapConsumer.prototype._findSourceIndex = function (aSource) {
-      var relativeSource = aSource;
-      if (this.sourceRoot != null) {
-        relativeSource = util.relative(this.sourceRoot, relativeSource);
-      }
-      if (this._sources.has(relativeSource)) {
-        return this._sources.indexOf(relativeSource);
-      }
-      var i;
-      for (i = 0; i < this._absoluteSources.length; ++i) {
-        if (this._absoluteSources[i] == aSource) {
-          return i;
-        }
-      }
-      return -1;
-    };
-    BasicSourceMapConsumer.fromSourceMap = function SourceMapConsumer_fromSourceMap(aSourceMap, aSourceMapURL) {
-      var smc = Object.create(BasicSourceMapConsumer.prototype);
-      var names = smc._names = ArraySet.fromArray(aSourceMap._names.toArray(), true);
-      var sources = smc._sources = ArraySet.fromArray(aSourceMap._sources.toArray(), true);
-      smc.sourceRoot = aSourceMap._sourceRoot;
-      smc.sourcesContent = aSourceMap._generateSourcesContent(smc._sources.toArray(), smc.sourceRoot);
-      smc.file = aSourceMap._file;
-      smc._sourceMapURL = aSourceMapURL;
-      smc._absoluteSources = smc._sources.toArray().map(function (s) {
-        return util.computeSourceURL(smc.sourceRoot, s, aSourceMapURL);
-      });
-      var generatedMappings = aSourceMap._mappings.toArray().slice();
-      var destGeneratedMappings = smc.__generatedMappings = [];
-      var destOriginalMappings = smc.__originalMappings = [];
-      for (var i = 0, length = generatedMappings.length; i < length; i++) {
-        var srcMapping = generatedMappings[i];
-        var destMapping = new Mapping;
-        destMapping.generatedLine = srcMapping.generatedLine;
-        destMapping.generatedColumn = srcMapping.generatedColumn;
-        if (srcMapping.source) {
-          destMapping.source = sources.indexOf(srcMapping.source);
-          destMapping.originalLine = srcMapping.originalLine;
-          destMapping.originalColumn = srcMapping.originalColumn;
-          if (srcMapping.name) {
-            destMapping.name = names.indexOf(srcMapping.name);
-          }
-          destOriginalMappings.push(destMapping);
-        }
-        destGeneratedMappings.push(destMapping);
-      }
-      quickSort(smc.__originalMappings, util.compareByOriginalPositions);
-      return smc;
-    };
-    BasicSourceMapConsumer.prototype._version = 3;
-    Object.defineProperty(BasicSourceMapConsumer.prototype, 'sources', {
-      get: function () {
-        return this._absoluteSources.slice();
-      }
-    });
-    function Mapping() {
-      this.generatedLine = 0;
-      this.generatedColumn = 0;
-      this.source = null;
-      this.originalLine = null;
-      this.originalColumn = null;
-      this.name = null;
+  } else if (in_html_comment && c === '-') {
+    resulting_string = this.__patterns.html_comment_end.read();
+    if (resulting_string) {
+      in_html_comment = false;
+      return this._create_token(TOKEN.COMMENT, resulting_string);
     }
-    BasicSourceMapConsumer.prototype._parseMappings = function SourceMapConsumer_parseMappings(aStr, aSourceRoot) {
-      var generatedLine = 1;
-      var previousGeneratedColumn = 0;
-      var previousOriginalLine = 0;
-      var previousOriginalColumn = 0;
-      var previousSource = 0;
-      var previousName = 0;
-      var length = aStr.length;
-      var index = 0;
-      var cachedSegments = {};
-      var temp = {};
-      var originalMappings = [];
-      var generatedMappings = [];
-      var mapping, str, segment, end, value;
-      while (index < length) {
-        if (aStr.charAt(index) === ';') {
-          generatedLine++;
-          index++;
-          previousGeneratedColumn = 0;
-        } else if (aStr.charAt(index) === ',') {
-          index++;
-        } else {
-          mapping = new Mapping;
-          mapping.generatedLine = generatedLine;
-          for (end = index; end < length; end++) {
-            if (this._charIsMappingSeparator(aStr, end)) {
-              break;
-            }
-          }
-          str = aStr.slice(index, end);
-          segment = cachedSegments[str];
-          if (segment) {
-            index += str.length;
+  }
+
+  return null;
+};
+
+Tokenizer.prototype._read_comment = function(c) {
+  var token = null;
+  if (c === '/') {
+    var comment = '';
+    if (this._input.peek(1) === '*') {
+      // peek for comment /* ... */
+      comment = this.__patterns.block_comment.read();
+      var directives = directives_core.get_directives(comment);
+      if (directives && directives.ignore === 'start') {
+        comment += directives_core.readIgnored(this._input);
+      }
+      comment = comment.replace(acorn.allLineBreaks, '\n');
+      token = this._create_token(TOKEN.BLOCK_COMMENT, comment);
+      token.directives = directives;
+    } else if (this._input.peek(1) === '/') {
+      // peek for comment // ...
+      comment = this.__patterns.comment.read();
+      token = this._create_token(TOKEN.COMMENT, comment);
+    }
+  }
+  return token;
+};
+
+Tokenizer.prototype._read_string = function(c) {
+  if (c === '`' || c === "'" || c === '"') {
+    var resulting_string = this._input.next();
+    this.has_char_escapes = false;
+
+    if (c === '`') {
+      resulting_string += this._read_string_recursive('`', true, '${');
+    } else {
+      resulting_string += this._read_string_recursive(c);
+    }
+
+    if (this.has_char_escapes && this._options.unescape_strings) {
+      resulting_string = unescape_string(resulting_string);
+    }
+
+    if (this._input.peek() === c) {
+      resulting_string += this._input.next();
+    }
+
+    resulting_string = resulting_string.replace(acorn.allLineBreaks, '\n');
+
+    return this._create_token(TOKEN.STRING, resulting_string);
+  }
+
+  return null;
+};
+
+Tokenizer.prototype._allow_regexp_or_xml = function(previous_token) {
+  // regex and xml can only appear in specific locations during parsing
+  return (previous_token.type === TOKEN.RESERVED && in_array(previous_token.text, ['return', 'case', 'throw', 'else', 'do', 'typeof', 'yield'])) ||
+    (previous_token.type === TOKEN.END_EXPR && previous_token.text === ')' &&
+      previous_token.opened.previous.type === TOKEN.RESERVED && in_array(previous_token.opened.previous.text, ['if', 'while', 'for'])) ||
+    (in_array(previous_token.type, [TOKEN.COMMENT, TOKEN.START_EXPR, TOKEN.START_BLOCK, TOKEN.START,
+      TOKEN.END_BLOCK, TOKEN.OPERATOR, TOKEN.EQUALS, TOKEN.EOF, TOKEN.SEMICOLON, TOKEN.COMMA
+    ]));
+};
+
+Tokenizer.prototype._read_regexp = function(c, previous_token) {
+
+  if (c === '/' && this._allow_regexp_or_xml(previous_token)) {
+    // handle regexp
+    //
+    var resulting_string = this._input.next();
+    var esc = false;
+
+    var in_char_class = false;
+    while (this._input.hasNext() &&
+      ((esc || in_char_class || this._input.peek() !== c) &&
+        !this._input.testChar(acorn.newline))) {
+      resulting_string += this._input.peek();
+      if (!esc) {
+        esc = this._input.peek() === '\\';
+        if (this._input.peek() === '[') {
+          in_char_class = true;
+        } else if (this._input.peek() === ']') {
+          in_char_class = false;
+        }
+      } else {
+        esc = false;
+      }
+      this._input.next();
+    }
+
+    if (this._input.peek() === c) {
+      resulting_string += this._input.next();
+
+      // regexps may have modifiers /regexp/MOD , so fetch those, too
+      // Only [gim] are valid, but if the user puts in garbage, do what we can to take it.
+      resulting_string += this._input.read(acorn.identifier);
+    }
+    return this._create_token(TOKEN.STRING, resulting_string);
+  }
+  return null;
+};
+
+Tokenizer.prototype._read_xml = function(c, previous_token) {
+
+  if (this._options.e4x && c === "<" && this._allow_regexp_or_xml(previous_token)) {
+    var xmlStr = '';
+    var match = this.__patterns.xml.read_match();
+    // handle e4x xml literals
+    //
+    if (match) {
+      // Trim root tag to attempt to
+      var rootTag = match[2].replace(/^{\s+/, '{').replace(/\s+}$/, '}');
+      var isCurlyRoot = rootTag.indexOf('{') === 0;
+      var depth = 0;
+      while (match) {
+        var isEndTag = !!match[1];
+        var tagName = match[2];
+        var isSingletonTag = (!!match[match.length - 1]) || (tagName.slice(0, 8) === "![CDATA[");
+        if (!isSingletonTag &&
+          (tagName === rootTag || (isCurlyRoot && tagName.replace(/^{\s+/, '{').replace(/\s+}$/, '}')))) {
+          if (isEndTag) {
+            --depth;
           } else {
-            segment = [];
-            while (index < end) {
-              base64VLQ.decode(aStr, index, temp);
-              value = temp.value;
-              index = temp.rest;
-              segment.push(value);
-            }
-            if (segment.length === 2) {
-              throw new Error('Found a source, but no line and column');
-            }
-            if (segment.length === 3) {
-              throw new Error('Found a source and line, but no column');
-            }
-            cachedSegments[str] = segment;
-          }
-          mapping.generatedColumn = previousGeneratedColumn + segment[0];
-          previousGeneratedColumn = mapping.generatedColumn;
-          if (segment.length > 1) {
-            mapping.source = previousSource + segment[1];
-            previousSource += segment[1];
-            mapping.originalLine = previousOriginalLine + segment[2];
-            previousOriginalLine = mapping.originalLine;
-            mapping.originalLine += 1;
-            mapping.originalColumn = previousOriginalColumn + segment[3];
-            previousOriginalColumn = mapping.originalColumn;
-            if (segment.length > 4) {
-              mapping.name = previousName + segment[4];
-              previousName += segment[4];
-            }
-          }
-          generatedMappings.push(mapping);
-          if (typeof mapping.originalLine === 'number') {
-            originalMappings.push(mapping);
+            ++depth;
           }
         }
-      }
-      quickSort(generatedMappings, util.compareByGeneratedPositionsDeflated);
-      this.__generatedMappings = generatedMappings;
-      quickSort(originalMappings, util.compareByOriginalPositions);
-      this.__originalMappings = originalMappings;
-    };
-    BasicSourceMapConsumer.prototype._findMapping = function SourceMapConsumer_findMapping(aNeedle, aMappings, aLineName, aColumnName, aComparator, aBias) {
-      if (aNeedle[aLineName] <= 0) {
-        throw new TypeError('Line must be greater than or equal to 1, got ' + aNeedle[aLineName]);
-      }
-      if (aNeedle[aColumnName] < 0) {
-        throw new TypeError('Column must be greater than or equal to 0, got ' + aNeedle[aColumnName]);
-      }
-      return binarySearch.search(aNeedle, aMappings, aComparator, aBias);
-    };
-    BasicSourceMapConsumer.prototype.computeColumnSpans = function SourceMapConsumer_computeColumnSpans() {
-      for (var index = 0; index < this._generatedMappings.length; ++index) {
-        var mapping = this._generatedMappings[index];
-        if (index + 1 < this._generatedMappings.length) {
-          var nextMapping = this._generatedMappings[index + 1];
-          if (mapping.generatedLine === nextMapping.generatedLine) {
-            mapping.lastGeneratedColumn = nextMapping.generatedColumn - 1;
-            continue;
-          }
-        }
-        mapping.lastGeneratedColumn = Infinity;
-      }
-    };
-    BasicSourceMapConsumer.prototype.originalPositionFor = function SourceMapConsumer_originalPositionFor(aArgs) {
-      var needle = {
-          generatedLine: util.getArg(aArgs, 'line'),
-          generatedColumn: util.getArg(aArgs, 'column')
-        };
-      var index = this._findMapping(needle, this._generatedMappings, 'generatedLine', 'generatedColumn', util.compareByGeneratedPositionsDeflated, util.getArg(aArgs, 'bias', SourceMapConsumer.GREATEST_LOWER_BOUND));
-      if (index >= 0) {
-        var mapping = this._generatedMappings[index];
-        if (mapping.generatedLine === needle.generatedLine) {
-          var source = util.getArg(mapping, 'source', null);
-          if (source !== null) {
-            source = this._sources.at(source);
-            source = util.computeSourceURL(this.sourceRoot, source, this._sourceMapURL);
-          }
-          var name = util.getArg(mapping, 'name', null);
-          if (name !== null) {
-            name = this._names.at(name);
-          }
-          return {
-            source: source,
-            line: util.getArg(mapping, 'originalLine', null),
-            column: util.getArg(mapping, 'originalColumn', null),
-            name: name
-          };
-        }
-      }
-      return {
-        source: null,
-        line: null,
-        column: null,
-        name: null
-      };
-    };
-    BasicSourceMapConsumer.prototype.hasContentsOfAllSources = function BasicSourceMapConsumer_hasContentsOfAllSources() {
-      if (!this.sourcesContent) {
-        return false;
-      }
-      return this.sourcesContent.length >= this._sources.size() && !this.sourcesContent.some(function (sc) {
-        return sc == null;
-      });
-    };
-    BasicSourceMapConsumer.prototype.sourceContentFor = function SourceMapConsumer_sourceContentFor(aSource, nullOnMissing) {
-      if (!this.sourcesContent) {
-        return null;
-      }
-      var index = this._findSourceIndex(aSource);
-      if (index >= 0) {
-        return this.sourcesContent[index];
-      }
-      var relativeSource = aSource;
-      if (this.sourceRoot != null) {
-        relativeSource = util.relative(this.sourceRoot, relativeSource);
-      }
-      var url;
-      if (this.sourceRoot != null && (url = util.urlParse(this.sourceRoot))) {
-        var fileUriAbsPath = relativeSource.replace(/^file:\/\//, '');
-        if (url.scheme == 'file' && this._sources.has(fileUriAbsPath)) {
-          return this.sourcesContent[this._sources.indexOf(fileUriAbsPath)];
-        }
-        if ((!url.path || url.path == '/') && this._sources.has('/' + relativeSource)) {
-          return this.sourcesContent[this._sources.indexOf('/' + relativeSource)];
-        }
-      }
-      if (nullOnMissing) {
-        return null;
-      } else {
-        throw new Error('"' + relativeSource + '" is not in the SourceMap.');
-      }
-    };
-    BasicSourceMapConsumer.prototype.generatedPositionFor = function SourceMapConsumer_generatedPositionFor(aArgs) {
-      var source = util.getArg(aArgs, 'source');
-      source = this._findSourceIndex(source);
-      if (source < 0) {
-        return {
-          line: null,
-          column: null,
-          lastColumn: null
-        };
-      }
-      var needle = {
-          source: source,
-          originalLine: util.getArg(aArgs, 'line'),
-          originalColumn: util.getArg(aArgs, 'column')
-        };
-      var index = this._findMapping(needle, this._originalMappings, 'originalLine', 'originalColumn', util.compareByOriginalPositions, util.getArg(aArgs, 'bias', SourceMapConsumer.GREATEST_LOWER_BOUND));
-      if (index >= 0) {
-        var mapping = this._originalMappings[index];
-        if (mapping.source === needle.source) {
-          return {
-            line: util.getArg(mapping, 'generatedLine', null),
-            column: util.getArg(mapping, 'generatedColumn', null),
-            lastColumn: util.getArg(mapping, 'lastGeneratedColumn', null)
-          };
-        }
-      }
-      return {
-        line: null,
-        column: null,
-        lastColumn: null
-      };
-    };
-    exports.BasicSourceMapConsumer = BasicSourceMapConsumer;
-    function IndexedSourceMapConsumer(aSourceMap, aSourceMapURL) {
-      var sourceMap = aSourceMap;
-      if (typeof aSourceMap === 'string') {
-        sourceMap = util.parseSourceMapInput(aSourceMap);
-      }
-      var version = util.getArg(sourceMap, 'version');
-      var sections = util.getArg(sourceMap, 'sections');
-      if (version != this._version) {
-        throw new Error('Unsupported version: ' + version);
-      }
-      this._sources = new ArraySet;
-      this._names = new ArraySet;
-      var lastOffset = {
-          line: -1,
-          column: 0
-        };
-      this._sections = sections.map(function (s) {
-        if (s.url) {
-          throw new Error('Support for url field in sections not implemented.');
-        }
-        var offset = util.getArg(s, 'offset');
-        var offsetLine = util.getArg(offset, 'line');
-        var offsetColumn = util.getArg(offset, 'column');
-        if (offsetLine < lastOffset.line || offsetLine === lastOffset.line && offsetColumn < lastOffset.column) {
-          throw new Error('Section offsets must be ordered and non-overlapping.');
-        }
-        lastOffset = offset;
-        return {
-          generatedOffset: {
-            generatedLine: offsetLine + 1,
-            generatedColumn: offsetColumn + 1
-          },
-          consumer: new SourceMapConsumer(util.getArg(s, 'map'), aSourceMapURL)
-        };
-      });
-    }
-    IndexedSourceMapConsumer.prototype = Object.create(SourceMapConsumer.prototype);
-    IndexedSourceMapConsumer.prototype.constructor = SourceMapConsumer;
-    IndexedSourceMapConsumer.prototype._version = 3;
-    Object.defineProperty(IndexedSourceMapConsumer.prototype, 'sources', {
-      get: function () {
-        var sources = [];
-        for (var i = 0; i < this._sections.length; i++) {
-          for (var j = 0; j < this._sections[i].consumer.sources.length; j++) {
-            sources.push(this._sections[i].consumer.sources[j]);
-          }
-        }
-        return sources;
-      }
-    });
-    IndexedSourceMapConsumer.prototype.originalPositionFor = function IndexedSourceMapConsumer_originalPositionFor(aArgs) {
-      var needle = {
-          generatedLine: util.getArg(aArgs, 'line'),
-          generatedColumn: util.getArg(aArgs, 'column')
-        };
-      var sectionIndex = binarySearch.search(needle, this._sections, function (needle, section) {
-          var cmp = needle.generatedLine - section.generatedOffset.generatedLine;
-          if (cmp) {
-            return cmp;
-          }
-          return needle.generatedColumn - section.generatedOffset.generatedColumn;
-        });
-      var section = this._sections[sectionIndex];
-      if (!section) {
-        return {
-          source: null,
-          line: null,
-          column: null,
-          name: null
-        };
-      }
-      return section.consumer.originalPositionFor({
-        line: needle.generatedLine - (section.generatedOffset.generatedLine - 1),
-        column: needle.generatedColumn - (section.generatedOffset.generatedLine === needle.generatedLine ? section.generatedOffset.generatedColumn - 1 : 0),
-        bias: aArgs.bias
-      });
-    };
-    IndexedSourceMapConsumer.prototype.hasContentsOfAllSources = function IndexedSourceMapConsumer_hasContentsOfAllSources() {
-      return this._sections.every(function (s) {
-        return s.consumer.hasContentsOfAllSources();
-      });
-    };
-    IndexedSourceMapConsumer.prototype.sourceContentFor = function IndexedSourceMapConsumer_sourceContentFor(aSource, nullOnMissing) {
-      for (var i = 0; i < this._sections.length; i++) {
-        var section = this._sections[i];
-        var content = section.consumer.sourceContentFor(aSource, true);
-        if (content) {
-          return content;
-        }
-      }
-      if (nullOnMissing) {
-        return null;
-      } else {
-        throw new Error('"' + aSource + '" is not in the SourceMap.');
-      }
-    };
-    IndexedSourceMapConsumer.prototype.generatedPositionFor = function IndexedSourceMapConsumer_generatedPositionFor(aArgs) {
-      for (var i = 0; i < this._sections.length; i++) {
-        var section = this._sections[i];
-        if (section.consumer._findSourceIndex(util.getArg(aArgs, 'source')) === -1) {
-          continue;
-        }
-        var generatedPosition = section.consumer.generatedPositionFor(aArgs);
-        if (generatedPosition) {
-          var ret = {
-              line: generatedPosition.line + (section.generatedOffset.generatedLine - 1),
-              column: generatedPosition.column + (section.generatedOffset.generatedLine === generatedPosition.line ? section.generatedOffset.generatedColumn - 1 : 0)
-            };
-          return ret;
-        }
-      }
-      return {
-        line: null,
-        column: null
-      };
-    };
-    IndexedSourceMapConsumer.prototype._parseMappings = function IndexedSourceMapConsumer_parseMappings(aStr, aSourceRoot) {
-      this.__generatedMappings = [];
-      this.__originalMappings = [];
-      for (var i = 0; i < this._sections.length; i++) {
-        var section = this._sections[i];
-        var sectionMappings = section.consumer._generatedMappings;
-        for (var j = 0; j < sectionMappings.length; j++) {
-          var mapping = sectionMappings[j];
-          var source = section.consumer._sources.at(mapping.source);
-          source = util.computeSourceURL(section.consumer.sourceRoot, source, this._sourceMapURL);
-          this._sources.add(source);
-          source = this._sources.indexOf(source);
-          var name = null;
-          if (mapping.name) {
-            name = section.consumer._names.at(mapping.name);
-            this._names.add(name);
-            name = this._names.indexOf(name);
-          }
-          var adjustedMapping = {
-              source: source,
-              generatedLine: mapping.generatedLine + (section.generatedOffset.generatedLine - 1),
-              generatedColumn: mapping.generatedColumn + (section.generatedOffset.generatedLine === mapping.generatedLine ? section.generatedOffset.generatedColumn - 1 : 0),
-              originalLine: mapping.originalLine,
-              originalColumn: mapping.originalColumn,
-              name: name
-            };
-          this.__generatedMappings.push(adjustedMapping);
-          if (typeof adjustedMapping.originalLine === 'number') {
-            this.__originalMappings.push(adjustedMapping);
-          }
-        }
-      }
-      quickSort(this.__generatedMappings, util.compareByGeneratedPositionsDeflated);
-      quickSort(this.__originalMappings, util.compareByOriginalPositions);
-    };
-    exports.IndexedSourceMapConsumer = IndexedSourceMapConsumer;
-  });
-  require.define('/node_modules/source-map/lib/quick-sort.js', function (module, exports, __dirname, __filename) {
-    function swap(ary, x, y) {
-      var temp = ary[x];
-      ary[x] = ary[y];
-      ary[y] = temp;
-    }
-    function randomIntInRange(low, high) {
-      return Math.round(low + Math.random() * (high - low));
-    }
-    function doQuickSort(ary, comparator, p, r) {
-      if (p < r) {
-        var pivotIndex = randomIntInRange(p, r);
-        var i = p - 1;
-        swap(ary, pivotIndex, r);
-        var pivot = ary[r];
-        for (var j = p; j < r; j++) {
-          if (comparator(ary[j], pivot) <= 0) {
-            i += 1;
-            swap(ary, i, j);
-          }
-        }
-        swap(ary, i + 1, j);
-        var q = i + 1;
-        doQuickSort(ary, comparator, p, q - 1);
-        doQuickSort(ary, comparator, q + 1, r);
-      }
-    }
-    exports.quickSort = function (ary, comparator) {
-      doQuickSort(ary, comparator, 0, ary.length - 1);
-    };
-  });
-  require.define('/node_modules/source-map/lib/binary-search.js', function (module, exports, __dirname, __filename) {
-    exports.GREATEST_LOWER_BOUND = 1;
-    exports.LEAST_UPPER_BOUND = 2;
-    function recursiveSearch(aLow, aHigh, aNeedle, aHaystack, aCompare, aBias) {
-      var mid = Math.floor((aHigh - aLow) / 2) + aLow;
-      var cmp = aCompare(aNeedle, aHaystack[mid], true);
-      if (cmp === 0) {
-        return mid;
-      } else if (cmp > 0) {
-        if (aHigh - mid > 1) {
-          return recursiveSearch(mid, aHigh, aNeedle, aHaystack, aCompare, aBias);
-        }
-        if (aBias == exports.LEAST_UPPER_BOUND) {
-          return aHigh < aHaystack.length ? aHigh : -1;
-        } else {
-          return mid;
-        }
-      } else {
-        if (mid - aLow > 1) {
-          return recursiveSearch(aLow, mid, aNeedle, aHaystack, aCompare, aBias);
-        }
-        if (aBias == exports.LEAST_UPPER_BOUND) {
-          return mid;
-        } else {
-          return aLow < 0 ? -1 : aLow;
-        }
-      }
-    }
-    exports.search = function search(aNeedle, aHaystack, aCompare, aBias) {
-      if (aHaystack.length === 0) {
-        return -1;
-      }
-      var index = recursiveSearch(-1, aHaystack.length, aNeedle, aHaystack, aCompare, aBias || exports.GREATEST_LOWER_BOUND);
-      if (index < 0) {
-        return -1;
-      }
-      while (index - 1 >= 0) {
-        if (aCompare(aHaystack[index], aHaystack[index - 1], true) !== 0) {
+        xmlStr += match[0];
+        if (depth <= 0) {
           break;
         }
-        --index;
+        match = this.__patterns.xml.read_match();
       }
-      return index;
-    };
-  });
-  require.define('/node_modules/esutils/lib/utils.js', function (module, exports, __dirname, __filename) {
-    (function () {
-      'use strict';
-      exports.ast = require('/node_modules/esutils/lib/ast.js', module);
-      exports.code = require('/node_modules/esutils/lib/code.js', module);
-      exports.keyword = require('/node_modules/esutils/lib/keyword.js', module);
-    }());
-  });
-  require.define('/node_modules/esutils/lib/keyword.js', function (module, exports, __dirname, __filename) {
-    (function () {
-      'use strict';
-      var code = require('/node_modules/esutils/lib/code.js', module);
-      function isStrictModeReservedWordES6(id) {
-        switch (id) {
-        case 'implements':
-        case 'interface':
-        case 'package':
-        case 'private':
-        case 'protected':
-        case 'public':
-        case 'static':
-        case 'let':
-          return true;
-        default:
-          return false;
+      // if we didn't close correctly, keep unformatted.
+      if (!match) {
+        xmlStr += this._input.match(/[\s\S]*/g)[0];
+      }
+      xmlStr = xmlStr.replace(acorn.allLineBreaks, '\n');
+      return this._create_token(TOKEN.STRING, xmlStr);
+    }
+  }
+
+  return null;
+};
+
+function unescape_string(s) {
+  // You think that a regex would work for this
+  // return s.replace(/\\x([0-9a-f]{2})/gi, function(match, val) {
+  //         return String.fromCharCode(parseInt(val, 16));
+  //     })
+  // However, dealing with '\xff', '\\xff', '\\\xff' makes this more fun.
+  var out = '',
+    escaped = 0;
+
+  var input_scan = new InputScanner(s);
+  var matched = null;
+
+  while (input_scan.hasNext()) {
+    // Keep any whitespace, non-slash characters
+    // also keep slash pairs.
+    matched = input_scan.match(/([\s]|[^\\]|\\\\)+/g);
+
+    if (matched) {
+      out += matched[0];
+    }
+
+    if (input_scan.peek() === '\\') {
+      input_scan.next();
+      if (input_scan.peek() === 'x') {
+        matched = input_scan.match(/x([0-9A-Fa-f]{2})/g);
+      } else if (input_scan.peek() === 'u') {
+        matched = input_scan.match(/u([0-9A-Fa-f]{4})/g);
+        if (!matched) {
+          matched = input_scan.match(/u\{([0-9A-Fa-f]+)\}/g);
         }
-      }
-      function isKeywordES5(id, strict) {
-        if (!strict && id === 'yield') {
-          return false;
+      } else {
+        out += '\\';
+        if (input_scan.hasNext()) {
+          out += input_scan.next();
         }
-        return isKeywordES6(id, strict);
+        continue;
       }
-      function isKeywordES6(id, strict) {
-        if (strict && isStrictModeReservedWordES6(id)) {
-          return true;
-        }
-        switch (id.length) {
-        case 2:
-          return id === 'if' || id === 'in' || id === 'do';
-        case 3:
-          return id === 'var' || id === 'for' || id === 'new' || id === 'try';
-        case 4:
-          return id === 'this' || id === 'else' || id === 'case' || id === 'void' || id === 'with' || id === 'enum';
-        case 5:
-          return id === 'while' || id === 'break' || id === 'catch' || id === 'throw' || id === 'const' || id === 'yield' || id === 'class' || id === 'super';
-        case 6:
-          return id === 'return' || id === 'typeof' || id === 'delete' || id === 'switch' || id === 'export' || id === 'import';
-        case 7:
-          return id === 'default' || id === 'finally' || id === 'extends';
-        case 8:
-          return id === 'function' || id === 'continue' || id === 'debugger';
-        case 10:
-          return id === 'instanceof';
-        default:
-          return false;
-        }
+
+      // If there's some error decoding, return the original string
+      if (!matched) {
+        return s;
       }
-      function isReservedWordES5(id, strict) {
-        return id === 'null' || id === 'true' || id === 'false' || isKeywordES5(id, strict);
+
+      escaped = parseInt(matched[1], 16);
+
+      if (escaped > 0x7e && escaped <= 0xff && matched[0].indexOf('x') === 0) {
+        // we bail out on \x7f..\xff,
+        // leaving whole string escaped,
+        // as it's probably completely binary
+        return s;
+      } else if (escaped >= 0x00 && escaped < 0x20) {
+        // leave 0x00...0x1f escaped
+        out += '\\' + matched[0];
+      } else if (escaped > 0x10FFFF) {
+        // If the escape sequence is out of bounds, keep the original sequence and continue conversion
+        out += '\\' + matched[0];
+      } else if (escaped === 0x22 || escaped === 0x27 || escaped === 0x5c) {
+        // single-quote, apostrophe, backslash - escape these
+        out += '\\' + String.fromCharCode(escaped);
+      } else {
+        out += String.fromCharCode(escaped);
       }
-      function isReservedWordES6(id, strict) {
-        return id === 'null' || id === 'true' || id === 'false' || isKeywordES6(id, strict);
+    }
+  }
+
+  return out;
+}
+
+// handle string
+//
+Tokenizer.prototype._read_string_recursive = function(delimiter, allow_unescaped_newlines, start_sub) {
+  var current_char;
+  var pattern;
+  if (delimiter === '\'') {
+    pattern = this.__patterns.single_quote;
+  } else if (delimiter === '"') {
+    pattern = this.__patterns.double_quote;
+  } else if (delimiter === '`') {
+    pattern = this.__patterns.template_text;
+  } else if (delimiter === '}') {
+    pattern = this.__patterns.template_expression;
+  }
+
+  var resulting_string = pattern.read();
+  var next = '';
+  while (this._input.hasNext()) {
+    next = this._input.next();
+    if (next === delimiter ||
+      (!allow_unescaped_newlines && acorn.newline.test(next))) {
+      this._input.back();
+      break;
+    } else if (next === '\\' && this._input.hasNext()) {
+      current_char = this._input.peek();
+
+      if (current_char === 'x' || current_char === 'u') {
+        this.has_char_escapes = true;
+      } else if (current_char === '\r' && this._input.peek(1) === '\n') {
+        this._input.next();
       }
-      function isRestrictedWord(id) {
-        return id === 'eval' || id === 'arguments';
+      next += this._input.next();
+    } else if (start_sub) {
+      if (start_sub === '${' && next === '$' && this._input.peek() === '{') {
+        next += this._input.next();
       }
-      function isIdentifierNameES5(id) {
-        var i, iz, ch;
-        if (id.length === 0) {
-          return false;
-        }
-        ch = id.charCodeAt(0);
-        if (!code.isIdentifierStartES5(ch)) {
-          return false;
-        }
-        for (i = 1, iz = id.length; i < iz; ++i) {
-          ch = id.charCodeAt(i);
-          if (!code.isIdentifierPartES5(ch)) {
-            return false;
-          }
-        }
-        return true;
-      }
-      function decodeUtf16(lead, trail) {
-        return (lead - 55296) * 1024 + (trail - 56320) + 65536;
-      }
-      function isIdentifierNameES6(id) {
-        var i, iz, ch, lowCh, check;
-        if (id.length === 0) {
-          return false;
-        }
-        check = code.isIdentifierStartES6;
-        for (i = 0, iz = id.length; i < iz; ++i) {
-          ch = id.charCodeAt(i);
-          if (55296 <= ch && ch <= 56319) {
-            ++i;
-            if (i >= iz) {
-              return false;
-            }
-            lowCh = id.charCodeAt(i);
-            if (!(56320 <= lowCh && lowCh <= 57343)) {
-              return false;
-            }
-            ch = decodeUtf16(ch, lowCh);
-          }
-          if (!check(ch)) {
-            return false;
-          }
-          check = code.isIdentifierPartES6;
-        }
-        return true;
-      }
-      function isIdentifierES5(id, strict) {
-        return isIdentifierNameES5(id) && !isReservedWordES5(id, strict);
-      }
-      function isIdentifierES6(id, strict) {
-        return isIdentifierNameES6(id) && !isReservedWordES6(id, strict);
-      }
-      module.exports = {
-        isKeywordES5: isKeywordES5,
-        isKeywordES6: isKeywordES6,
-        isReservedWordES5: isReservedWordES5,
-        isReservedWordES6: isReservedWordES6,
-        isRestrictedWord: isRestrictedWord,
-        isIdentifierNameES5: isIdentifierNameES5,
-        isIdentifierNameES6: isIdentifierNameES6,
-        isIdentifierES5: isIdentifierES5,
-        isIdentifierES6: isIdentifierES6
-      };
-    }());
-  });
-  require.define('/node_modules/esutils/lib/code.js', function (module, exports, __dirname, __filename) {
-    (function () {
-      'use strict';
-      var ES6Regex, ES5Regex, NON_ASCII_WHITESPACES, IDENTIFIER_START, IDENTIFIER_PART, ch;
-      ES5Regex = {
-        NonAsciiIdentifierStart: /[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u052F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u08A0-\u08B4\u08B6-\u08BD\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0980\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0AF9\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D\u0C58-\u0C5A\u0C60\u0C61\u0C80\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D54-\u0D56\u0D5F-\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F5\u13F8-\u13FD\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1877\u1880-\u1884\u1887-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191E\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4B\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1C80-\u1C88\u1CE9-\u1CEC\u1CEE-\u1CF1\u1CF5\u1CF6\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2E2F\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303C\u3041-\u3096\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FD5\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA69D\uA6A0-\uA6EF\uA717-\uA71F\uA722-\uA788\uA78B-\uA7AE\uA7B0-\uA7B7\uA7F7-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA8FD\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uA9E0-\uA9E4\uA9E6-\uA9EF\uA9FA-\uA9FE\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA7E-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB65\uAB70-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]/,
-        NonAsciiIdentifierPart: /[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u0487\u048A-\u052F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u0800-\u082D\u0840-\u085B\u08A0-\u08B4\u08B6-\u08BD\u08D4-\u08E1\u08E3-\u0963\u0966-\u096F\u0971-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-\u09F1\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0AF9\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5C\u0B5D\u0B5F-\u0B63\u0B66-\u0B6F\u0B71\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-\u0BEF\u0C00-\u0C03\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58-\u0C5A\u0C60-\u0C63\u0C66-\u0C6F\u0C80-\u0C83\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D01-\u0D03\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D-\u0D44\u0D46-\u0D48\u0D4A-\u0D4E\u0D54-\u0D57\u0D5F-\u0D63\u0D66-\u0D6F\u0D7A-\u0D7F\u0D82\u0D83\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DE6-\u0DEF\u0DF2\u0DF3\u0E01-\u0E3A\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB9\u0EBB-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F29\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1380-\u138F\u13A0-\u13F5\u13F8-\u13FD\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD\u17E0-\u17E9\u180B-\u180D\u1810-\u1819\u1820-\u1877\u1880-\u18AA\u18B0-\u18F5\u1900-\u191E\u1920-\u192B\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19D9\u1A00-\u1A1B\u1A20-\u1A5E\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1AB0-\u1ABD\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1C80-\u1C88\u1CD0-\u1CD2\u1CD4-\u1CF6\u1CF8\u1CF9\u1D00-\u1DF5\u1DFB-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u200C\u200D\u203F\u2040\u2054\u2071\u207F\u2090-\u209C\u20D0-\u20DC\u20E1\u20E5-\u20F0\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2DE0-\u2DFF\u2E2F\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099\u309A\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FD5\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA66F\uA674-\uA67D\uA67F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA7AE\uA7B0-\uA7B7\uA7F7-\uA827\uA840-\uA873\uA880-\uA8C5\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA8FD\uA900-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-\uA9D9\uA9E0-\uA9FE\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A-\uAAC2\uAADB-\uAADD\uAAE0-\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB65\uAB70-\uABEA\uABEC\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE2F\uFE33\uFE34\uFE4D-\uFE4F\uFE70-\uFE74\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF3F\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]/
-      };
-      ES6Regex = {
-        NonAsciiIdentifierStart: /[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u052F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u08A0-\u08B4\u08B6-\u08BD\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0980\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0AF9\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D\u0C58-\u0C5A\u0C60\u0C61\u0C80\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D54-\u0D56\u0D5F-\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F5\u13F8-\u13FD\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1877\u1880-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191E\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4B\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1C80-\u1C88\u1CE9-\u1CEC\u1CEE-\u1CF1\u1CF5\u1CF6\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2118-\u211D\u2124\u2126\u2128\u212A-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303C\u3041-\u3096\u309B-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FD5\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA69D\uA6A0-\uA6EF\uA717-\uA71F\uA722-\uA788\uA78B-\uA7AE\uA7B0-\uA7B7\uA7F7-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA8FD\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uA9E0-\uA9E4\uA9E6-\uA9EF\uA9FA-\uA9FE\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA7E-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB65\uAB70-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD40-\uDD74\uDE80-\uDE9C\uDEA0-\uDED0\uDF00-\uDF1F\uDF30-\uDF4A\uDF50-\uDF75\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDCB0-\uDCD3\uDCD8-\uDCFB\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDCE0-\uDCF2\uDCF4\uDCF5\uDD00-\uDD15\uDD20-\uDD39\uDD80-\uDDB7\uDDBE\uDDBF\uDE00\uDE10-\uDE13\uDE15-\uDE17\uDE19-\uDE33\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE4\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48\uDC80-\uDCB2\uDCC0-\uDCF2]|\uD804[\uDC03-\uDC37\uDC83-\uDCAF\uDCD0-\uDCE8\uDD03-\uDD26\uDD50-\uDD72\uDD76\uDD83-\uDDB2\uDDC1-\uDDC4\uDDDA\uDDDC\uDE00-\uDE11\uDE13-\uDE2B\uDE80-\uDE86\uDE88\uDE8A-\uDE8D\uDE8F-\uDE9D\uDE9F-\uDEA8\uDEB0-\uDEDE\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3D\uDF50\uDF5D-\uDF61]|\uD805[\uDC00-\uDC34\uDC47-\uDC4A\uDC80-\uDCAF\uDCC4\uDCC5\uDCC7\uDD80-\uDDAE\uDDD8-\uDDDB\uDE00-\uDE2F\uDE44\uDE80-\uDEAA\uDF00-\uDF19]|\uD806[\uDCA0-\uDCDF\uDCFF\uDEC0-\uDEF8]|\uD807[\uDC00-\uDC08\uDC0A-\uDC2E\uDC40\uDC72-\uDC8F]|\uD808[\uDC00-\uDF99]|\uD809[\uDC00-\uDC6E\uDC80-\uDD43]|[\uD80C\uD81C-\uD820\uD840-\uD868\uD86A-\uD86C\uD86F-\uD872][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD811[\uDC00-\uDE46]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDED0-\uDEED\uDF00-\uDF2F\uDF40-\uDF43\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDF00-\uDF44\uDF50\uDF93-\uDF9F\uDFE0]|\uD821[\uDC00-\uDFEC]|\uD822[\uDC00-\uDEF2]|\uD82C[\uDC00\uDC01]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB]|\uD83A[\uDC00-\uDCC4\uDD00-\uDD43]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD869[\uDC00-\uDED6\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D\uDC20-\uDFFF]|\uD873[\uDC00-\uDEA1]|\uD87E[\uDC00-\uDE1D]/,
-        NonAsciiIdentifierPart: /[\xAA\xB5\xB7\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u0487\u048A-\u052F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u0800-\u082D\u0840-\u085B\u08A0-\u08B4\u08B6-\u08BD\u08D4-\u08E1\u08E3-\u0963\u0966-\u096F\u0971-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-\u09F1\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0AF9\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5C\u0B5D\u0B5F-\u0B63\u0B66-\u0B6F\u0B71\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-\u0BEF\u0C00-\u0C03\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58-\u0C5A\u0C60-\u0C63\u0C66-\u0C6F\u0C80-\u0C83\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D01-\u0D03\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D-\u0D44\u0D46-\u0D48\u0D4A-\u0D4E\u0D54-\u0D57\u0D5F-\u0D63\u0D66-\u0D6F\u0D7A-\u0D7F\u0D82\u0D83\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DE6-\u0DEF\u0DF2\u0DF3\u0E01-\u0E3A\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB9\u0EBB-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F29\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1369-\u1371\u1380-\u138F\u13A0-\u13F5\u13F8-\u13FD\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD\u17E0-\u17E9\u180B-\u180D\u1810-\u1819\u1820-\u1877\u1880-\u18AA\u18B0-\u18F5\u1900-\u191E\u1920-\u192B\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19DA\u1A00-\u1A1B\u1A20-\u1A5E\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1AB0-\u1ABD\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1C80-\u1C88\u1CD0-\u1CD2\u1CD4-\u1CF6\u1CF8\u1CF9\u1D00-\u1DF5\u1DFB-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u200C\u200D\u203F\u2040\u2054\u2071\u207F\u2090-\u209C\u20D0-\u20DC\u20E1\u20E5-\u20F0\u2102\u2107\u210A-\u2113\u2115\u2118-\u211D\u2124\u2126\u2128\u212A-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2DE0-\u2DFF\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FD5\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA66F\uA674-\uA67D\uA67F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA7AE\uA7B0-\uA7B7\uA7F7-\uA827\uA840-\uA873\uA880-\uA8C5\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA8FD\uA900-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-\uA9D9\uA9E0-\uA9FE\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A-\uAAC2\uAADB-\uAADD\uAAE0-\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB65\uAB70-\uABEA\uABEC\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE2F\uFE33\uFE34\uFE4D-\uFE4F\uFE70-\uFE74\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF3F\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD40-\uDD74\uDDFD\uDE80-\uDE9C\uDEA0-\uDED0\uDEE0\uDF00-\uDF1F\uDF30-\uDF4A\uDF50-\uDF7A\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDCA0-\uDCA9\uDCB0-\uDCD3\uDCD8-\uDCFB\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDCE0-\uDCF2\uDCF4\uDCF5\uDD00-\uDD15\uDD20-\uDD39\uDD80-\uDDB7\uDDBE\uDDBF\uDE00-\uDE03\uDE05\uDE06\uDE0C-\uDE13\uDE15-\uDE17\uDE19-\uDE33\uDE38-\uDE3A\uDE3F\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE6\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48\uDC80-\uDCB2\uDCC0-\uDCF2]|\uD804[\uDC00-\uDC46\uDC66-\uDC6F\uDC7F-\uDCBA\uDCD0-\uDCE8\uDCF0-\uDCF9\uDD00-\uDD34\uDD36-\uDD3F\uDD50-\uDD73\uDD76\uDD80-\uDDC4\uDDCA-\uDDCC\uDDD0-\uDDDA\uDDDC\uDE00-\uDE11\uDE13-\uDE37\uDE3E\uDE80-\uDE86\uDE88\uDE8A-\uDE8D\uDE8F-\uDE9D\uDE9F-\uDEA8\uDEB0-\uDEEA\uDEF0-\uDEF9\uDF00-\uDF03\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3C-\uDF44\uDF47\uDF48\uDF4B-\uDF4D\uDF50\uDF57\uDF5D-\uDF63\uDF66-\uDF6C\uDF70-\uDF74]|\uD805[\uDC00-\uDC4A\uDC50-\uDC59\uDC80-\uDCC5\uDCC7\uDCD0-\uDCD9\uDD80-\uDDB5\uDDB8-\uDDC0\uDDD8-\uDDDD\uDE00-\uDE40\uDE44\uDE50-\uDE59\uDE80-\uDEB7\uDEC0-\uDEC9\uDF00-\uDF19\uDF1D-\uDF2B\uDF30-\uDF39]|\uD806[\uDCA0-\uDCE9\uDCFF\uDEC0-\uDEF8]|\uD807[\uDC00-\uDC08\uDC0A-\uDC36\uDC38-\uDC40\uDC50-\uDC59\uDC72-\uDC8F\uDC92-\uDCA7\uDCA9-\uDCB6]|\uD808[\uDC00-\uDF99]|\uD809[\uDC00-\uDC6E\uDC80-\uDD43]|[\uD80C\uD81C-\uD820\uD840-\uD868\uD86A-\uD86C\uD86F-\uD872][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD811[\uDC00-\uDE46]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDE60-\uDE69\uDED0-\uDEED\uDEF0-\uDEF4\uDF00-\uDF36\uDF40-\uDF43\uDF50-\uDF59\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDF00-\uDF44\uDF50-\uDF7E\uDF8F-\uDF9F\uDFE0]|\uD821[\uDC00-\uDFEC]|\uD822[\uDC00-\uDEF2]|\uD82C[\uDC00\uDC01]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99\uDC9D\uDC9E]|\uD834[\uDD65-\uDD69\uDD6D-\uDD72\uDD7B-\uDD82\uDD85-\uDD8B\uDDAA-\uDDAD\uDE42-\uDE44]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB\uDFCE-\uDFFF]|\uD836[\uDE00-\uDE36\uDE3B-\uDE6C\uDE75\uDE84\uDE9B-\uDE9F\uDEA1-\uDEAF]|\uD838[\uDC00-\uDC06\uDC08-\uDC18\uDC1B-\uDC21\uDC23\uDC24\uDC26-\uDC2A]|\uD83A[\uDC00-\uDCC4\uDCD0-\uDCD6\uDD00-\uDD4A\uDD50-\uDD59]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD869[\uDC00-\uDED6\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D\uDC20-\uDFFF]|\uD873[\uDC00-\uDEA1]|\uD87E[\uDC00-\uDE1D]|\uDB40[\uDD00-\uDDEF]/
-      };
-      function isDecimalDigit(ch) {
-        return 48 <= ch && ch <= 57;
-      }
-      function isHexDigit(ch) {
-        return 48 <= ch && ch <= 57 || 97 <= ch && ch <= 102 || 65 <= ch && ch <= 70;
-      }
-      function isOctalDigit(ch) {
-        return ch >= 48 && ch <= 55;
-      }
-      NON_ASCII_WHITESPACES = [
-        5760,
-        8192,
-        8193,
-        8194,
-        8195,
-        8196,
-        8197,
-        8198,
-        8199,
-        8200,
-        8201,
-        8202,
-        8239,
-        8287,
-        12288,
-        65279
-      ];
-      function isWhiteSpace(ch) {
-        return ch === 32 || ch === 9 || ch === 11 || ch === 12 || ch === 160 || ch >= 5760 && NON_ASCII_WHITESPACES.indexOf(ch) >= 0;
-      }
-      function isLineTerminator(ch) {
-        return ch === 10 || ch === 13 || ch === 8232 || ch === 8233;
-      }
-      function fromCodePoint(cp) {
-        if (cp <= 65535) {
-          return String.fromCharCode(cp);
-        }
-        var cu1 = String.fromCharCode(Math.floor((cp - 65536) / 1024) + 55296);
-        var cu2 = String.fromCharCode((cp - 65536) % 1024 + 56320);
-        return cu1 + cu2;
-      }
-      IDENTIFIER_START = new Array(128);
-      for (ch = 0; ch < 128; ++ch) {
-        IDENTIFIER_START[ch] = ch >= 97 && ch <= 122 || ch >= 65 && ch <= 90 || ch === 36 || ch === 95;
-      }
-      IDENTIFIER_PART = new Array(128);
-      for (ch = 0; ch < 128; ++ch) {
-        IDENTIFIER_PART[ch] = ch >= 97 && ch <= 122 || ch >= 65 && ch <= 90 || ch >= 48 && ch <= 57 || ch === 36 || ch === 95;
-      }
-      function isIdentifierStartES5(ch) {
-        return ch < 128 ? IDENTIFIER_START[ch] : ES5Regex.NonAsciiIdentifierStart.test(fromCodePoint(ch));
-      }
-      function isIdentifierPartES5(ch) {
-        return ch < 128 ? IDENTIFIER_PART[ch] : ES5Regex.NonAsciiIdentifierPart.test(fromCodePoint(ch));
-      }
-      function isIdentifierStartES6(ch) {
-        return ch < 128 ? IDENTIFIER_START[ch] : ES6Regex.NonAsciiIdentifierStart.test(fromCodePoint(ch));
-      }
-      function isIdentifierPartES6(ch) {
-        return ch < 128 ? IDENTIFIER_PART[ch] : ES6Regex.NonAsciiIdentifierPart.test(fromCodePoint(ch));
-      }
-      module.exports = {
-        isDecimalDigit: isDecimalDigit,
-        isHexDigit: isHexDigit,
-        isOctalDigit: isOctalDigit,
-        isWhiteSpace: isWhiteSpace,
-        isLineTerminator: isLineTerminator,
-        isIdentifierStartES5: isIdentifierStartES5,
-        isIdentifierPartES5: isIdentifierPartES5,
-        isIdentifierStartES6: isIdentifierStartES6,
-        isIdentifierPartES6: isIdentifierPartES6
-      };
-    }());
-  });
-  require.define('/node_modules/esutils/lib/ast.js', function (module, exports, __dirname, __filename) {
-    (function () {
-      'use strict';
-      function isExpression(node) {
-        if (node == null) {
-          return false;
-        }
-        switch (node.type) {
-        case 'ArrayExpression':
-        case 'AssignmentExpression':
-        case 'BinaryExpression':
-        case 'CallExpression':
-        case 'ConditionalExpression':
-        case 'FunctionExpression':
-        case 'Identifier':
-        case 'Literal':
-        case 'LogicalExpression':
-        case 'MemberExpression':
-        case 'NewExpression':
-        case 'ObjectExpression':
-        case 'SequenceExpression':
-        case 'ThisExpression':
-        case 'UnaryExpression':
-        case 'UpdateExpression':
-          return true;
-        }
-        return false;
-      }
-      function isIterationStatement(node) {
-        if (node == null) {
-          return false;
-        }
-        switch (node.type) {
-        case 'DoWhileStatement':
-        case 'ForInStatement':
-        case 'ForStatement':
-        case 'WhileStatement':
-          return true;
-        }
-        return false;
-      }
-      function isStatement(node) {
-        if (node == null) {
-          return false;
-        }
-        switch (node.type) {
-        case 'BlockStatement':
-        case 'BreakStatement':
-        case 'ContinueStatement':
-        case 'DebuggerStatement':
-        case 'DoWhileStatement':
-        case 'EmptyStatement':
-        case 'ExpressionStatement':
-        case 'ForInStatement':
-        case 'ForStatement':
-        case 'IfStatement':
-        case 'LabeledStatement':
-        case 'ReturnStatement':
-        case 'SwitchStatement':
-        case 'ThrowStatement':
-        case 'TryStatement':
-        case 'VariableDeclaration':
-        case 'WhileStatement':
-        case 'WithStatement':
-          return true;
-        }
-        return false;
-      }
-      function isSourceElement(node) {
-        return isStatement(node) || node != null && node.type === 'FunctionDeclaration';
-      }
-      function trailingStatement(node) {
-        switch (node.type) {
-        case 'IfStatement':
-          if (node.alternate != null) {
-            return node.alternate;
-          }
-          return node.consequent;
-        case 'LabeledStatement':
-        case 'ForStatement':
-        case 'ForInStatement':
-        case 'WhileStatement':
-        case 'WithStatement':
-          return node.body;
-        }
-        return null;
-      }
-      function isProblematicIfStatement(node) {
-        var current;
-        if (node.type !== 'IfStatement') {
-          return false;
-        }
-        if (node.alternate == null) {
-          return false;
-        }
-        current = node.consequent;
-        do {
-          if (current.type === 'IfStatement') {
-            if (current.alternate == null) {
-              return true;
-            }
-          }
-          current = trailingStatement(current);
-        } while (current);
-        return false;
-      }
-      module.exports = {
-        isExpression: isExpression,
-        isStatement: isStatement,
-        isIterationStatement: isIterationStatement,
-        isSourceElement: isSourceElement,
-        isProblematicIfStatement: isProblematicIfStatement,
-        trailingStatement: trailingStatement
-      };
-    }());
-  });
-  require.define('/node_modules/estraverse/estraverse.js', function (module, exports, __dirname, __filename) {
-    (function clone(exports) {
-      'use strict';
-      var Syntax, VisitorOption, VisitorKeys, BREAK, SKIP, REMOVE;
-      function deepCopy(obj) {
-        var ret = {}, key, val;
-        for (key in obj) {
-          if (obj.hasOwnProperty(key)) {
-            val = obj[key];
-            if (typeof val === 'object' && val !== null) {
-              ret[key] = deepCopy(val);
-            } else {
-              ret[key] = val;
-            }
-          }
-        }
-        return ret;
-      }
-      function upperBound(array, func) {
-        var diff, len, i, current;
-        len = array.length;
-        i = 0;
-        while (len) {
-          diff = len >>> 1;
-          current = i + diff;
-          if (func(array[current])) {
-            len = diff;
-          } else {
-            i = current + 1;
-            len -= diff + 1;
-          }
-        }
-        return i;
-      }
-      Syntax = {
-        AssignmentExpression: 'AssignmentExpression',
-        AssignmentPattern: 'AssignmentPattern',
-        ArrayExpression: 'ArrayExpression',
-        ArrayPattern: 'ArrayPattern',
-        ArrowFunctionExpression: 'ArrowFunctionExpression',
-        AwaitExpression: 'AwaitExpression',
-        BlockStatement: 'BlockStatement',
-        BinaryExpression: 'BinaryExpression',
-        BreakStatement: 'BreakStatement',
-        CallExpression: 'CallExpression',
-        CatchClause: 'CatchClause',
-        ChainExpression: 'ChainExpression',
-        ClassBody: 'ClassBody',
-        ClassDeclaration: 'ClassDeclaration',
-        ClassExpression: 'ClassExpression',
-        ComprehensionBlock: 'ComprehensionBlock',
-        ComprehensionExpression: 'ComprehensionExpression',
-        ConditionalExpression: 'ConditionalExpression',
-        ContinueStatement: 'ContinueStatement',
-        DebuggerStatement: 'DebuggerStatement',
-        DirectiveStatement: 'DirectiveStatement',
-        DoWhileStatement: 'DoWhileStatement',
-        EmptyStatement: 'EmptyStatement',
-        ExportAllDeclaration: 'ExportAllDeclaration',
-        ExportDefaultDeclaration: 'ExportDefaultDeclaration',
-        ExportNamedDeclaration: 'ExportNamedDeclaration',
-        ExportSpecifier: 'ExportSpecifier',
-        ExpressionStatement: 'ExpressionStatement',
-        ForStatement: 'ForStatement',
-        ForInStatement: 'ForInStatement',
-        ForOfStatement: 'ForOfStatement',
-        FunctionDeclaration: 'FunctionDeclaration',
-        FunctionExpression: 'FunctionExpression',
-        GeneratorExpression: 'GeneratorExpression',
-        Identifier: 'Identifier',
-        IfStatement: 'IfStatement',
-        ImportExpression: 'ImportExpression',
-        ImportDeclaration: 'ImportDeclaration',
-        ImportDefaultSpecifier: 'ImportDefaultSpecifier',
-        ImportNamespaceSpecifier: 'ImportNamespaceSpecifier',
-        ImportSpecifier: 'ImportSpecifier',
-        Literal: 'Literal',
-        LabeledStatement: 'LabeledStatement',
-        LogicalExpression: 'LogicalExpression',
-        MemberExpression: 'MemberExpression',
-        MetaProperty: 'MetaProperty',
-        MethodDefinition: 'MethodDefinition',
-        ModuleSpecifier: 'ModuleSpecifier',
-        NewExpression: 'NewExpression',
-        ObjectExpression: 'ObjectExpression',
-        ObjectPattern: 'ObjectPattern',
-        PrivateIdentifier: 'PrivateIdentifier',
-        Program: 'Program',
-        Property: 'Property',
-        PropertyDefinition: 'PropertyDefinition',
-        RestElement: 'RestElement',
-        ReturnStatement: 'ReturnStatement',
-        SequenceExpression: 'SequenceExpression',
-        SpreadElement: 'SpreadElement',
-        Super: 'Super',
-        SwitchStatement: 'SwitchStatement',
-        SwitchCase: 'SwitchCase',
-        TaggedTemplateExpression: 'TaggedTemplateExpression',
-        TemplateElement: 'TemplateElement',
-        TemplateLiteral: 'TemplateLiteral',
-        ThisExpression: 'ThisExpression',
-        ThrowStatement: 'ThrowStatement',
-        TryStatement: 'TryStatement',
-        UnaryExpression: 'UnaryExpression',
-        UpdateExpression: 'UpdateExpression',
-        VariableDeclaration: 'VariableDeclaration',
-        VariableDeclarator: 'VariableDeclarator',
-        WhileStatement: 'WhileStatement',
-        WithStatement: 'WithStatement',
-        YieldExpression: 'YieldExpression'
-      };
-      VisitorKeys = {
-        AssignmentExpression: [
-          'left',
-          'right'
-        ],
-        AssignmentPattern: [
-          'left',
-          'right'
-        ],
-        ArrayExpression: ['elements'],
-        ArrayPattern: ['elements'],
-        ArrowFunctionExpression: [
-          'params',
-          'body'
-        ],
-        AwaitExpression: ['argument'],
-        BlockStatement: ['body'],
-        BinaryExpression: [
-          'left',
-          'right'
-        ],
-        BreakStatement: ['label'],
-        CallExpression: [
-          'callee',
-          'arguments'
-        ],
-        CatchClause: [
-          'param',
-          'body'
-        ],
-        ChainExpression: ['expression'],
-        ClassBody: ['body'],
-        ClassDeclaration: [
-          'id',
-          'superClass',
-          'body'
-        ],
-        ClassExpression: [
-          'id',
-          'superClass',
-          'body'
-        ],
-        ComprehensionBlock: [
-          'left',
-          'right'
-        ],
-        ComprehensionExpression: [
-          'blocks',
-          'filter',
-          'body'
-        ],
-        ConditionalExpression: [
-          'test',
-          'consequent',
-          'alternate'
-        ],
-        ContinueStatement: ['label'],
-        DebuggerStatement: [],
-        DirectiveStatement: [],
-        DoWhileStatement: [
-          'body',
-          'test'
-        ],
-        EmptyStatement: [],
-        ExportAllDeclaration: ['source'],
-        ExportDefaultDeclaration: ['declaration'],
-        ExportNamedDeclaration: [
-          'declaration',
-          'specifiers',
-          'source'
-        ],
-        ExportSpecifier: [
-          'exported',
-          'local'
-        ],
-        ExpressionStatement: ['expression'],
-        ForStatement: [
-          'init',
-          'test',
-          'update',
-          'body'
-        ],
-        ForInStatement: [
-          'left',
-          'right',
-          'body'
-        ],
-        ForOfStatement: [
-          'left',
-          'right',
-          'body'
-        ],
-        FunctionDeclaration: [
-          'id',
-          'params',
-          'body'
-        ],
-        FunctionExpression: [
-          'id',
-          'params',
-          'body'
-        ],
-        GeneratorExpression: [
-          'blocks',
-          'filter',
-          'body'
-        ],
-        Identifier: [],
-        IfStatement: [
-          'test',
-          'consequent',
-          'alternate'
-        ],
-        ImportExpression: ['source'],
-        ImportDeclaration: [
-          'specifiers',
-          'source'
-        ],
-        ImportDefaultSpecifier: ['local'],
-        ImportNamespaceSpecifier: ['local'],
-        ImportSpecifier: [
-          'imported',
-          'local'
-        ],
-        Literal: [],
-        LabeledStatement: [
-          'label',
-          'body'
-        ],
-        LogicalExpression: [
-          'left',
-          'right'
-        ],
-        MemberExpression: [
-          'object',
-          'property'
-        ],
-        MetaProperty: [
-          'meta',
-          'property'
-        ],
-        MethodDefinition: [
-          'key',
-          'value'
-        ],
-        ModuleSpecifier: [],
-        NewExpression: [
-          'callee',
-          'arguments'
-        ],
-        ObjectExpression: ['properties'],
-        ObjectPattern: ['properties'],
-        PrivateIdentifier: [],
-        Program: ['body'],
-        Property: [
-          'key',
-          'value'
-        ],
-        PropertyDefinition: [
-          'key',
-          'value'
-        ],
-        RestElement: ['argument'],
-        ReturnStatement: ['argument'],
-        SequenceExpression: ['expressions'],
-        SpreadElement: ['argument'],
-        Super: [],
-        SwitchStatement: [
-          'discriminant',
-          'cases'
-        ],
-        SwitchCase: [
-          'test',
-          'consequent'
-        ],
-        TaggedTemplateExpression: [
-          'tag',
-          'quasi'
-        ],
-        TemplateElement: [],
-        TemplateLiteral: [
-          'quasis',
-          'expressions'
-        ],
-        ThisExpression: [],
-        ThrowStatement: ['argument'],
-        TryStatement: [
-          'block',
-          'handler',
-          'finalizer'
-        ],
-        UnaryExpression: ['argument'],
-        UpdateExpression: ['argument'],
-        VariableDeclaration: ['declarations'],
-        VariableDeclarator: [
-          'id',
-          'init'
-        ],
-        WhileStatement: [
-          'test',
-          'body'
-        ],
-        WithStatement: [
-          'object',
-          'body'
-        ],
-        YieldExpression: ['argument']
-      };
-      BREAK = {};
-      SKIP = {};
-      REMOVE = {};
-      VisitorOption = {
-        Break: BREAK,
-        Skip: SKIP,
-        Remove: REMOVE
-      };
-      function Reference(parent, key) {
-        this.parent = parent;
-        this.key = key;
-      }
-      Reference.prototype.replace = function replace(node) {
-        this.parent[this.key] = node;
-      };
-      Reference.prototype.remove = function remove() {
-        if (Array.isArray(this.parent)) {
-          this.parent.splice(this.key, 1);
-          return true;
+
+      if (start_sub === next) {
+        if (delimiter === '`') {
+          next += this._read_string_recursive('}', allow_unescaped_newlines, '`');
         } else {
-          this.replace(null);
-          return false;
+          next += this._read_string_recursive('`', allow_unescaped_newlines, '${');
         }
-      };
-      function Element(node, path, wrap, ref) {
-        this.node = node;
-        this.path = path;
-        this.wrap = wrap;
-        this.ref = ref;
+        if (this._input.hasNext()) {
+          next += this._input.next();
+        }
       }
-      function Controller() {
+    }
+    next += pattern.read();
+    resulting_string += next;
+  }
+
+  return resulting_string;
+};
+
+module.exports.Tokenizer = Tokenizer;
+module.exports.TOKEN = TOKEN;
+module.exports.positionable_operators = positionable_operators.slice();
+module.exports.line_starters = line_starters.slice();
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module) {
+
+/*jshint node:true */
+/*
+
+  The MIT License (MIT)
+
+  Copyright (c) 2007-2018 Einar Lielmanis, Liam Newman, and contributors.
+
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation files
+  (the "Software"), to deal in the Software without restriction,
+  including without limitation the rights to use, copy, modify, merge,
+  publish, distribute, sublicense, and/or sell copies of the Software,
+  and to permit persons to whom the Software is furnished to do so,
+  subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
+
+
+var regexp_has_sticky = RegExp.prototype.hasOwnProperty('sticky');
+
+function InputScanner(input_string) {
+  this.__input = input_string || '';
+  this.__input_length = this.__input.length;
+  this.__position = 0;
+}
+
+InputScanner.prototype.restart = function() {
+  this.__position = 0;
+};
+
+InputScanner.prototype.back = function() {
+  if (this.__position > 0) {
+    this.__position -= 1;
+  }
+};
+
+InputScanner.prototype.hasNext = function() {
+  return this.__position < this.__input_length;
+};
+
+InputScanner.prototype.next = function() {
+  var val = null;
+  if (this.hasNext()) {
+    val = this.__input.charAt(this.__position);
+    this.__position += 1;
+  }
+  return val;
+};
+
+InputScanner.prototype.peek = function(index) {
+  var val = null;
+  index = index || 0;
+  index += this.__position;
+  if (index >= 0 && index < this.__input_length) {
+    val = this.__input.charAt(index);
+  }
+  return val;
+};
+
+// This is a JavaScript only helper function (not in python)
+// Javascript doesn't have a match method
+// and not all implementation support "sticky" flag.
+// If they do not support sticky then both this.match() and this.test() method
+// must get the match and check the index of the match.
+// If sticky is supported and set, this method will use it.
+// Otherwise it will check that global is set, and fall back to the slower method.
+InputScanner.prototype.__match = function(pattern, index) {
+  pattern.lastIndex = index;
+  var pattern_match = pattern.exec(this.__input);
+
+  if (pattern_match && !(regexp_has_sticky && pattern.sticky)) {
+    if (pattern_match.index !== index) {
+      pattern_match = null;
+    }
+  }
+
+  return pattern_match;
+};
+
+InputScanner.prototype.test = function(pattern, index) {
+  index = index || 0;
+  index += this.__position;
+
+  if (index >= 0 && index < this.__input_length) {
+    return !!this.__match(pattern, index);
+  } else {
+    return false;
+  }
+};
+
+InputScanner.prototype.testChar = function(pattern, index) {
+  // test one character regex match
+  var val = this.peek(index);
+  pattern.lastIndex = 0;
+  return val !== null && pattern.test(val);
+};
+
+InputScanner.prototype.match = function(pattern) {
+  var pattern_match = this.__match(pattern, this.__position);
+  if (pattern_match) {
+    this.__position += pattern_match[0].length;
+  } else {
+    pattern_match = null;
+  }
+  return pattern_match;
+};
+
+InputScanner.prototype.read = function(starting_pattern, until_pattern, until_after) {
+  var val = '';
+  var match;
+  if (starting_pattern) {
+    match = this.match(starting_pattern);
+    if (match) {
+      val += match[0];
+    }
+  }
+  if (until_pattern && (match || !starting_pattern)) {
+    val += this.readUntil(until_pattern, until_after);
+  }
+  return val;
+};
+
+InputScanner.prototype.readUntil = function(pattern, until_after) {
+  var val = '';
+  var match_index = this.__position;
+  pattern.lastIndex = this.__position;
+  var pattern_match = pattern.exec(this.__input);
+  if (pattern_match) {
+    match_index = pattern_match.index;
+    if (until_after) {
+      match_index += pattern_match[0].length;
+    }
+  } else {
+    match_index = this.__input_length;
+  }
+
+  val = this.__input.substring(this.__position, match_index);
+  this.__position = match_index;
+  return val;
+};
+
+InputScanner.prototype.readUntilAfter = function(pattern) {
+  return this.readUntil(pattern, true);
+};
+
+InputScanner.prototype.get_regexp = function(pattern, match_from) {
+  var result = null;
+  var flags = 'g';
+  if (match_from && regexp_has_sticky) {
+    flags = 'y';
+  }
+  // strings are converted to regexp
+  if (typeof pattern === "string" && pattern !== '') {
+    // result = new RegExp(pattern.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), flags);
+    result = new RegExp(pattern, flags);
+  } else if (pattern) {
+    result = new RegExp(pattern.source, flags);
+  }
+  return result;
+};
+
+InputScanner.prototype.get_literal_regexp = function(literal_string) {
+  return RegExp(literal_string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
+};
+
+/* css beautifier legacy helpers */
+InputScanner.prototype.peekUntilAfter = function(pattern) {
+  var start = this.__position;
+  var val = this.readUntilAfter(pattern);
+  this.__position = start;
+  return val;
+};
+
+InputScanner.prototype.lookBack = function(testVal) {
+  var start = this.__position - 1;
+  return start >= testVal.length && this.__input.substring(start - testVal.length, start)
+    .toLowerCase() === testVal;
+};
+
+module.exports.InputScanner = InputScanner;
+
+
+/***/ }),
+/* 9 */
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+/*jshint node:true */
+/*
+
+  The MIT License (MIT)
+
+  Copyright (c) 2007-2018 Einar Lielmanis, Liam Newman, and contributors.
+
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation files
+  (the "Software"), to deal in the Software without restriction,
+  including without limitation the rights to use, copy, modify, merge,
+  publish, distribute, sublicense, and/or sell copies of the Software,
+  and to permit persons to whom the Software is furnished to do so,
+  subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
+
+
+var InputScanner = (__webpack_require__(8).InputScanner);
+var Token = (__webpack_require__(3).Token);
+var TokenStream = (__webpack_require__(10).TokenStream);
+var WhitespacePattern = (__webpack_require__(11).WhitespacePattern);
+
+var TOKEN = {
+  START: 'TK_START',
+  RAW: 'TK_RAW',
+  EOF: 'TK_EOF'
+};
+
+var Tokenizer = function(input_string, options) {
+  this._input = new InputScanner(input_string);
+  this._options = options || {};
+  this.__tokens = null;
+
+  this._patterns = {};
+  this._patterns.whitespace = new WhitespacePattern(this._input);
+};
+
+Tokenizer.prototype.tokenize = function() {
+  this._input.restart();
+  this.__tokens = new TokenStream();
+
+  this._reset();
+
+  var current;
+  var previous = new Token(TOKEN.START, '');
+  var open_token = null;
+  var open_stack = [];
+  var comments = new TokenStream();
+
+  while (previous.type !== TOKEN.EOF) {
+    current = this._get_next_token(previous, open_token);
+    while (this._is_comment(current)) {
+      comments.add(current);
+      current = this._get_next_token(previous, open_token);
+    }
+
+    if (!comments.isEmpty()) {
+      current.comments_before = comments;
+      comments = new TokenStream();
+    }
+
+    current.parent = open_token;
+
+    if (this._is_opening(current)) {
+      open_stack.push(open_token);
+      open_token = current;
+    } else if (open_token && this._is_closing(current, open_token)) {
+      current.opened = open_token;
+      open_token.closed = current;
+      open_token = open_stack.pop();
+      current.parent = open_token;
+    }
+
+    current.previous = previous;
+    previous.next = current;
+
+    this.__tokens.add(current);
+    previous = current;
+  }
+
+  return this.__tokens;
+};
+
+
+Tokenizer.prototype._is_first_token = function() {
+  return this.__tokens.isEmpty();
+};
+
+Tokenizer.prototype._reset = function() {};
+
+Tokenizer.prototype._get_next_token = function(previous_token, open_token) { // jshint unused:false
+  this._readWhitespace();
+  var resulting_string = this._input.read(/.+/g);
+  if (resulting_string) {
+    return this._create_token(TOKEN.RAW, resulting_string);
+  } else {
+    return this._create_token(TOKEN.EOF, '');
+  }
+};
+
+Tokenizer.prototype._is_comment = function(current_token) { // jshint unused:false
+  return false;
+};
+
+Tokenizer.prototype._is_opening = function(current_token) { // jshint unused:false
+  return false;
+};
+
+Tokenizer.prototype._is_closing = function(current_token, open_token) { // jshint unused:false
+  return false;
+};
+
+Tokenizer.prototype._create_token = function(type, text) {
+  var token = new Token(type, text,
+    this._patterns.whitespace.newline_count,
+    this._patterns.whitespace.whitespace_before_token);
+  return token;
+};
+
+Tokenizer.prototype._readWhitespace = function() {
+  return this._patterns.whitespace.read();
+};
+
+
+
+module.exports.Tokenizer = Tokenizer;
+module.exports.TOKEN = TOKEN;
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module) {
+
+/*jshint node:true */
+/*
+
+  The MIT License (MIT)
+
+  Copyright (c) 2007-2018 Einar Lielmanis, Liam Newman, and contributors.
+
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation files
+  (the "Software"), to deal in the Software without restriction,
+  including without limitation the rights to use, copy, modify, merge,
+  publish, distribute, sublicense, and/or sell copies of the Software,
+  and to permit persons to whom the Software is furnished to do so,
+  subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
+
+
+function TokenStream(parent_token) {
+  // private
+  this.__tokens = [];
+  this.__tokens_length = this.__tokens.length;
+  this.__position = 0;
+  this.__parent_token = parent_token;
+}
+
+TokenStream.prototype.restart = function() {
+  this.__position = 0;
+};
+
+TokenStream.prototype.isEmpty = function() {
+  return this.__tokens_length === 0;
+};
+
+TokenStream.prototype.hasNext = function() {
+  return this.__position < this.__tokens_length;
+};
+
+TokenStream.prototype.next = function() {
+  var val = null;
+  if (this.hasNext()) {
+    val = this.__tokens[this.__position];
+    this.__position += 1;
+  }
+  return val;
+};
+
+TokenStream.prototype.peek = function(index) {
+  var val = null;
+  index = index || 0;
+  index += this.__position;
+  if (index >= 0 && index < this.__tokens_length) {
+    val = this.__tokens[index];
+  }
+  return val;
+};
+
+TokenStream.prototype.add = function(token) {
+  if (this.__parent_token) {
+    token.parent = this.__parent_token;
+  }
+  this.__tokens.push(token);
+  this.__tokens_length += 1;
+};
+
+module.exports.TokenStream = TokenStream;
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+/*jshint node:true */
+/*
+
+  The MIT License (MIT)
+
+  Copyright (c) 2007-2018 Einar Lielmanis, Liam Newman, and contributors.
+
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation files
+  (the "Software"), to deal in the Software without restriction,
+  including without limitation the rights to use, copy, modify, merge,
+  publish, distribute, sublicense, and/or sell copies of the Software,
+  and to permit persons to whom the Software is furnished to do so,
+  subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
+
+
+var Pattern = (__webpack_require__(12).Pattern);
+
+function WhitespacePattern(input_scanner, parent) {
+  Pattern.call(this, input_scanner, parent);
+  if (parent) {
+    this._line_regexp = this._input.get_regexp(parent._line_regexp);
+  } else {
+    this.__set_whitespace_patterns('', '');
+  }
+
+  this.newline_count = 0;
+  this.whitespace_before_token = '';
+}
+WhitespacePattern.prototype = new Pattern();
+
+WhitespacePattern.prototype.__set_whitespace_patterns = function(whitespace_chars, newline_chars) {
+  whitespace_chars += '\\t ';
+  newline_chars += '\\n\\r';
+
+  this._match_pattern = this._input.get_regexp(
+    '[' + whitespace_chars + newline_chars + ']+', true);
+  this._newline_regexp = this._input.get_regexp(
+    '\\r\\n|[' + newline_chars + ']');
+};
+
+WhitespacePattern.prototype.read = function() {
+  this.newline_count = 0;
+  this.whitespace_before_token = '';
+
+  var resulting_string = this._input.read(this._match_pattern);
+  if (resulting_string === ' ') {
+    this.whitespace_before_token = ' ';
+  } else if (resulting_string) {
+    var matches = this.__split(this._newline_regexp, resulting_string);
+    this.newline_count = matches.length - 1;
+    this.whitespace_before_token = matches[this.newline_count];
+  }
+
+  return resulting_string;
+};
+
+WhitespacePattern.prototype.matching = function(whitespace_chars, newline_chars) {
+  var result = this._create();
+  result.__set_whitespace_patterns(whitespace_chars, newline_chars);
+  result._update();
+  return result;
+};
+
+WhitespacePattern.prototype._create = function() {
+  return new WhitespacePattern(this._input, this);
+};
+
+WhitespacePattern.prototype.__split = function(regexp, input_string) {
+  regexp.lastIndex = 0;
+  var start_index = 0;
+  var result = [];
+  var next_match = regexp.exec(input_string);
+  while (next_match) {
+    result.push(input_string.substring(start_index, next_match.index));
+    start_index = next_match.index + next_match[0].length;
+    next_match = regexp.exec(input_string);
+  }
+
+  if (start_index < input_string.length) {
+    result.push(input_string.substring(start_index, input_string.length));
+  } else {
+    result.push('');
+  }
+
+  return result;
+};
+
+
+
+module.exports.WhitespacePattern = WhitespacePattern;
+
+
+/***/ }),
+/* 12 */
+/***/ (function(module) {
+
+/*jshint node:true */
+/*
+
+  The MIT License (MIT)
+
+  Copyright (c) 2007-2018 Einar Lielmanis, Liam Newman, and contributors.
+
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation files
+  (the "Software"), to deal in the Software without restriction,
+  including without limitation the rights to use, copy, modify, merge,
+  publish, distribute, sublicense, and/or sell copies of the Software,
+  and to permit persons to whom the Software is furnished to do so,
+  subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
+
+
+function Pattern(input_scanner, parent) {
+  this._input = input_scanner;
+  this._starting_pattern = null;
+  this._match_pattern = null;
+  this._until_pattern = null;
+  this._until_after = false;
+
+  if (parent) {
+    this._starting_pattern = this._input.get_regexp(parent._starting_pattern, true);
+    this._match_pattern = this._input.get_regexp(parent._match_pattern, true);
+    this._until_pattern = this._input.get_regexp(parent._until_pattern);
+    this._until_after = parent._until_after;
+  }
+}
+
+Pattern.prototype.read = function() {
+  var result = this._input.read(this._starting_pattern);
+  if (!this._starting_pattern || result) {
+    result += this._input.read(this._match_pattern, this._until_pattern, this._until_after);
+  }
+  return result;
+};
+
+Pattern.prototype.read_match = function() {
+  return this._input.match(this._match_pattern);
+};
+
+Pattern.prototype.until_after = function(pattern) {
+  var result = this._create();
+  result._until_after = true;
+  result._until_pattern = this._input.get_regexp(pattern);
+  result._update();
+  return result;
+};
+
+Pattern.prototype.until = function(pattern) {
+  var result = this._create();
+  result._until_after = false;
+  result._until_pattern = this._input.get_regexp(pattern);
+  result._update();
+  return result;
+};
+
+Pattern.prototype.starting_with = function(pattern) {
+  var result = this._create();
+  result._starting_pattern = this._input.get_regexp(pattern, true);
+  result._update();
+  return result;
+};
+
+Pattern.prototype.matching = function(pattern) {
+  var result = this._create();
+  result._match_pattern = this._input.get_regexp(pattern, true);
+  result._update();
+  return result;
+};
+
+Pattern.prototype._create = function() {
+  return new Pattern(this._input, this);
+};
+
+Pattern.prototype._update = function() {};
+
+module.exports.Pattern = Pattern;
+
+
+/***/ }),
+/* 13 */
+/***/ (function(module) {
+
+/*jshint node:true */
+/*
+
+  The MIT License (MIT)
+
+  Copyright (c) 2007-2018 Einar Lielmanis, Liam Newman, and contributors.
+
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation files
+  (the "Software"), to deal in the Software without restriction,
+  including without limitation the rights to use, copy, modify, merge,
+  publish, distribute, sublicense, and/or sell copies of the Software,
+  and to permit persons to whom the Software is furnished to do so,
+  subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
+
+
+function Directives(start_block_pattern, end_block_pattern) {
+  start_block_pattern = typeof start_block_pattern === 'string' ? start_block_pattern : start_block_pattern.source;
+  end_block_pattern = typeof end_block_pattern === 'string' ? end_block_pattern : end_block_pattern.source;
+  this.__directives_block_pattern = new RegExp(start_block_pattern + / beautify( \w+[:]\w+)+ /.source + end_block_pattern, 'g');
+  this.__directive_pattern = / (\w+)[:](\w+)/g;
+
+  this.__directives_end_ignore_pattern = new RegExp(start_block_pattern + /\sbeautify\signore:end\s/.source + end_block_pattern, 'g');
+}
+
+Directives.prototype.get_directives = function(text) {
+  if (!text.match(this.__directives_block_pattern)) {
+    return null;
+  }
+
+  var directives = {};
+  this.__directive_pattern.lastIndex = 0;
+  var directive_match = this.__directive_pattern.exec(text);
+
+  while (directive_match) {
+    directives[directive_match[1]] = directive_match[2];
+    directive_match = this.__directive_pattern.exec(text);
+  }
+
+  return directives;
+};
+
+Directives.prototype.readIgnored = function(input) {
+  return input.readUntilAfter(this.__directives_end_ignore_pattern);
+};
+
+
+module.exports.Directives = Directives;
+
+
+/***/ }),
+/* 14 */
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+/*jshint node:true */
+/*
+
+  The MIT License (MIT)
+
+  Copyright (c) 2007-2018 Einar Lielmanis, Liam Newman, and contributors.
+
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation files
+  (the "Software"), to deal in the Software without restriction,
+  including without limitation the rights to use, copy, modify, merge,
+  publish, distribute, sublicense, and/or sell copies of the Software,
+  and to permit persons to whom the Software is furnished to do so,
+  subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
+
+
+var Pattern = (__webpack_require__(12).Pattern);
+
+
+var template_names = {
+  django: false,
+  erb: false,
+  handlebars: false,
+  php: false,
+  smarty: false,
+  angular: false
+};
+
+// This lets templates appear anywhere we would do a readUntil
+// The cost is higher but it is pay to play.
+function TemplatablePattern(input_scanner, parent) {
+  Pattern.call(this, input_scanner, parent);
+  this.__template_pattern = null;
+  this._disabled = Object.assign({}, template_names);
+  this._excluded = Object.assign({}, template_names);
+
+  if (parent) {
+    this.__template_pattern = this._input.get_regexp(parent.__template_pattern);
+    this._excluded = Object.assign(this._excluded, parent._excluded);
+    this._disabled = Object.assign(this._disabled, parent._disabled);
+  }
+  var pattern = new Pattern(input_scanner);
+  this.__patterns = {
+    handlebars_comment: pattern.starting_with(/{{!--/).until_after(/--}}/),
+    handlebars_unescaped: pattern.starting_with(/{{{/).until_after(/}}}/),
+    handlebars: pattern.starting_with(/{{/).until_after(/}}/),
+    php: pattern.starting_with(/<\?(?:[= ]|php)/).until_after(/\?>/),
+    erb: pattern.starting_with(/<%[^%]/).until_after(/[^%]%>/),
+    // django coflicts with handlebars a bit.
+    django: pattern.starting_with(/{%/).until_after(/%}/),
+    django_value: pattern.starting_with(/{{/).until_after(/}}/),
+    django_comment: pattern.starting_with(/{#/).until_after(/#}/),
+    smarty: pattern.starting_with(/{(?=[^}{\s\n])/).until_after(/[^\s\n]}/),
+    smarty_comment: pattern.starting_with(/{\*/).until_after(/\*}/),
+    smarty_literal: pattern.starting_with(/{literal}/).until_after(/{\/literal}/)
+  };
+}
+TemplatablePattern.prototype = new Pattern();
+
+TemplatablePattern.prototype._create = function() {
+  return new TemplatablePattern(this._input, this);
+};
+
+TemplatablePattern.prototype._update = function() {
+  this.__set_templated_pattern();
+};
+
+TemplatablePattern.prototype.disable = function(language) {
+  var result = this._create();
+  result._disabled[language] = true;
+  result._update();
+  return result;
+};
+
+TemplatablePattern.prototype.read_options = function(options) {
+  var result = this._create();
+  for (var language in template_names) {
+    result._disabled[language] = options.templating.indexOf(language) === -1;
+  }
+  result._update();
+  return result;
+};
+
+TemplatablePattern.prototype.exclude = function(language) {
+  var result = this._create();
+  result._excluded[language] = true;
+  result._update();
+  return result;
+};
+
+TemplatablePattern.prototype.read = function() {
+  var result = '';
+  if (this._match_pattern) {
+    result = this._input.read(this._starting_pattern);
+  } else {
+    result = this._input.read(this._starting_pattern, this.__template_pattern);
+  }
+  var next = this._read_template();
+  while (next) {
+    if (this._match_pattern) {
+      next += this._input.read(this._match_pattern);
+    } else {
+      next += this._input.readUntil(this.__template_pattern);
+    }
+    result += next;
+    next = this._read_template();
+  }
+
+  if (this._until_after) {
+    result += this._input.readUntilAfter(this._until_pattern);
+  }
+  return result;
+};
+
+TemplatablePattern.prototype.__set_templated_pattern = function() {
+  var items = [];
+
+  if (!this._disabled.php) {
+    items.push(this.__patterns.php._starting_pattern.source);
+  }
+  if (!this._disabled.handlebars) {
+    items.push(this.__patterns.handlebars._starting_pattern.source);
+  }
+  if (!this._disabled.angular) {
+    // Handlebars ('{{' and '}}') are also special tokens in Angular)
+    items.push(this.__patterns.handlebars._starting_pattern.source);
+  }
+  if (!this._disabled.erb) {
+    items.push(this.__patterns.erb._starting_pattern.source);
+  }
+  if (!this._disabled.django) {
+    items.push(this.__patterns.django._starting_pattern.source);
+    // The starting pattern for django is more complex because it has different
+    // patterns for value, comment, and other sections
+    items.push(this.__patterns.django_value._starting_pattern.source);
+    items.push(this.__patterns.django_comment._starting_pattern.source);
+  }
+  if (!this._disabled.smarty) {
+    items.push(this.__patterns.smarty._starting_pattern.source);
+  }
+
+  if (this._until_pattern) {
+    items.push(this._until_pattern.source);
+  }
+  this.__template_pattern = this._input.get_regexp('(?:' + items.join('|') + ')');
+};
+
+TemplatablePattern.prototype._read_template = function() {
+  var resulting_string = '';
+  var c = this._input.peek();
+  if (c === '<') {
+    var peek1 = this._input.peek(1);
+    //if we're in a comment, do something special
+    // We treat all comments as literals, even more than preformatted tags
+    // we just look for the appropriate close tag
+    if (!this._disabled.php && !this._excluded.php && peek1 === '?') {
+      resulting_string = resulting_string ||
+        this.__patterns.php.read();
+    }
+    if (!this._disabled.erb && !this._excluded.erb && peek1 === '%') {
+      resulting_string = resulting_string ||
+        this.__patterns.erb.read();
+    }
+  } else if (c === '{') {
+    if (!this._disabled.handlebars && !this._excluded.handlebars) {
+      resulting_string = resulting_string ||
+        this.__patterns.handlebars_comment.read();
+      resulting_string = resulting_string ||
+        this.__patterns.handlebars_unescaped.read();
+      resulting_string = resulting_string ||
+        this.__patterns.handlebars.read();
+    }
+    if (!this._disabled.django) {
+      // django coflicts with handlebars a bit.
+      if (!this._excluded.django && !this._excluded.handlebars) {
+        resulting_string = resulting_string ||
+          this.__patterns.django_value.read();
       }
-      Controller.prototype.path = function path() {
-        var i, iz, j, jz, result, element;
-        function addToPath(result, path) {
-          if (Array.isArray(path)) {
-            for (j = 0, jz = path.length; j < jz; ++j) {
-              result.push(path[j]);
-            }
-          } else {
-            result.push(path);
-          }
-        }
-        if (!this.__current.path) {
-          return null;
-        }
-        result = [];
-        for (i = 2, iz = this.__leavelist.length; i < iz; ++i) {
-          element = this.__leavelist[i];
-          addToPath(result, element.path);
-        }
-        addToPath(result, this.__current.path);
-        return result;
-      };
-      Controller.prototype.type = function () {
-        var node = this.current();
-        return node.type || this.__current.wrap;
-      };
-      Controller.prototype.parents = function parents() {
-        var i, iz, result;
-        result = [];
-        for (i = 1, iz = this.__leavelist.length; i < iz; ++i) {
-          result.push(this.__leavelist[i].node);
-        }
-        return result;
-      };
-      Controller.prototype.current = function current() {
-        return this.__current.node;
-      };
-      Controller.prototype.__execute = function __execute(callback, element) {
-        var previous, result;
-        result = undefined;
-        previous = this.__current;
-        this.__current = element;
-        this.__state = null;
-        if (callback) {
-          result = callback.call(this, element.node, this.__leavelist[this.__leavelist.length - 1].node);
-        }
-        this.__current = previous;
-        return result;
-      };
-      Controller.prototype.notify = function notify(flag) {
-        this.__state = flag;
-      };
-      Controller.prototype.skip = function () {
-        this.notify(SKIP);
-      };
-      Controller.prototype['break'] = function () {
-        this.notify(BREAK);
-      };
-      Controller.prototype.remove = function () {
-        this.notify(REMOVE);
-      };
-      Controller.prototype.__initialize = function (root, visitor) {
-        this.visitor = visitor;
-        this.root = root;
-        this.__worklist = [];
-        this.__leavelist = [];
-        this.__current = null;
-        this.__state = null;
-        this.__fallback = null;
-        if (visitor.fallback === 'iteration') {
-          this.__fallback = Object.keys;
-        } else if (typeof visitor.fallback === 'function') {
-          this.__fallback = visitor.fallback;
-        }
-        this.__keys = VisitorKeys;
-        if (visitor.keys) {
-          this.__keys = Object.assign(Object.create(this.__keys), visitor.keys);
-        }
-      };
-      function isNode(node) {
-        if (node == null) {
-          return false;
-        }
-        return typeof node === 'object' && typeof node.type === 'string';
+      if (!this._excluded.django) {
+        resulting_string = resulting_string ||
+          this.__patterns.django_comment.read();
+        resulting_string = resulting_string ||
+          this.__patterns.django.read();
       }
-      function isProperty(nodeType, key) {
-        return (nodeType === Syntax.ObjectExpression || nodeType === Syntax.ObjectPattern) && 'properties' === key;
+    }
+    if (!this._disabled.smarty) {
+      // smarty cannot be enabled with django or handlebars enabled
+      if (this._disabled.django && this._disabled.handlebars) {
+        resulting_string = resulting_string ||
+          this.__patterns.smarty_comment.read();
+        resulting_string = resulting_string ||
+          this.__patterns.smarty_literal.read();
+        resulting_string = resulting_string ||
+          this.__patterns.smarty.read();
       }
-      function candidateExistsInLeaveList(leavelist, candidate) {
-        for (var i = leavelist.length - 1; i >= 0; --i) {
-          if (leavelist[i].node === candidate) {
-            return true;
-          }
-        }
-        return false;
-      }
-      Controller.prototype.traverse = function traverse(root, visitor) {
-        var worklist, leavelist, element, node, nodeType, ret, key, current, current2, candidates, candidate, sentinel;
-        this.__initialize(root, visitor);
-        sentinel = {};
-        worklist = this.__worklist;
-        leavelist = this.__leavelist;
-        worklist.push(new Element(root, null, null, null));
-        leavelist.push(new Element(null, null, null, null));
-        while (worklist.length) {
-          element = worklist.pop();
-          if (element === sentinel) {
-            element = leavelist.pop();
-            ret = this.__execute(visitor.leave, element);
-            if (this.__state === BREAK || ret === BREAK) {
-              return;
-            }
-            continue;
-          }
-          if (element.node) {
-            ret = this.__execute(visitor.enter, element);
-            if (this.__state === BREAK || ret === BREAK) {
-              return;
-            }
-            worklist.push(sentinel);
-            leavelist.push(element);
-            if (this.__state === SKIP || ret === SKIP) {
-              continue;
-            }
-            node = element.node;
-            nodeType = node.type || element.wrap;
-            candidates = this.__keys[nodeType];
-            if (!candidates) {
-              if (this.__fallback) {
-                candidates = this.__fallback(node);
-              } else {
-                throw new Error('Unknown node type ' + nodeType + '.');
-              }
-            }
-            current = candidates.length;
-            while ((current -= 1) >= 0) {
-              key = candidates[current];
-              candidate = node[key];
-              if (!candidate) {
-                continue;
-              }
-              if (Array.isArray(candidate)) {
-                current2 = candidate.length;
-                while ((current2 -= 1) >= 0) {
-                  if (!candidate[current2]) {
-                    continue;
-                  }
-                  if (candidateExistsInLeaveList(leavelist, candidate[current2])) {
-                    continue;
-                  }
-                  if (isProperty(nodeType, candidates[current])) {
-                    element = new Element(candidate[current2], [
-                      key,
-                      current2
-                    ], 'Property', null);
-                  } else if (isNode(candidate[current2])) {
-                    element = new Element(candidate[current2], [
-                      key,
-                      current2
-                    ], null, null);
-                  } else {
-                    continue;
-                  }
-                  worklist.push(element);
-                }
-              } else if (isNode(candidate)) {
-                if (candidateExistsInLeaveList(leavelist, candidate)) {
-                  continue;
-                }
-                worklist.push(new Element(candidate, key, null, null));
-              }
-            }
-          }
-        }
-      };
-      Controller.prototype.replace = function replace(root, visitor) {
-        var worklist, leavelist, node, nodeType, target, element, current, current2, candidates, candidate, sentinel, outer, key;
-        function removeElem(element) {
-          var i, key, nextElem, parent;
-          if (element.ref.remove()) {
-            key = element.ref.key;
-            parent = element.ref.parent;
-            i = worklist.length;
-            while (i--) {
-              nextElem = worklist[i];
-              if (nextElem.ref && nextElem.ref.parent === parent) {
-                if (nextElem.ref.key < key) {
-                  break;
-                }
-                --nextElem.ref.key;
-              }
-            }
-          }
-        }
-        this.__initialize(root, visitor);
-        sentinel = {};
-        worklist = this.__worklist;
-        leavelist = this.__leavelist;
-        outer = { root: root };
-        element = new Element(root, null, null, new Reference(outer, 'root'));
-        worklist.push(element);
-        leavelist.push(element);
-        while (worklist.length) {
-          element = worklist.pop();
-          if (element === sentinel) {
-            element = leavelist.pop();
-            target = this.__execute(visitor.leave, element);
-            if (target !== undefined && target !== BREAK && target !== SKIP && target !== REMOVE) {
-              element.ref.replace(target);
-            }
-            if (this.__state === REMOVE || target === REMOVE) {
-              removeElem(element);
-            }
-            if (this.__state === BREAK || target === BREAK) {
-              return outer.root;
-            }
-            continue;
-          }
-          target = this.__execute(visitor.enter, element);
-          if (target !== undefined && target !== BREAK && target !== SKIP && target !== REMOVE) {
-            element.ref.replace(target);
-            element.node = target;
-          }
-          if (this.__state === REMOVE || target === REMOVE) {
-            removeElem(element);
-            element.node = null;
-          }
-          if (this.__state === BREAK || target === BREAK) {
-            return outer.root;
-          }
-          node = element.node;
-          if (!node) {
-            continue;
-          }
-          worklist.push(sentinel);
-          leavelist.push(element);
-          if (this.__state === SKIP || target === SKIP) {
-            continue;
-          }
-          nodeType = node.type || element.wrap;
-          candidates = this.__keys[nodeType];
-          if (!candidates) {
-            if (this.__fallback) {
-              candidates = this.__fallback(node);
-            } else {
-              throw new Error('Unknown node type ' + nodeType + '.');
-            }
-          }
-          current = candidates.length;
-          while ((current -= 1) >= 0) {
-            key = candidates[current];
-            candidate = node[key];
-            if (!candidate) {
-              continue;
-            }
-            if (Array.isArray(candidate)) {
-              current2 = candidate.length;
-              while ((current2 -= 1) >= 0) {
-                if (!candidate[current2]) {
-                  continue;
-                }
-                if (isProperty(nodeType, candidates[current])) {
-                  element = new Element(candidate[current2], [
-                    key,
-                    current2
-                  ], 'Property', new Reference(candidate, current2));
-                } else if (isNode(candidate[current2])) {
-                  element = new Element(candidate[current2], [
-                    key,
-                    current2
-                  ], null, new Reference(candidate, current2));
-                } else {
-                  continue;
-                }
-                worklist.push(element);
-              }
-            } else if (isNode(candidate)) {
-              worklist.push(new Element(candidate, key, null, new Reference(node, key)));
-            }
-          }
-        }
-        return outer.root;
-      };
-      function traverse(root, visitor) {
-        var controller = new Controller;
-        return controller.traverse(root, visitor);
-      }
-      function replace(root, visitor) {
-        var controller = new Controller;
-        return controller.replace(root, visitor);
-      }
-      function extendCommentRange(comment, tokens) {
-        var target;
-        target = upperBound(tokens, function search(token) {
-          return token.range[0] > comment.range[0];
-        });
-        comment.extendedRange = [
-          comment.range[0],
-          comment.range[1]
-        ];
-        if (target !== tokens.length) {
-          comment.extendedRange[1] = tokens[target].range[0];
-        }
-        target -= 1;
-        if (target >= 0) {
-          comment.extendedRange[0] = tokens[target].range[1];
-        }
-        return comment;
-      }
-      function attachComments(tree, providedComments, tokens) {
-        var comments = [], comment, len, i, cursor;
-        if (!tree.range) {
-          throw new Error('attachComments needs range information');
-        }
-        if (!tokens.length) {
-          if (providedComments.length) {
-            for (i = 0, len = providedComments.length; i < len; i += 1) {
-              comment = deepCopy(providedComments[i]);
-              comment.extendedRange = [
-                0,
-                tree.range[0]
-              ];
-              comments.push(comment);
-            }
-            tree.leadingComments = comments;
-          }
-          return tree;
-        }
-        for (i = 0, len = providedComments.length; i < len; i += 1) {
-          comments.push(extendCommentRange(deepCopy(providedComments[i]), tokens));
-        }
-        cursor = 0;
-        traverse(tree, {
-          enter: function (node) {
-            var comment;
-            while (cursor < comments.length) {
-              comment = comments[cursor];
-              if (comment.extendedRange[1] > node.range[0]) {
-                break;
-              }
-              if (comment.extendedRange[1] === node.range[0]) {
-                if (!node.leadingComments) {
-                  node.leadingComments = [];
-                }
-                node.leadingComments.push(comment);
-                comments.splice(cursor, 1);
-              } else {
-                cursor += 1;
-              }
-            }
-            if (cursor === comments.length) {
-              return VisitorOption.Break;
-            }
-            if (comments[cursor].extendedRange[0] > node.range[1]) {
-              return VisitorOption.Skip;
-            }
-          }
-        });
-        cursor = 0;
-        traverse(tree, {
-          leave: function (node) {
-            var comment;
-            while (cursor < comments.length) {
-              comment = comments[cursor];
-              if (node.range[1] < comment.extendedRange[0]) {
-                break;
-              }
-              if (node.range[1] === comment.extendedRange[0]) {
-                if (!node.trailingComments) {
-                  node.trailingComments = [];
-                }
-                node.trailingComments.push(comment);
-                comments.splice(cursor, 1);
-              } else {
-                cursor += 1;
-              }
-            }
-            if (cursor === comments.length) {
-              return VisitorOption.Break;
-            }
-            if (comments[cursor].extendedRange[0] > node.range[1]) {
-              return VisitorOption.Skip;
-            }
-          }
-        });
-        return tree;
-      }
-      exports.Syntax = Syntax;
-      exports.traverse = traverse;
-      exports.replace = replace;
-      exports.attachComments = attachComments;
-      exports.VisitorKeys = VisitorKeys;
-      exports.VisitorOption = VisitorOption;
-      exports.Controller = Controller;
-      exports.cloneEnvironment = function () {
-        return clone({});
-      };
-      return exports;
-    }(exports));
-  });
-  require('/tools/entry-point.js');
-}.call(this, this));
+    }
+  }
+  return resulting_string;
+};
+
+
+module.exports.TemplatablePattern = TemplatablePattern;
+
+
+/***/ })
+/******/ 	]);
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module is referenced by other modules so it can't be inlined
+/******/ 	var __webpack_exports__ = __webpack_require__(0);
+/******/ 	legacy_beautify_js = __webpack_exports__;
+/******/ 	
+/******/ })()
+;
+var js_beautify = legacy_beautify_js;
+/* Footer */
+if (typeof define === "function" && define.amd) {
+    // Add support for AMD ( https://github.com/amdjs/amdjs-api/wiki/AMD#defineamd-property- )
+    define([], function() {
+        return { js_beautify: js_beautify };
+    });
+} else if (typeof exports !== "undefined") {
+    // Add support for CommonJS. Just put this file somewhere on your require.paths
+    // and you will be able to `var js_beautify = require("beautify").js_beautify`.
+    exports.js_beautify = js_beautify;
+} else if (typeof window !== "undefined") {
+    // If we're running a web page and don't have either of the above, add our one global
+    window.js_beautify = js_beautify;
+} else if (typeof global !== "undefined") {
+    // If we don't even have window, try global.
+    global.js_beautify = js_beautify;
+}
+
+}());
 
 Object.freeze(this); // essential for security
+Object.freeze(Object);
+Object.freeze(Object.prototype);
