@@ -128,7 +128,6 @@ the makefile supports the following variables:
 
 - `EBDEBUG` - symbolic debugging via gdb
 - `EBPROF - profiling via gprof
-- `EBDEMIN` - adds javascript deminimization support
 
 To set any of these simply set them to any non-empty string. Distributors should
 not set these flags.

@@ -2598,7 +2598,7 @@ s.text = self.js_beautify(s.text);
 s.expanded = true;
 alert3("expanded");
 } else {
-alert("deminimization not available; try EBDEMIN=on");
+alert("deminimization not available");
 }
 }
 

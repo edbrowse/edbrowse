@@ -154,12 +154,9 @@ Functions or classes that can safely be shared amongst all edbrowse windows.
 This saves time and memory.
 
 src/demin.js:
-Third party open source javascript routines that are used for debugging
-and deminimization.
-These are snapshots; you will need to update demin.js, i.e. grab a new
+Third party open source software, to "beautify" the javascript.
+This is a snapshot; you will need to update demin.js, i.e. grab a new
 snapshot, as that software evolves.
-Distributers don't have to worry about this one,
-it isn't compiled in unless $EBDEMIN is set to on.
 
 src/endwindow.js:
 This is the close of shared.js, and it stands in if demin.js is not used.

@@ -30,14 +30,11 @@ install_file = $(call install_generic,$(1),$(FILEMODE),$(2))
 DEPENDENCIES ?= libcurl odbc libpcre2-8 readline openssl
 dependency_cflags ::= $(shell $(PKG_CONFIG) --cflags $(DEPENDENCIES))
 dependency_libs ::= $(shell $(PKG_CONFIG) --libs $(DEPENDENCIES))
-CFLAGS += -Wall -D_FILE_OFFSET_BITS=64 $(dependency_cflags) -I$(QUICKJS_INCLUDE)
+CFLAGS += -Wall -D_FILE_OFFSET_BITS=64 -Wno-trigraphs $(dependency_cflags) -I$(QUICKJS_INCLUDE)
 
-#  Set EBDEMIN=on to support dynamic js deminimization
-ifneq ($(EBDEMIN),)
-	EDBR_JS_ASSETS = shared.js startwindow.js demin.js
-else
-	EDBR_JS_ASSETS = shared.js startwindow.js endwindow.js
-endif
+EDBR_JS_ASSETS = shared.js startwindow.js demin.js
+# if you don't want the deminimizer - but it only adds 130K to the executable...
+# EDBR_JS_ASSETS = shared.js startwindow.js endwindow.js
 
 # If EBDEBUG is set to on, or a non-empty string, build with debug flags and
 # don't strip executables.
