@@ -143,7 +143,7 @@ d7 times
 2207 del
 2208 member of
 2209 not a member of
-220d small contains as member
+220b contains as member
 2211 sum
 2250 limit
 221a square root
