@@ -6640,7 +6640,7 @@ static int twoLetterG(const char *line)
 		}
 // default ls mode is size time
 		if (!lsmode[0])
-			strcpy(lsmode, "st");
+			strcpy(lsmode, (cw->imapMode2 | cw->imapMode3) ? "fdz" : "st");
 		if(cw->ircoMode1 && lsmode[1] == 0 &&
 		(*lsmode == 't' || *lsmode == 'c')) {
 			if (cw->dot == 0) {
