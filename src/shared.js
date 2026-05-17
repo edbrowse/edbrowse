@@ -3400,7 +3400,37 @@ return this.dataset$2}})
 
 nodep.contains = nodeContains;
 
-nodep.hasChildNodes = function() { return (this.childNodes.length > 0); }
+/*********************************************************************
+In the wild, I saw  validNode.firstChild.call(null).
+thence I check for null.childNodes, and it blows up.
+I guess I should check for this === null first. Ugh!
+This is a test to see if this is in fact an object.
+It is used by the various Node and Element children methods.
+99.9% of the time we don't need it, but...
+I am concerned that the one time I saw this, I shouldn't be passing null,
+but rather a valid node.
+The problem might be upstream.
+So if I patch this I'm just masking the problem, and I won't see an error,
+and I'm just scratching my head wondering why the site doesn't work.
+So compromise - I'll at least print a warning message.
+Until someone can tell me yeah this is how the website js is suppose to work,
+and it really is suppose to pass in null.
+To see how we got here, set a break point and then call step$stack(),
+or simply return true to blow up as before.
+*********************************************************************/
+function thisNode(e)
+{
+//  return true; // resurrect original behavior
+    if(e === null) { alert3("node method on null"); return false; }
+    const t = typeof e;
+    if(t != "object") { alert3(`node method on ${t}`); return false; }
+    return true; // parent node is object, looks ok
+}
+
+nodep.hasChildNodes = function() {
+    if(!thisNode(this)) return false;
+    return (this.childNodes && this.childNodes.length > 0);
+}
 
 /*********************************************************************
 The functions eb$apch1 and eb$apch2 are native. They perform appendChild in js.
@@ -3429,6 +3459,7 @@ b = b.parentNode;
 }
 
 nodep.appendChild = function(c) {
+    if(!thisNode(this)) return null;
     if(!c) return null;
     if(c.nodeType == 11) return appendFragment(this, c);
     isabove(c, this);
@@ -3444,6 +3475,7 @@ nodep.appendChild = function(c) {
 }
 
 nodep.appendChild$nm = function(c) {
+    if(!thisNode(this)) return null;
     if(!c) return null;
     isabove(c, this);
     if(c.parentNode) c.parentNode.removeChild$nm(c);
@@ -3451,6 +3483,7 @@ nodep.appendChild$nm = function(c) {
 }
 
 nodep.prependChild = function(c) {
+    if(!thisNode(this)) return null;
 let v;
 isabove(c, this);
 if(this.childNodes.length) v = this.insertBefore(c, this.childNodes[0]);
@@ -3459,6 +3492,7 @@ return v;
 }
 
 nodep.insertBefore = function(c, t) {
+    if(!thisNode(this)) return null;
     if(!c) return null;
     if(!t) return this.appendChild(c);
     isabove(c, this);
@@ -3474,6 +3508,7 @@ nodep.insertBefore = function(c, t) {
 }
 
 nodep.removeChild = function(c) {
+    if(!thisNode(this)) return null;
     if(!c) return null;
     const mark = this.eb$rmch2(c);
     if(mark < 0) return null;
@@ -3485,6 +3520,7 @@ nodep.removeChild = function(c) {
 
 // like the above but with no mutation records
 nodep.removeChild$nm = function(c) {
+    if(!thisNode(this)) return null;
     if(!c) return null;
     const mark = this.eb$rmch2(c);
     return mark < 0 ? null : c;
@@ -3492,12 +3528,14 @@ nodep.removeChild$nm = function(c) {
 
 odp(nodep, "firstChild", {
 get: function() {
+if(!thisNode(this)) return null;
 return (this.childNodes && this.childNodes.length) ?
 this.childNodes[0] : null; },
 configurable:true})
 
 odp(nodep, "lastChild", {
 get: function() {
+if(!thisNode(this)) return null;
 return (this.childNodes && this.childNodes.length) ?
 this.childNodes[this.childNodes.length-1] : null},
 configurable:true})
@@ -3531,6 +3569,7 @@ return getSibling(this,"previous")} })
 
 odp(nodep, "parentElement", {
 get: function() {
+if(!thisNode(this)) return null;
 return this.parentNode && this.parentNode.nodeType == 1 ?
 this.parentNode : null}})
 
@@ -3764,6 +3803,7 @@ return z}})
 
 odp(elemp, "firstElementChild", {
 get: function() {
+if(!thisNode(this)) return null;
 let u = this.childNodes;
 if(!u) return null;
 for(let i=0; i<u.length; ++i) if(u[i].nodeType == 1) return u[i];
@@ -3771,6 +3811,7 @@ return null}});
 
 odp(elemp, "lastElementChild", {
 get: function() {
+if(!thisNode(this)) return null;
 let u = this.childNodes;
 if(!u) return null;
 for(let i=u.length-1; i>=0; --i) if(u[i].nodeType == 1) return u[i];
