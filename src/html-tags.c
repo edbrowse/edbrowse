@@ -848,7 +848,7 @@ int htmlScanner(const char *htmltext, Tag *above, bool isgen)
 	}
 	htmlGenerated = isgen;
 // magic code to say this is xml
-	if(!strncmp(htmltext, "`~*xml}@;", 9)) {
+    if(!strncmp(htmltext, "`~*xml}@;", 9)) {
 /*********************************************************************
 When we are scanning xml, the entire frame is xml, and wholly xml, and forever xml.
 If javascript calls DOMParser to parse some xml, it creates a new frame inside to do it.
@@ -857,13 +857,19 @@ which runs within the current frame.
 Thus it is fair to set xml mode in the frame, a global variable if you will,
 and reference that everywhere.
 *********************************************************************/
-		cf->xmlMode = true;
+        cf->xmlMode = true;
 // and some shorthand for within this function
-	xml = true;
-		htmltext += 9;
-		scannerInfo1("xml parsing", 0);
-	}
-	seek = s = htmltext, ln = 1, premode = false;
+        xml = true;
+        htmltext += 9;
+        scannerInfo1("xml parsing", 0);
+    }
+
+// kludge, if we have extracted the html out of an email,
+// we want to recognize it as having come from email.
+    if(!strncmp(htmltext, "<html>\n<pre nowspc>", 19))
+        browseMail = true;
+
+    seek = s = htmltext, ln = 1, premode = false;
 
 // loop looking for tags
 	while(*s) {
