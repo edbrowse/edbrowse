@@ -573,6 +573,7 @@ void htmlMetaHelper(const Tag *t)
 		}
 
 		if (allowRedirection && !browseLocal
+		&& ! cw->imapMode3
 		    && stringEqualCI(heq, "Refresh")) {
 			if (parseRefresh(copy, &delay)) {
 				char *newcontent;
