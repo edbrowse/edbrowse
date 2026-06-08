@@ -297,16 +297,20 @@ swp("dispatchEvent", mw$.dispatchEvent.bind(window))
 swp("addEventListener", mw$.addEventListener.bind(window))
 swp("removeEventListener", mw$.removeEventListener.bind(window))
 
-/* Apparently people want to muck with DOMException so can't be shared as
-otherwise we end up with read-only prototype chain issues */
-this.DOMException = function(message, name) {
-    this.message = message
-    this.name = name
-    var error = Error(message)
-    this.stack = error.stack
+// quickjs-ng has built-in (and alterable) DOMException these days
+if (!this.DOMException) {
+    alert3("Using fallback for DOMException");
+    /* Apparently people want to muck with DOMException so can't be shared as
+    otherwise we end up with read-only prototype chain issues */
+    this.DOMException = function(message, name) {
+        this.message = message
+        this.name = name
+        var error = Error(message)
+        this.stack = error.stack
+    }
+    DOMException.prototype = Object.create(Error.prototype)
+    DOMException.prototype.constructor = DOMException
 }
-DOMException.prototype = Object.create(Error.prototype)
-DOMException.prototype.constructor = DOMException
 
 // importNode is the same as cloneNode, except it is copying a tree
 // of objects from another context into the current context.
