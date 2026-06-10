@@ -296,22 +296,6 @@ swp("findClass4Tag", function(tagname, above) {
 swp("dispatchEvent", mw$.dispatchEvent.bind(window))
 swp("addEventListener", mw$.addEventListener.bind(window))
 swp("removeEventListener", mw$.removeEventListener.bind(window))
-
-// quickjs-ng has built-in (and alterable) DOMException these days
-if (!this.DOMException) {
-    alert3("Using fallback for DOMException");
-    /* Apparently people want to muck with DOMException so can't be shared as
-    otherwise we end up with read-only prototype chain issues */
-    this.DOMException = function(message, name) {
-        this.message = message
-        this.name = name
-        var error = Error(message)
-        this.stack = error.stack
-    }
-    DOMException.prototype = Object.create(Error.prototype)
-    DOMException.prototype.constructor = DOMException
-}
-
 // importNode is the same as cloneNode, except it is copying a tree
 // of objects from another context into the current context.
 // Set the second parameter to true to indicate this.
@@ -1136,23 +1120,6 @@ odp(AbortController.prototype, "signal",
 AbortController.prototype.abort = function(){
 alert3("abort dom request not implemented"); }
 
-/* quickjs-ng has a native implementation of queueMicrotask but quickjs
-doesn't currently */
-if (!window.queueMicrotask) {
-    alert3("Using fallback for queueMicrotask");
-    swpv("queueMicrotask", function(f) {
-        if (typeof f !== "function") throw new TypeError("not a function");
-/* Per the spec we need to wait until after the caller's executed but before
-timers. This means we need to simulate with promises but the error handling
-isn't quite right as I can't find a way to rethrow outside the promise chain.
-This is simple and closer to the spec than we have been but better is to use the
-implementation provided by quickjs-ng. */
-        Promise.resolve().then(f).catch(
-            (e) => alert3("Error in microtask: " + e)
-        );
-    });
-}
-
 swp("IntersectionObserverEntry", function(){})
 swp("IntersectionObserver", function(callback, o){
 this.callback = callback, this.root = null;
@@ -1213,6 +1180,39 @@ swp("ResizeObserver", function(){})
 ResizeObserver.prototype.disconnect = eb$voidfunction;
 ResizeObserver.prototype.observe = eb$voidfunction;
 ResizeObserver.prototype.unobserve = eb$voidfunction;
+
+// Fallback stuff now implemented in quickjs-ng
+// quickjs-ng has built-in (and alterable) DOMException these days
+if (false) {
+    alert3("Using fallback for DOMException");
+    /* Apparently people want to muck with DOMException so can't be shared as
+    otherwise we end up with read-only prototype chain issues */
+    window.DOMException = function(message, name) {
+        this.message = message
+        this.name = name
+        var error = Error(message)
+        this.stack = error.stack
+    }
+    window.DOMException.prototype = Object.create(Error.prototype)
+    window.DOMException.prototype.constructor = DOMException
+}
+
+/* quickjs-ng has a native implementation of queueMicrotask but quickjs
+doesn't currently */
+if (!window.queueMicrotask) {
+    alert3("Using fallback for queueMicrotask");
+    swpv("queueMicrotask", function(f) {
+        if (typeof f !== "function") throw new TypeError("not a function");
+/* Per the spec we need to wait until after the caller's executed but before
+timers. This means we need to simulate with promises but the error handling
+isn't quite right as I can't find a way to rethrow outside the promise chain.
+This is simple and closer to the spec than we have been but better is to use the
+implementation provided by quickjs-ng. */
+        Promise.resolve().then(f).catch(
+            (e) => alert3("Error in microtask: " + e)
+        );
+    });
+}
 
 // don't need these any more
 ;(function() {
