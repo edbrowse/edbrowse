@@ -144,28 +144,27 @@ static const int availableTagCount = sizeof(availableTags) / sizeof(struct tagIn
 
 const struct tagInfo *name2tagInfo(const char *name)
 {
+    char namelow[MAXTAGNAME];
+    int n = 0, i, l = 1, r = availableTagCount, rc;
+    const struct tagInfo *ti;
 // some bookmark files have thousands of tags;
 // here is an efficiency for <a>
     if(name[1] == 0 && (name[0] == 'a' || name[0] == 'A'))
         return availableTags + 1;
 
-// lower case, so far the longest tag is 17
-    char namelow[20];
-    int n = strlen(name) + 1;
-    if(n > sizeof(namelow)) return 0;
+    n = strlen(name) + 1;
+    if(n > MAXTAGNAME) return 0;
    memcpy(namelow, name, n);
     caseShift(namelow, 'l');
 
 // Binary search, as you would imagine. Since we already checked for <a>,
 // we can put the left mark there.
-    int i, l = 1, r = availableTagCount, rc;
-    const struct tagInfo *ti;
     while(r - l > 1) {
         i = (l + r) / 2;
         ti = availableTags + i;
         rc = strcmp(ti->name, namelow);
         if(!rc) return ti;
-        if(rc < 0)l = i; else r = i;
+        if(rc < 0) l = i; else r = i;
     }
     return 0;
 }
