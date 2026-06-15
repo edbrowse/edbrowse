@@ -3375,15 +3375,12 @@ odp(valp, "valid", {
 get: function() { // only need to check items with getters
 return !(this.valueMissing)}})
 
-swpc("EventTarget", function() {})
-swpp("EventTarget", null)
-let targetp = w.EventTarget.prototype;
-targetp.addEventListener = addEventListener;
-targetp.removeEventListener = removeEventListener;
-targetp.dispatchEvent = dispatchEvent;
-
-swpc("Node", function() {})
-swpp("Node", w.EventTarget)
+swpc("EventTarget", class {
+    addEventListener = addEventListener;
+    removeEventListener = removeEventListener;
+    dispatchEvent = dispatchEvent;
+})
+swpc("Node", class extends w.EventTarget {})
 let nodep = w.Node.prototype;
 
 // These are native helper functions
@@ -3664,18 +3661,25 @@ t = t.parentNode;
 return t1;
 }
 
-swpc("Document", function() {
-    odp(this, "id$hash", {value: new w.Map});
-    odp(this, "id$registry", {value: new w.FinalizationRegistry(
-        (i) => {
-            alert3(`GC triggers delete of element with id ${i} from id hash`);
-            this.id$hash.delete(i);
-        }
-    )});
-    this.readyState$2 = "interactive";
+swpc("Document", class extends w.Node {
+    constructor()
+    {
+        super(w.Node);
+        odp(this, "id$hash", {value: new w.Map});
+        odp(this, "id$registry", {
+            value: new w.FinalizationRegistry(
+                (i) => {
+                    alert3(`GC triggers delete of element with id ${i} from id hash`);
+                    this.id$hash.delete(i);
+                }
+            )
+        });
+        this.readyState$2 = "interactive";
+    }
 });
-swpp("Document", w.Node)
-swpc("HTMLDocument", w.Document) // legacy
+swpc("HTMLDocument", class extends w.Document {
+    constructor() { super(w.Document); } 
+}) // legacy
 let docp = w.Document.prototype;
 docp.activeElement = null;
 docp.querySelector = querySelector
@@ -3744,26 +3748,27 @@ swpv("document", d);
 
 // Window constructor, passes the url back to edbrowse
 // so it can open a new web page.
-swpc("Window", function() {
-    var newloc = "";
-    var winname = "";
-    if(arguments.length > 0) newloc = arguments[0];
-    if(arguments.length > 1) winname = arguments[1];
-// I only do something if opening a new web page.
-// If it's just a blank window, I don't know what to do with that.
-    if(newloc.length)
-        eb$newLocation('p' + w.eb$ctx + newloc+ '\n' + winname);
-    this.opener = w;
+swpc("Window", class extends w.EventTarget {
+    constructor() {
+        super(w.EventTarget);
+        let newloc = "";
+        let winname = "";
+        if(arguments.length > 0) newloc = arguments[0];
+        if(arguments.length > 1) winname = arguments[1];
+        // I only do something if opening a new web page.
+        // If it's just a blank window, I don't know what to do with that.
+        if(newloc.length)
+            eb$newLocation('p' + w.eb$ctx + newloc+ '\n' + winname);
+        this.opener = w;
+    }
 })
-swpp("Window", w.EventTarget)
 
 // window.open is the same as new window, just pass the args through
 w.open = function(a, b) {
     return new w.Window(a, b);
 }
 
-swpc("Element", function(){})
-swpp("Element", w.Node)
+swpc("Element", class extends w.Node {})
 let elemp = w.Element.prototype;
 
 // attributes are on demand
@@ -4139,8 +4144,17 @@ w.soj$ = z.style;
 }
 
 // The html element, which is the DOM nodes that you know and love.
-swpc("HTMLElement", function(){})
-swpp("HTMLElement", w.Element)
+swpc("HTMLElement", class extends w.Element {
+    // style object is on demand
+    get style()
+    {
+        if (!this.style$2) {
+            this.style$2 = new w.CSSStyleDeclaration;
+            this.style$2.element = this;
+        }
+        return this.style$2;
+    }
+})
 let helemp = w.HTMLElement.prototype;
 odp(helemp, "name", {
 get: function() {
@@ -4257,30 +4271,26 @@ odp(helemp, "innerText", {
     get: function() { return textUnder(this, 0); },
     set: function(s) { return newTextUnder(this, s, 0); },
     configurable:true});
-
-// style object is on demand
-odp( helemp, "style", { get: function(){ if(!this.style$2) {
-odp(this,"style$2", {value:new w.CSSStyleDeclaration,configurable:true});
-this.style$2.element = this}
-return this.style$2}})
-
 // visual
 helemp.offsetHeight = 1.0;
 helemp.offsetWidth = 1.0;
 helemp.offsetTop = 0.0;
 helemp.offsetLeft = 0.0;
 
-swpc("SVGElement", function(){})
-swpp("SVGElement", w.Element)
-
-swpc("Text", function(){
-odp(this, "data$2", {value:"",writable:true})
-if(arguments.length > 0) {
-// data always has to be a string
-this.data$2 += arguments[0];
-}
+swpc("SVGElement", class extends w.Element {
+    constructor() { super(w.Element); }
 })
-swpp("Text", w.HTMLElement)
+
+swpc("Text", class extends w.HTMLElement {
+    constructor()
+    {
+        super(w.HTMLElement);
+        odp(this, "data$2", {value:"",writable:true});
+        // data always has to be a string
+        if(arguments.length > 0) this.data$2 += arguments[0];
+    }
+})
+
 let textp = w.Text.prototype;
 textp.nodeName = textp.tagName = "#text";
 textp.nodeType = 3;
@@ -4650,14 +4660,18 @@ swpp("HTMLOptGroupElement", w.HTMLElement)
 let optgp = w.HTMLOptGroupElement.prototype;
 optgp.nodeName = optgp.tagName = "OPTGROUP";
 
-swpc("HTMLSelectElement", function() {
-    this.selectedIndex = -1;
-    this.options = new w.Array;
-    this.selectedOptions = new w.Array;
-    this.validity = new w.Validity;
-    this.validity.owner = this;
+swpc("HTMLSelectElement", class extends w.HTMLElement {
+    constructor()
+    {
+        super(w.HTMLElement);
+        this.selectedIndex = -1;
+        this.options = new w.Array;
+        this.selectedOptions = new w.Array;
+        this.validity = new w.Validity;
+        this.validity.owner = this;
+    }
 })
-swpp("HTMLSelectElement", w.HTMLElement)
+
 let selp = w.HTMLSelectElement.prototype;
 odp(selp, "value", {
     get: function() {
@@ -4795,12 +4809,20 @@ selp.remove = function(idx) {
 }
 
 // input, textarea, button; the other input classes
-swpc("HTMLInputElement", function(){this.validity = new w.Validity, this.validity.owner = this})
-swpp("HTMLInputElement", w.HTMLElement)
-swpc("HTMLButtonElement", function(){})
-swpp("HTMLButtonElement", w.HTMLElement)
-swpc("HTMLTextAreaElement", function(){})
-swpp("HTMLTextAreaElement", w.HTMLElement)
+swpc("HTMLInputElement", class extends w.HTMLElement {
+    constructor()
+    {
+        super(w.HTMLElement);
+        this.validity = new w.Validity;
+        this.validity.owner = this;
+    }
+})
+swpc("HTMLButtonElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+swpc("HTMLTextAreaElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
 
 let inputp = w.HTMLInputElement.prototype;
 let buttonp = w.HTMLButtonElement.prototype;
@@ -4950,8 +4972,13 @@ return t === null || t === false || t === "false" || t === 0 || t === '0' ? fals
 set:function(v) { this.setAttribute("readonly", v);}});
 
 // the html form
-swpc("HTMLFormElement", function(){this.elements = new w.Array})
-swpp("HTMLFormElement", w.HTMLElement)
+swpc("HTMLFormElement", class extends w.HTMLElement {
+    constructor() {
+        super(w.HTMLElement);
+        this.elements = new w.Array;
+    }
+})
+
 let formp = w.HTMLFormElement.prototype;
 formp.submit = eb$formSubmit;
 formp.reset = eb$formReset;
@@ -5410,8 +5437,8 @@ if(this.height === 0  || this.width === 0) return "data:,";
 return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAADElEQVQImWNgoBMAAABpAAFEI8ARAAAAAElFTkSuQmCC";
 }
 
-swpc("HTMLStyleElement", function(){})
-swpp("HTMLStyleElement", w.HTMLElement)
+swpc("HTMLStyleElement", class extends w.HTMLElement { constructor() { super(w.HTMLElement); }})
+
 // Kind of a hack to make this like the link element
 let stylep = w.HTMLStyleElement.prototype;
 odp(stylep, "css$data", {
@@ -5421,15 +5448,25 @@ odp(stylep, "sheet", { get: function(){ if(!this.sheet$2) this.sheet$2 = new w.C
 
 // The css style declaration - complicated by all the default values,
 // and the plethora of shorthand properties that we must expand.
-swpc("CSSStyleDeclaration", function(){
-odp(this, "style$2", {value:this})
-odp(this, "element", {value:null, writable:true})
-})
-swpp("CSSStyleDeclaration", w.HTMLElement)
-let csdp = w.CSSStyleDeclaration.prototype;
-// sheet on demand
-odp(csdp, "sheet", { get: function(){ if(!this.sheet$2) this.sheet$2 = new w.CSSStyleSheet; return this.sheet$2; }});
+swpc("CSSStyleDeclaration", class extends w.HTMLElement {
+    constructor() {
+        super(w.HTMLElement);
+        odp(this, "style$2", {value:this});
+        odp(this, "element", {value:null, writable:true});
+    }
+    toString() { return "style object" };
+    // sheet on demand
+    get shee() {
+        if(!this.sheet$2) this.sheet$2 = new w.CSSStyleSheet;
+        return this.sheet$2;
+    }
+    // acid test 45 says float magically turns into cssFloat - I guess.
+    // And what's the point of that?
+    set float(v) { this.cssFloat = v}
 
+})
+
+let csdp = w.CSSStyleDeclaration.prototype;
 // when one property is shorthand for several others.
 // margin implies top right bottom left
 // How many of these are there that I don't know about?
@@ -5443,9 +5480,6 @@ for(let k of list) {
 eval('odp(csdp, "' + k + '", {set: function(h) {cssShort.' + k + 'Short(this, h)}})')
 }})();
 
-// acid test 45 says float magically turns into cssFloat - I guess.
-// And what's the point of that?
-odp(csdp, "float", {set:function(v) { this.cssFloat = v}})
 
 // These are default properties of a style declaration.
 // they should not be enumerable. They must however be writable,
@@ -5563,7 +5597,6 @@ const s = k.split('.');
 odp(csdp, s[0], {value:s[1],writable:true})
 }})();
 
-csdp.toString = function() { return "style object" };
 odp(csdp, "length", {get: function() {
 let cnt = 0;
 for(let i in this) if(this.hasOwnProperty(i)) ++cnt;
@@ -5659,19 +5692,26 @@ else
 list.splice(idx, 0, r);
 }
 
-swp("HTMLTimeElement", function(){})
-swpp("HTMLTimeElement", w.HTMLElement)
+swp("HTMLTimeElement", class extends w.HTMLElement { constructor() { super(w.HTMLElement); }})
 let timep = w.HTMLTimeElement.prototype;
 odp(timep, "dateTime", {get: function(){return this.getAttribute("datetime")}})
 
-swp("HTMLUnknownElement", function(){})
-swpp("HTMLUnknownElement", w.HTMLElement)
+swp("HTMLUnknownElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
 
-swp("z$Timer", function(){this.nodeName = "TIMER"})
-swpp("z$Timer", w.EventTarget)
+swp("z$Timer", class extends w.EventTarget {
+    constructor()
+    {
+        super(w.EventTarget);
+        this.nodeName = "TIMER"
+    }
+})
 
-swp("z$Datalist", function() {})
-swpp("z$Datalist", w.HTMLElement)
+swp("z$Datalist", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+
 odp(w.z$Datalist.prototype, "multiple", {
 get:function(){ var t = this.getAttribute("multiple");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
@@ -5934,30 +5974,33 @@ swpp("XMLHttpRequestUpload", w.XMLHttpRequestEventTarget)
 // So here we go.
 // Originally implemented by Yehuda Katz
 // And since then, from envjs, by Thatcher et al
-swpc("XMLHttpRequest", function() {
-    this.headers = new w.Object;
-    this.responseHeaders = new w.Object;
-    this.aborted = false;//non-standard
-    this.withCredentials = true;
-    this.upload = new w.XMLHttpRequestUpload;
-    this.readyState$2 = 0;
-    this.async = false;
-    this.responseText = "";
-    this.response = "";
-    this.responseXML = null;
-    this.status = 0;
-    this.statusText = "";
+swpc("XMLHttpRequest", class extends w.EventTarget {
+    // defined by the standard: http://www.w3.org/TR/XMLHttpRequest/#xmlhttprequest
+    // but not provided by Firefox.  Safari and others do define it.
+    UNSENT = 0;
+    OPEN = 1;
+    HEADERS_RECEIVED = 2;
+    LOADING = 3;
+    DONE = 4;
+
+    conxstructor()
+    {
+        this.headers = new w.Object;
+        this.responseHeaders = new w.Object;
+        this.aborted = false;//non-standard
+        this.withCredentials = true;
+        this.upload = new w.XMLHttpRequestUpload;
+        this.readyState$2 = 0;
+        this.async = false;
+        this.responseText = "";
+        this.response = "";
+        this.responseXML = null;
+        this.status = 0;
+        this.statusText = "";
+    }
+    toString (){ return "[object XMLHttpRequest]"; }
 })
-swpp("XMLHttpRequest", w.EventTarget)
-// defined by the standard: http://www.w3.org/TR/XMLHttpRequest/#xmlhttprequest
-// but not provided by Firefox.  Safari and others do define it.
-w.XMLHttpRequest.UNSENT = 0;
-w.XMLHttpRequest.OPEN = 1;
-w.XMLHttpRequest.HEADERS_RECEIVED = 2;
-w.XMLHttpRequest.LOADING = 3;
-w.XMLHttpRequest.DONE = 4;
 let xmlp = w.XMLHttpRequest.prototype;
-xmlp.toString = function(){return "[object XMLHttpRequest]"}
 xmlp.open = xml.open;
 xmlp.setRequestHeader = xml.srh;
 xmlp.getResponseHeader = xml.grh;
