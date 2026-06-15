@@ -1183,7 +1183,7 @@ ResizeObserver.prototype.unobserve = eb$voidfunction;
 
 // Fallback stuff now implemented in quickjs-ng
 // quickjs-ng has built-in (and alterable) DOMException these days
-if (false) {
+if (!window.DOMException) {
     alert3("Using fallback for DOMException");
     /* Apparently people want to muck with DOMException so can't be shared as
     otherwise we end up with read-only prototype chain issues */
