@@ -460,12 +460,11 @@ return false;
 
 function dispatchEvent (e) {
     // When handlers fire, or there are issues, print those at db3.
-// If we are simply tracking through the dispatch algorithm, then db4.
+    // If we are simply tracking through the dispatch algorithm, then db4.
     let dbg3 = () => undefined;
     let dbg4 = () => undefined;
-    const runEventHandler = (n, h) => {
+    const runEventHandler = (n, h, inline=false) => {
         e.currentTarget = n;
-        const inline = typeof h == "function";
         // handler info for debug
         const hd = inline ? "inline handler" : `handler ${h.ehsn}`;
         let f;
@@ -521,10 +520,10 @@ function dispatchEvent (e) {
         return !e.stop$propagating;
     }
 
-const runAllHandlers = (n) => {
+    const runAllHandlers = (n) => {
         const ep = `on${e.type}`;
         const hi = n[ep];
-        if (hi && !runEventHandler(n, hi)) return false;
+        if (hi && !runEventHandler(n, hi, true)) return false;
         return runHandlerArray(n);
     }
 
@@ -4444,7 +4443,7 @@ swp("z$tBody", class extends w.HTMLTableSectionElement {
         this.rows = new w.Array;
     }
 })
-swp("z$tHead", CLASS EXTENDS w.HTMLTableSectionElement {
+swp("z$tHead", class extends w.HTMLTableSectionElement {
     constructor()
     {
         super(w.HTMLTableSectionElement);
@@ -5375,82 +5374,6 @@ eval('odp(w.' + cn + '.prototype, "' + u + '", { ' +
 ' }});');
 }
 })();
-
-/*********************************************************************
-acid test 48 sets frame.onclick to a string, then expects that function to run
-when the frame loads. There are two designs, both are complicated,
-and I'm not sure which one I like better. I implemented the first.
-1. Use a setter so that onload = function just carries the function through,
-but onload = string compiles the string into a function then sets onload
-to the function, as though you had done that in the first place.
-2. Allow functions or strings, while dispatch event
-checks to see if it is a function or a string. If a string then compile it.
-There is probably a right answer here.
-Maybe there is some javascript somewhere that says
-a.onclick = "some_function(7,8,9)"; a.onclick();
-That would clinch it; 1 is the right answer.
-I don't know, but for now I implemented (1),
-and hope I don't have to recant some day and switch to (2).
-The compiled function has to run bound to this as the current node,
-and the current window as global.
-Thus I use w.eval below.
-Then there's another complication. For onclick, the code just runs,
-but for onsubmit the code is suppose to return true or false.
-Mozilla had no trouble compiling and running  return true  at top level.
-Duktape won't do that. Return has to be in a function.
-I don't know where we stand now that we use quickjs.
-So I wrap the code in (function (){ code })
-Then it doesn't matter if the code is just expression, or return expression.
-Here is handlerCompile to perform the compile.
-*********************************************************************/
-
-function handlerCompile(f, t) {
-let cf; // the compiled function
-try {
-cf = w.eval(`(function(){${f}})`);
-// looks good, now bind to this
-cf = cf.bind(t);
-} catch(e) {
-// Don't just use eb$truefunction; I want to put the text
-// on function.body, for debugging, and that means I need my own function.
-cf = w.eval("(function(){return true;})");
-alert3("handler syntax error <" + f + ">");
-}
-cf.body = f;
-cf.toString = function() { return this.body; }
-return cf;
-}
-
-// Now make sure this is invoked by body.onload and his friends.
-; (function() {
-var cnlist = ["elemp", "d", "w"];
-for(let cn of cnlist) {
-// there are lots more events, onmouseout etc, that we don't responnd to,
-// should we watch for them anyways?
-var evs = ["onload", "onunload", "onclick", "onchange", "oninput",
-"onsubmit", "onreset", "onmessage"];
-for(let evname of evs) {
-eval('odp(' + cn + ', "' + evname + '", { \
-get: function() { return this.' + evname + '$2}, \
-set: function(f) { if(db$flags(1)) alert3((this.'+evname+'$2 ?"clobber ":"create ") + (this.nodeName ? this.nodeName : "+"+this.dom$class) + ".' + evname + '"); \
-if(typeof f == "string") f = handlerCompile(f, this); \
-if(typeof f == "function") { Object.defineProperty(this, "' + evname + '$2", {value:f,writable:true,configurable:true}); \
-}}})')
-}}})();
-
-// onhashchange from certain places
-; (function() {
-// Also HTMLFrameSetElement which we have not yet implemented.
-// Don't have to eval here because it's just one event.
-var cnlist = [bodyp, w.SVGElement, w];
-for(let cn of cnlist) {
-odp(cn, "onhashchange", {
-get: function() { return this.onhashchange$2; },
-set: function(f) { if(db$flags(1)) alert3((this.onhashchange$2?"clobber ":"create ") + (this.nodeName ? this.nodeName : "+"+this.dom$class) + ".onhashchange");
-if(typeof f == "string") f = handlerCompile(f, this);
-if(typeof f == "function") {
-odp(this, "onhashchange$2", {value:f,writable:true,configurable:true})}}})
-}})();
 
 // Canvas method draws a picture. That's meaningless for us,
 // but it still has to be there.
