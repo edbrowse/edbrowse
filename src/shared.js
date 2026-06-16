@@ -3374,12 +3374,15 @@ odp(valp, "valid", {
 get: function() { // only need to check items with getters
 return !(this.valueMissing)}})
 
-swpc("EventTarget", class {
+swpc("EventTarget", class extends w.Object {
+    constructor() { super(w.Object); }
     addEventListener = addEventListener;
     removeEventListener = removeEventListener;
     dispatchEvent = dispatchEvent;
 })
-swpc("Node", class extends w.EventTarget {})
+swpc("Node", class extends w.EventTarget {
+    constructor() { super(w.EventTarget); }
+})
 let nodep = w.Node.prototype;
 
 // These are native helper functions
@@ -3767,7 +3770,9 @@ w.open = function(a, b) {
     return new w.Window(a, b);
 }
 
-swpc("Element", class extends w.Node {})
+swpc("Element", class extends w.Node {
+    constructor() { super(w.Node); }
+})
 let elemp = w.Element.prototype;
 
 // attributes are on demand
@@ -4144,6 +4149,7 @@ w.soj$ = z.style;
 
 // The html element, which is the DOM nodes that you know and love.
 swpc("HTMLElement", class extends w.Element {
+    constructor() { super(w.Element); }
     // style object is on demand
     get style()
     {
