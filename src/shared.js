@@ -4324,10 +4324,13 @@ eb$logElement(c, "text");
 return c;
 }
 
-swpc("Comment", function(t) {
-this.data = t;
+swpc("Comment", class extends w.HTMLElement {
+    constructor(t)
+    {
+        super(w.HTMLElement);
+        this.data = t;
+    }
 })
-swpp("Comment", w.HTMLElement)
 let cmtp = w.Comment.prototype;
 cmtp.nodeName = cmtp.tagName = "#comment";
 cmtp.nodeType = 8;
@@ -4342,8 +4345,10 @@ eb$logElement(c, "comment");
 return c;
 }
 
-swpc("DocumentFragment", function(){})
-swpp("DocumentFragment", w.HTMLElement)
+swpc("DocumentFragment", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+
 let fragp = w.DocumentFragment.prototype;
 fragp.nodeType = 11;
 fragp.nodeName = fragp.tagName = "#document-fragment";
@@ -4355,11 +4360,11 @@ const c = this.createElement("fragment");
 return c;
 }
 
-swpc("CharacterData", function(){})
-swpp("CharacterData", w.Node)
+swpc("CharacterData", class extends w.Node { constructor() { super(w.Node); } })
 
-swpc("ProcessingInstruction", function(){})
-swpp("ProcessingInstruction", w.CharacterData)
+swpc("ProcessingInstruction", class extends w.CharacterData {
+    constructor() { super(w.CharacterData); }
+})
 let pip = w.ProcessingInstruction.prototype;
 pip.sheet = null;
 
@@ -4430,23 +4435,51 @@ this.removeChild(this.cells[n]);
 }
 
 // classes and prototypes for table, sections, row, cell
-swpc("HTMLTableSectionElement", function(){})
-swpp("HTMLTableSectionElement", w.HTMLElement)
-swp("z$tBody", function(){ this.rows = new w.Array})
-swpp("z$tBody", w.HTMLTableSectionElement)
-swp("z$tHead", function(){ this.rows = new w.Array})
-swpp("z$tHead", w.HTMLTableSectionElement)
-swp("z$tFoot", function(){ this.rows = new w.Array})
-swpp("z$tFoot", w.HTMLTableSectionElement)
-swp("z$tCap", function(){}) // caption
-swpp("z$tCap", w.HTMLElement)
-swpc("HTMLTableElement", function(){ this.rows = new w.Array; this.tBodies = new w.Array})
-swpp("HTMLTableElement", w.HTMLElement)
-swpc("HTMLTableRowElement", function(){ this.cells = new w.Array})
-swpp("HTMLTableRowElement", w.HTMLElement)
-swpc("HTMLTableCellElement", function(){})
-swpp("HTMLTableCellElement", w.HTMLElement)
+swpc("HTMLTableSectionElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+swp("z$tBody", class extends w.HTMLTableSectionElement {
+    constructor() {
+        super(w.HTMLTableSectionElement);
+        this.rows = new w.Array;
+    }
+})
+swp("z$tHead", CLASS EXTENDS w.HTMLTableSectionElement {
+    constructor()
+    {
+        super(w.HTMLTableSectionElement);
+        this.rows = new w.Array;
+    }
+})
+swp("z$tFoot", class extends w.HTMLTableSectionElement {
+    constructor()
+    {
+        super(w.HTMLTableSectionElement);
+        this.rows = new w.Array;
+    }
+})
+swp("z$tCap", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+swpc("HTMLTableElement", class extends w.HTMLElement {
+    constructor()
+    {
+        super(w.HTMLElement);
+        this.rows = new w.Array;
+        this.tBodies = new w.Array;
+    }
+})
 
+swpc("HTMLTableRowElement", class extends w.HTMLElement {
+    constructor()
+    {
+        super(w.HTMLElement);
+        this.cells = new w.Array;
+    }
+})
+swpc("HTMLTableCellElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
 let tablep = w.HTMLTableElement.prototype;
 let tablesecp = w.HTMLTableSectionElement.prototype;
 let trp = w.HTMLTableRowElement.prototype;
@@ -4641,13 +4674,14 @@ return item;
 }
 
 // options, option groups, and the select element
-swpc("HTMLOptionElement", function() {
-if(arguments.length > 0)
-this.text = arguments[0];
-if(arguments.length > 1)
-this.value = arguments[1];
+swpc("HTMLOptionElement", class extends w.HTMLElement {
+    constructor()
+    {
+        super(w.HTMLElement);
+        if (arguments.length > 0) this.text = arguments[0];
+        if (arguments.length > 1) this.value = arguments[1];
+    }
 })
-swpp("HTMLOptionElement", w.HTMLElement)
 swpc("Option", w.HTMLOptionElement)
 let optp = w.HTMLOptionElement.prototype;
 optp.selected = false;
@@ -4655,8 +4689,9 @@ optp.defaultSelected = false;
 optp.nodeName = optp.tagName = "OPTION";
 optp.text = optp.value = "";
 
-swpc("HTMLOptGroupElement", function() {})
-swpp("HTMLOptGroupElement", w.HTMLElement)
+swpc("HTMLOptGroupElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
 let optgp = w.HTMLOptGroupElement.prototype;
 optgp.nodeName = optgp.tagName = "OPTGROUP";
 
@@ -4984,9 +5019,11 @@ formp.submit = eb$formSubmit;
 formp.reset = eb$formReset;
 odp(formp, "length", { get: function() { return this.elements.length;}})
 
-swpc("HTMLImageElement", function(){})
+swpc("HTMLImageElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
 swpc("Image", w.HTMLImageElement)
-swpp("HTMLImageElement", w.HTMLElement)
+
 let imagep = w.HTMLImageElement.prototype;
 odp(imagep, "alt", {
 get:function(){ var t = this.getAttribute("alt");
@@ -4994,8 +5031,9 @@ return typeof t == "string" ? t : undefined},
 set:function(v) { this.setAttribute("alt", v);
 }})
 
-swpc("HTMLScriptElement", function(){})
-swpp("HTMLScriptElement", w.HTMLElement)
+swpc("HTMLScriptElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
 w.HTMLScriptElement.supports = function(t) {
 if(typeof t != "string") return false;
 t = t.toLowerCase();
@@ -5018,41 +5056,58 @@ scriptp.eb$step = 0;
 scriptp.text = "";
 
 // the all important <a>, the whole point of the internet
-swpc("HTMLAnchorElement", function(){})
-swpp("HTMLAnchorElement", w.HTMLElement)
+swpc("HTMLAnchorElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
 
 // classes that support lists in html
-swpc("HTMLOListElement", function(){})
-swpp("HTMLOListElement", w.HTMLElement)
-swpc("HTMLUListElement", function(){})
-swpp("HTMLUListElement", w.HTMLElement)
-swpc("HTMLDListElement", function(){})
-swpp("HTMLDListElement", w.HTMLElement)
-swpc("HTMLLIElement", function(){})
-swpp("HTMLLIElement", w.HTMLElement)
+swpc("HTMLOListElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
 
-swpc("HTMLLabelElement", function(){})
-swpp("HTMLLabelElement", w.HTMLElement)
+swpc("HTMLUListElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+swpc("HTMLDListElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+
+swpc("HTMLLIElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+
+swpc("HTMLLabelElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
 let labelp = w.HTMLLabelElement.prototype;
 odp(labelp, "htmlFor", { get: function() { return this.getAttribute("for"); }, set: function(h) { this.setAttribute("for", h); }})
 
 // <head> and friends
-swp("HTMLHeadElement", function(){})
-swpp("HTMLHeadElement", w.HTMLElement)
-swp("HTMLMetaElement", function(){})
-swpp("HTMLMetaElement", w.HTMLElement)
+swp("HTMLHeadElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+
+swp("HTMLMetaElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+
 let metap = w.HTMLMetaElement.prototype;
 odp(metap, "httpEquiv", { get: function() { return this.getAttribute("http-equiv"); }, set: function(h) { this.setAttribute("http-equiv", h); }})
-swp("HTMLBaseElement", function(){})
-swpp("HTMLBaseElement", w.HTMLElement)
-swp("z$Title", function(){})
-swpp("z$Title", w.HTMLElement)
+swp("HTMLBaseElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+
+swp("z$Title", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
 odp(w.z$Title.prototype, "text", {
 get: function(){ return this.firstChild && this.firstChild.nodeName == "#text" && this.firstChild.data || "";}
 // setter should change the title of the document, not yet implemented
 });
-swp("HTMLLinkElement", function(){})
-swpp("HTMLLinkElement", w.HTMLElement)
+swp("HTMLLinkElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+
 // It's a list but why would it ever be more than one?
 odp(w.HTMLLinkElement.prototype, "relList", {
 get: function() { var a = new w.Aray;
@@ -5063,8 +5118,10 @@ return a;
 }})
 
 // <body>
-swp("HTMLBodyElement", function(){})
-swpp("HTMLBodyElement", w.HTMLElement)
+swp("HTMLBodyElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+
 let bodyp = w.HTMLBodyElement.prototype;
 bodyp.doScroll = eb$voidfunction;
 bodyp.clientHeight = 768;
@@ -5079,8 +5136,10 @@ bodyp.scrollLeft = 0;
 bodyp.eb$dbih = function(s){this.innerHTML = s}
 
 // fake class to support <html>
-swp("z$HTML", function(){})
-swpp("z$HTML", w.HTMLElement)
+swp("z$HTML", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+
 let htmlp = w.z$HTML.prototype;
 odp(htmlp, "eb$win", {get: function(){return this.parentNode ? this.parentNode.defaultView : undefined}});
 // Some screen attributes that are suppose to be there.
@@ -5095,15 +5154,19 @@ htmlp.scrollTop = 0;
 htmlp.scrollLeft = 0;
 
 // is there a difference between DocType ad DocumentType?
-swpc("DocType", function(){})
-swpp("DocType", w.HTMLElement)
+swpc("DocType", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+
 w.DocType.prototype.nodeType = 10;
 w.DocType.prototype.nodeName = "DOCTYPE";
 swpc("DocumentType", w.DocType)
 
 // <div> <p> <span>
-swpc("HTMLDivElement", function(){})
-swpp("HTMLDivElement", w.HTMLElement)
+swpc("HTMLDivElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+
 let divp = w.HTMLDivElement.prototype;
 divp.doScroll = eb$voidfunction;
 divp.align = "left";
@@ -5114,25 +5177,31 @@ var e = new w.Event;
 e.initEvent("click", true, true);
 this.dispatchEvent(e);
 }
-swpc("HTMLParagraphElement", function(){})
-swpp("HTMLParagraphElement", w.HTMLElement)
-swpc("HTMLSpanElement", function(){})
-swpp("HTMLSpanElement", w.HTMLElement)
+swpc("HTMLParagraphElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+swpc("HTMLSpanElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
 let spanp = w.HTMLSpanElement.prototype;
 spanp.doScroll = eb$voidfunction;
 spanp.click = divp.click;
 
 // h1 through h6 and our own classes for header footer
-swpc("HTMLHeadingElement", function(){})
-swpp("HTMLHeadingElement", w.HTMLElement)
-swp("z$Header", function(){})
-swpp("z$Header", w.HTMLElement)
-swp("z$Footer", function(){})
-swpp("z$Footer", w.HTMLElement)
+swpc("HTMLHeadingElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+swp("z$Header", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+swp("z$Footer", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
 
 // media and audio
-swpc("HTMLMediaElement", function(){})
-swpp("HTMLMediaElement", w.HTMLElement)
+swpc("HTMLMediaElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
 let mediap = w.HTMLMediaElement.prototype;
 mediap.autoplay = false;
 mediap.muted = false;
@@ -5148,13 +5217,16 @@ mediap.play = eb$playAudio;
 mediap.load = eb$voidfunction;
 mediap.pause = eb$voidfunction;
 
-swpc("HTMLAudioElement", function(t){
-// arg to constructor is the url of the audio
-if(typeof t == "string") this.src = t;
-if(typeof t == "object") this.src = t.toString();
+swpc("HTMLAudioElement", class extends w.HTMLMediaElement {
+    constructor(t)
+    {
+        super(w.HTMLMediaElement);
+        // arg to constructor is the url of the audio
+        if (typeof t == "string") this.src = t;
+        if (typeof t == "object") this.src = t.toString();
+    }
 })
 swpc("Audio", w.HTMLAudioElement)
-swpp("HTMLAudioElement", w.HTMLMediaElement)
 w.HTMLAudioElement.prototype.nodeName = "AUDIO"
 
 /*********************************************************************
@@ -5176,11 +5248,14 @@ this.close = eb$voidfunction;
 })
 swpp("AudioContext", null)
 
-swpc("HTMLObjectElement", function(){})
-swpp("HTMLObjectElement", w.HTMLElement)
+swpc("HTMLObjectElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
 
-swpc("HTMLTemplateElement", function(){})
-swpp("HTMLTemplateElement", w.HTMLElement)
+swpc("HTMLTemplateElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+
 odp(w.HTMLTemplateElement.prototype, "content", {
 get: function() {
 if(this.content$2) return this.content$2;
@@ -5195,30 +5270,34 @@ odp(this, "content$2", {value:frag})
 return frag
 }})
 
-swpc("HTMLDetailsElement", function(){})
-swpp("HTMLDetailsElement", w.HTMLElement)
+swpc("HTMLDetailsElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
 let detp = w.HTMLDetailsElement.prototype;
 odp(detp, "open", {
 get:function(){ let t = this.getAttribute("open");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("open", v);}});
 
-swpc("ShadowRoot", function(){})
-swpp("ShadowRoot", w.HTMLElement)
+swpc("ShadowRoot", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
 
-swpc("HTMLAreaElement", function(){})
-swpp("HTMLAreaElement", w.HTMLElement)
-
-swpc("HTMLFrameElement", function(){})
-swpp("HTMLFrameElement", w.HTMLElement)
+swpc("HTMLAreaElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
+swpc("HTMLFrameElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
 let framep = w.HTMLFrameElement.prototype;
 framep.is$frame = true;
 odp(framep, "contentDocument", { get: eb$getter_cd});
 odp(framep, "contentWindow", { get: eb$getter_cw});
 
 // These may be different but for now I'm calling them the same.
-swpc("HTMLIFrameElement", function(){})
-swpp("HTMLIFrameElement", w.HTMLFrameElement)
+swpc("HTMLIFrameElement", class extends w.HTMLFrameElement {
+    constructor() { super(w.HTMLFrameElement); }
+})
 
 /*********************************************************************
 If foo is an anchor, then foo.href = "some_url"
@@ -5377,59 +5456,65 @@ odp(this, "onhashchange$2", {value:f,writable:true,configurable:true})}}})
 // but it still has to be there.
 // Because of the canvas element, I can't put the monster getContext function
 // into the prototype, I have to set it in the constructor.
-swpc("HTMLCanvasElement", function() {
-this.getContext = function(x) { return {
-canvas: this,
- addHitRegion: eb$nullfunction,
-arc: eb$nullfunction,
-arcTo: eb$nullfunction,
-beginPath: eb$nullfunction,
-bezierCurveTo: eb$nullfunction,
-clearHitRegions: eb$nullfunction,
-clearRect: eb$nullfunction,
-clip: eb$nullfunction,
-closePath: eb$nullfunction,
-createImageData: eb$nullfunction,
-createLinearGradient: eb$nullfunction,
-createPattern: eb$nullfunction,
-createRadialGradient: eb$nullfunction,
-drawFocusIfNeeded: eb$nullfunction,
-drawImage: eb$nullfunction,
-drawWidgetAsOnScreen: eb$nullfunction,
-drawWindow: eb$nullfunction,
-ellipse: eb$nullfunction,
-fill: eb$nullfunction,
-fillRect: eb$nullfunction,
-fillText: eb$nullfunction,
-getImageData: eb$nullfunction,
-getLineDash: eb$nullfunction,
-isPointInPath: eb$nullfunction,
-isPointInStroke: eb$nullfunction,
-lineTo: eb$nullfunction,
-measureText: function(s) {
-// returns a TextMetrics object, whatever that is.
-// Height and width will depend on the font, but this is just a stub.
-return {height: 12, width: s.length * 7};
-},
-moveTo: eb$nullfunction,
-putImageData: eb$nullfunction,
-quadraticCurveTo: eb$nullfunction,
-rect: eb$nullfunction,
-removeHitRegion: eb$nullfunction,
-resetTransform: eb$nullfunction,
-restore: eb$nullfunction,
-rotate: eb$nullfunction,
-save: eb$nullfunction,
-scale: eb$nullfunction,
-scrollPathIntoView: eb$nullfunction,
-setLineDash: eb$nullfunction,
-setTransform: eb$nullfunction,
-stroke: eb$nullfunction,
-strokeRect: eb$nullfunction,
-strokeText: eb$nullfunction,
-transform: eb$nullfunction,
-translate: eb$nullfunction }}})
-swpp("HTMLCanvasElement", w.HTMLElement)
+swpc("HTMLCanvasElement", class extends w.HTMLElement {
+    constructor() { SUPER(w.HTMLElement); }
+    getContext(x)
+    {
+        return {
+            canvas: this,
+            addHitRegion: eb$nullfunction,
+            arc: eb$nullfunction,
+            arcTo: eb$nullfunction,
+            beginPath: eb$nullfunction,
+            bezierCurveTo: eb$nullfunction,
+            clearHitRegions: eb$nullfunction,
+            clearRect: eb$nullfunction,
+            clip: eb$nullfunction,
+            closePath: eb$nullfunction,
+            createImageData: eb$nullfunction,
+            createLinearGradient: eb$nullfunction,
+            createPattern: eb$nullfunction,
+            createRadialGradient: eb$nullfunction,
+            drawFocusIfNeeded: eb$nullfunction,
+            drawImage: eb$nullfunction,
+            drawWidgetAsOnScreen: eb$nullfunction,
+            drawWindow: eb$nullfunction,
+            ellipse: eb$nullfunction,
+            fill: eb$nullfunction,
+            fillRect: eb$nullfunction,
+            fillText: eb$nullfunction,
+            getImageData: eb$nullfunction,
+            getLineDash: eb$nullfunction,
+            isPointInPath: eb$nullfunction,
+            isPointInStroke: eb$nullfunction,
+            lineTo: eb$nullfunction,
+            measureText: function(s) {
+                // returns a TextMetrics object, whatever that is.
+                // Height and width will depend on the font, but this is just a stub.
+                return {height: 12, width: s.length * 7};
+            },
+            moveTo: eb$nullfunction,
+            putImageData: eb$nullfunction,
+            quadraticCurveTo: eb$nullfunction,
+            rect: eb$nullfunction,
+            removeHitRegion: eb$nullfunction,
+            resetTransform: eb$nullfunction,
+            restore: eb$nullfunction,
+            rotate: eb$nullfunction,
+            save: eb$nullfunction,
+            scale: eb$nullfunction,
+            scrollPathIntoView: eb$nullfunction,
+            setLineDash: eb$nullfunction,
+            setTransform: eb$nullfunction,
+            stroke: eb$nullfunction,
+            strokeRect: eb$nullfunction,
+            strokeText: eb$nullfunction,
+            transform: eb$nullfunction,
+            translate: eb$nullfunction 
+        }
+    }
+})
+
 let canvasp = w.HTMLCanvasElement.prototype;
 canvasp.toDataURL = function() {
 if(this.height === 0  || this.width === 0) return "data:,";
