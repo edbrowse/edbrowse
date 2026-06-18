@@ -1331,7 +1331,7 @@ passes:
 		if(!t->f1 && // not expanded yet
 		!t->expf && // we haven't tried to expand it yet
 		isRooted(t) && // it's in our tree
-		typeof_property_t(t, "onload") == EJ_PROP_FUNCTION)
+		handlerPresent(t, "onload"))
 			forceFrameExpand(t);
 	}
 
