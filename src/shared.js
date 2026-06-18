@@ -472,7 +472,7 @@ function dispatchEvent (e) {
             // already bound or caller doesn't want it to be
             if (typeof h == "function") f = h;
             // Ensure the binding is correct
-            else if (typeof h == "string") f = () => eval.call(n, h);
+            else if (typeof h == "string") f = () => our_eval.call(n, h);
         }
         // Should be bound to the node
         else if (typeof h.callback == "function") f = h.callback.bind(n);
@@ -534,8 +534,8 @@ function dispatchEvent (e) {
             const phase = phases[e.eventPhase];
             logputs(l, `${prefix} tag ${n.eb$seqno} phase ${phase}: ${m}`);
         };
-        dbg3 = m=>dbg(3, m);
-        dbg4 = m=>dbg(4, m);
+        dbg3 = m => dbg(3, m);
+        dbg4 = m => dbg(4, m);
     }
     e.eventPhase = 0;
     e.target = this;
@@ -545,15 +545,16 @@ function dispatchEvent (e) {
         for (t = this; t; t = t.parentNode) {
             pathway.push(t);
             // don't go past document up to a higher frame
-            if(t.nodeType == 9) break;
+            if (t.nodeType == 9) break;
             // or through a frame and up into a higher frame
-            if(t.nodeType == 1 && (
-            t.dom$class == "HTMLIFrameElement" ||
-            // don't know if it could ever be a frame
-            t.dom$class == "HTMLFrameElement")) break;
+            if (t.nodeType == 1 && (
+                t.dom$class == "HTMLIFrameElement" ||
+                // don't know if it could ever be a frame
+                t.dom$class == "HTMLFrameElement")
+            ) break;
         }
 
-        if(!t) {
+        if (!t) {
             /* pathological and looks like we could just abort true here but
                 there's a corner case where someone could create an event
                 manually, call preventDefault() and then dispatch to the
@@ -574,7 +575,7 @@ function dispatchEvent (e) {
         handler is or might be. There is no parent so we stop here.
         Even if there was a parent we should still stop here, as above.
         In this case it is not document and there is no defaultView. */
-        if(t.nodeType == 1) // must be a frame
+        if (t.nodeType == 1) // must be a frame
             pathway.push(t);
         else // must be the document
             pathway.push(t.defaultView);
@@ -582,6 +583,9 @@ function dispatchEvent (e) {
         // no node type so assume it's a window or similar, just a target
         pathway.push(this);
     }
+    const our_eval = (pathway[pathway.length-1].eval?
+        pathway[pathway.length-1].eval :
+        my$win.eval);
     const states = [
         // Initial phase, nothing to do here
         () => true,
@@ -610,7 +614,7 @@ function dispatchEvent (e) {
         e.eventPhase = i;
         (i ? dbg4 : dbg3)("start");
         const rc = cb();
-        if(i) dbg4(`end (${rc})`);
+        if (i) dbg4(`end (${rc})`);
         return rc;
     });
 
