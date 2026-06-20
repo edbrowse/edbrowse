@@ -4484,6 +4484,7 @@ static void ircAlarm(int n)
         (void) n;
 	ircAlarming = true;
 	ircRead();
+	xmppRunActions();
 	signal(SIGALRM, ircAlarm);
 	alarm(7);
 	ircAlarming = false;
@@ -4507,6 +4508,9 @@ void ircReadlineRelease(void)
 
 static void xmppAddMsg(Window *w, void *msg) {
 	Window *save;
+	if (w->xmppiMode) {
+		w = sessionList[w->ircOther].lw;
+	}
 	// TODO: could use borogove_chat_get_member_details to get better details
 	void *sender = borogove_chat_message_sender_member_stub(msg);
 	const void *chatName = borogove_chat_get_display_name(w->xmppChat);
@@ -4524,58 +4528,118 @@ static void xmppAddMsg(Window *w, void *msg) {
 	borogove_release(body);
 }
 
+static struct xmppWork *xmppWorkQ = NULL;
+static pthread_mutex_t xmppWorkLock;
+static bool xmppWorkLockInit = false;
+
+void xmppRunActions(void) {
+	Window *save;
+
+	if (!xmppWorkLockInit) return;
+	pthread_mutex_lock(&xmppWorkLock);
+
+	while (xmppWorkQ) {
+		struct xmppWork *pop = xmppWorkQ;
+		switch (pop->action) {
+			case CLEAR_BUFFER:
+				if (pop->w->xmppiMode) {
+					pop->w = sessionList[pop->w->ircOther].lw;
+				}
+				save = cw;
+				cw = pop->w;
+				if (cw->dol) delText(0, cw->dol);
+				cw->changeMode = cw->undoable = false;
+				cw = save;
+				break;
+			case RESET_CURSOR:
+				// TODO: place cursor at first unread?
+				// Need to mark messages read first
+				if (pop->w->xmppiMode) {
+					pop->w = sessionList[pop->w->ircOther].lw;
+				}
+				pop->w->dot = pop->w->dol;
+				break;
+			case ADD_MESSAGE:
+				xmppAddMsg(pop->w, pop->item);
+				borogove_release(pop->item);
+				break;
+			case SET_CHAT:
+				if (pop->w->xmppChat) {
+					borogove_release(pop->w->xmppChat);
+				}
+				pop->w->xmppChat = pop->item;
+				if (pop->item) {
+					const char *chatId = borogove_chat_chat_id(pop->w->xmppChat);
+					// reuse ircChannel for our purposes
+					nzFree(pop->w->ircChannel), pop->w->ircChannel = cloneString(chatId);
+					char *p = allocMem(strlen(chatId) + 6);
+					sprintf(p, "%s send", chatId);
+					pop->w->f0.fileName = p;
+					Window *w2 = sessionList[pop->w->ircOther].lw;
+					if(w2) {
+						w2->xmppChat = pop->w->xmppChat;
+						ircSetFileName(w2);
+					}
+					eb_printf("Switched to %s\n", chatId);
+					borogove_release(chatId);
+				} else {
+					eb_puts("No chat found");
+				}
+
+				break;
+		}
+		xmppWorkQ = pop->next;
+		free(pop);
+	}
+
+	pthread_mutex_unlock(&xmppWorkLock);
+}
+
+static void xmppPushAction(struct xmppWork *work) {
+	if (!xmppWorkLockInit) {
+		pthread_mutex_init(&xmppWorkLock, NULL);
+		xmppWorkLockInit = true;
+	}
+
+	pthread_mutex_lock(&xmppWorkLock);
+
+	struct xmppWork *tail = xmppWorkQ;
+	struct xmppWork *new = allocMem(sizeof(*new));
+	memcpy(new, work, sizeof(*new));
+
+	if (!tail) {
+		xmppWorkQ = new;
+	} else {
+		while(tail->next) tail = tail->next;
+		tail->next = new;
+	}
+
+	pthread_mutex_unlock(&xmppWorkLock);
+}
+
 // Warning: this callback fires on the XMPP thread
 static void xmppLoad(void **msgs, size_t count, void *ctx) {
 	Window *w = ctx;
-	Window *save;
-	if (w->xmppiMode) {
-		w = sessionList[w->ircOther].lw;
-	}
-	save = cw;
-	cw = w;
-	if (w->dol) delText(0, w->dol);
-	cw->changeMode = cw->undoable = false;
-	cw = save;
+	xmppPushAction(&(struct xmppWork){ .action = CLEAR_BUFFER, .w = w });
 	for (size_t i = 0; i < count; i++) {
-		xmppAddMsg(w, msgs[i]);
-		borogove_release(msgs[i]);
+		xmppPushAction(&(struct xmppWork){ .action = ADD_MESSAGE, .w = w, .item = msgs[i] });
 	}
 
 	borogove_release(msgs);
-	// TODO: place cursor at first unread?
-	// Need to mark messages read first
-	w->dot = w->dol;
+
+	xmppPushAction(&(struct xmppWork){ .action = RESET_CURSOR, .w = w });
 }
 
 // Warning: this callback fires on the XMPP thread
 static void xmppAvailableChat(void *chat, void *ctx) {
-	Window *w2;
 	Window *w = ctx;
-	char *p;
-	const char *chatId;
-	// reuse ircChannel for our purposes
-	if (w->xmppChat) {
-		borogove_release(w->xmppChat);
-	}
 	if (chat) {
-		w->xmppChat = borogove_client_start_chat(w->xmppClient, chat);
-		chatId = borogove_chat_chat_id(w->xmppChat);
-		nzFree(w->ircChannel), w->ircChannel = cloneString(chatId);
-		p = allocMem(strlen(chatId) + 6);
-		sprintf(p, "%s send", chatId);
-		w->f0.fileName = p;
-		w2 = sessionList[w->ircOther].lw;
-		if(w2) {
-			w2->xmppChat = w->xmppChat;
-			ircSetFileName(w2);
-		}
-		eb_printf("Switched to %s\n", chatId);
-		borogove_chat_get_messages_before(w->xmppChat, NULL, xmppLoad, w);
-		borogove_release(chatId);
+		void *started = borogove_client_start_chat(w->xmppClient, chat);
+		xmppPushAction(&(struct xmppWork){ .action = SET_CHAT, .w = w, .item = started });
+		borogove_chat_get_messages_before(started, NULL, xmppLoad, w);
 		borogove_release(chat);
 	} else {
-		w->xmppChat = 0;
-		eb_puts("No chat found");
+		xmppPushAction(&(struct xmppWork){ .action = SET_CHAT, .w = w, .item = 0 });
 	}
 	borogove_release(w->xmppCtx);
 	w->xmppCtx = 0;
@@ -4634,14 +4698,10 @@ void xmppSetFileName(Window *w)
 // Warning: this callback fires on the XMPP thread
 static void onXmppMessage(void *message, int event, void *ctx) {
 	Window *w = ctx;
-	if (w->xmppiMode) {
-		w = sessionList[w->ircOther].lw;
-	}
 
 	if (event) return; // Ignore edits etc for now
 
-	xmppAddMsg(w, message);
-	borogove_release(message);
+	xmppPushAction(&(struct xmppWork){ .action = ADD_MESSAGE, .w = w, .item = message });
 }
 
 // Warning: this callback fires on the XMPP thread

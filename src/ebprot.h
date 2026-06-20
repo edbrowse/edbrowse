@@ -465,6 +465,7 @@ void ircReadlineControl(void);
 void ircReadlineRelease(void);
 bool xmppSetup(char *line);
 bool xmppWrite(void);
+void xmppRunActions(void);
 
 // sourcefile=css.c
 void writeShortCache(void);

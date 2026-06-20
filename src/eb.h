@@ -774,6 +774,20 @@ struct parseContext {
 	Tag *innerParent; // which tag invoked innerHTML
 };
 
+enum xmppWorkAction {
+	CLEAR_BUFFER,
+	ADD_MESSAGE,
+	RESET_CURSOR,
+	SET_CHAT,
+};
+
+struct xmppWork {
+	enum xmppWorkAction action;
+	Window *w;
+	void *item;
+	struct xmppWork *next;
+};
+
 /* Return codes for base64Decode() */
 #define GOOD_BASE64_DECODE 0
 #define BAD_BASE64_DECODE 1
