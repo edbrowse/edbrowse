@@ -25,6 +25,8 @@ The edbrowse wiki has many examples.
 *********************************************************************/
 
 #include "eb.h"
+#include "borogove.h"
+extern char *dataHome;
 
 struct PROTOCOL {
 	const char prot[MAXPROTLEN];
@@ -4100,10 +4102,10 @@ void ircSetFileName(Window *w)
 	int i, len;
 	char *p;
 	Window *w2;
-	if(!w->ircoMode) return;
+	if(!w->ircoMode && !w->xmppoMode) return;
 	for(i = 1, len = 0; i <= maxSession; ++i) {
 		w2 = sessionList[i].lw;
-		if(!w2 || !w2->irciMode || w2->ircOther != w->sno) continue;
+		if(!w2 || !(w2->irciMode || w2->xmppiMode) || w2->ircOther != w->sno) continue;
 		if(w2->ircChannel) len += strlen(w2->ircChannel) + 1;
 	}
 	nzFree(w->f0.fileName);
@@ -4111,7 +4113,7 @@ void ircSetFileName(Window *w)
 	p = allocMem(len + 8);
 	for(i = 1, *p = 0; i <= maxSession; ++i) {
 		w2 = sessionList[i].lw;
-		if(!w2 || !w2->irciMode || w2->ircOther != w->sno) continue;
+		if(!w2 || !(w2->irciMode || w2->xmppiMode) || w2->ircOther != w->sno) continue;
 		if(w2->ircChannel) {
 			strcat(p, w2->ircChannel);
 			strcat(p, " ");
@@ -4503,3 +4505,329 @@ void ircReadlineRelease(void)
 	signal(SIGALRM, SIG_DFL);
 }
 
+static void xmppAddMsg(Window *w, void *msg) {
+	Window *save;
+	// TODO: could use borogove_chat_get_member_details to get better details
+	void *sender = borogove_chat_message_sender_member_stub(msg);
+	const void *chatName = borogove_chat_get_display_name(w->xmppChat);
+	const void *name = borogove_member_display_name(sender);
+	void *body = borogove_chat_message_body(msg, sender);
+	const char *text = borogove_html_to_plain_text(body);
+	save = cw;
+	cw = w;
+	ircAddLine(chatName, w->showchan, false, "<%s> %s", name, text);
+	cw = save;
+	borogove_release(name);
+	borogove_release(sender);
+	borogove_release(chatName);
+	borogove_release(text);
+	borogove_release(body);
+}
+
+// Warning: this callback fires on the XMPP thread
+static void xmppLoad(void **msgs, size_t count, void *ctx) {
+	Window *w = ctx;
+	Window *save;
+	if (w->xmppiMode) {
+		w = sessionList[w->ircOther].lw;
+	}
+	save = cw;
+	cw = w;
+	if (w->dol) delText(0, w->dol);
+	cw->changeMode = cw->undoable = false;
+	cw = save;
+	for (size_t i = 0; i < count; i++) {
+		xmppAddMsg(w, msgs[i]);
+		borogove_release(msgs[i]);
+	}
+
+	borogove_release(msgs);
+	// TODO: place cursor at first unread?
+	// Need to mark messages read first
+	w->dot = w->dol;
+}
+
+// Warning: this callback fires on the XMPP thread
+static void xmppAvailableChat(void *chat, void *ctx) {
+	Window *w2;
+	Window *w = ctx;
+	char *p;
+	const char *chatId;
+	// reuse ircChannel for our purposes
+	if (w->xmppChat) {
+		borogove_release(w->xmppChat);
+	}
+	if (chat) {
+		w->xmppChat = borogove_client_start_chat(w->xmppClient, chat);
+		chatId = borogove_chat_chat_id(w->xmppChat);
+		nzFree(w->ircChannel), w->ircChannel = cloneString(chatId);
+		p = allocMem(strlen(chatId) + 6);
+		sprintf(p, "%s send", chatId);
+		w->f0.fileName = p;
+		w2 = sessionList[w->ircOther].lw;
+		if(w2) {
+			w2->xmppChat = w->xmppChat;
+			ircSetFileName(w2);
+		}
+		eb_printf("Switched to %s\n", chatId);
+		borogove_chat_get_messages_before(w->xmppChat, NULL, xmppLoad, w);
+		borogove_release(chatId);
+		borogove_release(chat);
+	} else {
+		w->xmppChat = 0;
+		eb_puts("No chat found");
+	}
+	borogove_release(w->xmppCtx);
+	w->xmppCtx = 0;
+}
+
+static void xmppSetChat(Window *w, const char *chat)
+{
+	Window *w2;
+	char *p;
+	if (chat) {
+		if (w->xmppChat) {
+				borogove_release(w->xmppChat);
+				w->xmppChat = 0;
+		}
+		w->xmppCtx = borogove_client_find_available_chats(w->xmppClient, chat);
+		borogove_available_chat_iterator_next(w->xmppCtx, xmppAvailableChat, w);
+	} else {
+		nzFree(w->ircChannel);
+		nzFree(w->f0.fileName);
+		w->ircChannel = cloneString("xmpp");
+		p = allocMem(strlen(w->ircChannel) + 6);
+		sprintf(p, "%s send", w->ircChannel);
+		w->f0.fileName = p;
+		w2 = sessionList[w->ircOther].lw;
+		if(w2) ircSetFileName(w2);
+	}
+}
+
+// parameter is output window
+void xmppSetFileName(Window *w)
+{
+	int i, len;
+	char *p;
+	Window *w2;
+	if(!w->xmppoMode) return;
+	for(i = 1, len = 0; i <= maxSession; ++i) {
+		w2 = sessionList[i].lw;
+		if(!w2 || !w2->xmppiMode || w2->ircOther != w->sno) continue;
+		if(w2->ircChannel) len += strlen(w2->ircChannel) + 1;
+	}
+	nzFree(w->f0.fileName);
+	if(!len) { w->f0.fileName = cloneString("xmpp receive"); return; }
+	p = allocMem(len + 8);
+	for(i = 1, *p = 0; i <= maxSession; ++i) {
+		w2 = sessionList[i].lw;
+		if(!w2 || !w2->xmppiMode || w2->ircOther != w->sno) continue;
+		if(w2->ircChannel) {
+			strcat(p, w2->ircChannel);
+			strcat(p, " ");
+		}
+	}
+	strcat(p, "receive");
+	w->f0.fileName = p;
+}
+
+// Warning: this callback fires on the XMPP thread
+static void onXmppMessage(void *message, int event, void *ctx) {
+	Window *w = ctx;
+	if (w->xmppiMode) {
+		w = sessionList[w->ircOther].lw;
+	}
+
+	if (event) return; // Ignore edits etc for now
+
+	xmppAddMsg(w, message);
+	borogove_release(message);
+}
+
+// Warning: this callback fires on the XMPP thread
+static void onXmppPasswordNeeded(void *client, void *password) {
+	borogove_client_use_password(client, password);
+	borogove_release(client);
+}
+
+bool xmppSetup(char *line)
+{
+	int cxin, cxout;
+	Window *win, *wout;
+	char *jid, *password;
+	int l;
+	line += 4;
+	if(!*line) goto usage;
+	spaceCrunch(line, true, false);
+	if(!isdigitByte(*line)) goto usage;
+	cxin = strtol(line, &line, 10);
+	if(cxin < 0 || *line != ' ') goto usage;
+	++line;
+	if(!isdigitByte(*line)) goto usage;
+	cxout = strtol(line, &line, 10);
+	if(cxout < 0 || *line != ' ') goto usage;
+	++line;
+	if(!cxin || !cxout) {
+		setError(MSG_Session0);
+		return false;
+	}
+	if(cxin >= MAXSESSION) {
+		setError(MSG_SessionHigh, cxin, MAXSESSION - 1);
+		return false;
+	}
+	if(cxout >= MAXSESSION) {
+		setError(MSG_SessionHigh, cxout, MAXSESSION - 1);
+		return false;
+	}
+	if(cxin == cxout) {
+		setError(MSG_IrcCompat, cxout); // TODO
+		return false;
+	}
+	win = sessionList[cxin].lw;
+	if(!win) {
+		sideBuffer(cxin, emptyString, 0, 0);
+		win = sessionList[cxin].lw;
+	} else if(win->sqlMode | win->binMode | win->dirMode | win->browseMode | win->irciMode | win->ircoMode | win->imapMode1 | win->imapMode2) {
+		setError(MSG_IrcCompat, cxin); // TODO
+		return false;
+	}
+	wout = sessionList[cxout].lw;
+	if(!wout) {
+		sideBuffer(cxout, emptyString, 0, 0);
+		wout = sessionList[cxout].lw;
+	} else if(wout->sqlMode | wout->binMode | wout->dirMode | wout->browseMode | wout->irciMode | wout->imapMode1 | wout->imapMode2) {
+		setError(MSG_IrcCompat, cxout); // TODO
+		return false;
+	}
+	if(!isalphaByte(*line)) goto usage;
+	jid = line;
+	password = ircChomp(jid, ' ');
+	if(!*password) password = 0;
+
+	win->showchan = false;
+	l = strlen(jid);
+	if(jid[l-1] == '+')
+		jid[--l] = 0, win->showchan = true;
+
+	borogove_setup(NULL);
+	// TODO: paths
+	char *mediaDir, *dbPath;
+	createFormattedString(&mediaDir, "%s/edbrowse/media", dataHome);
+	createFormattedString(&dbPath, "%s/edbrowse/xmpp.db", dataHome);
+	void *media = borogove_persistence_media_store_fs_new(mediaDir);
+	void *persistence = borogove_persistence_sqlite_new(dbPath, media);
+	free(mediaDir);
+	free(dbPath);
+	win->xmppClient = borogove_client_new(jid, persistence);
+	win->xmppiMode = true;
+	wout->xmppoMode = true;
+	win->ircOther = cxout; // Reuse ircOut for xmppOut
+	nzFree(win->f0.hbase);
+	win->f0.hbase = cloneString(jid);
+	xmppSetChat(win, 0);
+
+	if(password) {
+		borogove_client_add_password_needed_listener(win->xmppClient, onXmppPasswordNeeded, password);
+	}
+
+	borogove_client_add_chat_message_listener(win->xmppClient, onXmppMessage, win);
+
+	borogove_client_start(win->xmppClient);
+
+// switch to the output buffer
+	cxSwitch(cxout, false);
+
+	return true;
+
+usage:
+	setError(MSG_IrcUsage); // TODO
+	return false;
+}
+
+// win is the same as cw
+static void xmppPrepSend(Window *win, Window *wout, char *s)
+{
+	char c, *p;
+	if(s[0] == '\0')
+		return;
+	if(s[0] != ':') {
+		if(!win->xmppChat) {
+			eb_puts("No chat selected");
+			return;
+		}
+		void *builder = borogove_chat_message_builder_new();
+		void *body = borogove_html_text(s);
+		borogove_chat_message_builder_set_body(builder, body);
+		borogove_chat_send_message(win->xmppChat, builder);
+		borogove_release(body);
+		borogove_release(builder);
+		return;
+	}
+	c = *++s;
+	if(c != '\0' && isspaceByte(s[1])) {
+		p = s + 2;
+		switch(c) {
+		case 'j':
+			xmppSetChat(win, p);
+			return;
+		case 'l':
+			xmppSetChat(win, 0);
+			Window *wino = sessionList[win->ircOther].lw;
+			Window *save;
+			void **chats;
+			size_t chatsn = borogove_client_get_chats(win->xmppClient, &chats);
+			for (size_t i = 0; i < chatsn; i++) {
+				const char *name = borogove_chat_get_display_name(chats[i]);
+				const char *chatId = borogove_chat_chat_id(chats[i]);
+				save = cw;
+				cw = wino;
+				if (strcmp(name, chatId)) {
+					ircAddLine("", false, false, "%s (%s)", name, chatId);
+				} else {
+					ircAddLine("", false, false, "%s", chatId);
+				}
+				cw = save;
+				borogove_release(name);
+				borogove_release(chatId);
+				borogove_release(chats[i]);
+			}
+			borogove_release(chats);
+			return;
+		case 's':
+			xmppSetChat(win, p);
+			return;
+		}
+	}
+
+	// TODO: not a command, so probably a message...
+}
+
+bool xmppWrite(void)
+{
+	Window *nw = sessionList[cw->ircOther].lw;
+	int i;
+	pst s;
+	char *all, *cur;
+	if(nw && !nw->xmppoMode) nw = 0;
+	if(!nw) { // should never happen
+		setError(MSG_TextRec, cw->ircOther);
+		return false;
+	}
+	fileSize = 0;
+	for(i = 1; i <= cw->dol; ++i) {
+		s = fetchLine(i, 1);
+		fileSize += pstLength(s);
+	}
+	all = allocZeroString(fileSize + 1);
+	cur = all;
+	for(i = 1; i <= cw->dol; ++i) {
+		s = fetchLine(i, 1);
+		size_t len = pstLength(s);
+		memcpy(cur, s, len);
+		cur += len;
+		free(s);
+	}
+	xmppPrepSend(cw, nw, all);
+	free(all);
+	return true;
+}

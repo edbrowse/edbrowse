@@ -518,6 +518,8 @@ int ehsn;
 	bool showchan:1; // show channel when displaying messages
 	bool ircSecure:1; // ssl connection
 	bool ircPingOut:1; // sent ping to server
+	bool xmppiMode:1;
+	bool xmppoMode:1;
 	bool imapMode1:1;		// imap folders
 	bool imapMode2:1;		// imap envelopes
 	bool imapMode3:1;		// reading an email
@@ -526,6 +528,7 @@ int ehsn;
 	ushort ircOther; // point to the output side
 	ushort ircCount;
 	char *ircNick, *ircChannel;
+	void *xmppClient, *xmppChat, *xmppCtx;
 	time_t ircRespond;
 	int imap_n; // imap account
 	char imap_env[8]; // envelope format
