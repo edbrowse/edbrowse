@@ -4511,21 +4511,27 @@ static void xmppAddMsg(Window *w, void *msg) {
 	if (w->xmppiMode) {
 		w = sessionList[w->ircOther].lw;
 	}
-	// TODO: could use borogove_chat_get_member_details to get better details
-	void *sender = borogove_chat_message_sender_member_stub(msg);
-	const void *chatName = borogove_chat_get_display_name(w->xmppChat);
-	const void *name = borogove_member_display_name(sender);
-	void *body = borogove_chat_message_body(msg, sender);
-	const char *text = borogove_html_to_plain_text(body);
-	save = cw;
-	cw = w;
-	ircAddLine(chatName, w->showchan, false, "<%s> %s", name, text);
-	cw = save;
-	borogove_release(name);
-	borogove_release(sender);
-	borogove_release(chatName);
-	borogove_release(text);
-	borogove_release(body);
+	const void *chatId = borogove_chat_chat_id(w->xmppChat);
+	const void *mchatId = borogove_chat_message_chat_id(msg);
+	if (!strcmp(chatId, mchatId)) {
+		// TODO: could use borogove_chat_get_member_details to get better details
+		void *sender = borogove_chat_message_sender_member_stub(msg);
+		const void *chatName = borogove_chat_get_display_name(w->xmppChat);
+		const void *name = borogove_member_display_name(sender);
+		void *body = borogove_chat_message_body(msg, sender);
+		const char *text = borogove_html_to_plain_text(body);
+		save = cw;
+		cw = w;
+		ircAddLine(chatName, w->showchan, false, "<%s> %s", name, text);
+		cw = save;
+		borogove_release(name);
+		borogove_release(sender);
+		borogove_release(chatName);
+		borogove_release(text);
+		borogove_release(body);
+	}
+	borogove_release(chatId);
+	borogove_release(mchatId);
 }
 
 static struct xmppWork *xmppWorkQ = NULL;
