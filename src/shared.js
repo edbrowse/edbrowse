@@ -3380,10 +3380,11 @@ return !(this.valueMissing)}})
 
 swpc("EventTarget", class extends w.Object {
     constructor() { super(w.Object); }
-    addEventListener = addEventListener;
-    removeEventListener = removeEventListener;
-    dispatchEvent = dispatchEvent;
 })
+let evtgtp = w.EventTarget.prototype;
+odp(evtgtp, "addEventListener", {value: addEventListener});
+odp(evtgtp, "removeEventListener", {value: removeEventListener});
+odp(evtgtp, "dispatchEvent", {value: dispatchEvent});
 swpc("Node", class extends w.EventTarget {
     constructor() { super(w.EventTarget); }
 })
@@ -5455,262 +5456,283 @@ if(this.height === 0  || this.width === 0) return "data:,";
 return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAADElEQVQImWNgoBMAAABpAAFEI8ARAAAAAElFTkSuQmCC";
 }
 
-swpc("HTMLStyleElement", class extends w.HTMLElement { constructor() { super(w.HTMLElement); }})
-
-// Kind of a hack to make this like the link element
-let stylep = w.HTMLStyleElement.prototype;
-odp(stylep, "css$data", {
-get: function() { let s = ""; for(let i=0; i<this.childNodes.length; ++i) if(this.childNodes[i].nodeName == "#text") s += this.childNodes[i].data; return s; }});
-// this is one of those on-demand properties, so check sheet$2.
-odp(stylep, "sheet", { get: function(){ if(!this.sheet$2) this.sheet$2 = new w.CSSStyleSheet; return this.sheet$2; }})
-
 // The css style declaration - complicated by all the default values,
 // and the plethora of shorthand properties that we must expand.
 swpc("CSSStyleDeclaration", class extends w.HTMLElement {
-    constructor() {
+    constructor()
+    {
         super(w.HTMLElement);
         odp(this, "style$2", {value:this});
         odp(this, "element", {value:null, writable:true});
+
+        // when one property is shorthand for several others.
+        // margin implies top right bottom left
+        // How many of these are there that I don't know about?
+        // Not clear how this meshes with my $$scy specificity system.
+        let list = [
+            "margin", "scrollMargin", "padding", "scrollPadding",
+            "borderRadius", "border",
+            "borderWidth", "borderColor", "borderStyle", "borderImage",
+            "background", "font", "inset", "textDecoration"
+        ];
+        for (let k of list) {
+            odp(this, k, {
+                set: function(h) { cssShort[`${k}Short`](this, h); }
+            })
+        }
+        // These are default properties of a style declaration.
+        // they should not be enumerable. They must however be writable,
+        // so that the corresponding attributes placed on style objects are writable.
+        list = [
+            "accentColor","alignContent","alignItems","alignSelf","all",
+            "animation","animationDelay","animationDuration","animationFillMode","animationIterationCount","animationName","animationPlayState","animationTimingFunction",
+            "appearance","aspectRatio",
+            "backfaceVisibility","backgroundAttachment","backgroundBlendMode","backgroundClip","backgroundColor","backgroundImage",
+            "backgroundOrigin","backgroundPosition","backgroundPositionX","backgroundPositionY","backgroundRepeat","backgroundSize",
+            "blockSize","borderBlock","borderBlockColor","borderBlockEnd","borderBlockEndColor","borderBlockEndStyle","borderBlockEndWidth",
+            "borderBlockStart","borderBlockStartColor","borderBlockStartStyle","borderBlockStartWidth","borderBlockStyle","borderBlockWidth",
+            "borderBottomLeftRadius","borderBottomRightRadius","borderCollapse",
+            "borderEndEndRadius","borderEndStartRadius","borderInline","borderInlineColor","borderInlineEnd","borderInlineEndColor","borderInlineEndStyle","borderInlineEndWidth","borderInlineStart","borderInlineStartColor","borderInlineStartStyle","borderInlineStartWidth","borderInlineStyle","borderInlineWidth",
+            "borderSpacing","borderStartEndRadius","borderStartStartRadius","borderTopLeftRadius","borderTopRightRadius",
+            "bottom","boxDecorationBreak","boxShadow","boxSizing",
+            "breakAfter","breakBefore","breakInside",
+            "captionSide","caretColor","clear","clip","clipPath","clipRule",
+            "color","colorAdjust","colorInterpolation","colorInterpolationFilters",
+            "columnCount","columnFill","columnGap","columnRule","columnRuleColor","columnRuleStyle","columnRuleWidth","columns","columnSpan","columnWidth",
+            "contain","content","counterIncrement","counterReset","counterSet",
+            "cssFloat","cursor","cx","cy",
+            "direction","display","dominantBaseline",
+            "emptyCells","fill","fillOpacity","fillRule","filter",
+            "flex","flexBasis","flexDirection","flexFlow","flexGrow","flexShrink","flexWrap",
+            // need default for cssFloat, documentation says none, acid 45 says ""
+            "cssFloat",
+            "floodColor","floodOpacity",
+            "fontFamily","fontFeatureSettings","fontKerning","fontLanguageOverride","fontSize","fontSizeAdjust","fontStretch","fontStyle","fontSynthesis","fontVariant","fontVariantAlternates","fontVariantCaps","fontVariantEastAsian","fontVariantLigatures","fontVariantNumeric","fontVariantPosition","fontWeight",
+            "gap","grid","gridArea","gridAutoColumns","gridAutoFlow","gridAutoRows","gridColumn","gridColumnEnd","gridColumnGap","gridColumnStart",
+            "gridGap","gridRow","gridRowEnd","gridRowGap","gridRowStart","gridTemplate","gridTemplateAreas","gridTemplateColumns","gridTemplateRows",
+            "hyphens","imageOrientation","imageRendering","imeMode","inlineSize",
+            "insetBlock","insetBlockEnd","insetBlockStart","insetInline","insetInlineEnd","insetInlineStart","isolation",
+            "justifyContent","justifyItems","justifySelf",
+            "left","letterSpacing","lightingColor","lineBreak","lineHeight","listStyle","listStyleImage","listStylePosition","listStyleType",
+            "marginBlock","marginBlockEnd","marginBlockStart","marginBottom","marginInline","marginInlineEnd","marginInlineStart","marginLeft","marginRight","marginTop",
+            "marker","markerEnd","markerMid","markerStart",
+            "mask","maskClip","maskComposite","maskImage","maskMode","maskOrigin","maskPosition","maskPositionX","maskPositionY","maskRepeat","maskSize","maskType",
+            "maxBlockSize","maxHeight","maxInlineSize","maxWidth",
+            "minBlockSize","minHeight","minInlineSize","minWidth","mixBlendMode",
+            "MozAnimation","MozAnimationDelay","MozAnimationDirection","MozAnimationDuration","MozAnimationFillMode","MozAnimationIterationCount","MozAnimationName","MozAnimationPlayState","MozAnimationTimingFunction",
+            "MozAppearance",
+            "MozBackfaceVisibility","MozBorderEnd","MozBorderEndColor","MozBorderEndStyle","MozBorderEndWidth","MozBorderStart","MozBorderStartColor","MozBorderStartStyle","MozBorderStartWidth",
+            "MozBoxAlign","MozBoxDirection","MozBoxFlex","MozBoxOrdinalGroup","MozBoxOrient","MozBoxPack","MozBoxSizing",
+            "MozFloatEdge","MozFontFeatureSettings","MozFontLanguageOverride","MozForceBrokenImageIcon",
+            "MozHyphens","MozImageRegion","MozMarginEnd","MozMarginStart","MozOrient",
+            "MozPaddingEnd","MozPaddingStart","MozPerspective","MozPerspectiveOrigin",
+            "MozTabSize","MozTextSizeAdjust","MozTransform","MozTransformOrigin","MozTransformStyle","MozTransition","MozTransitionDelay","MozTransitionDuration","MozTransitionProperty","MozTransitionTimingFunction",
+            "MozUserFocus","MozUserInput","MozUserModify","MozUserSelect","MozWindowDragging",
+            "objectFit","objectPosition",
+            "offset","offsetAnchor","offsetDistance","offsetPath","offsetRotate",
+            "opacity","order","outline","outlineColor","outlineOffset","outlineStyle","outlineWidth",
+            "overflow","overflowAnchor","overflowBlock","overflowInline","overflowWrap","overflowX","overflowY",
+            "overscrollBehavior","overscrollBehaviorBlock","overscrollBehaviorInline","overscrollBehaviorX","overscrollBehaviorY",
+            "paddingBlock","paddingBlockEnd","paddingBlockStart","paddingBottom","paddingInline","paddingInlineEnd","paddingInlineStart","paddingLeft","paddingRight","paddingTop",
+            "pageBreakAfter","pageBreakBefore","pageBreakInside","paintOrder","perspective","perspectiveOrigin",
+            "placeContent","placeItems","placeSelf","pointerEvents","position",
+            "quotes",
+            "r","resize","right","rotate","rowGap","rubyAlign","rubyPosition","rx","ry",
+            "scale","scrollbarColor","scrollbarWidth","scrollBehavior","scrollMarginBlock","scrollMarginBlockEnd","scrollMarginBlockStart","scrollMarginBottom","scrollMarginInline","scrollMarginInlineEnd","scrollMarginInlineStart","scrollMarginLeft","scrollMarginRight","scrollMarginTop",
+            "scrollPaddingBlock","scrollPaddingBlockEnd","scrollPaddingBlockStart","scrollPaddingBottom","scrollPaddingInline","scrollPaddingInlineEnd","scrollPaddingInlineStart","scrollPaddingLeft","scrollPaddingRight","scrollPaddingTop",
+            "scrollSnapAlign","scrollSnapType",
+            "shapeImageThreshold","shapeMargin","shapeOutside","shapeRendering",
+            "stopColor","stopOpacity",
+            "stroke","strokeDasharray","strokeDashoffset","strokeLinecap","strokeLinejoin","strokeMiterlimit","strokeOpacity","strokeWidth",
+            "tableLayout","tabSize","textAlign","textAlignLast","textAnchor","textCombineUpright",
+            "textDecorationColor","textDecorationLine","textDecorationSkipInk","textDecorationStyle","textDecorationThickness",
+            "textEmphasis","textEmphasisColor","textEmphasisPosition","textEmphasisStyle","textIndent","textJustify",
+            "textOrientation","textOverflow","textRendering","textShadow","textUnderlineOffset","textUnderlinePosition",
+            "top","touchAction","transform","transformBox","transformOrigin","transformStyle",
+            "transition","transitionDelay","transitionDuration","transitionProperty","transitionTimingFunction","translate",
+            "unicodeBidi","userSelect","vectorEffect","verticalAlign","visibility",
+            "webkitAlignContent","WebkitAlignContent","webkitAlignItems","WebkitAlignItems","webkitAlignSelf","WebkitAlignSelf",
+            "webkitAnimation","WebkitAnimation","webkitAnimationDelay","WebkitAnimationDelay","webkitAnimationDirection","WebkitAnimationDirection","webkitAnimationDuration","WebkitAnimationDuration","webkitAnimationFillMode","WebkitAnimationFillMode","webkitAnimationIterationCount","WebkitAnimationIterationCount",
+            "webkitAnimationName","WebkitAnimationName","webkitAnimationPlayState","WebkitAnimationPlayState","webkitAnimationTimingFunction","WebkitAnimationTimingFunction",
+            "webkitAppearance","WebkitAppearance",
+            "webkitBackfaceVisibility","WebkitBackfaceVisibility","webkitBackgroundClip","WebkitBackgroundClip","webkitBackgroundOrigin","WebkitBackgroundOrigin","webkitBackgroundSize","WebkitBackgroundSize",
+            "webkitBoxAlign","WebkitBoxAlign","webkitBoxDirection","WebkitBoxDirection","webkitBoxFlex","WebkitBoxFlex","webkitBoxOrdinalGroup","WebkitBoxOrdinalGroup","webkitBoxOrient","WebkitBoxOrient",
+            "webkitBoxPack","WebkitBoxPack","webkitBoxShadow","WebkitBoxShadow","webkitBoxSizing","WebkitBoxSizing",
+            "webkitFilter","WebkitFilter","webkitFlex","WebkitFlex","webkitFlexBasis","WebkitFlexBasis","webkitFlexDirection","WebkitFlexDirection","webkitFlexFlow","WebkitFlexFlow","webkitFlexGrow","WebkitFlexGrow",
+            "webkitFlexShrink","WebkitFlexShrink","webkitFlexWrap","WebkitFlexWrap",
+            "webkitJustifyContent","WebkitJustifyContent","webkitLineClamp","WebkitLineClamp",
+            "webkitMask","WebkitMask","webkitMaskClip","WebkitMaskClip","webkitMaskComposite","WebkitMaskComposite","webkitMaskImage","WebkitMaskImage","webkitMaskOrigin","WebkitMaskOrigin",
+            "webkitMaskPosition","WebkitMaskPosition","webkitMaskPositionX","WebkitMaskPositionX","webkitMaskPositionY","WebkitMaskPositionY","webkitMaskRepeat","WebkitMaskRepeat","webkitMaskSize","WebkitMaskSize",
+            "webkitOrder","WebkitOrder","webkitPerspective","WebkitPerspective","webkitPerspectiveOrigin","WebkitPerspectiveOrigin",
+            "webkitTextFillColor","WebkitTextFillColor","webkitTextSizeAdjust","WebkitTextSizeAdjust","webkitTextStroke","WebkitTextStroke","webkitTextStrokeColor","WebkitTextStrokeColor","webkitTextStrokeWidth","WebkitTextStrokeWidth",
+            "webkitTransform","WebkitTransform","webkitTransformOrigin","WebkitTransformOrigin","webkitTransformStyle","WebkitTransformStyle",
+            "webkitTransition","WebkitTransition","webkitTransitionDelay","WebkitTransitionDelay","webkitTransitionDuration","WebkitTransitionDuration","webkitTransitionProperty","WebkitTransitionProperty","webkitTransitionTimingFunction","WebkitTransitionTimingFunction",
+            "webkitUserSelect","WebkitUserSelect",
+            "whiteSpace","willChange","wordBreak","wordSpacing","wordWrap","writingMode",
+            "x",
+            "y",
+            "zIndex",
+        ];
+        for (let k of list) odp(this, k, {value: "", writable: true})
+
+        list = [
+            // first attribute is per acid test 46
+            "textTransform.none",
+            "borderImageSource.none","borderImageOutset.0","borderImageWidth.1","borderImageSlice.100%",
+            "borderBottom.1px solid rgb(193, 193, 193)","borderLeft.1px solid rgb(193, 193, 193)","borderRight.1px solid rgb(193, 193, 193)","borderTop.1px solid rgb(193, 193, 193)",
+            "borderBottomWidth.1px","borderLeftWidth.1px","borderRightWidth.1px","borderTopWidth.1px",
+            "width.250px", "height.40px",
+            "MozBorderImage.none 100% / 1 / 0 stretch","webkitBorderImage.none 100% / 1 / 0 stretch","WebkitBorderImage.none 100% / 1 / 0 stretch",
+            "borderBottomColor.rgb(193, 193, 193)","borderLeftColor.rgb(193, 193, 193)","borderRightColor.rgb(193, 193, 193)","borderTopColor.rgb(193, 193, 193)",
+            "borderBottomStyle.solid","borderLeftStyle.solid","borderRightStyle.solid","borderTopStyle.solid",
+            "borderImageRepeat.stretch",
+            "parentRule.null",
+        ];
+        for(let k of list) {
+            const s = k.split('.');
+            odp(this, s[0], {value: s[1], writable: true})
+        }
     }
+
     toString() { return "style object" };
     // sheet on demand
-    get shee() {
+    get sheet() {
         if(!this.sheet$2) this.sheet$2 = new w.CSSStyleSheet;
         return this.sheet$2;
     }
     // acid test 45 says float magically turns into cssFloat - I guess.
     // And what's the point of that?
-    set float(v) { this.cssFloat = v}
+    set float(v) { this.cssFloat = v; }
 
+    get length()
+    {
+        let cnt = 0;
+        for(let i in this) if(this.hasOwnProperty(i)) ++cnt;
+        return cnt;
+    }
+
+    item(n)
+    {
+        if(typeof n !== "number") return "";
+        let cnt = 0;
+        for(let i in this) {
+            if (!this.hasOwnProperty(i)) continue;
+            if (cnt == n) return uncamelCase(i);
+            ++cnt;
+        }
+        return ""
+    }
+
+    getPropertyValue(p)
+    {
+        p = camelCase(p);
+        if (this[p] == undefined) this[p] = "";
+        return this[p];
+    }
+
+    getProperty(p)
+    {
+        p = camelCase(p);
+        return this[p] ? this[p] : "";
+    }
+
+    setProperty(p, v, prv)
+    {
+        p = camelCase(p);
+        this[p] = v;
+        const pri = p + "$pri";
+        odp(this, pri, {
+            value: (prv === "important"),
+            writable: true,
+            configurable: true
+        })
+    }
+
+    getPropertyPriority(p)
+    {
+        p = camelCase(p);
+        const pri = p + "$pri";
+        return this[pri] ? "important" : "";
+    }
+
+    removeProperty(p)
+    {
+        p = camelCase(p);
+        delete this[p]
+        delete this[p+"$$scy"]
+        delete this[p+"$$pri"]
+    }
+
+    get cssText()
+    {
+        let s = "";
+        for (let k in this) {
+            if (!this.hasOwnProperty(k)) continue;
+            let l = this[k];
+            // weirdness from acid 45
+            if (k === "cssFloat") k = "float";
+            if (l.match(/[ \t;"'{}]/)) {
+                if (!l.match(/"/)) l = '"' + l + '"';
+                else if (!l.match(/'/)) l = "'" + l + "'";
+                else {
+                    alert3(`cssText unrepresentable ${k}: ${l}`);
+                    l = "none";
+                }
+            }
+            if (s.length) s += ' ';
+            s = s + k + ': ' + l + ';';
+        }
+        return s;
+    }
+
+    set cssText(h)
+    {
+        w.soj$ = this;
+        eb$cssText.call(this, h);
+        delete w.soj$;
+    }
+});
+
+swpc("HTMLStyleElement", class extends w.CSSStyleDeclaration {
+    constructor() { super(w.CSSStyleDeclaration); }
+    get css$data()
+    {
+        let s = "";
+        for(let i=0; i<this.childNodes.length; ++i)
+            if(this.childNodes[i].nodeName == "#text")
+                s += this.childNodes[i].data;
+        return s;
+    }
 })
 
-let csdp = w.CSSStyleDeclaration.prototype;
-// when one property is shorthand for several others.
-// margin implies top right bottom left
-// How many of these are there that I don't know about?
-// Not clear how this meshes with my $$scy specificity system.
-;(function(){
-const list = ["margin", "scrollMargin", "padding", "scrollPadding",
-"borderRadius", "border",
-"borderWidth", "borderColor", "borderStyle", "borderImage",
-"background", "font", "inset", "textDecoration"];
-for(let k of list) {
-eval('odp(csdp, "' + k + '", {set: function(h) {cssShort.' + k + 'Short(this, h)}})')
-}})();
+swpc("CSSRule", class extends w.Object {
+    constructor() {super(w.Object); this.cssText=""; }
+    toString() { return this.cssText; }
+})
 
-
-// These are default properties of a style declaration.
-// they should not be enumerable. They must however be writable,
-// so that the corresponding attributes placed on style objects are writable.
-// Remember that a readonly prototype property cascades down.
-;(function(){
-const list =[
-"accentColor","alignContent","alignItems","alignSelf","all",
-"animation","animationDelay","animationDuration","animationFillMode","animationIterationCount","animationName","animationPlayState","animationTimingFunction",
-"appearance","aspectRatio",
-"backfaceVisibility","backgroundAttachment","backgroundBlendMode","backgroundClip","backgroundColor","backgroundImage",
-"backgroundOrigin","backgroundPosition","backgroundPositionX","backgroundPositionY","backgroundRepeat","backgroundSize",
-"blockSize","borderBlock","borderBlockColor","borderBlockEnd","borderBlockEndColor","borderBlockEndStyle","borderBlockEndWidth",
-"borderBlockStart","borderBlockStartColor","borderBlockStartStyle","borderBlockStartWidth","borderBlockStyle","borderBlockWidth",
-"borderBottomLeftRadius","borderBottomRightRadius","borderCollapse",
-"borderEndEndRadius","borderEndStartRadius","borderInline","borderInlineColor","borderInlineEnd","borderInlineEndColor","borderInlineEndStyle","borderInlineEndWidth","borderInlineStart","borderInlineStartColor","borderInlineStartStyle","borderInlineStartWidth","borderInlineStyle","borderInlineWidth",
-"borderSpacing","borderStartEndRadius","borderStartStartRadius","borderTopLeftRadius","borderTopRightRadius",
-"bottom","boxDecorationBreak","boxShadow","boxSizing",
-"breakAfter","breakBefore","breakInside",
-"captionSide","caretColor","clear","clip","clipPath","clipRule",
-"color","colorAdjust","colorInterpolation","colorInterpolationFilters",
-"columnCount","columnFill","columnGap","columnRule","columnRuleColor","columnRuleStyle","columnRuleWidth","columns","columnSpan","columnWidth",
-"contain","content","counterIncrement","counterReset","counterSet",
-"cssFloat","cursor","cx","cy",
-"direction","display","dominantBaseline",
-"emptyCells","fill","fillOpacity","fillRule","filter",
-"flex","flexBasis","flexDirection","flexFlow","flexGrow","flexShrink","flexWrap",
-// need default for cssFloat, documentation says none, acid 45 says ""
-"cssFloat",
-"floodColor","floodOpacity",
-"fontFamily","fontFeatureSettings","fontKerning","fontLanguageOverride","fontSize","fontSizeAdjust","fontStretch","fontStyle","fontSynthesis","fontVariant","fontVariantAlternates","fontVariantCaps","fontVariantEastAsian","fontVariantLigatures","fontVariantNumeric","fontVariantPosition","fontWeight",
-"gap","grid","gridArea","gridAutoColumns","gridAutoFlow","gridAutoRows","gridColumn","gridColumnEnd","gridColumnGap","gridColumnStart",
-"gridGap","gridRow","gridRowEnd","gridRowGap","gridRowStart","gridTemplate","gridTemplateAreas","gridTemplateColumns","gridTemplateRows",
-"hyphens","imageOrientation","imageRendering","imeMode","inlineSize",
-"insetBlock","insetBlockEnd","insetBlockStart","insetInline","insetInlineEnd","insetInlineStart","isolation",
-"justifyContent","justifyItems","justifySelf",
-"left","letterSpacing","lightingColor","lineBreak","lineHeight","listStyle","listStyleImage","listStylePosition","listStyleType",
-"marginBlock","marginBlockEnd","marginBlockStart","marginBottom","marginInline","marginInlineEnd","marginInlineStart","marginLeft","marginRight","marginTop",
-"marker","markerEnd","markerMid","markerStart",
-"mask","maskClip","maskComposite","maskImage","maskMode","maskOrigin","maskPosition","maskPositionX","maskPositionY","maskRepeat","maskSize","maskType",
-"maxBlockSize","maxHeight","maxInlineSize","maxWidth",
-"minBlockSize","minHeight","minInlineSize","minWidth","mixBlendMode",
-"MozAnimation","MozAnimationDelay","MozAnimationDirection","MozAnimationDuration","MozAnimationFillMode","MozAnimationIterationCount","MozAnimationName","MozAnimationPlayState","MozAnimationTimingFunction",
-"MozAppearance",
-"MozBackfaceVisibility","MozBorderEnd","MozBorderEndColor","MozBorderEndStyle","MozBorderEndWidth","MozBorderStart","MozBorderStartColor","MozBorderStartStyle","MozBorderStartWidth",
-"MozBoxAlign","MozBoxDirection","MozBoxFlex","MozBoxOrdinalGroup","MozBoxOrient","MozBoxPack","MozBoxSizing",
-"MozFloatEdge","MozFontFeatureSettings","MozFontLanguageOverride","MozForceBrokenImageIcon",
-"MozHyphens","MozImageRegion","MozMarginEnd","MozMarginStart","MozOrient",
-"MozPaddingEnd","MozPaddingStart","MozPerspective","MozPerspectiveOrigin",
-"MozTabSize","MozTextSizeAdjust","MozTransform","MozTransformOrigin","MozTransformStyle","MozTransition","MozTransitionDelay","MozTransitionDuration","MozTransitionProperty","MozTransitionTimingFunction",
-"MozUserFocus","MozUserInput","MozUserModify","MozUserSelect","MozWindowDragging",
-"objectFit","objectPosition",
-"offset","offsetAnchor","offsetDistance","offsetPath","offsetRotate",
-"opacity","order","outline","outlineColor","outlineOffset","outlineStyle","outlineWidth",
-"overflow","overflowAnchor","overflowBlock","overflowInline","overflowWrap","overflowX","overflowY",
-"overscrollBehavior","overscrollBehaviorBlock","overscrollBehaviorInline","overscrollBehaviorX","overscrollBehaviorY",
-"paddingBlock","paddingBlockEnd","paddingBlockStart","paddingBottom","paddingInline","paddingInlineEnd","paddingInlineStart","paddingLeft","paddingRight","paddingTop",
-"pageBreakAfter","pageBreakBefore","pageBreakInside","paintOrder","perspective","perspectiveOrigin",
-"placeContent","placeItems","placeSelf","pointerEvents","position",
-"quotes",
-"r","resize","right","rotate","rowGap","rubyAlign","rubyPosition","rx","ry",
-"scale","scrollbarColor","scrollbarWidth","scrollBehavior","scrollMarginBlock","scrollMarginBlockEnd","scrollMarginBlockStart","scrollMarginBottom","scrollMarginInline","scrollMarginInlineEnd","scrollMarginInlineStart","scrollMarginLeft","scrollMarginRight","scrollMarginTop",
-"scrollPaddingBlock","scrollPaddingBlockEnd","scrollPaddingBlockStart","scrollPaddingBottom","scrollPaddingInline","scrollPaddingInlineEnd","scrollPaddingInlineStart","scrollPaddingLeft","scrollPaddingRight","scrollPaddingTop",
-"scrollSnapAlign","scrollSnapType",
-"shapeImageThreshold","shapeMargin","shapeOutside","shapeRendering",
-"stopColor","stopOpacity",
-"stroke","strokeDasharray","strokeDashoffset","strokeLinecap","strokeLinejoin","strokeMiterlimit","strokeOpacity","strokeWidth",
-"tableLayout","tabSize","textAlign","textAlignLast","textAnchor","textCombineUpright",
-"textDecorationColor","textDecorationLine","textDecorationSkipInk","textDecorationStyle","textDecorationThickness",
-"textEmphasis","textEmphasisColor","textEmphasisPosition","textEmphasisStyle","textIndent","textJustify",
-"textOrientation","textOverflow","textRendering","textShadow","textUnderlineOffset","textUnderlinePosition",
-"top","touchAction","transform","transformBox","transformOrigin","transformStyle",
-"transition","transitionDelay","transitionDuration","transitionProperty","transitionTimingFunction","translate",
-"unicodeBidi","userSelect","vectorEffect","verticalAlign","visibility",
-"webkitAlignContent","WebkitAlignContent","webkitAlignItems","WebkitAlignItems","webkitAlignSelf","WebkitAlignSelf",
-"webkitAnimation","WebkitAnimation","webkitAnimationDelay","WebkitAnimationDelay","webkitAnimationDirection","WebkitAnimationDirection","webkitAnimationDuration","WebkitAnimationDuration","webkitAnimationFillMode","WebkitAnimationFillMode","webkitAnimationIterationCount","WebkitAnimationIterationCount",
-"webkitAnimationName","WebkitAnimationName","webkitAnimationPlayState","WebkitAnimationPlayState","webkitAnimationTimingFunction","WebkitAnimationTimingFunction",
-"webkitAppearance","WebkitAppearance",
-"webkitBackfaceVisibility","WebkitBackfaceVisibility","webkitBackgroundClip","WebkitBackgroundClip","webkitBackgroundOrigin","WebkitBackgroundOrigin","webkitBackgroundSize","WebkitBackgroundSize",
-"webkitBoxAlign","WebkitBoxAlign","webkitBoxDirection","WebkitBoxDirection","webkitBoxFlex","WebkitBoxFlex","webkitBoxOrdinalGroup","WebkitBoxOrdinalGroup","webkitBoxOrient","WebkitBoxOrient",
-"webkitBoxPack","WebkitBoxPack","webkitBoxShadow","WebkitBoxShadow","webkitBoxSizing","WebkitBoxSizing",
-"webkitFilter","WebkitFilter","webkitFlex","WebkitFlex","webkitFlexBasis","WebkitFlexBasis","webkitFlexDirection","WebkitFlexDirection","webkitFlexFlow","WebkitFlexFlow","webkitFlexGrow","WebkitFlexGrow",
-"webkitFlexShrink","WebkitFlexShrink","webkitFlexWrap","WebkitFlexWrap",
-"webkitJustifyContent","WebkitJustifyContent","webkitLineClamp","WebkitLineClamp",
-"webkitMask","WebkitMask","webkitMaskClip","WebkitMaskClip","webkitMaskComposite","WebkitMaskComposite","webkitMaskImage","WebkitMaskImage","webkitMaskOrigin","WebkitMaskOrigin",
-"webkitMaskPosition","WebkitMaskPosition","webkitMaskPositionX","WebkitMaskPositionX","webkitMaskPositionY","WebkitMaskPositionY","webkitMaskRepeat","WebkitMaskRepeat","webkitMaskSize","WebkitMaskSize",
-"webkitOrder","WebkitOrder","webkitPerspective","WebkitPerspective","webkitPerspectiveOrigin","WebkitPerspectiveOrigin",
-"webkitTextFillColor","WebkitTextFillColor","webkitTextSizeAdjust","WebkitTextSizeAdjust","webkitTextStroke","WebkitTextStroke","webkitTextStrokeColor","WebkitTextStrokeColor","webkitTextStrokeWidth","WebkitTextStrokeWidth",
-"webkitTransform","WebkitTransform","webkitTransformOrigin","WebkitTransformOrigin","webkitTransformStyle","WebkitTransformStyle",
-"webkitTransition","WebkitTransition","webkitTransitionDelay","WebkitTransitionDelay","webkitTransitionDuration","WebkitTransitionDuration","webkitTransitionProperty","WebkitTransitionProperty","webkitTransitionTimingFunction","WebkitTransitionTimingFunction",
-"webkitUserSelect","WebkitUserSelect",
-"whiteSpace","willChange","wordBreak","wordSpacing","wordWrap","writingMode",
-"x",
-"y",
-"zIndex",];
-for(let k of list)
-odp(csdp, k, {value:"",writable:true})
-})();
-
-;(function(){
-const list =[
-// first attribute is per acid test 46
-"textTransform.none",
-"borderImageSource.none","borderImageOutset.0","borderImageWidth.1","borderImageSlice.100%",
-"borderBottom.1px solid rgb(193, 193, 193)","borderLeft.1px solid rgb(193, 193, 193)","borderRight.1px solid rgb(193, 193, 193)","borderTop.1px solid rgb(193, 193, 193)",
-"borderBottomWidth.1px","borderLeftWidth.1px","borderRightWidth.1px","borderTopWidth.1px",
-"width.250px", "height.40px",
-"MozBorderImage.none 100% / 1 / 0 stretch","webkitBorderImage.none 100% / 1 / 0 stretch","WebkitBorderImage.none 100% / 1 / 0 stretch",
-"borderBottomColor.rgb(193, 193, 193)","borderLeftColor.rgb(193, 193, 193)","borderRightColor.rgb(193, 193, 193)","borderTopColor.rgb(193, 193, 193)",
-"borderBottomStyle.solid","borderLeftStyle.solid","borderRightStyle.solid","borderTopStyle.solid",
-"borderImageRepeat.stretch",
-"parentRule.null",];
-for(let k of list) {
-const s = k.split('.');
-odp(csdp, s[0], {value:s[1],writable:true})
-}})();
-
-odp(csdp, "length", {get: function() {
-let cnt = 0;
-for(let i in this) if(this.hasOwnProperty(i)) ++cnt;
-return cnt;
-}})
-csdp.item = function(n) {
-if(typeof n !== "number") return "";
-let cnt = 0;
-for(let i in this) {
-if(!this.hasOwnProperty(i)) continue;
-if(cnt == n) return uncamelCase(i);
-++cnt;
-}
-return ""
-}
-csdp.getPropertyValue = function(p) {
-p = camelCase(p);
-                if (this[p] == undefined)                
-                        this[p] = "";
-                        return this[p];
-}
-csdp.getProperty = function(p) {
-p = camelCase(p);
-return this[p] ? this[p] : "";
-}
-csdp.setProperty = function(p, v, prv) {
-p = camelCase(p);
-this[p] = v;
-const pri = p + "$pri";
-odp(this, pri, {value:(prv === "important"),writable:true,configurable:true})
-}
-csdp.getPropertyPriority = function(p) {
-p = camelCase(p);
-const pri = p + "$pri";
-return this[pri] ? "important" : "";
-}
-csdp.removeProperty = function(p) {
-p = camelCase(p);
-delete this[p]
-delete this[p+"$$scy"]
-delete this[p+"$$pri"]
-}
-
-odp(csdp, "cssText", { get:  function(){
-let s = "";
-for(let k in this) {
-if(!this.hasOwnProperty(k)) continue;
-let l = this[k];
-// weirdness from acid 45
-if(k === "cssFloat") k = "float";
-if(l.match(/[ \t;"'{}]/)) {
-if(!l.match(/"/)) l = '"' + l + '"';
-else if(!l.match(/'/)) l = "'" + l + "'";
-else {
-alert3(`cssText unrepresentable ${k}: ${l}`);
-l = "none";
-}
-}
-if(s.length) s += ' ';
-s=s+ k + ': ' + l + ';';
-}
-return s;
-},
-set: function(h) {
-w.soj$ = this; eb$cssText.call(this,h); delete w.soj$; } });
-
-swpc("CSSRule", function(){this.cssText=""})
-w. CSSRule.prototype = new w.Object;
-w. CSSRule.prototype.toString = function(){return this.cssText}
-
-swpc("CSSRuleList", function(){})
 // This isn't really right, but it's easy
-w. CSSRuleList.prototype = new w.Array;
-
-swpc("CSSStyleSheet", function() { this.cssRules = new w.CSSRuleList})
-swpp("CSSStyleSheet", null)
+swpc("CSSRuleList", class extends w.Array { constructor() { super(w.Array); }})
+swpc("CSSStyleSheet", class extends w.Object {
+    constructor() { super(w.Object); this.cssRules = new w.CSSRuleList; }
+})
 let cssp = w.CSSStyleSheet.prototype;
 cssp.insertRule = function(r, idx) {
-let list = this.cssRules;
-(typeof idx == "number" && idx >= 0 && idx <= list.length || (idx = 0));
-if(idx == list.length)
-list.push(r);
-else
-list.splice(idx, 0, r);
+    let list = this.cssRules;
+    (typeof idx == "number" && idx >= 0 && idx <= list.length || (idx = 0));
+    if (idx == list.length) list.push(r);
+    else list.splice(idx, 0, r);
 }
 cssp.addRule = function(sel, r, idx) {
-var list = this.cssRules;
-(typeof idx == "number" && idx >= 0 && idx <= list.length || (idx = list.length));
-r = sel + "{" + r + "}";
-if(idx == list.length)
-list.push(r);
-else
-list.splice(idx, 0, r);
+    let list = this.cssRules;
+    (typeof idx == "number" && idx >= 0 && idx <= list.length || (idx = list.length));
+    r = sel + "{" + r + "}";
+    if (idx == list.length) list.push(r);
+    else list.splice(idx, 0, r);
 }
 
-swp("HTMLTimeElement", class extends w.HTMLElement { constructor() { super(w.HTMLElement); }})
+swp("HTMLTimeElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
+})
 let timep = w.HTMLTimeElement.prototype;
 odp(timep, "dateTime", {get: function(){return this.getAttribute("datetime")}})
 
