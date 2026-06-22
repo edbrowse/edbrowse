@@ -4787,6 +4787,7 @@ bool xmppSetup(char *line)
 	xmppSetChat(win, 0);
 
 	if(password) {
+		password = cloneString(password);
 		borogove_client_add_password_needed_listener(win->xmppClient, onXmppPasswordNeeded, password);
 	}
 
