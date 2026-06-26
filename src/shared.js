@@ -3127,10 +3127,10 @@ function swpp(c, inherit) {
     odp(w[c].prototype, "dom$class", {value:v});
 }
 // Establish DOM elements in the window for modern classes
-function swde(cls, exp, change=true)
+function swde(cls, exp, changeable=true)
 {
     odp(w, cls, {value:exp, writable:changeable, configurable:changeable});
-    odp(w[c].prototype, "dom$class", {value: cls.replace(/^z\$/, "")});
+    odp(w[cls].prototype, "dom$class", {value: cls.replace(/^z\$/, "")});
 }
 
 // Establish properties under document, as we did with window.
