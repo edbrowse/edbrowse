@@ -5693,8 +5693,8 @@ swpc("CSSStyleDeclaration", class extends w.HTMLElement {
     }
 });
 
-swpc("HTMLStyleElement", class extends w.CSSStyleDeclaration {
-    constructor() { super(w.CSSStyleDeclaration); }
+swpc("HTMLStyleElement", class extends w.HTMLElement {
+    constructor() { super(w.HTMLElement); }
     get css$data()
     {
         let s = "";
