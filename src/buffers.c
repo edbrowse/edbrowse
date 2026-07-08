@@ -7354,10 +7354,6 @@ replaceframe:
 			setError(MSG_NoBrowse);
 			goto fail;
 		}
-		if (globalMode) {
-			setError(MSG_GlobalCommand2, "ib");
-			goto fail;
-		}
 		if (endRange > startRange) {
 			setError(MSG_RangeCmd, "ib");
 			goto fail;
@@ -9340,9 +9336,8 @@ int sideBuffer(int cx, const char *text, int textlen, const char *bufname)
 		}
 	}
 	cxSwitch(cx, false);
-	if (bufname) {
+	if (bufname)
 		cf->fileName = cloneString(bufname);
-	}
 	if (textlen < 0) {
 		textlen = strlen(text);
 	} else {

@@ -2574,10 +2574,6 @@ skip_encode:
 						nzFree(cxbuf);
 						goto fail;
 					}
-				if (j && cxbuf[j - 1] == '\n')
-					--j;
-				if (j && cxbuf[j - 1] == '\r')
-					--j;
 				cxbuf[j] = 0;
 				rc = postNameVal(name, cxbuf, fsep, false);
 				nzFree(cxbuf);

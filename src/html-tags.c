@@ -1319,8 +1319,11 @@ With this understanding, we can, and should, scan for </textarea
 // adjust line number
 			for(u = seek; u < gt; ++u)
 				if(*u == '\n') ++ln;
-			while(isspaceByte(*seek)) ++seek; // should we be doing this?
-			if(lt > seek) {
+// skip down to the next line
+			while(*seek == ' ' || *seek == '\t') ++seek;
+			if(*seek == '\r') ++ seek;
+			if(*seek == '\n') ++ seek;
+			if(lt > seek) { // something there
 // pull out the text and andify.
 				w = pullAnd(seek, lt, false);
 				   scannerInfo1("textarea length %d", strlen(w));
@@ -1628,14 +1631,22 @@ void setTagAttr(Tag *t, const char *name, char *val)
 
 static void setAttrFromHTML(const char *a1, const char *a2, const char *v1, const char *v2)
 {
-	char *w;
-	char save_c;
-	w = pullAnd(v1, v2, true);
+    char *w;
+    char save_c;
+    w = pullAnd(v1, v2, true);
 // yeah this is tacky, write on top of a const, but I'll put it back.
-	save_c = *a2, *(char*)a2 = 0;
-	if(debugScanner && debugLevel >= 3) printf("%s=%s\n", a1, w);
-	setTagAttr(working_t, a1, w);
-	*(char*)a2 = save_c;
+    save_c = *a2, *(char*)a2 = 0;
+// remove cr lf from an input field -
+// should we remove it in general? I don't think so.
+    if(stringEqualCI(a1, "value")) {
+        char *w1 , *w2;
+        for(w1 = w2 = w; *w1; ++w1)
+            if(*w1 != '\r' && *w1 != '\n') *w2++ = *w1;
+        *w2 = 0;
+    }
+    if(debugScanner && debugLevel >= 3) printf("%s=%s\n", a1, w);
+    setTagAttr(working_t, a1, w);
+    *(char*)a2 = save_c;
 }
 
 const char *attribVal(const Tag *t, const char *name)
@@ -4269,7 +4280,6 @@ static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
 
 		if (currentTA) {
 			currentTA->value = t->textval;
-			leftClipString(currentTA->value);
 			currentTA->rvalue = cloneString(currentTA->value);
 			t->textval = 0;
 			t->deleted = true;
