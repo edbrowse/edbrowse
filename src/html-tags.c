@@ -1320,8 +1320,11 @@ With this understanding, we can, and should, scan for </textarea
 // adjust line number
 			for(u = seek; u < gt; ++u)
 				if(*u == '\n') ++ln;
-			while(isspaceByte(*seek)) ++seek; // should we be doing this?
-			if(lt > seek) {
+// skip down to the next line
+			while(*seek == ' ' || *seek == '\t') ++seek;
+			if(*seek == '\r') ++ seek;
+			if(*seek == '\n') ++ seek;
+			if(lt > seek) { // something there
 // pull out the text and andify.
 				w = pullAnd(seek, lt, false);
 				   scannerInfo1("textarea length %d", strlen(w));
@@ -4278,7 +4281,6 @@ static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
 
 		if (currentTA) {
 			currentTA->value = t->textval;
-			leftClipString(currentTA->value);
 			currentTA->rvalue = cloneString(currentTA->value);
 			t->textval = 0;
 			t->deleted = true;
