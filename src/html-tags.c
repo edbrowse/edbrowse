@@ -1629,14 +1629,22 @@ void setTagAttr(Tag *t, const char *name, char *val)
 
 static void setAttrFromHTML(const char *a1, const char *a2, const char *v1, const char *v2)
 {
-	char *w;
-	char save_c;
-	w = pullAnd(v1, v2, true);
+    char *w;
+    char save_c;
+    w = pullAnd(v1, v2, true);
 // yeah this is tacky, write on top of a const, but I'll put it back.
-	save_c = *a2, *(char*)a2 = 0;
-	if(debugScanner && debugLevel >= 3) printf("%s=%s\n", a1, w);
-	setTagAttr(working_t, a1, w);
-	*(char*)a2 = save_c;
+    save_c = *a2, *(char*)a2 = 0;
+// remove cr lf from an input field -
+// should we remove it in general? I don't think so.
+    if(stringEqualCI(a1, "value")) {
+        char *w1 , *w2;
+        for(w1 = w2 = w; *w1; ++w1)
+            if(*w1 != '\r' && *w1 != '\n') *w2++ = *w1;
+        *w2 = 0;
+    }
+    if(debugScanner && debugLevel >= 3) printf("%s=%s\n", a1, w);
+    setTagAttr(working_t, a1, w);
+    *(char*)a2 = save_c;
 }
 
 const char *attribVal(const Tag *t, const char *name)
