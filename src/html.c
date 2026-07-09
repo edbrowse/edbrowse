@@ -4155,6 +4155,7 @@ So ssoonest always returns something, and it is almost always ready to run.
 		return;
 
 	ircRead();
+	xmppRunActions();
 
 /*********************************************************************
 Only syncing the foreground window is right almost all the time,

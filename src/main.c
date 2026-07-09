@@ -14,7 +14,7 @@ const char *progname;
 const char eol[] = "\r\n";
 const char *version = "3.8.17";
 char *changeFileName;
-char *configFile, *addressFile, *cookieFile, *emojiFile, *configHome;
+char *configFile, *addressFile, *cookieFile, *emojiFile, *configHome, *dataHome;
 char *mailDir, *mailUnread, *mailStash, *mailReply;
 char *sigFile, *sigFileEnd;
 char *cacheDir;
@@ -498,6 +498,11 @@ int main(int argc, char **argv)
         configHome = getenv("XDG_CONFIG_HOME");
         if (configHome && *configHome) createFormattedString(&configFile, "%s/edbrowse/ebrc", configHome);
         else createFormattedString(&configFile, "%s/.config/edbrowse/ebrc", home);
+
+        dataHome = getenv("XDG_DATA_HOME");
+        if (!dataHome || !*dataHome) {
+            createFormattedString(&dataHome, "%s/.local/share", home);
+        }
 /* For now just check for the presence of the config in the xdg location but
 create in the old location to avoid surprises */
 	if (fileTypeByName(configFile, 0) == 0) {
