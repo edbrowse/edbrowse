@@ -2184,12 +2184,13 @@ static void resetVar(Tag *t)
 
 	if (itype == INP_TA) {
 		int cx = t->lic;
-		if (cx)
+		if (cx > 0)
 			sideBuffer(cx, w, -1, 0);
 	} else if (itype != INP_HIDDEN && itype != INP_SELECT)
 		updateFieldInBuffer(t->seqno, w, false, false);
 
-	if ((itype >= INP_TEXT && itype <= INP_FILE) || itype == INP_TA) {
+	if ((itype >= INP_TEXT && itype <= INP_FILE) ||
+	(itype == INP_TA && t->lic >= 0)) {
 		nzFree(t->value);
 		t->value = cloneString(t->rvalue);
 	}
