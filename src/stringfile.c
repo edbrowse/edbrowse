@@ -995,6 +995,30 @@ bool unfoldBuffer(int cx, bool cr, char **data, int *len)
 	return unfoldBufferW(w, cr, data, len);
 }
 
+// turn lf into crlf
+// assumes input and output strings are both allocated
+char *make_crlf(char *s)
+{
+    char *t;
+    int l, cnt;
+    const char *w;
+    char *v;
+    if(!s) return s;
+    for(w = s, cnt = 0; *w; ++w)
+        if(*w == '\n') ++cnt;
+    if(!cnt) return s; // no newlines
+    l = strlen(s) + cnt + 1;
+    t = allocMem(l);
+    for(w = s, v = t; *w; ++w) {
+        if(*w == '\n' && (w == s || w[-1] != '\r'))
+            *v++ = '\r';
+        *v++ = *w;
+    }
+    *v = 0;
+    free(s);
+    return t;
+}
+
 // shift string to upper or lower case
 // action is u or l.
 void caseShift(char *s, char action)

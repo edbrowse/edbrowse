@@ -357,6 +357,7 @@ long long bufferSizeW(const Window *w, bool browsing);
 long long bufferSize(int cx, bool browsing);
 bool unfoldBufferW(const struct ebWindow *w, bool cr, char **data, int *len);
 bool unfoldBuffer(int cx, bool cr, char **data, int *len);
+char *make_crlf(char *s);
 void caseShift(char *s, char action) ;
 void i_caseShift(char *s, char action) ;
 void camelCase(char *s);

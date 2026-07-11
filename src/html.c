@@ -2549,54 +2549,56 @@ skip_encode:
 		}
 
 		if (itype == INP_TA) {
-			int cx = t->lic;
-			char *cxbuf;
-			int cxlen;
-			if(cx < 0) {
-				dynamicvalue = fetchTextVar(t);
-				if(!dynamicvalue) // don't know what happened
-				cx = 0;
-			}
-			if (cx) {
-				if (fsep == '-') {
+		    int cx = t->lic;
+		    char *cxbuf;
+		    int cxlen;
+		    if(cx == 0) {
+		        if(t->rvalue) {
+		            dynamicvalue= make_crlf(cloneString(t->rvalue));
+		            cx = -1;
+		        }
+		    } else if(cx < 0) {
+		        dynamicvalue = fetchTextVar(t);
+		        if(!dynamicvalue) // don't know what happened
+		            cx = 0;
+		    }
+		    if (cx) {
+		        if (fsep == '-') {
 // do this as an attachment
-					char cxstring[12];
-					if(cx < 0) {
-						cx = sideBuffer(0, dynamicvalue, -1, NULL);
-						nzFree0(dynamicvalue);
-					}
-					sprintf(cxstring, "%d", cx);
-					rc = postNameVal
-					    (name, cxstring, fsep, 1);
-					if(t->lic < 0) cxQuit(cx, 3);
-					if(!rc)
-						goto fail;
-					continue;
-				} // attach
-				if(cx < 0)
-					cxbuf = dynamicvalue, cxlen = strlen(dynamicvalue);
-				else if (!unfoldBuffer(cx, true, &cxbuf, &cxlen))
-					goto fail;
-				for (j = 0; j < cxlen; ++j)
-					if (cxbuf[j] == 0) {
-						setError(MSG_SessionNull, cx);
-						nzFree(cxbuf);
-						goto fail;
-					}
-				cxbuf[j] = 0;
-				rc = postNameVal(name, cxbuf, fsep, false);
-				nzFree(cxbuf);
-				if (!rc)
-					goto fail;
-				if(inputRequired(t) && !j)
-					goto required;
-				continue;
-			}
+		            char cxstring[12];
+		            if(cx < 0) {
+		                cx = sideBuffer(0, dynamicvalue, -1, NULL);
+		                nzFree0(dynamicvalue);
+		            }
+		            sprintf(cxstring, "%d", cx);
+		            rc = postNameVal
+		                (name, cxstring, fsep, 1);
+		            if(t->lic < 0) cxQuit(cx, 3);
+		            if(!rc) goto fail;
+		            continue;
+		        } // attach
+		        if(cx < 0)
+		            cxbuf = dynamicvalue, cxlen = strlen(dynamicvalue), dynamicvalue = 0;
+		        else if (!unfoldBuffer(cx, true, &cxbuf, &cxlen))
+		            goto fail;
+		        for (j = 0; j < cxlen; ++j)
+		            if (cxbuf[j] == 0) {
+		                setError(MSG_SessionNull, cx);
+		                nzFree(cxbuf);
+		                goto fail;
+		            }
+		        cxbuf[j] = 0;
+		        rc = postNameVal(name, cxbuf, fsep, false);
+		        nzFree(cxbuf);
+		        if (!rc) goto fail;
+		        if(inputRequired(t) && !j)
+		            goto required;
+		        continue;
+		    }
 
-			postNameVal(name, 0, fsep, false);
-			if(inputRequired(t))
-				goto required;
-			continue;
+		    postNameVal(name, 0, fsep, false);
+		    if(inputRequired(t)) goto required;
+		    continue;
 		}
 
 /*********************************************************************
