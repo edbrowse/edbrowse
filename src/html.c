@@ -1714,6 +1714,13 @@ static void connectDatalist(Tag *t)
 	nzFree(listj);
 }
 
+static bool inputRequired(const Tag *t)
+{
+	if (allowJS && t->jslink)
+		return get_property_bool_t(t, "required");
+	return t->required;
+}
+
 // Show an input field
 void infShow(int tagno, const char *search)
 {
@@ -1757,6 +1764,8 @@ void infShow(int tagno, const char *search)
 		eb_printf(" readonly");
 	if (inputDisabled(t))
 		eb_printf(" disabled");
+	if (inputRequired(t))
+		eb_printf(" required");
 	if (t->name)
 		eb_printf(" %s", t->name);
 	if(t->itype == INP_SUBMIT &&
@@ -2533,7 +2542,7 @@ skip_encode:
  * hope that's not a problem. */
 			dynamicvalue = fetchTextVar(t);
 			postNameVal(name, dynamicvalue, fsep, false);
-			if(t->required && !dynamicvalue && !*dynamicvalue)
+			if(inputRequired(t) && !dynamicvalue && !*dynamicvalue)
 				goto required;
 			nzFree0(dynamicvalue);
 			continue;
@@ -2579,13 +2588,13 @@ skip_encode:
 				nzFree(cxbuf);
 				if (!rc)
 					goto fail;
-				if(t->required && !j)
+				if(inputRequired(t) && !j)
 					goto required;
 				continue;
 			}
 
 			postNameVal(name, 0, fsep, false);
-			if(t->required)
+			if(inputRequired(t))
 				goto required;
 			continue;
 		}
@@ -2622,13 +2631,13 @@ Here is a small page to test some of these select option cases.
 // unlike display, value can return null, if no choice was made
 			if (!dynamicvalue) {
 				nzFree(display);
-				if(t->required) goto required;
+				if(inputRequired(t)) goto required;
 				continue;
 			}
 
 // Single select cannot select a blank value
 // if the option selected is first in list. Wow.
-			if(!t->required || t->multiple || *dynamicvalue)
+			if(!inputRequired(t) || t->multiple || *dynamicvalue)
 				goto options_ok;
 			const char *z; int zv;
 // setting size to something > 1 disables this behavior.
@@ -2664,7 +2673,7 @@ options_ok:
 			uchar isfile = 3;
 			dynamicvalue = fetchTextVar(t);
 			if (!dynamicvalue || !*dynamicvalue) {
-				if(t->required)
+				if(inputRequired(t))
 					goto required;
 				postNameVal(name, emptyString, fsep, 0);
 				continue;
