@@ -1714,6 +1714,13 @@ static void connectDatalist(Tag *t)
 	nzFree(listj);
 }
 
+static bool inputRequired(const Tag *t)
+{
+	if (allowJS && t->jslink)
+		return get_property_bool_t(t, "required");
+	return t->required;
+}
+
 // Show an input field
 void infShow(int tagno, const char *search)
 {
@@ -1757,6 +1764,8 @@ void infShow(int tagno, const char *search)
 		eb_printf(" readonly");
 	if (inputDisabled(t))
 		eb_printf(" disabled");
+	if (inputRequired(t))
+		eb_printf(" required");
 	if (t->name)
 		eb_printf(" %s", t->name);
 	if(t->itype == INP_SUBMIT &&
@@ -2175,12 +2184,13 @@ static void resetVar(Tag *t)
 
 	if (itype == INP_TA) {
 		int cx = t->lic;
-		if (cx)
+		if (cx > 0)
 			sideBuffer(cx, w, -1, 0);
 	} else if (itype != INP_HIDDEN && itype != INP_SELECT)
 		updateFieldInBuffer(t->seqno, w, false, false);
 
-	if ((itype >= INP_TEXT && itype <= INP_FILE) || itype == INP_TA) {
+	if ((itype >= INP_TEXT && itype <= INP_FILE) ||
+	(itype == INP_TA && t->lic >= 0)) {
 		nzFree(t->value);
 		t->value = cloneString(t->rvalue);
 	}
@@ -2533,61 +2543,63 @@ skip_encode:
  * hope that's not a problem. */
 			dynamicvalue = fetchTextVar(t);
 			postNameVal(name, dynamicvalue, fsep, false);
-			if(t->required && !dynamicvalue && !*dynamicvalue)
+			if(inputRequired(t) && !dynamicvalue && !*dynamicvalue)
 				goto required;
 			nzFree0(dynamicvalue);
 			continue;
 		}
 
 		if (itype == INP_TA) {
-			int cx = t->lic;
-			char *cxbuf;
-			int cxlen;
-			if(cx < 0) {
-				dynamicvalue = fetchTextVar(t);
-				if(!dynamicvalue) // don't know what happened
-				cx = 0;
-			}
-			if (cx) {
-				if (fsep == '-') {
+		    int cx = t->lic;
+		    char *cxbuf;
+		    int cxlen;
+		    if(cx == 0) {
+		        if(t->rvalue) {
+		            dynamicvalue= make_crlf(cloneString(t->rvalue));
+		            cx = -1;
+		        }
+		    } else if(cx < 0) {
+		        dynamicvalue = fetchTextVar(t);
+		        if(!dynamicvalue) // don't know what happened
+		            cx = 0;
+		    }
+		    if (cx) {
+		        if (fsep == '-') {
 // do this as an attachment
-					char cxstring[12];
-					if(cx < 0) {
-						cx = sideBuffer(0, dynamicvalue, -1, NULL);
-						nzFree0(dynamicvalue);
-					}
-					sprintf(cxstring, "%d", cx);
-					rc = postNameVal
-					    (name, cxstring, fsep, 1);
-					if(t->lic < 0) cxQuit(cx, 3);
-					if(!rc)
-						goto fail;
-					continue;
-				} // attach
-				if(cx < 0)
-					cxbuf = dynamicvalue, cxlen = strlen(dynamicvalue);
-				else if (!unfoldBuffer(cx, true, &cxbuf, &cxlen))
-					goto fail;
-				for (j = 0; j < cxlen; ++j)
-					if (cxbuf[j] == 0) {
-						setError(MSG_SessionNull, cx);
-						nzFree(cxbuf);
-						goto fail;
-					}
-				cxbuf[j] = 0;
-				rc = postNameVal(name, cxbuf, fsep, false);
-				nzFree(cxbuf);
-				if (!rc)
-					goto fail;
-				if(t->required && !j)
-					goto required;
-				continue;
-			}
+		            char cxstring[12];
+		            if(cx < 0) {
+		                cx = sideBuffer(0, dynamicvalue, -1, NULL);
+		                nzFree0(dynamicvalue);
+		            }
+		            sprintf(cxstring, "%d", cx);
+		            rc = postNameVal
+		                (name, cxstring, fsep, 1);
+		            if(t->lic < 0) cxQuit(cx, 3);
+		            if(!rc) goto fail;
+		            continue;
+		        } // attach
+		        if(cx < 0)
+		            cxbuf = dynamicvalue, cxlen = strlen(dynamicvalue), dynamicvalue = 0;
+		        else if (!unfoldBuffer(cx, true, &cxbuf, &cxlen))
+		            goto fail;
+		        for (j = 0; j < cxlen; ++j)
+		            if (cxbuf[j] == 0) {
+		                setError(MSG_SessionNull, cx);
+		                nzFree(cxbuf);
+		                goto fail;
+		            }
+		        cxbuf[j] = 0;
+		        rc = postNameVal(name, cxbuf, fsep, false);
+		        nzFree(cxbuf);
+		        if (!rc) goto fail;
+		        if(inputRequired(t) && !j)
+		            goto required;
+		        continue;
+		    }
 
-			postNameVal(name, 0, fsep, false);
-			if(t->required)
-				goto required;
-			continue;
+		    postNameVal(name, 0, fsep, false);
+		    if(inputRequired(t)) goto required;
+		    continue;
 		}
 
 /*********************************************************************
@@ -2622,13 +2634,13 @@ Here is a small page to test some of these select option cases.
 // unlike display, value can return null, if no choice was made
 			if (!dynamicvalue) {
 				nzFree(display);
-				if(t->required) goto required;
+				if(inputRequired(t)) goto required;
 				continue;
 			}
 
 // Single select cannot select a blank value
 // if the option selected is first in list. Wow.
-			if(!t->required || t->multiple || *dynamicvalue)
+			if(!inputRequired(t) || t->multiple || *dynamicvalue)
 				goto options_ok;
 			const char *z; int zv;
 // setting size to something > 1 disables this behavior.
@@ -2664,7 +2676,7 @@ options_ok:
 			uchar isfile = 3;
 			dynamicvalue = fetchTextVar(t);
 			if (!dynamicvalue || !*dynamicvalue) {
-				if(t->required)
+				if(inputRequired(t))
 					goto required;
 				postNameVal(name, emptyString, fsep, 0);
 				continue;
