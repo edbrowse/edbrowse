@@ -7341,7 +7341,9 @@ replaceframe:
 	}
 
 // special code for textareas into sessions
-	if(line[0] == 'i' && line[1] == 'b' && (!line[2] || isdigitByte(line[2]))) {
+	if(line[0] == 'i' &&
+	((line[1] == 'b' && (!line[2] || isdigitByte(line[2]))) ||
+	(line[1] == 'f' && !line[2]))) {
 		int d = 0;
 		char *s;
 		if(isdigitByte(line[2])) {
@@ -7367,7 +7369,7 @@ replaceframe:
 			if(!cxCompare(d) || (cxActive(d, false) && !cxQuit(d, 0)))
 				goto fail;
 		}
-		rc = itext(d);
+			rc = itext(d, line[1] == 'f');
 		goto done;
 	}
 after_ib:

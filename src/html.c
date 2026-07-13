@@ -5919,52 +5919,59 @@ char *render(void)
 
 // Create buffers for text areas, so the user can type in comments or whatever
 // and send them to the website in a fill-out form.
-bool itext(int d)
+bool itext(int d, bool flatten)
 {
-	int ln = cw->dot;	// line number
-	pst p;			// the raw line to scan
-	int n;
-	Tag *t;
-	char newtext[20], *v = 0;
-	bool change = false, inp = false;
+    int ln = cw->dot;    // line number
+    pst p;            // the raw line to scan
+    int n, len;
+    Tag *t;
+    char newtext[20], *v = 0;
+    bool change = false, inp = false;
 
-	p = fetchLine(ln, -1);
-	while (*p != '\n') {
-		if (*p != InternalCodeChar) {
-			++p;
-			continue;
-		}
-		n = strtol((char *)p + 1, (char **)&p, 10);
-		if (*p != '<')
-			continue;
-		inp = true;
-		t = tagList[n];
-		if (t->itype != INP_TA || t->lic > 0)
-			continue;
-// this way works with or without javascript
-		if(t->lic < 0 && !(t->jslink && allowJS))
-			v = fetchTextVar(t);
-		t->lic = sideBuffer(d, (v ? v : t->value), -1, 0);
-		nzFree(v);
-		change = true;
-		sprintf(newtext, "session %d", t->lic);
-// updateFieldInBuffer is crazy inefficient in that it searches through the
-// whole buffer, and we know it's on the current line, but really, how often
-// do you invoke this command?
-		updateFieldInBuffer(n, newtext, false, false);
+    p = fetchLine(ln, -1);
+    while (*p != '\n') {
+        if (*p != InternalCodeChar) {
+            ++p;
+            continue;
+        }
+        n = strtol((char *)p + 1, (char **)&p, 10);
+        if (*p != '<') continue;
+        inp = true;
+        t = tagList[n];
+        if (t->itype != INP_TA) continue;
+        if(!flatten) { // ib
+            if(t->lic > 0) continue;
+// trying to make this work with or without javascript
+            if(t->lic < 0 && !(t->jslink && allowJS))
+                v = fetchTextVar(t);
+            t->lic = sideBuffer(d, (v ? v : t->value), -1, 0);
+            sprintf(newtext, "session %d", t->lic);
+            updateFieldInBuffer(n, newtext, false, false);
+        } else { // if
+            if(t->lic < 0) continue;
+            if(t->lic)
+                unfoldBuffer(t->lic, false, &v, &len);
+            else
+                v = cloneString(t->rvalue);
+// line breaks not allowed
+            spaceCrunch(v, true, false);
+            infReplace(n, v, false);
+        }
+        nzFree(v);
+        change = true;
 // And now all the pointers are invalid so break out.
 // If there's another textarea on the same line you have to issue the command
 // again, but really, how often does that happen?
-		break;
-	}
+        break;
+    }
 
-	if (change) {
-		if(debugLevel > 0)
-			displayLine(ln);
-		return true;
-	}
-		setError(inp ? MSG_NoChange : MSG_NoInputFields);
-	return false;
+    if (change) {
+        if(debugLevel > 0)
+            displayLine(ln);
+        return true;
+    }
+        setError(inp ? MSG_NoChange : MSG_NoInputFields);
+    return false;
 }
 
 struct htmlTag *line2tr(int ln)
