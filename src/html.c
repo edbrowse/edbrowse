@@ -2189,11 +2189,13 @@ static void resetVar(Tag *t)
 	} else if (itype != INP_HIDDEN && itype != INP_SELECT)
 		updateFieldInBuffer(t->seqno, w, false, false);
 
-	if ((itype >= INP_TEXT && itype <= INP_FILE) ||
-	(itype == INP_TA && t->lic >= 0)) {
-		nzFree(t->value);
-		t->value = cloneString(t->rvalue);
-	}
+    if ((itype >= INP_TEXT && itype <= INP_FILE) ||
+    itype == INP_TA) {
+        nzFree(t->value);
+        t->value = cloneString(t->rvalue);
+        if(itype == INP_TA && t->lic < 0)
+            spaceCrunch(t->value, true, false);
+    }
 
 	if (!t->jslink || !allowJS)
 		return;
