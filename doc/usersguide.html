@@ -761,6 +761,7 @@ g : go to the link on the current line
 <br>ib : allocate an input buffer for this textarea
 <br>ib7 : use session 7 for this input textarea
 <br>/&lt;session/ ib : note the space between / and i
+<br>if : turn this text area into an input field (restricted to one line)
 <br>shc : show columns of an html table
 <br>ur : unfold a row in an html table (toggle)
 <br>M4 : move this web page to session 4 and back up to the previous page
@@ -3790,6 +3791,13 @@ At this point the textarea acts like a simple text input field.
 Your comments are now an inline string.
 If the line is becoming unmanageably long,
 Use the ib command to switch back to a buffer.
+
+<p>
+The if (input field) command transmutes the textarea into an input field, using the default text, or the text that is in the corresponding buffer.
+Newline characters are removed, since an input field must exist on one line.
+It is thus possible to go back and forth,
+between an inline input field and an adjunct buffer,
+using the ib and if commands.
 
 <h2 id="button">Push The Button</h2>
 
