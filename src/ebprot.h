@@ -199,7 +199,7 @@ bool all_th(const Tag *tr);
 bool set_tdchars(const char *s);
 int is_tdchar(const char *s);
 char *render(void);
-bool itext(int d);
+bool itext(int d, bool flatten);
 struct htmlTag *line2tr(int ln);
 bool showHeaders(int ln);
 void html_from_setter( Tag *innerParent, const char *h);

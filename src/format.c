@@ -69,15 +69,15 @@ void prepareForBrowse(char *h, int h_len)
 /* An input field cannot contain cr, lf, null, or the InternalCodeChar */
 void prepareForField(char *h)
 {
-	bool ab = false;
-	while (*h) {
-// this line is goofy cause null would terminate the loop
-		if (*h == 0) *h = ' ';
-		if (*h == '\n') *h = '\07'; // should never happen
-		if (*h == InternalCodeChar) { *h = InternalCodeCharAlternate; ab = true; }
-		++h;
-	}
-	if(ab) debugPrint(1, "changing ^b to ^a");
+    bool ab = false;
+    while (*h) {
+// no line breaks in an input field
+        if (*h == '\n' || *h == '\r') *h = ' ';
+// our internal code char is reserved to indicate hyperlinks and fields
+        if (*h == InternalCodeChar) { *h = InternalCodeCharAlternate; ab = true; }
+        ++h;
+    }
+    if(ab) debugPrint(1, "changing ^b to ^a");
 }
 
 /*********************************************************************

@@ -1,0 +1,11 @@
+<body>
+<form action=http://www.eklhad.net/cgi-bin/testperl>
+<textarea name=ta>
+default line 1
+default line 2
+</textarea>
+<input type=submit name=baby>
+<br>
+<input type=reset>
+</form>
+</body>

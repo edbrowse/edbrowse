@@ -1,5 +1,9 @@
 Here are some changes introduced by recent versions of edbrowse.
 
+3.8.18
+
+The if (input field) command to bring a textarea inline.
+
 3.8.17
 
 Fix some makefile issues, and warnings across different compilers.
