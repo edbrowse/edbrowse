@@ -507,11 +507,12 @@ static JSValue setter_value(JSContext * cx, JSValueConst this, int argc, JSValue
 	debugPrint(5, "setter v in");
 	JS_SetPropertyStr(cx, this, "val$ue", JS_NewAtomString(cx, h));
 	k = cloneString(h);
-	prepareForField(k);
 	JS_FreeCString(cx, h);
 	t = tagFromObject(this);
 	if(t) {
 		debugPrint(4, "value tag %d=%s", t->seqno, k);
+		if(t->itype != INP_TA || t->lic < 0)
+			prepareForField(k);
 		domSetsTagValue(t, k);
 	}
 	nzFree(k);

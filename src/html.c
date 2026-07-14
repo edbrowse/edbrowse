@@ -3061,23 +3061,22 @@ void domSubmitsForm(Tag *t, bool reset)
 
 void domSetsTagValue(Tag *t, const char *newtext)
 {
-	if (t->itype == INP_HIDDEN || t->itype == INP_RADIO
-	    || t->itype == INP_FILE)
-		return;
-	nzFree(t->value);
-	t->value = cloneString(newtext);
-	if (t->itype == INP_TA) {
-		int side = t->lic;
-		if(side < 0) side = t->lic = 0;
-		if (side == 0 || side > maxSession || side == context)
-			return;
-		if (sessionList[side].lw == NULL)
-			return;
-		if (cw->browseMode)
-			i_printf(MSG_BufferUpdated, side);
-		sideBuffer(side, newtext, -1, 0);
-		return;
-	}
+   int itype = t->itype;
+    if (itype == INP_HIDDEN || itype == INP_RADIO
+        || itype == INP_FILE)
+        return;
+    nzFree(t->value);
+    t->value = cloneString(newtext);
+    if (itype != INP_TA) return;
+    int side = t->lic;
+    if(side < 0) side = t->lic = 0;
+    if (side == 0 || side > maxSession || side == context)
+        return;
+    if (sessionList[side].lw == NULL)
+        return;
+    if (cw->browseMode)
+        i_printf(MSG_BufferUpdated, side);
+    sideBuffer(side, newtext, -1, 0);
 }
 
 bool charInOptions(char c)
