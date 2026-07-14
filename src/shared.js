@@ -470,9 +470,10 @@ function dispatchEvent (e) {
         let f;
         if (inline) {
             // already bound or caller doesn't want it to be
-            if (typeof h == "function") f = h;
-            // Ensure the binding is correct
-            else if (typeof h == "string") f = () => our_eval.call(n, h);
+            if (typeof h === "function") f = () => h; // consume the argument
+            // Wrap in an anonymous function (I hope nothing breaks this syntax)
+            else if (typeof h == "string")
+                f = our_eval(`(function () { ${h};})`).bind(n);
         }
         // Should be bound to the node
         else if (typeof h.callback == "function") f = h.callback.bind(n);
@@ -3029,63 +3030,73 @@ a = a.concat(gatherInputElements(c));
 return a;
 }
 
-function formReindex(f) {
-// clear out what we had; we are rebuilding from scratch
-if(!f.elements) f.elements = [];
-else f.elements.length = 0;
-const el = f.elements; // shorthand
-let name;
-for(name in f) {
-if(!f.hasOwnProperty(name)) continue;
-if(typeof f[name] != "object") continue;
-if(name == "childNodes") continue;
-if(name == "elements") continue;
-if(name.match(/^on[a-zA-Z]+\$\$array$/)) continue;
-// special code to detect and delete an array of radio buttons.
-if(Array.isArray(f[name]) && (f[name].length == 0 ||
-f[name][0].form == f)) {
-for(let v of f[name]) delete v.form;
-delete f[name];
-delete el[name];
-continue;
-}
-if(f[name].form != f) continue;
-let inclass = f[name].dom$class;
-if(!inclass) continue;
-if(inclass != "HTMLInputElement" && inclass != "HTMLTextAreaElement" && inclass != "HTMLSelectElement" && inclass != "HTMLButtonElement") continue;
-// we may be deleting this just to put it back,
-// but that's how this function goes.
-delete f[name].form;
-delete f[name];
-delete el[name];
-}
-const ilist = gatherInputElements(f);
-for(let i of ilist) {
-el.push(i);
-i.form = f;
-name = i.name;
-if(!name) continue;
-if(name in f) {
-// already there
-if(!f.hasOwnProperty(name)) continue; // it's implicit, don't displace
-if(Array.isArray(f[name]) && i.type == "radio") f[name].push(i);
-continue;
-}
-// New input tag, create the link, or the array
-// if it's an array of radio buttons.
-if(i.type == "radio") {
-f[name] = el[name] = [i];
-continue;
-}
-f[name] = el[name] = i;
-}
+function formReindex(f)
+{
+    // clear out what we had; we are rebuilding from scratch
+    if (!f.elements) f.elements = [];
+    else f.elements.length = 0;
+    const el = f.elements; // shorthand
+    let name;
+    for (name in f) {
+        if (!f.hasOwnProperty(name)) continue;
+        if (typeof f[name] != "object") continue;
+        if (name == "childNodes") continue;
+        if (name == "elements") continue;
+        if (name.match(/^on[a-zA-Z]+\$\$array$/)) continue;
+        // special code to detect and delete an array of radio buttons.
+        if (
+            Array.isArray(f[name]) &&
+            (f[name].length == 0 || f[name][0].form == f)
+        ) {
+            for (let v of f[name]) delete v.form;
+            delete f[name];
+            delete el[name];
+            continue;
+        }
+        if (f[name].form != f) continue;
+        let inclass = f[name].dom$class;
+        if (!inclass) continue;
+        if (
+            inclass != "HTMLInputElement" &&
+            inclass != "HTMLTextAreaElement" &&
+            inclass != "HTMLSelectElement" &&
+            inclass != "HTMLButtonElement"
+        ) continue;
+        // we may be deleting this just to put it back,
+        // but that's how this function goes.
+        delete f[name].form;
+        delete f[name];
+        delete el[name];
+    }
+    const ilist = gatherInputElements(f);
+    for (let i of ilist) {
+        el.push(i);
+        i.form = f;
+        name = i.name;
+        if (!name) continue;
+        if (name in f) {
+            // already there
+            if (!f.hasOwnProperty(name))
+                continue; // it's implicit, don't displace
+            if (Array.isArray(f[name]) && i.type == "radio") f[name].push(i);
+            continue;
+        }
+        // New input tag, create the link, or the array
+        // if it's an array of radio buttons.
+        if (i.type == "radio") {
+            f[name] = el[name] = [i];
+            continue;
+        }
+        f[name] = el[name] = i;
+    }
 }
 
 // if we add or remove something from the tree, which is or was
 // part of a form, reindex the form. item doesn't have to be an input element,
 // it could be div with input elements below.
 // Parameter is the parent of the thing added or removed.
-function formReindex2(t) {
+function formReindex2(t)
+{
     while(t) {
         if(t.nodeType != 1) return; // stop ad document or fragment
         if(t.dom$class == "HTMLFormElement") {
