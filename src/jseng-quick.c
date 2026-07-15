@@ -3711,7 +3711,7 @@ void js_main(void)
 JSValue mwo; // master window object
 	JSValue r;
 	void **lp;
-#define MAX_JSRT 512
+#define MAX_JSRT 2048
 	uchar save_jsrt[MAX_JSRT];
 
 	if(js_running)
