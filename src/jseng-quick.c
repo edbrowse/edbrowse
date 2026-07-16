@@ -3389,6 +3389,8 @@ typedef struct JSJobEntry {
 
 int my_ExecutePendingJobs(void)
 {
+    if(!JSRuntimeJobIndex) return 0; // we couldn't find the pending queue
+
     JSContext *ctx;
     JSValue res, g, v, arg1native;
     JSJobEntry *e;
