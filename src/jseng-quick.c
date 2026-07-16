@@ -3389,6 +3389,8 @@ typedef struct JSJobEntry {
 
 int my_ExecutePendingJobs(void)
 {
+    if(!JSRuntimeJobIndex) return 0; // we couldn't find the pending queue
+
     JSContext *ctx;
     JSValue res, g, v, arg1native;
     JSJobEntry *e;
@@ -3711,7 +3713,7 @@ void js_main(void)
 JSValue mwo; // master window object
 	JSValue r;
 	void **lp;
-#define MAX_JSRT 512
+#define MAX_JSRT 2048
 	uchar save_jsrt[MAX_JSRT];
 
 	if(js_running)

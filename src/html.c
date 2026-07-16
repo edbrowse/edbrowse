@@ -3069,7 +3069,7 @@ void domSetsTagValue(Tag *t, const char *newtext)
     t->value = cloneString(newtext);
     if (itype != INP_TA) return;
     int side = t->lic;
-    if(side < 0) side = t->lic = 0;
+    if(side < 0) return;
     if (side == 0 || side > maxSession || side == context)
         return;
     if (sessionList[side].lw == NULL)
