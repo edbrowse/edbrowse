@@ -1964,10 +1964,13 @@ bool infReplace(int tagno, char *newtext, bool notify)
 		return false;
 	}
 
-	if (itype == INP_TA) {
-		if(t->lic > 0) cxQuit(t->lic, 3);
-		t->lic = -1;
-	}
+    if (itype == INP_TA) {
+        if(t->lic > 0) {
+            if(cxActive(t->lic, false))
+                cxQuit(t->lic, 3);
+        }
+        t->lic = -1;
+    }
 
 	if (inputReadonly(t)) {
 		setError(MSG_Readonly);
@@ -2555,6 +2558,9 @@ skip_encode:
 		    int cx = t->lic;
 		    char *cxbuf;
 		    int cxlen;
+// did we quit the buffer before submit?
+		if(cx > 0 && !cxActive(cx, false))
+			cx = 0;
 		    if(cx == 0) {
 		        if(t->rvalue) {
 		            dynamicvalue= make_crlf(cloneString(t->rvalue));
