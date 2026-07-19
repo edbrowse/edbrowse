@@ -5325,7 +5325,7 @@ var evs = ["onload", "onunload", "onclick", "onchange", "oninput",
 "onsubmit", "onreset", "onmessage"];
 for(let evname of evs) {
 eval('odp(' + cn + ', "' + evname + '", { \
-get: function() { return this.' + evname + '$2}, \
+get: function() { return this.' + evname + '$2 ? this.' + evname + '$2 : null}, \
 set: function(f) { if(db$flags(1)) alert3((this.'+evname+'$2 ?"clobber ":"create ") + (this.nodeName ? this.nodeName : "+"+this.dom$class) + ".' + evname + '"); \
 if(typeof f == "string") f = handlerCompile(f, this); \
 if(typeof f == "function") { Object.defineProperty(this, "' + evname + '$2", {value:f,writable:true,configurable:true}); \
