@@ -64,10 +64,9 @@ for(i=0; i<p_len; ++i) {
 const char *s = JS_AtomToCString(cx, p_list[i].atom);
 puts(s);
 JS_FreeCString(cx, s);
-JS_FreeAtom(cx, p_list[i].atom);
 }
+JS_FreePropertyEnum(cx, p_list, p_len);
 JS_FreeValue(cx, g);
-  free(p_list);
 return JS_NewInt32(cx, p_len);
 }
 
