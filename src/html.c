@@ -5948,9 +5948,10 @@ bool itext(int d, bool flatten)
             updateFieldInBuffer(n, newtext, false, false);
         } else { // if
             if(t->lic < 0) continue;
-            if(t->lic)
+            if(cxActive(t->lic, false))
                 unfoldBuffer(t->lic, false, &v, &len);
-            else
+            else t->lic = 0;
+            if(!v)
                 v = cloneString(t->rvalue);
 // line breaks not allowed
             spaceCrunch(v, true, false);
