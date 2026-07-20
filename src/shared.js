@@ -586,7 +586,7 @@ function dispatchEvent (e) {
     }
     const our_eval = (pathway[pathway.length-1].eval?
         pathway[pathway.length-1].eval :
-        my$win.eval);
+        my$win().eval);
     const states = [
         // Initial phase, nothing to do here
         () => true,
