@@ -4756,7 +4756,7 @@ cw->dol = ln2 - 1;
 	return true;
 }
 
-static char *lessFile(const char *line, bool tamode)
+static char *lessFile(const char *line)
 {
 	int j, k, n, plen, dol;
 	int lno1, lno2;
@@ -4777,7 +4777,7 @@ static char *lessFile(const char *line, bool tamode)
 				setError(MSG_BufferXEmpty, n);
 				return 0;
 			}
-				if (dol > 1 && !tamode) {
+				if (dol > 1) {
 					setError(MSG_BufferXLines, n);
 					return 0;
 				}
@@ -4785,7 +4785,7 @@ static char *lessFile(const char *line, bool tamode)
 		} else {
 			if(!atPartCracker(0, n, false, p, &lno1, &lno2))
 				return 0;
-			if (lno2 > lno1 && !tamode) {
+			if (lno2 > lno1) {
 				setError(MSG_BufferXLines, n);
 				return 0;
 			}
@@ -4807,7 +4807,7 @@ static char *lessFile(const char *line, bool tamode)
 		}
 		if(!atPartCracker(line[0], n, false, p, &lno1, &lno2))
 			return 0;
-		if (lno2 > lno1 && !tamode) {
+		if (lno2 > lno1) {
 			setError(MSG_BufferXLines, n);
 			return 0;
 		}
@@ -4838,7 +4838,7 @@ static char *lessFile(const char *line, bool tamode)
 			nzFree(line2);
 			return 0;
 		}
-		if (line2[j] == '\n' && !tamode)
+		if (line2[j] == '\n')
 			break;
 	}
 	line2[j] = 0;
@@ -5672,7 +5672,7 @@ et_go:
 // and be sure to document it in usersguide.
 #if 0
 	if (strchr("bwref", line[0]) && line[1] == '<') {
-		allocatedLine = lessFile(line + 2, false);
+		allocatedLine = lessFile(line + 2);
 		if (allocatedLine == 0)
 			return false;
 		n = strlen(allocatedLine);
@@ -8671,13 +8671,12 @@ past_js:
 				undoSpecialClear();
 
 				if (c == '<') {
-					Tag *t = tagList[tagno];
 					if (globalMode) {
 						setError(MSG_IG);
 						goto failg;
 					}
 					nzFree(allocatedLine);
-					allocatedLine = lessFile(line, (t->itype == INP_TA && t->lic > 0));
+					allocatedLine = lessFile(line);
 					if (!allocatedLine)
 						goto fail;
 					line = allocatedLine;
