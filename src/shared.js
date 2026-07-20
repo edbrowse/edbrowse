@@ -5355,7 +5355,7 @@ Or you could end the last statement with a semicolon.
         const s = k.split('.');
         const cn = s[0]; // class name
         const u = s[1]; // url name
-        odp(w[cn][prototype], u, {
+        odp(w[cn].prototype, u, {
             get: function() { return this.href$2 ? this.href$2.href$val : ""; },
             set: function(h)
             {
@@ -5391,7 +5391,7 @@ Or you could end the last statement with a semicolon.
         });
         const piecelist = ["protocol", "pathname", "host", "search", "hostname", "port", "hash"];
         for (let piece of piecelist)
-            odp(w[cn][prototype], piece, {
+            odp(w[cn].prototype, piece, {
                 get: function() { return this.href$2 ? this.href$2[piece] : null; },
                 set: function(x) { if (this.href$2) this.href$2[piece] = x; }
             });
@@ -5414,7 +5414,7 @@ and also put it in spilldownResolveURL instead of spilldownResolve.
         const s = k.split('.');
         const cn = s[0]; // class name
         const u = s[1]; // url name
-        odp(w[cn][prototype], u, {
+        odp(w[cn].prototype, u, {
             get: function() { return this.href$2 ? this.href$2 : ""},
             set: function(h) {
                 if (h instanceof w.URL || h.dom$class == "URL") h = h.toString();
