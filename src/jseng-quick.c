@@ -1712,12 +1712,11 @@ static JSValue nat_ok(JSContext * cx, JSValueConst this, int argc, JSValueConst 
 			const char *s = JS_AtomToCString(cx, p_list[i].atom);
 			puts(s);
 			JS_FreeCString(cx, s);
-			JS_FreeAtom(cx, p_list[i].atom);
 		}
-		  free(p_list);
+		JS_FreePropertyEnum(cx, p_list, p_len);
 	}
-        (void) this;
-	return JS_NewInt32(cx, p_len);
+    (void) this;
+    return JS_NewInt32(cx, p_len);
 }
 
 static JSValue nat_new_location(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
