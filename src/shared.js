@@ -5525,8 +5525,8 @@ swde("CSSStyleDeclaration", class extends w.HTMLElement {
             })
         }
         // These are default properties of a style declaration.
-        // they should not be enumerable. They must however be writable,
-        // so that the corresponding attributes placed on style objects are writable.
+        // These should be writable and enumerable,
+        // so that the corresponding attributes placed on style objects are same.
         list = [
             "accentColor","alignContent","alignItems","alignSelf","all",
             "animation","animationDelay","animationDuration","animationFillMode","animationIterationCount","animationName","animationPlayState","animationTimingFunction",
@@ -5617,7 +5617,7 @@ swde("CSSStyleDeclaration", class extends w.HTMLElement {
             "y",
             "zIndex",
         ];
-        for (let k of list) odp(this, k, {value: "", writable: true})
+        for (let k of list) odp(this, k, {value: "", writable: true, enumerable: true})
 
         list = [
             // first attribute is per acid test 46
@@ -5634,7 +5634,7 @@ swde("CSSStyleDeclaration", class extends w.HTMLElement {
         ];
         for(let k of list) {
             const s = k.split('.');
-            odp(this, s[0], {value: s[1], writable: true})
+            odp(this, s[0], {value: s[1], writable: true, enumerable: true})
         }
     }
 
