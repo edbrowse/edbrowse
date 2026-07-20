@@ -8677,7 +8677,7 @@ past_js:
 						goto failg;
 					}
 					nzFree(allocatedLine);
-					allocatedLine = lessFile(line, (t->itype == INP_TA));
+					allocatedLine = lessFile(line, (t->itype == INP_TA && t->lic > 0));
 					if (!allocatedLine)
 						goto fail;
 					line = allocatedLine;
