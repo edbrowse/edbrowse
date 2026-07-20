@@ -5350,35 +5350,52 @@ Or you could end the last statement with a semicolon.
 *********************************************************************/
 
 ; (function() {
-const cnlist = ["HTMLAnchorElement.href", "HTMLAreaElement.href", "HTMLFrameElement.src"];
-for(let k of cnlist) {
-const s = k.split('.');
-const cn = s[0]; // class name
-const u = s[1]; // url name
-eval('odp(w.' + cn + '.prototype, "' + u + '", { ' +
-'get: function() { return this.href$2 ? this.href$2.href$val : ""}, ' +
-'set: function(h) { if(h === null || h === undefined) h = ""; ' +
-'if(h instanceof w.URL || h.dom$class == "URL") h = h.toString(); ' +
-'if(typeof h != "string") { alert3("hrefset " + typeof h); ' +
-'return; } ' +
-'if(!h) return; ' +
-'let last_href = (this.href$2 ? this.href$2.toString() : null); ' +
-'this.setAttribute("' + u +'",h); ' +
-'/* special code for setting frame.src, redirect to a new page. */ ' +
-'h = this.href$2.href$val; ' +
-'if(this.is$frame && this.eb$expf && last_href != h) { ' +
-'/* There is a nasty corner case here, dont know if it ever happens. What if we are replacing the running frame? window.parent.src = new_url; See if we can get around it this way. */ ' +
-'if(w == this.contentWindow) { w.location = h; return; } ' +
-'delete this.eb$expf; ' +
-'eb$unframe(this); /* fix links on the edbrowse side */ ' +
-'/* I can force the opening of this new frame, but should I? */ ' +
-'this.contentDocument; eb$unframe2(this); ' +
-'} }});');
-const piecelist = ["protocol", "pathname", "host", "search", "hostname", "port", "hash"];
-for(let piece of piecelist) {
-eval('odp(w.' + cn + '.prototype, "' + piece + '", {get: function() { return this.href$2 ? this.href$2.' + piece + ' : null},set: function(x) { if(this.href$2) this.href$2.' + piece + ' = x; }});');
-}
-}
+    const cnlist = ["HTMLAnchorElement.href", "HTMLAreaElement.href", "HTMLFrameElement.src"];
+    for (let k of cnlist) {
+        const s = k.split('.');
+        const cn = s[0]; // class name
+        const u = s[1]; // url name
+        odp(w[cn][prototype], u, {
+            get: function() { return this.href$2 ? this.href$2.href$val : ""; },
+            set: function(h)
+            {
+                if (h === null || h === undefined) h = "";
+                if (h instanceof w.URL || h.dom$class == "URL") h = h.toString();
+                if (typeof h != "string") {
+                    alert3(`href set ${typeof h}`);
+                    return;
+                }
+                if (!h) return;
+                let last_href = (this.href$2 ? this.href$2.toString() : null);
+                this.setAttribute(u, h);
+                // special code for setting frame.src, redirect to a new page.
+                h = this.href$2.href$val;
+                if (this.is$frame && this.eb$expf && last_href != h) {
+                    /*
+                        There is a nasty corner case here, dont know if it ever
+                        happens. What if we are replacing the running frame?
+                        window.parent.src = new_url; See if we can get around it
+                        this way.
+                    */
+                    if (w === this.contentWindow) {
+                        w.location = h;
+                        return;
+                    }
+                    delete this.eb$expf;
+                    eb$unframe(this); // fix links on the edbrowse side
+                    // I can force the opening of this new frame, but should I?
+                    this.contentDocument;
+                    eb$unframe2(this);
+                }
+            }
+        });
+        const piecelist = ["protocol", "pathname", "host", "search", "hostname", "port", "hash"];
+        for (let piece of piecelist)
+            odp(w[cn][prototype], piece, {
+                get: function() { return this.href$2 ? this.href$2[piece] : null; },
+                set: function(x) { if (this.href$2) this.href$2[piece] = x; }
+            });
+    }
 })();
 
 /*********************************************************************
@@ -5390,23 +5407,27 @@ and also put it in spilldownResolveURL instead of spilldownResolve.
 *********************************************************************/
 
 ; (function() {
-const cnlist = ["HTMLFormElement.action", "HTMLImageElement.src", "HTMLScriptElement.src",
-"HTMLBaseElement.href", "HTMLLinkElement.href", "HTMLMediaElement.src",
-"HTMLObjectElement.data"];
-for(let k of cnlist) {
-const s = k.split('.');
-const cn = s[0]; // class name
-const u = s[1]; // url name
-eval('odp(w.' + cn + '.prototype, "' + u + '", { ' +
-'get: function() { return this.href$2 ? this.href$2 : ""}, ' +
-'set: function(h) { if(h instanceof w.URL || h.dom$class == "URL") h = h.toString(); ' +
-'if(h === null || h === undefined) h = ""; ' +
-'if(typeof h != "string") { alert3("hrefset " + typeof h); ' +
-'return; } ' +
-'if(!h) return; ' +
-'this.setAttribute("' + u +'",h) ' +
-' }});');
-}
+    const cnlist = ["HTMLFormElement.action", "HTMLImageElement.src", "HTMLScriptElement.src",
+    "HTMLBaseElement.href", "HTMLLinkElement.href", "HTMLMediaElement.src",
+    "HTMLObjectElement.data"];
+    for(let k of cnlist) {
+        const s = k.split('.');
+        const cn = s[0]; // class name
+        const u = s[1]; // url name
+        odp(w[cn][prototype], u, {
+            get: function() { return this.href$2 ? this.href$2 : ""},
+            set: function(h) {
+                if (h instanceof w.URL || h.dom$class == "URL") h = h.toString();
+                if (h === null || h === undefined) h = "";
+                if (typeof h != "string") {
+                    alert3(`hrefset ${typeof h}`);
+                    return;
+                }
+                if (!h) return;
+                this.setAttribute(u, h);
+            }
+        });
+    }
 })();
 
 // Canvas method draws a picture. That's meaningless for us,
