@@ -3801,7 +3801,7 @@ swde("Element", class extends w.Node {
 let elemp = w.Element.prototype;
 
 // attributes are on demand
-odp( elemp, "attributes", { get: function(){ if(!this.attributes$2) {
+odp(elemp, "attributes", { get: function(){ if(!this.attributes$2) {
 odp(this, "attributes$2", {value:new w.NamedNodeMap})
 this.attributes$2.owner = this
 this.attributes$2.ownerDocument = this.ownerDocument ? this.ownerDocument : d;
@@ -3812,8 +3812,8 @@ return this.attributes$2}})
 "getAttribute", "getAttributeNS", "getAttributeNode",
 "setAttribute", "setAttributeNS", "setAttributeNode",
 "removeAttribute", "removeAttributeNS", "removeAttributeNode"];
-for(let k of list)
-eval('elemp.'+k+' = attr.'+k)})();
+for (let k of list) elemp[k] = attr[k]
+})();
 
 // children is subtly different from childnodes; this code taken from
 // https://developer.mozilla.org/en-US/docs/Web/API/ParentNode/children
