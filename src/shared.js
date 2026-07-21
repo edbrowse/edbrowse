@@ -5480,7 +5480,8 @@ function dhp(obj, ev)
         }
     });
 }
-    let objlist = [elemp, d, w];
+// Looks odd but w.Window.prototype will become the prototype of w eventually
+    let objlist = [elemp, docp, w.Window.prototype];
     for(let obj of objlist) {
 // there are lots more events, onmouseout etc, that we don't responnd to,
 // should we watch for them anyways?
@@ -5492,7 +5493,7 @@ function dhp(obj, ev)
 // onhashchange from certain places
 // Also HTMLFrameSetElement which we have not yet implemented.
 
-    objlist = [bodyp, w.SVGElement, w];
+    objlist = [bodyp, w.SVGElement.prototype, w.Window.prototype];
     for(let obj of objlist) dhp(obj, "onhashchange");
 })();
 
