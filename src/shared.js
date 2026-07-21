@@ -470,7 +470,7 @@ function dispatchEvent (e) {
         let f;
         if (inline) {
             // already bound or caller doesn't want it to be
-            if (typeof h === "function") f = () => h; // consume the argument
+            if (typeof h === "function") f = h.bind(n);
             // Wrap in an anonymous function (I hope nothing breaks this syntax)
             else if (typeof h == "string")
                 f = our_eval(`(function () { ${h};})`).bind(n);
@@ -5427,6 +5427,58 @@ and also put it in spilldownResolveURL instead of spilldownResolve.
                 this.setAttribute(u, h);
             }
         });
+    }
+})();
+
+// We can set input.onclick = 'some code to execute";, then invoke
+// input.onclick() directly, which means it has to transmute to a function.
+// That requires a setter to compile the string, and a getter to return the function.
+function handlerCompile(f, t) {
+    let cf; // the compiled function
+    try {
+        cf = w.eval(`(function(){${f}})`);
+// looks good, now bind to this
+        cf = cf.bind(t);
+    } catch(e) {
+// Don't just use eb$truefunction; I want to put the text
+// on function.body, for debugging, and that means I need my own function.
+        cf = w.eval("(function(){return true;})");
+        alert3("handler syntax error <" + f + ">");
+    }
+    cf.body = f;
+    cf.toString = function() { return this.body; }
+    return cf;
+}
+
+// Now make sure this is invoked by body.onload and his friends.
+; (function() {
+    var cnlist = ["elemp", "d", "w"];
+    for(let cn of cnlist) {
+// there are lots more events, onmouseout etc, that we don't responnd to,
+// should we watch for them anyways?
+        var evs = ["onload", "onunload", "onclick", "onchange", "oninput",
+            "onsubmit", "onreset", "onmessage"];
+        for(let evname of evs) {
+            eval('odp(' + cn + ', "' + evname + '", { \
+get: function() { return this.' + evname + '$2 ? this.' + evname + '$2 : null}, \
+set: function(f) { if(db$flags(1)) alert3((this.'+evname+'$2 ?"clobber ":"create ") + (this.nodeName ? this.nodeName : "+"+this.dom$class) + ".' + evname + '"); \
+if(typeof f == "string") f = handlerCompile(f, this); \
+if(typeof f == "function") { Object.defineProperty(this, "' + evname + '$2", {value:f,writable:true,configurable:true}); \
+}}})')
+}}})();
+
+// onhashchange from certain places
+; (function() {
+// Also HTMLFrameSetElement which we have not yet implemented.
+// Don't have to eval here because it's just one event.
+    var cnlist = [bodyp, w.SVGElement, w];
+    for(let cn of cnlist) {
+        odp(cn, "onhashchange", {
+            get: function() { return this.onhashchange$2; },
+            set: function(f) { if(db$flags(1)) alert3((this.onhashchange$2?"clobber ":"create ") + (this.nodeName ? this.nodeName : "+"+this.dom$class) + ".onhashchange");
+                if(typeof f == "string") f = handlerCompile(f, this);
+                if(typeof f == "function") {
+                    odp(this, "onhashchange$2", {value:f,writable:true,configurable:true})}}})
     }
 })();
 
