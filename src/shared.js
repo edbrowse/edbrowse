@@ -3406,7 +3406,12 @@ odp(evtgtp, "addEventListener", {value: addEventListener});
 odp(evtgtp, "removeEventListener", {value: removeEventListener});
 odp(evtgtp, "dispatchEvent", {value: dispatchEvent});
 swde("Node", class extends w.EventTarget {
-    constructor() { super(); }
+    constructor()
+    {
+        super();
+        this.childNodes = new w.Array;
+        this.parentNode = null;
+    }
 })
 let nodep = w.Node.prototype;
 
@@ -3769,9 +3774,7 @@ docp.nodeType = 9
 // create the document
 d = new w.Document;
 swpv("document", d);
-// this wasn't done by createElement, so have to make the child array
-    odp(d, "childNodes", {value:new w.Array,writable:true,configurable:true});
-    odp(d, "parentNode", {value:null,writable:true,configurable:true});
+nodep.ownerDocument = d;
 
 // Window constructor, passes the url back to edbrowse
 // so it can open a new web page.
@@ -4341,14 +4344,6 @@ odp(textp, "data", {
 docp.createTextNode = function(t) {
 if(t == undefined) t = "";
 const c = new w.Text(t);
-/* A text node chould never have children, and does not need childNodes array,
- * but there is improper html out there <text> <stuff> </text>
- * which has to put stuff under the text node, so against this
- * unlikely occurence, I have to create the array.
- * I have to treat a text node like an html node. */
-    odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
-    odp(c, "parentNode", {value:null,writable:true,configurable:true});
-    odp(c, "ownerDocument", {value:this});
 if(this.eb$xml) c.eb$xml = true;
 eb$logElement(c, "text");
 return c;
@@ -4368,9 +4363,6 @@ cmtp.nodeType = 8;
 docp.createComment = function(t) {
 if(t == undefined) t = "";
 const c = new w.Comment(t);
-    odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
-    odp(c, "parentNode", {value:null,writable:true,configurable:true});
-    odp(c, "ownerDocument", {value:this});
 eb$logElement(c, "comment");
 return c;
 }
@@ -5874,9 +5866,6 @@ cdatap.nodeType = 4;
 docp.createCDATASection = function(t) {
 if(t == undefined) t = "";
 const c = new w.CDATASection(t);
-    odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
-    odp(c, "parentNode", {value:null,writable:true,configurable:true});
-    odp(c, "ownerDocument", {value:this});
 eb$logElement(c, "cdata");
 return c;
 }
@@ -5894,12 +5883,12 @@ let t = s.toLowerCase();
 let x = w.customElements.get(s);
 if(x) { // here we go
 c = new x;
-    odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
-    odp(c, "parentNode", {value:null,writable:true,configurable:true});
+// assumes custom element is an extension of Node, so that
+// childNodes parentNode etc are created by the Node constructor,
+// and we don't have to do that here.
 if(this.eb$xml) c.eb$xml = true;
     odp(c, "nodeName", {value:s,writable:true,configurable:true});
     odp(c, "tagName", {value:s,writable:true,configurable:true});
-odp(c, "ownerDocument", {value:this,writable:true})
 odp(c, "connectedCallback$pending", {value:!!c.connectedCallback, writable:true})
 eb$logElement(c, t);
 return c;
@@ -5959,9 +5948,6 @@ case "iframe": c = new w.HTMLIFrameElement; break;
 case "select": c = new w.HTMLSelectElement; break;
 case "option":
 c = new w.Option;
-    odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
-    odp(c, "parentNode", {value:null,writable:true,configurable:true});
-odp(c, "ownerDocument", {value:this,writable:true})
 if(this.eb$xml) c.eb$xml = true;
 c.selected = true; // jquery says we should do this
 // we don't log options because rebuildSelectors() checks
@@ -5981,9 +5967,6 @@ unknown = true;
 c = new w.HTMLUnknownElement;
 }
 
-    odp(c, "childNodes", {value:new w.Array,writable:true,configurable:true});
-    odp(c, "parentNode", {value:null,writable:true,configurable:true});
-odp(c, "ownerDocument", {value:this,writable:true})
 if(this.eb$xml && !(c instanceof w.HTMLFrameElement) && !(c instanceof w.HTMLIFrameElement)) c.eb$xml = true;
 // Split on : if this comes from a name space
 let colon = t.split(':');
