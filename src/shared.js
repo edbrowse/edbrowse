@@ -5458,34 +5458,42 @@ and also put it in spilldownResolveURL instead of spilldownResolve.
 // That requires a setter to compile the string, and a getter to return the function.
 
 ; (function() {
-    var cnlist = ["elemp", "d", "w"];
-    for(let cn of cnlist) {
+// define handler properties helper function to define the getter and setter
+// for compiling event handlers
+function dhp(obj, ev)
+{
+    const evprop = `${ev}$2`
+    odp(obj, ev, {
+        get: function() { return this[evprop] ? this[evprop] : null; },
+        set: function(f)
+        {
+            if (db$flags(1))
+                alert3(
+                    `${(this[evprop] ? "clobber": "create")} ${(this.nodeName ? this.nodeName : this.dom$class)}.${ev}`
+                );
+            if(typeof f === "string") f = handlerCompile(f, this);
+            if(typeof f === "function") {
+                odp(this, evprop, {
+                    value: f, writable: true, configurable: true
+                });
+            }
+        }
+    });
+}
+    let objlist = [elemp, d, w];
+    for(let obj of objlist) {
 // there are lots more events, onmouseout etc, that we don't responnd to,
 // should we watch for them anyways?
-        var evs = ["onload", "onunload", "onclick", "onchange", "oninput",
+        let evs = ["onload", "onunload", "onclick", "onchange", "oninput",
             "onsubmit", "onreset", "onmessage"];
-        for(let evname of evs) {
-            eval('odp(' + cn + ', "' + evname + '", { \
-get: function() { return this.' + evname + '$2 ? this.' + evname + '$2 : null}, \
-set: function(f) { if(db$flags(1)) alert3((this.'+evname+'$2 ?"clobber ":"create ") + (this.nodeName ? this.nodeName : "+"+this.dom$class) + ".' + evname + '"); \
-if(typeof f == "string") f = handlerCompile(f, this); \
-if(typeof f == "function") { Object.defineProperty(this, "' + evname + '$2", {value:f,writable:true,configurable:true}); \
-}}})')
-}}})();
+        for(let evname of evs) dhp(obj, evname);
+    }
 
 // onhashchange from certain places
-; (function() {
 // Also HTMLFrameSetElement which we have not yet implemented.
-// Don't have to eval here because it's just one event.
-    var cnlist = [bodyp, w.SVGElement, w];
-    for(let cn of cnlist) {
-        odp(cn, "onhashchange", {
-            get: function() { return this.onhashchange$2; },
-            set: function(f) { if(db$flags(1)) alert3((this.onhashchange$2?"clobber ":"create ") + (this.nodeName ? this.nodeName : "+"+this.dom$class) + ".onhashchange");
-                if(typeof f == "string") f = handlerCompile(f, this);
-                if(typeof f == "function") {
-                    odp(this, "onhashchange$2", {value:f,writable:true,configurable:true})}}})
-    }
+
+    objlist = [bodyp, w.SVGElement, w];
+    for(let obj of objlist) dhp(obj, "onhashchange");
 })();
 
 // Canvas method draws a picture. That's meaningless for us,
