@@ -6129,8 +6129,9 @@ swde("XMLHttpRequest", class extends w.EventTarget {
     LOADING = 3;
     DONE = 4;
 
-    conxstructor()
+    constructor()
     {
+        super();
         this.headers = new w.Object;
         this.responseHeaders = new w.Object;
         this.aborted = false;//non-standard
