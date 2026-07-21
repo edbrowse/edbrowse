@@ -3075,7 +3075,11 @@ void domSetsTagValue(Tag *t, const char *newtext)
     t->value = cloneString(newtext);
     if (itype != INP_TA) return;
     int side = t->lic;
-    if(side < 0) return;
+    if(side < 0) {
+        spaceCrunch(t->value, true, false);
+        set_property_string_t(t, "val$ue", t->value);
+        return;
+    }
     if (side == 0 || side > maxSession || side == context)
         return;
     if (sessionList[side].lw == NULL)
