@@ -705,19 +705,9 @@ void delete_property_doc(const Frame *f, const char *name)
 	delete_property(f->cx, *((JSValue*)f->docobj), name);
 }
 
-// The instantiate functions take an optional parent and name,
+// The instantiate function takes an optional parent and name,
 // to hand the instantiated thing on, if you wish.
 // This is part convenience and part legacy.
-static JSValue instantiate_hidden_array(JSContext *cx, JSValueConst parent, const char *name)
-{
-    debugPrint(5, "new Array");
-    JSValue a = JS_NewArray(cx);
-    grab(a);
-    if(name)
-        define_hidden_property_object(cx, parent, name, a);
-    return a;
-}
-
 static JSValue instantiate(JSContext *cx, JSValueConst parent, const char *name,
 			  const char *classname)
 {
@@ -4208,7 +4198,6 @@ void establish_js_option(Tag *t, Tag *sel, Tag *og)
 	if(og) ogobj = *((JSValue*)og->jv);
 	oa = get_property_object(cx, selobj, "options");
 	oo = instantiate_array_element(cx, oa, idx, "Option");
-	if(cf->xmlMode) set_property_bool(cx, oo, "eb$xml", true);
 	if(t->checked) {
 		soa = get_property_object(cx, selobj, "selectedOptions");
 		set_array_element_object(cx, soa, idx, oo);
@@ -4225,12 +4214,7 @@ void establish_js_option(Tag *t, Tag *sel, Tag *og)
 idx = get_arraylength(cx, cn);
 	set_array_element_object(cx, cn, idx, oo);
 	set_property_object(cx, oo, "parentNode", (og ? ogobj : selobj));
-
 connectTagObject(t, oo);
-	JS_Release(cx, cn);
-	cn = instantiate_hidden_array(cx, oo, "childNodes");
-	JS_DefinePropertyValueStr(cx, oo, "parentNode", JS_NULL,
-	JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE);
 	JS_Release(cx, cn);
 	JS_Release(cx, oa);
 }
@@ -4238,15 +4222,8 @@ connectTagObject(t, oo);
 void establish_js_textnode(Tag *t)
 {
 	JSContext *cx = cf->cx;
-	JSValue cn;
 	 JSValue tagobj = instantiate(cx, *((JSValue*)cf->winobj), 0, "Text");
-	if(cf->xmlMode) set_property_bool(cx, tagobj, "eb$xml", true);
-	cn = instantiate_hidden_array(cx, tagobj, "childNodes");
-	JS_DefinePropertyValueStr(cx, tagobj, "parentNode", JS_NULL,
-	JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE);
-	define_hidden_property_object(cx, tagobj, "ownerDocument", *(JSValue*)cf->docobj);
 	connectTagObject(t, tagobj);
-	JS_Release(cx, cn);
 }
 
 static void processStyles(JSValueConst so, const char *stylestring)
@@ -4307,7 +4284,6 @@ int extra) // bits: radio, window, document, unknown
     const char *symname = t->name;
     const char *idname = t->id;
     const char *stylestring = attribVal(t, "style");
-    JSValue cn; // child nodes
     	static const char * const z_list[] = {
         "Header", "Footer", "Title", "Datalist",
         "tHead", "tBody", "tFoot", "HTML", 0};
@@ -4356,11 +4332,6 @@ don't overwrite form.action, or anything else that pre-exists.
         io = instantiate(cx,
         *((JSValue*)cf->winobj), 0, classtweak);
     if(JS_IsUndefined(io)) return;
-    if(cf->xmlMode) set_property_bool(cx, io, "eb$xml", true);
-    cn = instantiate_hidden_array(cx, io, "childNodes");
-    JS_Release(cx, cn);
-    JS_DefinePropertyValueStr(cx, io, "parentNode", JS_NULL,
-    JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE);
 // these two have spillup setters
     if(symname) set_property_string(cx, io, "name", symname);
     if(idname) set_property_string(cx, io, "id", idname);
@@ -4398,7 +4369,6 @@ Don't do any of this if the tag is itself <style>. */
             define_hidden_property_string(cx, io, "nodeName", js_node);
             define_hidden_property_string(cx, io, "tagName", js_node);
         }
-        define_hidden_property_object(cx, io, "ownerDocument", *(JSValue*)cf->docobj);
     }
     connectTagObject(t, io);
 }

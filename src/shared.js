@@ -3735,6 +3735,8 @@ swde("Document", class extends w.Node {
         });
         this.readyState$2 = "interactive";
     }
+
+    toString() { return "[object HTMLDocument]" };
 });
 swde("HTMLDocument", class extends w.Document {
     constructor() { super(); }
@@ -3829,6 +3831,9 @@ swde("Element", class extends w.Node {
     constructor() { super(); }
 })
 let elemp = w.Element.prototype;
+
+// carry the xml indicator from the document down to all the elements inside it.
+odp(elemp, "eb$xml", {get: function() { return this.ownerDocument.eb$xml}})
 
 // attributes are on demand
 odp(elemp, "attributes", { get: function(){ if(!this.attributes$2) {
@@ -4371,7 +4376,6 @@ odp(textp, "data", {
 docp.createTextNode = function(t) {
 if(t == undefined) t = "";
 const c = new w.Text(t);
-if(this.eb$xml) c.eb$xml = true;
 eb$logElement(c, "text");
 return c;
 }
@@ -5896,7 +5900,6 @@ c = new x;
 // assumes custom element is an extension of Node, so that
 // childNodes parentNode etc are created by the Node constructor,
 // and we don't have to do that here.
-if(this.eb$xml) c.eb$xml = true;
     odp(c, "nodeName", {value:s,writable:true,configurable:true});
     odp(c, "tagName", {value:s,writable:true,configurable:true});
 odp(c, "connectedCallback$pending", {value:!!c.connectedCallback, writable:true})
@@ -5958,7 +5961,6 @@ case "iframe": c = new w.HTMLIFrameElement; break;
 case "select": c = new w.HTMLSelectElement; break;
 case "option":
 c = new w.Option;
-if(this.eb$xml) c.eb$xml = true;
 c.selected = true; // jquery says we should do this
 // we don't log options because rebuildSelectors() checks
 // the dropdown lists after every js run.
@@ -5977,7 +5979,6 @@ unknown = true;
 c = new w.HTMLUnknownElement;
 }
 
-if(this.eb$xml && !(c instanceof w.HTMLFrameElement) && !(c instanceof w.HTMLIFrameElement)) c.eb$xml = true;
 // Split on : if this comes from a name space
 let colon = t.split(':');
 if(colon.length == 2) {
