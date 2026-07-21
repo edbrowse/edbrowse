@@ -1299,6 +1299,10 @@ o.type = "checkbox";
 if(o.value != "on") fail(259);
 o = document.createElement("button");
 if(o.type != "submit") fail(260);
+
+// if no handler given, the handler should come back null
+if(document.body.onclick !== null) fail(261)
+
 // delete the memory stuff from the form,
 // elements and links and so on should readjust.
 document.getElementById("hog").remove();
