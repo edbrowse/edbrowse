@@ -3040,7 +3040,10 @@ function formReindex(f)
     for (name in f) {
         if (!f.hasOwnProperty(name)) continue;
         if (typeof f[name] != "object") continue;
+        if(f[name] === null) continue;
+// these should not be enumerable, but just in case...
         if (name == "childNodes") continue;
+        if (name == "parentNode") continue;
         if (name == "elements") continue;
         if (name.match(/^on[a-zA-Z]+\$\$array$/)) continue;
         // special code to detect and delete an array of radio buttons.
@@ -3409,8 +3412,11 @@ swde("Node", class extends w.EventTarget {
     constructor()
     {
         super();
-        this.childNodes = new w.Array;
-        this.parentNode = null;
+// childNodes should probably be readonly, but there are still some
+// questionable implementations where I delete it and replace it.
+// Still, it shouldn't be enumerable.
+        odp(this, "childNodes", {value: new w.Array, writable: true, configurable:true})
+        odp(this, "parentNode", {value: null, writable: true, configurable:true})
     }
 })
 let nodep = w.Node.prototype;
