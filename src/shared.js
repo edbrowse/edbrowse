@@ -1235,6 +1235,11 @@ like form.setAttribute("elements", "xx") or some such.
 I call these implicit members, we shouldn't overwrite them.
 *********************************************************************/
 
+        const standard_events = ["onload", "onunload", "onclick", "onchange", "oninput",
+            "onsubmit", "onreset", "onmessage"];
+// there are lots more events, onmouseout etc, that we don't responnd to,
+// should we watch for them anyways?
+
 this.attr = {
 
 implicitMember: function(o, name) {
@@ -1273,6 +1278,19 @@ return name == "action" && nn == "form" ||
 name == "data" && (nn == "object") ||
 name == "src" && (nn == "img" || nn == "script" || nn == "audio" || nn == "video") ||
 name == "href" && (nn == "link" || nn == "base");
+},
+
+// Attributes that compile a string as part of spilldown.
+// this function should agree with the criteria for the getters below,
+// that return null if no property was set.
+// This function and the getters below are rather permissive,
+// taking action on many tags that might not allow onclick etc.
+spilldownCompile: function(t, name) {
+    if(!t.nodeName) return false;
+    let nn = t.nodeName.toLowerCase();
+    for(let evname of standard_events) if(evname == n) return true;
+    if(evname == onhashchange) return true;
+    return false;
 },
 
 spilldownBool: function(t, name) {
@@ -5477,11 +5495,7 @@ function dhp(obj, ev)
 // Looks odd but w.Window.prototype will become the prototype of w eventually
     let objlist = [elemp, docp, w.Window.prototype];
     for(let obj of objlist) {
-// there are lots more events, onmouseout etc, that we don't responnd to,
-// should we watch for them anyways?
-        let evs = ["onload", "onunload", "onclick", "onchange", "oninput",
-            "onsubmit", "onreset", "onmessage"];
-        for(let evname of evs) dhp(obj, evname);
+        for(let evname of standard_events) dhp(obj, evname);
     }
 
 // onhashchange from certain places
