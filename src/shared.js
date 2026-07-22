@@ -1288,8 +1288,8 @@ name == "href" && (nn == "link" || nn == "base");
 spilldownCompile: function(t, name) {
     if(!t.nodeName) return false;
     let nn = t.nodeName.toLowerCase();
-    for(let evname of standard_events) if(evname == n) return true;
-    if(evname == onhashchange) return true;
+    for(let evname of standard_events) if(evname == name) return true;
+    if(name == onhashchange) return true;
     return false;
 },
 
