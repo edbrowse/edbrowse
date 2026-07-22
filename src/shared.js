@@ -1239,6 +1239,8 @@ I call these implicit members, we shouldn't overwrite them.
             "onsubmit", "onreset", "onmessage"];
 // there are lots more events, onmouseout etc, that we don't responnd to,
 // should we watch for them anyways?
+const standard_event_classes = ["Element", "Document"];
+const standard_hashchange_classes = ["HTMLBodyElement", "SVGElement"];
 
 this.attr = {
 
@@ -1286,10 +1288,16 @@ name == "href" && (nn == "link" || nn == "base");
 // This function and the getters below are rather permissive,
 // taking action on many tags that might not allow onclick etc.
 spilldownCompile: function(t, name) {
-    if(!t.nodeName) return false;
-    let nn = t.nodeName.toLowerCase();
-    for(let evname of standard_events) if(evname == name) return true;
-    if(name == onhashchange) return true;
+    let w = my$win();
+// can we get window from the tag? Might be more accurate.
+    if(t.ownerDocument && typeof t.ownerDocument.defaultView == "object")
+        w = t.ownerDocument.defaultView;
+    for(let c of standard_event_classes) if(t instanceof w[c]) {
+        for(let evname of standard_events) if(evname == name) return true;
+    }
+    for(let c of standard_hashchange_classes) if(t instanceof w[c]) {
+        if("onhashchange" == name) return true;
+    }
     return false;
 },
 
@@ -5471,11 +5479,12 @@ function handlerCompile(f, t)
 
 ; (function() {
 // define handler properties helper function to define the getter and setter
-// for compiling event handlers
-function dhp(obj, ev)
+// for event handlers spilldown and default null value
+// At some point the compile will be taken out of this function and moved to the attribute system.
+function dhp1(obj, ev)
 {
     const evprop = `${ev}$2`
-    odp(obj, ev, {
+    odp(w[obj].prototype, ev, {
         get: function() { return this[evprop] ? this[evprop] : null; },
         set: function(f)
         {
@@ -5492,17 +5501,38 @@ function dhp(obj, ev)
         }
     });
 }
-// Looks odd but w.Window.prototype will become the prototype of w eventually
-    let objlist = [elemp, docp, w.Window.prototype];
-    for(let obj of objlist) {
-        for(let evname of standard_events) dhp(obj, evname);
+
+function dhp2(obj, ev)
+{
+    const evprop = `${ev}$2`
+    odp(w[obj].prototype, ev, {
+        get: function() { return this[evprop] ? this[evprop] : null; },
+        set: function(f)
+        {
+            if (db$flags(1))
+                alert3(
+                    `${(this[evprop] ? "clobber": "create")} ${(this.nodeName ? this.nodeName : this.dom$class)}.${ev}`
+                );
+            if(typeof f === "function") {
+                odp(this, evprop, {
+                    value: f, writable: true, configurable: true
+                });
+            }
+        }
+    });
+}
+
+    for(let obj of standard_event_classes) {
+        for(let evname of standard_events) dhp1(obj, evname);
     }
+
+// window has no attribute system - requires different getter / setter
+    for(let evname of standard_events) dhp2("Window", evname);
 
 // onhashchange from certain places
 // Also HTMLFrameSetElement which we have not yet implemented.
-
-    objlist = [bodyp, w.SVGElement.prototype, w.Window.prototype];
-    for(let obj of objlist) dhp(obj, "onhashchange");
+    for(let obj of standard_hashchange_classes) dhp1(obj, "onhashchange");
+   dhp2("Window", "onhashchange");
 })();
 
 // Canvas method draws a picture. That's meaningless for us,
