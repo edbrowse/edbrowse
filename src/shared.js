@@ -663,7 +663,7 @@ function addEventListener(evtype, handler, iscapture)
 
 // what if every handler is removed and there is an empty array?
 // the assumption is that this is not a problem.
-function removeEventListener(ev, handler, iscapture)
+function removeEventListener(evtype, handler, iscapture)
 {
     let dbg = () => undefined;
     const ev = `on${evtype}`;
