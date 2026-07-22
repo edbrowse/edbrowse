@@ -56,6 +56,9 @@ if(!window.mw$) {
 // mw$.share = 0 means I made up that window out of thin air
     this.mw$ = {share:0, URL:{}};
 this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
+    this.mw$.dispatchEvent = () => undefined;
+    this.mw$.addEventListener = () => undefined;
+    this.mw$.removeEventListener = () => undefined;
     this.mw$.getComputedStyle = () => {};
     this.mw$.structuredClone = () => {};
     this.mw$.attr = {};
@@ -288,6 +291,11 @@ swp("findClass4Tag", function(tagname, above) {
     return f2;
 });
 
+// make sure to wrap global dispatchEvent, so this becomes this window,
+// and not the shared window.
+swp("dispatchEvent", mw$.dispatchEvent.bind(window))
+swp("addEventListener", mw$.addEventListener.bind(window))
+swp("removeEventListener", mw$.removeEventListener.bind(window))
 // importNode is the same as cloneNode, except it is copying a tree
 // of objects from another context into the current context.
 // Set the second parameter to true to indicate this.
