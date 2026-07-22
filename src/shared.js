@@ -3410,11 +3410,11 @@ return !(this.valueMissing)}})
 swde("EventTarget", class extends w.Object {
     constructor() { super(); }
 })
-let evtgtp = w.EventTarget.prototype;
-// Add to the prototype so we don't recreate the functions per window
-odp(evtgtp, "addEventListener", {value: addEventListener});
-odp(evtgtp, "removeEventListener", {value: removeEventListener});
-odp(evtgtp, "dispatchEvent", {value: dispatchEvent});
+let evtgtp = w.EventTarget.prototype
+evtgtp.addEventListener = addEventListener
+evtgtp.removeEventListener = removeEventListener
+evtgtp.dispatchEvent = dispatchEvent
+
 swde("Node", class extends w.EventTarget {
     constructor()
     {
