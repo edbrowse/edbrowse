@@ -458,27 +458,6 @@ if(cont(top.childNodes[i], n)) return true;
 return false;
 }
 
-// Function to compile event handlers, used both when setting known legacy
-// handlers and handling unknown ones
-function handlerCompile(f, t, e = null)
-{
-    let cf; // the compiled function
-    if (!e) e = my$win().eval;
-    try {
-        cf = e(`(function(){${f}})`);
-// looks good, now bind to this
-        cf = cf.bind(t);
-    } catch(e) {
-// Don't just use eb$truefunction; I want to put the text
-// on function.body, for debugging, and that means I need my own function.
-        cf = w.eval("(function(){return true;})");
-        alert3(`handler syntax error <${f}>`);
-    }
-    cf.body = f;
-    cf.toString = function() { return this.body; }
-    return cf;
-}
-
 function dispatchEvent (e) {
     // When handlers fire, or there are issues, print those at db3.
     // If we are simply tracking through the dispatch algorithm, then db4.
@@ -490,11 +469,7 @@ function dispatchEvent (e) {
         const hd = inline ? "inline handler" : `handler ${h.ehsn}`;
         let f;
         if (inline) {
-            // already bound or caller doesn't want it to be
             if (typeof h === "function") f = h.bind(n);
-            // Wrap in an anonymous function (I hope nothing breaks this syntax)
-            else if (typeof h === "string")
-                f = handlerCompile(h, n, our_eval);
         }
         // Should be bound to the node
         else if (typeof h.callback == "function") f = h.callback.bind(n);
@@ -5456,6 +5431,25 @@ and also put it in spilldownResolveURL instead of spilldownResolve.
 // We can set input.onclick = 'some code to execute";, then invoke
 // input.onclick() directly, which means it has to transmute to a function.
 // That requires a setter to compile the string, and a getter to return the function.
+
+// Function to compile event handlers
+function handlerCompile(f, t)
+{
+    let cf; // the compiled function
+    try {
+        cf = w.eval(`(function(){${f}})`);
+// looks good, now bind to this
+        cf = cf.bind(t);
+    } catch(e) {
+// Don't just use eb$truefunction; I want to put the text
+// on function.body, for debugging, and that means I need my own function.
+        cf = w.eval("(function(){return true;})");
+        alert3(`handler syntax error <${f}>`);
+    }
+    cf.body = f;
+    cf.toString = function() { return this.body; }
+    return cf;
+}
 
 ; (function() {
 // define handler properties helper function to define the getter and setter
