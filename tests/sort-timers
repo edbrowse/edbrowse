@@ -1,0 +1,16 @@
+<body>
+<h1>Sleep sort</h1>
+<!--
+https://accu.org/journals/overload/31/175/henney/
+-->
+<p>This text should go away - replaced with the numbers in order.</p>
+<script>
+// cranks out a timer for each value
+  const sleepsort = values =>
+    values.forEach(
+      value => setTimeout(
+        () => document.writeln(value), value * 1000))
+  sleepsort([3, 1, 4, 1, 37, 5, 9])
+// after this, tmlist will show empty
+</script>
+</body>

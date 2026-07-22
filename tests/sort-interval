@@ -1,0 +1,20 @@
+<body>
+<h1>Sleep sort</h1>
+<p>This text should go away - replaced with the numbers in order.</p>
+<script>
+// driven by an interval, rather than individual timers
+const sleepsort = values => {
+  const sleepers = {}
+  values.forEach(value => sleepers[value] = sleepers[value] + 1 || 1)
+  let ticks = 0
+  const tick = () => {
+    for (let count = sleepers[ticks]; count > 0; --count)
+      document.writeln(ticks)
+    ++ticks
+  }
+  setInterval(tick, 1000)
+}
+  sleepsort([3, 1, 4, 1, 37, 5, 9])
+// after this tmlist will still show the interval
+</script>
+</body>
