@@ -626,22 +626,7 @@ function dispatchEvent (e) {
     return !e.defaultPrevented;
 }
 
-/*********************************************************************
-This is our addEventListener function.
-It needs to be bound to window, document and to other nodes via
-class.prototype.addEventListener = addEventListener,
-to cover all the instantiated objects in one go. A similar design applies for removeEventListener.
-This is frickin complicated, so use dbev+ to debug it.
-*********************************************************************/
-
-function addEventListener(ev, handler, iscapture) {
-    return eb$listen.call(this, ev, handler, iscapture);
-}
-function removeEventListener(ev, handler, iscapture) {
-    return eb$unlisten.call(this, ev, handler, iscapture, true);
-}
-
-function eb$listen(evtype, handler, iscapture)
+function addEventListener(evtype, handler, iscapture)
 {
     const h = {};
     h.do$phases = new Set;
@@ -676,10 +661,9 @@ function eb$listen(evtype, handler, iscapture)
     this[evarray].push(h);
 }
 
-// here is unlisten, the opposite of listen.
 // what if every handler is removed and there is an empty array?
 // the assumption is that this is not a problem.
-function eb$unlisten(evtype, handler, iscapture, addon)
+function removeEventListener(ev, handler, iscapture)
 {
     let dbg = () => undefined;
     const ev = `on${evtype}`;
@@ -3427,6 +3411,7 @@ swde("EventTarget", class extends w.Object {
     constructor() { super(); }
 })
 let evtgtp = w.EventTarget.prototype;
+// Add to the prototype so we don't recreate the functions per window
 odp(evtgtp, "addEventListener", {value: addEventListener});
 odp(evtgtp, "removeEventListener", {value: removeEventListener});
 odp(evtgtp, "dispatchEvent", {value: dispatchEvent});
@@ -9146,7 +9131,7 @@ Response.prototype.toString = function(){return "[object Response]"}
 // have these functions say "native code" when stringified
 var flist = [
 getElementsByTagName, getElementsByClassName, getElementsByName, getElementById,nodeContains,
-dispatchEvent,
+dispatchEvent, addEventListener, removeEventListener,
 NodeFilter,createNodeIterator,createTreeWalker,
 runScriptWhenAttached, traceBreakReplace,
 getComputedStyle,
