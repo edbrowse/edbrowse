@@ -786,8 +786,8 @@ debug promise disabled
 debug promise enabled
 %s: invalid markup characters at line %d
 warning: some filenames contain \\n
-0
-0
+pending jobs disabled
+pending jobs enabled
 0
 0
 0

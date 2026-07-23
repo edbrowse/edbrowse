@@ -6264,6 +6264,20 @@ et_go:
 		return true;
 	}
 
+	if (stringEqual(line, "pjobs")) {
+		do_pjobs ^= 1;
+		if (helpMessagesOn || debugLevel >= 1)
+			i_puts(do_pjobs + MSG_PjobsOff);
+		return true;
+	}
+
+	if (stringEqual(line, "pjobs+") || stringEqual(line, "pjobs-")) {
+		do_pjobs = (line[5] == '+');
+		if (helpMessagesOn)
+			i_puts(do_pjobs + MSG_PjobsOff);
+		return true;
+	}
+
 	if (stringEqual(line, "dblay")) {
 		debugLayout ^= 1;
 		if (helpMessagesOn || debugLevel >= 1)

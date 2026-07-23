@@ -17,6 +17,7 @@ extern int gettimeofday(struct timeval *tp, void *tzp);
 
 uchar browseLocal;
 bool showall, textd = true, doColors;
+bool do_pjobs = true;
 
 static Tag *js_reset, *js_submit;
 static const int asyncTimer = 700;
@@ -4193,7 +4194,7 @@ We need to fix this someday, though it is a very rare corner case.
 		jSyncup(true, 0);
 
 	if(jt->pending) { // pending jobs
-		if(allowJS) {
+		if(allowJS && do_pjobs) {
 /*********************************************************************
 pending jobs, microtasks in particular, are suppose to run before timers.
 Sometimes there are dozens of these.
@@ -4203,9 +4204,9 @@ any of the timers.
 Loop back around, see if the user has typed a key, if not come right back
 on the same timer and do some more.
 *********************************************************************/
-			if(my_ExecutePendingJobs()) goto done;
-			if(my_ExecutePendingMessages()
-                        || my_ExecutePendingMessagePorts()) goto done;
+		    if(my_ExecutePendingJobs()) goto done;
+		    if(my_ExecutePendingMessages()
+		    || my_ExecutePendingMessagePorts()) goto done;
 		}
 // promise jobs not throttled by timerspeed
 		int n = jt->jump_sec * 1000 + jt->jump_ms;

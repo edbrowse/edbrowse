@@ -886,4 +886,6 @@ MSG_ImaskOn,
 	MSG_DebugPromiseOn,
 	MSG_EBRC_Markups,
 	MSG_WarnNewlines,
+	MSG_PjobsOff,
+	MSG_PjobsOn,
 };
