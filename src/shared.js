@@ -1199,11 +1199,37 @@ function connectedCallbackCheck(t)
     }
 }
 
+        const standard_events = ["onload", "onunload", "onclick", "onchange", "oninput",
+            "onsubmit", "onreset", "onmessage"];
+// there are lots more events, onmouseout etc, that we don't responnd to,
+// should we watch for them anyways?
+const standard_event_classes = ["Element", "Document"];
+const standard_hashchange_classes = ["HTMLBodyElement", "SVGElement"];
+
+// Function to compile event handlers
+function handlerCompile(f, t, w)
+{
+    let cf; // the compiled function
+    try {
+        cf = w.eval(`(function(){${f}})`);
+// looks good, now bind to this
+        cf = cf.bind(t);
+    } catch(e) {
+// Don't just use eb$truefunction; I want to put the text
+// on function.body, for debugging, and that means I need my own function.
+        cf = w.eval("(function(){return true;})");
+        alert3(`handler syntax error <${f}>`);
+    }
+    cf.body = f;
+    cf.toString = function() { return this.body; }
+    return cf;
+}
+
 /*********************************************************************
 The attribute system is complex, with many functions
 and many surprising side effects.
 Most of these functions could be private node methods in setupClasses(),.
-but it's a lof ot code, and would disrupt the flow.
+but it's a lot of code, and would disrupt the flow.
 So instead I gather them all here in one attr object.
 along with some helper functions to manage spillup and spilldown.
 Spill up means we set the property and it sets the attribute.
@@ -1218,13 +1244,6 @@ when setAttribute is doing something it shouldn't,
 like form.setAttribute("elements", "xx") or some such.
 I call these implicit members, we shouldn't overwrite them.
 *********************************************************************/
-
-        const standard_events = ["onload", "onunload", "onclick", "onchange", "oninput",
-            "onsubmit", "onreset", "onmessage"];
-// there are lots more events, onmouseout etc, that we don't responnd to,
-// should we watch for them anyways?
-const standard_event_classes = ["Element", "Document"];
-const standard_hashchange_classes = ["HTMLBodyElement", "SVGElement"];
 
 this.attr = {
 
@@ -1243,9 +1262,6 @@ name === "selectedOptions" && o.dom$class == "HTMLSelectElement";
 },
 
 spilldown: function(name) {
-// Ideally I should have a list of all the on functions, but I'm gonna say
-// any word that starts with on spills down.
-if(name.match(/^on[a-zA-Z]*$/)) return true;
 // I'm not sure if value should spill down, setAttribute("value","blah")
 return name == "value";
 },
@@ -1334,55 +1350,64 @@ return this.getAttribute(name);
 hasAttributeNS: function(space, name) { return this.getAttributeNS(space, name) !== null;},
 
 setAttribute: function(name, v) {
-var a, w = my$win();
-if(!this.eb$xml) name = name.toLowerCase();
+    var a, w = my$win();
+    if(!this.eb$xml) name = name.toLowerCase();
 // special code for style
-if(name == "style" && this.style.dom$class == "CSSStyleDeclaration") {
-this.style.cssText = v;
-return;
-}
-if(attr.implicitMember(this, name)) return;
-var oldv = null;
-if(name === "length") {
-a = null
-for(var i=0; i<this.attributes.length; ++i)
-if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
-} else a = this.attributes[name]
-if(!a) {
-a = new w.Attr();
-a.owner = this;
-a.name = name;
-this.attributes.push(a);
-if(name !== "length") this.attributes[name] = a
-} else {
-oldv = a.value;
-}
-a.value = v;
-if(name.substr(0,5) == "data-") {
-this.dataset[dataCamel(name)] = v;
-}
+    if(name == "style" && this.style.dom$class == "CSSStyleDeclaration") {
+        this.style.cssText = v;
+        return;
+    }
+    if(attr.implicitMember(this, name)) return;
+    var oldv = null;
+    if(name === "length") {
+        a = null
+        for(var i=0; i<this.attributes.length; ++i)
+            if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
+    } else a = this.attributes[name]
+    if(!a) {
+        a = new w.Attr();
+        a.owner = this;
+        a.name = name;
+        this.attributes.push(a);
+        if(name !== "length") this.attributes[name] = a
+    } else {
+        oldv = a.value;
+    }
+    a.value = v;
+    if(name.substr(0,5) == "data-") {
+        this.dataset[dataCamel(name)] = v;
+    }
 // names that spill down into the actual property
-// should we be doing any of this for xml nodes?
-if(attr.spilldown(name)) this[name] = v;
-// href$2 not enumerable. cloneNode still works because it finds
-// href in the attributes and copies it there,
-// whence spilldown puts href$2 in node2.
-if(attr.spilldownResolve(this, name))
-Object.defineProperty(this, "href$2", {value:resolveURL(w.eb$base, v),configurable:true,writable:true})
-if(attr.spilldownResolveURL(this, name))
-Object.defineProperty(this, "href$2", {value:new (w.URL)(resolveURL(w.eb$base, v)),configurable:true,writable:true})
-if(attr.spilldownBool(this, name)) {
+    if(attr.spilldown(name)) this[name] = v;
+        // href$2 not enumerable. cloneNode still works because it finds
+        // href in the attributes and copies it there,
+        // whence spilldown puts href$2 in node2.
+    if(attr.spilldownResolve(this, name))
+        Object.defineProperty(this, "href$2", {value:resolveURL(w.eb$base, v),configurable:true,writable:true})
+    if(attr.spilldownResolveURL(this, name))
+        Object.defineProperty(this, "href$2", {value:new (w.URL)(resolveURL(w.eb$base, v)),configurable:true,writable:true})
+    if(attr.spilldownBool(this, name)) {
 // This one is required by acid test 43, I don't understand it at all.
-if(name == "checked" && v == "checked")
-this.defaultChecked = true;
-else {
+        if(name == "checked" && v == "checked")
+            this.defaultChecked = true;
+        else {
 // is a nonsense string like blah, true or false? I don't know.
 // For now I'll assume it's true.
-v = (v === "false" ? false : true);
-this[name] = v;
-}
-}
-mutFixup(this, 1, name, oldv);
+            v = (v === "false" ? false : true);
+            this[name] = v;
+        }
+    }
+    if(attr.spilldownCompile(this, name)) {
+        const name2 = name + "$2"
+        if (db$flags(1))
+            alert3(`${(this[name2] ? "clobber": "create")} ${(this.nodeName ? this.nodeName : this.dom$class)}.${name}`);
+        if(typeof v === "string") v = handlerCompile(v, this, w);
+        if(typeof v === "function") {
+            Object.defineProperty(this, name2, {
+                value: v, writable: true, configurable: true});
+        } else delete this[name2];
+    }
+    mutFixup(this, 1, name, oldv);
 },
 
 setAttributeNS: function(space, name, v) {
@@ -5443,30 +5468,9 @@ and also put it in spilldownResolveURL instead of spilldownResolve.
 // input.onclick() directly, which means it has to transmute to a function.
 // That requires a setter to compile the string, and a getter to return the function.
 
-// Function to compile event handlers
-function handlerCompile(f, t)
-{
-    let cf; // the compiled function
-    try {
-        cf = w.eval(`(function(){${f}})`);
-// looks good, now bind to this
-        cf = cf.bind(t);
-    } catch(e) {
-// Don't just use eb$truefunction; I want to put the text
-// on function.body, for debugging, and that means I need my own function.
-        cf = w.eval("(function(){return true;})");
-        alert3(`handler syntax error <${f}>`);
-    }
-    cf.body = f;
-    cf.toString = function() { return this.body; }
-    return cf;
-}
-
 ; (function() {
-// define handler properties helper function to define the getter and setter
-// for event handlers spilldown and default null value
-// At some point the compile will be taken out of this function and moved to the attribute system.
-function dhp1(obj, ev)
+// getter and setter - so that an unassigned handler returns null
+function dhp(obj, ev)
 {
     const evprop = `${ev}$2`
     odp(w[obj].prototype, ev, {
@@ -5474,50 +5478,27 @@ function dhp1(obj, ev)
         set: function(f)
         {
             if (db$flags(1))
-                alert3(
-                    `${(this[evprop] ? "clobber": "create")} ${(this.nodeName ? this.nodeName : this.dom$class)}.${ev}`
-                );
-            if(typeof f === "string") f = handlerCompile(f, this);
+                alert3(`${(this[evprop] ? "clobber": "create")} ${(this.nodeName ? this.nodeName : this.dom$class)}.${ev}`);
+// it should only be a function in the context of a direct assignment
             if(typeof f === "function") {
                 odp(this, evprop, {
-                    value: f, writable: true, configurable: true
-                });
-            }
-        }
-    });
-}
-
-function dhp2(obj, ev)
-{
-    const evprop = `${ev}$2`
-    odp(w[obj].prototype, ev, {
-        get: function() { return this[evprop] ? this[evprop] : null; },
-        set: function(f)
-        {
-            if (db$flags(1))
-                alert3(
-                    `${(this[evprop] ? "clobber": "create")} ${(this.nodeName ? this.nodeName : this.dom$class)}.${ev}`
-                );
-            if(typeof f === "function") {
-                odp(this, evprop, {
-                    value: f, writable: true, configurable: true
-                });
+                    value: f, writable: true, configurable: true});
             }
         }
     });
 }
 
     for(let obj of standard_event_classes) {
-        for(let evname of standard_events) dhp1(obj, evname);
+        for(let evname of standard_events) dhp(obj, evname);
     }
 
-// window has no attribute system - requires different getter / setter
-    for(let evname of standard_events) dhp2("Window", evname);
+// window has no attribute system - so include it here
+    for(let evname of standard_events) dhp("Window", evname);
 
 // onhashchange from certain places
 // Also HTMLFrameSetElement which we have not yet implemented.
-    for(let obj of standard_hashchange_classes) dhp1(obj, "onhashchange");
-   dhp2("Window", "onhashchange");
+    for(let obj of standard_hashchange_classes) dhp(obj, "onhashchange");
+   dhp("Window", "onhashchange");
 })();
 
 // Canvas method draws a picture. That's meaningless for us,
@@ -9133,7 +9114,8 @@ var flist = [
 getElementsByTagName, getElementsByClassName, getElementsByName, getElementById,nodeContains,
 dispatchEvent, addEventListener, removeEventListener,
 NodeFilter,createNodeIterator,createTreeWalker,
-runScriptWhenAttached, traceBreakReplace,
+runScriptWhenAttached, connectedCallbackCheck, handlerCompile,
+traceBreakReplace,
 getComputedStyle,
 URL, TextEncoder, TextDecoder];
 for(let k of flist)
