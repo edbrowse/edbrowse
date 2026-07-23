@@ -1,0 +1,37 @@
+<head></head><body>
+<script>
+/* put some objects into the finalization registry.
+Alert when any of them are cleaned up.
+I will include messages so you can tell which is which.
+This use to cause seg faults, before quickjs fixed the associated bug.
+It doesn't fault any more, but is still very mysterious.
+You can call eb$gc() at any point if you want to force a full gc sweep. */
+
+fg = new FinalizationRegistry((h) => alert("final "+h));
+// an isolated object not connected to anything else.
+// It is garbage collected almost immediately.
+fg.register({foo:37}, "isolated");
+
+// two objects that reference each other
+a = {}, b = {}, a.x = b, b.x = a;
+fg.register(a, "a>b");
+fg.register(b, "b>a");
+delete a; delete b;
+// You won't see this one until we do a full sweep.
+eb$gc();
+
+// Isolated node. This seems never to go away,
+// probably because a C structure holds a link to it.
+p = document.createElement("P");
+fg.register(p, "p alone");
+delete p;
+eb$gc();
+
+// If a disconnected and deleted node never goes away,
+// then a node in a tree sure won't go away.
+// I'll include this one because this started the seg faults.
+fg.register(document.body, "body");
+eb$gc();
+
+</script>
+</body>
