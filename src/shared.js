@@ -1207,13 +1207,11 @@ const standard_event_classes = ["Element", "Document"];
 const standard_hashchange_classes = ["HTMLBodyElement", "SVGElement"];
 
 // Function to compile event handlers
-function handlerCompile(f, t, w)
+function handlerCompile(f, w)
 {
     let cf; // the compiled function
     try {
         cf = w.eval(`(function(){${f}})`);
-// looks good, now bind to this
-        cf = cf.bind(t);
     } catch(e) {
 // Don't just use eb$truefunction; I want to put the text
 // on function.body, for debugging, and that means I need my own function.
@@ -1401,7 +1399,7 @@ setAttribute: function(name, v) {
         const name2 = name + "$2"
         if (db$flags(1))
             alert3(`${(this[name2] ? "clobber": "create")} ${(this.nodeName ? this.nodeName : this.dom$class)}.${name}`);
-        if(typeof v === "string") v = handlerCompile(v, this, w);
+        if(typeof v === "string") v = handlerCompile(v, w);
         if(typeof v === "function") {
             Object.defineProperty(this, name2, {
                 value: v, writable: true, configurable: true});
