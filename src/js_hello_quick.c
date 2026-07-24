@@ -1,4 +1,4 @@
-#include "quickjs-libc.h"
+#include "quickjs.h"
 
 #include "eb.h"
 
@@ -32,6 +32,8 @@ char *emojiFile;
 void preFormatCheck(int tagno, bool * pretag, bool * slash) {}
 bool isDataURI(const char *u){ return false; }
 void unpercentString(char *s) {}
+void eb_variables(void) {}
+int is_tdchar(const char *s) { return 0; }
 
 static JSValue g0; // first global object
 static JSContext *cx0;
@@ -117,6 +119,28 @@ JS_FreeValue(cx, g);
 JS_FreeAtom(cx, a);
 }
 return JS_UNDEFINED;
+}
+
+static void processError(JSContext * cx)
+{
+JSValue exc;
+const char *msg, *stack = 0;
+JSValue sv; // stack value
+exc = JS_GetException(cx);
+if(!JS_IsObject(exc))
+return; // this should never happen
+msg = JS_ToCString(cx, exc); // this runs ext.toString()
+sv = JS_GetPropertyStr(cx, exc, "stack");
+if(JS_IsString(sv))
+stack = JS_ToCString(cx, sv);
+puts(msg);
+if(stack) {
+puts(stack);
+JS_FreeCString(cx, stack);
+}
+JS_FreeCString(cx, msg);
+JS_FreeValue(cx, sv);
+JS_FreeValue(cx, exc);
 }
 
 int main(int argc, char **argv)
@@ -231,7 +255,7 @@ continue;
 val = JS_Eval(cx[c], data, datalen, line + 1, JS_EVAL_TYPE_GLOBAL);
 nzFree(data);
 if(JS_IsException(val)) {
-js_std_dump_error(cx[c]);
+processError(cx[c]);
 } else {
 puts("ok");
 }
@@ -241,7 +265,7 @@ continue;
 
 val = JS_Eval(cx[c], line, strlen(line), filename, JS_EVAL_TYPE_GLOBAL);
 if(JS_IsException(val)) {
-js_std_dump_error(cx[c]);
+processError(cx[c]);
 } else {
 result = JS_ToCString(cx[c], val);
 puts(result);

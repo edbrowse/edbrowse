@@ -3,7 +3,7 @@ This is the simplest javascript program you can write.
 To test the basic functionality of the js engine.
 *********************************************************************/
 
-#include "quickjs-libc.h"
+#include "quickjs.h"
 #include <stdio.h>
 #include <string.h>
 
