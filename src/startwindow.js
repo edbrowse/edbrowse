@@ -201,6 +201,34 @@ this.toString = Object.prototype.toString = function() {
 }
 odp(window, "toString", {enumerable:false})
 
+// link functions in the shared window to this window
+for(let f of ["my$win", "my$doc", "natok", "UnsupportedError", "db$flags",
+"eb$voidfunction", "eb$nullfunction", "eb$truefunction", "eb$falsefunction",
+"eb$visible", "eb$newLocation", "eb$logElement", "alert3", "alert4",
+"dumptree", "uptrace", "by_esn", "showscripts", "searchscripts",
+"showframes", "snapshot", "aloop", "showarg", "showarglist",
+"set_location_hash", "NodeFilter", "rowReindex", "formReindex", "mutFixup",
+"makeSheets"])
+    swp(f, mw$[f]);
+for(let f of ["alert", "confirm", "prompt", "close"])
+    swpv(f, mw$[f]);
+for(let f of ["scroll", "scrollTo", "scrollBy", "scrollByLines", "scrollByPages"])
+    swpv(f, mw$.eb$voidfunction);
+swpv("blur", ()=>(document.activeElement = null))
+swpv("focus", ()=>(document.activeElement = document.body))
+swpv("self", window)
+swpc("atob", mw$.atob)
+swpc("btoa", mw$.btoa)
+swp("connectedCallbackStart", () => mw$.connectedCallbackCheck(my$doc()));
+this.print = ()=>  alert("javascript is trying to print this document")
+this.stop = ()=>  alert("javascript is trying to stop the browse process")
+swpc("getComputedStyle", mw$.getComputedStyle.bind(window))
+swpc("structuredClone", mw$.structuredClone.bind(window))
+swp("dom$class", "Window")
+window.top = eb$top();
+window.parent = window.eb$parent();
+odp(window, "frameElement", {get: eb$frameElement,enumerable:true});
+
 /*********************************************************************
 a node list is and isn't an array; I don't really understand it.
 I'll just have it inherit from array, until someone tells me I'm wrong.
@@ -304,69 +332,12 @@ sdp("importNode", function(start,deep) {
     return mw$.clone1 (start,deep, true);
 })
 
-// point to shared methods in the master window
-swp("UnsupportedError", mw$.UnsupportedError);
-swp("my$win", mw$.my$win)
-swp("my$doc", mw$.my$doc)
-swp("natok", mw$.natok)
-swp("db$flags", mw$.db$flags)
-swp("eb$voidfunction", mw$.eb$voidfunction)
-swp("eb$nullfunction", mw$.eb$nullfunction)
-swp("eb$truefunction", mw$.eb$truefunction)
-swp("eb$falsefunction", mw$.eb$falsefunction)
-swpv("close", mw$.win$close)
-swp("eb$visible", mw$.eb$visible)
-swpc("atob", mw$.atob)
-swpc("btoa", mw$.btoa)
-swpv("prompt", mw$.prompt)
-swpv("confirm", mw$.confirm)
-swp("eb$newLocation", mw$.eb$newLocation)
-swp("eb$logElement", mw$.eb$logElement)
-swpv("alert", mw$.alert)
-swp("alert3", mw$.alert3)
-swp("alert4", mw$.alert4)
-this.print = function() { alert("javascript is trying to print this document")}
-this.stop = function() { alert("javascript is trying to stop the browse process")}
-swp("dumptree", mw$.dumptree)
-swp("uptrace", mw$.uptrace)
-swp("by_esn", mw$.by_esn)
-swp("showscripts", mw$.showscripts)
-swp("searchscripts", mw$.searchscripts)
-swp("showframes", mw$.showframes)
-swp("snapshot", mw$.snapshot)
-swp("aloop", mw$.aloop)
-swp("showarg", mw$.showarg)
-swp("showarglist", mw$.showarglist)
-swp("set_location_hash", mw$.set_location_hash)
+// link functions from the shared window into document
 sdp("nodeContains", mw$.nodeContains)
-swp("NodeFilter", mw$.NodeFilter)
 sdpc("createNodeIterator", mw$.createNodeIterator)
 sdpc("createTreeWalker", mw$.createTreeWalker)
-swp("rowReindex", mw$.rowReindex)
-swp("formReindex", mw$.formReindex)
-swp("connectedCallbackStart", () => mw$.connectedCallbackCheck(my$doc()));
-swpc("getComputedStyle", mw$.getComputedStyle.bind(window))
-swp("mutFixup", mw$.mutFixup)
-swp("makeSheets", mw$.makeSheets)
-swpc("structuredClone", mw$.structuredClone.bind(window))
-
-swp("dom$class", "Window")
-// next two are overwritten if xml
 sdpc("eb$xml", false)
-swpv("scroll", eb$voidfunction)
-swpv("scrollTo", eb$voidfunction)
-swpv("scrollBy", eb$voidfunction)
-swpv("scrollByLines", eb$voidfunction)
-swpv("scrollByPages", eb$voidfunction)
 sdp("close", eb$voidfunction)
-swpv("blur", ()=>(document.activeElement = null))
-swpv("focus", ()=>(document.activeElement = document.body))
-
-swpv("self", window)
-window.top = eb$top();
-window.parent = window.eb$parent();
-odp(window, "frameElement", {get: eb$frameElement,enumerable:true});
-
 sdp("write", eb$write)
 sdp("writeln", eb$writeln)
 sdp("hasFocus", eb$hasFocus)
