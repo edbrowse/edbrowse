@@ -5,11 +5,15 @@ Alert when any of them are cleaned up.
 I will include messages so you can tell which is which.
 This use to cause seg faults, before quickjs fixed the associated bug.
 It doesn't fault any more, but is still very mysterious.
+Note that these finalizers don't run until the script is over; they don't
+interrupt the script in a reentrant manner.
+In fact they are pending jobs: if you set pjobs- they won't run.
+Then when you turn pjobs back on they will run.
 You can call eb$gc() at any point if you want to force a full gc sweep. */
 
 fg = new FinalizationRegistry((h) => alert("final "+h));
 // an isolated object not connected to anything else.
-// It is garbage collected almost immediately.
+// It is garbage collected immediately, by reference count = 0.
 fg.register({foo:37}, "isolated");
 
 // two objects that reference each other
@@ -17,24 +21,39 @@ a = {}, b = {}, a.x = b, b.x = a;
 fg.register(a, "a>b");
 fg.register(b, "b>a");
 delete a; delete b;
-// You won't see this one until we do a full sweep.
-// You can comment out this line and run eb$gc yourself from jdb.
+/* Ref counts are still positive, so you won't see this one unless we do
+a full sweep. You can comment out the next line, then run eb$gc()
+yourself in jdb, and watch the finalizers run.
+Or - within jdb, delete fg and then run eb$gc().
+The finalizers disappear with the registry, so the objects
+go away but there is nothing to run. */
 eb$gc();
 
-// Isolated node. This seems never to go away,
-// probably because a C structure holds a link to it.
+/* Isolated node. This has a corresponding C structure in edbrowse,
+a reference you don't see here. After all, you might put p into the tree,
+we don't know what you're going to do with it, so we have to track it.
+And we can't really tell if you delete it. */
 p = document.createElement("P");
 fg.register(p, "p alone");
 delete p;
+/* Now the ref count for p is 1, because of the C structure that still
+points to it. Suppose we unbrowse, and all the C structures go away.
+The struct that points to p is freed, the ref count for p drops to 0,
+because p is not in the tree, and p is cleaned up.
+It's finalizer is queued as a pending job, ready to run.
+But it doesn't run, none of the pending jobs run, because we are closing the window.
+Still, you can see it at db3.
+Unbrowse, and notice a message like this.
+begin js context cleanup for 1
+deleting finalizer because of freeing context 1
+complete js context cleanup for 1
+That finalizer was queued when the C struct let go of p. */
 
-// If a disconnected and deleted node never goes away,
-// then a node in a tree sure won't go away.
 // I'll include this one because this started the seg faults.
 fg.register(document.body, "body");
+/* I think fg goes away before the tree is taken down.
+For whatever reason, this finalizer is never queued, and you don't see it, even on unbrowse at db3. */
 
-// verify that these finalizers don't run until the script is over; they don't
-// interrupt the script in a reentrant manner.
-// In fact they are pending jobs, if you set pjobs- they won't run.
 alert("the end");
 </script>
 </body>

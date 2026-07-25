@@ -3467,7 +3467,7 @@ cleaning up when we really want to run all the finalizers */
                 pbool = JS_ToBool(ctx, e->argv[3]) ? "+" : "-";
             if (jj > -1) debugPrint(3, "exec %s for context %d job %d%s",
                 job_type, cf->gsn, jj, pbool);
-            else debugPrint(3, "deleting %s for freeing context %d", job_type, cf->gsn);
+            else debugPrint(3, "deleting %s because of freeing context %d", job_type, cf->gsn);
         }
 
         list_del(&e->link);
