@@ -18,6 +18,7 @@ fg.register(a, "a>b");
 fg.register(b, "b>a");
 delete a; delete b;
 // You won't see this one until we do a full sweep.
+// You can comment out this line and run eb$gc yourself from jdb.
 eb$gc();
 
 // Isolated node. This seems never to go away,
@@ -25,13 +26,15 @@ eb$gc();
 p = document.createElement("P");
 fg.register(p, "p alone");
 delete p;
-eb$gc();
 
 // If a disconnected and deleted node never goes away,
 // then a node in a tree sure won't go away.
 // I'll include this one because this started the seg faults.
 fg.register(document.body, "body");
-eb$gc();
 
+// verify that these finalizers don't run until the script is over; they don't
+// interrupt the script in a reentrant manner.
+// In fact they are pending jobs, if you set pjobs- they won't run.
+alert("the end");
 </script>
 </body>
