@@ -5950,15 +5950,26 @@ let t = s.toLowerCase();
 // check for custom elements first
 let x = w.customElements.get(s);
 if(x) { // here we go
-c = new x;
-// assumes custom element is an extension of Node, so that
-// childNodes parentNode etc are created by the Node constructor,
-// and we don't have to do that here.
+    c = new x;
+    if(c.eb$apch1 !== w.Node.prototype.eb$apch1) {
+        alert3(`${s} is not an extension of Node, and may not work properly`);
+            // add the methods we need to make this behave like a node
+        // these are functions, not getters, like firstChild
+        for(let f of ["eb$apch1", "eb$apch2", "eb$rmch2", "eb$insbf",
+        "appendChild", "removeChild", "insertBefore", "prependChild"])
+            c[f] = w.Node.prototype[f];
+        for(let f of ["getAttribute", "hasAttribute", "setAttribute",
+        "removeAttribute"])
+            c[f] = w.Element.prototype[f];
+        // It's not a Node, so we don't have childNodes yet.
+        odp(this, "childNodes", {value: new w.Array})
+        odp(this, "parentNode", {value: null, writable: true, configurable:true})
+    }
     odp(c, "nodeName", {value:s,writable:true,configurable:true});
     odp(c, "tagName", {value:s,writable:true,configurable:true});
-odp(c, "connectedCallback$pending", {value:!!c.connectedCallback, writable:true})
-eb$logElement(c, t);
-return c;
+    odp(c, "connectedCallback$pending", {value:!!c.connectedCallback, writable:true})
+    eb$logElement(c, t);
+    return c;
 }
 
 if(!t.match(/^[a-z:\d_-]+$/) || t.match(/^[\d_-]/)) {

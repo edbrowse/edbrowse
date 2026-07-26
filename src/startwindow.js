@@ -296,7 +296,7 @@ Object.setPrototypeOf(window, Window.prototype)
 swp("findClass4Tag", function(tagname, above) {
     if(!above) alert4(`searching for custom ${tagname}`);
     else alert4(`searching for custom ${tagname} under ${above.nodeName} ${above.eb$seqno}`);
-    let ce = customElements;
+    let ce = customElements, f, f2;
 // see if there is another registry in our scope
     while(above) {
         if(above.custom$Elements) {
@@ -307,14 +307,14 @@ swp("findClass4Tag", function(tagname, above) {
         if(above.nodeType == 9) break;
         above = above.parentNode;
     }
-    let f = ce.get(tagname);
+    f = ce.get(tagname);
     if(!f) return new HTMLElement; // revert back to the default constructor
-    let f2 = new f;
-// f is almost always an extension of HTMLElement, it will therefore have
-// eb$apch1, which we need to link this into the growing html tree.
-// But if it doesn't, we have to provide it.
-    if(!f2.eb$apch1)
-        Object.defineProperty(f2, "eb$apch1", {value:mw$.eb$apch1});
+    try {
+        f2 = new f;
+    } catch(e) {
+        alert3(`${tagname} constructor: ${e}`);
+        return new HTMLElement;
+    }
     Object.defineProperty(f2, "connectedCallback$pending", {value:!!f2.connectedCallback, writable:true})
     return f2;
 });
