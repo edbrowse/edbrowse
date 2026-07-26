@@ -3737,14 +3737,9 @@ odp(nodep, "innerHTML", {
             c2[i] = c1[i], c2[i].parentNode = null;
         c1.length = 0;
         if(!h) h = "";
-        // secret code for xml
-        const magic = "`~*xml}@;";
-        let xml = false;
-        if(h.substr(0,9) == magic)
-            h = h.substr(9), xml = true;
         this.inner$HTML = h;
         // Put some tags around the html, so we can parse it.
-        h = `${xml ? magic : ""}<body>${h}</body>`;
+        h = `<body>${h}</body>`;
         w.set_innerHTML(this, h);
         w.textarea$html$crossover(this);
         w.mutFixup(this, 0, c1, c2);
