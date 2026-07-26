@@ -1,4 +1,4 @@
-<body>
+<head></head><body>
 <form action=http://www.eklhad.net/cgi-bin/testperl>
 <textarea name=ta>
 default line 1
@@ -8,4 +8,7 @@ default line 2
 <br>
 <input type=reset>
 </form>
+<script>
+ta = document.querySelector("textarea")
+</script>
 </body>

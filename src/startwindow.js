@@ -561,23 +561,6 @@ which is another setter, writtten in C.
 If all this works I'll be amazed.
 *********************************************************************/
 
-swp("textarea$html$crossover", function(t) {
-if(!t || t.dom$class != "HTMLElement" || t.type != "textarea")
-return;
-t.value = "";
-// It's a textarea - what is below?
-if(t.childNodes.length == 0) return; // nothing below
-var tn; // our textNode
-if(t.childNodes.length == 1 && (tn = t.firstChild) &&
-tn.dom$class == "Text") {
-var d = (tn.data ? tn.data : "");
-t.value = d;
-t.removeChild(tn);
-return;
-}
-alert3("textarea.innerHTML is too complicated for me to render");
-})
-
 // the performance registry
 swp("pf$registry", {mark:{},measure:{},measure0:{},resourceTiming:{}})
 odp(pf$registry, "measure0", {enumerable:false});

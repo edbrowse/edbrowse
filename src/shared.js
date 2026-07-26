@@ -3740,10 +3740,22 @@ odp(nodep, "innerHTML", {
         this.inner$HTML = h;
         // Put some tags around the html, so we can parse it.
         h = `<body>${h}</body>`;
-        w.set_innerHTML(this, h);
-        w.textarea$html$crossover(this);
+        set_innerHTML(this, h); // native function to parse the new html
+        if(this.dom$class == "HTMLTextAreaElement") {
+            this.value = "";
+            if(c1.length) { // stuff below
+                let tn; // our textNode
+                if(c1.length == 1 && (tn = this.firstChild) &&
+                tn.dom$class == "Text") {
+                    let d = (tn.data ? tn.data : "");
+                    this.value = d;
+                    this.removeChild(tn);
+                } else alert3("textarea.innerHTML is too complicated for me to render");
+            }
+        }
         w.mutFixup(this, 0, c1, c2);
-    }})
+    }
+})
 
 swde("Document", class extends w.Node {
     constructor()
@@ -5918,7 +5930,7 @@ for(let c of [
 "DocType", "HTMLBaseElement", "HTMLButtonElement", "HTMLCanvasElement",
 "HTMLFrameElement", "HTMLIFrameElement", "HTMLImageElement", "HTMLInputElement",
 "HTMLLinkElement", "HTMLMetaElement", "HTMLOptGroupElement", "HTMLOptionElement",
-"HTMLScriptElement", "HTMLStyleElement", "HTMLTextAreaElement",
+"HTMLScriptElement", "HTMLStyleElement",
 "HTMLTimeElement", "HTMLUnknownElement",
 "ProcessingInstruction", "Text",
 "z$Datalist", "z$HTML", "z$Title", "z$tCap"])

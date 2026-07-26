@@ -3753,6 +3753,8 @@ JS_NewCFunction(mwc, nat_unframe2, "unframe2", 1), 0);
 JS_NewCFunction(mwc, nat_playAudio, "play_audio", 0), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "jobsPending",
 JS_NewCFunction(mwc, nat_jobs, "jobspending", 0), JS_PROP_ENUMERABLE);
+    JS_DefinePropertyValueStr(mwc, mwo, "set_innerHTML",
+JS_NewCFunction(mwc, set_innerHTML, "set_innerHTML", 2), 0);
 
 // shared functions and classes
 	jsSourceFile = "shared.js";
@@ -3908,8 +3910,6 @@ JS_NewCFunction(cx, nat_doc_write, "doc_write", 0), 0);
 JS_NewCFunction(cx, nat_doc_writeln, "doc_writeln", 0), 0);
     JS_DefinePropertyValueStr(cx, g, "eb$gc",
 JS_NewCFunction(cx, nat_gc, "garbageCollect", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "set_innerHTML",
-JS_NewCFunction(cx, set_innerHTML, "set_innerHTML", 2), 0);
 
 // The sequence is to set f->fileName, then createContext(), so for a short time,
 // we can rely on that variable.
