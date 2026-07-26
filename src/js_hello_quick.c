@@ -1,4 +1,4 @@
-#include "quickjs-libc.h"
+#include "quickjs.h"
 
 #include "eb.h"
 
@@ -32,6 +32,8 @@ char *emojiFile;
 void preFormatCheck(int tagno, bool * pretag, bool * slash) {}
 bool isDataURI(const char *u){ return false; }
 void unpercentString(char *s) {}
+void eb_variables(void) {}
+int is_tdchar(const char *s) { return 0; }
 
 static JSValue g0; // first global object
 static JSContext *cx0;
@@ -56,18 +58,19 @@ printf("\n");
 static JSValue nat_plist(JSContext *cx, JSValueConst this_val,
                         int argc, JSValueConst *argv)
 {
-JSValue g = JS_GetGlobalObject(cx);
+uint32_t p_len = 0, i;
+if(argc >= 1 && JS_IsObject(argv[0])) {
 JSPropertyEnum *p_list;
-uint32_t p_len, i;
-JS_GetOwnPropertyNames(cx, &p_list, &p_len, g, JS_GPN_STRING_MASK);
+JS_GetOwnPropertyNames(cx, &p_list, &p_len, argv[0], JS_GPN_STRING_MASK);
 for(i=0; i<p_len; ++i) {
 const char *s = JS_AtomToCString(cx, p_list[i].atom);
 puts(s);
 JS_FreeCString(cx, s);
 }
 JS_FreePropertyEnum(cx, p_list, p_len);
-JS_FreeValue(cx, g);
-return JS_NewInt32(cx, p_len);
+}
+    (void) this_val;
+    return JS_NewInt32(cx, p_len);
 }
 
 static JSValue test_getter(JSContext *cx, JSValueConst this_val,
@@ -119,6 +122,28 @@ JS_FreeAtom(cx, a);
 return JS_UNDEFINED;
 }
 
+static void processError(JSContext * cx)
+{
+JSValue exc;
+const char *msg, *stack = 0;
+JSValue sv; // stack value
+exc = JS_GetException(cx);
+if(!JS_IsObject(exc))
+return; // this should never happen
+msg = JS_ToCString(cx, exc); // this runs ext.toString()
+sv = JS_GetPropertyStr(cx, exc, "stack");
+if(JS_IsString(sv))
+stack = JS_ToCString(cx, sv);
+puts(msg);
+if(stack) {
+puts(stack);
+JS_FreeCString(cx, stack);
+}
+JS_FreeCString(cx, msg);
+JS_FreeValue(cx, sv);
+JS_FreeValue(cx, exc);
+}
+
 int main(int argc, char **argv)
 {
 int c;
@@ -155,7 +180,7 @@ nonstandard attributes, like not writable, then you have to do this.
 *********************************************************************/
     JS_DefinePropertyValueStr(cx[0], wo[0], "print",
 JS_NewCFunction(cx[0], nat_puts, "eb$puts", 1), 0);
-    JS_DefinePropertyValueStr(cx[0], wo[0], "plist",
+    JS_DefinePropertyValueStr(cx[0], wo[0], "natok",
 JS_NewCFunction(cx[0], nat_plist, "eb$plist", 1), 0);
 
 /*********************************************************************
@@ -231,7 +256,7 @@ continue;
 val = JS_Eval(cx[c], data, datalen, line + 1, JS_EVAL_TYPE_GLOBAL);
 nzFree(data);
 if(JS_IsException(val)) {
-js_std_dump_error(cx[c]);
+processError(cx[c]);
 } else {
 puts("ok");
 }
@@ -241,7 +266,7 @@ continue;
 
 val = JS_Eval(cx[c], line, strlen(line), filename, JS_EVAL_TYPE_GLOBAL);
 if(JS_IsException(val)) {
-js_std_dump_error(cx[c]);
+processError(cx[c]);
 } else {
 result = JS_ToCString(cx[c], val);
 puts(result);
