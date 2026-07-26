@@ -6151,6 +6151,12 @@ meventp.shiftKey = false;
 meventp.metaKey = false;
 meventp.initMouseEvent = function() { this.initEvent.apply(this, arguments)}
 
+swpc("KeyboardEvent", function(etype){
+    this.timeStamp = new Date().getTime();
+if(typeof etype == "string") this.type = etype;
+})
+swpp("KeyboardEvent", w.Event);
+
 swpc("PromiseRejectionEvent", function(etype){
     this.timeStamp = new Date().getTime();
 if(typeof etype == "string") this.type = etype;
