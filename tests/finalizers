@@ -1,4 +1,6 @@
 <head></head><body>
+<hr>
+<p>hello</p>
 <script>
 /* put some objects into the finalization registry.
 Alert when any of them are cleaned up.
@@ -49,11 +51,19 @@ deleting finalizer because of freeing context 1
 complete js context cleanup for 1
 That finalizer was queued when the C struct let go of p. */
 
+hello = document.body.querySelector("hr")
+fg.register(hello, "hr removed");
+/* After 4 seconds I'm going to remove the hr tag.
+In another browser that node would go away, not here because a C struct still points to it.
+But when you unbrowse, as described above, the C struct is freed,
+and the finalizer is queued. You will see it deleted when the context is freed.
+So unbrowse before 4 seconds and one finalizer is in queue;
+unbrowse after 4 seconds and two finalizers are in queue. */
+setTimeout(()=>{hello.remove(); delete hello;}, 4000);
+
 // I'll include this one because this started the seg faults.
 fg.register(document.body, "body");
 /* I think fg goes away before the tree is taken down.
 For whatever reason, this finalizer is never queued, and you don't see it, even on unbrowse at db3. */
-
-alert("the end");
 </script>
 </body>
