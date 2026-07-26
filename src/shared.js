@@ -5916,6 +5916,21 @@ eb$logElement(c, "cdata");
 return c;
 }
 
+// html classes that shouldn't have html underneath them.
+// Overwrite the innerHTML setter so it doesn't do anything.
+for(let c of [
+"CDATASection", "CSSStyleDeclaration", "CharacterData", "Comment",
+"DocType", "HTMLBaseElement", "HTMLButtonElement", "HTMLCanvasElement",
+"HTMLFrameElement", "HTMLIFrameElement", "HTMLImageElement", "HTMLInputElement",
+"HTMLLinkElement", "HTMLMetaElement", "HTMLOptGroupElement", "HTMLOptionElement",
+"HTMLScriptElement", "HTMLStyleElement", "HTMLTextAreaElement",
+"HTMLTimeElement", "HTMLUnknownElement",
+"ProcessingInstruction", "Text",
+"z$Datalist", "z$HTML", "z$Title", "z$tCap"])
+    odp(w[c].prototype, "innerHTML", {
+        get: function(){ return ""},
+        set: function(h){}})
+
 // We've defined the HTMLElement classes, now let's create instances of them.
 docp.createElement = function(s) {
 let c;
