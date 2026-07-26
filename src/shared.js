@@ -3442,10 +3442,8 @@ swde("Node", class extends w.EventTarget {
     constructor()
     {
         super();
-// childNodes should probably be readonly, but there are still some
-// questionable implementations where I delete it and replace it.
-// Still, it shouldn't be enumerable.
-        odp(this, "childNodes", {value: new w.Array, writable: true, configurable:true})
+        // childNodes should be readonly; it is a live node list.
+        odp(this, "childNodes", {value: new w.Array})
         odp(this, "parentNode", {value: null, writable: true, configurable:true})
     }
 })
@@ -3728,6 +3726,29 @@ t = t.parentNode;
 }
 return t1;
 }
+
+odp(nodep, "inner$HTML", {value:"", writable:true})
+odp(nodep, "innerHTML", {
+    get: function() { return this.inner$HTML},
+    set: function(h) {
+        let c1 = this.childNodes, c2 = new w.Array;
+        if(!c1) return; // should never happen
+        for(let i = 0; i < c1.length; ++i)
+            c2[i] = c1[i], c2[i].parentNode = null;
+        c1.length = 0;
+        if(!h) h = "";
+        // secret code for xml
+        const magic = "`~*xml}@;";
+        let xml = false;
+        if(h.substr(0,9) == magic)
+            h = h.substr(9), xml = true;
+        this.inner$HTML = h;
+        // Put some tags around the html, so we can parse it.
+        h = `${xml ? magic : ""}<body>${h}</body>`;
+        w.set_innerHTML(this, h);
+        w.textarea$html$crossover(this);
+        w.mutFixup(this, 0, c1, c2);
+    }})
 
 swde("Document", class extends w.Node {
     constructor()

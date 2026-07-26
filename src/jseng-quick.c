@@ -410,83 +410,19 @@ char *get_style_string_t(const Tag *t, const char *name)
 
 // Before we write set_property_string, we need some getters and setters.
 
-static JSValue getter_innerHTML(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
+static JSValue set_innerHTML(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
-        (void) argv;
-        (void) argc;
-	return JS_GetPropertyStr(cx, this, "inner$HTML");
-}
-
-static JSValue setter_innerHTML(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
-{
-	jsInterruptCheck(cx);
-	JSValue c1, c2;
-	char *run;
-	int run_l;
-	Tag *t;
-	const char *h = JS_ToCString(cx, argv[0]);
-        (void) argc;
-	if (!h)			// should never happen
-		return JS_UNDEFINED;
-	debugPrint(5, "setter h in");
-// remove the preexisting children.
-	c1 = JS_GetPropertyStr(cx, this, "childNodes");
-	grab(c1);
-	if(!wrap_IsArray(cx, c1)) {
-// no child nodes array, don't do anything.
-// This should never happen.
-		debugPrint(5, "setter h fail");
-		JS_Release(cx, c1);
-		JS_FreeCString(cx, h);
-		return JS_UNDEFINED;
-	}
-// make new childNodes array
-	c2 = JS_NewArray(cx);
-	grab(c2);
-	JS_SetPropertyStr(cx, this, "childNodes", JS_DupValue(cx, c2));
-	const char *h1 = h;
-// secret code for xml
-	if(!strncmp(h1, "`~*xml}@;", 9)) h1 += 9;
-	JS_SetPropertyStr(cx, this, "inner$HTML", JS_NewAtomString(cx, h1));
-
-// Put some tags around the html, so we can parse it.
-	run = initString(&run_l);
-	if(h1 > h) stringAndBytes(&run, &run_l, h, 9);
-	stringAndString(&run, &run_l, "<body>");
-	stringAndString(&run, &run_l, h1);
-	stringAndString(&run, &run_l, "</body>");
-
-// now turn the html into objects
-		t = tagFromObject(this);
-	if(t) {
-		html_from_setter(t, run);
-	} else {
-		debugPrint(1, "innerHTML finds no tag, cannot parse");
-	}
-	nzFree(run);
-	debugPrint(5, "setter h out");
-
-	run_function_onearg(cx, *((JSValue*)cf->winobj), "textarea$html$crossover", this);
-
-// mutation fix up from native code
-	{
-		JSValue g = *(JSValue*)cf->winobj, r;
-		JSAtom a = JS_NewAtom(cx, "mutFixup");
-		JSValue l[4];
-		l[0] = this;
-		l[1] = JS_NewInt32(cx, 0);
-		l[2] = c2;
-		l[3] = c1;
-		r = JS_Invoke(cx, g, a, 4, l);
-// worked, didn't work, I don't care.
-		JS_FreeValue(cx, r);
-		JS_FreeAtom(cx, a);
-	}
-
-		JS_Release(cx, c2);
-		JS_Release(cx, c1);
-		JS_FreeCString(cx, h);
-	return JS_UNDEFINED;
+    jsInterruptCheck(cx);
+    const char *h = JS_ToCString(cx, argv[1]);
+    Tag *t = tagFromObject(argv[0]);
+    if(t) {
+        html_from_setter(t, h);
+    } else {
+        debugPrint(1, "innerHTML finds no tag, cannot parse");
+    }
+    JS_FreeCString(cx, h);
+    (void) this;
+    return JS_UNDEFINED;
 }
 
 static JSValue getter_value(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
@@ -527,10 +463,6 @@ static void set_property_string(JSContext *cx, JSValueConst parent, const char *
 	JSCFunction *getter = 0;
 	JSCFunction *setter = 0;
 	const char *altname;
-	if (stringEqual(name, "innerHTML"))
-		getter = getter_innerHTML,
-		setter = setter_innerHTML,
-		    altname = "inner$HTML";
 	if (stringEqual(name, "value")) {
 // Only meaningful in the Element class
 		JSValue dc = JS_GetPropertyStr(cx, parent, "dom$class");
@@ -2374,8 +2306,6 @@ static JSValue nat_log_element(JSContext * cx, JSValueConst this, int argc, JSVa
 	if (JS_IsUndefined(newobj) || !tagname)
 		return JS_UNDEFINED;
 	debugPrint(5, "log in");
-// create the innerHTML member with its setter, this has to be done in C.
-	set_property_string(cx, newobj, "innerHTML", emptyString);
 // pass the newly created node over to edbrowse
 	domSetsLinkage2('c', newobj, tagname);
 	JS_FreeCString(cx, tagname);
@@ -3978,6 +3908,8 @@ JS_NewCFunction(cx, nat_doc_write, "doc_write", 0), 0);
 JS_NewCFunction(cx, nat_doc_writeln, "doc_writeln", 0), 0);
     JS_DefinePropertyValueStr(cx, g, "eb$gc",
 JS_NewCFunction(cx, nat_gc, "garbageCollect", 0), 0);
+    JS_DefinePropertyValueStr(cx, g, "set_innerHTML",
+JS_NewCFunction(cx, set_innerHTML, "set_innerHTML", 2), 0);
 
 // The sequence is to set f->fileName, then createContext(), so for a short time,
 // we can rely on that variable.

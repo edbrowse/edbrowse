@@ -4610,7 +4610,7 @@ static void establish_inner(Tag *t, const char *start, const char *end,
 			    bool isText)
 {
 	const char *s = emptyString;
-	const char *name = (isText ? "value" : "innerHTML");
+	const char *name = (isText ? "value" : "inner$HTML");
 	if (start) {
 		s = start;
 		if (end)
@@ -4619,10 +4619,6 @@ static void establish_inner(Tag *t, const char *start, const char *end,
 	set_property_string_t(t, name, s);
 	if (start && end)
 		nzFree((char *)s);
-// If this is a textarea, we haven't yet set up the innerHTML
-// getter and seter
-	if (isText)
-		set_property_string_t(t, "innerHTML", emptyString);
 }
 
 static const char defvl[] = "defaultValue";
