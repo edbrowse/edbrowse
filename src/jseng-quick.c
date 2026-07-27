@@ -1574,7 +1574,8 @@ static JSValue nat_array(JSContext * cx, JSValueConst this, int argc, JSValueCon
 	return JS_NewArray(cx);
 }
 
-// base64 encode
+#if ! Q_NG
+// base64 encode, already provided by quickjs-ng
 static JSValue nat_btoa(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
 	char *t; // result
@@ -1621,6 +1622,7 @@ empty:
         (void) this;
 	return v;
 }
+#endif
 
 // object keys, just for debugging from jdb
 static JSValue nat_ok(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
@@ -3599,10 +3601,12 @@ JS_NewCFunction(mwc, nat_setcook, "setcook", 1), 0);
 JS_NewCFunction(mwc, nat_puts, "puts", 1), JS_PROP_ENUMERABLE);
     JS_DefinePropertyValueStr(mwc, mwo, "wlf",
 JS_NewCFunction(mwc, nat_wlf, "wlf", 2), JS_PROP_ENUMERABLE);
+#if ! Q_NG
     JS_DefinePropertyValueStr(mwc, mwo, "btoa",
 JS_NewCFunction(mwc, nat_btoa, "btoa", 1), JS_PROP_ENUMERABLE);
     JS_DefinePropertyValueStr(mwc, mwo, "atob",
 JS_NewCFunction(mwc, nat_atob, "atob", 1), JS_PROP_ENUMERABLE);
+#endif
     JS_DefinePropertyValueStr(mwc, mwo, "eb$voidfunction",
 JS_NewCFunction(mwc, nat_void, "void", 0), JS_PROP_ENUMERABLE);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$nullfunction",
