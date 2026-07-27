@@ -1816,7 +1816,8 @@ void utf2iso(const uchar * inbuf, int inbuflen, uchar ** outbuf_p,
 	*outbuflen_p = j;
 }
 
-// like the above, but always iso8859-1, and the change is made inline
+// Like the above, but always iso8859-1, and the change is made inline.
+// This is specific to xhr send of post Uint8Array. Null is encoded as c480.
 void utf2iso1(char *s0, size_t *lenp)
 {
 	char *s = s0;
@@ -1830,11 +1831,8 @@ void utf2iso1(char *s0, size_t *lenp)
 			debugPrint(1, "improper utf8 format in payload");
 			break;
 		}
-		if(c >= 0xc4) {
-			debugPrint(1, "null or high character in payload");
-			break;
-		}
 		if(c < 0x80) { *t++ = c; ++s; continue; }
+// this magically turns c480 back to 0
 		*t++ = ((d&0x3f) | (c<<6));
 		s += 2;
 	}
