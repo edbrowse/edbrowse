@@ -2876,12 +2876,13 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 	JS_FreeCString(cx, incoming_method);
 
 	if(incoming_payload && *incoming_payload && dopost) {
-		createFormattedString(&a, "%s\1%s",
-			     incoming_url, incoming_payload);
-		if(pd == 1) {
-// turn utf8 back into individual bytes
-			utf2iso1(a + strlen(incoming_url) + 1, 0);
-		}
+	    if(pd == 0) {
+        	createFormattedString(&a, "%s\1%s",
+	        incoming_url, incoming_payload);
+	    } else if(pd == 1) {
+        	createFormattedString(&a, "%s\1`88591+%s",
+	        incoming_url, incoming_payload);
+	    }
 	} else {
 	a = cloneString(incoming_url);
 	}

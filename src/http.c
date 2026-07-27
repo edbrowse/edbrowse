@@ -946,7 +946,7 @@ mimestream:
 		post_request = true;
 		post++;
 
-		if (strncmp(post, "`mfd~", 5) == 0) {
+		if (!strncmp(post, "`mfd~", 5)) {
 			int multipart_header_len = 0;
 			char *multipart_header =
 			    initString(&multipart_header_len);
@@ -968,6 +968,13 @@ mimestream:
 			thisbound[s - post] = 0;
 			post = s + 2;
 			unpackUploadedFile(post, thisbound, &postb, &postb_l);
+		} else if(!strncmp(post, "`88591+", 7)) {
+		    postb = cloneString(post + 7);
+		    size_t postb_z = strlen(postb);
+// convert from utf8 to iso8859-1 = but c480 turns into null.
+// This is how we send post data containing nulls.
+		    utf2iso1(postb, &postb_z);
+		    postb_l = postb_z;
 		} else if(strchr(post, '\n')) {
 // newlines indicate plain text, not url encoded.
 // But if some other content-type is specified, don't override.
