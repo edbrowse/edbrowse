@@ -968,13 +968,14 @@ mimestream:
 			thisbound[s - post] = 0;
 			post = s + 2;
 			unpackUploadedFile(post, thisbound, &postb, &postb_l);
-		} else if(!strncmp(post, "`88591+", 7)) {
-		    postb = cloneString(post + 7);
-		    size_t postb_z = strlen(postb);
-// convert from utf8 to iso8859-1 = but c480 turns into null.
-// This is how we send post data containing nulls.
-		    utf2iso1(postb, &postb_z);
-		    postb_l = postb_z;
+		} else if(!strncmp(post, "`b64+", 5)) {
+// base64 decode the data - this is how we can send nulls in post data.
+// this is used by xhr with data a Uint8Array.
+		    postb = cloneString(post + 5);
+		    int k = strlen(postb);
+		    char *postb_end = postb + k;
+		    base64Decode(postb, &postb_end);
+		    postb_l = postb_end - postb;
 		} else if(strchr(post, '\n')) {
 // newlines indicate plain text, not url encoded.
 // But if some other content-type is specified, don't override.
