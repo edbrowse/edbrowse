@@ -1665,7 +1665,6 @@ static JSValue nat_btoa(JSContext * cx, JSValueConst this, int argc, JSValueCons
 		memcpy(s, s0, len);
 		s[len] = 0;
 		JS_FreeCString(cx, s0);
-		utf2iso1(s, &len);
 	}
 	t = base64Encode(s, len, false);
 	nzFree(s);
@@ -2847,11 +2846,10 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 {
 	jsInterruptCheck(cx);
 	struct i_get g;
-	size_t len = 0;
 	const char *incoming_url = JS_ToCString(cx, argv[0]);
 	const char *incoming_method = JS_ToCString(cx, argv[1]);
 	const char *incoming_headers = JS_ToCString(cx, argv[2]);
-	const char *incoming_payload = JS_ToCStringLen(cx, &len, argv[3]);
+	const char *incoming_payload = JS_ToCString(cx, argv[3]);
 	char *outgoing_xhrheaders = NULL;
 	char *outgoing_xhrbody = NULL;
 	char *a;
@@ -2880,7 +2878,7 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
         	createFormattedString(&a, "%s\1%s",
 	        incoming_url, incoming_payload);
 	    } else if(pd == 1) {
-        	createFormattedString(&a, "%s\1`88591+%s",
+        	createFormattedString(&a, "%s\1`b64+%s",
 	        incoming_url, incoming_payload);
 	    }
 	} else {

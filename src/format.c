@@ -1816,30 +1816,6 @@ void utf2iso(const uchar * inbuf, int inbuflen, uchar ** outbuf_p,
 	*outbuflen_p = j;
 }
 
-// Like the above, but always iso8859-1, and the change is made inline.
-// This is specific to xhr send of post Uint8Array. Null is encoded as c480.
-void utf2iso1(char *s0, size_t *lenp)
-{
-	char *s = s0;
-	char *t = s0;
-// null pointer means we don't specify a length
-	while((!lenp && *s) || (lenp && (unsigned)(s - s0) < *lenp)) {
-		uchar c = *s;
-		uchar d = s[1];
-		if((c&0xe0) == 0xe0 || (c&0xe0) == 0x80 ||
-		((c&0x80) && (d&0xc0) != 0x80)) {
-			debugPrint(1, "improper utf8 format in payload");
-			break;
-		}
-		if(c < 0x80) { *t++ = c; ++s; continue; }
-// this magically turns c480 back to 0
-		*t++ = ((d&0x3f) | (c<<6));
-		s += 2;
-	}
-	*t = 0;
-	if(lenp) *lenp = t - s0;
-}
-
 // reverse the above. This time the new string is allocated, as it might be longer
 char *iso12utf(const char *t1, const char *t2, int *lenp)
 {

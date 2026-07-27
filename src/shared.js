@@ -2756,31 +2756,21 @@ alert3("xhr url does not look encoded");
 //urlcopy = encodeURI(urlcopy);
 }
 if(data) {
-alert3("xhr data " + data);
-// no idea if data is already encoded or not.
-/*
-if(data.match(/[!*'";\[\]$\u0000-\u0020\u007f-\uffff]/)) {
-alert3("xhr data was not encoded");
-data = encodeURI(data);
-}
-*/
+    // output could be huge if data is huge
+    alert3("xhr data " + data);
 }
 // check the sanity of data
 if(data === null || data === undefined) data = "";
 let td = typeof data;
 let pd = 0; // how to process the data
 if(td == "object" && data instanceof w.Uint8Array) {
-pd = 1;
-// Turn the byte array into utf8.
-// code 0 becomes code 256, so we don't have a problem with null bytes.
-let s="";
-for(let i=0; i<data.length; ++i)
-s += String.fromCharCode(data[i]?data[i]:256);
-td = typeof (data = s);
+    pd = 1;
+    data = data.toBase64();
+    td = typeof data;
 }
 // what do we do about Uint16Array and Uint32Array?
 if(td != "string") {
-alert3("payload data has improper type " + td);
+    alert3("payload data has improper type " + td);
 }
 this.$entire =  eb$fetchHTTP.call(this, urlcopy,this.method,headerstring,data, pd);
 if(this.$entire != "async") this.parseResponse();
