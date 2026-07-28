@@ -458,7 +458,10 @@ if(cont(top.childNodes[i], n)) return true;
 return false;
 }
 
-function dispatchEvent (e) {
+function dispatchEvent(e)
+{
+    // We've dispatched this now regardless of what happens next
+    e.eb$dispatched = true;
     // When handlers fire, or there are issues, print those at db3.
     // If we are simply tracking through the dispatch algorithm, then db4.
     let dbg3 = () => undefined;
@@ -6124,86 +6127,113 @@ return null;
 return u;
 }
 
-swpc("Event", function(etype){
-    this.timeStamp = new Date().getTime();
-if(typeof etype == "string") this.type = etype;
-})
-swpp("Event", null)
-let eventp = w.Event.prototype;
-eventp.bubbles = true;
+/* A bit hacky but this helper avoids setting something on the prototype of
+our event class. Note that it only works where the type of the options are the same as the defaults which seems to be the common case for events.
+*/
+function setEventOptions(event, options, defaults)
+{
+    for (const prop of defaults)
+        odp(event, prop, {
+            value: (
+                typeof options[prop] === typeof defaults[prop]
+            ) ? options[prop] : defaults[prop],
+            enumerable: true
+        })
+}
+
+swpc("Event", class extends w.Object {
+    constructor(etype, options={})
+    {
+        odp(this, "timeStamp", {value: new Date().getTime(), enumerable: true});
+        if (typeof etype === "string")
+            odp(this, "type", {value: etype, enumerable: true});
+
+        setEventOptions(this, options, {bubbles: true, cancelable: true});
 // non-standard but needed for target-only events
-eventp.eb$captures = true;
-eventp.cancelable = true;
-eventp.stop$propagating = false;
-eventp.stop$propagating$immediate = false;
-eventp.defaultPrevented = false;
-eventp.currentTarget = eventp.target = null;
-eventp.eventPhase = 0;
-eventp.preventDefault = function() { if(this.cancelable) this.defaultPrevented = true; }
-eventp.stopPropagation = function() { this.stop$propagating = true; }
-eventp.stopImmediatePropagation = function() { this.stop$propagating$immediate = true; }
-// deprecated - I guess - but a lot of people still use it.
-eventp.initEvent = function(t, bubbles, cancel) {
-this.type = t, this.bubbles = bubbles, this.cancelable = cancel;
-this.eb$captures = true; this.defaultPrevented = false; }
-eventp.initUIEvent = function(t, bubbles, cancel, unused, detail) {
-this.type = t, this.bubbles = bubbles, this.cancelable = cancel, this.detail = detail;
-this.eb$captures = true; this.defaultPrevented = false; }
-eventp.initCustomEvent = function(t, bubbles, cancel, detail) {
-this.type = t, this.bubbles = bubbles, this.cancelable = cancel,
-this.detail = detail, this.eb$captures = true; }
+        odp(this, "eb$captures", {value: true, writable: true});
+        odp(this, "defaultPrevented", {
+            value: false, writable: true, enumerable: true
+        });
+        this.currentTarget = null;
+        this.target = null;
+        this.eventPhase = 0;
+        odp(this, "eb$dispatched", {value: false, writable: true});
+        odp(this, "stop$propagating", {value: false, writable: true});
+        odp(this, "stop$propagating$immediate", {value: false, writable: true});
+    }
+    preventDefault() { if(this.cancelable) this.defaultPrevented = true; }
+    stopPropagation() { this.stop$propagating = true; }
+    stopImmediatePropagation() { this.stop$propagating$immediate = true; }
+// deprecated but a lot of people still use it.
+    initEvent(t, bubbles, cancel)
+    {
+// per spec do nothing if we're already dispatched
+        if (this.eb$dispatched) return;
+        this.type = t;
+        this.bubbles = bubbles;
+        this.cancelable = cancel;
+    }
+    initUIEvent(t, bubbles, cancel, unused, detail)
+    {
+        if (this.eb$dispatched) return;
+        this.type = t;
+        this.bubbles = bubbles;
+        this.cancelable = cancel;
+        this.detail = detail;
+    }
+    initCustomEvent(t, bubbles, cancel, detail)
+    {
+        if (this.eb$dispatched) return;
+        this.type = t, this.bubbles = bubbles;
+        this.cancelable = cancel;
+        this.detail = detail;
+    }
+});
 
 docp.createEvent = function(unused) { return new w.Event; }
 
 // various flavors of events; I'm sure there are more than I have here.
-swpc("HashChangeEvent", function() {
-    this.timeStamp = new Date().getTime();
-    this.type = "hashchange";
-    this.bubbles = false;
-    this.eb$captures = false;
+swpc("HashChangeEvent", class extends w.Event {
+    constructor()
+    {
+        super("hashchange", {bubbles: false});
+        this.eb$captures = false;
+    }
 })
-swpp("HashChangeEvent", w.Event);
+swpc("MouseEvent", class extends w.Event {
+    constructor(etype, options)
+    {
+        super(etype, options);
+        setEventOptions(options, {
+            altKey: false,
+            ctrlKey: false,
+            shiftKey: false,
+            metaKey: false
+        });
+    }
 
-swpc("MouseEvent", function(etype){
-    this.timeStamp = new Date().getTime();
-if(typeof etype == "string") this.type = etype;
+    initMouseEvent(...args) { this.initEvent(...args); }
+});
+for (const ev in ['Keyboard', 'PromiseRejection'])
+    swpc(`${ev}Event`, class extends w.Event {
+        constructor(t,o) { super(t,o); }
+    })
+
+swpc("CustomEvent", class extends w.Event {
+    constructor(etype, options)
+    {
+        super(etype, options);
+// no idea if the name option is actually valid but based on some js in the wild
+        setEventOptions(options, {detail: null, name: ""});
+        alert3(`customEvent " ${etype} {typeof o}`);
+    }
 })
-swpp("MouseEvent", w.Event);
-let meventp = w.MouseEvent.prototype;
-meventp.altKey = false;
-meventp.ctrlKey = false;
-meventp.shiftKey = false;
-meventp.metaKey = false;
-meventp.initMouseEvent = function() { this.initEvent.apply(this, arguments)}
-
-swpc("KeyboardEvent", function(etype){
-    this.timeStamp = new Date().getTime();
-if(typeof etype == "string") this.type = etype;
+swpc("XMLHttpRequestEventTarget", class extends w.EventTarget {
+    constructor() { super(); }
+});
+swpc("XMLHttpRequestUpload", class extends w.XMLHttpRequestEventTarget {
+    constructor() { super(); }
 })
-swpp("KeyboardEvent", w.Event);
-
-swpc("PromiseRejectionEvent", function(etype){
-    this.timeStamp = new Date().getTime();
-if(typeof etype == "string") this.type = etype;
-})
-swpp("PromiseRejectionEvent", w.Event);
-
-swpc("CustomEvent", function(etype, o){
-alert3("customEvent " + etype + " " + typeof o);
-    this.timeStamp = new Date().getTime();
-if(typeof etype == "string") this.type = etype;
-// This is nowhere documented.
-// I'm basing it on some js I saw in the wild.
-if(typeof o == "object")
-this.name = o.name, this.detail = o.detail;
-})
-swpp("CustomEvent", w.Event);
-
-swpc("XMLHttpRequestEventTarget", function(){})
-swpp("XMLHttpRequestEventTarget", w.EventTarget)
-
-swpc("XMLHttpRequestUpload", function(){})
-swpp("XMLHttpRequestUpload", w.XMLHttpRequestEventTarget)
 
 // XMLHttpRequest was a static class above, but like URL,
 // what if somebody wants to replace XMLHttpRequest.prototype.toString?
