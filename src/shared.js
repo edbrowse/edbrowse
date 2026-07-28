@@ -6122,6 +6122,7 @@ our event class. Note that it only works where the type of the options are the s
 */
 function setEventOptions(event, options, defaults)
 {
+    if (!options) return;
     for (const prop of defaults)
         odp(event, prop, {
             value: (
@@ -6132,7 +6133,7 @@ function setEventOptions(event, options, defaults)
 }
 
 swpc("Event", class extends w.Object {
-    constructor(etype, options={})
+    constructor(etype, options)
     {
         odp(this, "timeStamp", {value: new Date().getTime(), enumerable: true});
         if (typeof etype === "string")
