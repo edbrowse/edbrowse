@@ -6194,7 +6194,7 @@ swpc("MouseEvent", class extends w.Event {
     constructor(etype, options)
     {
         super(etype, options);
-        setEventOptions(options, {
+        setEventOptions(this, options, {
             altKey: false,
             ctrlKey: false,
             shiftKey: false,
@@ -6214,7 +6214,7 @@ swpc("CustomEvent", class extends w.Event {
     {
         super(etype, options);
 // no idea if the name option is actually valid but based on some js in the wild
-        setEventOptions(options, {detail: null, name: ""});
+        setEventOptions(this, options, {detail: null, name: ""});
         alert3(`customEvent " ${etype} {typeof o}`);
     }
 })
