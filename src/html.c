@@ -35,7 +35,6 @@ bool handlerPresent(const Tag *t, const char *name)
 {
 	const char *name2 = tack_array(name);
 	return (typeof_property_t(t, name) == EJ_PROP_FUNCTION ||
-            typeof_property_t(t, name) == EJ_PROP_STRING ||
             (name2 && typeof_property_t(t, name2) == EJ_PROP_ARRAY));
 }
 
