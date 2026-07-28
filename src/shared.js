@@ -6122,14 +6122,16 @@ our event class. Note that it only works where the type of the options are the s
 */
 function setEventOptions(event, options, defaults)
 {
-    if (!options) return;
-    for (const prop of defaults)
-        odp(event, prop, {
-            value: (
-                typeof options[prop] === typeof defaults[prop]
-            ) ? options[prop] : defaults[prop],
-            enumerable: true
-        })
+    if (!options)
+        for (const [k,v] of Object.entries(defaults))
+            odp(event, k, {value: v, enumerable: true})
+
+    else
+        for (const [k,v] of defaults)
+            odp(event, k, {
+                value: (typeof options[k] === typeof v) ? options[k] : v,
+                enumerable: true
+            })
 }
 
 swpc("Event", class extends w.Object {
