@@ -6135,6 +6135,7 @@ function setEventOptions(event, options, defaults)
 swpc("Event", class extends w.Object {
     constructor(etype, options)
     {
+        super();
         odp(this, "timeStamp", {value: new Date().getTime(), enumerable: true});
         if (typeof etype === "string")
             odp(this, "type", {value: etype, enumerable: true});
@@ -6152,9 +6153,13 @@ swpc("Event", class extends w.Object {
         odp(this, "stop$propagating", {value: false, writable: true});
         odp(this, "stop$propagating$immediate", {value: false, writable: true});
     }
+
     preventDefault() { if(this.cancelable) this.defaultPrevented = true; }
+
     stopPropagation() { this.stop$propagating = true; }
+
     stopImmediatePropagation() { this.stop$propagating$immediate = true; }
+
 // deprecated but a lot of people still use it.
     initEvent(t, bubbles, cancel)
     {
@@ -6164,6 +6169,7 @@ swpc("Event", class extends w.Object {
         this.bubbles = bubbles;
         this.cancelable = cancel;
     }
+
     initUIEvent(t, bubbles, cancel, unused, detail)
     {
         if (this.eb$dispatched) return;
@@ -6172,6 +6178,7 @@ swpc("Event", class extends w.Object {
         this.cancelable = cancel;
         this.detail = detail;
     }
+
     initCustomEvent(t, bubbles, cancel, detail)
     {
         if (this.eb$dispatched) return;
