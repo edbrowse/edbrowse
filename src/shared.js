@@ -4265,6 +4265,7 @@ w.soj$ = z.style;
 // The html element, which is the DOM nodes that you know and love.
 swde("HTMLElement", class extends w.Element {
     constructor() { super(); }
+
     // style object is on demand
     get style()
     {
@@ -4273,6 +4274,23 @@ swde("HTMLElement", class extends w.Element {
             this.style$2.element = this;
         }
         return this.style$2;
+    }
+
+    // almost anything can be disabled, an entire div section, etc
+    get disabled()
+    {
+        const t = this.getAttribute("disabled");
+        return !(t === null || t === false || t === "false" || t === 0 || t === '0');
+    }
+
+    set disabled(v) { this.setAttribute("disabled", v); }
+    /*
+        per mdn the click method simulates a mouse click. Based on the examples
+        I'm taking that to mean dispatch the relevant event.
+    */
+    click()
+    {
+        if (!this.disabled) this.dispatchEvent(new w.MouseEvent("click"));
     }
 })
 let helemp = w.HTMLElement.prototype;
@@ -4303,10 +4321,6 @@ const y = typeof t;
 return y == "string" || y == "number" ? t : undefined; },
 set:function(v) { this.setAttribute("title", v);}});
 // almost anything can be disabled, an entire div section, etc
-odp(helemp, "disabled", {
-get:function(){ const t = this.getAttribute("disabled");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("disabled", v);}});
 odp(helemp, "hidden", {
 get:function(){ const t = this.getAttribute("hidden");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
