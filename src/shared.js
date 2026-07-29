@@ -3573,8 +3573,15 @@ nodep.insertBefore = function(c, t) {
 nodep.removeChild = function(c) {
     if(!thisNode(this)) return null;
     if(!c) return null;
-    const mark = this.eb$rmch2(c);
+    const cn = this.childNodes;
+    const l = cn.length;
+    let mark = -1;
+    for(let i = 0; i < l; ++i)
+        if(c == cn[i]) { mark = i; break; }
     if(mark < 0) return null;
+    cn.splice(mark, 1);
+    c.parentNode = null;
+    this.eb$rmch2(c);
     if(c.nodeType != 3) formReindex2(this);
 // passing an integer as third argument is a special case, only from here.
     mutFixup(this, 0, mark, c);
@@ -3585,8 +3592,16 @@ nodep.removeChild = function(c) {
 nodep.removeChild$nm = function(c) {
     if(!thisNode(this)) return null;
     if(!c) return null;
-    const mark = this.eb$rmch2(c);
-    return mark < 0 ? null : c;
+    const cn = this.childNodes;
+    const l = cn.length;
+    let mark = -1;
+    for(let i = 0; i < l; ++i)
+        if(c == cn[i]) { mark = i; break; }
+    if(mark < 0) return null;
+    cn.splice(mark, 1);
+    c.parentNode = null;
+    this.eb$rmch2(c);
+    return c;
 }
 
 odp(nodep, "firstChild", {

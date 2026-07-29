@@ -2710,57 +2710,20 @@ done:
 
 static JSValue nat_rmch2(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
-	jsInterruptCheck(cx);
-	int i, length, mark = -1;
-	JSValue child, cn;
-	const char *thisname, *childname;
-
-	debugPrint(5, "remove in");
-	if (!JS_IsObject(argv[0]))
-		goto done;
-	child = argv[0];
-	cn = JS_GetPropertyStr(cx, this, "childNodes");
-	grab(cn);
-	if(!wrap_IsArray(cx, cn))
-		goto fail;
-	length = get_arraylength(cx, cn);
-	for (i = 0; i < length; ++i) {
-		JSValue v = get_array_element_object(cx, cn, i);
-		bool same = (JS_VALUE_GET_PTR(v) == JS_VALUE_GET_PTR(child));
-		JS_Release(cx, v);
-		if(same) {
-			mark = i;
-			break;
-		}
-	}
-	if (mark < 0)
-		goto fail;
-
-// push the other elements down
-	for (i = mark + 1; i < length; ++i) {
-		JSValue v = get_array_element_object(cx, cn, i);
-		set_array_element_object(cx, cn, i - 1, v);
-		JS_Release(cx, v);
-	}
-	set_property_number(cx, cn, "length", length - 1);
-// missing parentnode must always be null
-JS_SetPropertyStr(cx, child, "parentNode", JS_NULL);
-
+    JSValue child;
+    const char *thisname, *childname;
+    (void) argc;
+    jsInterruptCheck(cx);
+    if (!JS_IsObject(argv[0])) goto done;
+    debugPrint(5, "remove in");
+    child = argv[0];
 // pass this linkage information back to edbrowse, to update its dom tree
-	thisname = embedNodeName(cx, this);
-	childname = embedNodeName(cx, child);
-	domSetsLinkage1('r', this, thisname, child, childname);
-
-	debugPrint(5, "remove out");
-	JS_Release(cx, cn);
-	return JS_NewInt32(cx, mark);
-
-fail:
-	debugPrint(5, "remove fail");
-	JS_Release(cx, cn);
-        (void) argc;
+    thisname = embedNodeName(cx, this);
+    childname = embedNodeName(cx, child);
+    domSetsLinkage1('r', this, thisname, child, childname);
+    debugPrint(5, "remove out");
 done:
-	return JS_NewInt32(cx, -1);
+    return JS_UNDEFINED;
 }
 
 static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
