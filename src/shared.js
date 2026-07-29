@@ -4991,17 +4991,18 @@ let nn = this.nodeName, t = this.type;
 // as though the user had clicked on this
 if(nn == "BUTTON" || (nn == "INPUT" &&
 (t == "button" || t == "reset" || t == "submit" || t == "checkbox" || t == "radio"))) {
-var e = new w.Event;
-e.initEvent("click", true, true);
+let e = new w.MouseEvent("click");
 if(!this.dispatchEvent(e)) return;
 // do what the tag says to do
 if(this.form && this.form.dom$class == "HTMLFormElement") {
 if(t == "submit") {
+e = new w.Event;
 e.initEvent("submit", true, true);
 if(this.dispatchEvent(e) && this.form.submit)
 this.form.submit();
 }
 if(t == "reset") {
+e = new w.Event;
 e.initEvent("reset", true, true);
 if(this.dispatchEvent(e) && this.form.reset)
 this.form.reset();
@@ -5292,13 +5293,7 @@ swde("HTMLDivElement", class extends w.HTMLElement {
 let divp = w.HTMLDivElement.prototype;
 divp.doScroll = eb$voidfunction;
 divp.align = "left";
-// should this click be on w.HTMLElement?
-divp.click = function() {
-// as though the user had clicked on this
-var e = new w.Event;
-e.initEvent("click", true, true);
-this.dispatchEvent(e);
-}
+
 swde("HTMLParagraphElement", class extends w.HTMLElement {
     constructor() { super(); }
 })
@@ -5307,7 +5302,6 @@ swde("HTMLSpanElement", class extends w.HTMLElement {
 })
 let spanp = w.HTMLSpanElement.prototype;
 spanp.doScroll = eb$voidfunction;
-spanp.click = divp.click;
 
 // h1 through h6 and our own classes for header footer
 swde("HTMLHeadingElement", class extends w.HTMLElement {
