@@ -2051,7 +2051,7 @@ static JSValue nat_unframe2(JSContext * cx, JSValueConst this, int argc, JSValue
 
 // We need to call and remember up to 3 node names, to carry dom changes
 // across to html. As in parent.insertBefore(newChild, existingChild);
-// These names are passed into domSetsLinkage().
+// These names are used by domSetsLinkage().
 static const char *embedNodeName(JSContext * cx, JSValueConst obj)
 {
 	static char buf[3][MAXTAGNAME];
@@ -2075,20 +2075,27 @@ static const char *embedNodeName(JSContext * cx, JSValueConst obj)
 	return b;
 }
 
-static void domSetsLinkage(char type,
-JSValueConst p_j, const char *p_name,
-JSValueConst a_j, const char *a_name,
-JSValueConst b_j, const char *b_name)
+static void domSetsLinkage(char type, JSValueConst p_j, const char *p_name,
+JSValueConst a_j, JSValueConst b_j)
 {
-	Tag *parent, *add, *before, *c, *t;
-	int action;
-	char *jst;		// javascript string
-	JSContext *cx = cf->cx;
+    const char *a_name, *b_name; // node name of parent, a, and b
+    Tag *parent, *add, *before, *c, *t;
+    int action;
+    char *jst;		// generic javascript string
+    JSContext *cx = cf->cx;
 
 // Some functions in demin.js create, link, and then remove nodes, before
 // there is a document. Don't run any side effects in this case.
-	if (!cw->tags)
-		return;
+    if (!cw->tags) return;
+
+    if(!p_name && JS_IsObject(p_j)) p_name = embedNodeName(cx, p_j);
+    if(!p_name || !p_name[0]) { // should never happen
+        debugPrint(3, "domSetsLinkage, this.nodeName is null");
+        return;
+}
+    a_name = b_name = emptyString;
+    if(JS_IsObject(a_j)) a_name = embedNodeName(cx, a_j);
+    if(JS_IsObject(b_j)) b_name = embedNodeName(cx, b_j);
 
 	if (type == 'c') {	// create
 		parent = tagFromObject2(JS_DupValue(cx, p_j), p_name);
@@ -2108,7 +2115,7 @@ JSValueConst b_j, const char *b_name)
 		return;
 	}
 
-/* options are relinked by rebuildSelectors, not here. */
+// options are relinked by rebuildSelectors, not here.
 	if (stringEqual(p_name, "option"))
 		return;
 
@@ -2286,17 +2293,14 @@ ab:
 }
 
 // as above, with fewer parameters
-static void domSetsLinkage1(char type,
-JSValueConst p_j, const char *p_name,
-JSValueConst a_j, const char *a_name)
+static void domSetsLinkage1(char type, JSValueConst p_j, JSValueConst a_j)
 {
-domSetsLinkage(type, p_j, p_name, a_j, a_name, JS_UNDEFINED, emptyString);
+    domSetsLinkage(type, p_j, 0, a_j, JS_UNDEFINED);
 }
 
-static void domSetsLinkage2(char type,
-JSValueConst p_j, const char *p_name)
+static void domSetsLinkage2(char type, JSValueConst p_j, const char *p_name)
 {
-domSetsLinkage(type, p_j, p_name, JS_UNDEFINED, emptyString, JS_UNDEFINED, emptyString);
+    domSetsLinkage(type, p_j, p_name, JS_UNDEFINED, JS_UNDEFINED);
 }
 
 static JSValue nat_log_element(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
@@ -2307,7 +2311,6 @@ static JSValue nat_log_element(JSContext * cx, JSValueConst this, int argc, JSVa
 	if (JS_IsUndefined(newobj) || !tagname)
 		return JS_UNDEFINED;
 	debugPrint(5, "log in");
-// pass the newly created node over to edbrowse
 	domSetsLinkage2('c', newobj, tagname);
 	JS_FreeCString(cx, tagname);
 	debugPrint(5, "log out");
@@ -2584,7 +2587,6 @@ static bool append0(JSContext * cx, JSValueConst this, int argc, JSValueConst *a
 {
 	int i, length;
 	JSValue child, cn;
-	const char *thisname, *childname;
 	bool rc = false;
 
 /* we need one argument that is an object */
@@ -2616,14 +2618,8 @@ static bool append0(JSContext * cx, JSValueConst this, int argc, JSValueConst *a
 set_property_object(cx, child, "parentNode", this);
 	rc = true;
 
-	if (!side)
-		goto done;
-
-/* pass this linkage information back to edbrowse, to update its dom tree */
-	thisname = embedNodeName(cx, this);
-	childname = embedNodeName(cx, child);
-	domSetsLinkage1('a', this, thisname, child, childname);
-
+    if (side)
+        domSetsLinkage1('a', this, child);
 done:
 	JS_Release(cx, cn);
 	debugPrint(5, "append out");
@@ -2649,33 +2645,19 @@ static JSValue nat_apch2(JSContext * cx, JSValueConst this, int argc, JSValueCon
 static JSValue nat_insbf(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
     jsInterruptCheck(cx);
-    JSValue child, item;
-    const char *thisname, *childname, *itemname;
     debugPrint(5, "before in");
-    child = argv[0];
-    item = argv[1];
-// pass this linkage information back to edbrowse, to update its dom tree
-    thisname = embedNodeName(cx, this);
-    childname = embedNodeName(cx, child);
-    itemname = embedNodeName(cx, item);
-    domSetsLinkage('b', this, thisname, child, childname, item, itemname);
+    domSetsLinkage('b', this, 0, argv[0], argv[1]);
     debugPrint(5, "before out");
     return JS_UNDEFINED;
 }
 
 static JSValue nat_rmch2(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
-    JSValue child;
-    const char *thisname, *childname;
     (void) argc;
     jsInterruptCheck(cx);
     if (!JS_IsObject(argv[0])) goto done;
     debugPrint(5, "remove in");
-    child = argv[0];
-// pass this linkage information back to edbrowse, to update its dom tree
-    thisname = embedNodeName(cx, this);
-    childname = embedNodeName(cx, child);
-    domSetsLinkage1('r', this, thisname, child, childname);
+    domSetsLinkage1('r', this, argv[0]);
     debugPrint(5, "remove out");
 done:
     return JS_UNDEFINED;
