@@ -2647,65 +2647,19 @@ static JSValue nat_apch2(JSContext * cx, JSValueConst this, int argc, JSValueCon
 
 static JSValue nat_insbf(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
-	jsInterruptCheck(cx);
-	int i, length, mark;
-	JSValue child, item, cn;
-	const char *thisname, *childname, *itemname;
-	bool rc = false;
-
-/* we need two objects */
-	if (argc != 2 ||
-	    !JS_IsObject(argv[0]) || !JS_IsObject(argv[1]))
-		return JS_NULL;
-
-	debugPrint(5, "before in");
-	child = argv[0];
-	item = argv[1];
-	cn = JS_GetPropertyStr(cx, this, "childNodes");
-	grab(cn);
-	if(!wrap_IsArray(cx, cn))
-		goto done;
-	rc = true;
-	length = get_arraylength(cx, cn);
-	mark = -1;
-	for (i = 0; i < length; ++i) {
-		bool same1, same2;
-		JSValue v = get_array_element_object(cx, cn, i);
-		same1 = (JS_VALUE_GET_PTR(v) == JS_VALUE_GET_PTR(child));
-		same2 = (JS_VALUE_GET_PTR(v) == JS_VALUE_GET_PTR(item));
-		JS_Release(cx, v);
-		if (same1)
-// should we move it to before item?
-			goto done;
-		if (same2)
-			mark = i;
-	}
-
-	if (mark < 0) {
-		rc = false;
-		goto done;
-	}
-
-/* push the other elements down */
-	for (i = length; i > mark; --i) {
-		JSValue v = get_array_element_object(cx, cn, i - 1);
-		set_array_element_object(cx, cn, i, v);
-		JS_Release(cx, v);
-	}
-/* and place the child */
-	set_array_element_object(cx, cn, mark, child);
-set_property_object(cx, child, "parentNode", this);
-
-/* pass this linkage information back to edbrowse, to update its dom tree */
-	thisname = embedNodeName(cx, this);
-	childname = embedNodeName(cx, child);
-	itemname = embedNodeName(cx, item);
-	domSetsLinkage('b', this, thisname, child, childname, item, itemname);
-
-done:
-	JS_Release(cx, cn);
-	debugPrint(5, "before out");
-	return (rc ? JS_DupValue(cx, argv[0]) : JS_NULL);
+    jsInterruptCheck(cx);
+    JSValue child, item;
+    const char *thisname, *childname, *itemname;
+    debugPrint(5, "before in");
+    child = argv[0];
+    item = argv[1];
+// pass this linkage information back to edbrowse, to update its dom tree
+    thisname = embedNodeName(cx, this);
+    childname = embedNodeName(cx, child);
+    itemname = embedNodeName(cx, item);
+    domSetsLinkage('b', this, thisname, child, childname, item, itemname);
+    debugPrint(5, "before out");
+    return JS_UNDEFINED;
 }
 
 static JSValue nat_rmch2(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)

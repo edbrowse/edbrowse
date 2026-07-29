@@ -3561,13 +3561,23 @@ nodep.insertBefore = function(c, t) {
     isabove(c, this);
     if(c.nodeType == 11) return insertFragment(this, c, t);
     if(c.parentNode) c.parentNode.removeChild(c);
-    let r = this.eb$insbf(c, t);
-    if(r) {
-        if(r.nodeType != 3) formReindex2(this);
-        mutFixup(this, 0, r, null);
-        runScriptWhenAttached(r);
+    const cn = this.childNodes;
+    const l = cn.length;
+    let mark1 = -1, mark2 = -1;
+    for(let i = 0; i < l; ++i) {
+        if(c == cn[i]) mark1 = i;
+        if(t == cn[i]) mark2 = i;
     }
-    return r;
+    if(mark2 < 0) return null;
+// if c is already a child, should we move it to before t?
+    if(mark1 >= 0) return c;
+    cn.splice(mark2, 0, c);
+    c.parentNode = this;
+    this.eb$insbf(c, t);
+    if(c.nodeType != 3) formReindex2(this);
+    mutFixup(this, 0, c, null);
+    runScriptWhenAttached(c);
+    return c;
 }
 
 nodep.removeChild = function(c) {
