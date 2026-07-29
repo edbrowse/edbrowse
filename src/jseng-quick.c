@@ -2292,17 +2292,6 @@ ab:
 	}			// switch
 }
 
-// as above, with fewer parameters
-static void domSetsLinkage1(char type, JSValueConst p_j, JSValueConst a_j)
-{
-    domSetsLinkage(type, p_j, 0, a_j, JS_UNDEFINED);
-}
-
-static void domSetsLinkage2(char type, JSValueConst p_j, const char *p_name)
-{
-    domSetsLinkage(type, p_j, p_name, JS_UNDEFINED, JS_UNDEFINED);
-}
-
 static JSValue nat_log_element(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
 	jsInterruptCheck(cx);
@@ -2311,7 +2300,7 @@ static JSValue nat_log_element(JSContext * cx, JSValueConst this, int argc, JSVa
 	if (JS_IsUndefined(newobj) || !tagname)
 		return JS_UNDEFINED;
 	debugPrint(5, "log in");
-	domSetsLinkage2('c', newobj, tagname);
+	domSetsLinkage('c', newobj, tagname, JS_UNDEFINED, JS_UNDEFINED);
 	JS_FreeCString(cx, tagname);
 	debugPrint(5, "log out");
         (void) this;
@@ -2619,7 +2608,7 @@ set_property_object(cx, child, "parentNode", this);
 	rc = true;
 
     if (side)
-        domSetsLinkage1('a', this, child);
+        domSetsLinkage('a', this, 0, child, JS_UNDEFINED);
 done:
 	JS_Release(cx, cn);
 	debugPrint(5, "append out");
@@ -2657,7 +2646,7 @@ static JSValue nat_rmch2(JSContext * cx, JSValueConst this, int argc, JSValueCon
     jsInterruptCheck(cx);
     if (!JS_IsObject(argv[0])) goto done;
     debugPrint(5, "remove in");
-    domSetsLinkage1('r', this, argv[0]);
+    domSetsLinkage('r', this, 0, argv[0], JS_UNDEFINED);
     debugPrint(5, "remove out");
 done:
     return JS_UNDEFINED;
