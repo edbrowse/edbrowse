@@ -4987,6 +4987,7 @@ let tareap = w.HTMLTextAreaElement.prototype;
 
 // we need a couple of helper functions for clicking on a radio input field
 function clickfn() {
+if (this.disabled) return;
 let nn = this.nodeName, t = this.type;
 // as though the user had clicked on this
 if(nn == "BUTTON" || (nn == "INPUT" &&
