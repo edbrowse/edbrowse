@@ -345,7 +345,7 @@ function showcamp(o) { alert("camp " + o.camp); }
 const r = (await fetch("http://www.edbrowse.org/jscamp.json"));
 // p_json is the promise of the json object
 const p_json = r.json();
-if(r.headers.get("content-type") != "application/json") fail(179);
+if(r.headers.get("content-length") != 19) fail(179);
 p_json.then(showcamp);
 }
 </script>
