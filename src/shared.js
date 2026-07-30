@@ -1262,9 +1262,9 @@ name === "options" && o.dom$class == "HTMLSelectElement" ||
 name === "selectedOptions" && o.dom$class == "HTMLSelectElement";
 },
 
-spilldown: function(name) {
-// I'm not sure if value should spill down, setAttribute("value","blah")
-return name == "value";
+spilldown: function(t, name) {
+    let dc = t.dom$class;
+    return name == "value" && (dc == "HTMLInputElement" || dc == "HTMLTextAreaElement");
 },
 
 spilldownResolveURL: function(t, name) {
@@ -1379,7 +1379,7 @@ setAttribute: function(name, v) {
         this.dataset[dataCamel(name)] = v;
     }
 // names that spill down into the actual property
-    if(attr.spilldown(name)) this[name] = v;
+    if(attr.spilldown(this, name)) this[name] = v;
         // href$2 not enumerable. cloneNode still works because it finds
         // href in the attributes and copies it there,
         // whence spilldown puts href$2 in node2.
@@ -1428,8 +1428,8 @@ if(name.substr(0,5) == "data-") {
 var n = dataCamel(name);
 if(this.dataset$2 && this.dataset$2[n]) delete this.dataset$2[n];
 }
-// should we be doing any of this for xml nodes?
-if(attr.spilldown(name)) delete this[name];
+// the only simple spilldown is value, we shouldn't delete value, so just set it to ""
+if(attr.spilldown(this, name)) this[name] = "";
 if(attr.spilldownResolve(this, name)) delete this[name];
 if(attr.spilldownResolveURL(this, name)) delete this[name];
 if(attr.spilldownBool(this, name)) delete this[name];
