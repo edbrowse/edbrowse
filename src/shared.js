@@ -3556,17 +3556,13 @@ nodep.insertBefore = function(c, t) {
     if(c.parentNode) c.parentNode.removeChild(c);
     const cn = this.childNodes;
     const l = cn.length;
-    let mark1 = -1, mark2 = -1;
-    for(let i = 0; i < l; ++i) {
-        if(c == cn[i]) mark1 = i;
-        if(t == cn[i]) mark2 = i;
-    }
-    if(mark2 < 0) return null;
-// if c is already a child, should we move it to before t?
-    if(mark1 >= 0) return c;
-    cn.splice(mark2, 0, c);
+    let mark = -1;
+    for(let i = 0; i < l; ++i)
+        if(t == cn[i]) mark = i;
+    if(mark < 0) return null;
+    cn.splice(mark, 0, c);
     c.parentNode = this;
-    this.eb$insbf(c, t);
+    this.eb$insbf(c, t); // update the tree in C
     if(c.nodeType != 3) formReindex2(this);
     mutFixup(this, 0, c, null);
     runScriptWhenAttached(c);

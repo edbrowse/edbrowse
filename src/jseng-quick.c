@@ -2534,45 +2534,23 @@ static JSValue nat_top(JSContext * cx, JSValueConst this, int argc, JSValueConst
 
 static bool append0(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv, bool side)
 {
-	int i, length;
-	JSValue child, cn;
-	bool rc = false;
-
-/* we need one argument that is an object */
-	if (argc != 1 || !JS_IsObject(argv[0]))
-		return false;
-
-	debugPrint(5, "append in");
-	child = argv[0];
-	cn = JS_GetPropertyStr(cx, this, "childNodes");
-	grab(cn);
-	if(!wrap_IsArray(cx, cn))
-		goto done;
-
-	rc = true;
-	length = get_arraylength(cx, cn);
-// see if it's already there.
-	for (i = 0; i < length; ++i) {
-		JSValue v = get_array_element_object(cx, cn, i);
-		bool same = (JS_VALUE_GET_PTR(v) == JS_VALUE_GET_PTR(child));
-		JS_Release(cx, v);
-		if(same)
-// child was already there, just return.
-// Were we suppose to move it to the end? idk
-			goto done;
-	}
-
-// add child to the end
-	set_array_element_object(cx, cn, length, child);
-set_property_object(cx, child, "parentNode", this);
-	rc = true;
-
-    if (side)
-        domSetsLinkage('a', this, 0, child, JS_UNDEFINED);
+    JSValue child = argv[0], cn;
+    bool rc = false;
+    if (argc != 1 || !JS_IsObject(child))
+        return false;
+    debugPrint(5, "append in");
+    cn = JS_GetPropertyStr(cx, this, "childNodes");
+    grab(cn);
+    if(!wrap_IsArray(cx, cn)) goto done;
+    rc = true;
+    int length = get_arraylength(cx, cn);
+    set_array_element_object(cx, cn, length, child);
+    set_property_object(cx, child, "parentNode", this);
+    if (side) domSetsLinkage('a', this, 0, child, JS_UNDEFINED);
 done:
-	JS_Release(cx, cn);
-	debugPrint(5, "append out");
-	return rc;
+    JS_Release(cx, cn);
+    debugPrint(5, "append out");
+    return rc;
 }
 
 static JSValue nat_apch1(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
