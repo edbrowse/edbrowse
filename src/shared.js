@@ -5040,6 +5040,21 @@ if(e[i].nodeName == "INPUT" && e[i].type == t && e[i].name == nn &&e[i] != this)
 }
 }
 
+// and a getter and setter for value, so that it can be reflected in C,
+// and you can see it on screen, and it can be sent to the server via a form.
+function getvalue()
+{
+    return this.val$ue ? this.val$ue : "";
+}
+function setvalue(h)
+{
+    if(!h) return; // should never happen
+    this.val$ue = h;
+    // push this over to the c world.
+    set_value(this, h);
+}
+
+odp(inputp, "value", { get: getvalue, set: setvalue})
 inputp.selectionStart = 0;
 inputp.selectionEnd = -1;
 inputp.selectionDirection = "none";
@@ -5111,6 +5126,7 @@ get:function(){ var t = this.getAttribute("type");
 return typeof t == "string" ? t.toLowerCase() : "submit"; },
 set:function(v) { this.setAttribute("type", v);}});
 
+odp(tareap, "value", { get: getvalue, set: setvalue})
 odp(tareap, "innerText", {
 get: function() { return this.value},
 set: function(t) { this.value = t }});

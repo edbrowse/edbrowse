@@ -408,9 +408,7 @@ char *get_style_string_t(const Tag *t, const char *name)
 	return result;
 }
 
-// Before we write set_property_string, we need some getters and setters.
-
-static JSValue set_innerHTML(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
+static JSValue nat_set_innerHTML(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
     jsInterruptCheck(cx);
     const char *h = JS_ToCString(cx, argv[1]);
@@ -425,75 +423,42 @@ static JSValue set_innerHTML(JSContext * cx, JSValueConst this, int argc, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue getter_value(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
+static JSValue nat_set_value(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
-        (void) argc;
-        (void) argv;
-	return JS_GetPropertyStr(cx, this, "val$ue");
-}
-
-static JSValue setter_value(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
-{
-	char *k;
-	Tag *t;
-	const char *h = JS_ToCString(cx, argv[0]);
-        (void) argc;
-	if (!h)			// should never happen
-		return JS_UNDEFINED;
 	debugPrint(5, "setter v in");
-	JS_SetPropertyStr(cx, this, "val$ue", JS_NewAtomString(cx, h));
-	k = cloneString(h);
-	JS_FreeCString(cx, h);
-	t = tagFromObject(this);
-	if(t) {
-		debugPrint(4, "value tag %d=%s", t->seqno, k);
-		if(t->itype != INP_TA || t->lic < 0)
-			prepareForField(k);
-		domSetsTagValue(t, k);
-	}
-	nzFree(k);
-	debugPrint(5, "setter v out");
-	return JS_UNDEFINED;
+    Tag *t = tagFromObject(argv[0]);
+    if(t) {
+        const char *h = JS_ToCString(cx, argv[1]);
+        char *k = cloneString(h); // our own copy
+        JS_FreeCString(cx, h);
+        debugPrint(4, "value tag %d=%s", t->seqno, k);
+        if(t->itype != INP_TA || t->lic < 0)
+            prepareForField(k);
+        domSetsTagValue(t, k);
+        nzFree(k);
+    }
+    debugPrint(5, "setter v out");
+    return JS_UNDEFINED;
 }
 
 static void set_property_string(JSContext *cx, JSValueConst parent, const char *name,
 			    const char *value)
 {
-	bool defset = false;
-	JSCFunction *getter = 0;
-	JSCFunction *setter = 0;
-	const char *altname;
-	if (stringEqual(name, "value")) {
-// Only meaningful in the Element class
-		JSValue dc = JS_GetPropertyStr(cx, parent, "dom$class");
-		const char *dcs = JS_ToCString(cx, dc);
-		grab(dc);
-		if(stringEqual(dcs, "HTMLInputElement") ||
-		stringEqual(dcs, "HTMLTextAreaElement"))
-			getter = getter_value,
-			setter = setter_value,
-			    altname = "val$ue";
-		JS_FreeCString(cx, dcs);
-		JS_Release(cx, dc);
-	}
-	if (setter) {
-// see if we already did this - does the property show up as a string?
-		if(typeof_property(cx, parent, name) != EJ_PROP_STRING)
-			defset = true;
-	}
-	if (defset) {
-		JSAtom a = JS_NewAtom(cx, name);
-		JS_DefinePropertyGetSet(cx, parent, a,
-		JS_NewCFunction(cx, getter, "get", 0),
-		JS_NewCFunction(cx, setter, "set", 0),
-		0);
-		JS_FreeAtom(cx, a);
-// so it can be not enumerable
-		JS_DefinePropertyValueStr(cx, parent, altname, JS_UNDEFINED, JS_PROP_WRITABLE);
-	}
-	if (!value)
-		value = emptyString;
-	JS_SetPropertyStr(cx, parent, (setter ? altname : name), JS_NewAtomString(cx, value));
+    const char *altname = 0;
+    if (stringEqual(name, "value")) {
+        // from C, we don't go through the value setter function
+        // check for input or textarea
+        JSValue dc = JS_GetPropertyStr(cx, parent, "dom$class");
+        grab(dc);
+        const char *dcs = JS_ToCString(cx, dc);
+        if(stringEqual(dcs, "HTMLInputElement") ||
+        stringEqual(dcs, "HTMLTextAreaElement"))
+            altname = "val$ue";
+        JS_FreeCString(cx, dcs);
+        JS_Release(cx, dc);
+    }
+    if (!value) value = emptyString;
+    JS_SetPropertyStr(cx, parent, (altname ? altname : name), JS_NewAtomString(cx, value));
 }
 
 void set_property_string_t(const Tag *t, const char *name, const char * v)
@@ -2104,11 +2069,6 @@ JSValueConst a_j, JSValueConst b_j)
 				   p_name, parent->seqno);
 // creating the new tag, with t->jv, represents a regrab
 			grab(p_j);
-			if (parent->action == TAGACT_INPUT) {
-// we need to establish the getter and setter for value
-				set_property_string(parent->f0->cx,
-				*((JSValue*)parent->jv), "value", emptyString);
-			}
 			if (parent->action == TAGACT_SCRIPT)
 				parent->scriptgen = true;
 		}
@@ -3645,7 +3605,9 @@ JS_NewCFunction(mwc, nat_playAudio, "play_audio", 0), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "jobsPending",
 JS_NewCFunction(mwc, nat_jobs, "jobspending", 0), JS_PROP_ENUMERABLE);
     JS_DefinePropertyValueStr(mwc, mwo, "set_innerHTML",
-JS_NewCFunction(mwc, set_innerHTML, "set_innerHTML", 2), 0);
+JS_NewCFunction(mwc, nat_set_innerHTML, "set_innerHTML", 2), 0);
+    JS_DefinePropertyValueStr(mwc, mwo, "set_value",
+JS_NewCFunction(mwc, nat_set_value, "set_value", 2), 0);
 
 // shared functions and classes
 	jsSourceFile = "shared.js";
