@@ -6148,7 +6148,7 @@ function setEventOptions(event, options, defaults)
             odp(event, k, {value: v, enumerable: true, writable: true})
 
     else
-        for (const [k,v] of defaults)
+        for (const [k,v] of Object.entries(defaults))
             odp(event, k, {
                 value: (typeof options[k] === typeof v) ? options[k] : v,
                 enumerable: true,
