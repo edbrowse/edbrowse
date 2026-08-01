@@ -110,6 +110,7 @@ void prepareForField(char *h);
 bool breakLine(const char *line, int len, int *newlen);
 void breakLineSetup(void);
 bool balanceLine(const char *line, int mark);
+bool balanceIndent(int direction);
 char *htmlReformat(char *buf);
 void extractEmailAddresses(char *line);
 void cutDuplicateEmails(char *tolist, char *cclist, const char *reply);

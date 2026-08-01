@@ -1148,24 +1148,6 @@ static void unbalanced(char c, char d, int ln, int *back_p, int *for_p)
 	*for_p = forward;
 }
 
-// Determine the indent level of a line.
-#if 0
-static int indentLevel(int ln)
-{
-    if(ln <= 0 || ln > cw->dol) return -1;
-    const uchar *p = fetchLine(ln, -1);
-    int n = 1;
-    while(*p == ' ' || *p == '\t') {
-        if(*p == '\t') { // tab
-            // assumes tabs have width 8, this cannot be changed.
-            n = ((n+7) & ~7) + 1;
-        } else ++n;
-    }
-    // blank line returns -1
-    return *p == '\n' ? -1 : n;
-}
-#endif
-
 // Find the line that balances the unbalanced punctuation.
 bool balanceLine(const char *line, int mark)
 {
@@ -1243,6 +1225,63 @@ bool balanceLine(const char *line, int mark)
 
 	setError(MSG_Unbalanced, selected);
 	return false;
+}
+
+// Determine the indent level of a line.
+static int indentLevel(int ln)
+{
+    if(ln <= 0 || ln > cw->dol) return -1;
+    const uchar *p = fetchLine(ln, -1);
+    int n = 1;
+    while(*p == ' ' || *p == '\t') {
+        if(*p == '\t') { // tab
+            // assumes tabs have width 8, this cannot be changed.
+            n = ((n+7) & ~7) + 1;
+        } else ++n;
+    }
+    // blank line returns -1
+    return *p == '\n' ? -1 : n;
+}
+
+bool balanceIndent(int direction)
+{
+    int ln = cw->dot, ln2, n;
+    if(ln == 0) {
+        setError(MSG_AtLine0);
+        return false;
+    }
+    int start = indentLevel(ln);
+    if(start < 0) {
+        setError(MSG_BlankLine);
+        return false;
+    }
+    if(direction < 0) { // go up
+        for(--ln; ln; --ln) {
+            n = indentLevel(ln);
+            if(n > 0 && n < start) goto success;
+        }
+        goto unbalance;
+    } else {
+        for(++ln; ln <= cw->dol; ++ln) {
+            n = indentLevel(ln);
+            if(n < 0) continue;
+            if(n <= start) goto unbalance;
+        }
+        // yes the next line is within this block
+        for(ln2 = ln; ln2 <= cw->dol; ++ln2) {
+            n = indentLevel(ln2);
+            if(n < 0) continue;
+            if(n <= start) break;
+            ln = ln2;
+        }
+    }
+success:
+    cw->dot = ln;
+    printDot();
+    return true;
+unbalance:
+    setError(MSG_NonIndent);
+    return false;
 }
 
 char *htmlReformat(char *buf)
