@@ -20,6 +20,8 @@ function+chromethis {
     s;^<br/+><a href='\(.*\)'>$;b chrmrndr://$1;f
     bw
     up
+    # Turn javascript off; chrome is handling that for us.
+    js-
     db1
     <*-1
 }
@@ -33,6 +35,7 @@ function+chromelink {
     s;^<br/+><a href='\(.*\)'>$;b chrmrndr://$1;f
     bw
     up
+    js-
     db1
     <*-1
 }
@@ -45,6 +48,7 @@ function+chromeline {
     r+1@.
     s;^;b chrmrndr://;f
     up
+    js-
     db1
     <*-1
 }
