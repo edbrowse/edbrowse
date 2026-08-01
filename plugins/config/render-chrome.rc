@@ -1,0 +1,51 @@
+# use headless Chrome to render a page, then grab the resulting html.
+# Hand the html back to edbrowse and view in a line oriented manner.
+# chrmrndr is our special protocol to invoke the headless browser.
+# This assumes you have installed selenium.    apt install python3-selenium
+
+plugin {
+    type = */*
+    desc = Render page with Chrome
+    protocol = chrmrndr
+    program = edbrowse-plugin-chrome %i
+    outtype = h
+}
+
+# Use the A command to capture the url of the current page.
+# Prepend our chrmrndr protocol, then go to that url.
+function+chromethis {
+    db0
+    0A
+    2,d
+    s;^<br/+><a href='\(.*\)'>$;b chrmrndr://$1;f
+    bw
+    up
+    db1
+    <*-1
+}
+
+# Use the A command to capture the url of the link on the current line.
+# Click here for {a page that we know won't render properly under edbrowse}
+function+chromelink {
+    db0
+    A
+    2,d
+    s;^<br/+><a href='\(.*\)'>$;b chrmrndr://$1;f
+    bw
+    up
+    db1
+    <*-1
+}
+
+# Use chrome to render the url on the current line.
+function+chromeline {
+    db0
+    bw
+    etmp
+    r+1@.
+    s;^;b chrmrndr://;f
+    up
+    db1
+    <*-1
+}
+
