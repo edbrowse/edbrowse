@@ -2763,12 +2763,19 @@ if(data) {
 if(data === null || data === undefined) data = "";
 let td = typeof data;
 let pd = 0; // how to process the data
+// can't send a request twice. This should be DOMException.
+if(this.readyState > 1) throw new w.Error("invalid state");
 if(td == "object" && data instanceof w.Uint8Array) {
     pd = 1;
     data = data.toBase64();
     td = typeof data;
 }
 // what do we do about Uint16Array and Uint32Array?
+// some things we can just stringify
+if(data instanceof w.URLSearchParams) {
+data = data.toString();
+td = typeof data;
+}
 if(td != "string") {
     alert3("payload data has improper type " + td);
 }
