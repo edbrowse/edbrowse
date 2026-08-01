@@ -1090,7 +1090,7 @@ void breakLineSetup(void)
 }
 
 // Return the number of unbalanced punctuation marks.
-// This is used by the next routine.
+// This is used by balanceLine().
 static void unbalanced(char c, char d, int ln, int *back_p, int *for_p)
 {
 	char *t, *open;
@@ -1147,6 +1147,24 @@ static void unbalanced(char c, char d, int ln, int *back_p, int *for_p)
 	*back_p = backward;
 	*for_p = forward;
 }
+
+// Determine the indent level of a line.
+#if 0
+static int indentLevel(int ln)
+{
+    if(ln <= 0 || ln > cw->dol) return -1;
+    const uchar *p = fetchLine(ln, -1);
+    int n = 1;
+    while(*p == ' ' || *p == '\t') {
+        if(*p == '\t') { // tab
+            // assumes tabs have width 8, this cannot be changed.
+            n = ((n+7) & ~7) + 1;
+        } else ++n;
+    }
+    // blank line returns -1
+    return *p == '\n' ? -1 : n;
+}
+#endif
 
 // Find the line that balances the unbalanced punctuation.
 bool balanceLine(const char *line, int mark)
