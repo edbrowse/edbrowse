@@ -33,8 +33,8 @@ driver.get(url)
 start = time.perf_counter()
 html = ''
 last_changed = start
-while (now := time.perf_counter()) - start < 4.0 and now - last_changed < 0.2:
-    time.sleep(0.5)
+while (now := time.perf_counter()) - start < 4.0 and now - last_changed < 2.0:
+    time.sleep(0.4)
     new_html = driver.page_source
     if new_html != html:
         html = new_html
