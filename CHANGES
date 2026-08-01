@@ -7,6 +7,9 @@ The if (input field) command to bring a textarea inline.
 Plugin renders a page through headless chrome,
 then hands the html back to edbrowse.
 
+Bu and Bd, go up to the top or down to the bottom of a block
+that is defined by indentation. This is for python programming.
+
 3.8.17
 
 Fix some makefile issues, and warnings across different compilers.
