@@ -1085,7 +1085,7 @@ static char *cssBase(const char *start, const char *end)
 				continue;
 extract:
 			end += 9;
-			t = strstr(end, "{}\n");
+			t = strstr(end, "{}\n") - 1;
 			l = t - end;
 			a = allocMem(l + 1);
 			memcpy(a, end, l);
@@ -1475,7 +1475,7 @@ top:
 				intoShortCache(newurl, a);
 imported_data:
 				createFormattedString(&t,
-					"%s\n@ebdelim1%s{}\n%s\n@ebdelim2{}\n%s",
+					"%s\n@ebdelim1%s-{}\n%s\n@ebdelim2-{}\n%s",
 					s, newurl, a, iu3);
 				nzFree(newurl);
 				nzFree(s), s = t;

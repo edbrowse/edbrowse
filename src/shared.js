@@ -1880,15 +1880,15 @@ if(t.dom$class == "HTMLLinkElement") {
 if(t.css$data && (
 t.type && t.type.toLowerCase() == "text/css" ||
 t.rel && t.rel.toLowerCase() == "stylesheet")) {
-w.cssSource.push({data: t.css$data, src:t.href});
-css_all += "@ebdelim0" + t.href + "{}\n";
+w.cssSource.push({data: t.css$data, src:t.href, fromstyle:false});
+css_all += "@ebdelim0" + t.href + "-{}\n";
 css_all += t.css$data;
 }
 }
 if(t.dom$class == "HTMLStyleElement") {
 if(t.css$data) {
-w.cssSource.push({data: t.css$data, src:w.eb$base});
-css_all += "@ebdelim0" + w.eb$base + "{}\n";
+w.cssSource.push({data: t.css$data, src:w.eb$base, fromstyle:true});
+css_all += "@ebdelim0" + w.eb$base + "+{}\n";
 css_all += t.css$data;
 }
 }
@@ -1932,13 +1932,13 @@ stack.length = 0; // should already be 0
 nss = new w.CSSStyleSheet;
 stack.push(nss);
 ss.push(nss);
-nss.src = line.substr(9).replace(/ *{}/,"");
+nss.src = line.substr(9).replace(/ *[-+] *{}/,"");
 break;
 case '1':
 nss = new w.CSSStyleSheet;
 stack.push(nss);
 ss.push(nss);
-nss.src = line.substr(9).replace(/ *{}/,"");
+nss.src = line.substr(9).replace(/ *[-+] *{}/,"");
 break;
 case '2':
 stack.pop();
