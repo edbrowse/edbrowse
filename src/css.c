@@ -887,10 +887,11 @@ struct desc {
 	uchar error;
 	bool visrel; // relevant to visibility
 	bool prop_ok; // at least one rule where the property is ok
+	char which;
 	struct sel *selectors;
 	struct rule *rules;
 	int highspec;		// specificity when this descriptor matches
-	bool underat;
+	bool underat, fromstyle;
 };
 
 // selector
@@ -1151,7 +1152,7 @@ copy:
 }
 
 // This is a crude measure of specificity, contained in a 5 digit number.
-static int specificity(const struct sel *sel, bool underat)
+static int specificity(const struct sel *sel, bool underat, bool fromstyle)
 {
 	const struct asel *a = sel->chain;
 	const struct mod *mod;
@@ -1184,11 +1185,12 @@ static int specificity(const struct sel *sel, bool underat)
 		for (mod = sel->chain->modifiers; mod; mod = mod->next)
 			++n;
 	}
-// @ media tag has more specificity; I have no idea how much more.
-	if (underat)
-		n += 10;
 
-	return n;
+// @ media tag has more specificity; I have no idea how much more.
+    if (underat) n += 10;
+// <style> is higher than rules from a css file.
+    if (fromstyle) n += 20;
+ return n;
 }
 
 static bool mediaPiece(struct desc *d, char *t)
@@ -1542,8 +1544,12 @@ top2:
 				goto past_at;
 // our special code to insert a delimiter into debugging output
 			if (!strncmp(t, "@ebdelim", 8)) {
-				d->error = CSS_ERROR_DELIM;
-				goto past_at;
+			    d->error = CSS_ERROR_DELIM;
+			d->which = t[8];
+			    trimWhite(t); // probably not necessary
+			    int b = strlen(t) - 1;
+			    if(b >= 0 && t[b] == '+') d->fromstyle = true;
+			    goto past_at;
 			}
 			if (d->bc > 2) {
 				d->error = CSS_ERROR_BRACES;
@@ -1661,23 +1667,28 @@ copy:		++s;
 		}
 	}
 
-// if all the selectors under d are in error, then d is error
+    int nest = 0;
+bool save_fromstyle = false;
+
 	for (d = d1; d; d = d->next) {
 		bool across = true;
 		uchar ec = CSS_ERROR_NONE;
-		if (d->error)
-			continue;
-		if (!d->selectors)	// should never happen
-			continue;
+		if(d->error == CSS_ERROR_DELIM) {
+		    if(d->which == '0') save_fromstyle = d->fromstyle;
+		    if(d->which == '1') ++nest;
+		    if(d->which == '2') --nest;
+		}
+		if (d->error) continue;
+		if (!d->selectors) continue;	// should never happen
 		for (sel = d->selectors; sel; sel = sel->next) {
-			if (!sel->error) {
-// as good a time as any to compute specificity
-				sel->spec = specificity(sel, d->underat);
-				across = false;
-				continue;
-			}
-			if (!ec)
-				ec = sel->error;
+		    if (!sel->error) {
+		        // as good a time as any to compute specificity
+		        sel->spec = specificity(sel, d->underat,
+		            nest ? false : save_fromstyle);
+		        across = false;
+		        continue;
+		    }
+			if (!ec) ec = sel->error;
 			else if (ec != sel->error)
 				ec = CSS_ERROR_MULTIPLE;
 		}
