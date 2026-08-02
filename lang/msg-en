@@ -786,10 +786,10 @@ debug promise disabled
 debug promise enabled
 %s: invalid markup characters at line %d
 warning: some filenames contain \\n
+pending jobs disabled
+pending jobs enabled
 blank line
 cannot find the line that balances by indent
-0
-0
 0
 0
 0
