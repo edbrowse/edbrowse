@@ -2770,18 +2770,18 @@ if(td == "object" && data instanceof w.Uint16Array) {
 // only Uint8Array has the base64 method
 d8 = new w.Uint8Array(data.length * 2);
 for(let i = 0; i < data.length; ++i) {
-d8[2*i] = data[i]&0xff;
-d8[2*i+1] = (data[i]>>8)&0xff;
+d8[2*i] = data[i];
+d8[2*i+1] = (data[i]>>8);
 }
 data = d8;
 }
 if(td == "object" && data instanceof w.Uint32Array) {
 d8 = new w.Uint8Array(data.length * 4);
 for(let i = 0; i < data.length; ++i) {
-d8[4*i] = data[i]&0xff;
-d8[4*i+1] = (data[i]>>8)&0xff;
-d8[4*i+2] = (data[i]>>16)&0xff;
-d8[4*i+3] = (data[i]>>24)&0xff;
+d8[4*i] = data[i];
+d8[4*i+1] = (data[i]>>8);
+d8[4*i+2] = (data[i]>>16);
+d8[4*i+3] = (data[i]>>24);
 }
 data = d8;
 }
