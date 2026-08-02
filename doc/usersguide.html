@@ -482,6 +482,8 @@ p : print the current line
 <br>B[ : find the line with the balancing closed bracket
 <br>B( : find the line with the balancing closed parenthesis
 <br>B{2 : find the line that balances the second (from the inside out) unbalanced brace
+<br>Bu : find the line above that starts this block, defined by indent
+<br>Bd : find the line below that ends this block, defined by indent
 <p>
 Help Messages
 <p>
@@ -1491,6 +1493,15 @@ In this example, B is the same as B} is the same as B}3.
 Edbrowse skips past strings, so that c = '{', or s = "abc}def", should not derail this function.
 However, comments, or bare regular expressions, (as seen in perl or javascript), that contain punctuation marks,
 will throw edbrowse off the track.
+
+<p>
+If you are a python programmer,
+punctuation does not define the blocks.
+Rather, they are defined by indentation.
+Bu moves up to the line that starts the current block.
+This is the first line that is indented less than the current line.
+Bd moves down to the end of the block.
+If tabs are used to indent, the tab width is assumed to be 8, and cannot be changed.
 
 <h2 id="cx">Context Switch</h2>
 

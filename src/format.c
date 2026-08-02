@@ -1090,7 +1090,7 @@ void breakLineSetup(void)
 }
 
 // Return the number of unbalanced punctuation marks.
-// This is used by the next routine.
+// This is used by balanceLine().
 static void unbalanced(char c, char d, int ln, int *back_p, int *for_p)
 {
 	char *t, *open;
@@ -1148,6 +1148,7 @@ static void unbalanced(char c, char d, int ln, int *back_p, int *for_p)
 	*for_p = forward;
 }
 
+static bool balanceIndent(int direction);
 // Find the line that balances the unbalanced punctuation.
 bool balanceLine(const char *line, int mark)
 {
@@ -1155,7 +1156,7 @@ bool balanceLine(const char *line, int mark)
 	char selected;
 	static char openlist[] = "{([<";
 	static char closelist[] = "})]>";
-	static const char alllist[] = "{}()[]<>`'";
+	static const char alllist[] = "{}()[]<>`'ud";
 	char *t;
 	int level = 0;
 	int i, direction, forward, backward;
@@ -1168,6 +1169,12 @@ bool balanceLine(const char *line, int mark)
 		}
 		if (!cx)
 			return true;
+	    if(c == 'u' || c == 'd') {
+	        // special code for indenting
+	        if(!mark) { setError(MSG_AtLine0); return false; }
+	        cw->dot = mark;
+	        return balanceIndent(c == 'u' ? -1 : 1);
+	    }
 		if ((t = strchr(openlist, c))) {
 			d = closelist[t - openlist];
 			direction = 1;
@@ -1225,6 +1232,61 @@ bool balanceLine(const char *line, int mark)
 
 	setError(MSG_Unbalanced, selected);
 	return false;
+}
+
+// Determine the indent level of a line.
+static int indentLevel(int ln)
+{
+    if(ln <= 0 || ln > cw->dol) return -1;
+    const uchar *p = fetchLine(ln, -1);
+    const int tabWidth = 8;
+    int n = 0;
+    while(*p == ' ' || *p == '\t') {
+        if(*p == '\t') // tab
+            n = (n + tabWidth) / tabWidth * tabWidth;
+        else ++n;
+        ++p;
+    }
+    // blank line returns -1
+    return *p == '\n' ? -1 : n;
+}
+
+static bool balanceIndent(int direction)
+{
+    int ln = cw->dot, ln2, n;
+    if(ln == 0) { setError(MSG_AtLine0); return false; }
+    int start = indentLevel(ln);
+    if(start < 0) { setError(MSG_BlankLine); return false; }
+    if(direction < 0) { // go up
+        for(--ln; ln; --ln) {
+            n = indentLevel(ln);
+            if(n >= 0 && n < start) goto success;
+        }
+        goto unbalance;
+    } else {
+        for(++ln; ln <= cw->dol; ++ln) {
+            n = indentLevel(ln);
+            if(n < 0) continue;
+            if(n >= start) goto inblock;
+        }
+        goto unbalance;
+inblock:
+        if(n == start) // it's part of the same block
+            --start; // look for something outer
+        for(ln2 = ln; ln2 <= cw->dol; ++ln2) {
+            n = indentLevel(ln2);
+            if(n < 0) continue;
+            if(n <= start) break;
+            ln = ln2;
+        }
+    }
+success:
+    cw->dot = ln;
+    printDot();
+    return true;
+unbalance:
+    setError(MSG_NonIndent);
+    return false;
 }
 
 char *htmlReformat(char *buf)

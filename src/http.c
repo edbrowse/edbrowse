@@ -868,8 +868,14 @@ mimestream:
 			cf->render1 = true;
 			if (sxfirst)
 				cf->render2 = true;
+#if 0
+/* a plugin takes data from a URL and generates html.
+   It is not a local file, and we don't need to tack .html on the end.
+   To do so would only confuse. Especially in the Chrome rendering protocol.
+   chrmrndr://https://this.that.come/file.html.html.browse */
 			if(mt->outtype == 'h') addToFilename(".html");
 			if(mt->outtype == 't') addToFilename(".txt");
+#endif
 			i_get_free(g, false);
 		} else {
 			runPluginCommand(mt, f, 0, 0, 0, 0, 0);

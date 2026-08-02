@@ -888,4 +888,6 @@ MSG_ImaskOn,
 	MSG_WarnNewlines,
 	MSG_PjobsOff,
 	MSG_PjobsOn,
+	MSG_BlankLine,
+	MSG_NonIndent,
 };

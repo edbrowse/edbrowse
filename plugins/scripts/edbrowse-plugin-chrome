@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+
+# Assumes you have installed selenium.    apt install python3-selenium
+
+import os
+import pathlib
+import sys
+import time
+
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+if len(sys.argv) < 2:
+    print(f"Usage: {sys.argv[0]} <url>", file=sys.stderr)
+    sys.exit(1)
+
+# Edbrowse prepends `chrmrndr://` to the URL to call the plugin that executes this script.
+url = sys.argv[1].removeprefix('chrmrndr://')
+if os.path.exists(url):
+    # This is a local file.
+    # Chrome expects `file://...`
+    url = pathlib.Path(os.path.abspath(url)).as_uri()
+
+chrome_options = Options()
+chrome_options.add_argument("--headless=new")
+chrome_options.add_argument("--blink-settings=imagesEnabled=false")
+driver = webdriver.Chrome(options=chrome_options)
+driver.get(url)
+
+# Try to wait until the page is fully loaded, by continuing to pull the page
+# source until it hasn't changed for a certain period of time. Return what we
+# have, if it's been 4 seconds, even if the page is still changing.
+start = time.perf_counter()
+html = ''
+last_changed = start
+while (now := time.perf_counter()) - start < 4.0 and now - last_changed < 2.0:
+    time.sleep(0.4)
+    new_html = driver.page_source
+    if new_html != html:
+        html = new_html
+        last_changed = time.perf_counter()
+
+sys.stdout.write(html)
