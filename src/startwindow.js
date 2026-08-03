@@ -217,8 +217,6 @@ for(let f of ["scroll", "scrollTo", "scrollBy", "scrollByLines", "scrollByPages"
 swpv("blur", ()=>(document.activeElement = null))
 swpv("focus", ()=>(document.activeElement = document.body))
 swpv("self", window)
-swpc("atob", mw$.atob)
-swpc("btoa", mw$.btoa)
 swp("connectedCallbackStart", () => mw$.connectedCallbackCheck(my$doc()));
 this.print = ()=>  alert("javascript is trying to print this document")
 this.stop = ()=>  alert("javascript is trying to stop the browse process")
@@ -1168,6 +1166,13 @@ implementation provided by quickjs-ng. */
     });
 }
 
+// quickjs-ng now has its own base64 handling
+if (!window.atob) {
+    alert3("Using fallback for atob and btoa");
+// if we're using our code for one we should for the other as well
+    swpc("atob", mw$.atob)
+    swpc("btoa", mw$.btoa)
+}
 // don't need these any more
 ;(function() {
     let names_to_delete = ["odp",
