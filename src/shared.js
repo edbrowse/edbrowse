@@ -2741,6 +2741,39 @@ returnedHeaders.push( header + ": " + this.responseHeaders[header] );
 return returnedHeaders.join("\r\n");
 },
 
+// Convert FormData to multipart. Surprised there is no open source for this.
+FormDataMultipart: function(f)
+{
+    let b = null, s = "";
+    function sanitizeName(n)
+    {
+        if(!n) return null;
+        if(n.match(/[^ -~]/)) {
+            alert3(`name ${n} has invalid characters`)
+            n = n.replace(/[^ -~]/g, '?');
+        }
+        if(n.match(/"/)) {
+            alert3(`name ${n} has quotes`)
+            n = n.replace(/"/g, '?');
+        }
+        return n;
+    }
+    for (const entry of f) {
+        if(!b) b = "--" + makeBoundary();
+        s += `${b}\r\nContent-Disposition: form-data; name="${sanitizeName(entry[0])}"\r\n`;
+        let b64 = false;
+        const v = entry[1];
+        if(v.length > 70) b64 = true;
+        if(v.match(/[^ -~]/)) b64 = true;
+        if(b64) s += "Content-Transfer-Encoding: base64\r\n";
+        s += "\r\n";
+        s += b64 ? btoa(v).replace(/.{72}/g, (a)=>{return a+"\r\n"}) : v;
+        s += "\r\n";
+    }
+    if(b) s += `${b}--\r\n`;
+    return s;
+},
+
 // send the request, wait for the data to return, possibly asynchronous
 send: function(data, parsedoc){
 const w = my$win();
@@ -2791,6 +2824,10 @@ data = d8;
 if(td == "object" && data instanceof w.Uint8Array) {
     pd = 1;
     data = data.toBase64();
+    td = typeof data;
+}
+if(td == "object" && data instanceof w.FormData) {
+    data = xml.FormDataMultipart(data);
     td = typeof data;
 }
 // what do we do about Uint16Array and Uint32Array?
