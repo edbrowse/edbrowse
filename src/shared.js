@@ -2342,41 +2342,21 @@ borderShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
-const l = h.length;
-delete s.borderWidth;
-delete s.borderStyle;
-delete s.borderColor;
-delete s.borderImage;
-if(l >= 1)
-s.borderWidth = h[0];
-if(l >= 2)
-s.borderStyle = h[1];
-if(l >= 3)
-s.borderColor =  h[2];
-if(l >= 4)
-s.borderImage =  h[3];
+s.borderWidth = h[0] ? h[0] : "";
+s.borderStyle = h[1] ? h[1] : "";
+s.borderColor =  h[2] ? h[2] : "";
+s.borderImage =  h[3] ? h[3] : "";
 },
 
 borderImageShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
-const l = h.length;
-delete s.borderImageSource;
-delete s.borderImageSlice;
-delete s.borderImageWidth;
-delete s.borderImageOutset;
-delete s.borderImageRepeat;
-if(l >= 1)
-s.borderImageSource = h[0];
-if(l >= 2)
-s.borderImageSlice = h[1];
-if(l >= 3)
-s.borderImageWidth =  h[2];
-if(l >= 4)
-s.borderImageOutset =  h[3];
-if(l >= 5)
-s.borderImageRepeat =  h[4];
+s.borderImageSource = h[0] ? h[0] : "";
+s.borderImageSlice = h[1] ? h[1] : "";
+s.borderImageWidth =  h[2] ? h[2] : "";
+s.borderImageOutset =  h[3] ? h[3] : "";
+s.borderImageRepeat =  h[4] ? h[4] : "";
 },
 
 insetShort: function(s, h) {
