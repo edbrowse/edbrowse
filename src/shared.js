@@ -1264,7 +1264,7 @@ name === "selectedOptions" && o.dom$class == "HTMLSelectElement";
 
 spilldown: function(t, name) {
     let dc = t.dom$class;
-    return name == "value" && (dc == "HTMLInputElement" || dc == "HTMLTextAreaElement");
+    return name == "value" && (dc == "HTMLInputElement" || dc == "HTMLTextAreaElement" || dc == "HTMLButtonElement");
 },
 
 spilldownResolveURL: function(t, name) {
@@ -1725,7 +1725,8 @@ node2.setAttribute(node1.attributes[l].name, node1.attributes[l].value);
     }
 
     if(node1.nodeType == 1) {
-        if(node1.dom$class == "HTMLFormElement")
+        if(node1.dom$class == "HTMLFormElement" ||
+        node1.dom$class == "HTMLFieldSetElement")
             formReindex(node2);
         if(node1.dom$class == "HTMLTableElement")
             rowReindexAll(node2);
@@ -3074,7 +3075,7 @@ let a = [];
 if(t.nodeType == 1) {
 let inclass = t.dom$class;
 if(inclass && (
-inclass == "HTMLInputElement" || inclass == "HTMLTextAreaElement" || inclass == "HTMLSelectElement" || inclass == "HTMLButtonElement"))
+inclass == "HTMLInputElement" || inclass == "HTMLTextAreaElement" || inclass == "HTMLSelectElement" || inclass == "HTMLButtonElement" || inclass == "HTMLFieldSetElement"))
 a.push(t);
 }
 for(let c of t.childNodes)
@@ -3084,8 +3085,12 @@ return a;
 
 function formReindex(f)
 {
+    const isform = f.dom$class === "HTMLFormElement";
+    const elname = isform ? "HTMLFormControlsCollection": "[object HTMLCollection]";
+    const backlink = isform ? "form" : "fs$";
     // clear out what we had; we are rebuilding from scratch
-    if (!f.elements) f.elements = [];
+    // elements should always be there.
+    if (!f.elements) f.elements = [], f.elements.toString = ()=>{ return elname}
     else f.elements.length = 0;
     const el = f.elements; // shorthand
     let name;
@@ -3101,32 +3106,36 @@ function formReindex(f)
         // special code to detect and delete an array of radio buttons.
         if (
             Array.isArray(f[name]) &&
-            (f[name].length == 0 || f[name][0].form == f)
-        ) {
-            for (let v of f[name]) delete v.form;
+            (f[name].length == 0 ||
+            f[name][0][backlink] == f
+        )) {
+            for (let v of f[name]) delete v[backlink];
             delete f[name];
             delete el[name];
             continue;
         }
-        if (f[name].form != f) continue;
+        if (f[name][backlink] != f) continue;
         let inclass = f[name].dom$class;
         if (!inclass) continue;
         if (
             inclass != "HTMLInputElement" &&
             inclass != "HTMLTextAreaElement" &&
             inclass != "HTMLSelectElement" &&
-            inclass != "HTMLButtonElement"
+            inclass != "HTMLButtonElement" &&
+            inclass != "HTMLFieldSetElement"
         ) continue;
         // we may be deleting this just to put it back,
         // but that's how this function goes.
-        delete f[name].form;
+        if(isform) delete f[name].form;
+        else delete f[name].fs;
         delete f[name];
         delete el[name];
     }
     const ilist = gatherInputElements(f);
     for (let i of ilist) {
+        if(i.dom$class == "HTMLFieldSetElement" && !isform) continue;
         el.push(i);
-        i.form = f;
+        i[backlink] = f;
         name = i.name;
         if (!name) continue;
         if (name in f) {
@@ -3157,6 +3166,11 @@ function formReindex2(t)
         if(t.dom$class == "HTMLFormElement") {
             formReindex(t);
             return;
+        }
+        if(t.dom$class == "HTMLFieldSetElement") {
+            formReindex(t);
+            // don't return; this is typically inside a form
+            // I assume fieldset is never inside a fieldset
         }
         t = t.parentNode;
     }
@@ -4346,7 +4360,7 @@ get:function(){ const t = this.getAttribute("title");
 const y = typeof t;
 return y == "string" || y == "number" ? t : undefined; },
 set:function(v) { this.setAttribute("title", v);}});
-// almost anything can be disabled, an entire div section, etc
+// almost anything can be hidden, an entire div section, etc
 odp(helemp, "hidden", {
 get:function(){ const t = this.getAttribute("hidden");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
@@ -5177,13 +5191,33 @@ swde("HTMLFormElement", class extends w.HTMLElement {
     constructor() {
         super();
         this.elements = new w.Array;
+        this.elements.toString = ()=>{return "HTMLFormControlsCollection"}
     }
+
+    get length() { return this.elements.length}
 })
 
 let formp = w.HTMLFormElement.prototype;
 formp.submit = eb$formSubmit;
 formp.reset = eb$formReset;
-odp(formp, "length", { get: function() { return this.elements.length;}})
+
+swde("HTMLFieldSetElement", class extends w.HTMLElement {
+    constructor() {
+        super();
+        this.elements = new w.Array;
+        this.elements.toString = ()=>{ return '[object HTMLCollection]'}
+    }
+
+     checkValidity() { return true; }
+     reportValidity() { return true; }
+    get length() { return this.elements.length}
+})
+
+let fsetp = w.HTMLFieldSetElement.prototype;
+fsetp.form = null;
+odp(fsetp, "type", {value: "fieldset"})
+odp(fsetp, "validationMessage", {value: ""})
+odp(fsetp, "willValidate", {value: false})
 
 swde("HTMLImageElement", class extends w.HTMLElement {
     constructor() { super(); }
@@ -6100,6 +6134,7 @@ c.selected = true; // jquery says we should do this
 // the dropdown lists after every js run.
 return c;
 case "form": c = new w.HTMLFormElement; break;
+case "fieldset": c = new w.HTMLFieldSetElement; break;
 case "input": c = new w.HTMLInputElement; break;
 case "textarea": c = new w.HTMLTextAreaElement; break;
 case "element": c = new w.Element; break;

@@ -59,7 +59,7 @@ static const struct tagInfo availableTags[] = {
 	{"element", "an input element", TAGACT_INPUT, 0, 4},
 	{"em", "emphasized text", TAGACT_EM, 0, 0},
 	{"embed", "embedded html", TAGACT_MUSIC, 0, 0},
-	{"fieldset", "a paragraph", TAGACT_NOP, 10, 1},
+	{"fieldset", "a field set", TAGACT_FIELDSET, 10, 1},
 	{"figcaption", "a figure caption", TAGACT_NOP, 10, 0},
 	{"figure", "a figure", TAGACT_NOP, 10, 0},
 	{"fixed", "a fixed presentation", TAGACT_NOP, 1, 0},
@@ -4735,8 +4735,8 @@ Needless to say that's not good!
         if (action == TAGACT_TABLE && t->jslink)
             run_function_onearg_win(cf, "rowReindex", t);
 
-// run reindex at form close
-        if (action == TAGACT_FORM && t->jslink)
+// run reindex at form or fieldset close
+        if ((action == TAGACT_FORM || action == TAGACT_FIELDSET) && t->jslink)
             run_function_onearg_win(cf, "formReindex", t);
 
 // close the option group
@@ -4845,6 +4845,10 @@ Needless to say that's not good!
 
 	case TAGACT_FORM:
 		domLink(t, "HTMLFormElement", "forms", 0, 4);
+		break;
+
+	case TAGACT_FIELDSET:
+		domLink(t, "HTMLFieldSetElement", 0, 0, 4);
 		break;
 
 	case TAGACT_INPUT:
