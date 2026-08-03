@@ -3696,6 +3696,14 @@ static void createJSContext_0(Frame *f)
 	cx = f->cx = JS_NewContext(jsrt);
 	if (!cx)
 		return;
+
+// quickjs-ng supports DOMException but doesn't add it to all contexts
+#if Q_NG
+        if (JS_AddIntrinsicDOMException(cx)) {
+            JS_FreeContext(cx);
+            return;
+        }
+#endif
 	if(debugLevel == 3)
 		debugPrint(3, "create js context %d", f->gsn);
 	if(debugLevel >= 4)
