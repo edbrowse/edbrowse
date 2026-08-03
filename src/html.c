@@ -1065,7 +1065,7 @@ as is clearly documented.
 So I allow for postponement, that is, two passes,
 the first pass runs scripts in order and skips async scripts,
 the second pass runs the async scripts.
-defered scripts are treated the same as async scripts.
+deferred scripts are treated the same as async scripts.
 Pass 2 runs the async scripts in order, and it doesn't have to, but it's
 the easiest way to go, and how often do we have several async scripts,
 some ready several seconds before others? Not very often.

@@ -1916,15 +1916,15 @@ if(t.dom$class == "HTMLLinkElement") {
 if(t.css$data && (
 t.type && t.type.toLowerCase() == "text/css" ||
 t.rel && t.rel.toLowerCase() == "stylesheet")) {
-w.cssSource.push({data: t.css$data, src:t.href});
-css_all += "@ebdelim0" + t.href + "{}\n";
+w.cssSource.push({data: t.css$data, src:t.href, fromstyle:false});
+css_all += "@ebdelim0" + t.href + "-{}\n";
 css_all += t.css$data;
 }
 }
 if(t.dom$class == "HTMLStyleElement") {
 if(t.css$data) {
-w.cssSource.push({data: t.css$data, src:w.eb$base});
-css_all += "@ebdelim0" + w.eb$base + "{}\n";
+w.cssSource.push({data: t.css$data, src:w.eb$base, fromstyle:true});
+css_all += "@ebdelim0" + w.eb$base + "+{}\n";
 css_all += t.css$data;
 }
 }
@@ -1968,13 +1968,13 @@ stack.length = 0; // should already be 0
 nss = new w.CSSStyleSheet;
 stack.push(nss);
 ss.push(nss);
-nss.src = line.substr(9).replace(/ *{}/,"");
+nss.src = line.substr(9).replace(/ *[-+] *{}/,"");
 break;
 case '1':
 nss = new w.CSSStyleSheet;
 stack.push(nss);
 ss.push(nss);
-nss.src = line.substr(9).replace(/ *{}/,"");
+nss.src = line.substr(9).replace(/ *[-+] *{}/,"");
 break;
 case '2':
 stack.pop();
@@ -2100,14 +2100,17 @@ s.marginLeft = s.marginBottom = s.marginRight = s.marginTop = h[0];
 return;
 }
 if(l == 2) {
-s.marginTop = s.marginBottom = h[0];
-s.marginLeft = s.marginRight = h[1];
+s.marginTop = h[0];
+s.marginRight = h[1];
+s.marginBottom = h[0];
+s.marginLeft = h[1];
 return;
 }
 if(l == 3) {
 s.marginTop = h[0];
-s.marginLeft = s.marginRight = h[1];
+s.marginRight = h[1];
 s.marginBottom = h[2];
+s.marginLeft = h[1];
 return;
 }
 if(l >= 4) {
@@ -2129,14 +2132,17 @@ s.scrollMarginLeft = s.scrollMarginBottom = s.scrollMarginRight = s.scrollMargin
 return;
 }
 if(l == 2) {
-s.scrollMarginTop = s.scrollMarginBottom = h[0];
-s.scrollMarginLeft = s.scrollMarginRight = h[1];
+s.scrollMarginTop = h[0];
+s.scrollMarginRight = h[1];
+s.scrollMarginBottom = h[0];
+s.scrollMarginLeft = h[1];
 return;
 }
 if(l == 3) {
 s.scrollMarginTop = h[0];
-s.scrollMarginLeft = s.scrollMarginRight = h[1];
+s.scrollMarginRight = h[1];
 s.scrollMarginBottom = h[2];
+s.scrollMarginLeft = h[1];
 return;
 }
 if(l >= 4) {
@@ -2158,14 +2164,17 @@ s.paddingLeft = s.paddingBottom = s.paddingRight = s.paddingTop = h[0];
 return;
 }
 if(l == 2) {
-s.paddingTop = s.paddingBottom = h[0];
-s.paddingLeft = s.paddingRight = h[1];
+s.paddingTop = h[0];
+s.paddingRight = h[1];
+s.paddingBottom = h[0];
+s.paddingLeft = h[1];
 return;
 }
 if(l == 3) {
 s.paddingTop = h[0];
-s.paddingLeft = s.paddingRight = h[1];
+s.paddingRight = h[1];
 s.paddingBottom = h[2];
+s.paddingLeft = h[1];
 return;
 }
 if(l >= 4) {
@@ -2187,14 +2196,17 @@ s.scrollPaddingLeft = s.scrollPaddingBottom = s.scrollPaddingRight = s.scrollPad
 return;
 }
 if(l == 2) {
-s.scrollPaddingTop = s.scrollPaddingBottom = h[0];
-s.scrollPaddingLeft = s.scrollPaddingRight = h[1];
+s.scrollPaddingTop = h[0];
+s.scrollPaddingRight = h[1];
+s.scrollPaddingBottom = h[0];
+s.scrollPaddingLeft = h[1];
 return;
 }
 if(l == 3) {
 s.scrollPaddingTop = h[0];
-s.scrollPaddingLeft = s.scrollPaddingRight = h[1];
+s.scrollPaddingRight = h[1];
 s.scrollPaddingBottom = h[2];
+s.scrollPaddingLeft = h[1];
 return;
 }
 if(l >= 4) {
@@ -2216,8 +2228,10 @@ s.borderBottomLeftRadius = s.borderBottomRightRadius = s.borderTopRightRadius = 
 return;
 }
 if(l == 2) {
-s.borderTopLeftRadius = s.borderBottomRightRadius = h[0];
-s.borderBottomLeftRadius = s.borderTopRightRadius = h[1];
+s.borderTopLeftRadius = h[0];
+s.borderTopRightRadius = h[1];
+s.borderBottomRightRadius = h[0];
+s.borderBottomLeftRadius = h[1];
 return;
 }
 if(l == 3) {
@@ -2245,14 +2259,17 @@ s.borderLeftWidth = s.borderBottomWidth = s.borderRightWidth = s.borderTopWidth 
 return;
 }
 if(l == 2) {
-s.borderTopWidth = s.borderBottomWidth = h[0];
-s.borderLeftWidth = s.borderRightWidth = h[1];
+s.borderTopWidth = h[0];
+s.borderRightWidth = h[1];
+s.borderBottomWidth = h[0];
+s.borderLeftWidth = h[1];
 return;
 }
 if(l == 3) {
 s.borderTopWidth = h[0];
-s.borderLeftWidth = s.borderRightWidth = h[1];
+s.borderRightWidth = h[1];
 s.borderBottomWidth = h[2];
+s.borderLeftWidth = h[1];
 return;
 }
 if(l >= 4) {
@@ -2274,14 +2291,17 @@ s.borderLeftColor = s.borderBottomColor = s.borderRightColor = s.borderTopColor 
 return;
 }
 if(l == 2) {
-s.borderTopColor = s.borderBottomColor = h[0];
-s.borderLeftColor = s.borderRightColor = h[1];
+s.borderTopColor = h[0];
+s.borderRightColor = h[1];
+s.borderBottomColor = h[0];
+s.borderLeftColor = h[1];
 return;
 }
 if(l == 3) {
 s.borderTopColor = h[0];
-s.borderLeftColor = s.borderRightColor = h[1];
+s.borderRightColor = h[1];
 s.borderBottomColor = h[2];
+s.borderLeftColor = h[1];
 return;
 }
 if(l >= 4) {
@@ -2303,14 +2323,17 @@ s.borderLeftStyle = s.borderBottomStyle = s.borderRightStyle = s.borderTopStyle 
 return;
 }
 if(l == 2) {
-s.borderTopStyle = s.borderBottomStyle = h[0];
-s.borderLeftStyle = s.borderRightStyle = h[1];
+s.borderTopStyle = h[0];
+s.borderRightStyle = h[1];
+s.borderBottomStyle = h[0];
+s.borderLeftStyle = h[1];
 return;
 }
 if(l == 3) {
 s.borderTopStyle = h[0];
-s.borderLeftStyle = s.borderRightStyle = h[1];
+s.borderRightStyle = h[1];
 s.borderBottomStyle = h[2];
+s.borderLeftStyle = h[1];
 return;
 }
 if(l >= 4) {
@@ -2378,41 +2401,21 @@ borderShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
-const l = h.length;
-delete s.borderWidth;
-delete s.borderStyle;
-delete s.borderColor;
-delete s.borderImage;
-if(l >= 1)
-s.borderWidth = h[0];
-if(l >= 2)
-s.borderStyle = h[1];
-if(l >= 3)
-s.borderColor =  h[2];
-if(l >= 4)
-s.borderImage =  h[3];
+s.borderWidth = h[0] ? h[0] : "";
+s.borderStyle = h[1] ? h[1] : "";
+s.borderColor =  h[2] ? h[2] : "";
+s.borderImage =  h[3] ? h[3] : "";
 },
 
 borderImageShort: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
-const l = h.length;
-delete s.borderImageSource;
-delete s.borderImageSlice;
-delete s.borderImageWidth;
-delete s.borderImageOutset;
-delete s.borderImageRepeat;
-if(l >= 1)
-s.borderImageSource = h[0];
-if(l >= 2)
-s.borderImageSlice = h[1];
-if(l >= 3)
-s.borderImageWidth =  h[2];
-if(l >= 4)
-s.borderImageOutset =  h[3];
-if(l >= 5)
-s.borderImageRepeat =  h[4];
+s.borderImageSource = h[0] ? h[0] : "";
+s.borderImageSlice = h[1] ? h[1] : "";
+s.borderImageWidth =  h[2] ? h[2] : "";
+s.borderImageOutset =  h[3] ? h[3] : "";
+s.borderImageRepeat =  h[4] ? h[4] : "";
 },
 
 insetShort: function(s, h) {
