@@ -5219,6 +5219,16 @@ odp(fsetp, "type", {value: "fieldset"})
 odp(fsetp, "validationMessage", {value: ""})
 odp(fsetp, "willValidate", {value: false})
 
+swde("HTMLLegendElement", class extends w.HTMLElement {
+    constructor() {
+        super();
+    }
+    get form() {
+        let p = this.parentNode;
+        return p && p.dom$class == "HTMLFieldSetElement" ? p.form : null;
+    }
+})
+
 swde("HTMLImageElement", class extends w.HTMLElement {
     constructor() { super(); }
 })
@@ -6135,6 +6145,7 @@ c.selected = true; // jquery says we should do this
 return c;
 case "form": c = new w.HTMLFormElement; break;
 case "fieldset": c = new w.HTMLFieldSetElement; break;
+case "legend": c = new w.HTMLLegendElement; break;
 case "input": c = new w.HTMLInputElement; break;
 case "textarea": c = new w.HTMLTextAreaElement; break;
 case "element": c = new w.Element; break;

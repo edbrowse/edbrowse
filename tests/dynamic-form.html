@@ -33,8 +33,10 @@ const form = document.querySelector("form");
 const el = form.elements
 const fs = el[0]; // fieldset
 const fsel = fs.elements; // field set elements
+const legend = fs.querySelector("legend")
 if(el.length != 8) msg += `|form elements.length ${el.length}`;
 if(fsel.length != 5) msg += `|fieldset elements.length ${fsel.length}`;
+if(legend.form != form) msg += "bad legend.form";
 const log = document.querySelector("#log");
 // push Show and see the fields.
 // This tests FormData, which is third party code.
