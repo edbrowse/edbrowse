@@ -1702,6 +1702,15 @@ empty:
 }
 #endif
 
+static JSValue nat_makeBoundary(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
+{
+    JSValue v = JS_NewString(cx, makeBoundary());
+    (void) this;
+    (void) argc;
+    (void) argv;
+    return v;
+}
+
 // object keys, just for debugging from jdb
 static JSValue nat_ok(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
@@ -3770,6 +3779,8 @@ JS_NewCFunction(mwc, nat_btoa, "btoa", 1), JS_PROP_ENUMERABLE);
     JS_DefinePropertyValueStr(mwc, mwo, "atob",
 JS_NewCFunction(mwc, nat_atob, "atob", 1), JS_PROP_ENUMERABLE);
 #endif
+    JS_DefinePropertyValueStr(mwc, mwo, "makeBoundary",
+JS_NewCFunction(mwc, nat_makeBoundary, "makeBoundary", 0), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$voidfunction",
 JS_NewCFunction(mwc, nat_void, "void", 0), JS_PROP_ENUMERABLE);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$nullfunction",
