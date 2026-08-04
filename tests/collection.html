@@ -1,0 +1,65 @@
+<body>
+<p id=show>start</p>
+<img src=http://this.that.com/something.png id=q0> alt="first image"></img>
+<script>
+// test the behavior of a live HTMLCollection
+try {
+show = document.getElementById("show")
+i = document.images; // an HTMLCollection
+msg = "ok";
+q0 = i[0];
+if(typeof q0.src != "string") msg += `|bad src type ${typeof q0.src}`
+if(q0.src != "http://this.that.com/something.png") msg += `|bad src ${q0.src}`;
+if(q0.protocol) msg += "|unexpected protocol compnent";
+// I wanted to test spilldown resolve, but it's hard to do that when run as a local file
+if(i.q0 != q0) msg += "|id access mismatch";
+q1 = document.createElement("img");
+q1.id="item";
+b = document.body
+b.appendChild(q1); // puts it in i
+if(i.length != 2) msg += `|bad collection length ${i.length}`;
+if(i.constructor.prototype.item != i.item) msg += "|id displaced the instance method item";
+// we can change the id directly or by setAtribute, the spec says it's the same.
+// Thus we have getter and setter on HTMLElement to do that.
+// So setAttribute also has to see if the item is part of an HTMLCollection
+// and make that update as well.
+q1.id = "q1"
+//q1.setAttribute("id", "q1")
+if(i.q1 != q1) msg += "|updated id did not reflect in collection"
+q2 = document.createElement("img");
+q2.name = "q2";
+b.appendChild(q2);
+if(i.q2 != q2) msg += "|name access mismatch";
+q3 = document.createElement("img");
+q3.name = "q1";
+b.appendChild(q3);
+// this q1 should not displace existing q1, because id has precedence over name
+if(i.q1 != q1) msg += "|name q1 displaced id q1";
+if(i.item(2) != q2) msg += "|item index mismatch";
+if(i.item(7) !== null) msg += "|item should be null";
+if(i[7] !== undefined) msg += "|item should be undefined";
+if(i.namedItem("q1") != q1) msg += `|named item ${i.namedItem("q1")}`
+if(i.namedItem("snork") != null) msg += "|namedItem should be null"
+if(i["snork"] !== undefined) msg += "|property reference should be undefined"
+// remove an image and verify synchronous delete
+b.removeChild(q1)
+if(i.length != 3) msg += `|bad length ${i.length} after delete`
+if(i[2] != q3) msg += "|q3 is out of position after delete"
+if(i.item(2) != q3) msg += "|q3 is out of item position after delete"
+if(i.q0 != q0) msg += "|q0 reference is lost after delete"
+// we deleted id=q1, but name=q1 is still there, so now we should see it
+if(i.q1 != q3) msg += "|i.q1 does not point to q3 after delete"
+if(i.namedItem("q1") != q3) msg += "|named q1 does not point to q3 after delete"
+// put q1 back, but at the end
+b.appendChild(q1)
+if(i.length != 4) msg += `|bad length ${i.length} after replacement`
+if(i[2] != q3) msg += "|q3 is out of position after replacement"
+if(i.item(2) != q3) msg += "|q3 is out of item position after replacement"
+if(i[3] != q1) msg += "|q1 is out of position after replacement"
+if(i.item(3) != q1) msg += "|q1 is out of item position after replacement"
+if(i.q1 != q1) msg += "|q1 reference is lost after replacement"
+if(i.namedItem("q1") != q1) msg += "|q1 named reference is lost after replacement"
+if(i.q0 != q0) msg += "|q0 reference is lost after replacement"
+show.innerHTML = msg;
+} catch(e) { show.innerHTML = "blowup " + e;}
+</script>
