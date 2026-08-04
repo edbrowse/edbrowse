@@ -532,23 +532,10 @@ toString: function() {  return "Sorry, edbrowse does not maintain a browsing his
 swp("CSS", mw$.CSS)
 swp("Intl", mw$.Intl)
 
-// some base arrays - lists of things we'll probably need
-sdp("heads", [])
-sdp("bases", [])
+// Some arrays under document that are shorthand for getElementsByTagName
 sdp("links", [])
-sdp("metas", [])
-sdp("styles", [])
-sdp("bodies", [])
 sdp("forms", [])
-sdp("elements", [])
-sdp("divs", [])
-sdp("labels", [])
-sdp("htmlobjs", [])
 sdp("scripts", [])
-sdp("paragraphs", [])
-sdp("headers", [])
-sdp("footers", [])
-sdp("tables", [])
 sdp("images", [])
 // styleSheets is a placeholder for now; I don't know what to do with it.
 sdp("styleSheets", [])

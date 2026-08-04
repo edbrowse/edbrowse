@@ -792,7 +792,7 @@ if(body.value.substring(10,19) != "brilliant") fail(108);
 // for(var i in document.idMaster) alert(i);
 if(document.getElementById("hound").name != "dog") fail(110);
 // I'm not sure of any of this table row stuff
-if(document.getElementById("pecan") != document.tables[0].rows[1]) fail(112);
+if(document.getElementById("pecan") != document.querySelector("table").rows[1]) fail(112);
 if(document.getElementById("pecan").parentNode.parentNode.getAttribute("class") != "filbert") fail(115);
 if(document.all.tags("FORM")[1] != document.forms[1]) fail(113);
 
@@ -1094,7 +1094,7 @@ fail(162);
 }
 test_siblings();
 
-if(document.metas[0].getAttribute("content") != "Snoopy")
+if(document.head.querySelector("meta").getAttribute("content") != "Snoopy")
 fail(163);
 // add tests for getAttribute etc, once Meta is actually a class in startwindow.js.
 

@@ -4816,11 +4816,11 @@ Needless to say that's not good!
 		break;
 
 	case TAGACT_META:
-		domLink(t, "HTMLMetaElement", "metas", 0, 4);
+		domLink(t, "HTMLMetaElement", 0, 0, 4);
 		break;
 
 	case TAGACT_STYLE:
-		domLink(t, "HTMLStyleElement", "styles", 0, 4);
+		domLink(t, "HTMLStyleElement", 0, 0, 4);
 		a = attribVal(t, "type");
 		if (!a) a = emptyString;
 // if type is spilldown then we don't need this line.
@@ -4884,12 +4884,12 @@ Needless to say that's not good!
 		break;
 
 	case TAGACT_HEAD:
-		domLink(t, "HTMLHeadElement", "heads", 0, 4);
+		domLink(t, "HTMLHeadElement", 0, 0, 4);
 		cf->headtag = t;
 		break;
 
 	case TAGACT_BODY:
-		domLink(t, "HTMLBodyElement", "bodies", 0, 4);
+		domLink(t, "HTMLBodyElement", 0, 0, 4);
 		cf->bodytag = t;
 		break;
 
@@ -4912,7 +4912,7 @@ Needless to say that's not good!
 		break;
 
 	case TAGACT_TABLE:
-		domLink(t, "HTMLTableElement", "tables", 0, 4);
+		domLink(t, "HTMLTableElement", 0, 0, 4);
 		break;
 
 	case TAGACT_TBODY:
@@ -4945,15 +4945,15 @@ Needless to say that's not good!
 		break;
 
 	case TAGACT_DIV:
-		domLink(t, "HTMLDivElement", "divs", 0, 4);
+		domLink(t, "HTMLDivElement", 0, 0, 4);
 		break;
 
 	case TAGACT_LABEL:
-		domLink(t, "HTMLLabelElement", "labels", 0, 4);
+		domLink(t, "HTMLLabelElement", 0, 0, 4);
 		break;
 
 	case TAGACT_OBJECT:
-		domLink(t, "HTMLObjectElement", "htmlobjs", 0, 4);
+		domLink(t, "HTMLObjectElement", 0, 0, 4);
 		break;
 
 	case TAGACT_SPAN:
@@ -4980,7 +4980,7 @@ Needless to say that's not good!
 		break;
 
 	case TAGACT_P:
-		domLink(t, "HTMLParagraphElement", "paragraphs", 0, 4);
+		domLink(t, "HTMLParagraphElement", 0, 0, 4);
 		break;
 
 	case TAGACT_H:
@@ -4988,11 +4988,11 @@ Needless to say that's not good!
 		break;
 
 	case TAGACT_HEADER:
-		domLink(t, "Header", "headers", 0, 4);
+		domLink(t, "Header", 0, 0, 4);
 		break;
 
 	case TAGACT_FOOTER:
-		domLink(t, "Footer", "footers", 0, 4);
+		domLink(t, "Footer", 0, 0, 4);
 		break;
 
 	case TAGACT_TITLE:
