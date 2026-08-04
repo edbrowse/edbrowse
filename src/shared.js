@@ -1271,6 +1271,7 @@ spilldownResolveURL: function(t, name) {
 if(!t.nodeName) return false;
 var nn = t.nodeName.toLowerCase();
 return name == "src" && (nn == "frame" || nn == "iframe") ||
+name == "cite" && (nn == "q" || nn == "blockquote") ||
 name == "href" && (nn == "a" || nn == "area");
 },
 
@@ -5229,6 +5230,12 @@ swde("HTMLLegendElement", class extends w.HTMLElement {
     }
 })
 
+swde("HTMLQuoteElement", class extends w.HTMLElement {
+    constructor() {
+        super();
+    }
+})
+
 swde("HTMLImageElement", class extends w.HTMLElement {
     constructor() { super(); }
 })
@@ -5523,7 +5530,8 @@ Or you could end the last statement with a semicolon.
 *********************************************************************/
 
 ; (function() {
-    const cnlist = ["HTMLAnchorElement.href", "HTMLAreaElement.href", "HTMLFrameElement.src"];
+    const cnlist = ["HTMLAnchorElement.href", "HTMLAreaElement.href",
+"HTMLFrameElement.src", "HTMLQuoteElement.cite"];
     for (let k of cnlist) {
         const s = k.split('.');
         const cn = s[0]; // class name
@@ -5562,6 +5570,7 @@ Or you could end the last statement with a semicolon.
                 }
             }
         });
+        if(u == "cite") continue;
         const piecelist = ["protocol", "pathname", "host", "search", "hostname", "port", "hash"];
         for (let piece of piecelist)
             odp(w[cn].prototype, piece, {
