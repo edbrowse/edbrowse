@@ -489,7 +489,7 @@ class HTMLCollectionCache
     {
         for (r of this.#cache.values()) {
             const c = r.deref;
-            if (r) yield r;
+            if (c) yield c;
         }
     }
 
