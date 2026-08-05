@@ -395,11 +395,9 @@ class HTMLCollectionHelper
             return; // everything's gone
         }
         for (const element of this.#callback(o)) {
-            const id = element.getAttribute("id");
-            const name = element.getAttribute("name");
             const ref = new this.#window.WeakRef(element);
-            if (id) this.#by_id.set(id, ref);
-            if (name) this.#by_name.set(name, ref);
+            if (element.id) this.#by_id.set(element.id, ref);
+            if (element.name) this.#by_name.set(element.name, ref);
             this.#by_index.push(ref);
             this.#tracker.register(element, this);
         }
