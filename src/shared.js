@@ -452,6 +452,65 @@ class HTMLCollectionHelper
     }
 }
 
+class HTMLCollectionCache
+{
+    #cache;
+    #tracker;
+    #window;
+    constructor()
+    {
+        const w = my$win();
+        this.#cache = new w.Map;
+        this.#tracker = new w.FinalizationRegistry(({m, k}) => m.delete(k));
+    }
+
+    #makeKey(k)
+    {
+        // for classname, key could be an array
+        return k instanceof this.#window.Array ? k.join(":|:") : k;
+    }
+
+    add(key, collection)
+    {
+        const w = this.#window;
+        const cache_key = this.#makeKey(key);
+        this.#cache.set(cache_key, new w.WeakRef(collection))
+        this.#tracker.register(collection, {m: this.#cache, k: cache_key});
+    }
+
+    get(k)
+    {
+        const r = this.#cache.get(k);
+        if (!r) return;
+        return r.deref();
+    }
+
+    *collections()
+    {
+        for (r of this.#cache.values()) {
+            const c = r.deref;
+            if (r) yield r;
+        }
+    }
+
+    // Mostly for debugging
+    // The size of the cache including possibly dead weakrefs
+    size() { return this.#cache.size(); }
+
+    *[Symbol.iterator]() {
+        for (const [k,r] of this.#cache) {
+            const c = r.deref();
+            if (c) yield [k,c];
+        }
+    }
+
+    *allKeys()
+    {
+        // Yield all the keys so we can check if we're gathering dead weakrefs
+        for (const k of this.#cache.keys()) yield k;
+    }
+}
+
 class HTMLCollection extends Array {
     // type indicates tag name, name, or class name
     // v is the value for getElements to watch for
