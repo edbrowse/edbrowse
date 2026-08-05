@@ -677,7 +677,6 @@ function dispatchEvent(e)
             // or through a frame and up into a higher frame
             if (t.nodeType == 1 && (
                 t.dom$class == "HTMLIFrameElement" ||
-                // don't know if it could ever be a frame
                 t.dom$class == "HTMLFrameElement")
             ) break;
         }
@@ -4516,6 +4515,8 @@ function nameSpill(n) {
     dc == "HTMLButtonElement" ||
     dc == "HTMLSelectElement" ||
     dc == "HTMLImageElement" ||
+    dc == "HTMLIFrameElement" ||
+    dc == "HTMLFrameElement" ||
     dc == "HTMLTextAreaElement" ||
     dc == "HTMLAnchorElement";
 }

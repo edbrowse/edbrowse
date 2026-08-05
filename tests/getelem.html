@@ -40,6 +40,39 @@ delete q2.cllass;
 // but changing the class suddenly brings it into the collection
 q2.className = "shoe"
 if(ac.length != 2 || an.length > 1) msg += "|q2 didn't enter ac after className change"
+// now we're going to leave js, bring in an html node, and go back to js.
+} catch(e) { show.innerHTML = "blowup " + e;}
+</script>
+<br class=shoe>
+<script>
+try {
+if(ac.length != 3) msg += "|<br> didn't enter ac"
+if(ac.item(2).nodeName != "BR") msg+= "|br not in position"
+// this won't change the nodes in the collections,
+// but will provide access by property or by namedItem()
+q1.id = "j k "
+if(ac.length != 3 || an.length != 1) msg += "| collections changed length after id was set"
+if(ac.namedItem("j k ") != q1) msg += "|can't access q1 through j k "
+// an is NodeList, so there is no id access
+// make a collection below document, with two classes
+mid = b.getElementsByClassName("shoe boot")
+if(mid.length) msg += "|mid has members"
+q2.classList.add("boot")
+// now both classes, so should be there
+if(mid[0] != q2) msg += "|mid didn't pick up q2"
+// stop again and this time a tag will become part of a body collection.
+// This is not a document collection, and is not rebuilt before each script,
+// but it is rebuilt when class is set on the hr tag, so we're ok.
+} catch(e) { show.innerHTML = "blowup " + e;}
+</script>
+
+<hr class="boot slipper shoe sandal">
+
+<script>
+try {
+// lastChild is the script we are running right now
+hr = b.lastChild. previousElementSibling
+if(mid[1] != hr) msg += "|hr didn't enter the collection"
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}
 </script>
