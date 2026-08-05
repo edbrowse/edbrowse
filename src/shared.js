@@ -391,7 +391,7 @@ function collectionReindex(c)
         (!c[s] || !c[s+"$$byid"]))
             c[s] = n, c[s+"$$byid"] = true;
     // try again with name
-        s = n.name;
+        s = n.getAttribute("name");
         if(typeof s == "string" && s &&
         !c.constructor.prototype[s] &&
         !c[s])
@@ -486,7 +486,7 @@ function getElementsByName(s) {
 function gebn(top, s, first) {
 let a = [];
 if(!first && top.nodeType != 1) return a;
-if(!first && (s === '*' || top.name === s))
+if(!first && (s === '*' || top.getAttribute("name") === s))
 a.push(top);
 if(top.childNodes) {
 if(!top.is$frame)
@@ -4509,16 +4509,23 @@ swde("HTMLElement", class extends w.Element {
     }
 })
 let helemp = w.HTMLElement.prototype;
+// name property spills up and down for input, acid test 53
+function nameSpill(n) {
+    const dc = n.dom$class;
+    return  dc == "HTMLInputElement" ||
+    dc == "HTMLButtonElement" ||
+    dc == "HTMLSelectElement" ||
+    dc == "HTMLImageElement" ||
+    dc == "HTMLTextAreaElement" ||
+    dc == "HTMLAnchorElement";
+}
 odp(helemp, "name", {
 get: function() {
-const isinput = (this.dom$class == "HTMLInputElement" || this.dom$class == "HTMLButtonElement" || this.dom$class == "HTMLSelectElement");
-if(!isinput) return this.name$2 ;
-// name property spills up and down for input, acid test 53
+if(!nameSpill(this)) return this.name$2 ;
 let t = this.getAttribute("name");
 return typeof t == "string" ? t : undefined}, 
 set: function(n) {
-const isinput = (this.dom$class == "HTMLInputElement" || this.dom$class == "HTMLButtonElement" || this.dom$class == "HTMLSelectElement");
-if(!isinput) { odp(this, "name$2", {value:n,writable:true,configurable:true}); return}
+if(!nameSpill(this)) { odp(this, "name$2", {value:n,writable:true,configurable:true}); return}
 const f = this.form;
 if(f && f.dom$class == "HTMLFormElement") {
 const oldname = this.getAttribute("name");

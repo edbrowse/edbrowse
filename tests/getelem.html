@@ -1,0 +1,45 @@
+<body>
+<p id=show>start</p>
+<img src=http://this.that.com/something.png id=q0 alt="first image"></img>
+<a></a><a href=ftp://this.that.com:731/hello>what</a>
+<area href=http://nuts.com>area</area>
+<script>
+// test the behavior of the getElements functions
+try {
+show = document.getElementById("show")
+b = document.body
+img = document.images; // an HTMLCollection
+li = document.links; // a bizarre HTMLCollection
+msg = "ok";
+if(img.length != 1) msg += `|bad img.length ${img.length}`
+// both a and area go into links, but only if they have the href attribute,
+// and even if that href attribute is empty.
+if(li.length != 2) msg += `|bad li.length ${li.length}`
+if(li[0].protocol != "ftp:") msg += `|bad protocol ${li[0].protocol} on links[0]`
+at = document.getElementsByTagName("a") // different from document.links
+an = document.getElementsByName("sock")
+ac = document.getElementsByClassName("shoe")
+// at has both <a> entries and not <area>
+if(at.length != 2) msg += `|bad at.length ${at.length}`
+if(at[1].hostname != "this.that.com") msg += `|bad at[1] hostname ${at[1].hostname}`
+// add a node that joins all three collections
+q1 = document.createElement("h1")
+q1.setAttribute("name", "sock")
+if(q1.name == "sock") msg += "|unexpected name spilldown"
+q1.setAttribute("class", "shoe")
+b.appendChild(q1)
+if(at.length != 2 || ac.length != 1 || an.length != 1) msg += "|lengths are not 2 1 and 1 after append"
+if(ac.sock != q1) msg += "|ac.sock not present"
+q2 = document.createElement("div")
+q2.name = "sock"; // properties are not sufficient
+q2.class = "shoe";
+b.appendChild(q2)
+if(ac.length > 1 || an.length > 1) msg += "|q2 goes in by property alone"
+delete q2.name;
+delete q2.cllass;
+// but changing the class suddenly brings it into the collection
+q2.className = "shoe"
+if(ac.length != 2 || an.length > 1) msg += "|q2 didn't enter ac after className change"
+show.innerHTML = msg;
+} catch(e) { show.innerHTML = "blowup " + e;}
+</script>
