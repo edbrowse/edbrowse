@@ -3522,6 +3522,39 @@ function swde(cls, exp, changeable=true)
 // These are not classes and will not have custom prototypes.
 function sdpc(k, v) { odp(d, k, {value:v, writable:true, configurable:true})}
 
+/* The other half of the HTMLCollection mechanism as promised. Note that we
+proxy the class here rather than a constructed object so we can proxy the
+constructor as well as everything else. */
+swp("HTMLCollection2", new Proxy(HTMLCollectionHelper, {
+    construct(target, args, new_target)
+    {
+        // We want to return a proxied version of the created object for our magic getter
+        const special = new w.Set(["item", "namedItem", "hasChanges", "length"]);
+        return new Proxy(Reflect.construct(target, args, new_target), {
+            /* Trap all get calls, if it's a string use namedItem if a number I assume
+            an index so item. The length property is special. */
+            get(target, property, receiver)
+            {
+                if (special.has(property)) return Reflect.get(target, property, receiver);
+                const pt = typeof property;
+                let res;
+                switch (pt) {
+                    case "string":
+                        res = target.namedItem(property);
+                    break;
+                    case "number":
+                        res = target.item(property);
+                    default:
+                        alert3(`HTMLCollection unknown type passed to get ${pt}`);
+                    break;
+                }
+                return (res === null) ? undefined : res;
+            },
+            set(t,p,r) { alert3(`HTMLCollection attempt to set property ${p}`); },
+            deleteProperty(t,p,r) { alert3(`HTMLCollection attempt to delete property ${p}`); }
+        })
+    }
+}))
 // here comes the URL class, which is head-spinning in its complexity.
 // Note the use of swpc, window property changeable, because people can and do
 // replace the standard URL class with their own, or even pieces of it,
