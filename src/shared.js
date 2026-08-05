@@ -102,7 +102,6 @@ return null;
 
 /*********************************************************************
 Show the scripts, where they come from, type, length, whether deminimized.
-This uses document.scripts and getElementsByTagname() so you see
 all the scripts, hopefully, not just those that were in the original html.
 The list is left in $ss for convenient access.
 my$win() is used to get the window of the running context, where you are,
@@ -117,11 +116,6 @@ for(i=0; i<d.scripts.length; ++i) {
 s = d.scripts[i];
 s.from$html = true;
 slist.push(s);
-}
-var getlist = gebtn(d, "script", true, true)
-for(i=0; i<getlist.length; ++i) {
-s = getlist[i];
-if(!s.from$html) slist.push(s);
 }
 for(i=0; i<slist.length; ++i) {
 s = slist[i];
@@ -314,21 +308,150 @@ function customizeInPlace(o1, custom)
     o2.connectedCallback$pending = true;
 }
 
-// implementation of getElementsByTagName, getElementsByName, and getElementsByClassName.
-// The return is an array, and you might put weird things on Array.prototype,
-// and then expect to use them, so let's return your Array.
+/*********************************************************************
+the HTMLCollection class.
+This is exported to every window, so we can confirm
+ document.images instanceof HTMLCollection
+That means the user could say new HTMLCollection, which is not allowed,
+but since it's not allowed I can be comfortable in saying nobody's going to
+do that, and I don't have to guard against it.
+Similarly, the user can't change the collection directly, change the length,
+set c[i] = object, etc, so I'm not going to guard against that either.
+I only need assure that the things he can do in another browser,
+he can do here.
+Suppose I keep a separate map or internal array.  this.a = []
+When the collection needs node 5, I have to create a getter so that
+c[5] returns this.a[5].
+Do that for every integer up to c.length.
+Fine - but when we remove a node, the last getter remains. I can't delete it.
+The c[5] getter has to know to return undefined.
+That can be done I suppose, and is a corner case.
+The alternative is having this class extend Array.
+That solves all those getter problems. We don't need them.
+I'm going for that, for now.
+What if someone asks document.images instanceof Array?
+It will fail, as it should.
+Because that refers to the window Array, and here we are extending the shared window Array.
+All good.
+This extension isn't perfect, but it's easier,
+and shouldn't cause any real-world problems.
+*********************************************************************/
+
+class HTMLCollection extends Array {
+    // type indicates tag name, name, or class name
+    // v is the value for getElements to watch for
+// owner is the node that invoked the getElements function
+    constructor(type, v, owner)
+    {
+        super();
+        this.hc$int$type = type, this.hc$int$v = v, this.hc$int$owner = owner;
+    }
+
+    item(n) { return this[n] ? this[n] : null}
+    namedItem(n) { return this[n] ? this[n] : null}
+    toString() { return "[object HTMLCollection]"}
+}
+
+function collectionReindex(c)
+{
+    const type = c.hc$int$type, v = c.hc$int$v, owner = c.hc$int$owner;
+//  alert(`collect ${type}:${v}`)
+    // clear everything out and rebuild; that's the easiest way
+    c.length = 0;
+    let name, list;
+    for(name in c) {
+        if (!c.hasOwnProperty(name)) continue;
+        if (typeof c[name] != "object") continue;
+        if(c[name] === null) continue;
+        if(c[name].nodeType != 1) continue;
+        if(name.match(/^hc\$int\$/)) continue;
+        // we may be deleting this just to put it back,
+        // but that's how this function goes.
+        delete c[name];
+        delete c[name+"$$byid"];
+    }
+    switch(type) {
+    case 1:
+        list = gebtn(owner, v, true, false);
+        break;
+    case 2:
+        list = gebn(owner, v, true);
+        break;
+    case 3:
+        list = gebcn(owner, v, true);
+        break;
+    }
+    // we have our list; put everything back.
+    for(let n of list) { // loop through the nodes
+        c.push(n)
+        let s = n.id;
+        if(typeof s == "string" && s &&
+        // don't displace an instance method
+        !c.constructor.prototype[s] &&
+        (!c[s] || !c[s+"$$byid"]))
+            c[s] = n, c[s+"$$byid"] = true;
+    // try again with name
+        s = n.name;
+        if(typeof s == "string" && s &&
+        !c.constructor.prototype[s] &&
+        !c[s])
+            c[s] = n, c[s+"$$byid"] = false;
+    }
+}
+
+function collectionNodeReindex(n)
+{
+    const a = n.getElements$$array;
+    if(!a) return; // nothing here
+    for(let c of a) collectionReindex(c)
+}
+
+function collectionNodeReindex2(t)
+{
+    while(t) {
+        collectionNodeReindex(t);
+        if(t.nodeType != 1) break; // stop at document
+        t = t.parentNode;
+    }
+}
+
+// there's a lot of overhead to reindex, try not to duplicate
+function collectionSet(type, value, node)
+{
+    let c, a = node.getElements$$array;
+    if(!a) { // first one
+        c = new HTMLCollection(type, value, node);
+        collectionReindex(c);
+        node.getElements$$array = [c];
+        return c;
+    }
+    // for classname, value could be an array
+    let v1 = value instanceof Array ? value.join(":|:") : value;
+    for(const d of a) {
+        if(d.hc$int$type != type) continue;
+        let v2 = d.hc$int$v;
+        v2 = v2 instanceof Array ? v2.join(":|:") : v2;
+        if(v1 != v2) continue;
+        // match! Reuse and maintain what we already have
+        return d;
+    }
+    c = new HTMLCollection(type, value, node);
+    collectionReindex(c);
+    node.getElements$$array.push(c);
+    return c;
+}
 
 function getElementsByTagName(s) {
-if(!s) { // missing or null argument
-alert3("getElementsByTagName(type " + typeof s + ")");
-return new (my$win().Array);
-}
-s = s.toLowerCase();
-return gebtn(this, s, true, false);
+    if(!s) { // missing or null argument
+        alert3("getElementsByTagName(type " + typeof s + ")");
+        return new HTMLCollection(0, "", null);
+    }
+    s = s.toLowerCase();
+    return collectionSet(1, s, this);
 }
 
 function gebtn(top, s, first, all) {
-var a = new (my$win().Array);
+let a = [];
 // The result should be all nodes, no texts, no comments.
 // And I don't believe we should descend into a document or document fragment,
 // although that is not clear. Of course the top node
@@ -336,6 +459,11 @@ var a = new (my$win().Array);
 // That said, sometimes I want all the nodes, for internal use.
 if(!first && !all && top.nodeType != 1) return a;
 if(!first && (s === '*' || (top.nodeName && top.nodeName.toLowerCase() === s)))
+a.push(top);
+// special code for document.links
+if(s === "a|area" &&
+(top.nodeName.toLowerCase() == "a" || top.nodeName.toLowerCase() == "area") &&
+top.href)
 a.push(top);
 if(top.childNodes) {
 // don't descend into another frame.
@@ -348,15 +476,15 @@ return a;
 }
 
 function getElementsByName(s) {
-if(!s) { // missing or null argument
-alert3("getElementsByName(type " + typeof s + ")");
-return new (my$win().Array);
-}
-return gebn(this, s, true);
+    if(!s) { // missing or null argument
+        alert3("getElementsByName(type " + typeof s + ")");
+        return new HTMLCollection(0, "", null)
+    }
+    return collectionSet(2, s, this);
 }
 
 function gebn(top, s, first) {
-var a = new (my$win().Array);
+let a = [];
 if(!first && top.nodeType != 1) return a;
 if(!first && (s === '*' || top.name === s))
 a.push(top);
@@ -417,18 +545,18 @@ for(let c of top.childNodes) {
 }
 
 function getElementsByClassName(s) {
-if(!s) { // missing or null argument
-alert3("getElementsByClassName(type " + typeof s + ")");
-return new (my$win().Array);
-}
-s = s . replace (/^\s+/, '') . replace (/\s+$/, '');
-if(s === "") return new (my$win().Array);
-var sa = s.split(/\s+/);
-return gebcn(this, sa, true);
+    if(!s) { // missing or null argument
+        alert3("getElementsByClassName(type " + typeof s + ")");
+        return new HTMLCollection(0, "", null)
+    }
+    s = s . replace (/^\s+/, '') . replace (/\s+$/, '');
+    if(s === "") return new HTMLCollection(0, "", null)
+    let sa = s.split(/\s+/);
+    return collectionSet(3, sa, this);
 }
 
 function gebcn(top, sa, first) {
-var a = new (my$win().Array);
+let a = [];
 if(!first && top.nodeType != 1) return a;
 if(!first && top.cl$present) {
 var ok = true;
@@ -1376,10 +1504,16 @@ setAttribute: function(name, v) {
         oldv = a.value;
     }
     a.value = v;
+
     if(name.substr(0,5) == "data-") {
         this.dataset[dataCamel(name)] = v;
     }
-// names that spill down into the actual property
+
+    // side effects of id, name, class
+    if(name == "id" || name == "class" || name == "name")
+collectionNodeReindex2(this)
+
+    // names that spill down into the actual property
     if(attr.spilldown(this, name)) this[name] = v;
         // href$2 not enumerable. cloneNode still works because it finds
         // href in the attributes and copies it there,
@@ -3604,8 +3738,8 @@ nodep.appendChild = function(c) {
     if(c.parentNode) c.parentNode.removeChild(c);
     let r = this.eb$apch2(c);
     if(r) {
-// a text node won't change the structure of the form
-        if(r.nodeType != 3) formReindex2(this);
+// a text node won't change the structure of the form, or the html collection
+        if(r.nodeType != 3) formReindex2(this), collectionNodeReindex2(this);
         mutFixup(this, 0, c, null);
         runScriptWhenAttached(r);
     }
@@ -3645,7 +3779,7 @@ nodep.insertBefore = function(c, t) {
     cn.splice(mark, 0, c);
     c.parentNode = this;
     this.eb$insbf(c, t); // update the tree in C
-    if(c.nodeType != 3) formReindex2(this);
+    if(c.nodeType != 3) formReindex2(this), collectionNodeReindex2(this);
     mutFixup(this, 0, c, null);
     runScriptWhenAttached(c);
     return c;
@@ -3663,7 +3797,7 @@ nodep.removeChild = function(c) {
     cn.splice(mark, 1);
     c.parentNode = null;
     this.eb$rmch2(c);
-    if(c.nodeType != 3) formReindex2(this);
+    if(c.nodeType != 3) formReindex2(this), collectionNodeReindex2(this);
 // passing an integer as third argument is a special case, only from here.
     mutFixup(this, 0, mark, c);
     return c;
@@ -3823,6 +3957,9 @@ t = t.parentNode;
 return t1;
 }
 
+nodep.getElementsByTagName = getElementsByTagName;
+nodep.getElementsByName = getElementsByName;
+nodep.getElementsByClassName = getElementsByClassName;
 odp(nodep, "inner$HTML", {value:"", writable:true})
 odp(nodep, "innerHTML", {
     get: function() { return this.inner$HTML},

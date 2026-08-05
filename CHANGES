@@ -10,6 +10,13 @@ then hands the html back to edbrowse.
 Bu and Bd, go up to the top or down to the bottom of a block
 that is defined by indentation. This is for python programming.
 
+build proper classes instead of just functions that stand in as classes.
+These classes extend other classes, as directed by the DOM.
+class HTMLElement extends Element extends Node etc.
+
+Implement HTMLCollection, and let the getElements functions use these
+collections to present live data to the user.
+
 3.8.17
 
 Fix some makefile issues, and warnings across different compilers.

@@ -69,6 +69,7 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
     this.Window = function(){}
     this.EventTarget = function(){}
     this.CSSStyleDeclaration = function(){}
+        this.document.getElementsByTagName = (t)=>[];
 }
 
 // We need some shorthand for this rather large file.
@@ -241,13 +242,6 @@ this.push(v[i])
 })
 swpp("NodeList", Array)
 NodeList.prototype.toString = function(){return "[object NodeList]"}
-swp("HTMLCollection", function(v){
-if(Array.isArray(v))
-for(var i=0; i<v.length; ++i)
-this.push(v[i])
-})
-swpp("HTMLCollection", Array)
-HTMLCollection.prototype.toString = function(){return "[object HTMLCollection]"}
 
 /*********************************************************************
     Originally I developed the shared window for efficiency.
@@ -489,13 +483,15 @@ toString: function() {  return "Sorry, edbrowse does not maintain a browsing his
 swp("CSS", mw$.CSS)
 swp("Intl", mw$.Intl)
 
-// Some arrays under document that are shorthand for getElementsByTagName
-sdp("links", [])
-sdp("forms", [])
-sdp("scripts", [])
-sdp("images", [])
+// Some members under document that are shorthand for getElementsByTagName
+sdp("links", document.getElementsByTagName("a|area"))
+sdp("forms", document.getElementsByTagName("form"))
+sdp("scripts", document.getElementsByTagName("script"))
+sdp("images", document.getElementsByTagName("img"))
 // styleSheets is a placeholder for now; I don't know what to do with it.
 sdp("styleSheets", [])
+
+swp("docCollectionReindex", ()=>mw$.collectionNodeReindex(document))
 
 swpc("frames$2", []);
 swpv("frames", {})
@@ -711,24 +707,7 @@ q.matches = eb$media(s);
 return q;
 })
 
-// Most of the instance method for the Node class are defined
-// in the shared window. These are here because they reference
-// NodeList or HTMLCollection.
-
-swp("live$wrapper", function(f, start, arg) {
-// get the result as an array
-var a = f.call(start, arg)
-var c = new HTMLCollection(a)
-// set an observer to watch the subtree based at start,
-// and when children are added or removed, recompute the array.
-// This is called a live array.
-// It is not yet implemented.
-return c})
-
 this.nodep = Node.prototype;
-nodep.getElementsByTagName = function(t) { return live$wrapper(mw$.getElementsByTagName, this, t)}
-nodep.getElementsByName = function(t) { return live$wrapper(mw$.getElementsByName, this, t)}
-nodep.getElementsByClassName = function(t) { return live$wrapper(mw$.getElementsByClassName, this, t)}
 
 sdp("implementation", {
 owner: document,
@@ -910,7 +889,13 @@ odp(document.location,'eb$ctx',{value:eb$ctx});
 // The constructor is Object by default.
 swp("constructor", Window)
 
-swp("eb$qs$start", function() { mw$.cssGather(true); mw$.frames$rebuild(window);})
+swp("eb$qs$start", function() {
+    // html parsed, rebuild the HTMLCollections under document
+    docCollectionReindex()
+    // now gather the css rules for inject before after
+    mw$.cssGather(true);
+    mw$.frames$rebuild(window);
+})
 swp("frames$rebuild", function() {mw$.frames$rebuild(window);})
 
 swp("DOMParser", mw$.DOMParser)
