@@ -5,7 +5,8 @@
 <meta charset="UTF-8">
 </head>
 <body>
-<h1>Order of CSS properties</h1>
+<p id=show>start</p>
+<p id=items></p>
 <div id="div1"    style="padding: 10px;
 scroll-padding: 0 5px;
 border-color: red;
@@ -26,18 +27,20 @@ background: bbb;
 font-family:  monospace
 "></div> 
 <script> 
+let show = document.getElementById("show")
+let h = "";
 for (let i = 1; i <= 2; i++) {
 const id = "div" + i;
 const myDiv = document.getElementById(id); 
 const divStyle = myDiv.style; 
 const len = divStyle.length;
-document.write("<h2>" + id + "</h2>");
-document.write("<p>" + len + "</p>");
-document.write("<ol>\n");
+h += `${id}:${len}|`
 for (let i = 0; i < len; i++)
-document.write("<li>" + divStyle.item(i) + "</li>\n");
-document.write("</ol>\n");
+h += divStyle.item(i) + "|";
 }
+const correct = "div1:34|padding-top|padding-right|padding-bottom|padding-left|scroll-padding-top|scroll-padding-right|scroll-padding-bottom|scroll-padding-left|border-top-color|border-right-color|border-bottom-color|border-left-color|border-top-left-radius|border-top-right-radius|border-bottom-right-radius|border-bottom-left-radius|border-top-style|border-right-style|border-bottom-style|border-left-style|border-top-width|border-right-width|border-bottom-width|border-left-width|scroll-margin-top|scroll-margin-right|scroll-margin-bottom|scroll-margin-left|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|div2:27|padding-top|padding-right|padding-bottom|padding-left|border-top-width|border-right-width|border-bottom-width|border-left-width|border-top-style|border-right-style|border-bottom-style|border-left-style|border-top-color|border-right-color|border-bottom-color|border-left-color|border-image-source|border-image-slice|border-image-width|border-image-outset|border-image-repeat|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|";
+if(h == correct) show.innerHTML = "ok";
+else show.innerHTML = "mismatch";
+document.getElementById("items").innerHTML = h.replace(/\|/g, "<br>");
 </script>
 </body>
-</html>
