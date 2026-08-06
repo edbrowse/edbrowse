@@ -1133,6 +1133,8 @@ void runScriptNow(Frame *runframe, Tag *t)
     const char *sourcefile;
     int ln; // line number
     bool is_module;
+    char *keep;
+    int keep_l;
     t->step = 5; // now running the script
     set_property_number_t(t, "eb$step", 5);
 
@@ -1189,20 +1191,22 @@ I will disconnect here, and also check for inxhr in runOnload().
 
 // Last step, look for document.write from this script
     if (!cf->dw) return;
+    keep = cf->dw, keep_l = cf->dw_l;
+    cf->dw = 0, cf->dw_l = 0;
 // completely different behavior before and after browse
 // After browse, it clobbers the page.
     if(cf->browseMode && ! cf->dw_clobber) {
         debugPrint(3, "document.write clobber 1");
         run_function_onestring_t(cf->bodytag, "eb$dbih",
-            strstr(cf->dw, "<body>")+6);
+            strstr(keep, "<body>")+6);
 		cf->dw_clobber = true;
     } else {
 // Any newly generated scripts have to run next. Move them up in the linked list.
         Tag *t1, *t2, *u;
         for (u = t; u; u = u->same) t1 = u;
 // t1 is now last real script in the list.
-        stringAndString(&cf->dw, &cf->dw_l, "</body>");
-        runGeneratedHtml(t, cf->dw);
+        stringAndString(&keep, &keep_l, "</body>");
+        runGeneratedHtml(t, keep);
         run_function_onearg_win(cf, "eb$uplift", t);
         for (u = t1; u; u = u->same) t2 = u;
         if(t1 != t && t2 != t1) {
@@ -1214,8 +1218,7 @@ I will disconnect here, and also check for inxhr in runOnload().
                 if (u->jslink) loadScriptData(u);
         }
     }
-    nzFree0(cf->dw);
-    cf->dw_l = 0;
+    nzFree(keep);
 }
 
 static void runOnload(void);
