@@ -229,21 +229,6 @@ window.parent = window.eb$parent();
 odp(window, "frameElement", {get: eb$frameElement,enumerable:true});
 
 /*********************************************************************
-a node list is and isn't an array; I don't really understand it.
-I'll just have it inherit from array, until someone tells me I'm wrong.
-Similarly for HTMLCollection.
-I seed it with an optional array, for my own convenience.
-Users aren't suppose to instantiate anyways, so I can't get in trouble by doing this.
-*********************************************************************/
-swp("NodeList", function(v){
-if(Array.isArray(v))
-for(var i=0; i<v.length; ++i)
-this.push(v[i])
-})
-swpp("NodeList", Array)
-NodeList.prototype.toString = function(){return "[object NodeList]"}
-
-/*********************************************************************
     Originally I developed the shared window for efficiency.
     There's no point in "compiling" the entire dom every time we bring up a new web page. Other browsers don't do that!
     That still holds but now there is another consideration: the context that holds startwindow.js never goes away, even if we free it.

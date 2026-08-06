@@ -309,31 +309,15 @@ function customizeInPlace(o1, custom)
 }
 
 /*********************************************************************
-the HTMLCollection class.
-This is exported to every window, so we can confirm
- document.images instanceof HTMLCollection
-That means the user could say new HTMLCollection, which is not allowed,
-but since it's not allowed I can be comfortable in saying nobody's going to
-do that, and I don't have to guard against it.
-Similarly, the user can't change the collection directly, change the length,
-set c[i] = object, etc, so I'm not going to guard against that either.
-I only need assure that the things he can do in another browser,
+the HTMLCollection class and the NodeList class.
+These are very similar, though the collection has more instance methods.
+Note that the user can't change the collection directly, change the length,
+set c[i] = object, etc, but I'm not going to guard against that.
+He can't do it in any other browser, it would blow up,
+so why would he even try it here?
+I only need assure that the things he can do in another browsers,
 he can do here.
-Suppose I keep a separate map or internal array.  this.a = []
-When the collection needs node 5, I have to create a getter so that
-c[5] returns this.a[5].
-Do that for every integer up to c.length.
-Fine - but when we remove a node, the last getter remains. I can't delete it.
-The c[5] getter has to know to return undefined.
-That can be done I suppose, and is a corner case.
-The alternative is having this class extend Array.
-That solves all those getter problems. We don't need them.
-I'm going for that, for now.
-What if someone asks document.images instanceof Array?
-It will fail, as it should.
-Because that refers to the window Array, and here we are extending the shared window Array.
-All good.
-This extension isn't perfect, but it's easier,
+This Array extension isn't perfect, but it's easier,
 and shouldn't cause any real-world problems.
 *********************************************************************/
 
@@ -352,6 +336,23 @@ class HTMLCollection extends Array {
     toString() { return "[object HTMLCollection]"}
 }
 
+class NodeList extends Array {
+    // type indicates tag name, name, or class name
+    // v is the value for getElements to watch for
+    // owner is the node that invoked the getElements function
+    // a is an array to load
+    constructor(type, v, owner, a)
+    {
+        super();
+        this.hc$int$type = type, this.hc$int$v = v, this.hc$int$owner = owner;
+        if(Array.isArray(a))
+            for(let c of a) this.push(c);
+    }
+
+    item(n) { return this[n] ? this[n] : null}
+    toString() { return "[object NodeList]"}
+}
+
 function collectionReindex(c)
 {
     const type = c.hc$int$type, v = c.hc$int$v, owner = c.hc$int$owner;
@@ -359,17 +360,18 @@ function collectionReindex(c)
     // clear everything out and rebuild; that's the easiest way
     c.length = 0;
     let name, list;
-    for(name in c) {
-        if (!c.hasOwnProperty(name)) continue;
-        if (typeof c[name] != "object") continue;
-        if(c[name] === null) continue;
-        if(c[name].nodeType != 1) continue;
-        if(name.match(/^hc\$int\$/)) continue;
-        // we may be deleting this just to put it back,
-        // but that's how this function goes.
-        delete c[name];
-        delete c[name+"$$byid"];
-    }
+    if(type != 2)
+        for(name in c) {
+            if (!c.hasOwnProperty(name)) continue;
+            if (typeof c[name] != "object") continue;
+            if(c[name] === null) continue;
+            if(c[name].nodeType != 1) continue;
+            if(name.match(/^hc\$int\$/)) continue;
+            // we may be deleting this just to put it back,
+            // but that's how this function goes.
+            delete c[name];
+            delete c[name+"$$byid"];
+        }
     switch(type) {
     case 1:
         list = gebtn(owner, v, true, false);
@@ -384,6 +386,7 @@ function collectionReindex(c)
     // we have our list; put everything back.
     for(let n of list) { // loop through the nodes
         c.push(n)
+        if(type == 2) continue;
         let s = n.id;
         if(typeof s == "string" && s &&
         // don't displace an instance method
@@ -420,7 +423,7 @@ function collectionSet(type, value, node)
 {
     let c, a = node.getElements$$array;
     if(!a) { // first one
-        c = new HTMLCollection(type, value, node);
+        c = type == 2 ? new NodeList(type, value, node) : new HTMLCollection(type, value, node);
         collectionReindex(c);
         node.getElements$$array = [c];
         return c;
@@ -435,9 +438,9 @@ function collectionSet(type, value, node)
         // match! Reuse and maintain what we already have
         return d;
     }
-    c = new HTMLCollection(type, value, node);
+    c = type == 2 ? new NodeList(type, value, node) : new HTMLCollection(type, value, node);
     collectionReindex(c);
-    node.getElements$$array.push(c);
+    a.push(c);
     return c;
 }
 
@@ -478,7 +481,7 @@ return a;
 function getElementsByName(s) {
     if(!s) { // missing or null argument
         alert3("getElementsByName(type " + typeof s + ")");
-        return new HTMLCollection(0, "", null)
+        return new NodeList(0, "", null)
     }
     return collectionSet(2, s, this);
 }
@@ -549,7 +552,7 @@ function getElementsByClassName(s) {
         alert3("getElementsByClassName(type " + typeof s + ")");
         return new HTMLCollection(0, "", null)
     }
-    s = s . replace (/^\s+/, '') . replace (/\s+$/, '');
+    s = s . trim();
     if(s === "") return new HTMLCollection(0, "", null)
     let sa = s.split(/\s+/);
     return collectionSet(3, sa, this);
@@ -3873,7 +3876,7 @@ nodep.cloneNode = function(deep) {
 }
 
 nodep.querySelector = querySelector
-nodep.querySelectorAll = function(c,s) { return new w.NodeList(querySelectorAll.call(this,c,s)) }
+nodep.querySelectorAll = function(c,s) { return new NodeList(0, "", null, querySelectorAll.call(this,c,s)) }
 
 // visual
 nodep.clientHeight = 16;
@@ -4013,7 +4016,7 @@ swde("HTMLDocument", class extends w.Document {
 let docp = w.Document.prototype;
 docp.activeElement = null;
 docp.querySelector = querySelector
-docp.querySelectorAll = function(c,s) { return new w.NodeList(querySelectorAll.call(this,c,s)) }
+docp.querySelectorAll = function(c,s) { return new NodeList(0, "", null, querySelectorAll.call(this,c,s)) }
 odp(docp, "documentElement", {get: function() {
   let e = this.lastChild;
 if(!e) { alert3("missing documentElement node"); return null; }
@@ -4698,7 +4701,7 @@ let fragp = w.DocumentFragment.prototype;
 fragp.nodeType = 11;
 fragp.nodeName = fragp.tagName = "#document-fragment";
 fragp.querySelector = querySelector
-fragp.querySelectorAll = function(c,s) { return new w.NodeList(querySelectorAll.call(this,c,s)) }
+fragp.querySelectorAll = function(c,s) { return new NodeList(0, "", null, querySelectorAll.call(this,c,s)) }
 
 docp.createDocumentFragment = function() {
 const c = this.createElement("fragment");
