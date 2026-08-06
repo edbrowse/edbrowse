@@ -47,7 +47,7 @@ if(ac.length != 2 || an.length > 1) msg += "|q2 didn't enter ac after className 
 <br class=shoe>
 <script>
 try {
-if(ac.length != 3) msg += "|<br> didn't enter ac"
+if(ac.length != 3) msg += "|&lt;br&gt; didn't enter ac"
 if(ac.item(2).nodeName != "BR") msg+= "|br not in position"
 // this won't change the nodes in the collections,
 // but will provide access by property or by namedItem()
@@ -93,6 +93,15 @@ try {
 if(bat.length != 1) msg += `|inline &lt;span&gt; not in the collection length ${bat.length}`
 document.writeln("<span></span>")
 if(bat.length != 2) msg += `|write &lt;span&gt; not in the collection length ${bat.length}`
+// hang a collection off an isolated node
+div = document.createElement("div")
+dat = div.getElementsByTagName("span")
+div.innerHTML = "<span></span>"
+if(div.firstChild.nodeName != "SPAN") msg += "|span not brought in by innerHTML"
+if(dat.length != 1) msg += "|&lt;span&gt; not brought in by innerHTML"
+if(bat.length != 2) msg += "|&lt;span&gt; pushed outside of its isolated node"
+b.appendChild(div)
+if(bat.length != 3) msg += "|&lt;span&gt; didn't join bat after appendChild"
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}
 </script>

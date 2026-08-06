@@ -1,0 +1,20 @@
+<body>
+<p id=show>start</p>
+<script>
+// Test the order in which scrips run.
+// Unfortunately, this proves script execution is reentrant.
+// Even worse, innerHTML is reentrant, which we are nowhere near able to do.
+try {
+show = document.getElementById("show")
+b = document.body
+h = "1";
+s = document.createElement("script")
+s.text = "h += '2'"
+b.appendChild(s);
+h += '3';
+if(h == "123") show.innerHTML = "ok"
+else show.innerHTML = "ok|bad order " + h;
+// There's lots more tests, scripts in innerHTML, scripts in document.write,
+// but since I can't even pass this one, I haven't written the others.
+} catch(e) { show.innerHTML = "blowup " + e;}
+</script>
