@@ -21,13 +21,15 @@ if(div.firstChild.nodeName != "SCRIPT") h += "x";
 // the script produced by innerHTML doesn't run. I don't know why!
 h += 5;
 document.write("<script> h += 6<" + "/script>") // runs right now
+// this one is deferred probably because it is src
+document.write("<script src=scriptorder.js> <" + "/script>")
 h += 7
-if(h == "123567") show.innerHTML = "mid"
+if(h == "1235678") show.innerHTML = "mid"
 else show.innerHTML = "mid|bad order " + h;
 // set a timer in case that innerHTML script ran later
 // And to accommodate the src script deferred
 setTimeout(()=>{
-if(h == "1235678") show.innerHTML = "ok"
+if(h == "12356788") show.innerHTML = "ok"
 else show.innerHTML = "ok|bad order " + h}, 600)
 } catch(e) { show.innerHTML = "blowup " + e;}
 </script>
