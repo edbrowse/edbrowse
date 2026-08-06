@@ -19,6 +19,7 @@ if(li[0].protocol != "ftp:") msg += `|bad protocol ${li[0].protocol} on links[0]
 at = document.getElementsByTagName("a") // different from document.links
 an = document.getElementsByName("sock")
 ac = document.getElementsByClassName("shoe")
+if(at+":"+an+":"+ac != "[object HTMLCollection]:[object NodeList]:[object HTMLCollection]") msg += "|collection shows wrong type"
 // at has both <a> entries and not <area>
 if(at.length != 2) msg += `|bad at.length ${at.length}`
 if(at[1].hostname != "this.that.com") msg += `|bad at[1] hostname ${at[1].hostname}`
@@ -75,12 +76,21 @@ hr = b.lastChild. previousElementSibling
 if(mid[1] != hr) msg += "|hr didn't enter the collection"
 q2.innerHTML = "<a href=http://www.water.com:731>water</a>"
 if(at.length != 3) msg += `|dynamic &lt;a&gt; not in the collection length ${at.length}`
-// edbrowse didn't have any cause to update that collection, but we can force it now
 water = q2.firstChild;
-water.id = "xyz"
 if(water.port != 731) msg += `|bad port ${water.port}`
+water.id = "xyz"
 if(at[2] != water) msg += "|water node not brought in by id"
 if(at.xyz != water) msg += "|no xyz reference"
+// inline tag without name or class
+bat = b.getElementsByTagName("span")
+} catch(e) { show.innerHTML = "blowup " + e;}
+</script>
+
+<span></span>
+
+<script>
+try {
+if(bat.length != 1) msg += `|inline &lt;span&gt; not in the collection length ${bat.length}`
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}
 </script>
