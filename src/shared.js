@@ -452,7 +452,7 @@ class HTMLCollectionHelper
     }
 }
 
-class HTMLCollectionCache
+class Eb$GetElementsCache
 {
     #cache;
     #tracker;
@@ -460,7 +460,9 @@ class HTMLCollectionCache
     constructor()
     {
         const w = my$win();
-        this.#cache = new w.Map;
+        this.#cache = new w.Array;
+        // Should stop having a magic number here but hard-code for now
+        for (t = 0; t < 3; ++t) this.#cache.push(new w.Map);
         this.#tracker = new w.FinalizationRegistry(({m, k}) => m.delete(k));
     }
 
@@ -470,24 +472,30 @@ class HTMLCollectionCache
         return k instanceof this.#window.Array ? k.join(":|:") : k;
     }
 
-    add(key, collection)
+    add(type, key, collection)
     {
         const w = this.#window;
         const cache_key = this.#makeKey(key);
-        this.#cache.set(cache_key, new w.WeakRef(collection))
-        this.#tracker.register(collection, {m: this.#cache, k: cache_key});
+        this.#cache[type].set(cache_key, new w.WeakRef(collection))
+        this.#tracker.register(collection, {m: this.#cache[type], k: cache_key});
     }
 
-    get(k)
+    get(t, k)
     {
-        const r = this.#cache.get(k);
+        const r = this.#cache[t].get(k);
         if (!r) return;
         return r.deref();
     }
 
-    *collections()
+    *collections(t)
     {
-        for (r of this.#cache.values()) {
+        let ref_iterator;
+        if (!t)
+            ref_iterator = Iterator.concat(...(
+                (function *() { for (m of this.#cache) yield m.values(); })()
+            ))
+        else ref_iterator = this.#cache[t].values()
+        for (r of ref_iterator) {
             const c = r.deref;
             if (c) yield c;
         }
@@ -495,19 +503,18 @@ class HTMLCollectionCache
 
     // Mostly for debugging
     // The size of the cache including possibly dead weakrefs
-    size() { return this.#cache.size(); }
-
-    *[Symbol.iterator]() {
-        for (const [k,r] of this.#cache) {
-            const c = r.deref();
-            if (c) yield [k,c];
-        }
+    size()
+    {
+        let cache_size;
+        for (m of this.#cache) cache_size += m.size();
+        return cache_size;
     }
 
-    *allKeys()
-    {
-        // Yield all the keys so we can check if we're gathering dead weakrefs
-        for (const k of this.#cache.keys()) yield k;
+    // dereferences values; dead refs will be yielded
+    *[Symbol.iterator]() {
+        for (i = 0; i < this.#cache.length; ++i)
+            for (const [k,r] of this.#cache[i])
+                yield {type: i+1, key: k, collection: r.deref()};
     }
 }
 
