@@ -327,7 +327,7 @@ collection directly, change the length,
 set c[i] = object, etc, again mostly not handled here.
 *********************************************************************/
 
-class HTMLCollectionHelper
+class LiveCollectionHelper
 {
     /* We're going to be storing weak references to avoid any GC issues but
     they're values so we use the standard maps here. */
@@ -344,34 +344,31 @@ class HTMLCollectionHelper
     #changes; // flag to say if we have changes
     #owner; // the node that invoked the getElements function
     #window; // our window
-    // type indicates tag name, name, or class name
-    // value is the value for getElements to watch for
-    // owner - see above
-    constructor(type, value, owner)
+    #named_items;
+    /*
+    - owner - the node which owns this collection
+    - cb - callback which takes onwer as a parameter used to rebuild the
+      collection. Note that we pass owner as a parameter so the collection
+      callback can avoid creating a reference cyle (owner is stored as a
+      weakref which is dereferenced on calling the callback).
+    - named_items - should we enable id and name based indexing?
+    */
+    constructor(owner, cb, named_items)
     {
         const w = my$win();
         // play safe with the weak ref to make sure it's in the right context
         this.#owner = new w.WeakRef(owner);
-        this.#by_id = new w.Map;
-        this.#by_name = new w.Map;
+        this.#named_items = !!named_items;
+        if (this.#named_items) {
+            this.#by_id = new w.Map;
+            this.#by_name = new w.Map;
+        }
         this.#by_index = new w.Array;
         this.#tracker = new w.FinalizationRegistry((c) => c.hasChanges());
         this.#tracker.register(owner, this);
-        switch(type) {
-            case 1:
-                this.#callback = (o) => gebtn(o, value, true, false);
-            break;
-            case 2:
-                this.#callback = (o) => gebn(o, value, true);
-            break;
-            case 3:
-                this.#callback = (o) => gebcn(o, value, true);
-            break;
-            default:
-                this.#callback = (o) => alert3(`HTMLCollection rebuild operation not set for ${o.nodeName}`);
-            break;
-        }
+        this.#callback = cb;
         this.#window = w;
+        // We need to rebuild initially but only on first lookup
         this.hasChanges();
     }
 
@@ -385,8 +382,10 @@ class HTMLCollectionHelper
         rebuild, but I'll clear the flag early in case */
         this.#changes = false;
         this.#by_index.length = 0;
-        this.#by_id.clear();
-        this.#by_name.clear();
+        if (this.#named_items) {
+            this.#by_id.clear();
+            this.#by_name.clear();
+        }
         if (!this.#owner) return;
         const o = this.#owner.deref();
         if (!o) {
@@ -395,10 +394,11 @@ class HTMLCollectionHelper
         }
         for (const element of this.#callback(o)) {
             const ref = new this.#window.WeakRef(element);
-            if (element.id) this.#by_id.set(element.id, ref);
-            if (element.name) this.#by_name.set(element.name, ref);
             this.#by_index.push(ref);
             this.#tracker.register(element, this);
+            if (!this.#named_items) continue;
+            if (element.id) this.#by_id.set(element.id, ref);
+            if (element.name) this.#by_name.set(element.name, ref);
         }
     }
 
@@ -419,6 +419,7 @@ class HTMLCollectionHelper
 
     namedItem(n)
     {
+        if (!this.#named_items) return;
         this.#handleChanges();
         for (const m of [this.#by_id, this.#by_name]) {
             const ref = m.get(n);
@@ -629,6 +630,41 @@ function collectionSet(type, value, node)
 
     c = type == 2 ? new NodeList(type, value, node) : new HTMLCollection(type, value, node);
     collectionReindex(c);
+    cache.add(type, value, c);
+    return c;
+}
+
+// new version, currently not used
+function collectionSet2(type, value, node)
+{
+    const w = my$win();
+    let c, cache = node.getElements$$cache;
+    if(!cache) {
+        cache = new Eb$GetElementsCache;
+        node.getElements$$cache = cache;
+    }
+
+    c = cache.get(type, value);
+    if(c) return c; // match! Reuse and maintain what we already have
+    let cb;
+    switch(type) {
+        case 1:
+            cb = (o) => gebtn(o, value, true, false)
+            c = new w.HTMLCollection(node, cb);
+        break;
+        case 2:
+            cb = (o) => gebn(o, value, true);
+            c = new w.NodeList(node, cb);
+        break;
+        case 3:
+            cb = (o) => gebcn(o, value, true);
+            c = new w.HTMLCollection(node, cb);
+        break;
+        default:
+            cb = (o) => alert3(`HTMLCollection rebuild operation not set for ${o.nodeName}`);
+            c = new w.HTMLCollection(node, cb);
+        break;
+    }
     cache.add(type, value, c);
     return c;
 }
@@ -3583,9 +3619,11 @@ function sdpc(k, v) { odp(d, k, {value:v, writable:true, configurable:true})}
 /* The other half of the HTMLCollection mechanism as promised. Note that we
 proxy the class here rather than a constructed object so we can proxy the
 constructor as well as everything else. */
-swp("HTMLCollection2", new Proxy(HTMLCollectionHelper, {
+swp("HTMLCollection2", new Proxy(LiveCollectionHelper, {
     construct(target, args, new_target)
     {
+        // HTMLCollections always have named items
+        args[2] = true;
         // We want to return a proxied version of the created object for our magic getter
         const special = new w.Set(["item", "namedItem", "hasChanges", "length"]);
         return new Proxy(Reflect.construct(target, args, new_target), {
@@ -3613,6 +3651,26 @@ swp("HTMLCollection2", new Proxy(HTMLCollectionHelper, {
         })
     }
 }))
+
+swp("NodeList2", new Proxy(LiveCollectionHelper, {
+    construct(target, args, new_target)
+    {
+        // NodeLists never have named items
+        args[2] = false;
+        const special = new w.Set(["item", "hasChanges", "length"]);
+        return new Proxy(Reflect.construct(target, args, new_target), {
+            get(target, property, receiver)
+            {
+                if (special.has(property)) return Reflect.get(target, property, receiver);
+                if (typeof property !== "number") return;
+                return (res === null) ? undefined : res;
+            },
+            set(t,p,r) { alert3(`HTMLCollection attempt to set property ${p}`); },
+            deleteProperty(t,p,r) { alert3(`HTMLCollection attempt to delete property ${p}`); }
+        })
+    }
+}))
+
 // here comes the URL class, which is head-spinning in its complexity.
 // Note the use of swpc, window property changeable, because people can and do
 // replace the standard URL class with their own, or even pieces of it,
