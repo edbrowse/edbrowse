@@ -325,7 +325,6 @@ do that, and I don't have to guard against it.
 The proxy object disallows certain operations as the user can't change the
 collection directly, change the length,
 set c[i] = object, etc, again mostly not handled here.
->>>>>>> 763026a8 (Unused helper class for new HTMLCollection implementation)
 *********************************************************************/
 
 class HTMLCollectionHelper
