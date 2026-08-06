@@ -1,17 +1,17 @@
 <body>
 <p id=show>start</p>
 <div id=hs></div>
+<script src=scriptorder.js defer></script>
 <script>
 // Test the order in which scrips run.
 // Unfortunately, this proves script execution is reentrant.
-// Even worse, innerHTML is reentrant, which we are nowhere near able to do.
 try {
 show = document.getElementById("show")
 b = document.body
 h = "1";
 s = document.createElement("script")
 s.text = "h += 2"
-b.appendChild(s);
+b.appendChild(s); // runs right now
 h += 3;
 div = document.getElementById("hs")
 // remember that the closing script tag can never appear, even in a string -
@@ -20,15 +20,14 @@ div.innerHTML = "<script>h += 4<" + "/script>"
 if(div.firstChild.nodeName != "SCRIPT") h += "x";
 // the script produced by innerHTML doesn't run. I don't know why!
 h += 5;
-document.write("<script> h += 6<" + "/script>")
-// but the document.write script runs right now
+document.write("<script> h += 6<" + "/script>") // runs right now
 h += 7
 if(h == "123567") show.innerHTML = "mid"
 else show.innerHTML = "mid|bad order " + h;
-// set a timer in case that innerHTML script was deferred.
-// It never runs, as far as I can tell.
+// set a timer in case that innerHTML script ran later
+// And to accommodate the src script deferred
 setTimeout(()=>{
-if(h == "123567") show.innerHTML = "ok"
+if(h == "1235678") show.innerHTML = "ok"
 else show.innerHTML = "ok|bad order " + h}, 600)
 } catch(e) { show.innerHTML = "blowup " + e;}
 </script>
