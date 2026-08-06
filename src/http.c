@@ -3357,7 +3357,7 @@ So check for serverData null here. Once again we pop the frame.
 	cdt->attributes = allocZeroMem(sizeof(char*));
 	cdt->atvals = allocZeroMem(sizeof(char*));
 	debugPrint(3, "parse html from frame");
-	const int startpos = htmlScanner(serverData, cdt, false);
+	const int startpos = htmlScanner(serverData, cdt, 0);
 	nzFree0(serverData);	// don't need it any more
 	prerender(startpos);
 
@@ -3476,7 +3476,7 @@ bool reexpandFrame(void)
 		createJSContext(cf);
 
 	debugPrint(3, "parse html from frame replace");
-	const int startpos = htmlScanner(serverData, cdt, false);
+	const int startpos = htmlScanner(serverData, cdt, 0);
 	nzFree0(serverData);	// don't need it any more
 	cf->browseMode = false;
 	cdt->step = 0;

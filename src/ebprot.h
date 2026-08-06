@@ -205,7 +205,7 @@ void html_from_setter( Tag *innerParent, const char *h);
 
 // sourcefile=html-tags.c
 const struct tagInfo *name2tagInfo(const char *name);
-int htmlScanner(const char *htmltext, Tag *above, bool isgen);
+int htmlScanner(const char *htmltext, Tag *above, int isgen);
 void setTagAttr(Tag *t, const char *name, char *val);
 const char *attribVal(const Tag *t, const char *name);
 bool attribPresent(const Tag *t, const char *name);

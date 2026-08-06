@@ -2081,7 +2081,7 @@ JSValueConst a_j, JSValueConst b_j)
 // creating the new tag, with t->jv, represents a regrab
 			grab(p_j);
 			if (parent->action == TAGACT_SCRIPT)
-				parent->scriptgen = true;
+				parent->scriptgen = 1;
 		}
 		return;
 	}

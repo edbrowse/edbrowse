@@ -217,7 +217,11 @@ static Tag *overnode;
 
 // is this generated html, rather than from a web page?
 // This is only used for the duration of the html scanner.
-static bool htmlGenerated;
+// 0: from a web page
+// 1: document.createElement("script")
+// 2: innerHTML
+// 3: document.write
+static uchar htmlGenerated;
 
 // 0 prehtml 1 prehead, 2 inhead, 3 posthead, 4 inbody, 5 postbody 6 posthtml
 static uchar headbody;
@@ -812,7 +816,7 @@ void initTagArray(void)
 
 // Now for the scanner, create edbrowse tags corresponding to the html tags.
 // Returns the start position of the new tags.
-int htmlScanner(const char *htmltext, Tag *above, bool isgen)
+int htmlScanner(const char *htmltext, Tag *above, int isgen)
 {
 	int i, startpos;
 	const char *lt; // les than sign
@@ -4842,7 +4846,12 @@ Needless to say that's not good!
 		a = attribVal(t, "text");
 		if (a) set_property_string_t(t, "text", a);
 		else set_property_string_t(t, "text", "");
-		loadScriptData(t);
+		// chrome tests show that scripts from innerHTML do not run
+		if(t->scriptgen == 2) {
+		    t->step = 5; // as if already ran
+		    // here's something loadScriptData would have done for us
+		    set_property_string_t(t, "text", t->textval);
+		} else loadScriptData(t);
 		break;
 
 	case TAGACT_FORM:
