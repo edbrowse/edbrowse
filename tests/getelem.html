@@ -1,7 +1,7 @@
 <body>
 <p id=show>start</p>
 <img src=http://this.that.com/something.png id=q0 alt="first image"></img>
-<a></a><a href=ftp://this.that.com:731/hello>what</a>
+<a></a><a href=ftp://this.that.com/hello>what</a>
 <area href=http://nuts.com>area</area>
 <script>
 // test the behavior of the getElements functions
@@ -73,6 +73,14 @@ try {
 // lastChild is the script we are running right now
 hr = b.lastChild. previousElementSibling
 if(mid[1] != hr) msg += "|hr didn't enter the collection"
+q2.innerHTML = "<a href=http://www.water.com:731>water</a>"
+if(at.length != 3) msg += `|dynamic &lt;a&gt; not in the collection length ${at.length}`
+// edbrowse didn't have any cause to update that collection, but we can force it now
+water = q2.firstChild;
+water.id = "xyz"
+if(water.port != 731) msg += `|bad port ${water.port}`
+if(at[2] != water) msg += "|water node not brought in by id"
+if(at.xyz != water) msg += "|no xyz reference"
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}
 </script>
