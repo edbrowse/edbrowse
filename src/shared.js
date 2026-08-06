@@ -460,9 +460,10 @@ class Eb$GetElementsCache
     constructor()
     {
         const w = my$win();
+        this.#window = w;
         this.#cache = new w.Array;
         // Should stop having a magic number here but hard-code for now
-        for (t = 0; t < 3; ++t) this.#cache.push(new w.Map);
+        for (let t = 0; t < 3; ++t) this.#cache.push(new w.Map);
         this.#tracker = new w.FinalizationRegistry(({m, k}) => m.delete(k));
     }
 
@@ -492,11 +493,11 @@ class Eb$GetElementsCache
         let ref_iterator;
         if (!t)
             ref_iterator = Iterator.concat(...(
-                (function *() { for (m of this.#cache) yield m.values(); })()
+                ( function *(cache) { for (const m of cache) yield m.values(); })(this.#cache)
             ))
         else ref_iterator = this.#cache[t].values()
-        for (r of ref_iterator) {
-            const c = r.deref;
+        for (const r of ref_iterator) {
+            const c = r.deref();
             if (c) yield c;
         }
     }
@@ -506,13 +507,13 @@ class Eb$GetElementsCache
     size()
     {
         let cache_size;
-        for (m of this.#cache) cache_size += m.size();
+        for (const m of this.#cache) cache_size += m.size();
         return cache_size;
     }
 
     // dereferences values; dead refs will be yielded
     *[Symbol.iterator]() {
-        for (i = 0; i < this.#cache.length; ++i)
+        for (let i = 0; i < this.#cache.length; ++i)
             for (const [k,r] of this.#cache[i])
                 yield {type: i+1, key: k, collection: r.deref()};
     }
@@ -553,7 +554,7 @@ class NodeList extends Array {
 function collectionReindex(c)
 {
     const type = c.hc$int$type, v = c.hc$int$v, owner = c.hc$int$owner;
-//    alert(`collect ${type}:${v}`)
+    alert3(`collect ${type}:${v}`)
     // clear everything out and rebuild; that's the easiest way
     c.length = 0;
     let name, list;
@@ -601,9 +602,9 @@ function collectionReindex(c)
 
 function collectionNodeReindex(n)
 {
-    const a = n.getElements$$array;
-    if(!a) return; // nothing here
-    for(let c of a) collectionReindex(c)
+    const cache = n.getElements$$cache;
+    if(!cache) return; // nothing here
+    for(let c of cache.collections()) collectionReindex(c);
 }
 
 function collectionNodeReindex2(t)
@@ -618,26 +619,18 @@ function collectionNodeReindex2(t)
 // there's a lot of overhead to reindex, try not to duplicate
 function collectionSet(type, value, node)
 {
-    let c, a = node.getElements$$array;
-    if(!a) { // first one
-        c = type == 2 ? new NodeList(type, value, node) : new HTMLCollection(type, value, node);
-        collectionReindex(c);
-        node.getElements$$array = [c];
-        return c;
+    let c, cache = node.getElements$$cache;
+    if(!cache) {
+        cache = new Eb$GetElementsCache;
+        node.getElements$$cache = cache;
     }
-    // for classname, value could be an array
-    let v1 = value instanceof Array ? value.join(":|:") : value;
-    for(const d of a) {
-        if(d.hc$int$type != type) continue;
-        let v2 = d.hc$int$v;
-        v2 = v2 instanceof Array ? v2.join(":|:") : v2;
-        if(v1 != v2) continue;
-        // match! Reuse and maintain what we already have
-        return d;
-    }
+
+    c = cache.get(type, value);
+    if(c) return c; // match! Reuse and maintain what we already have
+
     c = type == 2 ? new NodeList(type, value, node) : new HTMLCollection(type, value, node);
     collectionReindex(c);
-    a.push(c);
+    cache.add(type, value, c);
     return c;
 }
 
