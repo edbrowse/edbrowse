@@ -3632,6 +3632,9 @@ swp("HTMLCollection2", new Proxy(LiveCollectionHelper, {
             get(target, property, receiver)
             {
                 if (special.has(property)) return Reflect.get(target, property, receiver);
+                if (property === "toString")
+                    return () => "[object HTMLCollection]";
+
                 const pt = typeof property;
                 let res;
                 switch (pt) {
@@ -3662,6 +3665,9 @@ swp("NodeList2", new Proxy(LiveCollectionHelper, {
             get(target, property, receiver)
             {
                 if (special.has(property)) return Reflect.get(target, property, receiver);
+                if (property === "toString")
+                    return () => "[object NodeList]";
+
                 if (typeof property !== "number") return;
                 return (res === null) ? undefined : res;
             },
