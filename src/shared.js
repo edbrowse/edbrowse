@@ -310,7 +310,7 @@ function customizeInPlace(o1, custom)
 
 /*********************************************************************
 
-the HTMLCollection class.
+the HTMLCollection and NodeList classes.
 
 The below helper class is wrapped in a proxy object per window. That essentially
 allows us to catch any type of property access and handle accordingly. It also
@@ -326,131 +326,134 @@ The proxy object disallows certain operations as the user can't change the
 collection directly, change the length,
 set c[i] = object, etc, again mostly not handled here.
 *********************************************************************/
+/* I was using private fields to avoid sensible names clashing with sensibly
+named elements but that won't fly so use symbols. This also allows debugging by
+using the global symbol registry. */
+;( () => {
+    const lchs = (s) => Symbol.for(`Eb$LiveCollectionHelper.${s}`)
+    const by_id = lchs("by_id");;
+    const by_name = lchs("by_name");
+    const by_index = lchs("by_index");
+    const tracker = lchs("tracker");
+    const callback = lchs("callback");
+    const changes = lchs("changes");
+    const owner = lchs("owner");
+    const window = lchs("window");
+    const named_items = lchs("named_items");
+    const ignore = lchs("ignore");
+    const handleChanges = lchs("handleChanges");
+    const hasChanges = lchs("hasChanges");
 
-class LiveCollectionHelper
-{
-    /* We're going to be storing weak references to avoid any GC issues but
-    they're values so we use the standard maps here. */
-
-    #by_id;
-    #by_name;
-    #by_index;
-    /* This is probably not used but may help in the future and won't add much
-    cost by being here. Hopefully it'll mean that removeChild() will eventually
-    just have to make a gc call to do the book keeping for us.
-    */
-    #tracker;
-    #callback; // The callback to handle changes
-    #changes; // flag to say if we have changes
-    #owner; // the node that invoked the getElements function
-    #window; // our window
-    #named_items;
-    /*
-    - owner - the node which owns this collection
-    - cb - callback which takes onwer as a parameter used to rebuild the
-      collection. Note that we pass owner as a parameter so the collection
-      callback can avoid creating a reference cyle (owner is stored as a
-      weakref which is dereferenced on calling the callback).
-    - named_items - should we enable id and name based indexing?
-    */
-    constructor(owner, cb, named_items)
-    {
-        const w = my$win();
-        // play safe with the weak ref to make sure it's in the right context
-        this.#owner = new w.WeakRef(owner);
-        this.#named_items = !!named_items;
-        if (this.#named_items) {
-            this.#by_id = new w.Map;
-            this.#by_name = new w.Map;
-        }
-        this.#by_index = new w.Array;
-        this.#tracker = new w.FinalizationRegistry((c) => c.hasChanges());
-        this.#tracker.register(owner, this);
-        this.#callback = cb;
-        this.#window = w;
-        // We need to rebuild initially but only on first lookup
-        this.hasChanges();
-    }
-
-    // Just flag that we need to rebuild, nothing more
-    hasChanges() { this.#changes = true; }
-
-    // Possibly could be more efficient by not rebuilding from scratch
-    #handleChanges() {
-        if (!this.#changes) return;
-        /* I can't think of a case where the following logic could retrigger a
-        rebuild, but I'll clear the flag early in case */
-        this.#changes = false;
-        this.#by_index.length = 0;
-        if (this.#named_items) {
-            this.#by_id.clear();
-            this.#by_name.clear();
-        }
-        if (!this.#owner) return;
-        const o = this.#owner.deref();
-        if (!o) {
-            this.#owner = undefined;
-            return; // everything's gone
-        }
-        for (const element of this.#callback(o)) {
-            const ref = new this.#window.WeakRef(element);
-            this.#by_index.push(ref);
-            this.#tracker.register(element, this);
-            if (!this.#named_items) continue;
-            if (element.id) this.#by_id.set(element.id, ref);
-            if (element.name) this.#by_name.set(element.name, ref);
-        }
-    }
-
-    item(i)
-    {
-        this.#handleChanges();
-        const ref = this.#by_index[i];
-        if (ref) {
-            const element = ref.deref()
-            if (!element) {
-                this.by_index.splice(i, 1);
-                this.item(i);
+    globalThis.Eb$LiveCollectionHelper = class {
+        /*
+        - owner - the node which owns this collection
+        - cb - callback which takes onwer as a parameter used to rebuild the
+          collection. Note that we pass owner as a parameter so the collection
+          callback can avoid creating a reference cyle (owner is stored as a
+          weakref which is dereferenced on calling the callback).
+        - named - should we enable id and name based indexing?
+        */
+        constructor(owner, cb, named)
+        {
+            const w = my$win();
+            // play safe with the weak ref to make sure it's in the right context
+            this[owner] = new w.WeakRef(owner);
+            this[named_items] = !!named;
+            if (this[named_items]) {
+                this[by_id] = new w.Map;
+                this[by_name] = new w.Map;
             }
-            return element;
+            this[by_index] = new w.Array;
+            this[tracker] = new w.FinalizationRegistry((c) => c[hasChanges]());
+            this[tracker].register(owner, this);
+            this[callback] = cb;
+            this[window] = w;
+            // We need to rebuild initially but only on first lookup
+            this[ignore] = false;
+            this[hasChanges]();
         }
-        return null;
-    }
 
-    namedItem(n)
-    {
-        if (!this.#named_items) return;
-        this.#handleChanges();
-        for (const m of [this.#by_id, this.#by_name]) {
-            const ref = m.get(n);
+        // Just flag that we need to rebuild, nothing more
+        [hasChanges]() { this[changes] = true; }
+
+        // Possibly could be more efficient by not rebuilding from scratch
+        [handleChanges]()
+        {
+            if (this[ignore] || !this[changes]) return;
+            /* I can't think of a case where the following logic could retrigger a
+            rebuild, but I'll clear the flag early in case */
+            this[changes] = false;
+            this[by_index].length = 0;
+            if (this[named_items]) {
+                this[by_id].clear();
+                this[by_name].clear();
+            }
+            if (!this[owner]) return;
+            const o = this[owner].deref();
+            if (!o) {
+                this[owner] = null;
+                return; // everything's gone
+            }
+            for (const element of this[callback](o)) {
+                const ref = new this[window].WeakRef(element);
+                this[by_index].push(ref);
+                this[tracker].register(element, this);
+                if (!this[named_items]) continue;
+                if (element.id) this[by_id].set(element.id, ref);
+                if (element.name) this[by_name].set(element.name, ref);
+            }
+        }
+
+        item(i)
+        {
+            this[handleChanges]();
+            const ref = this[by_index][i];
             if (ref) {
-                const element = ref.deref();
-                if (!element) m.delete(n);
-                else return element;
+                const element = ref.deref()
+                if (!element) {
+                    this[by_index].splice(i, 1);
+                    this.item(i);
+                }
+                return element;
+            }
+            return null;
+        }
+
+        namedItem(n)
+        {
+            if (!this[named_items]) return;
+            this[handleChanges]();
+            for (const m of [this[by_id], this[by_name]]) {
+                const ref = m.get(n);
+                if (ref) {
+                    const element = ref.deref();
+                    if (!element) m.delete(n);
+                    else return element;
+                }
+            }
+            return null;
+        }
+
+        get length()
+        {
+            this[handleChanges]();
+            return this[by_index].length;
+        }
+
+        /* Altering collections during iteration is not good practice but is
+        mentioned in the spec. As such we need to make sure we handle changes
+        including emptying the entire collection during the process. */
+
+        *[Symbol.iterator]()
+        {
+            for (let i = 0; i < this.length; ++i) {
+                const element = this.item(i);
+                if (!element) break;
+                yield element;
             }
         }
-        return null;
     }
-
-    get length()
-    {
-        this.#handleChanges();
-        return this.#by_index.length;
-    }
-
-    /* Altering collections during iteration is not good practice but is
-    mentioned in the spec. As such we need to make sure we handle changes
-    including emptying the entire collection during the process. */
-
-    *[Symbol.iterator]()
-    {
-        for (let i = 0; i < this.length; ++i) {
-            const element = this.item(i);
-            if (!element) break;
-            yield element;
-        }
-    }
-}
+})();
 
 class Eb$GetElementsCache
 {
@@ -519,38 +522,6 @@ class Eb$GetElementsCache
     }
 }
 
-class HTMLCollection extends Array {
-    // type indicates tag name, name, or class name
-    // v is the value for getElements to watch for
-// owner is the node that invoked the getElements function
-    constructor(type, v, owner)
-    {
-        super();
-        this.hc$int$type = type, this.hc$int$v = v, this.hc$int$owner = owner;
-    }
-
-    item(n) { return this[n] ? this[n] : null}
-    namedItem(n) { return this[n] ? this[n] : null}
-    toString() { return "[object HTMLCollection]"}
-}
-
-class NodeList extends Array {
-    // type indicates tag name, name, or class name
-    // v is the value for getElements to watch for
-    // owner is the node that invoked the getElements function
-    // a is an array to load
-    constructor(type, v, owner, a)
-    {
-        super();
-        this.hc$int$type = type, this.hc$int$v = v, this.hc$int$owner = owner;
-        if(Array.isArray(a))
-            for(let c of a) this.push(c);
-    }
-
-    item(n) { return this[n] ? this[n] : null}
-    toString() { return "[object NodeList]"}
-}
-
 function collectionReindex(c)
 {
     const type = c.hc$int$type, v = c.hc$int$v, owner = c.hc$int$owner;
@@ -603,8 +574,9 @@ function collectionReindex(c)
 function collectionNodeReindex(n)
 {
     const cache = n.getElements$$cache;
-    if(!cache) return; // nothing here
-    for(let c of cache.collections()) collectionReindex(c);
+    if (!cache) return; // nothing here
+    for (const c of cache.collections())
+        c[Symbol.for("Eb$LiveCollectionHelper.hasChanges")]();
 }
 
 function collectionNodeReindex2(t)
@@ -619,24 +591,6 @@ function collectionNodeReindex2(t)
 // there's a lot of overhead to reindex, try not to duplicate
 function collectionSet(type, value, node)
 {
-    let c, cache = node.getElements$$cache;
-    if(!cache) {
-        cache = new Eb$GetElementsCache;
-        node.getElements$$cache = cache;
-    }
-
-    c = cache.get(type, value);
-    if(c) return c; // match! Reuse and maintain what we already have
-
-    c = type == 2 ? new NodeList(type, value, node) : new HTMLCollection(type, value, node);
-    collectionReindex(c);
-    cache.add(type, value, c);
-    return c;
-}
-
-// new version, currently not used
-function collectionSet2(type, value, node)
-{
     const w = my$win();
     let c, cache = node.getElements$$cache;
     if(!cache) {
@@ -645,9 +599,9 @@ function collectionSet2(type, value, node)
     }
 
     c = cache.get(type, value);
-    if(c) return c; // match! Reuse and maintain what we already have
+    if (c) return c; // match! Reuse and maintain what we already have
     let cb;
-    switch(type) {
+    switch (type) {
         case 1:
             cb = (o) => gebtn(o, value, true, false)
             c = new w.HTMLCollection(node, cb);
@@ -669,13 +623,13 @@ function collectionSet2(type, value, node)
     return c;
 }
 
-function getElementsByTagName(s) {
+function getElementsByTagName(s)
+{
     if(!s) { // missing or null argument
         alert3("getElementsByTagName(type " + typeof s + ")");
-        return new HTMLCollection(0, "", null);
+        return collectionSet(1, "", null);
     }
-    s = s.toLowerCase();
-    return collectionSet(1, s, this);
+    return collectionSet(1, s.toLowerCase(), this);
 }
 
 function gebtn(top, s, first, all) {
@@ -703,10 +657,11 @@ a = a.concat(gebtn(c, s, false, all));
 return a;
 }
 
-function getElementsByName(s) {
+function getElementsByName(s)
+{
     if(!s) { // missing or null argument
         alert3("getElementsByName(type " + typeof s + ")");
-        return new NodeList(0, "", null)
+        return collectionSet(2, "", null);
     }
     return collectionSet(2, s, this);
 }
@@ -772,15 +727,12 @@ for(let c of top.childNodes) {
     return null;
 }
 
-function getElementsByClassName(s) {
-    if(!s) { // missing or null argument
-        alert3("getElementsByClassName(type " + typeof s + ")");
-        return new HTMLCollection(0, "", null)
-    }
-    s = s . trim();
-    if(s === "") return new HTMLCollection(0, "", null)
-    let sa = s.split(/\s+/);
-    return collectionSet(3, sa, this);
+function getElementsByClassName(s)
+{
+    if(!s) alert3("getElementsByClassName(type " + typeof s + ")");
+    else s = s.trim();
+    if (!s) return collectionSet(3, "", null);
+    return collectionSet(3, s.split(/\s+/), this);
 }
 
 function gebcn(top, sa, first) {
@@ -3619,16 +3571,16 @@ function sdpc(k, v) { odp(d, k, {value:v, writable:true, configurable:true})}
 /* The other half of the HTMLCollection mechanism as promised. Note that we
 proxy the class here rather than a constructed object so we can proxy the
 constructor as well as everything else. */
-swp("HTMLCollection2", new Proxy(LiveCollectionHelper, {
+swp("HTMLCollection", new Proxy(Eb$LiveCollectionHelper, {
     construct(target, args, new_target)
     {
         // HTMLCollections always have named items
         args[2] = true;
         // We want to return a proxied version of the created object for our magic getter
-        const special = new w.Set(["item", "namedItem", "hasChanges", "length"]);
+        const special = new w.Set(["item", "namedItem", "length"]);
         return new Proxy(Reflect.construct(target, args, new_target), {
             /* Trap all get calls, if it's a string use namedItem if a number I assume
-            an index so item. The length property is special. */
+            an index so item. Some properties is special. */
             get(target, property, receiver)
             {
                 if (special.has(property)) return Reflect.get(target, property, receiver);
@@ -3643,24 +3595,23 @@ swp("HTMLCollection2", new Proxy(LiveCollectionHelper, {
                     break;
                     case "number":
                         res = target.item(property);
+                    break;
                     default:
-                        alert3(`HTMLCollection unknown type passed to get ${pt}`);
+                        return Reflect.get(target, property, receiver);
                     break;
                 }
                 return (res === null) ? undefined : res;
             },
-            set(t,p,r) { alert3(`HTMLCollection attempt to set property ${p}`); },
-            deleteProperty(t,p,r) { alert3(`HTMLCollection attempt to delete property ${p}`); }
         })
     }
 }))
 
-swp("NodeList2", new Proxy(LiveCollectionHelper, {
+swp("NodeList", new Proxy(Eb$LiveCollectionHelper, {
     construct(target, args, new_target)
     {
         // NodeLists never have named items
         args[2] = false;
-        const special = new w.Set(["item", "hasChanges", "length"]);
+        const special = new w.Set(["item", "length"]);
         return new Proxy(Reflect.construct(target, args, new_target), {
             get(target, property, receiver)
             {
@@ -3668,11 +3619,11 @@ swp("NodeList2", new Proxy(LiveCollectionHelper, {
                 if (property === "toString")
                     return () => "[object NodeList]";
 
-                if (typeof property !== "number") return;
+                if (typeof property !== "number")
+                    return Reflect.get(target, property, receiver);
+                let res = target.item(property);
                 return (res === null) ? undefined : res;
             },
-            set(t,p,r) { alert3(`HTMLCollection attempt to set property ${p}`); },
-            deleteProperty(t,p,r) { alert3(`HTMLCollection attempt to delete property ${p}`); }
         })
     }
 }))
@@ -4162,7 +4113,15 @@ nodep.cloneNode = function(deep) {
 }
 
 nodep.querySelector = querySelector
-nodep.querySelectorAll = function(c,s) { return new NodeList(0, "", null, querySelectorAll.call(this,c,s)) }
+nodep.querySelectorAll = function(c,s) {
+    const nl = new w.NodeList(this, (n, c, s) => {
+        querySelectorAll.call(n,c,s);
+        n[Symbol.for("Eb$LiveCollectionHelper.ignore")] = true;
+    });
+    // Trigger the rebuild
+    nl[0];
+    return nl;
+}
 
 // visual
 nodep.clientHeight = 16;
@@ -4301,8 +4260,6 @@ swde("HTMLDocument", class extends w.Document {
 }) // legacy
 let docp = w.Document.prototype;
 docp.activeElement = null;
-docp.querySelector = querySelector
-docp.querySelectorAll = function(c,s) { return new NodeList(0, "", null, querySelectorAll.call(this,c,s)) }
 odp(docp, "documentElement", {get: function() {
   let e = this.lastChild;
 if(!e) { alert3("missing documentElement node"); return null; }
@@ -4986,9 +4943,6 @@ swde("DocumentFragment", class extends w.HTMLElement {
 let fragp = w.DocumentFragment.prototype;
 fragp.nodeType = 11;
 fragp.nodeName = fragp.tagName = "#document-fragment";
-fragp.querySelector = querySelector
-fragp.querySelectorAll = function(c,s) { return new NodeList(0, "", null, querySelectorAll.call(this,c,s)) }
-
 docp.createDocumentFragment = function() {
 const c = this.createElement("fragment");
 return c;
@@ -9821,7 +9775,7 @@ Promise, Array, Uint8Array, Error, String, URL, URLSearchParams,
 Intl_dt, Intl_num,
 Blob, FormData,
 Request, Response,
-Headers, UnsupportedError];
+Headers, UnsupportedError, Eb$LiveCollectionHelper];
 for(let k of flist) {
 Object.freeze(k);
 Object.freeze(k.prototype);
