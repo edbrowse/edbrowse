@@ -752,24 +752,26 @@ static bool run_function_bool(JSContext *cx, JSValueConst parent, const char *na
 		debugPrint(3, "running function %s in context %d but current context is %d", name, jj, cf->gsn);
 // run it anyways and hope we know what we're doing
 	}
-// don't print timer in and out unless debug >= 4
-	if (stringEqual(name, "ontimer")) {
-		dbl = 4;
-		v = JS_GetPropertyStr(cx, parent, "tsn");
-		grab(v);
-		if(JS_IsNumber(v))
-			JS_ToInt32(cx, &seqno, v);
-		JS_Release(cx, v);
-	}
-	if (stringEqual(name, "connectedCallbackStart"))
-		dbl = 4;
-	if (stringEqual(name, "frames$rebuild"))
-		dbl = 4;
-// don't print message function running in and out, it runs all the time!
-	if (stringEqual(name, "onmessage$$running"))
-		dbl = 9;
-	v = JS_GetPropertyStr(cx, parent, name);
-	grab(v);
+
+    // don't print timer in and out unless debug >= 4
+    if (stringEqual(name, "ontimer")) {
+        dbl = 4;
+        v = JS_GetPropertyStr(cx, parent, "tsn");
+        grab(v);
+        if(JS_IsNumber(v))
+            JS_ToInt32(cx, &seqno, v);
+        JS_Release(cx, v);
+    }
+    // other functions we might not want to see at debug 3
+    if (stringEqual(name, "connectedCallbackStart") ||
+    stringEqual(name, "docCollectionReindex") ||
+    stringEqual(name, "frames$rebuild"))
+        dbl = 4;
+    if(stringEqual(name, "onmessage$$running"))
+        dbl = 9;
+
+    v = JS_GetPropertyStr(cx, parent, name);
+    grab(v);
 	if(!JS_IsFunction(cx, v)) {
 		debugPrint(3, "no such function %s", name);
 		JS_Release(cx, v);

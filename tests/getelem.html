@@ -91,6 +91,8 @@ bat = b.getElementsByTagName("span")
 <script>
 try {
 if(bat.length != 1) msg += `|inline &lt;span&gt; not in the collection length ${bat.length}`
+document.writeln("<span></span>")
+if(bat.length != 2) msg += `|write &lt;span&gt; not in the collection length ${bat.length}`
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}
 </script>
