@@ -632,7 +632,7 @@ static void runGeneratedHtml(Tag *t, const char *h)
 	else
 		debugPrint(4, "parse under top");
 	debugGenerated(h);
-	const int startpos = htmlScanner(h, t, true);
+	const int startpos = htmlScanner(h, t, 3);
 	prerender(startpos);
 	decorate(startpos, 0);
 	debugPrint(3, "end parse html from docwrite");
@@ -1408,7 +1408,7 @@ char *htmlParse(char *buf, int remote)
 	cf->hbase = cloneString(cf->fileName);
 
 	debugPrint(3, "parse html from browse");
-	const int startpos = htmlScanner(buf, NULL, false);
+	const int startpos = htmlScanner(buf, NULL, 0);
 	nzFree(buf);
 	prerender(startpos);
 
@@ -6099,7 +6099,7 @@ void html_from_setter(Tag *t, const char *h)
 
 // Cut all the children away from t
 	underKill(t);
-	const int startpos = htmlScanner(h, t, true);
+	const int startpos = htmlScanner(h, t, 2);
 	prerender(startpos);
 	decorate(startpos, t);
 	debugPrint(3, "end parse html from innerHTML");

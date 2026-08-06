@@ -609,12 +609,13 @@ struct htmlTag {
 	struct htmlTag *controller;
 	pthread_t loadthread;
 	long hcode;
-	bool loadsuccess;
 	uchar step; // prerender, decorate, load script, runscript
+	uchar scriptgen; // script generated, not from source
 // the slash member was for the tag coresponding to <foo/>, the closing tag,
 // but we don't do that any more, just one tag for <foo> in the tree.
 // Except ... <pre> and </pre> need separate tags.
 	bool slash:1;
+	bool loadsuccess;
 	bool textin:1; // <a> some text </a>
 	bool deleted:1; // deleted from the current buffer
 	bool dead:1; // removed by garbage collection
@@ -629,7 +630,6 @@ struct htmlTag {
 	bool hidden:1;
 	bool clickable:1;	// but not an input field
 	bool secure:1;
-	bool scriptgen:1; // script generated, not from source
 	bool checked:1;
 	bool rchecked:1;	// for reset
 	bool post:1;		// post, rather than get
