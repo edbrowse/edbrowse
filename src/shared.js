@@ -1473,18 +1473,7 @@ eval() is the key, but there are a lot of details.
 We can't run it twice, so set eb$step = 5, so that runScriptsPending()
 in html.c doesn't see it and run it again; after all, we might not detach it.
 It might still be hanging around. Or we might attach it again later.
-For now I don't run it if we are still browsing.
-I assume the scripts so attached are going to stay in the tree,
-and will be found by html.c.
-Thus the first check is on readyState, to see if we are browsing.
-What happens, you may ask, if they call getScript from one of the scripts
-in the base - that is, while we are still browsing.
-We don't run it here, and it isn't in the tree for runScriptsPending().
-Well, I don't think people do that, and if they do,
-we'll cross that bridge when we come to it.
-It seems like we should just run it all the time,
-but then it could run out of order relative to the other scripts in the base.
-It's complicated!
+The script does not run immediately if it is remote.
 For you developers, you might want to use our breakpoint trace feature,
 and that means you can't just shove the script through eval.
 You have to do the macro expansion that is done in jseng-quick.c.
@@ -1505,40 +1494,38 @@ return r
 }
 
 function runScriptWhenAttached(s) {
-if(s.dom$class != "HTMLScriptElement") return; // not a script
-const w = isRooted(s); // the rooting window
-if(!w) return;
-const d = w.document;
-const n = s.eb$step
-const inbrowse = (d.readyState != "complete");
-alert3(`script ${s.eb$seqno} attached ${inbrowse?"during":"after"} browse type ${s.type} src ${s.src} length ${s.text.length} step ${n}`);
-if(n >= 5) return; // already run
-if(inbrowse) return;
-s.eb$step = 5
-if(s.type && !s.type.match(/javascript$/i)) {
-alert3(`script type ${s.type} not executed`);
-return;
-}
-alert3("exec attached")
-d.currentScript = s;
-if(s.text.match(/(bp|trace)@\(/)) {
-// Oops, have to expand for tracing
-w.eval(s.text.replace(/(,?) *(trace|bp)@\((\w+)\) *([,;]?)/g, traceBreakReplace))
-} else {
-w.eval(s.text)
-}
-d.currentScript = null
-alert3("exec complete")
-/*
-in case the script has an onload handler
-but this doesn't run unless, perhaps, the script is loaded from src,
-which we don't even support at this time.
-If you need to support that some day, use XMLHttpRequest.
-Then execute then follow up with this onload code.
-var e = new w.Event()
-e.initEvent("load", true, true)
-s.dispatchEvent(e)
-*/
+    const w = isRooted(s); // the rooting window
+    if(!w) return;
+    const d = w.document;
+    const inbrowse = (d.readyState != "complete");
+    const save_current = d.currentScript;
+    let list = gebtn(s, "script", true, false);
+    // our getElements functions never include the top node,
+    // but in this case we might want to.
+    if(s.dom$class == "HTMLScriptElement") 
+        list.splice(0, 0, s);
+    for(let c of list) {
+        const n = c.eb$step
+        alert3(`script ${c.eb$seqno} attached ${inbrowse?"during":"after"} browse type ${c.type} src ${c.src} length ${c.text.length} step ${n}`);
+        if(n >= 5) continue; // already run
+        if(c.src) continue; // remote script
+        c.eb$step = 5
+        if(c.type && !c.type.match(/javascript$/i)) {
+            alert3(`script type ${c.type} not executed`);
+            continue;
+        }
+        alert3("exec attached")
+        d.currentScript = c;
+        if(c.text.match(/(bp|trace)@\(/)) {
+            // Oops, have to expand for tracing
+            w.eval(c.text.replace(/(,?) *(trace|bp)@\((\w+)\) *([,;]?)/g, traceBreakReplace))
+        } else {
+            w.eval(c.text)
+        }
+        alert3("exec complete")
+        // remote scripts not executed here, so we don't have to worry about onload
+    }
+    d.currentScript = save_current
 }
 
 // argument should be document; we descend down from there.
