@@ -309,17 +309,150 @@ function customizeInPlace(o1, custom)
 }
 
 /*********************************************************************
-the HTMLCollection class and the NodeList class.
-These are very similar, though the collection has more instance methods.
-Note that the user can't change the collection directly, change the length,
-set c[i] = object, etc, but I'm not going to guard against that.
-He can't do it in any other browser, it would blow up,
-so why would he even try it here?
-I only need assure that the things he can do in another browsers,
-he can do here.
-This Array extension isn't perfect, but it's easier,
-and shouldn't cause any real-world problems.
+
+the HTMLCollection class.
+
+The below helper class is wrapped in a proxy object per window. That essentially
+allows us to catch any type of property access and handle accordingly. It also
+handles proxying the constructor so the new operator works as expected. That's
+not handled here. This is the internal mechanism which handles all this.
+Since the proxy class is exported to every window, we can confirm
+ document.images instanceof HTMLCollection
+That means the user could say new HTMLCollection, which is not allowed,
+but since it's not allowed I can be comfortable in saying nobody's going to
+do that, and I don't have to guard against it.
+
+The proxy object disallows certain operations as the user can't change the
+collection directly, change the length,
+set c[i] = object, etc, again mostly not handled here.
+>>>>>>> 763026a8 (Unused helper class for new HTMLCollection implementation)
 *********************************************************************/
+
+class HTMLCollectionHelper
+{
+    /* We're going to be storing weak references to avoid any GC issues but
+    they're values so we use the standard maps here. */
+
+    #by_id;
+    #by_name;
+    #by_index;
+    /* This is probably not used but may help in the future and won't add much
+    cost by being here. Hopefully it'll mean that removeChild() will eventually
+    just have to make a gc call to do the book keeping for us.
+    */
+    #tracker;
+    #callback; // The callback to handle changes
+    #changes; // flag to say if we have changes
+    #owner; // the node that invoked the getElements function
+    #window; // our window
+    // type indicates tag name, name, or class name
+    // value is the value for getElements to watch for
+    // owner - see above
+    constructor(type, value, owner)
+    {
+        const w = my$win();
+        // play safe with the weak ref to make sure it's in the right context
+        this.#owner = new w.WeakRef(owner);
+        this.#by_id = new w.Map;
+        this.#by_name = new w.Map;
+        this.#by_index = new w.Array;
+        this.#tracker = new w.FinalizationRegistry((c) => c.hasChanges());
+        this.#tracker.register(owner, this);
+        switch(type) {
+            case 1:
+                this.#callback = (o) => gebtn(o, value, true, false);
+            break;
+            case 2:
+                this.#callback = (o) => gebn(o, value, true);
+            break;
+            case 3:
+                this.#callback = (o) => gebcn(o, value, true);
+            break;
+            default:
+                this.#callback = (o) => alert3(`HTMLCollection rebuild operation not set for ${o.nodeName}`);
+            break;
+        }
+        this.#window = w;
+        this.hasChanges();
+    }
+
+    // Just flag that we need to rebuild, nothing more
+    hasChanges() { this.#changes = true; }
+
+    // Possibly could be more efficient by not rebuilding from scratch
+    #handleChanges() {
+        if (!this.#changes) return;
+        /* I can't think of a case where the following logic could retrigger a
+        rebuild, but I'll clear the flag early in case */
+        this.#changes = false;
+        this.#by_index.length = 0;
+        this.#by_id.clear();
+        this.#by_name.clear();
+        if (!this.#owner) return;
+        const o = this.#owner.deref();
+        if (!o) {
+            this.#owner = undefined;
+            return; // everything's gone
+        }
+        for (const element of this.#callback(o)) {
+            const id = element.getAttribute("id");
+            const name = element.getAttribute("name");
+            const ref = new this.#window.WeakRef(element);
+            if (id) this.#by_id.set(id, ref);
+            if (name) this.#by_name.set(name, ref);
+            this.#by_index.push(ref);
+            this.#tracker.register(element, this);
+        }
+    }
+
+    item(i)
+    {
+        this.#handleChanges();
+        const ref = this.#by_index[i];
+        if (ref) {
+            const element = ref.deref()
+            if (!element) {
+                this.by_index.splice(i, 1);
+                this.item(i);
+            }
+            return element;
+        }
+        return null;
+    }
+
+    namedItem(n)
+    {
+        this.#handleChanges();
+        for (const m of [this.#by_id, this.#by_name]) {
+            const ref = m.get(n);
+            if (ref) {
+                const element = ref.deref();
+                if (!element) m.delete(n);
+                else return element;
+            }
+        }
+        return null;
+    }
+
+    get length()
+    {
+        this.#handleChanges();
+        return this.#by_index.length;
+    }
+
+    /* Altering collections during iteration is not good practice but is
+    mentioned in the spec. As such we need to make sure we handle changes
+    including emptying the entire collection during the process. */
+
+    *[Symbol.iterator]()
+    {
+        for (let i = 0; i < this.length; ++i) {
+            const element = this.item(i);
+            if (!element) break;
+            yield element;
+        }
+    }
+}
 
 class HTMLCollection extends Array {
     // type indicates tag name, name, or class name
@@ -356,7 +489,7 @@ class NodeList extends Array {
 function collectionReindex(c)
 {
     const type = c.hc$int$type, v = c.hc$int$v, owner = c.hc$int$owner;
-//  alert(`collect ${type}:${v}`)
+//    alert(`collect ${type}:${v}`)
     // clear everything out and rebuild; that's the easiest way
     c.length = 0;
     let name, list;
