@@ -4137,6 +4137,31 @@ static struct jsTimer *soonest(void)
 	return best_t;
 }
 
+// version of the above specifically for tmwait.
+// Returns 0 if there aren't any user-defined timers.
+static struct jsTimer *soonest2(void)
+{
+    struct jsTimer *t, *best_t = 0;
+    const Window *w;
+    bool realtimers = false;
+    foreach(t, timerList) {
+        if(!t->pending) {
+            realtimers = true;
+            if(!allowJS || !gotimers) continue;
+            w = t->f->owner;
+            if(sessionList[w->sno].lw != w) continue;
+            if(t->isInterval) {
+                puts("intervals");
+                return 0;
+            }
+        }
+        if (!best_t || t->sec < best_t->sec ||
+            (t->sec == best_t->sec && t->ms < best_t->ms))
+            best_t = t;
+    }
+    return realtimers ? best_t : 0;
+}
+
 bool timerWait(int *delay_sec, int *delay_ms)
 {
 	struct jsTimer *jt;
@@ -4173,6 +4198,23 @@ bool timerWait(int *delay_sec, int *delay_ms)
 	}
 
 	return true;
+}
+
+// version of the above specifically for tmwait.
+bool timerWait2(int *delay_sec, int *delay_ms)
+{
+    struct jsTimer *jt;
+    if (!(jt = soonest2())) return false;
+    currentTime();
+    if (now_sec > jt->sec || (now_sec == jt->sec && now_ms >= jt->ms))
+        *delay_sec = *delay_ms = 0;
+    else {
+        *delay_sec = jt->sec - now_sec;
+        *delay_ms = (jt->ms - now_ms);
+        if (*delay_ms < 0)
+            *delay_ms += 1000, --*delay_sec;
+    }
+    return true;
 }
 
 void delTimers(const Frame *f)

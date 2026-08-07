@@ -190,6 +190,7 @@ const char *tack_array(const char *e);
 void domSetsTimeout(int n, const char *jsrc, const char *backlink, bool isInterval);
 void scriptOnTimer( Tag *t);
 bool timerWait(int *delay_sec, int *delay_ms);
+bool timerWait2(int *delay_sec, int *delay_ms);
 void delTimers(const Frame *f);
 void runTimer(void);
 void showTimers(void);
