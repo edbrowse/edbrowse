@@ -3565,29 +3565,27 @@ swp("HTMLCollection", new Proxy(Eb$LiveCollectionHelper, {
         // HTMLCollections always have named items
         args[2] = true;
         // We want to return a proxied version of the created object for our magic getter
-        const special = new w.Set(["item", "namedItem", "length"]);
         return new Proxy(Reflect.construct(target, args, new_target), {
             /* Trap all get calls, if it's a string use namedItem if a number I assume
-            an index so item. Some properties is special. */
+            an index so item. Check the instance first in all cases. */
             get(target, property, receiver)
             {
-                if (special.has(property)) return Reflect.get(target, property, receiver);
+                if (property in target) return Reflect.get(target, property, receiver);
                 if (property === "toString")
                     return () => "[object HTMLCollection]";
 
-                const pt = typeof property;
+                if (typeof property === "symbol")
+                    return Reflect.get(target, property, receiver);
+
                 let res;
-                switch (pt) {
-                    case "string":
-                        res = target.namedItem(property);
-                    break;
-                    case "number":
-                        res = target.item(property);
-                    break;
-                    default:
-                        return Reflect.get(target, property, receiver);
-                    break;
-                }
+                /* Apparently numeric looking properties are actually passed
+                as strings so we have to check if the property converts to a
+                number in a way that passes the loose equality test */
+                if (Number(property) == property)
+                    res = target.item(property);
+                else
+                    res = target.namedItem(property);
+
                 return (res === null) ? undefined : res;
             },
         })
@@ -3599,11 +3597,10 @@ swp("NodeList", new Proxy(Eb$LiveCollectionHelper, {
     {
         // NodeLists never have named items
         args[2] = false;
-        const special = new w.Set(["item", "length"]);
         return new Proxy(Reflect.construct(target, args, new_target), {
             get(target, property, receiver)
             {
-                if (special.has(property)) return Reflect.get(target, property, receiver);
+                if (property in target) return Reflect.get(target, property, receiver);
                 if (property === "toString")
                     return () => "[object NodeList]";
 
