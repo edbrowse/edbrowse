@@ -354,10 +354,10 @@ function collectionSymbol(s)
     globalThis.Eb$CollectionHelper = class {
         /*
         - node - the node which owns this collection
-        - cb - callback which takes onwer as a parameter used to rebuild the
-          collection. Note that we pass owner as a parameter so the collection
-          callback can avoid creating a reference cyle (owner is stored as a
-          weakref which is dereferenced on calling the callback).
+        - cb - callback which takes onwer and this as parameters used to rebuild
+          the collection. Note that we pass owner as a parameter so the
+          collection callback can avoid creating a reference cyle (owner is
+          stored as a weakref which is dereferenced on calling).
         - named - should we enable id and name based indexing?
         */
         constructor(node, cb, named)
@@ -402,7 +402,7 @@ function collectionSymbol(s)
                 this[owner] = null;
                 return; // everything's gone
             }
-            for (const element of this[callback](o)) {
+            for (const element of this[callback](o, this)) {
                 const ref = new this[window].WeakRef(element);
                 this[by_index].push(ref);
                 this[tracker].register(element, this);
@@ -4064,14 +4064,14 @@ nodep.cloneNode = function(deep) {
 
 nodep.querySelector = querySelector
 nodep.querySelectorAll = function(c,s) {
-    const nl = new w.NodeList(this, (n, c, s) => {
+    const ret = new w.NodeList(this, (n,nl) => {
         const res = querySelectorAll.call(n,c,s);
-        n[collectionSymbol("ignore")] = true;
+        nl[collectionSymbol("ignore")] = true;
         return res;
     });
     // Trigger the rebuild
-    nl[0];
-    return nl;
+    ret[0];
+    return ret;
 }
 
 // visual
