@@ -346,8 +346,6 @@ function collectionSymbol(s)
     const named_items = collectionSymbol("named_items");
     const ignore = collectionSymbol("ignore");
     const handleChanges = collectionSymbol("handleChanges");
-    const hasChanges = collectionSymbol("hasChanges");
-
     /* not sure if it would be noticeably more efficient to handle the named
     items in the derived classes but this is easier */
 
@@ -372,17 +370,14 @@ function collectionSymbol(s)
                 this[by_name] = new w.Map;
             }
             this[by_index] = new w.Array;
-            this[tracker] = new w.FinalizationRegistry((c) => c[hasChanges]());
+            this[tracker] = new w.FinalizationRegistry((c) => c[changes] = true);
             this[tracker].register(node, this);
             this[callback] = cb;
             this[window] = w;
             // We need to rebuild initially but only on first lookup
             this[ignore] = false;
-            this[hasChanges]();
+            this[changes] = true;
         }
-
-        // Just flag that we need to rebuild, nothing more
-        [hasChanges]() { this[changes] = true; }
 
         // Possibly could be more efficient by not rebuilding from scratch
         [handleChanges]()
@@ -555,7 +550,7 @@ function collectionNodeReindex(n)
     const cache = n.getElements$$cache;
     if (!cache) return; // nothing here
     for (const c of cache.collections())
-        c[collectionSymbol("hasChanges")]();
+        c[collectionSymbol("changes")] = true;
 }
 
 function collectionNodeReindex2(t)
