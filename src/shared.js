@@ -356,6 +356,7 @@ using the global symbol registry. */
         constructor(owner, cb, named)
         {
             const w = my$win();
+            w.alert3(`LiveCollectionHelper construct for node ${owner.nodeName}`);
             // play safe with the weak ref to make sure it's in the right context
             this[owner] = new w.WeakRef(owner);
             this[named_items] = !!named;
