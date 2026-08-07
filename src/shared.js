@@ -346,19 +346,19 @@ using the global symbol registry. */
 
     globalThis.Eb$LiveCollectionHelper = class {
         /*
-        - owner - the node which owns this collection
+        - node - the node which owns this collection
         - cb - callback which takes onwer as a parameter used to rebuild the
           collection. Note that we pass owner as a parameter so the collection
           callback can avoid creating a reference cyle (owner is stored as a
           weakref which is dereferenced on calling the callback).
         - named - should we enable id and name based indexing?
         */
-        constructor(owner, cb, named)
+        constructor(node, cb, named)
         {
             const w = my$win();
-            w.alert3(`LiveCollectionHelper construct for node ${owner.nodeName}`);
+            w.alert3(`LiveCollectionHelper construct for node ${node.nodeName}`);
             // play safe with the weak ref to make sure it's in the right context
-            this[owner] = new w.WeakRef(owner);
+            this[owner] = new w.WeakRef(node);
             this[named_items] = !!named;
             if (this[named_items]) {
                 this[by_id] = new w.Map;
@@ -366,7 +366,7 @@ using the global symbol registry. */
             }
             this[by_index] = new w.Array;
             this[tracker] = new w.FinalizationRegistry((c) => c[hasChanges]());
-            this[tracker].register(owner, this);
+            this[tracker].register(node, this);
             this[callback] = cb;
             this[window] = w;
             // We need to rebuild initially but only on first lookup
