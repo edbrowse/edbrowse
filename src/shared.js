@@ -463,7 +463,7 @@ class Eb$GetElementsCache
         this.#window = w;
         this.#cache = new w.Array;
         // Should stop having a magic number here but hard-code for now
-        for (let t = 0; t < 3; ++t) this.#cache.push(new w.Map);
+        for (let t = 0; t < 4; ++t) this.#cache.push(new w.Map);
         this.#tracker = new w.FinalizationRegistry(({m, k}) => m.delete(k));
     }
 
