@@ -4849,6 +4849,7 @@ Needless to say that's not good!
 		// chrome tests show that scripts from innerHTML do not run
 		if(t->scriptgen == 2) {
 		    t->step = 5; // as if already ran
+		    set_property_number_t(t, "eb$step", 5);
 		    // here's something loadScriptData would have done for us
 		    set_property_string_t(t, "text", t->textval);
 		} else loadScriptData(t);
