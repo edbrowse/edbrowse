@@ -60,7 +60,7 @@ if(nn === "BASE" && top.href)
 extra = top.href.toString();
 if(extra.length) extra = ' ' + extra;
 // some tags should never have anything below them so skip the parentheses notation for these.
-if((nn == "BASE" || nn == "META" || nn == "LINK" ||nn == "#text" || nn == "#cdata-section" || nn == "IMAGE" || nn == "OPTION" || nn == "INPUT" || nn == "SCRIPT") &&
+if((nn == "BASE" || nn == "META" || nn == "LINK" ||nn == "#text" || nn == "#cdata-section" || nn == "IMAGE" || nn == "OPTION" || nn == "INPUT" || nn == "SCRIPT" || nn == "HR" || nn == "BR") &&
 (!top.childNodes || top.childNodes.length == 0)) {
 r += nn + extra + '\n';
 return r;
@@ -484,7 +484,7 @@ class Eb$GetElementsCache
         this.#window = w;
         this.#cache = new w.Array;
         // Should stop having a magic number here but hard-code for now
-        for (let t = 0; t < 3; ++t) this.#cache.push(new w.Map);
+        for (let t = 0; t < 4; ++t) this.#cache.push(new w.Map);
         this.#tracker = new w.FinalizationRegistry(({m, k}) => m.delete(k));
     }
 

@@ -774,13 +774,13 @@ void loadScriptData(Tag *t)
 	bool jsbg = down_jsbg;
 	struct i_get g;
 
-	if(cf->xmlMode) {
-// I don't believe we load or run scripts under xml.
-// If we load them, but don't run them, then this has to change somewhat.
-// step = 5 means the script loaded and ran.
-		t->step = 5;
-		return;
-	}
+    if(f->xmlMode) {
+        // I don't believe we load or run scripts under xml.
+        // If we load them, but don't run them, then this has to change somewhat.
+        // step = 5 means the script loaded and ran.
+        t->step = 5;
+        return;
+    }
 
 // If this tag is under <template>, and we clone it again and again,
 // we could be asked to prepare it again and again.
@@ -876,7 +876,7 @@ void loadScriptData(Tag *t)
 
 // don't background fetch for xml, because the scripts never run
 // and we can't guarantee to complete the fetch.
-			if(cf->xmlMode) jsbg = false;
+			if(f->xmlMode) jsbg = false;
 
 // async and defer are the same, as far is edbrowse is concerned.
 // If neither is set we need the script right now.
@@ -1126,6 +1126,75 @@ bool isRooted(const Tag *t)
 	return false;
 }
 
+static void dw_flush(Tag *t)
+{
+    char *keep;
+    int keep_l;
+    if (!cf->dw) return;
+    keep = cf->dw, keep_l = cf->dw_l;
+    cf->dw = 0, cf->dw_l = 0;
+    // completely different behavior before and after browse
+    // After browse, it clobbers the page.
+    if(cf->browseMode && ! cf->dw_clobber) {
+        debugPrint(3, "document.write clobber");
+        run_function_onestring_t(cf->bodytag, "eb$dbih",
+            strstr(keep, "<body>")+6);
+        cf->dw_clobber = true;
+    } else {
+        Tag *t1 = 0, *u;
+        stringAndString(&keep, &keep_l, "</body>");
+    if(t) {
+            for (u = t; u; u = u->same) t1 = u;
+            // t1 is now last real script in the list.
+            // it could be t.
+            // now link these new nodes under the parent of the script
+            t = t->parent;
+        }
+        // if t is null, then put these nodes under <body>
+        // t might have removed itself from the tree, no parent,
+        // or we might be writing outside the context of a script.
+        runGeneratedHtml(t ? t : cf->bodytag, keep);
+        if(!t1) t1 = cw->scriptlist;
+        else t1 = t1->same;
+        for(u = t1; u; u = u->same)
+            if (u->jslink) loadScriptData(u);
+    }
+    nzFree(keep);
+}
+
+// flush the document.write string, if it is a complete thought.
+// Complete means starts and ends with the same tag, open and closed.
+// That hardly captures the nuances of html parsing; it's just a huristic.
+// It will accept, for instance, "<ol> <li> apple <li> orange </ol>"
+static Tag *running_t;
+void dw_flush_conditional(void)
+{
+    char *lt1, *lt2, *gt1, *gt2; // point to < and >
+    char *t;
+    char *base = cf->dw; // shorthand
+    // if not called from a script, I don't know what to do
+    if(!running_t) return;
+    // there should be something here
+    if(!base) return;
+    // remember there is always <body> at the start of the string
+    base += 6;
+    lt1 = strchr(base, '<');
+    gt2 = strrchr(base, '>');
+    if(!lt1 || !gt2 || gt2 < lt1) return;
+    // custom tags can have hyphens
+    for(t = lt1 + 1; isalnum(*t) || *t == '-'; ++t)  ;
+    if(t == lt1 + 1) return; // no tag
+    if(*t != '>' && !isspace(*t)) return; // bad character
+    gt1 = t; // ignore tag attributes, they don't matter
+    lt2 = strrchr(gt1, '<');
+    if(!lt2 || lt2 > gt2 || lt2[1] != '/') return;
+    int l = gt1 - lt1;
+    if(gt2 - lt2 != l + 1) return;
+    if(memcmp(lt1 + 1, lt2 + 2, l - 1)) return; // different ghtags
+    // looks good, process it now
+    dw_flush(running_t);
+}
+
 void runScriptNow(Frame *runframe, Tag *t)
 {
     const char *a; // for attribute
@@ -1133,8 +1202,8 @@ void runScriptNow(Frame *runframe, Tag *t)
     const char *sourcefile;
     int ln; // line number
     bool is_module;
-    char *keep;
-    int keep_l;
+    Tag *save_running_t;
+
     t->step = 5; // now running the script
     set_property_number_t(t, "eb$step", 5);
 
@@ -1186,39 +1255,13 @@ I will disconnect here, and also check for inxhr in runOnload().
     if (cf != runframe)
         debugPrint(4, "running script at a lower frame %s", sourcefile);
     debugPrint(3, "exec %s at %d", sourcefile, ln);
+    save_running_t = running_t, running_t = t;
     jsRunData(t, sourcefile, ln, is_module);
+    running_t = save_running_t;
     debugPrint(3, "exec complete");
 
-// Last step, look for document.write from this script
-    if (!cf->dw) return;
-    keep = cf->dw, keep_l = cf->dw_l;
-    cf->dw = 0, cf->dw_l = 0;
-// completely different behavior before and after browse
-// After browse, it clobbers the page.
-    if(cf->browseMode && ! cf->dw_clobber) {
-        debugPrint(3, "document.write clobber 1");
-        run_function_onestring_t(cf->bodytag, "eb$dbih",
-            strstr(keep, "<body>")+6);
-		cf->dw_clobber = true;
-    } else {
-// Any newly generated scripts have to run next. Move them up in the linked list.
-        Tag *t1, *t2, *u;
-        for (u = t; u; u = u->same) t1 = u;
-// t1 is now last real script in the list.
-        stringAndString(&keep, &keep_l, "</body>");
-        runGeneratedHtml(t, keep);
-        run_function_onearg_win(cf, "eb$uplift", t);
-        for (u = t1; u; u = u->same) t2 = u;
-        if(t1 != t && t2 != t1) {
-            Tag *t3 = t->same;
-            t->same = t1->same;
-            t2->same = t3;
-            t1->same = 0;
-            for (u = t->same; u != t3; u = u->same)
-                if (u->jslink) loadScriptData(u);
-        }
-    }
-    nzFree(keep);
+    // Last step, look for document.write from this script
+    dw_flush(t);
 }
 
 static void runOnload(void);
@@ -1230,26 +1273,15 @@ void runScriptsPending(bool startbrowse)
 	bool change, async;
 	Frame *f, *save_cf = cf;
 
-// Not sure where document.write objects belong.
-// For now I'm putting them under body.
-// Each write corresponds to the frame containing document.write.
-	for (f = &(cw->f0); f; f = f->next) {
-		if (!f->dw) continue;
-		cf = f;
-// completely different behavior before and after browse
-// After browse, it clobbers the page.
-		if(cf->browseMode && !cf->dw_clobber) {
-			debugPrint(3, "document.write clobber 2");
-			run_function_onestring_t(cf->bodytag, "eb$dbih",
-            strstr(cf->dw, "<body>")+6);
-            cf->dw_clobber = true;
-        } else {
-			stringAndString(&cf->dw, &cf->dw_l, "</body>");
-			runGeneratedHtml(cf->bodytag, cf->dw);
-		}
-		nzFree0(cf->dw);
-		cf->dw_l = 0;
-	}
+    // Manage document.write outside the context of a script.
+    // It could come from an onload function or other places.
+    // So the write is just there, and we have to expand the html somewhere.
+    // I think body is the obvious choice.
+    for (f = &(cw->f0); f; f = f->next) {
+        if (!f->dw) continue;
+        cf = f;
+        dw_flush(0);
+    }
 
 top:
 	change = false;
@@ -3854,6 +3886,7 @@ static void unloadHyperlink(const char *js_function, const char *where)
 	stringAndString(&cf->dw, &cf->dw_l, "()'>");
 	stringAndString(&cf->dw, &cf->dw_l, where);
 	stringAndString(&cf->dw, &cf->dw_l, "</A><br>");
+	dw_flush(0);
 }
 
 // Run the various onload functions.
@@ -4381,7 +4414,7 @@ void domOpensWindow(const char *href, const char *name)
 	const char *a;
 	bool replace = false;
 	int ctx;
-	Frame *f;
+	Frame *f, *save_cf;
 
 // replace and context number are packed into the url
 	if (*href == 'r') replace = true;
@@ -4426,6 +4459,7 @@ create_hyperlink:
 	stringAndString(&f->dw, &f->dw_l, r);
 	nzFree(r);
 	stringAndString(&f->dw, &f->dw_l, "</A><br>\n");
+	save_cf = cf, dw_flush(0), cf = save_cf;
 }
 
 /* the new string, the result of the render operation */

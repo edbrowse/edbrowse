@@ -22,11 +22,14 @@ if(div.firstChild.nodeName != "SCRIPT") h += "x";
 // So we have implemented same.
 // d will not appear in the string h.
 h += 'e';
-document.write("<hr><script> h += 'f'<" + "/script>") // runs right now
+// Always write html that is complete, so it triggers dw_flush_conditional
+document.write("<ol><li>apple<li>orange<li>lemon</ol>")
 // document write puts nodes adjacent at the same level
-if(!s.nextSibling || s.nextSibling.nodeName != "HR") h += 'x'
+if(!s.nextSibling || s.nextSibling.nodeName != "OL") h += 'x'
+// write a complete script, which is evaluated now
+document.write(" <script> h += 'f'<" + "/script> ")
 h += 'g'
-// this one is deferred probably because it is src
+// this one is deferred probably because it is remote
 document.write("<script src=scriptord2.js> <" + "/script>")
 h += 'h'
 // indicate we are in the middle and the timer hasn't run yet

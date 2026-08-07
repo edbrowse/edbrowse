@@ -1,0 +1,34 @@
+<body>
+<p id="show">start</p>
+<script>
+/* This test shows the craziness of document.write.
+Edbrowse will probably never replicate all of this functionality.
+The spec says document.write is quirky and it's use is discouraged,
+so I'm not motivated to make everything work here.
+especially since it's not easy.
+Here is what chrome seems to do.
+It accumulates the write output in a buffer, and when any portion of it becomes
+parsible, it does so, immediately, including running any scripts therein.
+What cannot yet be parsed is retained, waiting for the next document.write.
+It weakly reminds me of buffered output, where stdio prints lines
+only when they are complete with \n.
+Look at the script below and you'll see what I mean.
+chrome gives abcd, and then the horizontal rule. */
+
+show = document.getElementById("show")
+v="a"
+document.write("<script> v += ");
+v+="b"
+document.write( "'c'</" + "script><h")
+v+="d"
+document.write("r>")
+show.innerHTML=v
+
+/* We're unlikely to do both, so should edbrowse: (A) process each
+document.write string immediately, hoping it is complete?
+Or (B) should it gather the strings and process it all when the script is over?
+I don't know.
+Some websites may work properly only under (A), some under (B).
+In any event, this test might not ever pass in edbrowse,
+but it's here for documentation. */
+</script>

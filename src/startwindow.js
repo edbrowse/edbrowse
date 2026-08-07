@@ -584,38 +584,6 @@ includes: eb$falsefunction
 }
 })
 
-/*********************************************************************
-When a script runs it may call document.write. But where to put those nodes?
-I think they belong under the script object, I think that's intuitive,
-but most browsers put them under body,
-or at least under the parent of the script object,
-but always in position, as though they were right here in place of the script.
-This function lifts the nodes from the script object to its parent,
-in position, just after the script.
-Watch out! If the script has inline text, it is a proper child of the script,
-and should not be moved. Check for eb$nomove.
-*********************************************************************/
-
-swp("eb$uplift", function(s) {
-var p = s.parentNode;
-if(!p) {
-// this can happen if a script removes itself from the tree.
-// And perhaps it created some nodes via document.write.
-// No I've never seen this combination in the wild.
-p = s.orig$parent;
-}
-if(!p) return;
-var before = s.nextSibling;
-var c = s.firstChild;
-if(c && c.nodeType == 3 && c.eb$nomove) c = c.nextSibling;
-while(c) {
-var hold = c.nextSibling;
-if(before) p.insertBefore(c, before);
-else p.appendChild(c);
-c = hold;
-}
-})
-
 swp("onmessage$$queue", []);
 swpv("postMessage", function (message,target_origin, transfer) {
     let locstring = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;

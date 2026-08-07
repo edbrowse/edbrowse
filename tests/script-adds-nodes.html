@@ -1,7 +1,9 @@
 <head></head>
-<body><p>first paragraph
+<body>
+<p id=show>start</p>
+<p>first paragraph
+<script defer>
 // set these scripts to defor or async it doesn't matter, because they are inline
-<script>
 var p = document.createElement("p");
 p.appendChild(document.createTextNode("second paragraph"));
 document.body.appendChild(p);
@@ -9,10 +11,20 @@ document.body.appendChild(p);
 <p>third paragraph</p>
 <script>
 (function () {
-document.write("<p>fourth paragraph</p>");
         var e = document.currentScript
 e.remove();
+document.write("<p>fourth paragraph</p>");
     })();
 </script>
 <p>fifth paragraph</p>
+<script>
+show = document.getElementById("show")
+try {
+let h = ""
+for(let i = 1; i <= 5; ++i)
+h += document.body.children[i].firstChild.data.substr(0,2);
+if(h == "fisethfofi") show.innerHTML = "ok";
+else show.innerHTML = `ok|bad order ${h}`
+} catch(e) { show.innerHTML = "blowup " + e;}
+</script>
 </body>
