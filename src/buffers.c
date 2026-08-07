@@ -6311,6 +6311,22 @@ et_go:
 		return true;
 	}
 
+        if (stringEqual(line, "tmwait")) {
+    int delay_sec, delay_ms;
+    fd_set channels;
+    struct timeval tv;
+    while (timerWait2(&delay_sec, &delay_ms)) {
+        // timers are pending, use select to pause
+        memset(&channels, 0, sizeof(channels));
+        tv.tv_sec = delay_sec;
+        tv.tv_usec = delay_ms * 1000;
+        if(select(0, &channels, 0, 0, &tv) < 0)
+            return true; // interrupt
+        runTimer();
+    }
+    return true;
+}
+
 	if (stringEqual(line, "timers")) {
 		gotimers ^= 1;
 		if (helpMessagesOn || debugLevel >= 1)
