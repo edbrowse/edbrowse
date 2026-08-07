@@ -4103,8 +4103,9 @@ nodep.cloneNode = function(deep) {
 nodep.querySelector = querySelector
 nodep.querySelectorAll = function(c,s) {
     const nl = new w.NodeList(this, (n, c, s) => {
-        querySelectorAll.call(n,c,s);
+        const res = querySelectorAll.call(n,c,s);
         n[Symbol.for("Eb$LiveCollectionHelper.ignore")] = true;
+        return res;
     });
     // Trigger the rebuild
     nl[0];
