@@ -465,10 +465,12 @@ function collectionSymbol(s)
 
 class Eb$HTMLCollectionHelper extends Eb$CollectionHelper {
     constructor(node, cb) { super(node, cb, true); }
+    toString() { return "[object HTMLCollection]"; }
 }
 
 class Eb$NodeListHelper extends Eb$CollectionHelper {
     constructor(node, cb) { super(node, cb, false); }
+    toString() { return "[object NodeList]"; }
 }
 
 class Eb$GetElementsCache
@@ -3535,11 +3537,6 @@ swp("HTMLCollection", new Proxy(Eb$HTMLCollectionHelper, {
             get(target, property, receiver)
             {
                 if (property in target) return Reflect.get(target, property, receiver);
-                if (property === "toString")
-                    return () => "[object HTMLCollection]";
-
-                if (typeof property === "symbol")
-                    return Reflect.get(target, property, receiver);
 
                 let res;
                 /* Apparently numeric looking properties are actually passed
@@ -3563,11 +3560,7 @@ swp("NodeList", new Proxy(Eb$NodeListHelper, {
             get(target, property, receiver)
             {
                 if (property in target) return Reflect.get(target, property, receiver);
-                if (property === "toString")
-                    return () => "[object NodeList]";
 
-                if (typeof property !== "number")
-                    return Reflect.get(target, property, receiver);
                 let res = target.item(property);
                 return (res === null) ? undefined : res;
             },
