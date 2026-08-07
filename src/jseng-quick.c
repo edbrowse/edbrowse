@@ -2608,9 +2608,10 @@ static void dwrite(JSContext * cx, JSValueConst this, int argc, JSValueConst *ar
 			debugPrint(4, "document.write on a different frame");
 		cf = f;
 	}
-	dwStart();
-	stringAndString(&cf->dw, &cf->dw_l, s);
-	cf = save_cf;
+    dwStart();
+    stringAndString(&cf->dw, &cf->dw_l, s);
+    dw_flush_conditional();
+    cf = save_cf;
 }
 
 static JSValue nat_doc_write(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)

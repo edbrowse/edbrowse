@@ -1162,6 +1162,39 @@ static void dw_flush(Tag *t)
     nzFree(keep);
 }
 
+// flush the document.write string, if it is a complete thought.
+// Complete means starts and ends with the same tag, open and closed.
+// That hardly captures the nuances of html parsing; it's just a huristic.
+// It will accept, for instance, "<ol> <li> apple <li> orange </ol>"
+static Tag *running_t;
+void dw_flush_conditional(void)
+{
+    char *lt1, *lt2, *gt1, *gt2; // point to < and >
+    char *t;
+    char *base = cf->dw; // shorthand
+    // if not called from a script, I don't know what to do
+    if(!running_t) return;
+    // there should be something here
+    if(!base) return;
+    // remember there is always <body> at the start of the string
+    base += 6;
+    lt1 = strchr(base, '<');
+    gt2 = strrchr(base, '>');
+    if(!lt1 || !gt2 || gt2 < lt1) return;
+    // custom tags can have hyphens
+    for(t = lt1 + 1; isalnum(*t) || *t == '-'; ++t)  ;
+    if(t == lt1 + 1) return; // no tag
+    if(*t != '>' && !isspace(*t)) return; // bad character
+    gt1 = t; // ignore tag attributes, they don't matter
+    lt2 = strrchr(gt1, '<');
+    if(!lt2 || lt2 > gt2 || lt2[1] != '/') return;
+    int l = gt1 - lt1;
+    if(gt2 - lt2 != l + 1) return;
+    if(memcmp(lt1 + 1, lt2 + 2, l - 1)) return; // different ghtags
+    // looks good, process it now
+    dw_flush(running_t);
+}
+
 void runScriptNow(Frame *runframe, Tag *t)
 {
     const char *a; // for attribute
@@ -1169,6 +1202,8 @@ void runScriptNow(Frame *runframe, Tag *t)
     const char *sourcefile;
     int ln; // line number
     bool is_module;
+    Tag *save_running_t;
+
     t->step = 5; // now running the script
     set_property_number_t(t, "eb$step", 5);
 
@@ -1220,8 +1255,11 @@ I will disconnect here, and also check for inxhr in runOnload().
     if (cf != runframe)
         debugPrint(4, "running script at a lower frame %s", sourcefile);
     debugPrint(3, "exec %s at %d", sourcefile, ln);
+    save_running_t = running_t, running_t = t;
     jsRunData(t, sourcefile, ln, is_module);
+    running_t = save_running_t;
     debugPrint(3, "exec complete");
+
     // Last step, look for document.write from this script
     dw_flush(t);
 }

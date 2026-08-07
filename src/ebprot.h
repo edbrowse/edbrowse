@@ -164,6 +164,7 @@ bool cssCompatibleContent(const char *content);
 bool frameCompatibleContent(const char *content);
 void loadScriptData(Tag *t);
 void loadFinishCSS(void);
+void dw_flush_conditional(void);
 void runScriptNow(Frame *runframe, Tag *t);
 bool isRooted(const Tag *t);
 void runScriptsPending(bool startbrowse);
