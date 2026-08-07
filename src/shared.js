@@ -329,22 +329,29 @@ set c[i] = object, etc, again mostly not handled here.
 /* I was using private fields to avoid sensible names clashing with sensibly
 named elements but that won't fly so use symbols. This also allows debugging by
 using the global symbol registry. */
-;( () => {
-    const lchs = (s) => Symbol.for(`Eb$LiveCollectionHelper.${s}`)
-    const by_id = lchs("by_id");;
-    const by_name = lchs("by_name");
-    const by_index = lchs("by_index");
-    const tracker = lchs("tracker");
-    const callback = lchs("callback");
-    const changes = lchs("changes");
-    const owner = lchs("owner");
-    const window = lchs("window");
-    const named_items = lchs("named_items");
-    const ignore = lchs("ignore");
-    const handleChanges = lchs("handleChanges");
-    const hasChanges = lchs("hasChanges");
 
-    globalThis.Eb$LiveCollectionHelper = class {
+function collectionSymbol(s)
+{
+    return Symbol.for(`eb$collection$${s}`);
+}
+;( () => {
+    const by_id = collectionSymbol("by_id");
+    const by_name = collectionSymbol("by_name");
+    const by_index = collectionSymbol("by_index");
+    const tracker = collectionSymbol("tracker");
+    const callback = collectionSymbol("callback");
+    const changes = collectionSymbol("changes");
+    const owner = collectionSymbol("owner");
+    const window = collectionSymbol("window");
+    const named_items = collectionSymbol("named_items");
+    const ignore = collectionSymbol("ignore");
+    const handleChanges = collectionSymbol("handleChanges");
+    const hasChanges = collectionSymbol("hasChanges");
+
+    /* not sure if it would be noticeably more efficient to handle the named
+    items in the derived classes but this is easier */
+
+    globalThis.Eb$CollectionHelper = class {
         /*
         - node - the node which owns this collection
         - cb - callback which takes onwer as a parameter used to rebuild the
@@ -456,6 +463,14 @@ using the global symbol registry. */
     }
 })();
 
+class Eb$HTMLCollectionHelper extends Eb$CollectionHelper {
+    constructor(node, cb) { super(node, cb, true); }
+}
+
+class Eb$NodeListHelper extends Eb$CollectionHelper {
+    constructor(node, cb) { super(node, cb, false); }
+}
+
 class Eb$GetElementsCache
 {
     #cache;
@@ -523,61 +538,12 @@ class Eb$GetElementsCache
     }
 }
 
-function collectionReindex(c)
-{
-    const type = c.hc$int$type, v = c.hc$int$v, owner = c.hc$int$owner;
-    alert3(`collect ${type}:${v}`)
-    // clear everything out and rebuild; that's the easiest way
-    c.length = 0;
-    let name, list;
-    if(type != 2)
-        for(name in c) {
-            if (!c.hasOwnProperty(name)) continue;
-            if (typeof c[name] != "object") continue;
-            if(c[name] === null) continue;
-            if(c[name].nodeType != 1) continue;
-            if(name.match(/^hc\$int\$/)) continue;
-            // we may be deleting this just to put it back,
-            // but that's how this function goes.
-            delete c[name];
-            delete c[name+"$$byid"];
-        }
-    switch(type) {
-    case 1:
-        list = gebtn(owner, v, true, false);
-        break;
-    case 2:
-        list = gebn(owner, v, true);
-        break;
-    case 3:
-        list = gebcn(owner, v, true);
-        break;
-    }
-    // we have our list; put everything back.
-    for(let n of list) { // loop through the nodes
-        c.push(n)
-        if(type == 2) continue;
-        let s = n.id;
-        if(typeof s == "string" && s &&
-        // don't displace an instance method
-        !c.constructor.prototype[s] &&
-        (!c[s] || !c[s+"$$byid"]))
-            c[s] = n, c[s+"$$byid"] = true;
-    // try again with name
-        s = n.getAttribute("name");
-        if(typeof s == "string" && s &&
-        !c.constructor.prototype[s] &&
-        !c[s])
-            c[s] = n, c[s+"$$byid"] = false;
-    }
-}
-
 function collectionNodeReindex(n)
 {
     const cache = n.getElements$$cache;
     if (!cache) return; // nothing here
     for (const c of cache.collections())
-        c[Symbol.for("Eb$LiveCollectionHelper.hasChanges")]();
+        c[collectionSymbol("hasChanges")]();
 }
 
 function collectionNodeReindex2(t)
@@ -3559,11 +3525,9 @@ function sdpc(k, v) { odp(d, k, {value:v, writable:true, configurable:true})}
 /* The other half of the HTMLCollection mechanism as promised. Note that we
 proxy the class here rather than a constructed object so we can proxy the
 constructor as well as everything else. */
-swp("HTMLCollection", new Proxy(Eb$LiveCollectionHelper, {
+swp("HTMLCollection", new Proxy(Eb$HTMLCollectionHelper, {
     construct(target, args, new_target)
     {
-        // HTMLCollections always have named items
-        args[2] = true;
         // We want to return a proxied version of the created object for our magic getter
         return new Proxy(Reflect.construct(target, args, new_target), {
             /* Trap all get calls, if it's a string use namedItem if a number I assume
@@ -3592,11 +3556,9 @@ swp("HTMLCollection", new Proxy(Eb$LiveCollectionHelper, {
     }
 }))
 
-swp("NodeList", new Proxy(Eb$LiveCollectionHelper, {
+swp("NodeList", new Proxy(Eb$NodeListHelper, {
     construct(target, args, new_target)
     {
-        // NodeLists never have named items
-        args[2] = false;
         return new Proxy(Reflect.construct(target, args, new_target), {
             get(target, property, receiver)
             {
@@ -4101,7 +4063,7 @@ nodep.querySelector = querySelector
 nodep.querySelectorAll = function(c,s) {
     const nl = new w.NodeList(this, (n, c, s) => {
         const res = querySelectorAll.call(n,c,s);
-        n[Symbol.for("Eb$LiveCollectionHelper.ignore")] = true;
+        n[collectionSymbol("ignore")] = true;
         return res;
     });
     // Trigger the rebuild
@@ -9761,7 +9723,8 @@ Promise, Array, Uint8Array, Error, String, URL, URLSearchParams,
 Intl_dt, Intl_num,
 Blob, FormData,
 Request, Response,
-Headers, UnsupportedError, Eb$LiveCollectionHelper];
+Headers, UnsupportedError, Eb$HTMLCollectionHelper, Eb$NodeListHelper,
+Eb$CollectionHelper];
 for(let k of flist) {
 Object.freeze(k);
 Object.freeze(k.prototype);
