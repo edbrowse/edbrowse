@@ -361,7 +361,6 @@ function collectionSymbol(s)
         constructor(node, cb, named)
         {
             const w = my$win();
-            w.alert3(`LiveCollectionHelper construct for node ${node.nodeName}`);
             // play safe with the weak ref to make sure it's in the right context
             this[owner] = new w.WeakRef(node);
             this[named_items] = !!named;
@@ -3541,7 +3540,7 @@ swp("HTMLCollection", new Proxy(Eb$HTMLCollectionHelper, {
             an index so item. Check the instance first in all cases. */
             get(target, property, receiver)
             {
-                if (property in target) return Reflect.get(target, property, receiver);
+                if (property in target || typeof property == "symbol") return Reflect.get(target, property, receiver);
 
                 let res;
                 /* Apparently numeric looking properties are actually passed
@@ -3564,7 +3563,7 @@ swp("NodeList", new Proxy(Eb$NodeListHelper, {
         return new Proxy(Reflect.construct(target, args, new_target), {
             get(target, property, receiver)
             {
-                if (property in target) return Reflect.get(target, property, receiver);
+                if (property in target || typeof property == "symbol") return Reflect.get(target, property, receiver);
 
                 let res = target.item(property);
                 return (res === null) ? undefined : res;
