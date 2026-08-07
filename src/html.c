@@ -1201,22 +1201,16 @@ I will disconnect here, and also check for inxhr in runOnload().
             strstr(keep, "<body>")+6);
 		cf->dw_clobber = true;
     } else {
-// Any newly generated scripts have to run next. Move them up in the linked list.
         Tag *t1, *t2, *u;
-        for (u = t; u; u = u->same) t1 = u;
-// t1 is now last real script in the list.
         stringAndString(&keep, &keep_l, "</body>");
-        runGeneratedHtml(t, keep);
-        run_function_onearg_win(cf, "eb$uplift", t);
-        for (u = t1; u; u = u->same) t2 = u;
-        if(t1 != t && t2 != t1) {
-            Tag *t3 = t->same;
-            t->same = t1->same;
-            t2->same = t3;
-            t1->same = 0;
-            for (u = t->same; u != t3; u = u->same)
-                if (u->jslink) loadScriptData(u);
-        }
+        for (u = t; u; u = u->same) t1 = u;
+        // t1 is now last real script in the list.
+        // it could be t
+        // t might have removed itself from the tree, or might have
+        // been removed by clobber, so check for parent.
+        runGeneratedHtml(t->parent ? t->parent : cf->bodytag, keep);
+        for (u = t1->same; u; u = u->same)
+            if (u->jslink) loadScriptData(u);
     }
     nzFree(keep);
 }

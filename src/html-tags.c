@@ -4802,12 +4802,8 @@ Needless to say that's not good!
 		debugPrint(5, "domText");
 		establish_js_textnode(t);
 // nodeName and nodeType set in constructor
-		if (t->jslink) {
-			const char *w = t->textval;
-			set_property_string_t(t, "data", w);
-			if(t->deleted && t->parent && t->parent->action == TAGACT_SCRIPT)
-				set_property_bool_t(t, "eb$nomove", true);
-		}
+		if (t->jslink)
+			set_property_string_t(t, "data", t->textval);
 		break;
 
 	case TAGACT_DOCTYPE:
