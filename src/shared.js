@@ -482,10 +482,12 @@ class Eb$GetElementsCache
     {
         const w = my$win();
         this.#window = w;
-        this.#cache = new w.Array;
-        // Should stop having a magic number here but hard-code for now
-        for (let t = 0; t < 4; ++t) this.#cache.push(new w.Map);
-        this.#tracker = new w.FinalizationRegistry(({m, k}) => m.delete(k));
+        this.#cache = new w.Map;
+        this.#tracker = new w.FinalizationRegistry(({c, t, k}) => {
+            const m = c.get(t);
+            m.delete(k);
+            if (!m.size) c.delete(t); // the cache for this type is empty
+        })
     }
 
     #makeKey(k)
@@ -498,13 +500,20 @@ class Eb$GetElementsCache
     {
         const w = this.#window;
         const cache_key = this.#makeKey(key);
-        this.#cache[type].set(cache_key, new w.WeakRef(collection))
-        this.#tracker.register(collection, {m: this.#cache[type], k: cache_key});
+        let cache = this.#cache.get(type);
+        if (!cache) {
+            cache = new w.Map;
+            this.#cache.set(type, cache);
+        }
+        cache.set(cache_key, new w.WeakRef(collection))
+        this.#tracker.register(collection, {c: this.#cache, t: type, k: cache_key});
     }
 
     get(t, k)
     {
-        const r = this.#cache[t].get(k);
+        const cache = this.#cache.get(t);
+        if (!cache) return;
+        const r = cache.get(k);
         if (!r) return;
         return r.deref();
     }
@@ -514,9 +523,10 @@ class Eb$GetElementsCache
         let ref_iterator;
         if (!t)
             ref_iterator = Iterator.concat(...(
-                ( function *(cache) { for (const m of cache) yield m.values(); })(this.#cache)
+                ( function *(cache) { for (const m of cache.values()) yield m.values(); })(this.#cache)
             ))
-        else ref_iterator = this.#cache[t].values()
+        else ref_iterator = this.#cache.get(t).values()
+        if (!ref_iterator) return;
         for (const r of ref_iterator) {
             const c = r.deref();
             if (c) yield c;
@@ -525,18 +535,18 @@ class Eb$GetElementsCache
 
     // Mostly for debugging
     // The size of the cache including possibly dead weakrefs
-    size()
+    get size()
     {
         let cache_size;
-        for (const m of this.#cache) cache_size += m.size();
+        for (const m of this.#cache.values()) cache_size += m.size;
         return cache_size;
     }
 
     // dereferences values; dead refs will be yielded
     *[Symbol.iterator]() {
-        for (let i = 0; i < this.#cache.length; ++i)
-            for (const [k,r] of this.#cache[i])
-                yield {type: i+1, key: k, collection: r.deref()};
+        for (const [t,m] of this.#cache)
+            for (const [k,r] of m)
+                yield {type: t, key: k, collection: r.deref()};
     }
 }
 
