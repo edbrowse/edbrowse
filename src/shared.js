@@ -60,7 +60,7 @@ if(nn === "BASE" && top.href)
 extra = top.href.toString();
 if(extra.length) extra = ' ' + extra;
 // some tags should never have anything below them so skip the parentheses notation for these.
-if((nn == "BASE" || nn == "META" || nn == "LINK" ||nn == "#text" || nn == "#cdata-section" || nn == "IMAGE" || nn == "OPTION" || nn == "INPUT" || nn == "SCRIPT") &&
+if((nn == "BASE" || nn == "META" || nn == "LINK" ||nn == "#text" || nn == "#cdata-section" || nn == "IMAGE" || nn == "OPTION" || nn == "INPUT" || nn == "SCRIPT" || nn == "HR" || nn == "BR") &&
 (!top.childNodes || top.childNodes.length == 0)) {
 r += nn + extra + '\n';
 return r;
