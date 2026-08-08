@@ -479,7 +479,13 @@ class Eb$GetElementsCache
         this.#cache = new w.Map;
         this.#tracker = new w.FinalizationRegistry(({c, t, k}) => {
             alert3(`collection cache cleanup type ${t} key ${k}`);
-            c.remove(t, k);
+            const m = c.get(t);
+            if (!m) return; // already gone
+            m.delete(k);
+            if (!m.size) {
+                alert3(`collection cache cleanup cache type ${t}`)
+                c.delete(t); // the cache for this type is empty
+            }
         })
     }
 
@@ -499,37 +505,19 @@ class Eb$GetElementsCache
             cache = new w.Map;
             this.#cache.set(type, cache);
         }
-        const r = new w.WeakRef(collection);
-        cache.set(cache_key, r);
-        this.#tracker.register(collection, {c: this, t: type, k: cache_key}, r);
+        cache.set(cache_key, new w.WeakRef(collection));
+        this.#tracker.register(collection, {c: this.#cache, t: type, k: cache_key});
     }
 
-    remove(t, k)
+    get(type, key)
     {
-        alert3(`collection cache removes type ${t} key ${k}`);
-        const c = this.#cache;
-        const m = c.get(t);
-        m.delete(k);
-        if (!m.size) {
-            alert3(`collection cache remove cache for type ${t}`)
-            c.delete(t); // the cache for this type is empty
-        }
-    }
-
-    get(t, k)
-    {
-        alert3(`collection cache get type ${t} key ${k}`)
-        const cache = this.#cache.get(t);
+        key = this.#makeKey(key)
+        alert3(`collection cache get type ${type} key ${key}`)
+        const cache = this.#cache.get(type);
         if (!cache) return;
-        const r = cache.get(k);
-        if (!r) return;
-        const c = r.deref();
-        if (!c) {
-            alert3(`collection cache get remove dead ref type ${t} key ${k}`);
-            this.remove(t, k);
-            this.#tracker.unregister(r);
-        }
-        return c; // Either collection or undefined
+        const ref = cache.get(key);
+        if (!ref) return;
+        return ref.deref();
     }
 
     *collections(t)
