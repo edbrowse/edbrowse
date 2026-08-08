@@ -467,12 +467,30 @@ class Eb$NodeListHelper extends Eb$CollectionHelper {
     toString() { return "[object NodeList]"; }
 }
 
+/* Cache live collections to mitigate overhead
+Collections are held in the cache under either of two conditions:
+- They are still referenced somewhere
+- The cache is below the hold limit
+
+This means that the maximum number of collections cached can be higher than
+the hold limit if they're still referenced. The hold limit is designed to be a
+small number and is there to allow for e.g. the return values of the
+getElements* functions to be used directly as function arguments. If using
+purely weak refs this usage means the cache is mostly ineffective. Instead
+we maintain a small array of strong refs which are replaced as new values are
+added. This, in conjunction with the automatic book keeping means that the
+above two conditions apply. It also allow the cache to be effective without
+becoming an uncontrolled object leak.
+*/
 class Eb$GetElementsCache
 {
-    #cache;
-    #tracker;
-    #window;
-    constructor()
+    #cache; // map that holds the per type caches
+    #tracker; // finalization registry used to clean up the map
+    #window; // our window, so our weak refs etc are in the right context
+    #refs; // holds a limited number of strong refs
+    #index; // the current index into the refs array
+    #hold; // how many refs to hold
+    constructor(hold=10)
     {
         const w = my$win();
         this.#window = w;
@@ -487,6 +505,9 @@ class Eb$GetElementsCache
                 c.delete(t); // the cache for this type is empty
             }
         })
+        this.#hold = hold;
+        this.#refs = new w.Array;
+        this.#index = 0;
     }
 
     #makeKey(k)
@@ -507,6 +528,9 @@ class Eb$GetElementsCache
         }
         cache.set(cache_key, new w.WeakRef(collection));
         this.#tracker.register(collection, {c: this.#cache, t: type, k: cache_key});
+        alert3(`collection cache holds ref ${this.#index}`)
+        this.#refs[this.#index] = collection;
+    this.#index = (this.#index+1)%this.#hold
     }
 
     get(type, key)
