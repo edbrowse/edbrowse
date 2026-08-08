@@ -147,6 +147,14 @@ if(q.length) msg += "|bad unchecked"
 // which are technically readonly, I guess
 q = b.querySelectorAll("input:read-only")
 if(q.length != 3 || q[0].name != "subject" || q[2].type != "submit") msg += "|bad readonly"
+q = b.querySelectorAll("input:read-write")
+// all our inputs are locked out
+if(q.length) msg += "|bad input readwrite"
+q = b.querySelectorAll("select:read-write")
+// select is not read write in that it isn't editable.
+if(q.length) msg += "|bad select readwrite"
+q = b.querySelectorAll("select:read-only")
+if(q.length != 1) msg += "|bad select readonly"
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}
