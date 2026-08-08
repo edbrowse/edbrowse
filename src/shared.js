@@ -5624,9 +5624,11 @@ set: checkset});
 // type property is automatically in the getAttribute system, acid test 53
 odp(inputp, "type", {
 get:function(){ var t = this.getAttribute("type");
+// no type, text is implied
+if(!t || typeof t != "string") t = "text";
 // input type is special, tidy converts it to lower case, so I will too.
 // Also acid test 54 requires it.
-return typeof t == "string" ? this.eb$xml ? t : t.toLowerCase() : undefined; },
+return this.eb$xml ? t : t.toLowerCase(); },
 set:function(v) { this.setAttribute("type", v);
 if(v.toLowerCase() == "checkbox" && !this.value) this.value = "on";
 }});

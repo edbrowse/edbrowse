@@ -3,12 +3,13 @@
 <div n=1 class="shoe sandal">
 <h1> first div </h1>
 <form action=http://this.that.com>
-subject: <input name=subject>
+subject: <input name=subject value="Punic wars" readonly>
 Fruit: <select name=fruit multiple>
 <option value=a>apple
 <option value=o>orange
 <option value=l>lemon
 </select>
+<input name=happy type=checkbox checked disabled>
 <input type=submit name=act value=Send>
 </form>
 </div>
@@ -107,11 +108,11 @@ q = b.querySelectorAll(":first-child:last-of-type")
 if(q.length != 3) msg += `|bad first last type length ${q.length}`
 if(q[0].id != "show" || q[1].nodeName != "H1" || q[2].nodeName != "OL") msg += "|bad first last type nodes"
 q = b.querySelectorAll(":nth-child(4)")
-if(q.length != 1) msg += `|bad child4 length ${q.length}`
-if(q[0].n != 3) msg += "|bad child4 node"
+if(q.length != 2) msg += `|bad child4 length ${q.length}`
+if(q[1].n != 3) msg += "|bad child4 node"
 q = b.querySelectorAll(":nth-child(even)")
-if(q.length != 7) msg += `|bad child even length ${q.length}`
-if(q[5].n != 3 || q[6].n != 5) msg += "|bad child even node"
+if(q.length != 8) msg += `|bad child even length ${q.length}`
+if(q[6].n != 3 || q[7].n != 5) msg += "|bad child even node"
 q = b.querySelectorAll(":nth-child(odd)")
 if(q.length != 13) msg += `|bad child odd length ${q.length}`
 if(q[3].text != "apple" || q[9].firstChild.data != "gamma") msg += "|bad child odd node"
@@ -125,11 +126,27 @@ q = b.querySelectorAll(':nth-last-child(5)')
 if(q.length != 1) msg += `|bad child -5 length ${q.length}`
 if(q[0].id != "show") msg += "|bad child -5 node"
 q = b.querySelectorAll(':nth-of-type(3)')
-if(q.length != 4) msg += `|bad type 3 length ${q.length}`
-if(q[0].value != 'l' || q[3].n != 6) msg += "|bad type 3 node"
+if(q.length != 5) msg += `|bad type 3 length ${q.length}`
+if(q[0].value != 'l' || q[4].n != 6) msg += "|bad type 3 node"
 q = b.querySelectorAll(':nth-last-of-type(3)')
-if(q.length != 4) msg += `|bad type -3 length ${q.length}`
-if(q[0].n != 1 || q[3].n != 4) msg += "|bad type -3 node"
+if(q.length != 5) msg += `|bad type -3 length ${q.length}`
+if(q[0].n != 1 || q[4].n != 4) msg += "|bad type -3 node"
+
+// input fields
+cb = b.querySelectorAll("[type=checkbox]")
+if(cb.length != 1 || cb[0].name != "happy") msg += "|bad cb"
+cb = cb[0]
+q = b.querySelectorAll(":disabled")
+if(q.length != 1 || q[0] != cb) msg += "|bad disabled"
+q = b.querySelectorAll(":checked")
+if(q.length != 1 || q[0] != cb) msg += "|bad checked"
+cb.checked = false; // uncheck
+q = b.querySelectorAll(":checked")
+if(q.length) msg += "|bad unchecked"
+// if I don't say input here, I get all sorts of tags, like p and h1,
+// which are technically readonly, I guess
+q = b.querySelectorAll("input:read-only")
+if(q.length != 3 || q[0].name != "subject" || q[2].type != "submit") msg += "|bad readonly"
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}
