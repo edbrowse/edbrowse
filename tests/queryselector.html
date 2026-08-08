@@ -1,0 +1,92 @@
+<body>
+<p id=show>start</p>
+<div n=1 class="shoe sandal">
+<h1> first div </h1>
+<form action=http://this.that.com>
+subject: <input name=subject>
+Fruit: <select name=fruit multiple>
+<option value=a>apple
+<option value=o>orange
+<option value=l>lemon
+</select>
+<input type=submit name=act value=Send>
+</form>
+</div>
+<div n=2 v="fan-fin-fun">
+<ol n="greek letters"><li>alpha<li>beta<li>gamma</ol>
+</div>
+<div n=3 id=div3>
+<p n=4 id=p4></p><p n=5></p><p n=6></p>
+</div>
+<script>
+// test querySelector, and perhaps some of the css machinery.
+try {
+show = document.getElementById("show")
+b = document.body
+msg = "ok"
+// I wanted to do some shorthand, but chrome won't except it,
+// qsa = document.querySelectorAll
+// so we have to write it out every time.
+div1 = document.querySelector("div")
+
+// basic
+p = document.querySelectorAll("p")
+if(p.toString() != "[object NodeList]") msg += `|bad type ${p}`
+if(p.length != 4) msg += `|bad p.length ${p.length}`
+if(p[0].id != "show") msg += "|first p isn't show"
+extra = document.createElement("p")
+b.appendChild(extra)
+if(p.length > 4) msg += "|p is unexpectedly live"
+extra.remove()
+q = document.querySelectorAll(" div , h1 ") // union of two selectors, with whitespace around
+if(q.length != 4) msg += `|bad union length ${q.length}`
+if(q[1].nodeName != "H1") msg += "|union nodes aren't in tree order"
+h1 = q[1]
+q = document.querySelectorAll(".shoe,#show") // class id
+if(q.length != 2) msg += `|bad show shoe length ${q.length}`
+if(q[0].id != "show" || !q[1].classList.contains("shoe")) msg += "| bad show shoe attributes"
+h1.n = 76
+q = b.querySelectorAll("[n]") // wherever the n attribute is defined
+// note that h1 doesn't count because n isn't in the attribute system
+if(q.length != 7) msg += `|bad [n] length ${q.length}`
+// manual spilldown, to make the rest of the script a little easier
+for(let c of q) c.n = c.getAttribute("n")
+if(q[3].n != 3) msg += "|[n] nodes not in tree order"
+// we accept [n=6], chrome requires [n="6"], maybe because 6 is a number.
+q = b.querySelectorAll('[n="6"]')
+if(q.length != 1 || q[0].n != 6) msg += "|bad [n=6]"
+q = b.querySelectorAll("[n^=gre]")
+if(q.length != 1 || q[0].nodeName != "OL") msg += "|bad [n^=gre]"
+q = b.querySelectorAll("[n$=tters]")
+if(q.length != 1 || q[0].nodeName != "OL") msg += "|bad [n$=tters]"
+q = b.querySelectorAll("[n~=greek]")
+if(q.length != 1 || q[0].nodeName != "OL") msg += "|bad [n~=greek]"
+q = b.querySelectorAll("[n~=gree]")
+if(q.length != 0) msg += "|bad [n~=gree]"
+q = b.querySelectorAll("[v|=fan]")
+if(q.length != 1 || q[0].nodeName != "DIV") msg += "|bad [v|=fan]"
+// with |= we don't need the quotes
+q = b.querySelectorAll('[n|="6"]')
+if(q.length != 1 || q[0].nodeName != "P") msg += "|bad [n|=6]"
+q = b.querySelectorAll('[n*="ek let"]') // a substring therein
+if(q.length != 1 || q[0].nodeName != "OL") msg += "|bad substring"
+q = b.querySelectorAll('[n*="eK let"]')
+if(q.length) msg += "|substring is case insensitive"
+// it can be made case insensitive with i] but we haven't implemented that yet
+q = div1.querySelectorAll("div")
+if(q.length) msg += "|querySelectorAll includes its top"
+q = div1.querySelector("div")
+if(q !== null) msg += "|querySelector includes its top"
+
+// modifiers. There are dozens of these, we haven't implemented them all.
+q = b.querySelectorAll(":last-child")
+if(q.length != 7) msg += `|bad last-child length ${q.length}`
+if(q[0].nodeName != "FORM" || q[6].nodeName != "SCRIPT") msg += "|last-child not in tree order"
+q = b.querySelectorAll(":first-child")
+if(q.length != 7) msg += `|bad first-child length ${q.length}`
+if(q[1].nodeName != "H1" || q[5].nodeName != "LI") msg += "|last-child not in tree order"
+
+show.innerHTML = msg;
+} catch(e) { show.innerHTML = "blowup " + e;}
+</script>
+</body>

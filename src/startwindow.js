@@ -476,7 +476,8 @@ sdp("images", document.getElementsByTagName("img"))
 // styleSheets is a placeholder for now; I don't know what to do with it.
 sdp("styleSheets", [])
 
-swp("docCollectionReindex", ()=>mw$.collectionNodeReindex(document))
+swp("markAllCollections", mw$.markAllCollections)
+swp("markUpwardCollections", mw$.collectionNodeReindex2)
 
 swpc("frames$2", []);
 swpv("frames", {})
@@ -844,7 +845,7 @@ swp("constructor", Window)
 
 swp("eb$qs$start", function() {
     // html parsed, rebuild the HTMLCollections under document
-    docCollectionReindex()
+    markAllCollections();
     // now gather the css rules for inject before after
     mw$.cssGather(true);
     mw$.frames$rebuild(window);

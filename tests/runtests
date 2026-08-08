@@ -1,0 +1,47 @@
+#!/bin/sh
+# This script runs the tests in this directory that should pass under edbrowse.
+# They pass under chrome via the <chromethis function.
+# Pass is defined by printing ok on the first line.
+# These tests are not clean - they clutter the window with
+# global variables, thus each test should be run on its own.
+# Furthermore, your .ebrc settings should not get in the way.
+# This test calls upon the latest edbrowse, not the one installed.
+
+program=../src/edbrowse
+outfile=/tmp/runtests.out
+
+# Some of these tests aren't complete until timers run.
+# Use the tmwait command to wait for the timers.
+# If there are no timers, tmwait returns immediately.
+# acid3 is the longest, and can take 10 seconds or more.
+# Note that jsrt is not included here.
+# That is an important test, but it follows a different format,
+# and is more interactive.
+
+for t in collection.html dynamic-form.html getelem.html script-adds-nodes.html scriptorder.html style-shorthand.html
+do
+echo $t
+$program -c /dev/null $t >$outfile <<!
+b
+tmwait
+rr
+1
+q
+!
+tail -1 $outfile
+rm $outfile
+done
+
+# acid3 is third party, and doesn't follow our format.
+# The pass fail message is on line 3, not line 1.
+t=acid3
+echo $t
+$program -c /dev/null $t >$outfile <<!
+b
+tmwait
+rr
+3
+q
+!
+tail -1 $outfile
+rm $outfile

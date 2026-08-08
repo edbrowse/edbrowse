@@ -764,7 +764,7 @@ static bool run_function_bool(JSContext *cx, JSValueConst parent, const char *na
     }
     // other functions we might not want to see at debug 3
     if (stringEqual(name, "connectedCallbackStart") ||
-    stringEqual(name, "docCollectionReindex") ||
+    stringEqual(name, "markAllCollections") ||
     stringEqual(name, "frames$rebuild"))
         dbl = 4;
     if(stringEqual(name, "onmessage$$running"))

@@ -645,12 +645,16 @@ let a = [];
 // can be document, we call document.getElementsByTagName all the time.
 // That said, sometimes I want all the nodes, for internal use.
 if(!first && !all && top.nodeType != 1) return a;
-if(!first && (s === '*' || (top.nodeName && top.nodeName.toLowerCase() === s)))
+const nn = top.nodeName ? top.nodeName.toLowerCase() : "";
+if(!first && (s === '*' || nn === s))
 a.push(top);
 // special code for document.links
 if(s === "a|area" &&
-(top.nodeName.toLowerCase() == "a" || top.nodeName.toLowerCase() == "area") &&
+(nn == "a" || nn == "area") &&
 top.href)
+a.push(top);
+if(s === "field|set" &&
+(nn == "input" || nn == "select" || nn == "textarea" || nn == "button"))
 a.push(top);
 if(top.childNodes) {
 // don't descend into another frame.
@@ -758,6 +762,33 @@ for(let c of top.childNodes)
 a = a.concat(gebcn(c, sa, false));
 }
 return a;
+}
+
+/*********************************************************************
+html is parsed by C, and the corresponding javascript tree is built by C
+as well. Methods like appendchild are not called.
+There are no side effects that might mark HTMLCollections as out of date.
+It would be inefficient in any case, to do that for every html node.
+Better to do it at the end, when the tree is built.
+This routine finds all collections and marks them as out of date.
+They will thence be updated when accessed.
+Even if you create no collections at all, there is:
+document.links document.forms document.images document.scripts.
+This function must also be called before each inline script is invoked,
+even if the tree is not entirely built.
+The script might access document.links, and we have to be ready for that.
+Gather all nodes by our internal gebtn function;
+this is no time to create yet another HTMLCollection.
+*********************************************************************/
+
+function markAllCollections()
+{
+    const d = my$doc();
+    let list = gebtn(d, '*', true, false);
+    // in this case we want the top node, it has plenty of collections
+    list.splice(0, 0, d)
+    for(const c of list)
+        collectionNodeReindex(c);
 }
 
 function nodeContains(n) {  return cont(this, n); }
@@ -1681,7 +1712,9 @@ setAttribute: function(name, v) {
     }
 
     // side effects of id, name, class
-    if(name == "id" || name == "class" || name == "name")
+    // no need for collectoin side effects if parsing - we will be marking
+    // all collections as out of date after the parse is finished.
+    if(!w.eb$push$attributes && (name == "id" || name == "class" || name == "name"))
 collectionNodeReindex2(this)
 
     // names that spill down into the actual property
@@ -1755,6 +1788,8 @@ if(found) this.attributes[i] = this.attributes[i+1];
 this.attributes.length = i;
 delete this.attributes[i];
 if(name !== "length") delete this.attributes[name]
+if(name == "id" || name == "name" || name == "class")
+collectionNodeReindex2(this)
 mutFixup(this, 1, name, a.value);
 },
 
@@ -3953,10 +3988,14 @@ nodep.appendChild = function(c) {
     if(c.parentNode) c.parentNode.removeChild(c);
     let r = this.eb$apch2(c);
     if(r) {
-// a text node won't change the structure of the form, or the html collection
-        if(r.nodeType != 3) formReindex2(this), collectionNodeReindex2(this);
+        // a text node won't change the structure of the form, or the html collection
+        if(r.nodeType != 3) {
+            formReindex2(this);
+            collectionNodeReindex2(this);
+            runScriptWhenAttached(r);
+        }
+        // a text node can have an observer - for CharacterData
         mutFixup(this, 0, c, null);
-        runScriptWhenAttached(r);
     }
     return r;
 }
@@ -3994,9 +4033,12 @@ nodep.insertBefore = function(c, t) {
     cn.splice(mark, 0, c);
     c.parentNode = this;
     this.eb$insbf(c, t); // update the tree in C
-    if(c.nodeType != 3) formReindex2(this), collectionNodeReindex2(this);
+    if(c.nodeType != 3) {
+                formReindex2(this);
+        collectionNodeReindex2(this);
+        runScriptWhenAttached(c);
+    }
     mutFixup(this, 0, c, null);
-    runScriptWhenAttached(c);
     return c;
 }
 
@@ -4012,8 +4054,11 @@ nodep.removeChild = function(c) {
     cn.splice(mark, 1);
     c.parentNode = null;
     this.eb$rmch2(c);
-    if(c.nodeType != 3) formReindex2(this), collectionNodeReindex2(this);
-// passing an integer as third argument is a special case, only from here.
+    if(c.nodeType != 3) {
+        formReindex2(this);
+        collectionNodeReindex2(this);
+    }
+    // passing an integer as third argument is a special case, only from here.
     mutFixup(this, 0, mark, c);
     return c;
 }
@@ -4582,8 +4627,11 @@ set: function(h) {
 this.setAttribute("class", h)}})
 
 odp(elemp, "id", {
-get:function(){ var t = this.getAttribute("id");
-return typeof t == "string" ? t : undefined; },
+get:function(){ let t = this.getAttribute("id");
+if(t === null) t = "" // id was never defined
+if(t === undefined) t = ""
+// if defined it should always be a string
+return typeof t == "string" ? t : t.toString(); },
 set:function(v) { this.setAttribute("id", v)}});
 
 odp(elemp, "outerHTML", { get: function() { return htmlString(this);},
@@ -4747,7 +4795,10 @@ odp(helemp, "name", {
 get: function() {
 if(!nameSpill(this)) return this.name$2 ;
 let t = this.getAttribute("name");
-return typeof t == "string" ? t : undefined}, 
+if(t === null) t = "" // name was never defined
+if(t === undefined) t = ""
+// if defined it should always be a string
+return typeof t == "string" ? t : t.toString(); },
 set: function(n) {
 if(!nameSpill(this)) { odp(this, "name$2", {value:n,writable:true,configurable:true}); return}
 const f = this.form;
