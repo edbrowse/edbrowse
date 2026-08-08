@@ -4672,8 +4672,11 @@ set: function(h) {
 this.setAttribute("class", h)}})
 
 odp(elemp, "id", {
-get:function(){ var t = this.getAttribute("id");
-return typeof t == "string" ? t : undefined; },
+get:function(){ let t = this.getAttribute("id");
+if(t === null) t = "" // id was never defined
+if(t === undefined) t = ""
+// if defined it should always be a string
+return typeof t == "string" ? t : t.toString(); },
 set:function(v) { this.setAttribute("id", v)}});
 
 odp(elemp, "outerHTML", { get: function() { return htmlString(this);},
@@ -4837,7 +4840,10 @@ odp(helemp, "name", {
 get: function() {
 if(!nameSpill(this)) return this.name$2 ;
 let t = this.getAttribute("name");
-return typeof t == "string" ? t : undefined}, 
+if(t === null) t = "" // name was never defined
+if(t === undefined) t = ""
+// if defined it should always be a string
+return typeof t == "string" ? t : t.toString(); },
 set: function(n) {
 if(!nameSpill(this)) { odp(this, "name$2", {value:n,writable:true,configurable:true}); return}
 const f = this.form;

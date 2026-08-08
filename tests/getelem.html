@@ -102,6 +102,26 @@ if(dat.length != 1) msg += "|&lt;span&gt; not brought in by innerHTML"
 if(bat.length != 2) msg += "|&lt;span&gt; pushed outside of its isolated node"
 b.appendChild(div)
 if(bat.length != 3) msg += "|&lt;span&gt; didn't join bat after appendChild"
+
+// we should test some instance methods for NodeList, so put at least one
+// more node into the list.
+hr.setAttribute("name", "sock")
+h = ""
+an.forEach((c)=> h += c.nodeName)
+if(h != "H1HR") msg += `|bad forEach ${h}`
+h = ""
+for(let e of an.entries()) { h += e[0]; h += e[1].id; }
+if(h != "0j k 1") msg += `|bad entries ${h}`
+h = 0
+for(let k of an.keys()) h += k;
+if(h != 1) msg += `|bad keys ${h}`
+h = ""
+for(let v of an.values()) h += v.tagName;
+if(h != "H1HR") msg += `|bad values ${h}`
+h = ""
+for(const c of an) h += c.getAttribute("name")
+if(h != "socksock") msg += `|bad direct of ${h}`
+
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}
 </script>
