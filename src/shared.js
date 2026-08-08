@@ -803,6 +803,33 @@ a = a.concat(gebcn(c, sa, false));
 return a;
 }
 
+/*********************************************************************
+html is parsed by C, and the corresponding javascript tree is built by C
+as well. Methods like appendchild are not called.
+There are no side effects that might mark HTMLCollections as out of date.
+It would be inefficient in any case, to do that for every html node.
+Better to do it at the end, when the tree is built.
+This routine finds all collections and marks them as out of date.
+They will thence be updated when accessed.
+Even if you create no collections at all, there is:
+document.links document.forms document.images document.scripts.
+This function must also be called before each inline script is invoked,
+even if the tree is not entirely built.
+The script might access document.links, and we have to be ready for that.
+Gather all nodes by our internal gebtn function;
+this is no time to create yet another HTMLCollection.
+*********************************************************************/
+
+function markAllCollections()
+{
+    const d = my$doc();
+    let list = gebtn(d, '*', true, false);
+    // in this case we want the top node, it has plenty of collections
+    list.splice(0, 0, d)
+    for(const c of list)
+        collectionNodeReindex2(c);
+}
+
 function nodeContains(n) {  return cont(this, n); }
 
 function cont(top, n) {
@@ -4013,10 +4040,14 @@ nodep.appendChild = function(c) {
     if(c.parentNode) c.parentNode.removeChild(c);
     let r = this.eb$apch2(c);
     if(r) {
-// a text node won't change the structure of the form, or the html collection
-        if(r.nodeType != 3) formReindex2(this), collectionNodeReindex2(this);
+        // a text node won't change the structure of the form, or the html collection
+        if(r.nodeType != 3) {
+            formReindex2(this);
+            collectionNodeReindex2(this);
+            runScriptWhenAttached(r);
+        }
+        // a text node can have an observer - for CharacterData
         mutFixup(this, 0, c, null);
-        runScriptWhenAttached(r);
     }
     return r;
 }
@@ -4054,9 +4085,12 @@ nodep.insertBefore = function(c, t) {
     cn.splice(mark, 0, c);
     c.parentNode = this;
     this.eb$insbf(c, t); // update the tree in C
-    if(c.nodeType != 3) formReindex2(this), collectionNodeReindex2(this);
+    if(c.nodeType != 3) {
+                formReindex2(this);
+        collectionNodeReindex2(this);
+        runScriptWhenAttached(c);
+    }
     mutFixup(this, 0, c, null);
-    runScriptWhenAttached(c);
     return c;
 }
 
@@ -4072,8 +4106,11 @@ nodep.removeChild = function(c) {
     cn.splice(mark, 1);
     c.parentNode = null;
     this.eb$rmch2(c);
-    if(c.nodeType != 3) formReindex2(this), collectionNodeReindex2(this);
-// passing an integer as third argument is a special case, only from here.
+    if(c.nodeType != 3) {
+        formReindex2(this);
+        collectionNodeReindex2(this);
+    }
+    // passing an integer as third argument is a special case, only from here.
     mutFixup(this, 0, mark, c);
     return c;
 }

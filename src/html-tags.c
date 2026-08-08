@@ -4770,7 +4770,7 @@ Needless to say that's not good!
             // in case the script calls getComputedStyle
             loadFinishCSS();
             // in case it accesses document.links etc
-            run_function_bool_win(cf, "docCollectionReindex");
+            run_function_bool_win(cf, "markAllCollections");
             char *up1 = upSnap(t);
             runScriptNow(cf, t);
             char *up2 = upSnap(t);
