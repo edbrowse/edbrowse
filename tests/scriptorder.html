@@ -1,10 +1,12 @@
 <body>
 <p id=show>start</p>
 <div id=hs></div>
-<script src=scriptord1.js defer onload="h += 'y'"></script>
+<script id=last src=scriptord1.js defer onload="h += 'y'"></script>
 <script>
 // Test the order in which scrips run.
 // This proves script execution is reentrant.
+// This fails at the end, because the handlers don't run in the order
+// capture, inline, bubble.
 try {
 show = document.getElementById("show")
 b = document.body
@@ -25,19 +27,26 @@ h += 'e';
 // Always write html that is complete, so it triggers dw_flush_conditional
 document.write("<ol><li>apple<li>orange<li>lemon</ol>")
 // document write puts nodes adjacent at the same level
-if(!s.nextSibling || s.nextSibling.nodeName != "OL") h += 'x'
+if(!s.nextSibling || s.nextSibling.nodeName != "OL") h += '@'
 // write a complete script, which is evaluated now
 document.write(" <script> h += 'f'<" + "/script> ")
 h += 'g'
 // this one is deferred probably because it is remote
 document.write("<script src=scriptord2.js> <" + "/script>")
 h += 'h'
+// put a couple of handlers on the scrip load. this is just a warmup -
+// we need a file for testing events.
+last = document.getElementById("last")
+// should be capture, fire, bubble. Thus xyw
+last.addEventListener("load", ()=>(h += 'x'), true);
+last.addEventListener("load", ()=>(h += 'w'), false);
 // indicate we are in the middle and the timer hasn't run yet
 show.innerHTML = "mid"
 // set a timer in case that innerHTML script ran later
 // And to accommodate the src scripts deferred
 setTimeout(()=>{
-if(h == "abcefghizy") show.innerHTML = "ok";
-else show.innerHTML = "ok|bad order " + h}, 600)
+const correct = "abcefghizxyw";
+if(h == correct) show.innerHTML = "ok";
+else show.innerHTML = `ok|bad order  ${h}/${correct}`}, 600)
 } catch(e) { show.innerHTML = "blowup " + e;}
 </script>
