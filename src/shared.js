@@ -478,9 +478,8 @@ class Eb$GetElementsCache
         this.#window = w;
         this.#cache = new w.Map;
         this.#tracker = new w.FinalizationRegistry(({c, t, k}) => {
-            const m = c.get(t);
-            m.delete(k);
-            if (!m.size) c.delete(t); // the cache for this type is empty
+            alert3(`collection cache cleanup type ${t} key ${k}`);
+            c.remove(t, k);
         })
     }
 
@@ -492,6 +491,7 @@ class Eb$GetElementsCache
 
     add(type, key, collection)
     {
+        alert3(`collection cache adds type ${type} key ${key}`);
         const w = this.#window;
         const cache_key = this.#makeKey(key);
         let cache = this.#cache.get(type);
@@ -499,17 +499,37 @@ class Eb$GetElementsCache
             cache = new w.Map;
             this.#cache.set(type, cache);
         }
-        cache.set(cache_key, new w.WeakRef(collection))
-        this.#tracker.register(collection, {c: this.#cache, t: type, k: cache_key});
+        const r = new w.WeakRef(collection);
+        cache.set(cache_key, r);
+        this.#tracker.register(collection, {c: this, t: type, k: cache_key}, r);
+    }
+
+    remove(t, k)
+    {
+        alert3(`collection cache removes type ${t} key ${k}`);
+        const c = this.#cache;
+        const m = c.get(t);
+        m.delete(k);
+        if (!m.size) {
+            alert3(`collection cache remove cache for type ${t}`)
+            c.delete(t); // the cache for this type is empty
+        }
     }
 
     get(t, k)
     {
+        alert3(`collection cache get type ${t} key ${k}`)
         const cache = this.#cache.get(t);
         if (!cache) return;
         const r = cache.get(k);
         if (!r) return;
-        return r.deref();
+        const c = r.deref();
+        if (!c) {
+            alert3(`collection cache get remove dead ref type ${t} key ${k}`);
+            this.remove(t, k);
+            this.#tracker.unregister(r);
+        }
+        return c; // Either collection or undefined
     }
 
     *collections(t)
