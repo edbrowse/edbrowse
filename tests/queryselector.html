@@ -55,7 +55,8 @@ if(q[3].n != 3) msg += "|[n] nodes not in tree order"
 // we accept [n=6], chrome requires [n="6"], maybe because 6 is a number.
 q = b.querySelectorAll('[n="6"]')
 if(q.length != 1 || q[0].n != 6) msg += "|bad [n=6]"
-q = b.querySelectorAll("[n^=gre]")
+// quotes optional for this one
+q = b.querySelectorAll('[n^="gre"]')
 if(q.length != 1 || q[0].nodeName != "OL") msg += "|bad [n^=gre]"
 q = b.querySelectorAll("[n$=tters]")
 if(q.length != 1 || q[0].nodeName != "OL") msg += "|bad [n$=tters]"
@@ -79,12 +80,56 @@ q = div1.querySelector("div")
 if(q !== null) msg += "|querySelector includes its top"
 
 // modifiers. There are dozens of these, we haven't implemented them all.
+q = b.querySelectorAll(":first-child")
+if(q.length != 7) msg += `|bad first-child length ${q.length}`
+if(q[1].nodeName != "H1" || q[5].nodeName != "LI") msg += "|first-child not in tree order"
 q = b.querySelectorAll(":last-child")
 if(q.length != 7) msg += `|bad last-child length ${q.length}`
 if(q[0].nodeName != "FORM" || q[6].nodeName != "SCRIPT") msg += "|last-child not in tree order"
-q = b.querySelectorAll(":first-child")
-if(q.length != 7) msg += `|bad first-child length ${q.length}`
-if(q[1].nodeName != "H1" || q[5].nodeName != "LI") msg += "|last-child not in tree order"
+// don't put a space between li and :last, the space becomes a combinator
+q = b.querySelectorAll("li:last-child") // tagname andmodifier
+if(q.length != 1 || q[0].firstChild.data != "gamma") msg += "|bad li:last"
+q = b.querySelectorAll(":only-child")
+if(q.length != 1 || q[0].nodeName != "OL") msg += "|bad only child"
+q = b.querySelectorAll(":first-of-type")
+if(q.length != 11) msg += `|bad first type length ${q.length}`
+if(q[3].nodeName != "FORM" || q[9].nodeName != "P") msg += "|first type not in tree order"
+q = b.querySelectorAll(":last-of-type")
+if(q.length != 11) msg += `|bad last type length ${q.length}`
+if(q[3].nodeName != "SELECT" || q[9].nodeName != "P") msg += "|last type not in tree order"
+q = b.querySelectorAll(":only-of-type")
+if(q.length != 6) msg += `|bad only type length ${q.length}`
+if(q[3].nodeName != "SELECT" || q[4].nodeName != "OL") msg += "|only type not in tree order"
+q = b.querySelectorAll("p:only-of-type")
+if(q.length != 1) msg += `|bad p only type length ${q.length}`
+if(q[0].id != "show") msg += "|bad p only id"
+q = b.querySelectorAll(":first-child:last-of-type")
+if(q.length != 3) msg += `|bad first last type length ${q.length}`
+if(q[0].id != "show" || q[1].nodeName != "H1" || q[2].nodeName != "OL") msg += "|bad first last type nodes"
+q = b.querySelectorAll(":nth-child(4)")
+if(q.length != 1) msg += `|bad child4 length ${q.length}`
+if(q[0].n != 3) msg += "|bad child4 node"
+q = b.querySelectorAll(":nth-child(even)")
+if(q.length != 7) msg += `|bad child even length ${q.length}`
+if(q[5].n != 3 || q[6].n != 5) msg += "|bad child even node"
+q = b.querySelectorAll(":nth-child(odd)")
+if(q.length != 13) msg += `|bad child odd length ${q.length}`
+if(q[3].text != "apple" || q[9].firstChild.data != "gamma") msg += "|bad child odd node"
+q = b.querySelectorAll(":nth-child(3n)")
+if(q.length != 5) msg += `|bad child 3n length ${q.length}`
+if(q[0].text != "lemon" || q[4].n != 6) msg += "|bad child 3n node"
+q = b.querySelectorAll(':nth-child(3n+2)')
+if(q.length != 7) msg += `|bad child 3n+2 length ${q.length}`
+if(q[2].nodeName != "SELECT" || q[6].nodeName != "SCRIPT") msg += "|bad child 3n+2 node"
+q = b.querySelectorAll(':nth-last-child(5)')
+if(q.length != 1) msg += `|bad child -5 length ${q.length}`
+if(q[0].id != "show") msg += "|bad child -5 node"
+q = b.querySelectorAll(':nth-of-type(3)')
+if(q.length != 4) msg += `|bad type 3 length ${q.length}`
+if(q[0].value != 'l' || q[3].n != 6) msg += "|bad type 3 node"
+q = b.querySelectorAll(':nth-last-of-type(3)')
+if(q.length != 4) msg += `|bad type -3 length ${q.length}`
+if(q[0].n != 1 || q[3].n != 4) msg += "|bad type -3 node"
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}
