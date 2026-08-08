@@ -627,15 +627,13 @@ static void debugGenerated(const char *h)
 static void runGeneratedHtml(Tag *t, const char *h)
 {
 	debugPrint(3, "parse html from docwrite");
-	if (t)
-		debugPrint(4, "parse under %s %d", t->info->name, t->seqno);
-	else
-		debugPrint(4, "parse under top");
+	debugPrint(4, "parse under %s %d", t->info->name, t->seqno);
 	debugGenerated(h);
 	const int startpos = htmlScanner(h, t, 3);
 	prerender(startpos);
 	decorate(startpos, 0);
 	debugPrint(3, "end parse html from docwrite");
+	run_function_onearg_win(cf, "markUpwardCollections", t);
 }
 
 // acid3 test[0] says we don't process a css file if it's content type is
@@ -6175,12 +6173,12 @@ void html_from_setter(Tag *t, const char *h)
 	debugPrint(3, "parse html from innerHTML");
 	debugPrint(4, "parse under tag %s %d", t->info->name, t->seqno);
 	debugGenerated(h);
-
 // Cut all the children away from t
 	underKill(t);
 	const int startpos = htmlScanner(h, t, 2);
 	prerender(startpos);
 	decorate(startpos, t);
 	debugPrint(3, "end parse html from innerHTML");
+	run_function_onearg_win(cf, "markUpwardCollections", t);
 }
 
