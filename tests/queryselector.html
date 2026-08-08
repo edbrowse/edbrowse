@@ -9,7 +9,7 @@ Fruit: <select name=fruit multiple>
 <option value=o>orange
 <option value=l>lemon
 </select>
-<input name=happy type=checkbox checked disabled>
+<input name=happy type=checkbox checked disabled required>
 <input type=submit name=act value=Send>
 </form>
 </div>
@@ -138,6 +138,8 @@ if(cb.length != 1 || cb[0].name != "happy") msg += "|bad cb"
 cb = cb[0]
 q = b.querySelectorAll(":disabled")
 if(q.length != 1 || q[0] != cb) msg += "|bad disabled"
+q = b.querySelectorAll(":required")
+if(q.length != 1 || q[0] != cb) msg += "|bad required"
 q = b.querySelectorAll(":checked")
 if(q.length != 1 || q[0] != cb) msg += "|bad checked"
 cb.checked = false; // uncheck

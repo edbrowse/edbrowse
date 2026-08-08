@@ -2073,6 +2073,7 @@ static void cssModify(struct asel *a, const char *m1, const char *m2)
 		"first-of-type", "last-of-type", "only-of-type",
 		"first", "last", "empty",
 		"disabled", "enabled", "read-only", "read-write",
+		"required",
 		"scope", "root",
 		0
 	};
@@ -3065,6 +3066,14 @@ all the div sections just below the current node.
 		    } else rc = (get_property_bool_t(t, "readOnly") |
 		        get_property_bool_t(t, "disabled"));
 		    if (p[6] == 'w') rc ^= 1;
+		    if (rc) goto next_mod;
+		    return false;
+		}
+
+		if (stringEqual(p, ":required")) {
+		    if (bulkmatch) {
+		        rc = t->required;
+		    } else rc = get_property_bool_t(t, "required");
 		    if (rc) goto next_mod;
 		    return false;
 		}
