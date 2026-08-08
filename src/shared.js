@@ -686,12 +686,16 @@ let a = [];
 // can be document, we call document.getElementsByTagName all the time.
 // That said, sometimes I want all the nodes, for internal use.
 if(!first && !all && top.nodeType != 1) return a;
-if(!first && (s === '*' || (top.nodeName && top.nodeName.toLowerCase() === s)))
+const nn = top.nodeName ? top.nodeName.toLowerCase() : "";
+if(!first && (s === '*' || nn === s))
 a.push(top);
 // special code for document.links
 if(s === "a|area" &&
-(top.nodeName.toLowerCase() == "a" || top.nodeName.toLowerCase() == "area") &&
+(nn == "a" || nn == "area") &&
 top.href)
+a.push(top);
+if(s === "field|set" &&
+(nn == "input" || nn == "select" || nn == "textarea" || nn == "button"))
 a.push(top);
 if(top.childNodes) {
 // don't descend into another frame.
@@ -827,7 +831,7 @@ function markAllCollections()
     // in this case we want the top node, it has plenty of collections
     list.splice(0, 0, d)
     for(const c of list)
-        collectionNodeReindex2(c);
+        collectionNodeReindex(c);
 }
 
 function nodeContains(n) {  return cont(this, n); }
@@ -1751,7 +1755,9 @@ setAttribute: function(name, v) {
     }
 
     // side effects of id, name, class
-    if(name == "id" || name == "class" || name == "name")
+    // no need for collectoin side effects if parsing - we will be marking
+    // all collections as out of date after the parse is finished.
+    if(!w.eb$push$attributes && (name == "id" || name == "class" || name == "name"))
 collectionNodeReindex2(this)
 
     // names that spill down into the actual property
@@ -1825,6 +1831,8 @@ if(found) this.attributes[i] = this.attributes[i+1];
 this.attributes.length = i;
 delete this.attributes[i];
 if(name !== "length") delete this.attributes[name]
+if(name == "id" || name == "name" || name == "class")
+collectionNodeReindex2(this)
 mutFixup(this, 1, name, a.value);
 },
 

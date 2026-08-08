@@ -5111,6 +5111,7 @@ static void pushAttributes(const Tag *t)
 	if (!a)
 		return;
 
+	set_property_bool_win(cf, "eb$push$attributes", true);
 	for (i = 0; a[i]; ++i) {
 // html tags and attributes are case insensitive.
 // That's why the entire getAttribute system drops names to lower case.
@@ -5132,6 +5133,7 @@ static void pushAttributes(const Tag *t)
 			run_function_twostring_t(t, "setAttribute", "class", u);
 		nzFree(x);
 	}
+	set_property_bool_win(cf, "eb$push$attributes", false);
 }
 
 /* decorate the tree of nodes with js objects */
