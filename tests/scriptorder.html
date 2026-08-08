@@ -1,7 +1,7 @@
 <body>
 <p id=show>start</p>
 <div id=hs></div>
-<script src=scriptord1.js defer></script>
+<script src=scriptord1.js defer onload="h += 'y'"></script>
 <script>
 // Test the order in which scrips run.
 // This proves script execution is reentrant.
@@ -37,7 +37,7 @@ show.innerHTML = "mid"
 // set a timer in case that innerHTML script ran later
 // And to accommodate the src scripts deferred
 setTimeout(()=>{
-if(h == "abcefghiz") show.innerHTML = "ok";
+if(h == "abcefghizy") show.innerHTML = "ok";
 else show.innerHTML = "ok|bad order " + h}, 600)
 } catch(e) { show.innerHTML = "blowup " + e;}
 </script>
