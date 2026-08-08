@@ -29,6 +29,7 @@ msg = "ok"
 // qsa = document.querySelectorAll
 // so we have to write it out every time.
 div1 = document.querySelector("div")
+div3 = document.getElementById("div3")
 
 // basic
 p = document.querySelectorAll("p")
@@ -157,6 +158,29 @@ q = b.querySelectorAll("select:read-write")
 if(q.length) msg += "|bad select readwrite"
 q = b.querySelectorAll("select:read-only")
 if(q.length != 1) msg += "|bad select readonly"
+q = b.querySelectorAll("p:empty")
+if(q.length != 3) msg += "|bad p empty"
+// I implemented one layer of not(), and hope nobody goes deeper than that
+q = b.querySelectorAll("p:not(:empty)")
+if(q.length != 1 || q[0].id != "show") msg += "|bad p nonempty"
+
+// combinators.space is going down the tree
+q = b.querySelectorAll("div li")
+if(q.length != 3) msg += "|bad div li"
+// > means directly below
+q = b.querySelectorAll("div > li")
+if(q.length != 0) msg += "|bad div&gt;li"
+q = b.querySelectorAll("ol>li")
+if(q.length != 3) msg += "|bad ol&gt;li"
+q = b.querySelectorAll(".sandal+div")
+if(q.length != 1 || q[0].n != 2) msg += "|bad sandal +"
+q = b.querySelectorAll(".sandal~div")
+if(q.length != 2 || q[0].n != 2 || q[1].n != 3) msg += "|bad sandal ~"
+
+q = div3.querySelectorAll("*")
+if(q.length != 3) msg += "|bad *"
+q = div3.querySelectorAll('*[n="6"]')
+if(q.length != 1) msg += "|bad *6"
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}
