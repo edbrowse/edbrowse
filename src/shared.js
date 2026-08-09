@@ -414,7 +414,7 @@ function collectionSymbol(s)
                 const element = ref.deref()
                 if (!element) {
                     this[by_index].splice(i, 1);
-                    this.item(i);
+                    return this.item(i);
                 }
                 return element;
             }
