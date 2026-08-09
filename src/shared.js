@@ -3681,7 +3681,7 @@ swp("NodeList", new Proxy(Eb$NodeListHelper, {
             get(target, property, receiver)
             {
                 if (property in target || typeof property == "symbol") return Reflect.get(target, property, receiver);
-
+                if (Number(property) != property) return;
                 let res = target.item(property);
                 return (res === null) ? undefined : res;
             },
