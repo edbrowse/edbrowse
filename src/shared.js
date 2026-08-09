@@ -411,6 +411,8 @@ function collectionSymbol(s)
 
         item(i)
         {
+            // Don't allow item to be used to call methods on our array
+            if (Number(i) != i) return null;
             this[handleChanges]();
             const ref = this[by_index][i];
             if (ref) {
@@ -3683,7 +3685,6 @@ swp("NodeList", new Proxy(Eb$NodeListHelper, {
             get(target, property, receiver)
             {
                 if (property in target || typeof property == "symbol") return Reflect.get(target, property, receiver);
-                if (Number(property) != property) return;
                 let res = target.item(property);
                 return (res === null) ? undefined : res;
             },
