@@ -401,8 +401,10 @@ function collectionSymbol(s)
                 this[by_index].push(ref);
                 this[tracker].register(element, this);
                 if (!this[named_items]) continue;
-                if (element.id) this[by_id].set(element.id, ref);
-                if (element.name) this[by_name].set(element.name, ref);
+                const id = element.id;
+                if (id && typeof id == "string") this[by_id].set(id, ref);
+                const name = element.getAttribute("name");
+                if (name) this[by_name].set(name, ref);
             }
         }
 
