@@ -1,3 +1,6 @@
+<head><script> h = "a"; v = ""; onlink = false; </script>
+<LINK href="sample.css" rel=stylesheet type=text/css onload="onlink = true">
+</head>
 <body onload="v += 'l'">
 <p id="show">start</p>
 <div id="hs"></div>
@@ -8,7 +11,6 @@
 try {
 show = document.getElementById("show")
 b = document.body
-h = "a";
 s = document.createElement("script")
 s.text = "h += 'b'"
 b.appendChild(s); // runs right now
@@ -17,14 +19,14 @@ div = document.getElementById("hs")
 // remember that the closing script tag can never appear, even in a string -
 // until you are really ready to close the script.
 div.innerHTML = "<script>h += 'd'<" + "/script>"
-if(div.firstChild.nodeName != "SCRIPT") h += '@';
+if(div.firstChild.nodeName != "SCRIPT") h += "@1";
 // the script produced by innerHTML doesn't run. I don't know why!
 // d will not appear in the string h.
 h += 'e';
 // Always write html that is complete, so it triggers dw_flush_conditional
 document.write("<ol><li>apple<li>orange<li>lemon</ol>")
 // document write puts nodes adjacent at the same level
-if(!s.nextSibling || s.nextSibling.nodeName != "OL") h += '@'
+if(!s.nextSibling || s.nextSibling.nodeName != "OL") h += "@2"
 // write a complete script, which is evaluated now
 document.write(" <script> h += 'f'<" + "/script> ")
 h += 'g'
@@ -39,7 +41,6 @@ last = document.getElementById("last")
 last.addEventListener("load", ()=>(h += 'x'), true);
 last.addEventListener("load", ()=>(h += 'w'), false);
 
-v = ""; // track the order of onload functions
 document.addEventListener("DOMContentLoaded", ()=>(v += 'j'));
 document.addEventListener("readystatechange", ()=>{
 if(document.readyState == "complete") v += 'k'; })
@@ -52,6 +53,10 @@ show.innerHTML = "mid"
 // And to accommodate the src scripts deferred
 setTimeout(()=>{
 h += `/${v}`
+// I wanna fold the css onload function into the timing,
+// but it fetches asynchronously in chrome, so I can't guarantee when it will happen.
+// I'll just make sure it happened by now.
+if(!onlink) h += '@3';
 const correct = "abcefghizxyw/jklm";
 if(h == correct) show.innerHTML = "ok";
 else show.innerHTML = `ok|bad order  ${h} should be ${correct}`}, 600)

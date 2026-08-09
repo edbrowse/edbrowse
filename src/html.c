@@ -3895,6 +3895,7 @@ static void runOnload(void)
     if (intFlag) return;
     run_event_doc(cf, "DOMContentLoaded");
     run_function_bool_win(cf, "readyStateComplete");
+    // bubble order
     Tag *t = cf->bodytag;
     run_event_t(t, "load");
     if (t->onunload)

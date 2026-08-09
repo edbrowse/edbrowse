@@ -1,0 +1,10 @@
+// sample rules for various tests.
+// Use nondefault values so they shine through.
+
+body {
+background: gray;
+color: red;
+font-family: Arial;
+font-size: 120%;
+}
+
