@@ -870,9 +870,9 @@ function dispatchEvent(e)
             return !e.stop$propagating$immediate; // null listeners are allowed
         }
         if (!(inline || h.do$phases.has(e.eventPhase))) {
-            dbg3(`Unsupported phase ${e.eventPhase} for ${hd}`, n);
+            dbg3(`unsupported phase ${e.eventPhase} for ${hd}`, n);
             dbg3(
-                `${hd} supported: ${JSON.stringify(Array.from(h.do$phases))}`,
+                `${hd} supports: ${JSON.stringify(Array.from(h.do$phases))}`,
                 n);
             return !e.stop$propagating$immediate;
         }
@@ -896,7 +896,18 @@ function dispatchEvent(e)
         return !e.stop$propagating$immediate;
     }
 
+    /* arrays are easy. Every handler that goes through addEventListener
+    is capture or bubble, not both. We can't run a handler twice,
+    we can't run a handler when we shouldnt. It's the onfunctions
+    that are tricky. */
     const runHandlerArray = (n) => {
+        // before bubbling the array, try onfunction
+        if(e.eventPhase == 3 && n != pathway[0]) {
+            const ep = `on${e.type}`;
+            const hi = n[ep];
+            if (hi) runEventHandler(n, hi, true);
+        }
+        // now go down the array of handlers
         const prop = `on${e.type}$$array`;
         const handlers = n[prop];
         if (handlers) {
@@ -905,13 +916,6 @@ function dispatchEvent(e)
             handlers.slice().every((h) => runEventHandler(n, h));
         }
         return !e.stop$propagating;
-    }
-
-    const runAllHandlers = (n) => {
-        const ep = `on${e.type}`;
-        const hi = n[ep];
-        if (hi && !runEventHandler(n, hi, true)) return false;
-        return runHandlerArray(n);
     }
 
     if(db$flags(1)) {
@@ -931,7 +935,7 @@ function dispatchEvent(e)
         let t;
         for (t = this; t; t = t.parentNode) {
             pathway.push(t);
-            // don't go past document up to a higher frame
+            // don't go past document
             if (t.nodeType == 9) break;
             // or through a frame and up into a higher frame
             if (t.nodeType == 1 && (
@@ -972,27 +976,42 @@ function dispatchEvent(e)
     const our_eval = (pathway[pathway.length-1].eval?
         pathway[pathway.length-1].eval :
         my$win().eval);
+
+    /* Don't be confused by eb$captures = false. That doesn't mean
+    we don't run capture handlers, it means we don't run them for nodes above.
+    Similarly, !e.bubbles means we don't bubble above.
+    All handlers are attempted on the target node.
+    Example: script.onload runs after the script is fetched and executed.
+    This is target only, so bubbles and eb$captures are false.
+    Still, handlers attached to script will run, in the prescribed order. */
+
     const states = [
         // Initial phase, nothing to do here
         () => true,
         // Capture phase: outer to inner elements
         () => {
             if (e.eb$captures)
-                return pathway.slice(1).reverse().every(runHandlerArray);
+                return pathway.slice(0).reverse().every(runHandlerArray);
             else {
-                dbg4("not capturing");
-                return true;
+                dbg4("not capturing, base node only");
+                return runHandlerArray(pathway[0])
             }
         },
         // target phase
-        () => runAllHandlers(pathway[0]),
+        () => {
+            const n = pathway[0]
+            const ep = `on${e.type}`;
+            const hi = n[ep];
+            if (hi) return runEventHandler(n, hi, true);
+            return true;
+        },
         // Bubble phase, inner to outer
         () => {
             if (e.bubbles)
-                return pathway.slice(1).every(runAllHandlers);
+                return pathway.slice(0).every(runHandlerArray);
             else {
-                dbg4("not bubbling");
-                return true;
+                dbg4("not bubbling, base node only");
+                return runHandlerArray(pathway[0])
             }
         }
     ];
@@ -1023,7 +1042,6 @@ function addEventListener(evtype, handler, iscapture)
     else if (typeof handler == "object" && typeof h.handleEvent == "function")
         h.callback = handler;
     else throw TypeError("Invalid event handler");
-    h.do$phases.add(2);
     const ev = `on${evtype}`;
     const evarray = `${ev}$$array`; // array of handlers
     // legacy, iscapture could be boolean, or object, or missing
@@ -6761,7 +6779,8 @@ swpc("Event", class extends w.Object {
             odp(this, "type", {value: etype, enumerable: true});
 
         setEventOptions(this, options, {bubbles: true, cancelable: true});
-// non-standard but needed for target-only events
+        // in the edbrowse world, we have to say yes to capture,
+        // just as we have to say yes to bubble.
         odp(this, "eb$captures", {value: true, writable: true});
         odp(this, "defaultPrevented", {
             value: false, writable: true, enumerable: true
