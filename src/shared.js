@@ -554,7 +554,7 @@ class NodeList extends Array {
 function collectionReindex(c)
 {
     const type = c.hc$int$type, v = c.hc$int$v, owner = c.hc$int$owner;
-    alert3(`collect ${type}:${v}`)
+    alert4(`collect ${type}:${v}`)
     // clear everything out and rebuild; that's the easiest way
     c.length = 0;
     let name, list;

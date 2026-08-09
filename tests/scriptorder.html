@@ -1,12 +1,10 @@
-<body>
-<p id=show>start</p>
-<div id=hs></div>
+<body onload="v += 'l'">
+<p id="show">start</p>
+<div id="hs"></div>
 <script id=last src=scriptord1.js defer onload="h += 'y'"></script>
 <script>
 // Test the order in which scrips run.
 // This proves script execution is reentrant.
-// This fails at the end, because the handlers don't run in the order
-// capture, inline, bubble.
 try {
 show = document.getElementById("show")
 b = document.body
@@ -19,9 +17,8 @@ div = document.getElementById("hs")
 // remember that the closing script tag can never appear, even in a string -
 // until you are really ready to close the script.
 div.innerHTML = "<script>h += 'd'<" + "/script>"
-if(div.firstChild.nodeName != "SCRIPT") h += "x";
+if(div.firstChild.nodeName != "SCRIPT") h += '@';
 // the script produced by innerHTML doesn't run. I don't know why!
-// So we have implemented same.
 // d will not appear in the string h.
 h += 'e';
 // Always write html that is complete, so it triggers dw_flush_conditional
@@ -34,19 +31,30 @@ h += 'g'
 // this one is deferred probably because it is remote
 document.write("<script src=scriptord2.js> <" + "/script>")
 h += 'h'
+
 // put a couple of handlers on the scrip load. this is just a warmup -
 // we need a file for testing events.
 last = document.getElementById("last")
 // should be capture, fire, bubble. Thus xyw
 last.addEventListener("load", ()=>(h += 'x'), true);
 last.addEventListener("load", ()=>(h += 'w'), false);
+
+v = ""; // track the order of onload functions
+document.addEventListener("DOMContentLoaded", ()=>(v += 'j'));
+document.addEventListener("readystatechange", ()=>{
+if(document.readyState == "complete") v += 'k'; })
+addEventListener("load", ()=>(v += 'm'));
+
 // indicate we are in the middle and the timer hasn't run yet
 show.innerHTML = "mid"
+
 // set a timer in case that innerHTML script ran later
 // And to accommodate the src scripts deferred
 setTimeout(()=>{
-const correct = "abcefghizxyw";
+h += `/${v}`
+const correct = "abcefghizxyw/jklm";
 if(h == correct) show.innerHTML = "ok";
-else show.innerHTML = `ok|bad order  ${h}/${correct}`}, 600)
+else show.innerHTML = `ok|bad order  ${h} should be ${correct}`}, 600)
 } catch(e) { show.innerHTML = "blowup " + e;}
 </script>
+</body>
