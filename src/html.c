@@ -2577,16 +2577,16 @@ skip_encode:
 		}
 
 		if (itype < INP_FILE) {
-/* Even a hidden variable can be adjusted by js.
- * fetchTextVar allows for this possibility.
- * I didn't allow for it in the above, the value of a radio button;
- * hope that's not a problem. */
-			dynamicvalue = fetchTextVar(t);
-			postNameVal(name, dynamicvalue, fsep, false);
-			if(inputRequired(t) && !dynamicvalue && !*dynamicvalue)
-				goto required;
-			nzFree0(dynamicvalue);
-			continue;
+		/* Even a hidden variable can be adjusted by js.
+		 * fetchTextVar allows for this possibility.
+		 * I didn't allow for it in the above, the value of a radio button;
+		 * hope that's not a problem. */
+		    dynamicvalue = fetchTextVar(t);
+		    if(inputRequired(t) && (!dynamicvalue || !*dynamicvalue))
+		        goto required;
+		    postNameVal(name, dynamicvalue, fsep, false);
+		    nzFree0(dynamicvalue);
+		    continue;
 		}
 
 		if (itype == INP_TA) {
