@@ -593,8 +593,8 @@ class Eb$GetElementsCache
     // The size of the cache including possibly dead weakrefs
     get size()
     {
-        let cache_size;
-        for (const m of this.#cache.values()) cache_size += m.size;
+        let cache_size = 0;
+        for (const _ of this.collections()) ++cache_size;
         return cache_size;
     }
 
