@@ -1043,10 +1043,15 @@ function addEventListener(evtype, handler, iscapture)
     if (!this[evarray])
         Object.defineProperty(this, evarray, {value: []})
 
-    /* Duplicate handlers are allowed and are sometimes deliberately used although
-    they're generally not recommended. It's also really hard to reliably deduplicate
-    handlers these days with modern coding practices. As such I'm not sure what
-    other sanity checks we can or should do which won't break things. */
+    // duplicate handlers, per phase, are not allowed.
+    for (const e of this[evarray])
+        if (e.callback === h.callback &&
+        e.do$phases.has(1) == h.do$phases.has(1)) {
+            if (db$flags(1))
+                alert3(`duplicate handler ${h.ehsn} for ${(h.do$phases.has(1)?"capture":"bubble")}`);
+            return;
+        }
+
     this[evarray].push(h);
 }
 
