@@ -465,6 +465,31 @@ class Eb$HTMLCollectionHelper extends Eb$CollectionHelper {
 class Eb$NodeListHelper extends Eb$CollectionHelper {
     constructor(node, cb) { super(node, cb, false); }
     toString() { return "[object NodeList]"; }
+    // Can't just use forEach because we want to handle references
+    forEach(callback, thisarg)
+    {
+        let cb, idx = 0;
+        if (thisarg) cb = (e, i) => callback.call(thisarg, e, i, this);
+        else cb = (e, i) => callback(e, i, this);
+        for (const e of this) cb(e,idx++);
+    }
+
+    *entries()
+    {
+        let idx = 0;
+        for (const e of this) yield [idx++, e];
+    }
+
+    *keys()
+    {
+        let idx = 0;
+        for (const _ of this) yield idx++;
+    }
+
+    *values()
+    {
+        for (const e of this) yield e;
+    }
 }
 
 /* Cache live collections to mitigate overhead
