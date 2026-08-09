@@ -1371,7 +1371,6 @@ passes:
     if (!async) {
         if(startbrowse) {
             cf = save_cf;
-            run_function_bool_win(cf, "readyStateComplete");
             runOnload();
             runConnectedCallback();
             startbrowse = false;
@@ -3892,53 +3891,17 @@ static void unloadHyperlink(const char *js_function, const char *where)
 // This runs after the page is parsed and before the deferred scripts run.
 static void runOnload(void)
 {
-	int i, action;
-	int fn;			/* form number */
-	Tag *t;
-
-	if (!isJSAlive)
-		return;
-	if (intFlag)
-		return;
-
-run_event_doc(cf, "onDOMContentLoaded");
-
-/* window and document onload */
-	run_event_win(cf, "onload");
-	if (intFlag)
-		return;
-	run_event_doc(cf, "onload");
-	if (intFlag)
-		return;
-
-	fn = -1;
-	for (i = 0; i < cw->numTags; ++i) {
-		if (intFlag)
-			return;
-		t = tagList[i];
-		if (t->f0 != cf)
-			continue;
-		if(!isRooted(t)) continue;
-		action = t->action;
-		if (action == TAGACT_FORM)
-			++fn;
-		if (!t->jslink)
-			continue;
-		if (action == TAGACT_BODY)
-			run_event_t(t, "onload");
-		if (action == TAGACT_BODY && t->onunload)
-			unloadHyperlink("document.body.onunload", "Body");
-		if (action == TAGACT_FORM)
-			run_event_t(t, "onload");
-// tidy5 says there is no form.onunload
-		if (action == TAGACT_FORM && t->onunload) {
-			char formfunction[48];
-			sprintf(formfunction, "document.forms[%d].onunload", fn);
-			unloadHyperlink(formfunction, "Form");
-		}
-		if (action == TAGACT_H)
-			run_event_t(t, "onload");
-	}
+    if (!isJSAlive) return;
+    if (intFlag) return;
+    run_event_doc(cf, "DOMContentLoaded");
+    run_function_bool_win(cf, "readyStateComplete");
+    // bubble order
+    Tag *t = cf->bodytag;
+    run_event_t(t, "load");
+    if (t->onunload)
+        unloadHyperlink("document.body.onunload", "Body");
+    run_event_doc(cf, "load");
+    run_event_win(cf, "load");
 }
 
 static void runConnectedCallback(void)

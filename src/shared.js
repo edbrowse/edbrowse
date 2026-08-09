@@ -402,9 +402,10 @@ function collectionSymbol(s)
                 this[tracker].register(element, this);
                 if (!this[named_items]) continue;
                 const id = element.id;
-                if (id && typeof id == "string") this[by_id].set(id, ref);
+                if (typeof id == "string" && id) this[by_id].set(id, ref);
                 const name = element.getAttribute("name");
-                if (name) this[by_name].set(name, ref);
+                if (typeof name == "string" && name)
+                    this[by_name].set(name, ref);
             }
         }
 
@@ -596,7 +597,8 @@ class Eb$GetElementsCache
     }
 
     // dereferences values; dead refs will be yielded
-    *[Symbol.iterator]() {
+    *[Symbol.iterator]()
+    {
         for (const [t,m] of this.#cache)
             for (const [k,r] of m)
                 yield {type: t, key: k, collection: r.deref()};

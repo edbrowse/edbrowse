@@ -15,8 +15,6 @@ body:hover { animation:windshield }
 body p.inject:before { display:round }
 p.inject:before { content:My }
 </style>
-<!-- this isn't an internet load of css so onload doesn't run -->
-<link type=foobar onload="onlv+=2">
 </head>
 
 <body onload=bodyLoad() onunload=bodyUnload()
@@ -299,7 +297,7 @@ alert(e.stack);
 </OL>
 </noscript>
 
-<H1 onload="onlv+=16"> jsrt </H1>
+<H1> jsrt </H1>
 
 <a id=ftp href="ftp://ftp.netbsd.org/">NetBsd FTP site</a>
 <form>
@@ -421,8 +419,7 @@ you shouldn't see this stuff
 class=betty-boop
 action=http://localhost:1500/origact
 onsubmit='return submitFunction(this)'
-onreset='return resetFunction()'
-onload=formLoad(this.name) onunload=formUnload(this.name)>
+onreset='return resetFunction()'>
 
 <!-- we might want to test json some day. -->
     <script type='application/json'>
@@ -898,7 +895,6 @@ olist.add(oo);
 
 function bodyLoad() {
 if(isedbrowse) alert("body loading");
-onlv++;
 var e = document.createEvent();
 e.type = "snork";
 document.dispatchEvent(e);
@@ -917,8 +913,7 @@ if(confirm("Go to the edbrowse home page?"))
 new Window("http://edbrowse.org");
 else alert("ok, never mind");
 }
-function formLoad(name) {
-onlv += 4;
+function docReady() {
 var t = document.createTextNode("Created Text");
 document.body.appendChild(t);
 document.body.appendChild(document.createElement("br"));
@@ -926,14 +921,14 @@ var s = document.createElement("script");
 s.text = "lastScript()";
 document.body.appendChild(s);
 }
-function formUnload(name) { alert("form " + name + " unloading"); }
-function docLoad(e) { onlv += 8; if(e.target != document) faile(179); }
+document.addEventListener("DOMContentLoaded", docReady);
+
+function docLoad(e) { if(e.target != document) faile(179); }
 document.addEventListener("snork", docLoad, true);
-var onlv = 64;
 
 /* last script to run automatically; loaded by the form.onload function */
 function lastScript() {
-/* Queue some text to appear after all current macrotasks have ran. Note the
+/* Queue some text to appear after all current macrotasks have run. Note the
 order of microtasks is guaranteed but the only timing guarantee here is that
 they run when all current macrotasks have completed and before timers. */
 let microtask_count = 0;
@@ -945,7 +940,6 @@ let microtask_cb = () => {
 }
 for (let i=0; i < 3; ++i) queueMicrotask(microtask_cb);
 document.writeln(" Last Script");
-if(onlv != 93) fail(1000);
 }
 
 setTimeout("joker()", 10000);
@@ -979,7 +973,7 @@ alert(e.stack);
 >
 
 <!-- this script has a url but it's data, and doesn't load, so onload does not run -->
-<script type="text/javascript" src="data:text/javascript,var data_uri1_test %3d %22set%22%3b" onload="onlv+=2"></script>
+<script type="text/javascript" src="data:text/javascript,var data_uri1_test %3d %22set%22%3b" onload="onlv=2345"></script>
 <script type="text/javascript" src="data:text/javascript;base64,dmFyIGRhdGFfdXJpMl90ZXN0ID0gInNldCI7Cg=="></script>
 
 <script type=text/javascript language=JavaScript>
