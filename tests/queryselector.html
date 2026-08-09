@@ -3,12 +3,13 @@
 <div n=1 class="shoe sandal">
 <h1> first div </h1>
 <form action=http://this.that.com>
-subject: <input name=subject>
+subject: <input name=subject value="Punic wars" readonly>
 Fruit: <select name=fruit multiple>
 <option value=a>apple
 <option value=o>orange
 <option value=l>lemon
 </select>
+<input name=happy type=checkbox checked disabled required>
 <input type=submit name=act value=Send>
 </form>
 </div>
@@ -28,6 +29,7 @@ msg = "ok"
 // qsa = document.querySelectorAll
 // so we have to write it out every time.
 div1 = document.querySelector("div")
+div3 = document.getElementById("div3")
 
 // basic
 p = document.querySelectorAll("p")
@@ -55,7 +57,8 @@ if(q[3].n != 3) msg += "|[n] nodes not in tree order"
 // we accept [n=6], chrome requires [n="6"], maybe because 6 is a number.
 q = b.querySelectorAll('[n="6"]')
 if(q.length != 1 || q[0].n != 6) msg += "|bad [n=6]"
-q = b.querySelectorAll("[n^=gre]")
+// quotes optional for this one
+q = b.querySelectorAll('[n^="gre"]')
 if(q.length != 1 || q[0].nodeName != "OL") msg += "|bad [n^=gre]"
 q = b.querySelectorAll("[n$=tters]")
 if(q.length != 1 || q[0].nodeName != "OL") msg += "|bad [n$=tters]"
@@ -79,12 +82,105 @@ q = div1.querySelector("div")
 if(q !== null) msg += "|querySelector includes its top"
 
 // modifiers. There are dozens of these, we haven't implemented them all.
+q = b.querySelectorAll(":first-child")
+if(q.length != 7) msg += `|bad first-child length ${q.length}`
+if(q[1].nodeName != "H1" || q[5].nodeName != "LI") msg += "|first-child not in tree order"
 q = b.querySelectorAll(":last-child")
 if(q.length != 7) msg += `|bad last-child length ${q.length}`
 if(q[0].nodeName != "FORM" || q[6].nodeName != "SCRIPT") msg += "|last-child not in tree order"
-q = b.querySelectorAll(":first-child")
-if(q.length != 7) msg += `|bad first-child length ${q.length}`
-if(q[1].nodeName != "H1" || q[5].nodeName != "LI") msg += "|last-child not in tree order"
+// don't put a space between li and :last, the space becomes a combinator
+q = b.querySelectorAll("li:last-child") // tagname andmodifier
+if(q.length != 1 || q[0].firstChild.data != "gamma") msg += "|bad li:last"
+q = b.querySelectorAll(":only-child")
+if(q.length != 1 || q[0].nodeName != "OL") msg += "|bad only child"
+q = b.querySelectorAll(":first-of-type")
+if(q.length != 11) msg += `|bad first type length ${q.length}`
+if(q[3].nodeName != "FORM" || q[9].nodeName != "P") msg += "|first type not in tree order"
+q = b.querySelectorAll(":last-of-type")
+if(q.length != 11) msg += `|bad last type length ${q.length}`
+if(q[3].nodeName != "SELECT" || q[9].nodeName != "P") msg += "|last type not in tree order"
+q = b.querySelectorAll(":only-of-type")
+if(q.length != 6) msg += `|bad only type length ${q.length}`
+if(q[3].nodeName != "SELECT" || q[4].nodeName != "OL") msg += "|only type not in tree order"
+q = b.querySelectorAll("p:only-of-type")
+if(q.length != 1) msg += `|bad p only type length ${q.length}`
+if(q[0].id != "show") msg += "|bad p only id"
+q = b.querySelectorAll(":first-child:last-of-type")
+if(q.length != 3) msg += `|bad first last type length ${q.length}`
+if(q[0].id != "show" || q[1].nodeName != "H1" || q[2].nodeName != "OL") msg += "|bad first last type nodes"
+q = b.querySelectorAll(":nth-child(4)")
+if(q.length != 2) msg += `|bad child4 length ${q.length}`
+if(q[1].n != 3) msg += "|bad child4 node"
+q = b.querySelectorAll(":nth-child(even)")
+if(q.length != 8) msg += `|bad child even length ${q.length}`
+if(q[6].n != 3 || q[7].n != 5) msg += "|bad child even node"
+q = b.querySelectorAll(":nth-child(odd)")
+if(q.length != 13) msg += `|bad child odd length ${q.length}`
+if(q[3].text != "apple" || q[9].firstChild.data != "gamma") msg += "|bad child odd node"
+q = b.querySelectorAll(":nth-child(3n)")
+if(q.length != 5) msg += `|bad child 3n length ${q.length}`
+if(q[0].text != "lemon" || q[4].n != 6) msg += "|bad child 3n node"
+q = b.querySelectorAll(':nth-child(3n+2)')
+if(q.length != 7) msg += `|bad child 3n+2 length ${q.length}`
+if(q[2].nodeName != "SELECT" || q[6].nodeName != "SCRIPT") msg += "|bad child 3n+2 node"
+q = b.querySelectorAll(':nth-last-child(5)')
+if(q.length != 1) msg += `|bad child -5 length ${q.length}`
+if(q[0].id != "show") msg += "|bad child -5 node"
+q = b.querySelectorAll(':nth-of-type(3)')
+if(q.length != 5) msg += `|bad type 3 length ${q.length}`
+if(q[0].value != 'l' || q[4].n != 6) msg += "|bad type 3 node"
+q = b.querySelectorAll(':nth-last-of-type(3)')
+if(q.length != 5) msg += `|bad type -3 length ${q.length}`
+if(q[0].n != 1 || q[4].n != 4) msg += "|bad type -3 node"
+
+// input fields
+cb = b.querySelectorAll("[type=checkbox]")
+if(cb.length != 1 || cb[0].name != "happy") msg += "|bad cb"
+cb = cb[0]
+q = b.querySelectorAll(":disabled")
+if(q.length != 1 || q[0] != cb) msg += "|bad disabled"
+q = b.querySelectorAll(":required")
+if(q.length != 1 || q[0] != cb) msg += "|bad required"
+q = b.querySelectorAll(":checked")
+if(q.length != 1 || q[0] != cb) msg += "|bad checked"
+cb.checked = false; // uncheck
+q = b.querySelectorAll(":checked")
+if(q.length) msg += "|bad unchecked"
+// if I don't say input here, I get all sorts of tags, like p and h1,
+// which are technically readonly, I guess
+q = b.querySelectorAll("input:read-only")
+if(q.length != 3 || q[0].name != "subject" || q[2].type != "submit") msg += "|bad readonly"
+q = b.querySelectorAll("input:read-write")
+// all our inputs are locked out
+if(q.length) msg += "|bad input readwrite"
+q = b.querySelectorAll("select:read-write")
+// select is not read write in that it isn't editable.
+if(q.length) msg += "|bad select readwrite"
+q = b.querySelectorAll("select:read-only")
+if(q.length != 1) msg += "|bad select readonly"
+q = b.querySelectorAll("p:empty")
+if(q.length != 3) msg += "|bad p empty"
+// I implemented one layer of not(), and hope nobody goes deeper than that
+q = b.querySelectorAll("p:not(:empty)")
+if(q.length != 1 || q[0].id != "show") msg += "|bad p nonempty"
+
+// combinators.space is going down the tree
+q = b.querySelectorAll("div li")
+if(q.length != 3) msg += "|bad div li"
+// > means directly below
+q = b.querySelectorAll("div > li")
+if(q.length != 0) msg += "|bad div&gt;li"
+q = b.querySelectorAll("ol>li")
+if(q.length != 3) msg += "|bad ol&gt;li"
+q = b.querySelectorAll(".sandal+div")
+if(q.length != 1 || q[0].n != 2) msg += "|bad sandal +"
+q = b.querySelectorAll(".sandal~div")
+if(q.length != 2 || q[0].n != 2 || q[1].n != 3) msg += "|bad sandal ~"
+
+q = div3.querySelectorAll("*")
+if(q.length != 3) msg += "|bad *"
+q = div3.querySelectorAll('*[n="6"]')
+if(q.length != 1) msg += "|bad *6"
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}

@@ -18,7 +18,7 @@ outfile=/tmp/runtests.out
 # That is an important test, but it follows a different format,
 # and is more interactive.
 
-for t in collection.html dynamic-form.html getelem.html script-adds-nodes.html scriptorder.html style-shorthand.html
+for t in collection.html dynamic-form.html getelem.html queryselector.html script-adds-nodes.html scriptorder.html style-shorthand.html
 do
 echo $t
 $program -c /dev/null $t >$outfile <<!

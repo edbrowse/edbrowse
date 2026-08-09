@@ -553,12 +553,6 @@ static void set_property_object(JSContext *cx, JSValueConst parent, const char *
 	JS_SetPropertyStr(cx, parent, name, JS_DupValue(cx, child));
 }
 
-static void define_hidden_property_object(JSContext *cx, JSValueConst parent, const char *name, JSValueConst child)
-{
-	JS_DefinePropertyValueStr(cx, parent, name, JS_DupValue(cx, child),
-	JS_PROP_CONFIGURABLE|JS_PROP_WRITABLE);
-}
-
 void set_property_object_t(const Tag *t, const char *name, const Tag *t2)
 {
 	if (!allowJS || !t->jslink || !t2->jslink)
@@ -1128,11 +1122,6 @@ void jsRunData(const Tag *t, const char *filename, int lineno, bool is_module)
 	}
 // have to set currentScript
 	JS_SetPropertyStr(cx, *((JSValue*)t->f0->docobj), "currentScript", JS_DupValue(cx, *((JSValue*)t->jv)));
-// this next line is if a script removes itself from the tree, and also
-// uses document.write to add more nodes. Remember the parent.
-	if(t->parent && t->parent->jslink)
-		define_hidden_property_object(cx, *((JSValue*)t->jv),
-		"orig$parent", *((JSValue*)t->parent->jv));
 // defer to the earlier routine if there are breakpoints
 	if (strstr(s, "bp@(") || strstr(s, "trace@(")) {
 		char *result = run_script(cx, s);
@@ -1154,8 +1143,9 @@ void jsRunData(const Tag *t, const char *filename, int lineno, bool is_module)
 // onload handler? Should this run even if the script fails?
 // Right now it does.
 // The script could be removed, replaced by other nodes by innerHTML.
-	if (t->jslink && isURL(t->href) && !isDataURI(t->href))
+	if (t->jslink && t->href && t->href[0] && !isDataURI(t->href)) {
 		run_event(cx, *((JSValue*)t->jv), "onload");
+}
 	debugPrint(5, "< ok");
 }
 

@@ -2073,6 +2073,7 @@ static void cssModify(struct asel *a, const char *m1, const char *m2)
 		"first-of-type", "last-of-type", "only-of-type",
 		"first", "last", "empty",
 		"disabled", "enabled", "read-only", "read-write",
+		"required",
 		"scope", "root",
 		0
 	};
@@ -2637,7 +2638,7 @@ static bool inputLike(Tag *t, int flavor)
 		"button", "submit", "reset", "hidden", 0
 	};
 	action = t->action;
-	rc = (action == TAGACT_INPUT || action == TAGACT_SELECT || action == TAGACT_OPTION);
+	rc = (action == TAGACT_INPUT || action == TAGACT_OPTION);
 	if (!rc) return false;
 	if (flavor == 1) {	// clickable
 		if(action == TAGACT_OPTION) return true;
@@ -2648,10 +2649,10 @@ static bool inputLike(Tag *t, int flavor)
 		return rc;
 	}
 	if (flavor == 2) {	// writable
+		if(action != TAGACT_INPUT || t->itype == INP_SELECT) return false;
 		v = get_property_string_t(t, "type");
-		rc = (action == TAGACT_SELECT || (action == TAGACT_INPUT && v
-						  && stringInList(nwtypes,
-								  v) < 0));
+		rc = (v && stringInList(nwtypes,
+								  v) < 0);
 		nzFree(v);
 		return rc;
 	}
@@ -3056,19 +3057,25 @@ all the div sections just below the current node.
 		}
 
 		if (stringEqual(p, ":read-only")
-		    || stringEqual(p, ":read-write")) {
-			rc = false;
-			if (inputLike(t, 2)) {
-				if (bulkmatch)
-					rc = t->rdonly;
-				else
-					rc = get_property_bool_t(t, "readOnly");
-				if (p[6] == 'w')
-					rc ^= 1;
-			}
-			if (rc)
-				goto next_mod;
-			return false;
+		|| stringEqual(p, ":read-write")) {
+		    if (!inputLike(t, 2)) {
+		        rc = true;
+		    } else if (bulkmatch) {
+		        // disabled implies readonly
+		        rc = (t->rdonly | t-> disabled);
+		    } else rc = (get_property_bool_t(t, "readOnly") |
+		        get_property_bool_t(t, "disabled"));
+		    if (p[6] == 'w') rc ^= 1;
+		    if (rc) goto next_mod;
+		    return false;
+		}
+
+		if (stringEqual(p, ":required")) {
+		    if (bulkmatch) {
+		        rc = t->required;
+		    } else rc = get_property_bool_t(t, "required");
+		    if (rc) goto next_mod;
+		    return false;
 		}
 
 		if (stringEqual(p, ":checked")) {
