@@ -5811,6 +5811,10 @@ swde("HTMLLabelElement", class extends w.HTMLElement {
 let labelp = w.HTMLLabelElement.prototype;
 odp(labelp, "htmlFor", { get: function() { return this.getAttribute("for"); }, set: function(h) { this.setAttribute("for", h); }})
 
+swde("HTMLHRElement", class extends w.HTMLElement {
+    constructor() { super(); }
+})
+
 // <head> and friends
 swde("HTMLHeadElement", class extends w.HTMLElement {
     constructor() { super(); }
@@ -6637,6 +6641,7 @@ case "root": c = new w.z$HTML; s = "html"; break;
 case "div": c = new w.HTMLDivElement; break;
 case "span": c = new w.HTMLSpanElement; break;
 case "label": c = new w.HTMLLabelElement; break;
+case "hr": c = new w.HTMLHRElement; break;
 case "p": c = new w.HTMLParagraphElement; break;
 case "ol": c = new w.HTMLOListElement; break;
 case "ul": c = new w.HTMLUListElement; break;

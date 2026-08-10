@@ -4970,6 +4970,10 @@ Needless to say that's not good!
 		domLink(t, "HTMLLabelElement", 0, 0, 4);
 		break;
 
+	case TAGACT_HR:
+		domLink(t, "HTMLHRElement", 0, 0, 4);
+		break;
+
 	case TAGACT_OBJECT:
 		domLink(t, "HTMLObjectElement", 0, 0, 4);
 		break;
