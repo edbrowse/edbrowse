@@ -2574,16 +2574,16 @@ skip_encode:
 		}
 
 		if (itype < INP_FILE) {
-/* Even a hidden variable can be adjusted by js.
- * fetchTextVar allows for this possibility.
- * I didn't allow for it in the above, the value of a radio button;
- * hope that's not a problem. */
-			dynamicvalue = fetchTextVar(t);
-			postNameVal(name, dynamicvalue, fsep, false);
-			if(inputRequired(t) && !dynamicvalue && !*dynamicvalue)
-				goto required;
-			nzFree0(dynamicvalue);
-			continue;
+		/* Even a hidden variable can be adjusted by js.
+		 * fetchTextVar allows for this possibility.
+		 * I didn't allow for it in the above, the value of a radio button;
+		 * hope that's not a problem. */
+		    dynamicvalue = fetchTextVar(t);
+		    if(inputRequired(t) && (!dynamicvalue || !*dynamicvalue))
+		        goto required;
+		    postNameVal(name, dynamicvalue, fsep, false);
+		    nzFree0(dynamicvalue);
+		    continue;
 		}
 
 		if (itype == INP_TA) {
@@ -4855,10 +4855,10 @@ static int ahref_under(const Tag *t)
 
 static void emphasize(Tag *t, bool opentag, const char *a)
 {
-	const Tag *u;
-	char mark[12];
-	sprintf(mark, "%c@%s", (opentag ? '`' : '\''), a);
-	int l = strlen(a);
+    Tag *w;
+    char mark[12];
+    sprintf(mark, "%c@%s", (opentag ? '`' : '\''), a);
+    int l = strlen(a);
 
 // I don't see the point of injecting these marks if we are
 // inside a hyperlink or button.
@@ -4870,11 +4870,11 @@ static void emphasize(Tag *t, bool opentag, const char *a)
 	if(t2) return;
 
 // the converse; don't emphasize if we are a hyperlink.
-    for(u = t->firstchild; u; u = u->sibling) {
-        if(isBlankTag(u)) continue;
-        if(u->action != TAGACT_A || !u->href) break;
+    for(w = t->firstchild; w; w = w->sibling) {
+        if(isBlankTag(w)) continue;
+        if(w->action != TAGACT_A || !w->href) break;
     }
-    if(!u) return;
+    if(!w) return;
 
 	if(opentag) {
 // see if we can compress adjacent blocks of emphasized text
@@ -5173,12 +5173,11 @@ nocolor:
 	switch (action) {
 	case TAGACT_TEXT:
 		if (t->jslink) {
-// defer to the javascript text.
-// either we query js every time, on every piece of text, as we do now,
-// or we include a setter so that Text.data assignment has a side effect.
-			char *u = get_property_string_t(t, "data");
-			if (u)
-				nzFree(t->textval), t->textval = u;
+		    // defer to the javascript text.
+		    // either we query js every time, on every piece of text, as we do now,
+		    // or we include a setter so that Text.data assignment has a side effect.
+		    char *u = get_property_string_t(t, "data");
+		    if (u) nzFree(t->textval), t->textval = u;
 		}
 		if (!t->textval) break;
 		if (!invisible) {
