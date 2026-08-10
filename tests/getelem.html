@@ -140,6 +140,8 @@ if(a2.href != "http://rush.yyz.com/goodbye") msg += "|bad spilldown resolve in c
 if(a2.ownerDocument != document) msg += "|owner of a2 is not document in clone"
 if(a2.attributes["href"].ownerDocument != document) msg += "|owner of attribute is not document in clone"
 if(a2.protocol != "http:") msg += "|bad a2 protocol"
+names = a2.getAttributeNames();
+if(names.length != 1 || names[0] != "href") msg += "|bad a2 attribute names"
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}

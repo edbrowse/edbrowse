@@ -2005,6 +2005,7 @@ if(typeof node1[item] === "object") {
 if(item === "style$2") continue;
 if(item === "attributes$2") continue;
 if(item === "dataset$2") continue;
+if(item === "getElements$$cache") continue;
 if(item === "ownerDocument") continue; // handled by createElement
 if(item === "validity") continue; // created by constructor
 
