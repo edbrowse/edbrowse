@@ -4397,7 +4397,7 @@ docp.tagName = "document"
 docp.nodeType = 9
 
 // create the document
-d = new w.Document;
+d = new w.HTMLDocument;
 swpv("document", d);
 nodep.ownerDocument = d;
 
