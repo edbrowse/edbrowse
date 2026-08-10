@@ -837,12 +837,17 @@ function dispatchEvent(e)
 {
     // We've dispatched this now regardless of what happens next
     e.eb$dispatched = true;
+    e.eventPhase = 0;
+    e.target = this;
+    const pathway = [];
     // When handlers fire, or there are issues, print those at db3.
     // If we are simply tracking through the dispatch algorithm, then db4.
     let dbg3 = () => undefined;
     let dbg4 = () => undefined;
+
     const runEventHandler = (n, h, inline=false) => {
         e.currentTarget = n;
+        const istarget = n == e.target;
         // handler info for debug
         const hd = inline ? "inline handler" : `handler ${h.ehsn}`;
         let f;
@@ -865,7 +870,11 @@ function dispatchEvent(e)
             return !e.stop$propagating$immediate;
         }
         dbg3(`fires ${hd}`, n);
+        // eventPhase always has to be 2 for target
+        const save_phase = e.eventPhase;
+        if(istarget) e.eventPhase = 2;
         let r = f(e);
+        e.eventPhase = save_phase;
         // Events added by listeners ignore return values these days
         if (inline) {
             const special = e.type === "error";
@@ -916,9 +925,7 @@ function dispatchEvent(e)
         dbg3 = m => dbg(3, m);
         dbg4 = m => dbg(4, m);
     }
-    e.eventPhase = 0;
-    e.target = this;
-    const pathway = [];
+    // build the path from target up to window
     if (this.nodeType !== undefined) {
         let t;
         for (t = this; t; t = t.parentNode) {

@@ -3900,7 +3900,6 @@ static void runOnload(void)
     run_event_t(t, "load");
     if (t->onunload)
         unloadHyperlink("document.body.onunload", "Body");
-    run_event_doc(cf, "load");
     run_event_win(cf, "load");
 }
 
