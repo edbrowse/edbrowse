@@ -628,7 +628,7 @@ swpv("postMessage", function (message,target_origin, transfer) {
 swp("onmessage$$running", mw$.onmessage$$running)
 
 // The Attr class and getAttributeNode().
-swp("Attr", function(){ this.owner = null; this.name = ""})
+swp("Attr", function(){ this.ownerDocument = document; this.name = ""})
 swpp("Attr", null)
 Attr.prototype.isId = function() { return this.name === "id"; }
 Attr.prototype.cloneNode = mw$.cloneAttr

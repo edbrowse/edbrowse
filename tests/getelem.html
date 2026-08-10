@@ -1,3 +1,4 @@
+<head><base href="http://rush.yyz.com/instrumental"></head>
 <body>
 <p id=show>start</p>
 <img src=http://this.that.com/something.png id=q0 alt="first image"></img>
@@ -121,6 +122,24 @@ if(h != "H1HR") msg += `|bad values ${h}`
 h = ""
 for(const c of an) h += c.getAttribute("name")
 if(h != "socksock") msg += `|bad direct of ${h}`
+
+// attribute with href, and cloning an attribute
+li[0].setAttribute("href", "goodbye")
+if(li[0].getAttribute("href") != "goodbye") msg += "|href attribute not preserved"
+if(li[0].href != "http://rush.yyz.com/goodbye") msg += "|bad spilldown resolve"
+if(li[0].attributes[0].ownerDocument != document) msg += "|href owner is not document"
+a2 = li[0].getAttributeNode("href").cloneNode()
+if(a2.name != "href" || a2.value != "goodbye") msg += "|bad attr clone name of value"
+if(a2.ownerDocument != document) msg += "|attr clone owner not document"
+// now clone the whole node, including its attribute
+a2 = li[0].cloneNode(true)
+if(a2.firstChild.data != "what") msg += "|clone didn't carry the text"
+if(a2.attributes.length != 1 || a2.attributes[0].name != "href") msg += "|clone didn't carry the single href attribute"
+if(a2.getAttributeNode("href").value != "goodbye") msg += "|href attribute not preserved in clone"
+if(a2.href != "http://rush.yyz.com/goodbye") msg += "|bad spilldown resolve in clone"
+if(a2.ownerDocument != document) msg += "|owner of a2 is not document in clone"
+if(a2.attributes["href"].ownerDocument != document) msg += "|owner of attribute is not document in clone"
+if(a2.protocol != "http:") msg += "|bad a2 protocol"
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}

@@ -1759,7 +1759,6 @@ setAttribute: function(name, v) {
     } else a = this.attributes[name]
     if(!a) {
         a = new w.Attr();
-        a.owner = this;
         a.name = name;
         this.attributes.push(a);
         if(name !== "length") this.attributes[name] = a
@@ -1883,7 +1882,6 @@ for(var i=0; i<this.attributes.length; ++i)
 if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
 } else a = this.attributes[name];
 if(!a) a = null; else this.removeAttribute(name);
-b.owner = this;
 this.attributes.push(b);
 if(name !== "length") this.attributes[name] = b
 // there are a lot of side effects I don't want to repeat here,
@@ -2293,8 +2291,8 @@ function cloneAttr()
 {
 var w = my$win()
 // if part of an html element, use its context
-if(this.owner && this.owner.ownerDocument && this.owner.ownerDocument.defaultView)
-w = this.owner.ownerDocument.defaultView
+if(this.ownerDocument && this.ownerDocument.defaultView)
+w = this.ownerDocument.defaultView
 var a = new w.Attr;
 a.name = this.name, a.value = this.value;
 return a
@@ -4435,8 +4433,6 @@ odp(elemp, "eb$xml", {get: function() { return this.ownerDocument.eb$xml}})
 // attributes are on demand
 odp(elemp, "attributes", { get: function(){ if(!this.attributes$2) {
 odp(this, "attributes$2", {value:new w.NamedNodeMap})
-this.attributes$2.owner = this
-this.attributes$2.ownerDocument = this.ownerDocument ? this.ownerDocument : d;
 }
 return this.attributes$2}})
 ; (function(){ const list = [
