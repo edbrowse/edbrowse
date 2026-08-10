@@ -526,12 +526,12 @@ class Eb$GetElementsCache
         this.#window = w;
         this.#cache = new w.Map;
         this.#tracker = new w.FinalizationRegistry(({c, t, k}) => {
-            alert3(`collection cache cleanup type ${t} key ${k}`);
+            alert4(`collection cache cleanup type ${t} key ${k}`);
             const m = c.get(t);
             if (!m) return; // already gone
             m.delete(k);
             if (!m.size) {
-                alert3(`collection cache cleanup cache type ${t}`)
+                alert4(`collection cache cleanup cache type ${t}`)
                 c.delete(t); // the cache for this type is empty
             }
         })
@@ -548,7 +548,7 @@ class Eb$GetElementsCache
 
     add(type, key, collection)
     {
-        alert3(`collection cache adds type ${type} key ${key}`);
+        alert4(`collection cache adds type ${type} key ${key}`);
         const w = this.#window;
         const cache_key = this.#makeKey(key);
         let cache = this.#cache.get(type);
@@ -558,15 +558,15 @@ class Eb$GetElementsCache
         }
         cache.set(cache_key, new w.WeakRef(collection));
         this.#tracker.register(collection, {c: this.#cache, t: type, k: cache_key});
-        alert3(`collection cache holds ref ${this.#index}`)
+        alert4(`collection cache holds ref ${this.#index}`)
         this.#refs[this.#index] = collection;
-    this.#index = (this.#index+1)%this.#hold
+        this.#index = (this.#index+1)%this.#hold
     }
 
     get(type, key)
     {
         key = this.#makeKey(key)
-        alert3(`collection cache get type ${type} key ${key}`)
+        alert4(`collection cache get type ${type} key ${key}`)
         const cache = this.#cache.get(type);
         if (!cache) return;
         const ref = cache.get(key);
