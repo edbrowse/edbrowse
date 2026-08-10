@@ -1645,8 +1645,6 @@ name === "rows" && (o.dom$class == "HTMLTableElement" || o.dom$class == "tBody" 
 name === "tBodies" && o.dom$class == "HTMLTableElement" ||
 (name === "cells" || name === "rowIndex" || name === "sectionRowIndex") && o.dom$class == "HTMLTableRowElement" ||
 name === "className" ||
-// no clue what getAttribute("style") is suppose to do
-name === "style" ||
 name === "htmlFor" && o.dom$class == "HTMLLabelElement" ||
 name === "httpEquiv" && o.dom$class == "HTMLMetaElement" ||
 name === "options" && o.dom$class == "HTMLSelectElement" ||
@@ -1748,8 +1746,7 @@ setAttribute: function(name, v) {
 // special code for style
     if(name == "style" && this.style.dom$class == "CSSStyleDeclaration") {
         this.style.cssText = v;
-        return;
-    }
+}
     if(attr.implicitMember(this, name)) return;
     var oldv = null;
     if(name === "length") {

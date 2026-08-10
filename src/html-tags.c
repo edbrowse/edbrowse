@@ -5127,11 +5127,6 @@ static void pushAttributes(const Tag *t)
 		x = cloneString(a[i]);
 		if(!cf->xmlMode) caseShift(x, 'l');
 
-		if (stringEqual(x, "style")) {	// no clue
-			nzFree(x);
-			continue;
-		}
-
 		run_function_twostring_t(t, "setAttribute", x, u);
 // special case, classname sets the class.
 // Are there others like this?

@@ -489,14 +489,6 @@ static void define_hidden_property_string(JSContext *cx, JSValueConst parent, co
 	JS_PROP_WRITABLE|JS_PROP_CONFIGURABLE);
 }
 
-static void define_hidden_property_number(JSContext *cx, JSValueConst parent, const char *name,
-			    int n)
-{
-	JS_DefinePropertyValueStr(cx, parent, name,
-	JS_NewInt32(cx, n),
-	JS_PROP_WRITABLE|JS_PROP_CONFIGURABLE);
-}
-
 void define_hidden_property_string_t(const Tag *t, const char *name, const char * v)
 {
 	if(!t->jslink || !allowJS)
@@ -4002,45 +3994,6 @@ void establish_js_textnode(Tag *t)
 	connectTagObject(t, tagobj);
 }
 
-static void processStyles(JSValueConst so, const char *stylestring)
-{
-	char *workstring = cloneString(stylestring);
-	char *s;		// gets truncated to the style name
-	char *sv;
-	char *next;
-	s = workstring, skipWhite2(&s);
-	for (; *s; s = next) {
-		next = strchr(s, ';');
-		if (!next) {
-			next = s + strlen(s);
-		} else {
-			*next++ = 0;
-			skipWhite2(&next);
-		}
-		sv = strchr(s, ':');
-		// if there was something there, but it didn't
-		// adhere to the expected syntax, skip this pair
-		if (sv) {
-			*sv++ = '\0';
-			skipWhite2(&sv);
-			trimWhite(s);
-			trimWhite(sv);
-				camelCase(s);
-// the property name has to be one of a prescribed set
-			if (stringInList(allowableStyleElements, s) >= 0) {
-				set_property_string(cf->cx, so, s, sv);
-// Should we set a specification level here, perhaps high,
-// so the css sheets don't overwrite it?
-				char *u;
-				createFormattedString(&u, "%s$$scy", s);
-				define_hidden_property_number(cf->cx, so, u, 99999);
-				nzFree(u);
-			}
-		}
-	}
-	nzFree(workstring);
-}
-
 void domLink(Tag *t, const char *classname,	/* instantiate this class */
 		    const char *list,	/* next member of this array */
 		    const Tag * owntag,
@@ -4059,7 +4012,6 @@ int extra) // bits: radio, window, document, unknown
 // some strings from the html tag
     const char *symname = t->name;
     const char *idname = t->id;
-    const char *stylestring = attribVal(t, "style");
     	static const char * const z_list[] = {
         "Header", "Footer", "Title", "Datalist",
         "tHead", "tBody", "tFoot", "HTML", 0};
@@ -4111,16 +4063,6 @@ don't overwrite form.action, or anything else that pre-exists.
 // these two have spillup setters
     if(symname) set_property_string(cx, io, "name", symname);
     if(idname) set_property_string(cx, io, "id", idname);
-
-/* If this node contains style='' of one or more name-value pairs,
-call out to process those and add them to the object.
-Don't do any of this if the tag is itself <style>. */
-    if (stylestring && t->action != TAGACT_STYLE) {
-// This call creates the styl object on demand.
-        JSValue so = get_property_object(cx, io, "style");
-        processStyles(so, stylestring);
-        JS_Release(cx, so);
-    }
 
 // only anchors with href go into links[]
     if (stringEqual(list, "links") &&

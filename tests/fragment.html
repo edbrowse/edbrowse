@@ -3,7 +3,7 @@
 <div id=place></div>
 <template id=tt>
 <h3> Fruit </h3>
-<ol><li>plum<li>pear<li>peach</ol>
+<ol k=1 l=2 style='color:red;padding-top: 10px'><li>plum<li>pear<li>peach</ol>
 <script>++fruitAttach</script>
 </template>
 
@@ -44,9 +44,18 @@ if(!tf instanceof DocumentFragment) msg += "|tf not a fragment"
 // two instances of the template to play with
 i1 = document.importNode(tf, true);
 i2 = document.importNode(tf, true);
+// make sure attributes ccarry across
+i1ol = i1.querySelector("ol")
+if(!i1ol) msg += "|can't find ol in clone"
+i1ola = i1ol.attributes;
+if(i1ola.length != 3) msg += `| ol in clone has ${i1ola.length} attributes`
+if(i1ol.getAttribute("k") != 1 ||
+i1ola.l.value != 2 || i1ol.getAttributeNode("k") != i1ola.k) msg += "|k l attributes didn't carry across";
+if(i1ol.style.color != "red") msg += "| color red not in clone"
+if(i1ol.style.paddingTop != "10px") msg += "| padding 10px not in clone"
 place = document.getElementById("place")
 place.appendChild(i1);
-place.appendChild(i2);
+place.append(i2);
 if(fruitAttach != 2) msg += `|wrong fruitAtach ${fruitAttach}`
 q = document.querySelectorAll("body>div>ol>li");
 if(q.length != 6) msg += `|wrong fruit count ${q.length}`
@@ -55,6 +64,37 @@ s1 = b.querySelector("ol+script")
 place.removeChild(s1)
 place.prepend(s1)
 if(fruitAttach > 2) msg += `|script reran ${fruitAttach}`
+i3 = document.importNode(tf, true);
+place.prepend(i3)
+q = place.children;
+if(q[0].nodeName != "H3" || q[1].nodeName != "OL" || q[2].nodeName != "SCRIPT") msg += "|i3 didn't prepend"
+if(fruitAttach != 3) msg += `|prepend fruit count ${fruitAttach}`
+place.removeChild(place.firstChild);
+place.removeChild(place.firstChild);
+place.removeChild(place.firstChild);
+place.removeChild(place.firstChild);
+place.removeChild(place.firstChild);
+place.removeChild(place.firstChild);
+place.append("cake ", "ice cream")
+if(place.lastChild.data != "ice cream") msg += "|lost cake ice cream"
+
+div = document.createElement("div")
+s1 = document.createElement("p")
+div.append(s1)
+s1.textContent = "3"
+p = document.createElement("p")
+p.textContent = "5"
+s1.insertAdjacentElement("afterend", p)
+p = document.createElement("p")
+p.textContent = "4"
+s1.insertAdjacentElement("beforeend", p)
+p = document.createElement("p")
+p.textContent = "1"
+s1.insertAdjacentElement("beforebegin", p);
+p = document.createElement("p")
+p.textContent = "2"
+s1.insertAdjacentElement("afterbegin", p)
+if(div.textContent != "12345") msg += `|bad adjacent ${div.textContent}`
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}
