@@ -1,0 +1,61 @@
+<body>
+<p id=show>start</p>
+<div id=place></div>
+<template id=tt>
+<h3> Fruit </h3>
+<ol><li>plum<li>pear<li>peach</ol>
+<script>++fruitAttach</script>
+</template>
+
+<script>
+// fragments and templates
+try {
+show = document.getElementById("show")
+msg = "ok"
+b = document.body
+if(!document instanceof Document) msg += "|document not Document"
+if(!document instanceof HTMLDocument) msg += "|document not HTMLDocument"
+frag = document.createDocumentFragment()
+if(frag.ownerDocument != document) msg += "|frag bad owner"
+frag.appendChild(document.createElement("hr"))
+frag.appendChild(document.createElement("hr"))
+frag.appendChild(document.createElement("hr"))
+hr = frag.firstChild
+b.appendChild(frag)
+if(frag.children.length) msg += "|lines did not leave frag"
+q = document.querySelectorAll("body>hr")
+if(q.length != 3) msg += "|lines did not move to body"
+if(q[0] != hr) msg += "|first hr doesn't match"
+b.removeChild(b.lastChild)
+b.removeChild(b.lastChild)
+frag.appendChild(document.createElement("div"))
+b.insertBefore(frag, hr)
+if(frag.children.length) msg += "|div did not leave frag"
+q = document.querySelectorAll("body>div+hr")
+if(q[0] != hr) msg += "|div did not move to body"
+
+tt = document.getElementById("tt")
+if(document.querySelector("body>div+template") != tt) msg += "|template not where it should be"
+fruitAttach = 0;
+// now template to fragment. C has already done the conversion,
+// we just need to grab it.
+tf = tt.content;
+if(!tf instanceof DocumentFragment) msg += "|tf not a fragment"
+// two instances of the template to play with
+i1 = document.importNode(tf, true);
+i2 = document.importNode(tf, true);
+place = document.getElementById("place")
+place.appendChild(i1);
+place.appendChild(i2);
+if(fruitAttach != 2) msg += `|wrong fruitAtach ${fruitAttach}`
+q = document.querySelectorAll("body>div>ol>li");
+if(q.length != 6) msg += `|wrong fruit count ${q.length}`
+// detach and reattach the script, should not run again.
+s1 = b.querySelector("ol+script")
+place.removeChild(s1)
+place.prepend(s1)
+if(fruitAttach > 2) msg += `|script reran ${fruitAttach}`
+
+show.innerHTML = msg;
+} catch(e) { show.innerHTML = "blowup " + e;}
+</script>
