@@ -4881,8 +4881,7 @@ return t === null || t === false || t === "false" || t === 0 || t === '0' ? fals
 set:function(v) { this.setAttribute("hidden", v);}});
 helemp.nodeType = 1;
 
-// Helper functions for contentText and textContent, the differences of which
-// I don't grok.
+// helper functions for textContent
 // First function is recursive and gathers text and data sections.
 // Some internet code uses querySelectorAll("text,cdata"), but then I found
 // an internet article that says this can't work and shouldn't work.
@@ -4903,7 +4902,7 @@ const pre = (nn=="PRE");
 let answer = "", part;
 const t = gatherText(top);
 for(let u of t) {
-part = u.nodeName == "#text" ? u.data : u.text;
+part = u.nodeValue;
 if(part) answer += part;
 }
 return answer;
@@ -4936,9 +4935,6 @@ function newTextUnder(top, s, flavor)
 odp(helemp, "textContent", {
 get: function() { return textUnder(this, 0); },
 set: function(s) { return newTextUnder(this, s, 0); }});
-odp(helemp, "contentText", {
-get: function() { return textUnder(this, 1); },
-set: function(s) { return newTextUnder(this, s, 1); }});
 odp(helemp, "nodeValue", {
 get: function() {
 return this.nodeType == 3 ?
