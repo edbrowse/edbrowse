@@ -6,7 +6,7 @@
 # global variables, thus each test should be run on its own.
 # Furthermore, your .ebrc settings should not get in the way.
 # This test calls upon the latest edbrowse, not the one installed.
-
+cd "$(dirname "$0")"
 program=../src/edbrowse
 outfile=/tmp/runtests.out
 
