@@ -4897,20 +4897,14 @@ return a;
 
 function textUnder(top, flavor) {
 const nn = top.nodeName;
-if(nn == "#text") return top.data.trim();
+if(nn == "#text") return top.data;
 if(nn == "SCRIPT" || nn == "#cdata-section") return top.text;
 const pre = (nn=="PRE");
-let answer = "", part, delim = " ";
-if(pre) delim = '';
+let answer = "", part;
 const t = gatherText(top);
 for(let u of t) {
-if(u.parentNode && u.parentNode.nodeName == "OPTION") continue;
-// any other texts we should skip?
 part = u.nodeName == "#text" ? u.data : u.text;
-if(!pre) part = part.trim(); // should we be doing this?
-if(!part) continue;
-if(answer) answer += delim;
-answer += part;
+if(part) answer += part;
 }
 return answer;
 }

@@ -117,6 +117,16 @@ if(q[6].n != 3 || q[7].n != 5) msg += "|bad child even node"
 q = b.querySelectorAll(":nth-child(odd)")
 if(q.length != 13) msg += `|bad child odd length ${q.length}`
 if(q[3].text != "apple" || q[9].firstChild.data != "gamma") msg += "|bad child odd node"
+
+// a diversion into textContent
+gamma = q[9]
+gamma.textContent = "  psi theta"
+if(gamma.firstChild.data != "  psi theta") msg += `|gamma replacement ${gamma.firstChild.data}`
+if(gamma.parentNode.textContent != "alphabeta  psi theta") msg += `|ol text ${gamma.parentNode.textContent}`
+gamma = b.querySelector("select")
+// I'm not sure I can get the browsers to agree on the whitespace
+if(!gamma.textContent.match(/^\s+apple\s+orange\s+lemon\s+$/)) msg += `|${gamma.textContent}|`
+
 q = b.querySelectorAll(":nth-child(3n)")
 if(q.length != 5) msg += `|bad child 3n length ${q.length}`
 if(q[0].text != "lemon" || q[4].n != 6) msg += "|bad child 3n node"
