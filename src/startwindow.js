@@ -477,7 +477,7 @@ sdp("images", document.getElementsByTagName("img"))
 sdp("styleSheets", [])
 
 swp("markAllCollections", mw$.markAllCollections)
-swp("markUpwardCollections", mw$.collectionNodeReindex2)
+swp("markUpwardCollections", mw$.markUpwardCollections)
 
 swpc("frames$2", []);
 swpv("frames", {})

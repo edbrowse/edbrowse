@@ -607,7 +607,7 @@ class Eb$GetElementsCache
     }
 }
 
-function collectionNodeReindex(n)
+function markNodeCollections(n)
 {
     const cache = n.getElements$$cache;
     if (!cache) return; // nothing here
@@ -615,10 +615,10 @@ function collectionNodeReindex(n)
         c[collectionSymbol("changes")] = true;
 }
 
-function collectionNodeReindex2(t)
+function markUpwardCollections(t)
 {
     while(t) {
-        collectionNodeReindex(t);
+        markNodeCollections(t);
         if(t.nodeType != 1) break; // stop at document
         t = t.parentNode;
     }
@@ -819,7 +819,7 @@ function markAllCollections()
     // in this case we want the top node, it has plenty of collections
     list.splice(0, 0, d)
     for(const c of list)
-        collectionNodeReindex(c);
+        markNodeCollections(c);
 }
 
 function nodeContains(n) {  return cont(this, n); }
@@ -1775,7 +1775,7 @@ setAttribute: function(name, v) {
     // no need for collectoin side effects if parsing - we will be marking
     // all collections as out of date after the parse is finished.
     if(!w.eb$push$attributes && (name == "id" || name == "class" || name == "name"))
-collectionNodeReindex2(this)
+markUpwardCollections(this)
 
     // names that spill down into the actual property
     if(attr.spilldown(this, name)) this[name] = v;
@@ -1849,7 +1849,7 @@ this.attributes.length = i;
 delete this.attributes[i];
 if(name !== "length") delete this.attributes[name]
 if(name == "id" || name == "name" || name == "class")
-collectionNodeReindex2(this)
+markUpwardCollections(this)
 mutFixup(this, 1, name, a.value);
 },
 
@@ -4050,7 +4050,7 @@ nodep.appendChild = function(c) {
         // a text node won't change the structure of the form, or the html collection
         if(r.nodeType != 3) {
             formReindex2(this);
-            collectionNodeReindex2(this);
+            markUpwardCollections(this);
             runScriptWhenAttached(r);
         }
         // a text node can have an observer - for CharacterData
@@ -4094,7 +4094,7 @@ nodep.insertBefore = function(c, t) {
     this.eb$insbf(c, t); // update the tree in C
     if(c.nodeType != 3) {
                 formReindex2(this);
-        collectionNodeReindex2(this);
+        markUpwardCollections(this);
         runScriptWhenAttached(c);
     }
     mutFixup(this, 0, c, null);
@@ -4115,7 +4115,7 @@ nodep.removeChild = function(c) {
     this.eb$rmch2(c);
     if(c.nodeType != 3) {
         formReindex2(this);
-        collectionNodeReindex2(this);
+        markUpwardCollections(this);
     }
     // passing an integer as third argument is a special case, only from here.
     mutFixup(this, 0, mark, c);
