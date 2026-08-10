@@ -2089,22 +2089,6 @@ continue;
 }
 }
 
-// copy style object if present and its subordinate strings.
-if (node1.style$2 && node1.style$2.dom$class == "CSSStyleDeclaration") {
-if(debug) alert3("copy style");
-// referencing it will create it
-node2.style;
-node2.style.element = node2;
-for (var l in node1.style$2){
-if(!node1.style$2.hasOwnProperty(l)) continue;
-if (typeof node1.style$2[l] === 'string' ||
-typeof node1.style$2[l] === 'number') {
-if(debug) alert3("copy stattr " + l);
-node2.style$2[l] = node1.style$2[l];
-}
-}
-}
-
 if (node1.attributes$2) { // has attributes
 if(debug) alert3("copy attributes");
 for(var l=0; l<node1.attributes.length; ++l) {
@@ -2112,6 +2096,24 @@ if(debug) alert3("copy attribute " + node1.attributes[l].name);
 node2.setAttribute(node1.attributes[l].name, node1.attributes[l].value);
 }
 }
+
+// copy style object if present and its subordinate strings.
+// This has to happen after the attributes.
+// In case the style property and getAttribute("style") disagree.
+    if (node1.style$2 && node1.style$2.dom$class == "CSSStyleDeclaration") {
+    if(debug) alert3("copy style");
+    // referencing it will create it
+    node2.style;
+    node2.style.element = node2;
+    for (var l in node1.style$2){
+        if(!node1.style$2.hasOwnProperty(l)) continue;
+        if (typeof node1.style$2[l] === 'string' ||
+        typeof node1.style$2[l] === 'number') {
+            if(debug) alert3("copy stattr " + l);
+            node2.style$2[l] = node1.style$2[l];
+        }
+    }
+    }
 
     if (deep && kids) {
         for(i = 0; i < kids.length; ++i) {
