@@ -75,6 +75,9 @@ try {
 // lastChild is the script we are running right now
 hr = b.lastChild. previousElementSibling
 if(mid[1] != hr) msg += "|hr didn't enter the collection"
+hr.classList.remove("shoe")
+if(hr.className != "boot slipper sandal") msg += `|className ${hr.className} wrong after remove`;
+if(mid.length != 1 || ac.length != 3) msg += "|wrong lengths after shoe remove";
 q2.innerHTML = "<a href=http://www.water.com:731>water</a>"
 if(at.length != 3) msg += `|dynamic &lt;a&gt; not in the collection length ${at.length}`
 water = q2.firstChild;
