@@ -3,7 +3,7 @@
 <div id=place></div>
 <template id=tt>
 <h3> Fruit </h3>
-<ol k=1 l=2 style='color:red;padding-top: 10px'><li>plum<li>pear<li>peach</ol>
+<ol k=1 l=2 data-alpha-bet="a b c" style='color:red;padding-top: 10px'><li>plum<li>pear<li>peach</ol>
 <script>++fruitAttach</script>
 </template>
 
@@ -48,7 +48,7 @@ i2 = document.importNode(tf, true);
 i1ol = i1.querySelector("ol")
 if(!i1ol) msg += "|can't find ol in clone"
 i1ola = i1ol.attributes;
-if(i1ola.length != 3) msg += `| ol in clone has ${i1ola.length} attributes`
+if(i1ola.length != 4) msg += `| ol in clone has ${i1ola.length} attributes`
 if(i1ol.getAttribute("k") != 1 ||
 i1ola.l.value != 2 || i1ol.getAttributeNode("k") != i1ola.k) msg += "|k l attributes didn't carry across";
 if(i1ol.style.color != "red") msg += "| color red not in clone"
@@ -71,6 +71,7 @@ place.prepend(i3)
 q = place.children;
 if(q[0].nodeName != "H3" || q[1].nodeName != "OL" || q[2].nodeName != "SCRIPT") msg += "|i3 didn't prepend"
 if(q[1].style.color != "green") msg += "|green didn't displace red"
+if(q[1].dataset.alphaBet != "a b c") msg += "|alphaBet didn't carry across"
 if(fruitAttach != 3) msg += `|prepend fruit count ${fruitAttach}`
 place.removeChild(place.firstChild);
 place.removeChild(place.firstChild);
@@ -97,6 +98,10 @@ s1.insertAdjacentElement("beforebegin", p);
 p = document.createElement("p")
 p.textContent = "2"
 s1.insertAdjacentElement("afterbegin", p)
+
+s1 = b.querySelector("li")
+if(b.contains(null)) msg += "|contains null"
+if(!b.contains(s1) || s1.contains(b) || !b.contains(b)) msg += "|bad contains"
 if(div.textContent != "12345") msg += `|bad adjacent ${div.textContent}`
 
 show.innerHTML = msg;

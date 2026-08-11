@@ -825,11 +825,14 @@ function markAllCollections()
 function nodeContains(n) {  return cont(this, n); }
 
 function cont(top, n) {
+if(!top || !n) return false;
+let p;
 if(top === n) return true;
-if(!top.childNodes) return false;
-if(top.is$frame) return false;
-for(var i=0; i<top.childNodes.length; ++i)
-if(cont(top.childNodes[i], n)) return true;
+while(p = n.parentNode) {
+n = p;
+if(n.is$frame) return false;
+if(n == top) return true;
+}
 return false;
 }
 
