@@ -30,7 +30,7 @@ b.removeChild(b.lastChild)
 b.removeChild(b.lastChild)
 frag.appendChild(document.createElement("div"))
 b.insertBefore(frag, hr)
-if(frag.children.length) msg += "|div did not leave frag"
+if(frag.hasChildNodes()) msg += "|div did not leave frag"
 q = document.querySelectorAll("body>div+hr")
 if(q[0] != hr) msg += "|div did not move to body"
 
@@ -41,12 +41,17 @@ fruitAttach = 0;
 // we just need to grab it.
 tf = tt.content;
 if(!tf instanceof DocumentFragment) msg += "|tf not a fragment"
+s1 = tf.firstChild;
+if(tf.parentElement !== null) msg += "|fragment has parent"
+if(s1.parentElement !== null) msg += "|parent element is fragment"
+if(show.parentElement != b) msg += "|show parent not body"
 // two instances of the template to play with
 i1 = document.importNode(tf, true);
 i2 = document.importNode(tf, true);
 // make sure attributes ccarry across
 i1ol = i1.querySelector("ol")
 if(!i1ol) msg += "|can't find ol in clone"
+if(i1ol.previousElementSibling.nodeName != "H3") msg += "|previous not h3"
 i1ola = i1ol.attributes;
 if(i1ola.length != 4) msg += `| ol in clone has ${i1ola.length} attributes`
 if(i1ol.getAttribute("k") != 1 ||
@@ -98,11 +103,25 @@ s1.insertAdjacentElement("beforebegin", p);
 p = document.createElement("p")
 p.textContent = "2"
 s1.insertAdjacentElement("afterbegin", p)
+if(div.textContent != "12345") msg += `|bad adjacent ${div.textContent}`
 
 s1 = b.querySelector("li")
 if(b.contains(null)) msg += "|contains null"
 if(!b.contains(s1) || s1.contains(b) || !b.contains(b)) msg += "|bad contains"
-if(div.textContent != "12345") msg += `|bad adjacent ${div.textContent}`
+if(b.compareDocumentPosition(b) != 0) msg += "|self nonzero"
+if(show.compareDocumentPosition(b.lastChild) != b.DOCUMENT_POSITION_FOLLOWING) msg += "|neighbors not follow"
+if(b.lastChild.compareDocumentPosition(show) != b.DOCUMENT_POSITION_PRECEDING) msg += "|neighbors not precede"
+if(show.compareDocumentPosition(s1) != b.DOCUMENT_POSITION_FOLLOWING) msg += "|cousins not follow"
+if(b.compareDocumentPosition(s1) != (b.DOCUMENT_POSITION_FOLLOWING | b.DOCUMENT_POSITION_CONTAINED_BY)) msg += "|s1 not follow"
+if(s1.compareDocumentPosition(b) != (b.DOCUMENT_POSITION_PRECEDING | b.DOCUMENT_POSITION_CONTAINS)) msg += "|s1 not precede"
+// template fragment is not in the tree at all
+// chrome sets other bits besides the disconnected bit.
+// That makes no sense to me!
+if(!(show.compareDocumentPosition(tf.firstChild) & b.DOCUMENT_POSITION_DISCONNECTED)) msg += "|unrelated compare"
+
+if(show.ELEMENT_NODE != 1 || show.DOCUMENT_FRAGMENT_NODE != 11 ||
+show.TEXT_NODE != 3)
+msg += "|no node types"
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}
