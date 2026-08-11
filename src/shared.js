@@ -3928,6 +3928,26 @@ odp(urlp, "charAt", {enumerable:false,writable:true,configurable:true,value:func
 odp(urlp, "charCodeAt", {enumerable:false,writable:true,configurable:true,value:function(n) { return this.toString().charCodeAt(n); }})
 odp(urlp, "trim", {enumerable:false,writable:true,configurable:true,value:function() { return this.toString().trim(); }})
 
+/* The URL class is set to changeable, because at least one website replaced it
+with their own. I think that's insane - but whatever.
+In contrast, nobody would replace Element, or HTMLTableElement,
+or any of those DOM classes. I assume.
+I doubt any browser would let you do it.
+So those are all set to false, not changeable.
+Attr is somewhere in the middle. Is it changeable?
+It is so intertwined with the getAttribute system,
+which is central to DOM, so I would say no.
+Thus I define it here with false. */
+swde("Attr", class extends w.Object {
+    constructor()
+    {
+        super();
+        this.ownerDocument = d; this.name = ""
+    }
+    isId() { return this.name === "id"; }
+    cloneNode = cloneAttr;
+}, false);
+
 swde("Validity", class extends w.Object { constructor() { super(); }})
 
 /*********************************************************************

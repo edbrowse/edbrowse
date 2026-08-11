@@ -627,12 +627,6 @@ swpv("postMessage", function (message,target_origin, transfer) {
 })
 swp("onmessage$$running", mw$.onmessage$$running)
 
-// The Attr class and getAttributeNode().
-swp("Attr", function(){ this.ownerDocument = document; this.name = ""})
-swpp("Attr", null)
-Attr.prototype.isId = function() { return this.name === "id"; }
-Attr.prototype.cloneNode = mw$.cloneAttr
-
 // this is sort of an array and sort of not.
 // For one thing, you can call setAttribute("length", "snork"), so I can't use length.
 swp("NamedNodeMap", function() { this.length = 0})
