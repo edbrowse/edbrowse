@@ -201,6 +201,11 @@ li.matches("div li") &&
 li.matches("[n~=greek]>li")))
 msg += "|li.matches error";
 if(li.matches("div>li")) msg += "|li matches just below div";
+if(li.closest("div").getAttribute("n") != 2 ||
+li.closest("li") != li ||
+li.closest("body").nodeName != "BODY") msg += "|couldn't find closest nodes";
+if(li.closest("div:nth-of-type(odd)") ||
+li.closest("p") !== null) msg += "|closest found wrong nodes";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}
