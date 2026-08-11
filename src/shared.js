@@ -2903,6 +2903,13 @@ if(rc == 4 && s1.hov$col) rc = 5;
 return rc;
 }
 
+// This is not comprehensive, but covers most cases,
+// and does what chrome does.
+function simpleHtmlEscape(h) {
+    // note that we have to replace & first.
+    return h.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 function htmlString(t) {
     if(t.nodeType == 3) return t.data;
     if(t.nodeType == 4) return "<![Cdata[" + t.text + "]]>";
@@ -2913,8 +2920,7 @@ function htmlString(t) {
         for(let l = 0; l < t.attributes$2.length; ++l) {
             const a = t.attributes$2[l];
             // we need to html escape certain characters, which I do a few of.
-            // replacing & with &amp; has to come first.
-            s += ` ${a.name}="${a.value.toString().replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}"`
+            s += ` ${a.name}="${simpleHtmlEscape(a.value.toString())}"`
         }
     }
     s += '>';
@@ -3979,6 +3985,10 @@ swde("Node", class extends w.EventTarget {
     a few lines of code. It's sweet, but creats more problems than it solves.
     Mostly because I don't preserve whitespace between tags. */
     get innerHTML() {
+        // textarea is special
+        if(this.dom$class == "HTMLTextAreaElement") {
+            return simpleHtmlEscape(this.inner$HTML);
+        }
         /*
         const div = d.createElement('div')
         div.innerHTML = this.inner$HTML;
@@ -3991,12 +4001,12 @@ swde("Node", class extends w.EventTarget {
     }
     set innerHTML(h) {
         if(!h) h = "";
-        this.inner$HTML = h;
         // textarea.innerHTML is special.
         if(this.dom$class == "HTMLTextAreaElement") {
             this.value = h;
             return;
         }
+        this.inner$HTML = h;
         // Put some tags around the html so we can parse it.
         h = `<body>${h}</body>`;
         // Have to make a copy of the old nodes, the ones that are

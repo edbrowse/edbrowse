@@ -6,7 +6,7 @@
  <ol 	 k=1   l=2 data-alpha-bet="a b c" style='color:red;padding-top: 10px'><li>plum<li>pear<li>peach</ol>
 <script>++fruitAttach</script>
 </template>
-<textarea>I'd like to be, under the sea.</textarea>
+<textarea>I'd like to be,<br>under the sea.</textarea>
 
 <script>
 // fragments and templates
@@ -204,10 +204,12 @@ if(div.textContent != "red orange yellow green blue indigo violet") msg += `|bad
 
 // textarea.innerHTML
 ta = b.querySelector("textarea")
-garden = "<p>in an octopus' garden,</p><p>with you</p>";
+// verify that tags in <textarea> are not parsed
+if(ta.value.indexOf("<br>") < 0) msg += "|tag lost in textarea";
+if(ta.innerHTML != "I'd like to be,&lt;br&gt;under the sea.") msg += "|bad get textarea innerHTML";
+garden = "in an octopus' garden,<br>with you";
 ta.innerHTML = garden;
-if(ta.value != garden)
-msg += "|bad textarea.innerHTML"
+if(ta.value != garden) msg += "|bad set textarea.innerHTML"
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}
