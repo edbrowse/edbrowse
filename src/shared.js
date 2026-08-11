@@ -2904,25 +2904,27 @@ return rc;
 }
 
 function htmlString(t) {
-if(t.nodeType == 3) return t.data;
-if(t.dom$class == "CDATASection") return "<![Cdata[" + t.text + "]]>";
-if(t.nodeType != 1) return "";
-var s = "<" + (t.nodeName ? t.nodeName : "x");
-if(t.attributes$2) {
-for(var l = 0; l < t.attributes$2.length; ++l) {
-var a = t.attributes$2[l];
-// we need to html escape certain characters, which I do a few of.
-s += ' ' + a.name + "='" + a.value.toString().replace(/['<>&]/g,function(a){return "&#"+a.charCodeAt(0)+";"}) + "'";
-}
-}
-s += '>';
-if(t.childNodes)
-for(var i=0; i<t.childNodes.length; ++i)
-s += htmlString(t.childNodes[i]);
-s += "</";
-s += (t.nodeName ? t.nodeName : "x");
-s += '>';
-return s;
+    if(t.nodeType == 3) return t.data;
+    if(t.nodeType == 4) return "<![Cdata[" + t.text + "]]>";
+    if(t.nodeType == 8) return "<!--" + t.data + "-->";
+    if(t.nodeType != 1) return "";
+    let s = "<" + (t.nodeName ? t.nodeName.toLowerCase() : "x");
+    if(t.attributes$2) {
+        for(let l = 0; l < t.attributes$2.length; ++l) {
+            const a = t.attributes$2[l];
+            // we need to html escape certain characters, which I do a few of.
+            // replacing & with &amp; has to come first.
+            s += ` ${a.name}="${a.value.toString().replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}"`
+        }
+    }
+    s += '>';
+    if(t.childNodes)
+        for(let i=0; i<t.childNodes.length; ++i)
+            s += htmlString(t.childNodes[i]);
+    s += "</";
+    s += (t.nodeName ? t.nodeName.toLowerCase() : "x");
+    s += '>';
+    return s;
 }
 
 function outer$1(t, h) {
@@ -4229,6 +4231,7 @@ width: 0, height: 0
 // constants
 nodep.ELEMENT_NODE = 1
 nodep.TEXT_NODE = 3
+nodep.CDATA_SECTION_NODE = 4
 nodep.COMMENT_NODE = 8
 nodep.DOCUMENT_NODE = 9
 nodep.DOCUMENT_TYPE_NODE = 10

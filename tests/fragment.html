@@ -103,7 +103,7 @@ s1.insertAdjacentElement("beforebegin", p);
 p = document.createElement("p")
 p.textContent = "2"
 s1.insertAdjacentElement("afterbegin", p)
-if(div.textContent != "12345") msg += `|bad adjacent ${div.textContent}`
+if(div.textContent != "12345") msg += `|bad adjacent element ${div.textContent}`
 
 s1 = b.querySelector("li")
 if(b.contains(null)) msg += "|contains null"
@@ -157,8 +157,49 @@ if(tt.innerHTML !==
 '\n<h3> Fruit </h3> \n <ol k="1" l="2" data-alpha-bet="a b c" style="color: green; padding-top: 10px;"><li>plum</li><li>pear</li><li>peach</li></ol>\n<script>++fruitAttach<'
 + // remember we have to break up the closing script tag
 '/script>\n')
-msg += `|unexpected html <textarea>${tt.innerHTML}</textarea>`
+msg += `|unexpected inner html <textarea>${tt.innerHTML}</textarea>`
 }
+
+// build from scratch and check outerHTML
+div = document.createElement("div")
+p = document.createElement("p")
+p.setAttribute("jk", "a b c76")
+p.textContent = " first paragraph ";
+div.append(p)
+ol = document.createElement("ol")
+ol.setAttribute("start", 37)
+li = document.createElement("li")
+li.textContent = "Happy"
+ol.append(li)
+li = document.createElement("li")
+li.textContent = "Sneezy"
+ol.append(li)
+li = document.createElement("li")
+li.textContent = "Doc"
+ol.append(li)
+div.append(ol)
+div.append(document.createComment(" come on baby light my fire "))
+// In this simple example, chrome and edbrowse agree
+if(div.outerHTML !=
+'<div><p jk="a b c76"> first paragraph </p><ol start="37"><li>Happy</li><li>Sneezy</li><li>Doc</li></ol><!-- come on baby light my fire --></div>')
+msg += `|unexpected outer html <textarea>${div.outerHTML}</textarea>`
+
+// insertAdjacentHTML
+div = document.createElement("div")
+s1 = document.createElement("p")
+div.append(s1)
+s1.textContent = "3"
+s1.insertAdjacentHTML("afterend", "<p><span jk=23>5</span></p>")
+s1.insertAdjacentHTML("beforeend", "<p><span jk=23>&gt;4</span></p>")
+s1.insertAdjacentHTML("beforebegin", "<p><span jk=23>1</span></p>");
+s1.insertAdjacentHTML("afterbegin", "<p><span jk=23>2&lt;</span></p>")
+if(div.textContent != "12<3>45") msg += `|bad adjacent html ${div.textContent}`
+// this catches 4 out of 5, because of the jk restriction
+q = div.querySelectorAll('p>span[jk="23"]');
+if(q.length != 4) msg += `|bad adjacent html length ${q.length}`
+// q comes out in tag order, the order the tags were created, marching down
+// the array of tags. It should be in tree order, so that's wrong.
+// We need to address this and include a test for it.
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}
