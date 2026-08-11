@@ -192,6 +192,16 @@ if(q.length != 3) msg += "|bad *"
 q = div3.querySelectorAll('*[n="6"]')
 if(q.length != 1) msg += "|bad *6"
 
+// matches is a form of querySelector. This is not at all the same
+// as match, which takes a regular expression.
+li = b.querySelector("li:last-child")
+if(!(li.matches("body>div>ol>li:nth-child(3)") &&
+li.matches(":last-of-type") &&
+li.matches("div li") &&
+li.matches("[n~=greek]>li")))
+msg += "|li.matches error";
+if(li.matches("div>li")) msg += "|li matches just below div";
+
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}
 </script>
