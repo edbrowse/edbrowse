@@ -2,8 +2,8 @@
 <p id=show>start</p>
 <div id=place></div>
 <template id=tt>
-<h3> Fruit </h3>
-<ol k=1 l=2 data-alpha-bet="a b c" style='color:red;padding-top: 10px'><li>plum<li>pear<li>peach</ol>
+<h3> Fruit </h3> 
+ <ol 	 k=1   l=2 data-alpha-bet="a b c" style='color:red;padding-top: 10px'><li>plum<li>pear<li>peach</ol>
 <script>++fruitAttach</script>
 </template>
 
@@ -122,6 +122,43 @@ if(!(show.compareDocumentPosition(tf.firstChild) & b.DOCUMENT_POSITION_DISCONNEC
 if(show.ELEMENT_NODE != 1 || show.DOCUMENT_FRAGMENT_NODE != 11 ||
 show.TEXT_NODE != 3)
 msg += "|no node types"
+
+/* This is a chrome only test, and I don't like to do those very often,
+but it will be a long time if ever that edbrowse does exactly the same thing,
+and it should perhaps be documented.
+tt.innerHTML produces the html that was originally in the template.
+But it's not an exact copy.
+I didn't close <li>, but when it comes back out, there is a closing </li> tag.
+The html syntax is cleaned up.
+And whitespace between tag attributes is compressed.
+Also, every attribute value is quoted, with double quotes,
+even if I didn't quote it, or if I used single quotes.
+So I verify what chrome does, and maybe some day edbrowse will do the same.
+If I don't get a match, how do I show you what edbrowse produced?
+I can't just alert it.
+If I paste it into show.innerHTML, chrome will render the tags.
+But there's a trick, which you will see below.
+One way I could approach this, from the edbrowse side, only requires
+a few lines of code. It's sweet.
+innerHTML getter {
+    let d = document.createElement('div')
+    d.innerHTML = this.inner$HTML;
+    return d.outerHTML;
+}
+Thats pretty damn close, but not exact.
+Maybe it's close enough. Better than leaving it untouched.
+I don't know anywhere in the wild where this matters -
+unless some gatekeeper uses it to prove we are a perfect browser,
+and that kind of shit does happen. */
+
+isedbrowse = navigator.userAgent.substr(0, 8) == "edbrowse";
+if(!isedbrowse) {
+if(tt.innerHTML !==
+'\n<h3> Fruit </h3> \n <ol k="1" l="2" data-alpha-bet="a b c" style="color: green; padding-top: 10px;"><li>plum</li><li>pear</li><li>peach</li></ol>\n<script>++fruitAttach<'
++ // remember we have to break up the closing script tag
+'/script>\n')
+msg += `|unexpected html <textarea>${tt.innerHTML}</textarea>`
+}
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}
