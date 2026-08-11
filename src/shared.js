@@ -4431,6 +4431,53 @@ w.open = function(a, b) {
 
 swde("Element", class extends w.Node {
     constructor() { super(); }
+
+    insertAdjacentElement(pos, e) {
+        let n, p = this.parentNode;
+        if(!p || typeof pos != "string") return null;
+        switch(pos.toLowerCase()) {
+        case "beforebegin": return p.insertBefore(e, this);
+        case "afterend":
+            n = this.nextSibling;
+            return n ? p.insertBefore(e, n) : p.appendChild(e);
+        case "beforeend": return this.appendChild(e);
+        case "afterbegin": return this.prepend$child(e);
+        }
+    return null;
+    }
+
+    insertAdjacentText(pos, e) {
+        let n, p = this.parentNode;
+        if(!p || typeof pos != "string") return null;
+        if(typeof e != "string") return null;
+        e = d.createTextNode(e);
+        return this.insertAdjacentElement(pos, e);
+    }
+
+    insertAdjacentHTML(pos, h) {
+        // easiest implementation is just to use the power of innerHTML
+        let p = d.createElement("p");
+        p.innerHTML = h; // the magic
+        let s, parent = this.parentNode;
+        switch(pos) {
+        case "beforebegin":
+            while(s = p.firstChild)
+                parent.insertBefore(s, this);
+            break;
+        case "afterbegin":
+            while(s = p.lastChild)
+                this.insertBefore(s, this.firstChild);
+            break;
+        case "beforeend":
+            while(s = p.firstChild)
+                this.appendChild(s);
+            break;
+        case "afterend":
+            while(s = p.lastChild)
+                parent.insertBefore(s, this.nextSibling);
+            break;
+        }
+    }
 })
 let elemp = w.Element.prototype;
 
@@ -4597,19 +4644,6 @@ break;
 
 elemp.remove = function() { if(this.parentNode) this.parentNode.removeChild(this)}
 
-elemp.insertAdjacentElement = function(pos, e) {
-let n, p = this.parentNode;
-if(!p || typeof pos != "string") return null;
-pos = pos.toLowerCase();
-switch(pos) {
-case "beforebegin": return p.insertBefore(e, this);
-case "afterend": n = this.nextSibling; return n ? p.insertBefore(e, n) : p.appendChild(e);
-case "beforeend": return this.appendChild(e);
-case "afterbegin": return this.prepend$child(e);
-return null;
-}
-}
-
 elemp.matches = querySelector0;
 
 elemp.closest = function(s) {
@@ -4699,33 +4733,6 @@ set:function(v) { this.setAttribute("id", v)}});
 
 odp(elemp, "outerHTML", { get: function() { return htmlString(this);},
 set: function(h) { outer$1(this,h); }});
-
-elemp.insertAdjacentHTML = function(flavor, h) {
-// easiest implementation is just to use the power of innerHTML
-let p = d.createElement("p");
-p.innerHTML = h; // the magic
-let s, parent = this.parentNode;
-switch(flavor) {
-case "beforebegin":
-while(s = p.firstChild)
-parent.insertBefore(s, this);
-break;
-case "afterbegin":
-while(s = p.lastChild)
-this.insertBefore(s, this.firstChild);
-break;
-case "beforeend":
-while(s = p.firstChild)
-this.appendChild(s);
-break;
-case "afterend":
-while(s = p.lastChild)
-parent.insertBefore(s, this.nextSibling);
-break;
-}
-}
-
-// insertAdjacentText not yet implemented
 
 odp(elemp, "shadowRoot", {
 get:function(){

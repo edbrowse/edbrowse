@@ -200,6 +200,19 @@ if(q.length != 4) msg += `|bad adjacent html length ${q.length}`
 h = ""; q.forEach((t)=>h+=t.firstChild.data);
 if(h != "12<>45") msg += `|qsa(adjacent) has wrong order ${h}`;
 
+// insertAdjacentText
+div = document.createElement("div")
+s1 = document.createElement("p")
+div.append(s1)
+s1.textContent = "green"
+s1.insertAdjacentText("afterEnd", " violet");
+s1.insertAdjacentText("afterEnd", " indigo");
+s1.insertAdjacentText("beforeBegin", "red ");
+s1.insertAdjacentText("beforeBegin", "orange ");
+s1.insertAdjacentText("afterBegin", "yellow ");
+s1.insertAdjacentText("beforeEnd", " blue");
+if(div.textContent != "red orange yellow green blue indigo violet") msg += `|bad adjacent text ${div.textContent}`
+
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}
 </script>
