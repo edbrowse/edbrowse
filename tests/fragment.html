@@ -6,6 +6,7 @@
  <ol 	 k=1   l=2 data-alpha-bet="a b c" style='color:red;padding-top: 10px'><li>plum<li>pear<li>peach</ol>
 <script>++fruitAttach</script>
 </template>
+<textarea>I'd like to be, under the sea.</textarea>
 
 <script>
 // fragments and templates
@@ -137,19 +138,7 @@ So I verify what chrome does, and maybe some day edbrowse will do the same.
 If I don't get a match, how do I show you what edbrowse produced?
 I can't just alert it.
 If I paste it into show.innerHTML, chrome will render the tags.
-But there's a trick, which you will see below.
-One way I could approach this, from the edbrowse side, only requires
-a few lines of code. It's sweet.
-innerHTML getter {
-    let d = document.createElement('div')
-    d.innerHTML = this.inner$HTML;
-    return d.outerHTML;
-}
-Thats pretty damn close, but not exact.
-Maybe it's close enough. Better than leaving it untouched.
-I don't know anywhere in the wild where this matters -
-unless some gatekeeper uses it to prove we are a perfect browser,
-and that kind of shit does happen. */
+But there's a trick, which you will see below. */
 
 isedbrowse = navigator.userAgent.substr(0, 8) == "edbrowse";
 if(!isedbrowse) {
@@ -212,6 +201,13 @@ s1.insertAdjacentText("beforeBegin", "orange ");
 s1.insertAdjacentText("afterBegin", "yellow ");
 s1.insertAdjacentText("beforeEnd", " blue");
 if(div.textContent != "red orange yellow green blue indigo violet") msg += `|bad adjacent text ${div.textContent}`
+
+// textarea.innerHTML
+ta = b.querySelector("textarea")
+garden = "<p>in an octopus' garden,</p><p>with you</p>";
+ta.innerHTML = garden;
+if(ta.value != garden)
+msg += "|bad textarea.innerHTML"
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}

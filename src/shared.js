@@ -3965,10 +3965,54 @@ swde("Node", class extends w.EventTarget {
     {
         super();
         // childNodes should be readonly; it is a live node list.
-        odp(this, "childNodes", {value: new w.Array})
+        odp(this, "childNodes", {value: []})
         odp(this, "parentNode", {value: null, writable: true, configurable:true})
     }
+
+    /* Set innerHTML, and then read it back; it's not an exact copy.
+    If I don't close <li>, when it comes back out, there is a closing </li> tag.
+    The html syntax is cleaned up.
+    And whitespace between tag attributes is compressed.
+    Also, every attribute value is quoted, with double quotes,
+    even if I didn't quote it, or if I used single quotes.
+    One way I could approach this, from the edbrowse side, only requires
+    a few lines of code. It's sweet, but creats more problems than it solves.
+    Mostly because I don't preserve whitespace between tags. */
+    get innerHTML() {
+        /*
+        const div = d.createElement('div')
+        div.innerHTML = this.inner$HTML;
+        let o = div.outerHTML;
+        // strip off <div> and </div>
+        const l = o.length;
+        return o.substr(5, l-11);
+        */
+        return this.inner$HTML;
+    }
+    set innerHTML(h) {
+        if(!h) h = "";
+        this.inner$HTML = h;
+        // textarea.innerHTML is special.
+        if(this.dom$class == "HTMLTextAreaElement") {
+            this.value = h;
+            return;
+        }
+        // Put some tags around the html so we can parse it.
+        h = `<body>${h}</body>`;
+        // Have to make a copy of the old nodes, the ones that are
+        // going to be displaced, for the mutation observers. Ugh!
+        let c1 = this.childNodes, c2 = [];
+        if(!c1) return; // should never happen
+        for(let i = 0; i < c1.length; ++i)
+            c2[i] = c1[i], c2[i].parentNode = null;
+        c1.length = 0;
+        // native function to parse the new html
+        set_innerHTML(this, h);
+        // c2 is the old nodes, for the observers.
+        w.mutFixup(this, 0, c1, c2);
+    }
 })
+
 let nodep = w.Node.prototype;
 
 // These are native helper functions
@@ -4295,35 +4339,6 @@ nodep.getElementsByTagName = getElementsByTagName;
 nodep.getElementsByName = getElementsByName;
 nodep.getElementsByClassName = getElementsByClassName;
 odp(nodep, "inner$HTML", {value:"", writable:true})
-odp(nodep, "innerHTML", {
-    get: function() { return this.inner$HTML},
-    set: function(h) {
-        let c1 = this.childNodes, c2 = new w.Array;
-        if(!c1) return; // should never happen
-        for(let i = 0; i < c1.length; ++i)
-            c2[i] = c1[i], c2[i].parentNode = null;
-        c1.length = 0;
-        if(!h) h = "";
-        this.inner$HTML = h;
-        // Put some tags around the html, so we can parse it.
-        h = `<body>${h}</body>`;
-        set_innerHTML(this, h); // native function to parse the new html
-        if(this.dom$class == "HTMLTextAreaElement") {
-            this.value = "";
-            if(c1.length) { // stuff below
-                let tn; // our textNode
-                if(c1.length == 1 && (tn = this.firstChild) &&
-                tn.dom$class == "Text") {
-                    let d = (tn.data ? tn.data : "");
-                    this.value = d;
-                    this.removeChild(tn);
-                } else alert3("textarea.innerHTML is too complicated for me to render");
-            }
-        }
-        w.mutFixup(this, 0, c1, c2);
-    }
-})
-
 swde("Document", class extends w.Node {
     constructor()
     {

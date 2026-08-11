@@ -124,7 +124,7 @@ static const struct tagInfo availableTags[] = {
 	{"table", "a table", TAGACT_TABLE, 10, 1},
 	{"tbody", "a table body", TAGACT_TBODY, 0, 1},
 	{"td", "a table entry", TAGACT_TD, 0, 1},
-	{"template", "a template", TAGACT_TEMPLATE, 0, 0},
+	{"template", "a template", TAGACT_TEMPLATE, 0, 1},
 	{"text", "a text section", TAGACT_TEXT, 0, 4},
 	{"textarea", "an input text area", TAGACT_TA, 0, 0},
 	{"tfoot", "a table foot", TAGACT_TFOOT, 0, 1},
