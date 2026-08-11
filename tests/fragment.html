@@ -197,9 +197,8 @@ if(div.textContent != "12<3>45") msg += `|bad adjacent html ${div.textContent}`
 // this catches 4 out of 5, because of the jk restriction
 q = div.querySelectorAll('p>span[jk="23"]');
 if(q.length != 4) msg += `|bad adjacent html length ${q.length}`
-// q comes out in tag order, the order the tags were created, marching down
-// the array of tags. It should be in tree order, so that's wrong.
-// We need to address this and include a test for it.
+h = ""; q.forEach((t)=>h+=t.firstChild.data);
+if(h != "12<>45") msg += `|qsa(adjacent) has wrong order ${h}`;
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}

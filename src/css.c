@@ -3370,7 +3370,6 @@ static Tag **qsa2(struct desc *d, const char *selstring)
 // Build the list of nodes in the document.
 // Gee, this use to be one line of javascript, via getElementsByTagName().
 static void build1_doclist(Tag *t);
-static int doclist_cmp(const void *v1, const void *v2);
 static void build_doclist(Tag *top)
 {
 	doclist_n = 0;
@@ -3391,7 +3390,6 @@ static void build_doclist(Tag *top)
 		}
 	}
 	doclist[doclist_n] = 0;
-	qsort(doclist, doclist_n, sizeof(Tag *), doclist_cmp);
 }
 
 // This is a bit like getElementsByTagName("*"), though we cull certain nodes,
@@ -3418,14 +3416,6 @@ skip:
 		return;
 	for (t = t->firstchild; t; t = t->sibling)
 		build1_doclist(t);
-}
-
-static int doclist_cmp(const void *v1, const void *v2)
-{
-	const Tag *const *p1 = v1;
-	const Tag *const *p2 = v2;
-	int d = (*p1)->seqno - (*p2)->seqno;
-	return d;
 }
 
 static Tag **qsaInternal(const char *selstring, Tag *top)
