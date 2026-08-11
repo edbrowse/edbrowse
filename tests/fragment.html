@@ -211,6 +211,16 @@ garden = "in an octopus' garden,<br>with you";
 ta.innerHTML = garden;
 if(ta.value != garden) msg += "|bad set textarea.innerHTML"
 
+// children
+div = document.createElement("div");
+div.innerHTML = "I'm so <em>excited</em>, and I just <u>can't hide it</u>.";
+cn = div.children;
+// cn is collection. Is it live? I don't know.
+if(div.childNodes.length != 5 || cn.length != 2 || div.childElementCount != 2) msg += "|bad children count";
+if(div.firstElementChild != cn[0] || div.lastElementChild != cn[1]) msg += "|bad first last children";
+if(cn[0].nextElementSibling != cn[1] || cn[1].previousElementSibling != cn[0]) mnsg += "|bad element sibling";
+if(cn[0].previousElementSibling != null || cn[1].nextElementSibling != null) mnsg += "|notnull element sibling";
+
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e;}
 </script>
