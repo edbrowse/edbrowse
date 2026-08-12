@@ -473,8 +473,8 @@ class Eb$NodeListHelper extends Eb$CollectionHelper {
     {
         super(node, cb, false);
         if (ignore) {
-            this[handleChanges](); // force the rebuild so we have everything
-            this[ignore] = true;
+            this[collectionSymbol("handleChanges")](); // load everything now
+            this[collectionSymbol("ignore")] = true;
         }
     }
     toString() { return "[object NodeList]"; }
@@ -1394,7 +1394,7 @@ function mutFixup(b, flavor, y, z) {
             // ok a child of b has changed; fix up the subtree even if we aren't observing child node changes
             if (target_cfg.subtree) o.observe$subtree(b, target_cfg);
             if(target_cfg.childList) {
-                mrKids(r, b, y, z);
+                mrKids(o.observed$window, r, b, y, z);
                 return r;
             }
             return null;
@@ -1450,11 +1450,13 @@ if(typeof x == "number") return [];
 return x ? [x] : [];
 }
 
-function mrKids(r, b, y, z) {
+function mrKids(w, r, b, y, z) {
 r.target = b;
 r.type = "childList";
-r.addedNodes = mrList(y);
-r.removedNodes = mrList(z);
+/* owner here doesn't really matter as long as it's an object which evaluates
+to true */
+r.addedNodes = new w.NodeList(b, () => mrList(y));
+r.removedNodes = new w.NodeList(b, () => mrList(z));
 r.nextSibling = r.previousSibling = null; // this is for innerHTML
 // if adding a single node then we can just compute the siblings
 if(y && y.nodeType && y.parentNode)
