@@ -48,20 +48,49 @@ const ob1 = new MutationObserver(generalCallback);
 // high and everything
 const all_config = { attributes: true, childList: true, subtree: true , characterData: true, attributeOldValue:true, characterDataOldValue: true};
         ob1.observe(b, all_config);
+// at this point we're watching...
 
 node2 = b.querySelector("[n='2']")
 node3 = b.querySelector("[n='3']")
+/* start simple, change the kind of worm, it should be the first entry in the log.
+Should generate {3:worm=regular>flat}
+node 3 because n=3, attribute worm, oldValue is enabled so we see
+the old value, regular, and then the new value, flat. */
 node3.setAttribute("worm", "flat")
 
-// log is still empty, because these observers run asynchronously
+/* log is still empty, because these observers run asynchronously.
+change it to middle so we know we got this far.
+The timer will fire in half a second and overwrite it.
+Still, this innerHTML changes the child under the show paragraph,
+so the almost last entry in the log will be {2:["start"]>["mid"]}
+text node with start is gone and now a text node with mid. */
 show.innerHTML = "mid" + log;
+
 // finally set a timer so all these observers can run asynchronously
 setTimeout(()=>{
 show.innerHTML = log;}, 600);
-// I'm going to put on another node in html, as we build the tree,
-// see if it triggers the observers.
-// It does in chrome, child, twice, not sure why.
 } catch(e) { show.innerHTML = "blowup " + e;}
-</script>
-<hr>
-</body>
+
+/* Our show.innerHTML = "mid" was not quite the last entry in the log.
+The next tag, <hr>, after script, is added to the tree,
+and yes this addition is observed.
+The new tag would show up as [HR], but I'm giving it an n value of 50,
+so it will look like {1:[]>[50]}.
+But there's more, a distinct difference between chrome and edbrowse.
+Chrome adds the bits of whitespace between tags. We don't.
+So if I have <hr> on it's own line, there's whitespace
+before and after it, two entries that edbrowse doesn't produce.
+The fact that we don't put in these whitespace separators is very old,
+and I don't know how easy it would be to change.
+It matters in acid test 0, right out of the gate,
+and I had to tweak it to pass.
+But I've never seen it matter anywhere else.
+Well I'm going to tweak this test as well -
+leave no whitespace before or after <hr>,
+so that chrome and edbrowse can produce exactly the same log.
+That's what it means to pass the test.
+Even more bizarre, I had to get rid of the newline at the end of this file -
+even that turned into a whitespace node which was added to the tree.
+So if you edit this, don't let your editor put a newline at the end.
+edbrowse won't - unless you muck with the last line. */
+</script><hr n=50></body>
