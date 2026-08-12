@@ -4098,7 +4098,7 @@ nodep.appendChild1 = function(c) {
 nodep.appendChild2 = function(c) {
     this.childNodes.push(c);
     c.parentNode = this;
-    this.eb$apch2(c); // C linkage
+    domLinkage('a', this, "", c); // C linkage
 }
 
 // like appendChild1 but without the mutations.
@@ -4107,11 +4107,6 @@ nodep.appendChild3 = function(c) {
     this.childNodes.push(c);
     c.parentNode = this;
 }
-
-// These are native helper functions
-nodep.eb$apch2 = eb$apch2;
-nodep.eb$rmch2 = eb$rmch2;
-nodep.eb$insbf = eb$insbf;
 
 // dataset is on demand
 odp( nodep, "dataset", { get: function(){
@@ -4154,8 +4149,7 @@ nodep.hasChildNodes = function() {
 }
 
 /*********************************************************************
-eb$apch2 passes linkage information back to C, to maintain the parallel tree.
-But, the wrapper function appendChild makes another check;
+Before adding the element, appendChild makes another check;
 if the child is already linked into the tree, then we have to unlink it first,
 before we put it somewhere else.
 This is a call to removeChild, also native, which unlinks in js,
@@ -4225,7 +4219,7 @@ nodep.insertBefore = function(c, t) {
     if(mark < 0) return null;
     cn.splice(mark, 0, c);
     c.parentNode = this;
-    this.eb$insbf(c, t); // update the tree in C
+    domLinkage('b', this, "", c, t); // update the tree in C
     if(c.nodeType != 3) {
                 formReindex2(this);
         markUpwardCollections(this);
@@ -4246,7 +4240,7 @@ nodep.removeChild = function(c) {
     if(mark < 0) return null;
     cn.splice(mark, 1);
     c.parentNode = null;
-    this.eb$rmch2(c);
+    domLinkage('r', this, "", c);
     if(c.nodeType != 3) {
         formReindex2(this);
         markUpwardCollections(this);
@@ -4268,7 +4262,7 @@ nodep.removeChild$nm = function(c) {
     if(mark < 0) return null;
     cn.splice(mark, 1);
     c.parentNode = null;
-    this.eb$rmch2(c);
+    domLinkage('r', this, "", c);
     return c;
 }
 
@@ -6693,11 +6687,11 @@ let t = s.toLowerCase();
 let x = w.customElements.get(s);
 if(x) { // here we go
     c = new x;
-    if(c.eb$apch2 !== w.Node.prototype.eb$apch2) {
+    if(c.eb$appendChild0 !== w.Node.prototype.eb$appendChild0) {
         alert3(`${s} is not an extension of Node, and may not work properly`);
             // add the methods we need to make this behave like a node
         // these are functions, not getters, like firstChild
-        for(let f of ["appendChild1", "appendChild2", "appendChild3", "eb$apch2", "eb$rmch2", "eb$insbf",
+        for(let f of ["appendChild1", "appendChild2", "appendChild3",
         "appendChild", "removeChild", "insertBefore", "prepend$child"])
             c[f] = w.Node.prototype[f];
         for(let f of ["getAttribute", "hasAttribute", "setAttribute",

@@ -2251,9 +2251,12 @@ static JSValue nat_linkage(JSContext * cx, JSValueConst this, int argc, JSValueC
     const char *typestring = JS_ToCString(cx, argv[0]);
     char type = typestring[0];
     JS_FreeCString(cx, typestring);
-    const char *tagname = JS_ToCString(cx, argv[2]);
-	domSetsLinkage(type, argv[1], tagname, argv[3], argv[4]);
-    JS_FreeCString(cx, tagname);
+    const char *tagname = 0;
+    if(type == 'c')
+        tagname = JS_ToCString(cx, argv[2]);
+    domSetsLinkage(type, argv[1], tagname, argv[3], argv[4]);
+    if(tagname)
+        JS_FreeCString(cx, tagname);
 (void)this;
     (void)argc;
     return JS_UNDEFINED;
@@ -2522,35 +2525,6 @@ static JSValue nat_top(JSContext * cx, JSValueConst this, int argc, JSValueConst
         (void) argc;
         (void) argv;
 	return JS_DupValue(cx, *((JSValue*)w));
-}
-
-static JSValue nat_apch2(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
-{
-    domSetsLinkage('a', this, 0, argv[0], JS_UNDEFINED);
-    (void)this;
-    (void)argc;
-    return JS_UNDEFINED;
-}
-
-static JSValue nat_insbf(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
-{
-    jsInterruptCheck(cx);
-    debugPrint(5, "before in");
-    domSetsLinkage('b', this, 0, argv[0], argv[1]);
-    debugPrint(5, "before out");
-    return JS_UNDEFINED;
-}
-
-static JSValue nat_rmch2(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
-{
-    (void) argc;
-    jsInterruptCheck(cx);
-    if (!JS_IsObject(argv[0])) goto done;
-    debugPrint(5, "remove in");
-    domSetsLinkage('r', this, 0, argv[0], JS_UNDEFINED);
-    debugPrint(5, "remove out");
-done:
-    return JS_UNDEFINED;
 }
 
 static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
@@ -3457,12 +3431,6 @@ JS_NewCFunction(mwc, nat_ok, "nat_ok", 1), JS_PROP_ENUMERABLE);
 JS_NewCFunction(mwc, nat_mywin, "mywin", 0), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "my$doc",
 JS_NewCFunction(mwc, nat_mydoc, "mydoc", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$apch2",
-JS_NewCFunction(mwc, nat_apch2, "apch2", 1), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$insbf",
-JS_NewCFunction(mwc, nat_insbf, "insbf", 2), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$rmch2",
-JS_NewCFunction(mwc, nat_rmch2, "removeChild", 1), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$getcook",
 JS_NewCFunction(mwc, nat_getcook, "getcook", 0), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$setcook",
