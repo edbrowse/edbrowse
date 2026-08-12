@@ -4632,7 +4632,6 @@ static const char defsel[] = "defaultSelected";
 static void formControlJS(Tag *t)
 {
 	int itype = t->itype;
-	int isradio = (itype == INP_RADIO);
 	bool isselect = (itype == INP_SELECT);
 	bool ista = (itype == INP_TA);
 /* this doesn't work because I convert button with no type to submit,
@@ -4644,9 +4643,9 @@ static void formControlJS(Tag *t)
 	const Tag *form = t->controller;
 
 	if (form && form->jslink)
-		domLink(t, whichclass, 0, form, isradio);
+		domLink(t, whichclass, 0, form, 0);
 	else
-		domLink(t, whichclass, 0, 0, (4|isradio));
+		domLink(t, whichclass, 0, 0, 4);
 	if (!t->jslink)
 		return;
 

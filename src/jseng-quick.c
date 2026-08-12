@@ -4006,12 +4006,8 @@ int extra) // bits: radio, window, document, unknown
     JSValue alist = JS_UNDEFINED;
     JSValue io = JS_UNDEFINED;	// the input object
     int length;
-    bool dupname = false;
-    uchar isradio = (extra&1);
     uchar isunknown = (extra&8);
 // some strings from the html tag
-    const char *symname = t->name;
-    const char *idname = t->id;
     	static const char * const z_list[] = {
         "Header", "Footer", "Title", "Datalist",
         "tHead", "tBody", "tFoot", "HTML", 0};
@@ -4022,8 +4018,8 @@ int extra) // bits: radio, window, document, unknown
         classtweak = class_z;
     }
 
-    debugPrint(5, "domLink %s.%d name %s",
-       classname, extra, (symname ? symname : emptyString));
+    debugPrint(5, "domLink %s.%d",
+       classname, extra);
     extra &= 6;
 
     if(owntag)
@@ -4033,26 +4029,6 @@ if(extra == 2)
 if(extra == 4)
         owner = *((JSValue*)cf->docobj);
 
-    if (symname && typeof_property(cx, owner, symname)) {
-/*********************************************************************
-What? We already have this name, under this object or form.
-This could be a duplicate name.
-Yes, that really happens.
-Link to the first tag having this name only.
-Or - and this really does happen -
-an input tag could have the name action, colliding with form.action.
-don't overwrite form.action, or anything else that pre-exists.
-*********************************************************************/
-
-        if (isradio) {
-// name present and radio buttons, name should be the array of buttons
-// That is handled by formReindex().
-        } else {
-// don't know why the duplicate name
-            dupname = true;
-        }
-    }
-
 // Instantiate the object - could be a custom element.
     if(isunknown && !cf->xmlMode)
         io = instantiate_custom(cx, owner, classname);
@@ -4060,22 +4036,12 @@ don't overwrite form.action, or anything else that pre-exists.
         io = instantiate(cx,
         *((JSValue*)cf->winobj), 0, classtweak);
     if(JS_IsUndefined(io)) return;
-// these two have spillup setters
-    if(symname) set_property_string(cx, io, "name", symname);
-    if(idname) set_property_string(cx, io, "id", idname);
 
-// only anchors with href go into links[]
-    if (stringEqual(list, "links") &&
-        !attribPresent(t, "href"))
-        list = 0;
     if (list)
         alist = get_property_object(cx, owner, list);
     if (!JS_IsUndefined(alist)) {
         length = get_arraylength(cx, alist);
         set_array_element_object(cx, alist, length, io);
-        if (symname && !dupname
-            && !has_property(cx, alist, symname))
-            set_property_object(cx, alist, symname, io);
         JS_Release(cx, alist);
         }		// list indicated
 
