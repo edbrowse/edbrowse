@@ -1,6 +1,6 @@
 <body n=1>
 <p id=show n=2>start</p>
-<div n=3 worm="regular"></div>
+<div n=3 worm="regular"><ol><li>apple<li>orange</ol></div>
 
 <script>
 // test mutation observers; this will be rather a bear.
@@ -46,11 +46,14 @@ log += '}';
     }
 };
 
-// should probably have multiple observers, just one for now
+// everything and subtree
+const config_all = { attributes: true, childList: true, subtree: true , characterData: true, attributeOldValue:true, characterDataOldValue: true};
+// without the subtree
+const config_shallow = { attributes: true, childList: true, characterData: true, attributeOldValue:true, characterDataOldValue: true};
 const ob1 = new MutationObserver(generalCallback);
-// high and everything
-const all_config = { attributes: true, childList: true, subtree: true , characterData: true, attributeOldValue:true, characterDataOldValue: true};
-        ob1.observe(b, all_config);
+const ob2 = new MutationObserver(generalCallback);
+
+        ob1.observe(b, config_all);
 // at this point we're watching...
 
 node2 = b.querySelector("[n='2']")
@@ -60,6 +63,24 @@ Should generate {3:worm=regular>flat}
 node 3 because n=3, attribute worm, oldValue is enabled so we see
 the old value, regular, and then the new value, flat. */
 node3.setAttribute("worm", "flat")
+
+// observe the div node but nothing below.
+        ob2.observe(node3, config_shallow);
+// If we add something to the list, div won't see it,
+// because it is not a direct child, but body will, because it has subtree set.
+banana = document.createElement("li");
+banana.textContent = "banana";
+ol = b.querySelector("ol");
+ol.appendChild(banana);
+// but if I add something directly under div, then both observers should see it.
+// The same entry in the log twice.
+node3.insertBefore(document.createElement("span"), ol);
+/* If I had ob1 watch both targets, body and div,
+not 2 observers but 1, then the entry would not be duplicated.
+Just one mutation record for the change is generated.
+In that case, observing div is completely pointless,
+as it is inside a subtree already being observed.
+But for this test I used a second observer. */
 
 /* log is still empty, because these observers run asynchronously.
 change it to middle so we know we got this far.
