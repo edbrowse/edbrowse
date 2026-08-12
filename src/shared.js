@@ -467,8 +467,16 @@ class Eb$HTMLCollectionHelper extends Eb$CollectionHelper {
     toString() { return "[object HTMLCollection]"; }
 }
 
+// Some node lists are live, most aren't so ignore changes by default
 class Eb$NodeListHelper extends Eb$CollectionHelper {
-    constructor(node, cb) { super(node, cb, false); }
+    constructor(node, cb, ignore=true)
+    {
+        super(node, cb, false);
+        if (ignore) {
+            this[handleChanges](); // force the rebuild so we have everything
+            this[ignore] = true;
+        }
+    }
     toString() { return "[object NodeList]"; }
     // Can't just use forEach because we want to handle references
     forEach(callback, thisarg)
@@ -4329,21 +4337,7 @@ nodep.cloneNode = function(deep) {
 
 nodep.querySelector = querySelector
 nodep.querySelectorAll = function(c,s) {
-    /* This needs to be a NodeList, but not a live one. Rather than
-    implementing an entirely new thing, set the callback to rebuild exactly
-    once. This is a little defensive since these shouldn't end up somewhere
-    where they are marked as being changed but this, if nothing else, makes the
-    situation clearer for debugging. */
-
-    const ret = new w.NodeList(this, (n,nl) => {
-        const res = querySelectorAll.call(n,c,s);
-        nl[collectionSymbol("ignore")] = true;
-        return res;
-    });
-    /* Trigger the rebuild since we want the nodes at this point not when the
-    list is first accessed. */
-    ret[0];
-    return ret;
+    return new w.NodeList(this, (n,nl) => querySelectorAll.call(n,c,s));
 }
 
 // visual
