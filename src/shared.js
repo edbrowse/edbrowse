@@ -1830,7 +1830,14 @@ markUpwardCollections(this)
                 value: v, writable: true, configurable: true});
         } else delete this[name2];
     }
-    mutFixup(this, 1, name, oldv);
+
+    /* If this is called while parsing html, to build the tree,
+    observers are not invoked. In other browsers, the tag is built
+    in its entirety, with its attributes, then attached to the tree.
+    so we only need see the attachment. On the other hand, if a
+    running script calls setAttribute, then we want to observe the change. */
+    if(!w.eb$push$attributes)
+        mutFixup(this, 1, name, oldv);
 },
 
 setAttributeNS: function(space, name, v) {
