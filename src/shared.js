@@ -652,7 +652,7 @@ function collectionSet(type, value, node)
         break;
         case 2:
             cb = (o) => gebn(o, value, true);
-            c = new w.NodeList(node, cb);
+            c = new w.NodeList(node, cb, false);
         break;
         case 3:
             cb = (o) => gebcn(o, value, true);
