@@ -4209,7 +4209,13 @@ nodep.appendChild$nm = function(c) {
     if(!c) return null;
     isabove(c, this);
     if(c.parentNode) c.parentNode.removeChild$nm(c);
-    return this.appendChild2(c);
+    this.appendChild2(c);
+    if(c.nodeType != 3) {
+        formReindex2(this);
+        markUpwardCollections(this);
+        runScriptWhenAttached(c);
+    }
+    return c;
 }
 
 nodep.prepend$child = function(c) {
@@ -4218,6 +4224,15 @@ let v;
 isabove(c, this);
 if(this.childNodes.length) v = this.insertBefore(c, this.childNodes[0]);
 else v = this.appendChild(c);
+return v;
+}
+
+nodep.prepend$child$nm = function(c) {
+    if(!thisNode(this)) return null;
+let v;
+isabove(c, this);
+if(this.childNodes.length) v = this.insertBefore$nm(c, this.childNodes[0]);
+else v = this.appendChild$nm(c);
 return v;
 }
 
@@ -4243,6 +4258,30 @@ nodep.insertBefore = function(c, t) {
         runScriptWhenAttached(c);
     }
     mutFixup(this, 0, c, null);
+    return c;
+}
+
+nodep.insertBefore$nm = function(c, t) {
+    if(!thisNode(this)) return null;
+    if(!c) return null;
+    if(!t) return this.appendChild$nm(c);
+    isabove(c, this);
+    if(c.nodeType == 11) return insertFragment(this, c, t);
+    if(c.parentNode) c.parentNode.removeChild(c);
+    const cn = this.childNodes;
+    const l = cn.length;
+    let mark = -1;
+    for(let i = 0; i < l; ++i)
+        if(t == cn[i]) mark = i;
+    if(mark < 0) return null;
+    cn.splice(mark, 0, c);
+    c.parentNode = this;
+    domLinkage('b', this, "", c, t); // update the tree in C
+    if(c.nodeType != 3) {
+                formReindex2(this);
+        markUpwardCollections(this);
+        runScriptWhenAttached(c);
+    }
     return c;
 }
 
@@ -4280,6 +4319,10 @@ nodep.removeChild$nm = function(c) {
     cn.splice(mark, 1);
     c.parentNode = null;
     domLinkage('r', this, "", c);
+    if(c.nodeType != 3) {
+        formReindex2(this);
+        markUpwardCollections(this);
+    }
     return c;
 }
 
