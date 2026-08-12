@@ -2245,20 +2245,18 @@ ab:
 	}			// switch
 }
 
-static JSValue nat_log_element(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
+static JSValue nat_linkage(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
-	jsInterruptCheck(cx);
-	JSValue newobj = argv[0];
-	const char *tagname = JS_ToCString(cx, argv[1]);
-	if (JS_IsUndefined(newobj) || !tagname)
-		return JS_UNDEFINED;
-	debugPrint(5, "log in");
-	domSetsLinkage('c', newobj, tagname, JS_UNDEFINED, JS_UNDEFINED);
-	JS_FreeCString(cx, tagname);
-	debugPrint(5, "log out");
-        (void) this;
-        (void) argc;
-	return JS_UNDEFINED;
+    jsInterruptCheck(cx);
+    const char *typestring = JS_ToCString(cx, argv[0]);
+    char type = typestring[0];
+    JS_FreeCString(cx, typestring);
+    const char *tagname = JS_ToCString(cx, argv[2]);
+	domSetsLinkage(type, argv[1], tagname, argv[3], argv[4]);
+    JS_FreeCString(cx, tagname);
+(void)this;
+    (void)argc;
+    return JS_UNDEFINED;
 }
 
 static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv, bool isInterval)
@@ -3507,8 +3505,8 @@ JS_NewCFunction(mwc, nat_modtime, "modtime", 1), JS_PROP_ENUMERABLE);
 JS_NewCFunction(mwc, nat_resolveURL, "resolveURL", 2), JS_PROP_ENUMERABLE);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$newLocation",
 JS_NewCFunction(mwc, nat_new_location, "new_location", 1), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$logElement",
-JS_NewCFunction(mwc, nat_log_element, "log_element", 2), JS_PROP_ENUMERABLE);
+    JS_DefinePropertyValueStr(mwc, mwo, "domLinkage",
+JS_NewCFunction(mwc, nat_linkage, "domLinkage", 5), JS_PROP_ENUMERABLE);
     JS_DefinePropertyValueStr(mwc, mwo, "setTimeout",
 JS_NewCFunction(mwc, nat_setTimeout, "setTimeout", 2), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "clearTimeout",

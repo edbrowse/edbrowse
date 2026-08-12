@@ -18,9 +18,9 @@ outfile=/tmp/runtests.out
 # That is an important test, but it follows a different format,
 # and is more interactive.
 
+status=0
 for t in collection.html dynamic-form.html fragment.html getelem.html queryselector.html script-adds-nodes.html scriptorder.html style-shorthand.html
 do
-echo $t
 $program -c /dev/null $t >$outfile <<!
 b
 tmwait
@@ -28,14 +28,17 @@ rr
 1
 q
 !
-tail -1 $outfile
+result=`tail -1 $outfile`
 rm $outfile
+if [ "$result" != ok ]; then
+echo "$t failed $result"
+status=1
+fi
 done
 
 # acid3 is third party, and doesn't follow our format.
 # The pass fail message is on line 3, not line 1.
 t=acid3
-echo $t
 $program -c /dev/null $t >$outfile <<!
 b
 tmwait
@@ -43,5 +46,13 @@ rr
 3
 q
 !
-tail -1 $outfile
+result=`tail -1 $outfile`
 rm $outfile
+if [ "$result" != 69/69 ]; then
+echo "$t failed $result"
+status=1
+fi
+
+if [ $status = 0 ]; then echo ok; fi
+
+exit $status

@@ -5103,7 +5103,7 @@ odp(textp, "data", {
 docp.createTextNode = function(t) {
 if(t == undefined) t = "";
 const c = new w.Text(t);
-eb$logElement(c, "text");
+domLinkage('c', c, "text");
 return c;
 }
 
@@ -5121,7 +5121,7 @@ cmtp.nodeType = 8;
 docp.createComment = function(t) {
 if(t == undefined) t = "";
 const c = new w.Comment(t);
-eb$logElement(c, "comment");
+domLinkage('c', c, "comment");
 return c;
 }
 
@@ -6661,7 +6661,7 @@ cdatap.nodeType = 4;
 docp.createCDATASection = function(t) {
 if(t == undefined) t = "";
 const c = new w.CDATASection(t);
-eb$logElement(c, "cdata");
+domLinkage('c', c, "cdata");
 return c;
 }
 
@@ -6710,7 +6710,7 @@ if(x) { // here we go
     odp(c, "nodeName", {value:s,writable:true,configurable:true});
     odp(c, "tagName", {value:s,writable:true,configurable:true});
     odp(c, "connectedCallback$pending", {value:!!c.connectedCallback, writable:true})
-    eb$logElement(c, t);
+    domLinkage('c', c, t);
     return c;
 }
 
@@ -6803,7 +6803,7 @@ if(colon.length == 2) {
 if(t == "input") { // name and type are automatic attributes acid test 53
 c.name = c.type = "";
 }
-eb$logElement(c, s);
+domLinkage('c', c, s);
 return c;
 } 
 

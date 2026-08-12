@@ -34,7 +34,6 @@ this.eb$truefunction = function() { return true}
 this.eb$falsefunction = function() { return false}
 this.db$flags = eb$falsefunction;
 this.eb$newLocation = function (s) { print("new location " + s)}
-this.eb$logElement = function(o, tag) { print("pass tag " + tag + " to edbrowse")}
 this.eb$parent = function() { return this}
 this.eb$top = function() { return this}
 this.eb$frameElement = function() { return this}
@@ -205,7 +204,7 @@ odp(window, "toString", {enumerable:false})
 // link functions in the shared window to this window
 for(let f of ["my$win", "my$doc", "natok", "UnsupportedError", "db$flags",
 "eb$voidfunction", "eb$nullfunction", "eb$truefunction", "eb$falsefunction",
-"eb$visible", "eb$newLocation", "eb$logElement", "alert3", "alert4",
+"eb$visible", "eb$newLocation", "alert3", "alert4",
 "dumptree", "uptrace", "by_esn", "showscripts", "searchscripts",
 "showframes", "snapshot", "aloop", "showarg", "showarglist",
 "set_location_hash", "NodeFilter", "rowReindex", "formReindex", "mutFixup",
