@@ -4101,6 +4101,13 @@ nodep.appendChild2 = function(c) {
     this.eb$apch2(c); // C linkage
 }
 
+// like appendChild1 but without the mutations.
+// Called from within innerHTML.
+nodep.appendChild3 = function(c) {
+    this.childNodes.push(c);
+    c.parentNode = this;
+}
+
 // These are native helper functions
 nodep.eb$apch2 = eb$apch2;
 nodep.eb$rmch2 = eb$rmch2;
@@ -6690,7 +6697,7 @@ if(x) { // here we go
         alert3(`${s} is not an extension of Node, and may not work properly`);
             // add the methods we need to make this behave like a node
         // these are functions, not getters, like firstChild
-        for(let f of ["appendChild1", "appendChild2", "eb$apch2", "eb$rmch2", "eb$insbf",
+        for(let f of ["appendChild1", "appendChild2", "appendChild3", "eb$apch2", "eb$rmch2", "eb$insbf",
         "appendChild", "removeChild", "insertBefore", "prepend$child"])
             c[f] = w.Node.prototype[f];
         for(let f of ["getAttribute", "hasAttribute", "setAttribute",

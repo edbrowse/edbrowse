@@ -5072,25 +5072,27 @@ Needless to say that's not good!
 // js tree mirrors the dom tree
 	linked_in = false;
 
-	if (t->parent && t->parent->jslink) {
-		run_function_onearg_t(t->parent, "appendChild1", t);
-		linked_in = true;
-	}
+    const char *appendFunction = pc->innerParent ? "appendChild3" : "appendChild1";
+
+    if (t->parent && t->parent->jslink) {
+        run_function_onearg_t(t->parent, appendFunction, t);
+        linked_in = true;
+    }
 
 // doctype and html are at the top of an html document.
 // for xml, anything can be at the top.
-	if ((cf->xmlMode && !linked_in) || (action == TAGACT_HTML || action == TAGACT_DOCTYPE)) {
-		run_function_onearg_doc(cf, "appendChild1", t);
-		linked_in = true;
-	}
+    if ((cf->xmlMode && !linked_in) || (action == TAGACT_HTML || action == TAGACT_DOCTYPE)) {
+        run_function_onearg_doc(cf, appendFunction, t);
+        linked_in = true;
+    }
 
 // innerHTML should never apply in the xml world
-	if (!t->parent && pc->innerParent) {
+    if (!t->parent && pc->innerParent) {
 // this is the top of innerHTML or some such.
 // It is never html head or body, as those are skipped.
-		run_function_onearg_t(pc->innerParent, "appendChild1", t);
-		linked_in = true;
-	}
+        run_function_onearg_t(pc->innerParent, appendFunction, t);
+        linked_in = true;
+    }
 
 	if (!linked_in) {
 		debugPrint(3, "tag %s not linked in", ti->name);

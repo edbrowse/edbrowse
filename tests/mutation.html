@@ -11,23 +11,42 @@ b = document.body;
 
 // record the change that was made in a log.
 log = "";
+function nodeString(t) {
+let s = null;
+if(t.nodeType == 1) s = t.getAttribute('n');
+if(s) return s;
+if(t.nodeType == 3) return `"${t.data}"`;
+return t.nodeName ? t.nodeName : t.toString();
+}
+
 const generalCallback = (mutationList, observer) => {
       for (const m of mutationList) {
-log += `@${m.target.getAttribute('n')}:`;
+log += ` {${nodeString(m.target)}:`;
         if (m.type === "childList") {
-            log += "child";
+            log += "[";
+if(m.removedNodes) {
+for(let c of m.removedNodes) log += `${nodeString(c)},`
+log = log.replace(/,$/, "");
+}
+log += ']>[';
+if(m.addedNodes) {
+for(let c of m.addedNodes) log += `${nodeString(c)},`
+log = log.replace(/,$/, "");
+}
+log += ']';
         } else if (m.type === "attributes") {
             log += `${m.attributeName}=${m.oldValue}>${m.target.getAttribute(m.attributeName)}`
         } else if (m.type === "characterData") {
-            log += `Character data was modified`;
+            log += `character=${m.oldValue}>${m.target.data}`
         }
+log += '}';
     }
 };
 
 // should probably have multiple observers, just one for now
 const ob1 = new MutationObserver(generalCallback);
 // high and everything
-const all_config = { attributes: true, childList: true, subtree: true , characterData: true, attributeOldValue:true};
+const all_config = { attributes: true, childList: true, subtree: true , characterData: true, attributeOldValue:true, characterDataOldValue: true};
         ob1.observe(b, all_config);
 
 node2 = b.querySelector("[n='2']")
