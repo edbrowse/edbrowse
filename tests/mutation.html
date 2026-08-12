@@ -1,6 +1,7 @@
 <body n=1>
 <p id=show n=2>start</p>
 <div n=3 worm="regular"><ol><li>apple<li>orange</ol></div>
+<div n=4><p>1</p><p>2</p></div>
 
 <script>
 // test mutation observers; this will be rather a bear.
@@ -58,6 +59,7 @@ const ob2 = new MutationObserver(generalCallback);
 
 node2 = b.querySelector("[n='2']")
 node3 = b.querySelector("[n='3']")
+node4 = b.querySelector("[n='4']")
 /* start simple, change the kind of worm, it should be the first entry in the log.
 Should generate {3:worm=regular>flat}
 node 3 because n=3, attribute worm, oldValue is enabled so we see
@@ -81,6 +83,12 @@ Just one mutation record for the change is generated.
 In that case, observing div is completely pointless,
 as it is inside a subtree already being observed.
 But for this test I used a second observer. */
+
+// replace 2 paragraphs with 3 spans.
+// This should make just one record.
+node4.innerHTML = "<span>a</span><span jkl=23>b</span><span>c</span>";
+// take out the last span
+node4.removeChild(node4.lastChild);
 
 /* log is still empty, because these observers run asynchronously.
 change it to middle so we know we got this far.
