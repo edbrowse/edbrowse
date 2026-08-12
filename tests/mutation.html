@@ -23,12 +23,15 @@ const generalCallback = (mutationList, observer) => {
       for (const m of mutationList) {
 log += ` {${nodeString(m.target)}:`;
         if (m.type === "childList") {
+if(m.previousSibling) log += `~${nodeString(m.previousSibling)}`
             log += "[";
 if(m.removedNodes) {
 for(let c of m.removedNodes) log += `${nodeString(c)},`
 log = log.replace(/,$/, "");
 }
-log += ']>[';
+log += ']';
+if(m.nextSibling) log += `${nodeString(m.nextSibling)}~`
+log += '>[';
 if(m.addedNodes) {
 for(let c of m.addedNodes) log += `${nodeString(c)},`
 log = log.replace(/,$/, "");

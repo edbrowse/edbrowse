@@ -939,6 +939,8 @@ MutationObserver.prototype.takeRecords = function() {
 swp("MutationRecord", function(){})
 swpp("MutationRecord", null)
 MutationRecord.prototype.oldValue = null;
+MutationRecord.prototype.nextSibling = null;
+MutationRecord.prototype.previousSibling = null;
 swpv("crypto", {})
 crypto.getRandomValues = function(a) {
 if(typeof a != "object") return NULL;
