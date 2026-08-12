@@ -471,6 +471,12 @@ class Eb$HTMLCollectionHelper extends Eb$CollectionHelper {
 class Eb$NodeListHelper extends Eb$CollectionHelper {
     constructor(node, cb, ignore=true)
     {
+        /* If we're ignoring changes we want to hang on to refs as otherwise
+        the Nodelist can't be static as nodes will disappear */
+        if (ignore) {
+            const refs = cb(node);
+            cb = () => refs; // Hold a ref to the nodes in the callback
+        }
         super(node, cb, false);
         if (ignore) {
             this[collectionSymbol("handleChanges")](); // load everything now
