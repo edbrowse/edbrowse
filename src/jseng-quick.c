@@ -2526,41 +2526,12 @@ static JSValue nat_top(JSContext * cx, JSValueConst this, int argc, JSValueConst
 	return JS_DupValue(cx, *((JSValue*)w));
 }
 
-static bool append0(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv, bool side)
-{
-    JSValue child = argv[0], cn;
-    bool rc = false;
-    if (argc != 1 || !JS_IsObject(child))
-        return false;
-    debugPrint(5, "append in");
-    cn = JS_GetPropertyStr(cx, this, "childNodes");
-    grab(cn);
-    if(!wrap_IsArray(cx, cn)) goto done;
-    rc = true;
-    int length = get_arraylength(cx, cn);
-    set_array_element_object(cx, cn, length, child);
-    set_property_object(cx, child, "parentNode", this);
-    if (side) domSetsLinkage('a', this, 0, child, JS_UNDEFINED);
-done:
-    JS_Release(cx, cn);
-    debugPrint(5, "append out");
-    return rc;
-}
-
-static JSValue nat_apch1(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
-{
-	jsInterruptCheck(cx);
-	if(append0(cx, this, argc, argv, false))
-		return JS_DupValue(cx, argv[0]);
-	return JS_NULL;
-}
-
 static JSValue nat_apch2(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
-	jsInterruptCheck(cx);
-	if(append0(cx, this, argc, argv, true))
-		return JS_DupValue(cx, argv[0]);
-	return JS_NULL;
+    domSetsLinkage('a', this, 0, argv[0], JS_UNDEFINED);
+    (void)this;
+    (void)argc;
+    return JS_UNDEFINED;
 }
 
 static JSValue nat_insbf(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
@@ -3488,8 +3459,6 @@ JS_NewCFunction(mwc, nat_ok, "nat_ok", 1), JS_PROP_ENUMERABLE);
 JS_NewCFunction(mwc, nat_mywin, "mywin", 0), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "my$doc",
 JS_NewCFunction(mwc, nat_mydoc, "mydoc", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$apch1",
-JS_NewCFunction(mwc, nat_apch1, "apch1", 1), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$apch2",
 JS_NewCFunction(mwc, nat_apch2, "apch2", 1), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$insbf",

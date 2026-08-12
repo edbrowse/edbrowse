@@ -4083,8 +4083,25 @@ swde("Node", class extends w.EventTarget {
 
 let nodep = w.Node.prototype;
 
+// basic append, without C side efffects.
+// This is called from C as we build the tree from html.
+// Thus building the tree is already happening in C;
+// it shouldn't happen twice.
+// Note that it has to call mutFixup, since mutation observers
+// can run even as the html tree is being built.  Ugh!
+nodep.appendChild1 = function(c) {
+    this.childNodes.push(c);
+    c.parentNode = this;
+    mutFixup(this, 0, c, null);
+}
+
+nodep.appendChild2 = function(c) {
+    this.childNodes.push(c);
+    c.parentNode = this;
+    this.eb$apch2(c); // C linkage
+}
+
 // These are native helper functions
-nodep.eb$apch1 = eb$apch1;
 nodep.eb$apch2 = eb$apch2;
 nodep.eb$rmch2 = eb$rmch2;
 nodep.eb$insbf = eb$insbf;
@@ -4130,11 +4147,7 @@ nodep.hasChildNodes = function() {
 }
 
 /*********************************************************************
-The functions eb$apch1 and eb$apch2 are native. They perform appendChild in js.
-The first has no side effects, because the linkage was already performed
-within edbrowse via html, and a linkage side effect would only confuse things.
-The second, eb$apch2, has side effects, as js code calls appendChild
-and those links have to pass back to edbrowse.
+eb$apch2 passes linkage information back to C, to maintain the parallel tree.
 But, the wrapper function appendChild makes another check;
 if the child is already linked into the tree, then we have to unlink it first,
 before we put it somewhere else.
@@ -4161,18 +4174,16 @@ nodep.appendChild = function(c) {
     if(c.nodeType == 11) return appendFragment(this, c);
     isabove(c, this);
     if(c.parentNode) c.parentNode.removeChild(c);
-    let r = this.eb$apch2(c);
-    if(r) {
-        // a text node won't change the structure of the form, or the html collection
-        if(r.nodeType != 3) {
-            formReindex2(this);
-            markUpwardCollections(this);
-            runScriptWhenAttached(r);
-        }
-        // a text node can have an observer - for CharacterData
-        mutFixup(this, 0, c, null);
+    this.appendChild2(c);
+    // a text node won't change the structure of the form, or the html collection
+    if(c.nodeType != 3) {
+        formReindex2(this);
+        markUpwardCollections(this);
+        runScriptWhenAttached(c);
     }
-    return r;
+    // a text node can have an observer - for CharacterData
+    mutFixup(this, 0, c, null);
+    return c;
 }
 
 nodep.appendChild$nm = function(c) {
@@ -4180,7 +4191,7 @@ nodep.appendChild$nm = function(c) {
     if(!c) return null;
     isabove(c, this);
     if(c.parentNode) c.parentNode.removeChild$nm(c);
-    return this.eb$apch2(c);
+    return this.appendChild2(c);
 }
 
 nodep.prepend$child = function(c) {
@@ -6675,11 +6686,11 @@ let t = s.toLowerCase();
 let x = w.customElements.get(s);
 if(x) { // here we go
     c = new x;
-    if(c.eb$apch1 !== w.Node.prototype.eb$apch1) {
+    if(c.eb$apch2 !== w.Node.prototype.eb$apch2) {
         alert3(`${s} is not an extension of Node, and may not work properly`);
             // add the methods we need to make this behave like a node
         // these are functions, not getters, like firstChild
-        for(let f of ["eb$apch1", "eb$apch2", "eb$rmch2", "eb$insbf",
+        for(let f of ["appendChild1", "appendChild2", "eb$apch2", "eb$rmch2", "eb$insbf",
         "appendChild", "removeChild", "insertBefore", "prepend$child"])
             c[f] = w.Node.prototype[f];
         for(let f of ["getAttribute", "hasAttribute", "setAttribute",

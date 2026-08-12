@@ -5073,14 +5073,14 @@ Needless to say that's not good!
 	linked_in = false;
 
 	if (t->parent && t->parent->jslink) {
-		run_function_onearg_t(t->parent, "eb$apch1", t);
+		run_function_onearg_t(t->parent, "appendChild1", t);
 		linked_in = true;
 	}
 
 // doctype and html are at the top of an html document.
 // for xml, anything can be at the top.
 	if ((cf->xmlMode && !linked_in) || (action == TAGACT_HTML || action == TAGACT_DOCTYPE)) {
-		run_function_onearg_doc(cf, "eb$apch1", t);
+		run_function_onearg_doc(cf, "appendChild1", t);
 		linked_in = true;
 	}
 
@@ -5088,7 +5088,7 @@ Needless to say that's not good!
 	if (!t->parent && pc->innerParent) {
 // this is the top of innerHTML or some such.
 // It is never html head or body, as those are skipped.
-		run_function_onearg_t(pc->innerParent, "eb$apch1", t);
+		run_function_onearg_t(pc->innerParent, "appendChild1", t);
 		linked_in = true;
 	}
 
