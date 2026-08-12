@@ -1623,7 +1623,7 @@ function handlerCompile(f, w)
 /*********************************************************************
 The attribute system is complex, with many functions
 and many surprising side effects.
-Most of these functions could be private node methods in setupClasses(),.
+Most of these functions could be private node methods in setupClasses(),
 but it's a lot of code, and would disrupt the flow.
 So instead I gather them all here in one attr object.
 along with some helper functions to manage spillup and spilldown.
@@ -1633,7 +1633,7 @@ Spilldown means we set the attribute and it spills down to the property.
 This has to be done by setAttribute, and sometimes additional processing
 is involved. Example: script.setAttribute("src", "file.html")
 is resolved against the base url as it spills down to the property.
-getATtribute still gets "file.html".
+getAttribute still gets "file.html".
 But before we get to that, implicitMember() is a workaround,
 when setAttribute is doing something it shouldn't,
 like form.setAttribute("elements", "xx") or some such.
@@ -1641,6 +1641,27 @@ I call these implicit members, we shouldn't overwrite them.
 *********************************************************************/
 
 this.attr = {
+
+// As far as I can tell, anything can be an attribute name,
+// as long as it doesn't have whitespace.
+attrNameValid: function(n) {
+    // take care of null, undefined, and ""
+    if(!n && n !== 0) {
+        alert3("null attribute name");
+        return false;
+    }
+    if(typeof n != "string") n = n.toString();
+    if(n.match(/\s/)) {
+        alert3("spaces in attribute name");
+        return false;
+    }
+    return true;
+},
+
+// a reserved method in NamedNodeMap
+attrNameReserved(n) {
+    return n == "length";
+},
 
 implicitMember: function(o, name) {
 return name === "elements" && o.dom$class == "HTMLFormElement" ||
@@ -1705,6 +1726,7 @@ name == "checked" && nn == "input";
 
 getAttribute: function(name) {
 var a, w = my$win();
+if(!attr.attrNameValid(name)) return null;
 if(!this.eb$xml) name = name.toLowerCase();
 if(attr.implicitMember(this, name)) return null;
 // has to be a real attribute
@@ -1737,6 +1759,7 @@ return a;
 },
 
 getAttributeNS: function(space, name) {
+if(!attr.attrNameValid(name)) return null;
 if(space && !name.match(/:/)) name = space + ":" + name;
 return this.getAttribute(name);
 },
@@ -1745,6 +1768,7 @@ hasAttributeNS: function(space, name) { return this.getAttributeNS(space, name) 
 
 setAttribute: function(name, v) {
     var a, w = my$win();
+if(!attr.attrNameValid(name)) return;
     if(!this.eb$xml) name = name.toLowerCase();
 // special code for style
     if(name == "style" && this.style.dom$class == "CSSStyleDeclaration") {
@@ -1811,11 +1835,13 @@ markUpwardCollections(this)
 },
 
 setAttributeNS: function(space, name, v) {
+if(!attr.attrNameValid(name)) return;
 if(space && !name.match(/:/)) name = space + ":" + name;
 this.setAttribute(name, v);
 },
 
 removeAttribute: function(name) {
+if(!attr.attrNameValid(name)) return;
 if(!this.eb$xml)     name = name.toLowerCase();
 // special code for style
 if(name == "style") {
@@ -1854,6 +1880,7 @@ mutFixup(this, 1, name, a.value);
 },
 
 removeAttributeNS: function(space, name) {
+if(!attr.attrNameValid(name)) return;
 if(space && !name.match(/:/)) name = space + ":" + name;
 this.removeAttribute(name);
 },
@@ -1861,6 +1888,7 @@ this.removeAttribute(name);
 // this returns null if no such attribute.
 getAttributeNode: function(name) {
 if(!this.attributes$2) return null;
+if(!attr.attrNameValid(name)) return null;
     name = name.toLowerCase();
 var a;
 if(name === "length") {
