@@ -56,6 +56,7 @@ q1.id = "j k "
 if(ac.length != 3 || an.length != 1) msg += "| collections changed length after id was set"
 if(ac.namedItem("j k ") != q1) msg += "|can't access q1 through j k "
 // an is NodeList, so there is no id access
+if(an["j k "]) msg += "|NodeList shows id access"
 // make a collection below document, with two classes
 mid = b.getElementsByClassName("shoe boot")
 if(mid.length) msg += "|mid has members"

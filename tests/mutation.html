@@ -2,6 +2,7 @@
 <p id=show n=2>start</p>
 <div n=3 worm="regular"><ol><li>apple<li>orange</ol></div>
 <div n=4><p>1</p><p>2</p></div>
+<div n=5><span>c</span></div>
 
 <script>
 // test mutation observers; this will be rather a bear.
@@ -60,6 +61,7 @@ const ob2 = new MutationObserver(generalCallback);
 node2 = b.querySelector("[n='2']")
 node3 = b.querySelector("[n='3']")
 node4 = b.querySelector("[n='4']")
+node5 = b.querySelector("[n='5']")
 /* start simple, change the kind of worm, it should be the first entry in the log.
 Should generate {3:worm=regular>flat}
 node 3 because n=3, attribute worm, oldValue is enabled so we see
@@ -89,6 +91,20 @@ But for this test I used a second observer. */
 node4.innerHTML = "<span>a</span><span jkl=23>b</span><span>c</span>";
 // take out the last span
 node4.removeChild(node4.lastChild);
+// appendChild sometimes implies a removechild
+node4.appendChild(node5.firstChild);
+// append two nodes should make one record.
+sp1 = document.createElement("span")
+sp1.textContent = "d";
+sp2 = document.createElement("span")
+sp2.textContent = "e";
+node4.append(sp1, sp2);
+// same for prepend
+sp1 = document.createElement("span")
+sp1.textContent = "y";
+sp2 = document.createElement("span")
+sp2.textContent = "z";
+node4.prepend(sp1, sp2);
 
 /* log is still empty, because these observers run asynchronously.
 change it to middle so we know we got this far.
