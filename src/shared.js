@@ -352,7 +352,7 @@ function collectionSymbol(s)
     globalThis.Eb$CollectionHelper = class {
         /*
         - node - the node which owns this collection
-        - cb - callback which takes onwer and this as parameters used to rebuild
+        - cb - callback which takes owner as a parameter used to rebuild
           the collection. Note that we pass owner as a parameter so the
           collection callback can avoid creating a reference cyle (owner is
           stored as a weakref which is dereferenced on calling).
@@ -396,7 +396,7 @@ function collectionSymbol(s)
                 this[owner] = null;
                 return; // everything's gone
             }
-            for (const element of this[callback](o, this)) {
+            for (const element of this[callback](o)) {
                 const ref = new this[window].WeakRef(element);
                 this[by_index].push(ref);
                 this[tracker].register(element, this);
@@ -4337,7 +4337,7 @@ nodep.cloneNode = function(deep) {
 
 nodep.querySelector = querySelector
 nodep.querySelectorAll = function(c,s) {
-    return new w.NodeList(this, (n,nl) => querySelectorAll.call(n,c,s));
+    return new w.NodeList(this, (n) => querySelectorAll.call(n,c,s));
 }
 
 // visual
