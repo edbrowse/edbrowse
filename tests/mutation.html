@@ -1,0 +1,48 @@
+<body n=1>
+<p id=show n=2>start</p>
+<div n=3 worm="regular"></div>
+
+<script>
+// test mutation observers; this will be rather a bear.
+try {
+show = document.getElementById("show")
+msg = "ok";
+b = document.body;
+
+// record the change that was made in a log.
+log = "";
+const generalCallback = (mutationList, observer) => {
+      for (const m of mutationList) {
+log += `@${m.target.getAttribute('n')}:`;
+        if (m.type === "childList") {
+            log += "child";
+        } else if (m.type === "attributes") {
+            log += `${m.attributeName}=${m.oldValue}>${m.target.getAttribute(m.attributeName)}`
+        } else if (m.type === "characterData") {
+            log += `Character data was modified`;
+        }
+    }
+};
+
+// should probably have multiple observers, just one for now
+const ob1 = new MutationObserver(generalCallback);
+// high and everything
+const all_config = { attributes: true, childList: true, subtree: true , characterData: true, attributeOldValue:true};
+        ob1.observe(b, all_config);
+
+node2 = b.querySelector("[n='2']")
+node3 = b.querySelector("[n='3']")
+node3.setAttribute("worm", "flat")
+
+// log is still empty, because these observers run asynchronously
+show.innerHTML = "mid" + log;
+// finally set a timer so all these observers can run asynchronously
+setTimeout(()=>{
+show.innerHTML = log;}, 600);
+// I'm going to put on another node in html, as we build the tree,
+// see if it triggers the observers.
+// It does in chrome, child, twice, not sure why.
+} catch(e) { show.innerHTML = "blowup " + e;}
+</script>
+<hr>
+</body>

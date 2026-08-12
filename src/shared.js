@@ -1445,7 +1445,6 @@ return x ? [x] : [];
 function mrKids(r, b, y, z) {
 r.target = b;
 r.type = "childList";
-r.oldValue = null;
 r.addedNodes = mrList(y);
 r.removedNodes = mrList(z);
 r.nextSibling = r.previousSibling = null; // this is for innerHTML
