@@ -4329,12 +4329,19 @@ nodep.cloneNode = function(deep) {
 
 nodep.querySelector = querySelector
 nodep.querySelectorAll = function(c,s) {
+    /* This needs to be a NodeList, but not a live one. Rather than
+    implementing an entirely new thing, set the callback to rebuild exactly
+    once. This is a little defensive since these shouldn't end up somewhere
+    where they are marked as being changed but this, if nothing else, makes the
+    situation clearer for debugging. */
+
     const ret = new w.NodeList(this, (n,nl) => {
         const res = querySelectorAll.call(n,c,s);
         nl[collectionSymbol("ignore")] = true;
         return res;
     });
-    // Trigger the rebuild
+    /* Trigger the rebuild since we want the nodes at this point not when the
+    list is first accessed. */
     ret[0];
     return ret;
 }
