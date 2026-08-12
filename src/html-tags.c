@@ -4643,9 +4643,9 @@ static void formControlJS(Tag *t)
 	const Tag *form = t->controller;
 
 	if (form && form->jslink)
-		domLink(t, whichclass, 0, form, 0);
+		domLink(t, whichclass, form, 0);
 	else
-		domLink(t, whichclass, 0, 0, 4);
+		domLink(t, whichclass, 0, 4);
 	if (!t->jslink)
 		return;
 
@@ -4805,22 +4805,22 @@ Needless to say that's not good!
 		break;
 
 	case TAGACT_DOCTYPE:
-		domLink(t, "DocType", 0, 0, 4);
+		domLink(t, "DocType", 0, 4);
 		t->deleted = true;
 		break;
 
 	case TAGACT_HTML:
-		domLink(t, "HTML", 0, 0, 4);
+		domLink(t, "HTML", 0, 4);
 		cf->htmltag = t;
 		set_property_string_win(cf, "eb$base", cf->fileName);
 		break;
 
 	case TAGACT_META:
-		domLink(t, "HTMLMetaElement", 0, 0, 4);
+		domLink(t, "HTMLMetaElement", 0, 4);
 		break;
 
 	case TAGACT_STYLE:
-		domLink(t, "HTMLStyleElement", 0, 0, 4);
+		domLink(t, "HTMLStyleElement", 0, 4);
 		a = attribVal(t, "type");
 		if (!a) a = emptyString;
 // if type is spilldown then we don't need this line.
@@ -4828,7 +4828,7 @@ Needless to say that's not good!
 		break;
 
 	case TAGACT_COMMENT:
-		domLink(t, "Comment", 0, 0, 4);
+		domLink(t, "Comment", 0, 4);
 		set_property_string_t(t, "data", t->textval);
 		break;
 
@@ -4836,12 +4836,12 @@ Needless to say that's not good!
 		nzFree(t->nodeName), nzFree(t->nodeNameU);
 		t->nodeName = cloneString("cdata");
 		t->nodeNameU = cloneString("CDATA");
-		domLink(t, "CDATASection", 0, 0, 4);
+		domLink(t, "CDATASection", 0, 4);
 		set_property_string_t(t, "text", t->textval);
 		break;
 
 	case TAGACT_SCRIPT:
-		domLink(t, "HTMLScriptElement", 0, 0, 4);
+		domLink(t, "HTMLScriptElement", 0, 4);
 		a = attribVal(t, "text");
 		if (a) set_property_string_t(t, "text", a);
 		else set_property_string_t(t, "text", "");
@@ -4856,19 +4856,19 @@ Needless to say that's not good!
 		break;
 
 	case TAGACT_FORM:
-		domLink(t, "HTMLFormElement", 0, 0, 4);
+		domLink(t, "HTMLFormElement", 0, 4);
 		break;
 
 	case TAGACT_FIELDSET:
-		domLink(t, "HTMLFieldSetElement", 0, 0, 0);
+		domLink(t, "HTMLFieldSetElement", 0, 0);
 		break;
 
 	case TAGACT_LEGEND:
-		domLink(t, "HTMLLegendElement", 0, 0, 0);
+		domLink(t, "HTMLLegendElement", 0, 0);
 		break;
 
 	case TAGACT_BQ:
-		domLink(t, "HTMLQuoteElement", 0, 0, 0);
+		domLink(t, "HTMLQuoteElement", 0, 0);
 		break;
 
 	case TAGACT_INPUT:
@@ -4886,108 +4886,108 @@ Needless to say that's not good!
 			return;
 		}
 // not part of a select, just link to parent as usual
-		domLink(t, "HTMLOptionElement", 0, 0, 4);
+		domLink(t, "HTMLOptionElement", 0, 4);
 		break;
 
 	case TAGACT_OPTG:
-		domLink(t, "HTMLOptGroupElement", 0, 0, 4);
+		domLink(t, "HTMLOptGroupElement", 0, 4);
 		pc->currentOG = t;
 		break;
 
 	case TAGACT_DATAL:
-		domLink(t, "Datalist", 0, 0, 4);
+		domLink(t, "Datalist", 0, 4);
 		break;
 
 	case TAGACT_A:
-		domLink(t, "HTMLAnchorElement", 0, 0, 4);
+		domLink(t, "HTMLAnchorElement", 0, 4);
 		break;
 
 	case TAGACT_HEAD:
-		domLink(t, "HTMLHeadElement", 0, 0, 4);
+		domLink(t, "HTMLHeadElement", 0, 4);
 		cf->headtag = t;
 		break;
 
 	case TAGACT_BODY:
-		domLink(t, "HTMLBodyElement", 0, 0, 4);
+		domLink(t, "HTMLBodyElement", 0, 4);
 		cf->bodytag = t;
 		break;
 
 	case TAGACT_OL:
-		domLink(t, "HTMLOListElement", 0, 0, 4);
+		domLink(t, "HTMLOListElement", 0, 4);
 		break;
 	case TAGACT_UL:
-		domLink(t, "HTMLUListElement", 0, 0, 4);
+		domLink(t, "HTMLUListElement", 0, 4);
 		break;
 	case TAGACT_DL:
-		domLink(t, "HTMLDListElement", 0, 0, 4);
+		domLink(t, "HTMLDListElement", 0, 4);
 		break;
 
 	case TAGACT_LI:
-		domLink(t, "HTMLLIElement", 0, 0, 4);
+		domLink(t, "HTMLLIElement", 0, 4);
 		break;
 
 	case TAGACT_CANVAS:
-		domLink(t, "HTMLCanvasElement", 0, 0, 4);
+		domLink(t, "HTMLCanvasElement", 0, 4);
 		break;
 
 	case TAGACT_TABLE:
-		domLink(t, "HTMLTableElement", 0, 0, 4);
+		domLink(t, "HTMLTableElement", 0, 4);
 		break;
 
 	case TAGACT_TBODY:
 		if ((above = t->controller) && above->jslink)
-			domLink(t, "tBody", "tBodies", above, 0);
+			domLink(t, "tBody", above, 0);
 		break;
 
 	case TAGACT_THEAD:
 		if ((above = t->controller) && above->jslink) {
-			domLink(t, "tHead", 0, above, 0);
+			domLink(t, "tHead", above, 0);
 			set_property_object_t(above, "tHead", t);
 		}
 		break;
 
 	case TAGACT_TFOOT:
 		if ((above = t->controller) && above->jslink) {
-			domLink(t, "tFoot", 0, above, 0);
+			domLink(t, "tFoot", above, 0);
 			set_property_object_t(above, "tFoot", t);
 		}
 		break;
 
 	case TAGACT_TR:
 		if ((above = t->controller) && above->jslink)
-			domLink(t, "HTMLTableRowElement", "rows", above, 0);
+			domLink(t, "HTMLTableRowElement", above, 0);
 		break;
 
 	case TAGACT_TD:
 		if ((above = t->controller) && above->jslink)
-			domLink(t, "HTMLTableCellElement", "cells", above, 0);
+			domLink(t, "HTMLTableCellElement", above, 0);
 		break;
 
 	case TAGACT_DIV:
-		domLink(t, "HTMLDivElement", 0, 0, 4);
+		domLink(t, "HTMLDivElement", 0, 4);
 		break;
 
 	case TAGACT_LABEL:
-		domLink(t, "HTMLLabelElement", 0, 0, 4);
+		domLink(t, "HTMLLabelElement", 0, 4);
 		break;
 
 	case TAGACT_HR:
-		domLink(t, "HTMLHRElement", 0, 0, 4);
+		domLink(t, "HTMLHRElement", 0, 4);
 		break;
 
 	case TAGACT_OBJECT:
-		domLink(t, "HTMLObjectElement", 0, 0, 4);
+		domLink(t, "HTMLObjectElement", 0, 4);
 		break;
 
 	case TAGACT_SPAN:
 	case TAGACT_SUB:
 	case TAGACT_SUP:
 	case TAGACT_OVB:
-		domLink(t, "HTMLSpanElement", 0, 0, 4);
+		domLink(t, "HTMLSpanElement", 0, 4);
 		break;
 
 	case TAGACT_AREA:
-		domLink(t, "HTMLAreaElement", 0, 0, 4);
+		domLink(t, "HTMLAreaElement", 0, 4);
 		break;
 
 	case TAGACT_FRAME:
@@ -4995,74 +4995,74 @@ Needless to say that's not good!
 		if (stringEqual(t->href, "about:blank")) {
 			nzFree0(t->href);
 		}
-		domLink(t, "HTMLFrameElement", 0, 0, 2);
+		domLink(t, "HTMLFrameElement", 0, 2);
 		break;
 
 	case TAGACT_IMAGE:
-		domLink(t, "HTMLImageElement", 0, 0, 4);
+		domLink(t, "HTMLImageElement", 0, 4);
 		break;
 
 	case TAGACT_P:
-		domLink(t, "HTMLParagraphElement", 0, 0, 4);
+		domLink(t, "HTMLParagraphElement", 0, 4);
 		break;
 
 	case TAGACT_H:
-		domLink(t, "HTMLHeadingElement", 0, 0, 4);
+		domLink(t, "HTMLHeadingElement", 0, 4);
 		break;
 
 	case TAGACT_HEADER:
-		domLink(t, "Header", 0, 0, 4);
+		domLink(t, "Header", 0, 4);
 		break;
 
 	case TAGACT_FOOTER:
-		domLink(t, "Footer", 0, 0, 4);
+		domLink(t, "Footer", 0, 4);
 		break;
 
 	case TAGACT_TITLE:
 		if (cw->htmltitle)
 			set_property_string_doc(cf, "title", cw->htmltitle);
-		domLink(t, "Title", 0, 0, 4);
+		domLink(t, "Title", 0, 4);
 		break;
 
 	case TAGACT_LINK:
-		domLink(t, "HTMLLinkElement", 0, 0, 4);
+		domLink(t, "HTMLLinkElement", 0, 4);
 		loadScriptData(t);
 		break;
 
 	case TAGACT_MUSIC:
 		if(!opentag) break;
-		domLink(t, "HTMLAudioElement", 0, 0, 4);
+		domLink(t, "HTMLAudioElement", 0, 4);
 		break;
 
 	case TAGACT_TEMPLATE:
 		if(opentag) {
-			domLink(t, "HTMLTemplateElement", 0, 0, 4);
+			domLink(t, "HTMLTemplateElement", 0, 4);
 		}
 		break;
 
 	case TAGACT_DET:
 		if(opentag) {
-			domLink(t, "HTMLDetailsElement", 0, 0, 4);
+			domLink(t, "HTMLDetailsElement", 0, 4);
 		}
 		break;
 
 	case TAGACT_BASE:
-		domLink(t, "HTMLBaseElement", 0, 0, 4);
+		domLink(t, "HTMLBaseElement", 0, 4);
 		if(t->href && *t->href)
 			set_property_string_win(cf, "eb$base", t->href);
 		break;
 
 	case TAGACT_TIME:
-		domLink(t, "HTMLTimeElement", 0, 0, 0);
+		domLink(t, "HTMLTimeElement", 0, 0);
 		break;
 
 	case TAGACT_HE:
-		domLink(t, "HTMLElement", 0, 0, 0);
+		domLink(t, "HTMLElement", 0, 0);
 		break;
 
 	default:
 // this could be a custom element
-		domLink(t, t->nodeName, 0, pc->innerParent, 8);
+		domLink(t, t->nodeName, pc->innerParent, 8);
 		break;
 	}			// switch
 

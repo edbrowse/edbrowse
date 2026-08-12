@@ -3995,7 +3995,6 @@ void establish_js_textnode(Tag *t)
 }
 
 void domLink(Tag *t, const char *classname,	/* instantiate this class */
-		    const char *list,	/* next member of this array */
 		    const Tag * owntag,
 // owner tag is form for input elements, table for sections or rows,
 // row for cells, and above for unknown elements from innerHTML.
@@ -4003,9 +4002,7 @@ int extra) // bits: radio, window, document, unknown
 {
     JSContext *cx = cf->cx;
     JSValue owner = JS_NULL;
-    JSValue alist = JS_UNDEFINED;
     JSValue io = JS_UNDEFINED;	// the input object
-    int length;
     uchar isunknown = (extra&8);
 // some strings from the html tag
     	static const char * const z_list[] = {
@@ -4036,14 +4033,6 @@ if(extra == 4)
         io = instantiate(cx,
         *((JSValue*)cf->winobj), 0, classtweak);
     if(JS_IsUndefined(io)) return;
-
-    if (list)
-        alist = get_property_object(cx, owner, list);
-    if (!JS_IsUndefined(alist)) {
-        length = get_arraylength(cx, alist);
-        set_array_element_object(cx, alist, length, io);
-        JS_Release(cx, alist);
-        }		// list indicated
 
     if(t->action != TAGACT_DOCTYPE) {
         if(!stringEqual(t->nodeNameU, "CDATA") &&

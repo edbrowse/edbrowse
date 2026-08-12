@@ -3453,17 +3453,28 @@ function rowReindex(t)
 let i, j, n = 0;
 let s; // section
 t.rows.length = 0; // squash and start over
+t.tBodies.length = 0; // squash and start over
+for(let c of t.children) if(c.dom$class == "tBody") t.tBodies.push(c);
+
 if(s = t.tHead) {
+s.rows.length = 0;
+for(let c of s.children) if(c.dom$class == "HTMLTableRowElement") s.rows.push(c);
 for(j=0; j<s.rows.length; ++j)
 t.rows.push(s.rows[j]), s.rows[j].rowIndex = n++, s.rows[j].sectionRowIndex = j;
 }
+
 // a table can have multiple bodies
 for(i=0; i<t.tBodies.length; ++i) {
 s = t.tBodies[i];
+s.rows.length = 0;
+for(let c of s.children) if(c.dom$class == "HTMLTableRowElement") s.rows.push(c);
 for(j=0; j<s.rows.length; ++j)
 t.rows.push(s.rows[j]), s.rows[j].rowIndex = n++, s.rows[j].sectionRowIndex = j;
 }
+
 if(s = t.tFoot) {
+s.rows.length = 0;
+for(let c of s.children) if(c.dom$class == "HTMLTableRowElement") s.rows.push(c);
 for(j=0; j<s.rows.length; ++j)
 t.rows.push(s.rows[j]), s.rows[j].rowIndex = n++, s.rows[j].sectionRowIndex = j;
 }
