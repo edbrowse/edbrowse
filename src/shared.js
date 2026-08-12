@@ -2182,7 +2182,7 @@ node2.setAttribute(node1.attributes[l].name, node1.attributes[l].value);
         node1.dom$class == "HTMLFieldSetElement")
             formReindex(node2);
         if(node1.dom$class == "HTMLTableElement")
-            rowReindexAll(node2);
+            rowReindex(node2);
     }
 
     if(debug) alert3("}");
@@ -3470,7 +3470,7 @@ return port;
 }
 
 // It's crude, but reindex the rows under <table>.
-function rowReindex(t)
+function rowReindex1(t)
 {
 let i, j, n = 0;
 let s; // section
@@ -3539,13 +3539,18 @@ Note that formReindex doesn't suffer from theese restrictions.
 It is quite common to have tags between <form> and <input>.
 *********************************************************************/
 
-function rowReindexAll(t)
+function rowReindex(t)
 {
-    delete t.tHead; delete t.tFoot; // crunch and rebuild
+    delete t.tHead; delete t.tFoot; delete t.caption; // crunch and rebuild
     t.tBodies.length = 0;
     for(let c of t.childNodes) {
         if(c.nodeName == "TR") {
             cellReindex(c);
+        }
+        if(c.nodeName == "CAPTION") {
+            if(t.caption) continue; // only one caption
+            t.caption = c;
+            continue;
         }
         if(c.nodeName == "THEAD") {
             if(t.tHead) continue; // only one head
@@ -3575,7 +3580,7 @@ function rowReindexAll(t)
         }
     }
 
-    rowReindex(t);
+    rowReindex1(t);
 }
 
 // more efficient than querySelectorAll
@@ -3683,6 +3688,12 @@ function formReindex2(t)
         }
         t = t.parentNode;
     }
+}
+
+function checkUpward(t) {
+    formReindex2(t);
+    rowReindex2(t);
+    markUpwardCollections(t);
 }
 
 /*********************************************************************
@@ -4201,8 +4212,7 @@ nodep.appendChild = function(c) {
     this.appendChild2(c);
     // a text node won't change the structure of the form, or the html collection
     if(c.nodeType != 3) {
-        formReindex2(this);
-        markUpwardCollections(this);
+        checkUpward(this);
         runScriptWhenAttached(c);
     }
     // a text node can have an observer - for CharacterData
@@ -4217,8 +4227,7 @@ nodep.appendChild$nm = function(c) {
     if(c.parentNode) c.parentNode.removeChild$nm(c);
     this.appendChild2(c);
     if(c.nodeType != 3) {
-        formReindex2(this);
-        markUpwardCollections(this);
+        checkUpward(this);
         runScriptWhenAttached(c);
     }
     return c;
@@ -4259,8 +4268,7 @@ nodep.insertBefore = function(c, t) {
     c.parentNode = this;
     domLinkage('b', this, "", c, t); // update the tree in C
     if(c.nodeType != 3) {
-                formReindex2(this);
-        markUpwardCollections(this);
+                checkUpward(this);
         runScriptWhenAttached(c);
     }
     mutFixup(this, 0, c, null);
@@ -4284,8 +4292,7 @@ nodep.insertBefore$nm = function(c, t) {
     c.parentNode = this;
     domLinkage('b', this, "", c, t); // update the tree in C
     if(c.nodeType != 3) {
-                formReindex2(this);
-        markUpwardCollections(this);
+                checkUpward(this);
         runScriptWhenAttached(c);
     }
     return c;
@@ -4304,8 +4311,7 @@ nodep.removeChild = function(c) {
     c.parentNode = null;
     domLinkage('r', this, "", c);
     if(c.nodeType != 3) {
-        formReindex2(this);
-        markUpwardCollections(this);
+        checkUpward(this);
     }
     // passing an integer as third argument is a special case, only from here.
     mutFixup(this, 0, mark, c);
@@ -4326,8 +4332,7 @@ nodep.removeChild$nm = function(c) {
     c.parentNode = null;
     domLinkage('r', this, "", c);
     if(c.nodeType != 3) {
-        formReindex2(this);
-        markUpwardCollections(this);
+        checkUpward(this);
     }
     return c;
 }
@@ -5321,47 +5326,6 @@ tablesecp.deleteRow = deleteRow;
 trp.insertCell = insertCell;
 trp.deleteCell = deleteCell;
 
-// rows under a table section
-tablesecp.appendChildNative = nodep.appendChild;
-tablesecp.appendChild = function(newobj) {
-if(!newobj) return null;
-if(newobj.nodeType == 11) return appendFragment(this, newobj);
-this.appendChildNative(newobj);
-if(newobj.dom$class == "HTMLTableRowElement") // shouldn't be anything other than TR
-this.rows.push(newobj), rowReindex2(this);
-return newobj;
-}
-tablesecp.insertBeforeNative = nodep.insertBefore;
-tablesecp.insertBefore = function(newobj, item) {
-if(!newobj) return null;
-if(!item) return this.appendChild(newobj);
-if(newobj.nodeType == 11) return insertFragment(this, newobj, item);
-const r = this.insertBeforeNative(newobj, item);
-if(!r) return null;
-if(newobj.dom$class == "HTMLTableRowElement")
-for(let i=0; i<this.rows.length; ++i)
-if(this.rows[i] == item) {
-this.rows.splice(i, 0, newobj);
-rowReindex2(this);
-break;
-}
-return newobj;
-}
-tablesecp.removeChildNative = nodep.removeChild;
-tablesecp.removeChild = function(item) {
-if(!item) return null;
-if(!this.removeChildNative(item))
-return null;
-if(item.dom$class == "HTMLTableRowElement")
-for(let i=0; i<this.rows.length; ++i)
-if(this.rows[i] == item) {
-this.rows.splice(i, 1);
-rowReindex2(this);
-break;
-}
-return item;
-}
-
 tablep.createCaption = function() {
 if(this.caption) return this.caption;
 let c = d.createElement("caption");
@@ -5389,79 +5353,6 @@ return c;
 }
 tablep.deleteTFoot = function() {
 if(this.tFoot) this.removeChild(this.tFoot);
-}
-
-// rows or bodies under a table
-tablep.appendChildNative = nodep.appendChild;
-tablep.appendChild = function(newobj) {
-if(!newobj) return null;
-if(newobj.nodeType == 11) return appendFragment(this, newobj);
-this.appendChildNative(newobj);
-if(newobj.dom$class == "HTMLTableRowElement") rowReindex(this);
-if(newobj.dom$class == "tBody") {
-this.tBodies.push(newobj);
-if(newobj.rows.length) rowReindex(this);
-}
-if(newobj.dom$class == "tCap") this.caption = newobj;
-if(newobj.dom$class == "tHead") {
-this.tHead = newobj;
-if(newobj.rows.length) rowReindex(this);
-}
-if(newobj.dom$class == "tFoot") {
-this.tFoot = newobj;
-if(newobj.rows.length) rowReindex(this);
-}
-return newobj;
-}
-tablep.insertBeforeNative = nodep.insertBefore;
-tablep.insertBefore = function(newobj, item) {
-if(!newobj) return null;
-if(!item) return this.appendChild(newobj);
-if(newobj.nodeType == 11) return insertFragment(this, newobj, item);
-const r = this.insertBeforeNative(newobj, item);
-if(!r) return null;
-if(newobj.dom$class == "HTMLTableRowElement") rowReindex(this);
-if(newobj.dom$class == "tBody")
-for(let i=0; i<this.tBodies.length; ++i)
-if(this.tBodies[i] == item) {
-this.tBodies.splice(i, 0, newobj);
-if(newobj.rows.length) rowReindex(this);
-break;
-}
-if(newobj.dom$class == "tCap") this.caption = newobj;
-if(newobj.dom$class == "tHead") {
-this.tHead = newobj;
-if(newobj.rows.length) rowReindex(this);
-}
-if(newobj.dom$class == "tFoot") {
-this.tFoot = newobj;
-if(newobj.rows.length) rowReindex(this);
-}
-return newobj;
-}
-tablep.removeChildNative = nodep.removeChild;
-tablep.removeChild = function(item) {
-if(!item) return null;
-if(!this.removeChildNative(item))
-return null;
-if(item.dom$class == "HTMLTableRowElement") rowReindex(this);
-if(item.dom$class == "tBody")
-for(let i=0; i<this.tBodies.length; ++i)
-if(this.tBodies[i] == item) {
-this.tBodies.splice(i, 1);
-if(item.rows.length) rowReindex(this);
-break;
-}
-if(item == this.caption) delete this.caption;
-if(item.dom$class == "tHead") {
-if(item == this.tHead) delete this.tHead;
-if(item.rows.length) rowReindex(this);
-}
-if(item.dom$class == "tFoot") {
-if(item == this.tFoot) delete this.tFoot;
-if(item.rows.length) rowReindex(this);
-}
-return item;
 }
 
 // row methods
