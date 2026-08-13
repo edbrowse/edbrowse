@@ -4627,7 +4627,6 @@ static void establish_inner(Tag *t, const char *start, const char *end,
 
 static const char defvl[] = "defaultValue";
 static const char defck[] = "defaultChecked";
-static const char defsel[] = "defaultSelected";
 
 static void formControlJS(Tag *t)
 {
@@ -4661,33 +4660,6 @@ static void formControlJS(Tag *t)
 		set_property_bool_t(t, "checked", t->checked);
 		set_property_bool_t(t, defck, t->checked);
 	}
-}
-
-static void optionJS(Tag *t, Tag *og)
-{
-	Tag *sel = t->controller;
-	const char *tx = t->textval;
-
-	if (!sel)
-		return;
-
-	if (!tx) {
-		debugPrint(3, "empty option");
-	} else {
-		if (!t->value)
-			t->value = cloneString(tx);
-	}
-/* no point if the controlling select doesn't have a js object */
-	if (!sel->jslink)
-		return;
-establish_js_option(t, sel, og);
-// nodeName and nodeType set in constructor
-	set_property_string_t(t, "text", t->textval);
-	set_property_string_t(t, "value", t->value);
-	set_property_bool_t(t, "selected", t->checked);
-	set_property_bool_t(t, defsel, t->checked);
-	if (t->checked && !sel->multiple)
-		set_property_number_t(sel, "selectedIndex", t->lic);
 }
 
 // tkae a snapshot of the nodes going up the tree
@@ -4879,11 +4851,15 @@ Needless to say that's not good!
 
 	case TAGACT_OPTION:
 		if(t->controller) {
-			optionJS(t, pc->currentOG);
-// The parent child relationship has already been established,
-// don't break, just return;
-			pushAttributes(t);
-			return;
+		    if (!t->textval)
+		        debugPrint(3, "empty option");
+		    else if (!t->value)
+		        t->value = cloneString(t->textval);
+		    establish_js_option(t, t->controller, pc->currentOG);
+		    // The parent child relationship has already been established,
+		    // don't break, just return;
+		    pushAttributes(t);
+		    return;
 		}
 // not part of a select, just link to parent as usual
 		domLink(t, "HTMLOptionElement", 0, 4);

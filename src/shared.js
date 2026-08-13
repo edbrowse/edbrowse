@@ -5518,47 +5518,75 @@ swde("HTMLSelectElement", class extends w.HTMLElement {
     {
         super();
         this.selectedIndex = -1;
-        this.options = new w.Array;
-        this.selectedOptions = new w.Array;
+        this.options = [];
+        this.selectedOptions = [];
         this.validity = new w.Validity;
         this.validity.owner = this;
     }
-})
 
-let selp = w.HTMLSelectElement.prototype;
-odp(selp, "value", {
-    get: function() {
+    get value() {
         const a = this.options;
         const n = this.selectedIndex;
         return (this.multiple || n < 0 || n >= a.length) ? "" : a[n].value;
     }
-});
-odp(selp, "type", {
-    get:function(){ return this.multiple ? "select-multiple" : "select-one"}
-});
-odp(selp, "multiple", {
-    get: function() {
+
+    get type() {
+        return this.multiple ? "select-multiple" : "select-one";
+    }
+
+    get multiple() {
         const t = this.getAttribute("multiple");
-        return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true
-    },
-    set:function(v) { this.setAttribute("multiple", v);}
-});
-odp(selp, "size", {
-    get: function() {
+        return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true;
+    }
+
+    set type(v) {
+        this.setAttribute("multiple", v);
+    }
+
+    get size() {
         const t = this.getAttribute("size");
         if(typeof t == "number") return t;
         if(typeof t == "string" && t.match(/^\d+$/)) return parseInt(t);
         return 0;
-    },
-    set: function(v) { this.setAttribute("size", v);}
-});
-odp(selp, "required", {
-    get:function() {
+    }
+
+    set size(v) {
+        this.setAttribute("size", v);
+    }
+
+    get required() {
         const t = this.getAttribute("required");
-        return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true
-    },
-    set: function(v) { this.setAttribute("required", v);}
-});
+        return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true;
+    }
+
+    set required(v) {
+        this.setAttribute("required", v);
+    }
+})
+
+const selp = w.HTMLSelectElement.prototype;
+
+// A helper function for <option> coming from html.
+function option_from_html(o){
+    this.childNodes.push(o);
+    o.parentNode = this;
+    let og = null; // option group
+    let select = this;
+    if(select.dom$class == "HTMLOptGroupElement") {
+        og = select;
+        while(select = select.parentNode) {
+            if(select.nodeType != 1) return; // should never happen
+            if(select.dom$class == "HTMLSelectElement") break;
+        }
+        if(!select) return;
+    }
+    select.options.push(o);
+    if(o.selected) select.selectedOptions.push(o);
+    o.form = select.form;
+    mutFixup(this, 0, o, null);
+}
+optgp.option_from_html = option_from_html;
+selp.option_from_html = option_from_html;
 
 selp.eb$bso = function() { // build selected options array
     // do not replace the array with a new one, this is suppose to be a live array

@@ -3885,44 +3885,21 @@ bool has_property_win(const Frame *f, const char *name)
 
 void establish_js_option(Tag *t, Tag *sel, Tag *og)
 {
-	JSContext *cx = cf->cx; // context
-	int idx = t->lic;
-	JSValue oa;		// option array
-	JSValue oo;		// option object
-	JSValue selobj; // select object
-	JSValue ogobj; // optgroup object
-	JSValue soa; // selectedOptions array
-	JSValue fo;		// form object
-	JSValue cn; // childNodes
-
-	if(!sel->jslink) return;
-	selobj = *((JSValue*)sel->jv);
-	oo = instantiate(cx, selobj, 0, "HTMLOptionElement");
-connectTagObject(t, oo);
-
-	// add to options array
-	oa = get_property_object(cx, selobj, "options");
-	idx = get_arraylength(cx, oa);
-	set_array_element_object(cx, oa, idx, oo);
-	if(t->checked) {
-		soa = get_property_object(cx, selobj, "selectedOptions");
-		set_array_element_object(cx, soa, idx, oo);
-		JS_Release(cx, soa);
-	}
-// option.form = select.form
-	fo = get_property_object(cx, selobj, "form");
-	if(!JS_IsUndefined(fo)) {
-		set_property_object(cx, oo, "form", fo);
-		JS_Release(cx, fo);
-	}
-// add option under select or under optgroup
-	if(og) ogobj = *((JSValue*)og->jv);
-	cn = get_property_object(cx, (og ? ogobj : selobj), "childNodes");
-idx = get_arraylength(cx, cn);
-	set_array_element_object(cx, cn, idx, oo);
-	set_property_object(cx, oo, "parentNode", (og ? ogobj : selobj));
-	JS_Release(cx, cn);
-	JS_Release(cx, oa);
+    JSContext *cx = cf->cx; // context
+    JSValue oo;		// option object
+    JSValue selobj; // select object
+    if(!sel->jslink) return;
+    selobj = *((JSValue*)sel->jv);
+    oo = instantiate(cx, selobj, 0, "HTMLOptionElement");
+    connectTagObject(t, oo);
+    // have to established checked before we call the next function
+    set_property_string(cx, oo, "text", t->textval);
+    set_property_string(cx, oo, "value", t->value);
+    set_property_bool(cx, oo, "selected", t->checked);
+    set_property_bool(cx, oo, "defaultSelected", t->checked);
+    if (t->checked && !sel->multiple)
+        set_property_number(cx, selobj, "selectedIndex", t->lic);
+    run_function_onearg_t((og ? og : sel), "option_from_html", t);
 }
 
 void establish_js_textnode(Tag *t)
