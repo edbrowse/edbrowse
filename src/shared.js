@@ -1463,7 +1463,6 @@ r.type = "childList";
 to true */
 r.addedNodes = new w.NodeList(b, () => mrList(y));
 r.removedNodes = new w.NodeList(b, () => mrList(z));
-r.nextSibling = r.previousSibling = null; // this is for innerHTML
 // if adding a single node then we can just compute the siblings
 if(y && y.nodeType && y.parentNode)
 r.previousSibling = y.previousSibling, r.nextSibling = y.nextSibling;
@@ -1476,6 +1475,9 @@ r.nextSibling = y < l ? c[y] : null;
 --y;
 r.previousSibling = y >= 0 ? c[y] : null;
 }
+// last case we will deal with is adding an array of nodes.
+if(Array.isArray(y) && y.length)
+r.previousSibling = y[0].previousSibling, r.nextSibling = y[y.length - 1].nextSibling;
 }
 
 /*********************************************************************
@@ -4900,13 +4902,13 @@ elemp.replaceWith = function() {
             mutFixup(c, 0, 0, deletions);
             continue;
         }
-    this.removeChild(c);
+    c.remove();
         p.insertBefore$nm(c, n);
         additions.push(c);
     }
     p.removeChild$nm(this);
     checkUpward(p);
-    mutFixup(p, 0, additions, null);
+    mutFixup(p, 0, additions, this);
 }
 
 // replaceChildren not yet implemented
