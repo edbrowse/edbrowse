@@ -1,14 +1,15 @@
 <body n=1>
 <p id=show n=2>start</p>
-<div n=3 worm="regular"><ol><li>apple<li>orange</ol></div>
+<div n=3 worm="round"><ol><li>apple<li>orange</ol></div>
 <div n=4><p>1</p><p>2</p></div>
 <div n=5><span>c</span></div>
+<div n=6><span n=30></span><span n=31></span><span n=32></span><span n=33></span><span n=34></span><span n=35></span><span n=36></span><span n=37></span><span n=38></span><span n=39></span></div>
 
 <script>
 // test mutation observers; this will be rather a bear.
 try {
 show = document.getElementById("show")
-msg = "ok";
+msg = "pending";
 b = document.body;
 
 // record the change that was made in a log.
@@ -58,17 +59,20 @@ const ob2 = new MutationObserver(generalCallback);
         ob1.observe(b, config_all);
 // at this point we're watching...
 
-node2 = b.querySelector("[n='2']")
-node3 = b.querySelector("[n='3']")
-node4 = b.querySelector("[n='4']")
-node5 = b.querySelector("[n='5']")
-/* start simple, change the kind of worm, it should be the first entry in the log.
-Should generate {3:worm=regular>flat}
-node 3 because n=3, attribute worm, oldValue is enabled so we see
-the old value, regular, and then the new value, flat. */
+function makeNode(n) { return b.querySelector(`[n="${n}"]`); }
+node2 = makeNode(2);
+node3 = makeNode(3);
+node4 = makeNode(4);
+node5 = makeNode(5);
+node6 = makeNode(6);
+
+/* start simple, setAttribute, change the kind of worm, it should be the first entry in the log.
+Should generate {3:worm=round>flat}
+3 because we are in node 3, attribute worm, oldValue is enabled so we see
+the old value, round, and then the new value, flat. */
 node3.setAttribute("worm", "flat")
 
-// observe the div node but nothing below.
+// observe node3 but nothing below.
         ob2.observe(node3, config_shallow);
 // If we add something to the list, div won't see it,
 // because it is not a direct child, but body will, because it has subtree set.
@@ -78,33 +82,47 @@ ol = b.querySelector("ol");
 ol.appendChild(banana);
 // but if I add something directly under div, then both observers should see it.
 // The same entry in the log twice.
-node3.insertBefore(document.createElement("span"), ol);
+node3.insertBefore(document.createElement("blockquote"), ol);
 /* If I had ob1 watch both targets, body and div,
 not 2 observers but 1, then the entry would not be duplicated.
-Just one mutation record for the change is generated.
+Just one mutation record for the inserted node.
 In that case, observing div is completely pointless,
 as it is inside a subtree already being observed.
-But for this test I used a second observer. */
+But for this test I used a second observer.
+The order of these "observations" is not prescribed,
+and could be different for chrome and edbrowse.
+We'll deal with that later, when we analyze the log for correctness. */
 
 // replace 2 paragraphs with 3 spans.
 // This should make just one record.
 node4.innerHTML = "<span>a</span><span jkl=23>b</span><span>c</span>";
 // take out the last span
 node4.removeChild(node4.lastChild);
-// appendChild sometimes implies a removechild
+// appendChild sometimes implies a removeChild
 node4.appendChild(node5.firstChild);
-// append two nodes should make one record.
-sp1 = document.createElement("span")
-sp1.textContent = "d";
-sp2 = document.createElement("span")
-sp2.textContent = "e";
-node4.append(sp1, sp2);
-// same for prepend
-sp1 = document.createElement("span")
-sp1.textContent = "y";
-sp2 = document.createElement("span")
-sp2.textContent = "z";
-node4.prepend(sp1, sp2);
+
+/* append() is complicated. Nodes can be removed from all over the tree,
+  but are all added to one destination.
+Ans some of those nodes might be fragments, whence the contents
+of the fragments are transferred.
+How does this all play out with the records?
+That's what we're going to find out. */
+frag = document.createDocumentFragment();
+frag.innerHTML = "<span n=40></span><span n=41></span>";
+node4.append(makeNode(33), makeNode(37), frag, makeNode(30));
+frag.innerHTML = "<span n=42></span><span n=43></span>";
+node4.prepend(makeNode(34), makeNode(38), frag, makeNode(31));
+node42 = makeNode(42);
+node42.before(makeNode(39));
+node42.after(makeNode(32), "zz");
+node42.replaceWith(makeNode(35), "yy", makeNode(36));
+//make sure everything in node4 is in the right order.
+let h = "";
+for(let i = 0; i < node4.childNodes.length; ++i) {
+const c = node4.childNodes[i];
+if(c.nodeType == 3) h += c.data; else if(c.firstChild) h += c.firstChild.data; else h += c.getAttribute('n');
+}
+if(h != "34383935yy3632zz4331abc3337404130") msg += `|nodes ${h} are in the wrong order`;
 
 /* log is still empty, because these observers run asynchronously.
 change it to middle so we know we got this far.
@@ -116,7 +134,7 @@ show.innerHTML = "mid" + log;
 
 // finally set a timer so all these observers can run asynchronously
 setTimeout(()=>{
-show.innerHTML = log;}, 600);
+show.innerHTML = msg + "<br>" + log.replace(/} {/g, "}<br>{");}, 600);
 } catch(e) { show.innerHTML = "blowup " + e;}
 
 /* Our show.innerHTML = "mid" was not quite the last entry in the log.

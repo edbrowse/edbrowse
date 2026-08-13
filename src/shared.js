@@ -1486,8 +1486,55 @@ Since we are appending many nodes, I'm not sure what to return.
 
 // The return is completely undocumented. I have determined it is not null.
 // I assume it is the appended fragment.
-function appendFragment(p,  frag) { var c; while(c = frag.firstChild) p.appendChild(c); return frag; }
-function insertFragment(p, frag, l) { var c; while(c = frag.firstChild) p.insertBefore(c, l); return frag; }
+function appendFragment(p,  frag) {
+    let c;
+    const additions = [], deletions = [];
+    while(c = frag.firstChild) {
+        if(c.nodeType == 11) { alert3("appendFragment recursion"); continue; }
+        p.appendChild$nm(c);
+        additions.push(c);
+        deletions.push(c);
+    }
+    checkUpward(frag);
+    checkUpward(p);
+    mutFixup(frag, 0, 0, deletions);
+    mutFixup(p, 0, additions, null);
+    return frag;
+}
+
+function appendFragment$nm(p,  frag) {
+    let c;
+    while(c = frag.firstChild) {
+        if(c.nodeType == 11) { alert3("appendFragment$nm recursion"); continue; }
+        p.appendChild$nm(c);
+    }
+    return frag;
+}
+
+function insertFragment(p,  frag, l) {
+    let c;
+    const additions = [], deletions = [];
+    while(c = frag.firstChild) {
+        if(c.nodeType == 11) { alert3("insertFragment recursion"); continue; }
+        p.insertBefore$nm(c, l);
+        additions.push(c);
+        deletions.push(c);
+    }
+    checkUpward(frag);
+    checkUpward(p);
+    mutFixup(frag, 0, 0, deletions);
+    mutFixup(p, 0, additions, null);
+    return frag;
+}
+
+function insertFragment$nm(p,  frag, l) {
+    let c;
+    while(c = frag.firstChild) {
+        if(c.nodeType == 11) { alert3("insertFragment$nm recursion"); continue; }
+        p.insertBefore$nm(c, l);
+    }
+    return frag;
+}
 
 // if t is linkd into the tree, return the containing window
 // This is similar to though not identical to the C version in html.c
@@ -2171,6 +2218,10 @@ node2.setAttribute(node1.attributes[l].name, node1.attributes[l].value);
     if (deep && kids) {
         for(i = 0; i < kids.length; ++i) {
             let current_item = kids[i];
+            if(current_item.nodeType == 11) {
+                alert3("cannot clone a fragment, skipping this child.");
+                continue;
+            }
 // mutation observers don't apply to these newly created items.
 // I can call the faster, simpler apendChild method.
             node2.appendChild$nm(clone1(current_item,deep, into));
@@ -4223,16 +4274,16 @@ nodep.appendChild = function(c) {
 nodep.appendChild$nm = function(c) {
     if(!thisNode(this)) return null;
     if(!c) return null;
+    if(c.nodeType == 11) return appendFragment$nm(this, c);
     isabove(c, this);
     if(c.parentNode) c.parentNode.removeChild$nm(c);
     this.appendChild2(c);
-    if(c.nodeType != 3) {
-        checkUpward(this);
+    if(c.nodeType != 3)
         runScriptWhenAttached(c);
-    }
     return c;
 }
 
+// this is an internal function, and it doesn't watch for fragment
 nodep.prepend$child = function(c) {
     if(!thisNode(this)) return null;
 let v;
@@ -4280,8 +4331,8 @@ nodep.insertBefore$nm = function(c, t) {
     if(!c) return null;
     if(!t) return this.appendChild$nm(c);
     isabove(c, this);
-    if(c.nodeType == 11) return insertFragment(this, c, t);
-    if(c.parentNode) c.parentNode.removeChild(c);
+    if(c.nodeType == 11) return insertFragment$nm(this, c, t);
+    if(c.parentNode) c.parentNode.removeChild$nm(c);
     const cn = this.childNodes;
     const l = cn.length;
     let mark = -1;
@@ -4291,10 +4342,8 @@ nodep.insertBefore$nm = function(c, t) {
     cn.splice(mark, 0, c);
     c.parentNode = this;
     domLinkage('b', this, "", c, t); // update the tree in C
-    if(c.nodeType != 3) {
-                checkUpward(this);
+    if(c.nodeType != 3)
         runScriptWhenAttached(c);
-    }
     return c;
 }
 
@@ -4331,9 +4380,6 @@ nodep.removeChild$nm = function(c) {
     cn.splice(mark, 1);
     c.parentNode = null;
     domLinkage('r', this, "", c);
-    if(c.nodeType != 3) {
-        checkUpward(this);
-    }
     return c;
 }
 
@@ -4722,59 +4768,145 @@ odp(elemp, "previousElementSibling", { get: function() {
 return getElementSibling(this,"previous")} })
 
 elemp.append = function() {
-let l = arguments.length;
-for(let i=0; i<l; ++i) {
-let c = arguments[i];
-if(typeof c == "string") c = d.createTextNode(c); // convert to node
-if(c.nodeType > 0) this.appendChild(c);
-}
+    const additions = [];
+    for(let c of arguments) {
+        if(typeof c == "string") c = d.createTextNode(c);
+        if(c.nodeType == 11) { // descend into fragment
+            // make one mutation record to delete all the nodes under fragment
+            // but fragment isn't rooted and it shouldn't matter.
+            const deletions = [];
+            for(let f of c.children) {
+                if(typeof f == "string") f = d.createTextNode(f);
+                if(f.nodeType == 11) { alert3("append fragment recursion"); continue; }
+                c.removeChild$nm(f);
+                this.appendChild$nm(f);
+                additions.push(f);
+                deletions.push(f);
+            }
+            checkUpward(c);
+            mutFixup(c, 0, 0, deletions);
+            continue;
+        }
+    c.remove();
+        this.appendChild$nm(c);
+        additions.push(c);
+    }
+    checkUpward(this);
+    mutFixup(this, 0, additions, null);
 }
 
 elemp.prepend = function() {
-let l = arguments.length;
-for(let i=l-1; i>=0; --i) {
-let c = arguments[i];
-if(typeof c == "string") c = d.createTextNode(c); // convert to node
-if(c.nodeType > 0) this.prepend$child(c);
-}
+    const additions = [];
+    const first = this.firstChild;
+    for(let c of arguments) {
+        if(typeof c == "string") c = d.createTextNode(c);
+        if(c.nodeType == 11) { // descend into fragment
+            const deletions = [];
+            for(let f of c.children) {
+                if(typeof f == "string") f = d.createTextNode(f);
+                if(f.nodeType == 11) { alert3("prepend fragment recursion"); continue; }
+                c.removeChild$nm(f);
+                this.insertBefore$nm(f, first);
+                additions.push(f);
+                deletions.push(f);
+            }
+            checkUpward(c);
+            mutFixup(c, 0, 0, deletions);
+            continue;
+        }
+    c.remove();
+        this.insertBefore$nm(c, first);
+        additions.push(c);
+    }
+    checkUpward(this);
+    mutFixup(this, 0, additions, null);
 }
 
 elemp.before = function() {
-let p = this.parentNode;
-if(!p) return;
-let l = arguments.length;
-for(let i=0; i<l; ++i) {
-let c = arguments[i];
-if(typeof c == "string") c = d.createTextNode(c);
-if(c.nodeType > 0) p.insertBefore(c, this);
-}
+    const p = this.parentNode;
+    if(!p) return;
+    const additions = [];
+    for(let c of arguments) {
+        if(typeof c == "string") c = d.createTextNode(c);
+        if(c.nodeType == 11) { // descend into fragment
+            const deletions = [];
+            for(let f of c.children) {
+                if(typeof f == "string") f = d.createTextNode(f);
+                if(f.nodeType == 11) { alert3("before fragment recursion"); continue; }
+                c.removeChild$nm(f);
+                p.insertBefore$nm(f, this);
+                additions.push(f);
+                deletions.push(f);
+            }
+            checkUpward(c);
+            mutFixup(c, 0, 0, deletions);
+            continue;
+        }
+    c.remove();
+        p.insertBefore$nm(c, this);
+        additions.push(c);
+    }
+    checkUpward(this);
+    mutFixup(p, 0, additions, null);
 }
 
 elemp.after = function() {
-let p = this.parentNode;
-if(!p) return;
-let l = arguments.length;
-let n = this.nextSibling;
-for(let i=0; i<l; ++i) {
-let c = arguments[i];
-if(typeof c == "string") c = d.createTextNode(c);
-if(c.nodeType > 0)
-n ? p.insertBefore(c,n) : p.appendChild(c);
-}
+    const p = this.parentNode;
+    if(!p) return;
+    const n = this.nextSibling;
+    const additions = [];
+    for(let c of arguments) {
+        if(typeof c == "string") c = d.createTextNode(c);
+        if(c.nodeType == 11) { // descend into fragment
+            const deletions = [];
+            for(let f of c.children) {
+                if(typeof f == "string") f = d.createTextNode(f);
+                if(f.nodeType == 11) { alert3("after fragment recursion"); continue; }
+                c.removeChild$nm(f);
+                p.insertBefore$nm(f, n);
+                additions.push(f);
+                deletions.push(f);
+            }
+            checkUpward(c);
+            mutFixup(c, 0, 0, deletions);
+            continue;
+        }
+    c.remove();
+        p.insertBefore$nm(c, n);
+        additions.push(c);
+    }
+    checkUpward(this);
+    mutFixup(p, 0, additions, null);
 }
 
 elemp.replaceWith = function() {
-let p = this.parentNode;
-if(!p) return;
-let l = arguments.length;
-let n = this.nextSibling;
-for(let i=0; i<l; ++i) {
-let c = arguments[i];
-if(typeof c == "string") c = d.createTextNode(c);
-if(c.nodeType > 0)
-n ? p.insertBefore(c,n) : p.appendChild(c);
-}
-p.removeChild(this);
+    const p = this.parentNode;
+    if(!p) return;
+    const n = this.nextSibling;
+    const additions = [];
+    for(let c of arguments) {
+        if(typeof c == "string") c = d.createTextNode(c);
+        if(c.nodeType == 11) { // descend into fragment
+            const deletions = [];
+            for(let f of c.children) {
+                if(typeof f == "string") f = d.createTextNode(f);
+                if(f.nodeType == 11) { alert3("replaceWith fragment recursion"); continue; }
+                c.removeChild$nm(f);
+                p.insertBefore$nm(f, n);
+                additions.push(f);
+                deletions.push(f);
+            }
+            checkUpward(c);
+            mutFixup(c, 0, 0, deletions);
+            continue;
+        }
+    this.removeChild(c);
+        p.insertBefore$nm(c, n);
+        additions.push(c);
+    }
+    p.removeChild$nm(this);
+    checkUpward(p);
+    mutFixup(p, 0, additions, null);
 }
 
 // replaceChildren not yet implemented
@@ -5102,6 +5234,7 @@ function newTextUnder(top, s, flavor)
     } else {
         mutFixup(top, 0, oldlist, null);
     }
+    checkUpward(top);
 }
 
 odp(helemp, "textContent", {
