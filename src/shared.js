@@ -5490,45 +5490,6 @@ tablep.deleteTFoot = function() {
 if(this.tFoot) this.removeChild(this.tFoot);
 }
 
-// row methods
-trp.appendChildNative = nodep.appendChild;
-trp.appendChild = function(newobj) {
-if(!newobj) return null;
-if(newobj.nodeType == 11) return appendFragment(this, newobj);
-this.appendChildNative(newobj);
-if(newobj.nodeName === "TD") // shouldn't be anything other than TD
-this.cells.push(newobj);
-return newobj;
-}
-trp.insertBeforeNative = nodep.insertBefore;
-trp.insertBefore = function(newobj, item) {
-if(!newobj) return null;
-if(!item) return this.appendChild(newobj);
-if(newobj.nodeType == 11) return insertFragment(this, newobj, item);
-const r = this.insertBeforeNative(newobj, item);
-if(!r) return null;
-if(newobj.nodeName === "TD")
-for(let i=0; i<this.cells.length; ++i)
-if(this.cells[i] == item) {
-this.cells.splice(i, 0, newobj);
-break;
-}
-return newobj;
-}
-trp.removeChildNative = nodep.removeChild;
-trp.removeChild = function(item) {
-if(!item) return null;
-if(!this.removeChildNative(item))
-return null;
-if(item.nodeName === "TD")
-for(let i=0; i<this.cells.length; ++i)
-if(this.cells[i] == item) {
-this.cells.splice(i, 1);
-break;
-}
-return item;
-}
-
 // options, option groups, and the select element
 swde("HTMLOptionElement", class extends w.HTMLElement {
     constructor()
