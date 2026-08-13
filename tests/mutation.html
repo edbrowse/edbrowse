@@ -108,11 +108,21 @@ of the fragments are transferred.
 How does this all play out with the records?
 That's what we're going to find out. */
 frag = document.createDocumentFragment();
-frag.innerHTML = "<span n=40></span><span n=41></span>";
+span = document.createElement("span");
+span.setAttribute("n", 40);
+frag.appendChild(span);
+span = document.createElement("span");
+span.setAttribute("n", 41);
+frag.appendChild(span);
 node4.append(makeNode(33), makeNode(37), frag, makeNode(30));
-frag.innerHTML = "<span n=42></span><span n=43></span>";
+span = document.createElement("span");
+span.setAttribute("n", 42);
+node42 = span;
+frag.appendChild(span);
+span = document.createElement("span");
+span.setAttribute("n", 43);
+frag.appendChild(span);
 node4.prepend(makeNode(34), makeNode(38), frag, makeNode(31));
-node42 = makeNode(42);
 node42.before(makeNode(39));
 node42.after(makeNode(32), "zz");
 node42.replaceWith(makeNode(35), "yy", makeNode(36));

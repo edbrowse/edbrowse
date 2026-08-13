@@ -6751,11 +6751,14 @@ for(let c of [
 "HTMLLinkElement", "HTMLMetaElement", "HTMLOptGroupElement", "HTMLOptionElement",
 "HTMLScriptElement", "HTMLStyleElement",
 "HTMLTimeElement", "HTMLUnknownElement",
-"ProcessingInstruction", "Text",
-"z$Datalist", "z$HTML", "z$Title", "z$tCap"])
+"ProcessingInstruction", "Text", "DocumentFragment",
+"z$Datalist", "z$HTML", "z$Title", "z$tCap"]) {
     odp(w[c].prototype, "innerHTML", {
-        get: function(){ return ""},
-        set: function(h){}})
+        get: function(){ return this.inner$html},
+        set: function(h){this.inner$HTML = h}})
+    odp(w[c].prototype, "inner$HTML", {
+    value:"", writable:true});
+}
 
 // We've defined the HTMLElement classes, now let's create instances of them.
 docp.createElement = function(s) {
