@@ -135,6 +135,16 @@ if(c.nodeType == 3) h += c.data; else if(c.firstChild) h += c.firstChild.data; e
 }
 if(h != "34383935yy3632zz4331abc3337404130") msg += `|nodes ${h} are in the wrong order`;
 
+// apendChild(frag) calls a special routine
+span = document.createElement("span");
+span.textContent = "Alaska ";
+frag.appendChild(span);
+span = document.createElement("span");
+span.textContent = "Hawaii";
+frag.appendChild(span);
+node6.appendChild(frag);
+if(node6.textContent != "Alaska Hawaii") msg += "|bad appendChild(frag)";
+
 // create and remove an attribute.
 node5.setAttribute("r@*s", "cat dog");
 node5.removeAttribute("jam");
@@ -174,7 +184,7 @@ log2 = log.replace(/(\{1:~SCRIPT\[]>\[HR]}) (.*)$/,
 (a,b,c)=>{return c+' '+b});
 }
 correct = // according to chrome
-' {3:worm=round>flat} {OL:~LI[]>[LI]} {3:[]OL~>[BLOCKQUOTE]} {4:[P,P]>[SPAN,SPAN,SPAN]} {4:~SPAN[SPAN]>[]} {5:[SPAN]"Barney and Betty"~>[]} {4:~SPAN[]>[SPAN]} {6:~32[33]34~>[]} {6:~36[37]38~>[]} {6:[30]31~>[]} {4:~SPAN[]>[33,37,40,41,30]} {6:~32[34]35~>[]} {6:~36[38]39~>[]} {6:[31]32~>[]} {4:[]SPAN~>[34,38,42,43,31]} {6:~36[39]>[]} {4:~38[]42~>[39]} {6:[32]35~>[]} {4:~42[]43~>[32,"zz"]} {6:[35]36~>[]} {6:[36]>[]} {4:~39[42]32~>[35,"yy",36]} {5:r@*s=null>cat dog} {5:jam=boysenberry>null} {"Barney and Betty":character=Fred and Wilma>Barney and Betty} {2:["start"]>["mid"]} {3:[]OL~>[BLOCKQUOTE]} {1:~SCRIPT[]>[HR]}';
+' {3:worm=round>flat} {OL:~LI[]>[LI]} {3:[]OL~>[BLOCKQUOTE]} {4:[P,P]>[SPAN,SPAN,SPAN]} {4:~SPAN[SPAN]>[]} {5:[SPAN]"Barney and Betty"~>[]} {4:~SPAN[]>[SPAN]} {6:~32[33]34~>[]} {6:~36[37]38~>[]} {6:[30]31~>[]} {4:~SPAN[]>[33,37,40,41,30]} {6:~32[34]35~>[]} {6:~36[38]39~>[]} {6:[31]32~>[]} {4:[]SPAN~>[34,38,42,43,31]} {6:~36[39]>[]} {4:~38[]42~>[39]} {6:[32]35~>[]} {4:~42[]43~>[32,"zz"]} {6:[35]36~>[]} {6:[36]>[]} {4:~39[42]32~>[35,"yy",36]} {6:[]>[SPAN,SPAN]} {5:r@*s=null>cat dog} {5:jam=boysenberry>null} {"Barney and Betty":character=Fred and Wilma>Barney and Betty} {2:["start"]>["mid"]} {3:[]OL~>[BLOCKQUOTE]} {1:~SCRIPT[]>[HR]}';
 if(log2 != correct) msg += "|rules don't match";
 // make the rules one per line, for readability.
 ob1.disconnect();
