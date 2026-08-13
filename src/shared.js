@@ -5148,6 +5148,7 @@ function nameSpill(n) {
     return  dc == "HTMLInputElement" ||
     dc == "HTMLButtonElement" ||
     dc == "HTMLSelectElement" ||
+    dc == "HTMLFormElement" ||
     dc == "HTMLImageElement" ||
     dc == "HTMLIFrameElement" ||
     dc == "HTMLFrameElement" ||

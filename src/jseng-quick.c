@@ -3896,11 +3896,14 @@ void establish_js_option(Tag *t, Tag *sel, Tag *og)
 	JSValue cn; // childNodes
 
 	if(!sel->jslink) return;
-
 	selobj = *((JSValue*)sel->jv);
-	if(og) ogobj = *((JSValue*)og->jv);
+	oo = instantiate(cx, selobj, 0, "HTMLOptionElement");
+connectTagObject(t, oo);
+
+	// add to options array
 	oa = get_property_object(cx, selobj, "options");
-	oo = instantiate_array_element(cx, oa, idx, "Option");
+	idx = get_arraylength(cx, oa);
+	set_array_element_object(cx, oa, idx, oo);
 	if(t->checked) {
 		soa = get_property_object(cx, selobj, "selectedOptions");
 		set_array_element_object(cx, soa, idx, oo);
@@ -3913,11 +3916,11 @@ void establish_js_option(Tag *t, Tag *sel, Tag *og)
 		JS_Release(cx, fo);
 	}
 // add option under select or under optgroup
+	if(og) ogobj = *((JSValue*)og->jv);
 	cn = get_property_object(cx, (og ? ogobj : selobj), "childNodes");
 idx = get_arraylength(cx, cn);
 	set_array_element_object(cx, cn, idx, oo);
 	set_property_object(cx, oo, "parentNode", (og ? ogobj : selobj));
-connectTagObject(t, oo);
 	JS_Release(cx, cn);
 	JS_Release(cx, oa);
 }
