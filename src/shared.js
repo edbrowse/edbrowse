@@ -6826,6 +6826,7 @@ case "div": c = new w.HTMLDivElement; break;
 case "span": c = new w.HTMLSpanElement; break;
 case "label": c = new w.HTMLLabelElement; break;
 case "hr": c = new w.HTMLHRElement; break;
+case "blockquote": case "q": c = new w.HTMLQuoteElement; break;
 case "p": c = new w.HTMLParagraphElement; break;
 case "ol": c = new w.HTMLOListElement; break;
 case "ul": c = new w.HTMLUListElement; break;

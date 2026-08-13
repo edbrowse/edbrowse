@@ -106,7 +106,7 @@ static const struct tagInfo availableTags[] = {
 	{"ovb", "an overbar", TAGACT_OVB, 0, 0},
 	{"p", "a paragraph", TAGACT_P, 10, 1},
 	{"pre", "a preformatted section", TAGACT_PRE, 10, 0},
-	{"q", "quoted text", TAGACT_BQ, 0, 0},
+	{"q", "quoted text", TAGACT_BQ, 0, 1},
 	{"s", "strikethrough text", TAGACT_S, 0, 0},
 	{"samp", "a block of sample text", TAGACT_NOP, 0, 0},
 	{"script", "a script", TAGACT_SCRIPT, 0, 3},
