@@ -2,7 +2,7 @@
 <p id=show n=2>start</p>
 <div n=3 worm="round"><ol><li>apple<li>orange</ol></div>
 <div n=4><p>1</p><p>2</p></div>
-<div n=5><span>c</span></div>
+<div n=5 jam=boysenberry><span>c</span>Fred and Wilma</div>
 <div n=6><span n=30></span><span n=31></span><span n=32></span><span n=33></span><span n=34></span><span n=35></span><span n=36></span><span n=37></span><span n=38></span><span n=39></span></div>
 
 <script>
@@ -135,6 +135,16 @@ if(c.nodeType == 3) h += c.data; else if(c.firstChild) h += c.firstChild.data; e
 }
 if(h != "34383935yy3632zz4331abc3337404130") msg += `|nodes ${h} are in the wrong order`;
 
+// create and remove an attribute.
+node5.setAttribute("r@*s", "cat dog");
+node5.removeAttribute("jam");
+
+/* character data update.
+Note that Text.data has no spillup or spilldown -
+it's not clear that Text has an attribute system at all.
+characterData is triggered by accessing data directly. Like this. */
+node5.lastChild.data = "Barney and Betty";
+
 /* log is still empty, because these observers run asynchronously.
 change it to middle so we know we got this far.
 The timer will fire in half a second and overwrite it.
@@ -164,7 +174,7 @@ log2 = log.replace(/(\{1:~SCRIPT\[]>\[HR]}) (.*)$/,
 (a,b,c)=>{return c+' '+b});
 }
 correct = // according to chrome
-' {3:worm=round>flat} {OL:~LI[]>[LI]} {3:[]OL~>[BLOCKQUOTE]} {4:[P,P]>[SPAN,SPAN,SPAN]} {4:~SPAN[SPAN]>[]} {5:[SPAN]>[]} {4:~SPAN[]>[SPAN]} {6:~32[33]34~>[]} {6:~36[37]38~>[]} {6:[30]31~>[]} {4:~SPAN[]>[33,37,40,41,30]} {6:~32[34]35~>[]} {6:~36[38]39~>[]} {6:[31]32~>[]} {4:[]SPAN~>[34,38,42,43,31]} {6:~36[39]>[]} {4:~38[]42~>[39]} {6:[32]35~>[]} {4:~42[]43~>[32,"zz"]} {6:[35]36~>[]} {6:[36]>[]} {4:~39[42]32~>[35,"yy",36]} {2:["start"]>["mid"]} {3:[]OL~>[BLOCKQUOTE]} {1:~SCRIPT[]>[HR]}';
+' {3:worm=round>flat} {OL:~LI[]>[LI]} {3:[]OL~>[BLOCKQUOTE]} {4:[P,P]>[SPAN,SPAN,SPAN]} {4:~SPAN[SPAN]>[]} {5:[SPAN]"Barney and Betty"~>[]} {4:~SPAN[]>[SPAN]} {6:~32[33]34~>[]} {6:~36[37]38~>[]} {6:[30]31~>[]} {4:~SPAN[]>[33,37,40,41,30]} {6:~32[34]35~>[]} {6:~36[38]39~>[]} {6:[31]32~>[]} {4:[]SPAN~>[34,38,42,43,31]} {6:~36[39]>[]} {4:~38[]42~>[39]} {6:[32]35~>[]} {4:~42[]43~>[32,"zz"]} {6:[35]36~>[]} {6:[36]>[]} {4:~39[42]32~>[35,"yy",36]} {5:r@*s=null>cat dog} {5:jam=boysenberry>null} {"Barney and Betty":character=Fred and Wilma>Barney and Betty} {2:["start"]>["mid"]} {3:[]OL~>[BLOCKQUOTE]} {1:~SCRIPT[]>[HR]}';
 if(log2 != correct) msg += "|rules don't match";
 // make the rules one per line, for readability.
 ob1.disconnect();
