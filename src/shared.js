@@ -3561,7 +3561,8 @@ t.rows.push(s.rows[j]), s.rows[j].rowIndex = n++, s.rows[j].sectionRowIndex = j;
             t.rows.push(s), s.rowIndex = n++, s.sectionRowIndex = j;
 }
 
-function rowReindex2(t) {
+function rowReindex2(t)
+{
     while(t) {
         if(t.nodeType != 1) return; // stop ad document or fragment
         if(t.dom$class == "HTMLTableElement") {
@@ -3580,10 +3581,10 @@ function cellReindex(r)
 }
 
 /*********************************************************************
-This function, and the modified appendChild removeChild insertBefore methods,
-for table and table sections and table row, don't do what they need to do
-relative to rows unless tr is directly below table,
-(with a possible table section in between), and td is directly below tr.
+This function, combined with the helper functions above,
+don't do what they need to do relative to rows,
+unless tr is directly below table, (with a possible table section in between),
+and td is directly below tr.
 Any intervening tags will blow it.
 <table><div><tr>...</tr></div></table>
 I haven't seen a website in the wild that does this, yet,
@@ -3637,7 +3638,8 @@ function rowReindex(t)
 }
 
 // more efficient than querySelectorAll
-function gatherInputElements(t) {
+function gatherInputElements(t)
+{
 let a = [];
 if(t.nodeType == 1) {
 let inclass = t.dom$class;
@@ -3742,6 +3744,37 @@ function formReindex2(t)
         t = t.parentNode;
     }
 }
+
+/*********************************************************************
+Given a select tag, build the options array, and selectedOptions array
+below it. Again, some structure is assumed.
+Options are directly below select, or, they are in opt groups
+which are below select.
+*********************************************************************/
+
+function selectReindex(t)
+{
+    // do not replace the array with a new one, this is suppose to be a live array
+    const a = t.selectedOptions;
+    const o = t.options;
+    o.length = 0; a.length = 0;
+    for(const c of t.children) {
+        if (c.nodeName == "OPTION") {
+            o.push(c);
+            if(c.selected) a.push(c);
+            continue;
+        }
+        if(c.nodeName != "OPTGROUP") continue;
+        for(const d of c.children) {
+            if(d.nodeName == "OPTION") {
+                o.push(d);
+                if(d.selected) a.push(d);
+            }
+        }
+    }
+}
+
+function selectReindexThis() { selectReindex(this); }
 
 function checkUpward(t) {
     formReindex2(t);
@@ -5566,6 +5599,8 @@ swde("HTMLSelectElement", class extends w.HTMLElement {
 
 const selp = w.HTMLSelectElement.prototype;
 
+selp.selectReindexThis = selectReindexThis;
+
 // A helper function for <option> coming from html.
 function option_from_html(o){
     this.childNodes.push(o);
@@ -5587,29 +5622,6 @@ function option_from_html(o){
 }
 optgp.option_from_html = option_from_html;
 selp.option_from_html = option_from_html;
-
-selp.eb$bso = function() { // build selected options array
-    // do not replace the array with a new one, this is suppose to be a live array
-    const a = this.selectedOptions;
-    const o = this.options;
-    a.length = 0;
-    o.length = 0;
-    const cn = this.childNodes;
-    for(let i=0; i<cn.length; ++i) {
-        if (cn[i].nodeName == "OPTION") {
-            o.push(cn[i]);
-            if(cn[i].selected) a.push(cn[i]);
-        }
-        if(cn[i].nodeName != "OPTGROUP") continue;
-        const og = cn[i];
-        const cn2 = og.childNodes;
-        for(let j=0; j<cn2.length; ++j)
-            if(cn2[j].nodeName == "OPTION") {
-                o.push(cn2[j]);
-                if(cn2[j].selected) a.push(cn2[j]);
-            }
-    }
-}
 
 /*********************************************************************
 Look out! Select class maintains an array of options beneath,
@@ -5634,7 +5646,7 @@ selp.appendChild = function(newobj) {
     const l = this.childNodes.length;
     if(newobj.defaultSelected) newobj.selected = true, this.selectedIndex = l;
     this.childNodes.push(newobj); newobj.parentNode = this;
-    this.eb$bso();
+    selectReindex(this);
     mutFixup(this, 0, newobj, null);
     return newobj;
 }
@@ -5659,7 +5671,7 @@ selp.insertBefore = function(newobj, item) {
         // side effect, object is freeed from wherever it was.
         return null;
     }
-    this.eb$bso();
+    selectReindex(this);
     mutFixup(this, 0, newobj, null);
     return newobj;
 }
@@ -5671,7 +5683,7 @@ selp.removeChild = function(item) {
     if(i == this.childNodes.length) return null;
     this.childNodes.splice(i, 1);
     item.parentNode = null;
-    this.eb$bso();
+    selectReindex(this);
     mutFixup(this, 0, i, item);
     return item;
 }

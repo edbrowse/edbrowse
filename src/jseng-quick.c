@@ -4106,7 +4106,7 @@ I'm bringing the tags back to life.
 	if (!sel->multiple)
 		set_property_number(cx, *((JSValue*)sel->jv), "selectedIndex", sel->lic);
 // rebuild the live selectedOptions array
-	run_function_bool(cx, *((JSValue*)sel->jv), "eb$bso");
+	run_function_bool(cx, *((JSValue*)sel->jv), "selectReindexThis");
 }
 
 void rebuildSelectors(void)
