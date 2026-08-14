@@ -206,11 +206,11 @@ for(let f of ["my$win", "my$doc", "natok", "UnsupportedError", "db$flags",
 "eb$voidfunction", "eb$nullfunction", "eb$truefunction", "eb$falsefunction",
 "eb$visible", "eb$newLocation", "alert3", "alert4",
 "dumptree", "uptrace", "by_esn", "showscripts", "searchscripts",
-"showframes", "snapshot", "aloop", "showarg", "showarglist",
+"showframes", "snapshot", "aloop",
 "set_location_hash", "NodeFilter", "tableReindex", "formReindex", "selectReindex",
 "mutFixup", "makeSheets"])
     swp(f, mw$[f]);
-for(let f of ["alert", "confirm", "prompt", "close"])
+for(let f of ["confirm", "prompt", "close"])
     swpv(f, mw$[f]);
 for(let f of ["scroll", "scrollTo", "scrollBy", "scrollByLines", "scrollByPages"])
     swpv(f, mw$.eb$voidfunction);
@@ -721,10 +721,10 @@ return cf;
 
 // Request, Response, Headers, fetch; link to third party code in master window.
 // fetch calls XMLHttpRequest, but puts the Response in a Promise
-swpc("Headers", mw$.Headers)
-swpc("Request", mw$.Request)
-swpc("Response", mw$.Response)
-swpc("fetch", mw$.fetch)
+for(let f of [
+"Headers", "Request", "Response", "fetch",
+"alert", "showarg", "showarglist"])
+    swpc(f, mw$[f]);
 
 // pages seem to want document.style to exist
 sdp("style", new CSSStyleDeclaration)
