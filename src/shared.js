@@ -4540,6 +4540,18 @@ nodep.getElementsByTagName = getElementsByTagName;
 nodep.getElementsByName = getElementsByName;
 nodep.getElementsByClassName = getElementsByClassName;
 odp(nodep, "inner$HTML", {value:"", writable:true})
+
+// If all these Node methods return [native code], as they are
+// suppose to, then the same holds for the downstream classes,
+// like HTMLElement.appendChild etc.
+for( let k of [
+"hasChildNodes", "appendChild", "insertBefore", "removeChild",
+"getClientRects", "cloneNode", "querySelectorAll",
+"focus", "blur",
+"getBoundingClientRect", "compareDocumentPosition", "getRootNode"])
+    // wrapString doesn't work here because they are anonymous functions
+    eval(`Object.defineProperty(nodep.${k}, "toString", {value: ()=>{return "function ${k}() {\\n    [native code]\\n}"}})`);
+
 swde("Document", class extends w.Node {
     constructor()
     {
@@ -9989,16 +10001,15 @@ Response.prototype.toString = function(){return "[object Response]"}
 // end third party code.
 
 // have these functions say "native code" when stringified
-var flist = [
+for(let k of [
 getElementsByTagName, getElementsByClassName, getElementsByName, getElementById,nodeContains,
 dispatchEvent, addEventListener, removeEventListener,
 NodeFilter,createNodeIterator,createTreeWalker,
 runScriptWhenAttached, connectedCallbackCheck, handlerCompile,
 traceBreakReplace,
 getComputedStyle,
-URL, TextEncoder, TextDecoder];
-for(let k of flist)
-Object.defineProperty(k, "toString",{value:wrapString});
+URL, TextEncoder, TextDecoder])
+    Object.defineProperty(k, "toString",{value:wrapString});
 
 // objects and particularly classes have to be frozen,
 // so nobody replaces their prototype or the methods beneath
