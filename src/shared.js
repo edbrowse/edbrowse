@@ -5086,15 +5086,6 @@ elemp.scrollWidth = 120;
 elemp.scrollTop = 0;
 elemp.scrollLeft = 0;
 elemp.dir = "auto";
-elemp.focus = function(){d.activeElement=this}
-elemp.blur = function(){d.activeElement=null}
-elemp.getBoundingClientRect = function(){
-return {
-top: 0, bottom: 0, left: 0, right: 0,
-x: 0, y: 0,
-width: 0, height: 0
-}
-}
 elemp.scroll = eb$voidfunction;
 elemp.scrollBy = eb$voidfunction;
 elemp.scrollByLines = eb$voidfunction;
@@ -5130,6 +5121,11 @@ break;
 // establish the style object, for the calling function in css.c
 w.soj$ = z.style;
 }
+
+for(let k of [
+"append" , "prepend" , "before" , "after" , "replaceWith" ,
+"replaceChild" , "remove" , "closest" , "attachShadow" , "injectSetup" ])
+    eval(`Object.defineProperty(elemp.${k}, "toString", {value: ()=>{return "function ${k}() {\\n    [native code]\\n}"}})`);
 
 // The html element, which is the DOM nodes that you know and love.
 swde("HTMLElement", class extends w.Element {
@@ -10006,14 +10002,13 @@ getElementsByTagName, getElementsByClassName, getElementsByName, getElementById,
 dispatchEvent, addEventListener, removeEventListener,
 NodeFilter,createNodeIterator,createTreeWalker,
 runScriptWhenAttached, connectedCallbackCheck, handlerCompile,
-traceBreakReplace,
 getComputedStyle,
 URL, TextEncoder, TextDecoder])
     Object.defineProperty(k, "toString",{value:wrapString});
 
 // objects and particularly classes have to be frozen,
 // so nobody replaces their prototype or the methods beneath
-flist = [
+for(let k of [
 // We need Object.prototype to remain writable, for the deminimizer
 Function, Date, Math,
 Promise, Array, Uint8Array, Error, String, URL, URLSearchParams,
@@ -10021,8 +10016,7 @@ Intl_dt, Intl_num,
 Blob, FormData,
 Request, Response,
 Headers, UnsupportedError, Eb$HTMLCollectionHelper, Eb$NodeListHelper,
-Eb$CollectionHelper];
-for(let k of flist) {
-Object.freeze(k);
-Object.freeze(k.prototype);
+Eb$CollectionHelper]) {
+    Object.freeze(k);
+    Object.freeze(k.prototype);
 }
