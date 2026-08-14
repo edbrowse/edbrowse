@@ -318,7 +318,6 @@ void jSyncup(bool fromtimer, const Tag *active)
         if (itype == INP_SELECT) {
 // set option.selected in js based on the option(s) in value
             locateOptions(t, (value ? value : t->value), 0, 0, true);
-            run_function_bool_t(t, "selectReindexThis");
             if (value) {
                 nzFree(t->value);
                 t->value = value;

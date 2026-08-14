@@ -4708,7 +4708,10 @@ Needless to say that's not good!
     if (!opentag) {
 // run reindex at table close
         if (action == TAGACT_TABLE && t->jslink)
-            run_function_onearg_win(cf, "rowReindex", t);
+            run_function_onearg_win(cf, "tableReindex", t);
+
+        if (action == TAGACT_INPUT && t->itype == INP_SELECT && t->jslink)
+            run_function_onearg_win(cf, "selectReindex", t);
 
 // run reindex at form or fieldset close
         if ((action == TAGACT_FORM || action == TAGACT_FIELDSET) && t->jslink)

@@ -207,8 +207,8 @@ for(let f of ["my$win", "my$doc", "natok", "UnsupportedError", "db$flags",
 "eb$visible", "eb$newLocation", "alert3", "alert4",
 "dumptree", "uptrace", "by_esn", "showscripts", "searchscripts",
 "showframes", "snapshot", "aloop", "showarg", "showarglist",
-"set_location_hash", "NodeFilter", "rowReindex", "formReindex", "mutFixup",
-"makeSheets"])
+"set_location_hash", "NodeFilter", "tableReindex", "formReindex", "selectReindex",
+"mutFixup", "makeSheets"])
     swp(f, mw$[f]);
 for(let f of ["alert", "confirm", "prompt", "close"])
     swpv(f, mw$[f]);

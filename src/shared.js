@@ -2225,7 +2225,7 @@ node2.setAttribute(node1.attributes[l].name, node1.attributes[l].value);
                 continue;
             }
 // mutation observers don't apply to these newly created items.
-// I can call the faster, simpler apendChild method.
+// I can call the faster, simpler appendChild method.
             node2.appendChild$nm(clone1(current_item,deep, into));
         }
     }
@@ -2235,7 +2235,9 @@ node2.setAttribute(node1.attributes[l].name, node1.attributes[l].value);
         node1.dom$class == "HTMLFieldSetElement")
             formReindex(node2);
         if(node1.dom$class == "HTMLTableElement")
-            rowReindex(node2);
+            tableReindex(node2);
+        if(node1.dom$class == "HTMLSelectElement")
+            selectReindex(node2);
     }
 
     if(debug) alert3("}");
@@ -3523,7 +3525,7 @@ return port;
 }
 
 // It's crude, but reindex the rows under <table>.
-function rowReindex1(t)
+function tableReindex1(t)
 {
 let i, j, n = 0;
 let s; // section
@@ -3561,18 +3563,6 @@ t.rows.push(s.rows[j]), s.rows[j].rowIndex = n++, s.rows[j].sectionRowIndex = j;
             t.rows.push(s), s.rowIndex = n++, s.sectionRowIndex = j;
 }
 
-function rowReindex2(t)
-{
-    while(t) {
-        if(t.nodeType != 1) return; // stop ad document or fragment
-        if(t.dom$class == "HTMLTableElement") {
-            rowReindex(t);
-            return;
-        }
-        t = t.parentNode;
-    }
-}
-
 function cellReindex(r)
 {
     r.cells.length = 0; // crunch and rebuild
@@ -3593,7 +3583,7 @@ Note that formReindex doesn't suffer from theese restrictions.
 It is quite common to have tags between <form> and <input>.
 *********************************************************************/
 
-function rowReindex(t)
+function tableReindex(t)
 {
     delete t.tHead; delete t.tFoot; delete t.caption; // crunch and rebuild
     t.tBodies.length = 0;
@@ -3634,10 +3624,12 @@ function rowReindex(t)
         }
     }
 
-    rowReindex1(t);
+    tableReindex1(t);
 }
 
-// more efficient than querySelectorAll
+// More efficient than querySelectorAll.
+// Assumes there is never a form within a form; hence all input
+/// elements below belong to this form.
 function gatherInputElements(t)
 {
 let a = [];
@@ -3724,62 +3716,41 @@ function formReindex(f)
     }
 }
 
-// if we add or remove something from the tree, which is or was
-// part of a form, reindex the form. item doesn't have to be an input element,
-// it could be div with input elements below.
-// Parameter is the parent of the thing added or removed.
-function formReindex2(t)
-{
-    while(t) {
-        if(t.nodeType != 1) return; // stop ad document or fragment
-        if(t.dom$class == "HTMLFormElement") {
-            formReindex(t);
-            return;
-        }
-        if(t.dom$class == "HTMLFieldSetElement") {
-            formReindex(t);
-            // don't return; this is typically inside a form
-            // I assume fieldset is never inside a fieldset
-        }
-        t = t.parentNode;
-    }
-}
-
 /*********************************************************************
 Given a select tag, build the options array, and selectedOptions array
-below it. Again, some structure is assumed.
-Options are directly below select, or, they are in opt groups
-which are below select.
+below it. Assumes there is never a select within a select,
+hence all options below belong to this select.
+Some may be in optgroups, not direct children of select.
 *********************************************************************/
 
 function selectReindex(t)
 {
     // do not replace the array with a new one, this is suppose to be a live array
-    const a = t.selectedOptions;
     const o = t.options;
+    const a = t.selectedOptions;
     o.length = 0; a.length = 0;
-    for(const c of t.children) {
-        if (c.nodeName == "OPTION") {
-            o.push(c);
-            if(c.selected) a.push(c);
-            continue;
-        }
-        if(c.nodeName != "OPTGROUP") continue;
-        for(const d of c.children) {
-            if(d.nodeName == "OPTION") {
-                o.push(d);
-                if(d.selected) a.push(d);
-            }
-        }
+    for(const c of gebtn(t, "option", false, false)) {
+        o.push(c);
+        if(c.selected) a.push(c);
     }
 }
 
-function selectReindexThis() { selectReindex(this); }
-
-function checkUpward(t) {
-    formReindex2(t);
-    rowReindex2(t);
-    markUpwardCollections(t);
+function checkUpward(t)
+{
+    let tabledone = false, formdone = false, selectdone = false;
+    while(t) {
+        markNodeCollections(t);
+        if(t.nodeType != 1) break; // stop at document
+        const inclass = t.dom$class;
+        // tables do nest, often, so stop at the first table
+        if(!tabledone && inclass == "HTMLTableElement") { tableReindex(t); tabledone = true; }
+        // forms don't nest, but let's retain the design anyways.
+        if(!formdone && inclass == "HTMLFormElement") { formReindex(t); formdone = true; }
+        // fieldset can be inside a form, so don't set formdone just because we saw fieldset.
+        if(!formdone && inclass == "HTMLFieldSetElement") formReindex(t);
+        if(!selectdone && inclass == "HTMLSelectElement") { selectReindex(t); selectdone = true; }
+        t = t.parentNode;
+    }
 }
 
 /*********************************************************************
@@ -5598,8 +5569,7 @@ swde("HTMLSelectElement", class extends w.HTMLElement {
 })
 
 const selp = w.HTMLSelectElement.prototype;
-
-selp.selectReindexThis = selectReindexThis;
+selp.selectReindexThis = ()=> { selectReindex(this); }
 
 // A helper function for <option> coming from html.
 function option_from_html(o){
@@ -5637,55 +5607,34 @@ Actually we shouldn't be calling this routine at all; should be calling add(),
 so I don't even know if this makes sense.
 *********************************************************************/
 
-selp.appendChild = function(newobj) {
-    if(!newobj) return null;
-    // should only be options!
-    if(!(newobj.dom$class == "HTMLOptionElement")) return newobj;
-    isabove(newobj, this);
-    if(newobj.parentNode) newobj.parentNode.removeChild(newobj);
-    const l = this.childNodes.length;
-    if(newobj.defaultSelected) newobj.selected = true, this.selectedIndex = l;
-    this.childNodes.push(newobj); newobj.parentNode = this;
-    selectReindex(this);
-    mutFixup(this, 0, newobj, null);
-    return newobj;
-}
-selp.insertBefore = function(newobj, item) {
-    let i;
-    if(!newobj) return null;
-    if(!item) return this.appendChild(newobj);
-    if(!(newobj.dom$class == "HTMLOptionElement")) return newobj;
-    isabove(newobj, this);
-    if(newobj.parentNode) newobj.parentNode.removeChild(newobj);
-    for(i=0; i<this.childNodes.length; ++i)
-        if(this.childNodes[i] == item) {
-            this.childNodes.splice(i, 0, newobj);
-            newobj.parentNode = this;
-            if(newobj.defaultSelected) {
-                newobj.selected = true;
-                this.selectedIndex = i;
-            }
-            break;
-        }
-    if(i == this.childNodes.length) {
-        // side effect, object is freeed from wherever it was.
-        return null;
+// I have some wrappers here to manage some weird side effects.
+selp.appendChildNative = nodep.appendChild;
+selp.appendChild = function(c) {
+    if(!c) return null;
+    if(c.dom$class == "HTMLOptionElement") {
+        const l = this.childNodes.length;
+        if(c.defaultSelected) c.selected = true, this.selectedIndex = l;
     }
-    selectReindex(this);
-    mutFixup(this, 0, newobj, null);
-    return newobj;
+    return this.appendChildNative(c);
 }
-selp.removeChild = function(item) {
-    let i;
-    if(!item) return null;
-    for(i=0; i<this.childNodes.length; ++i)
-        if(this.childNodes[i] == item) break;
-    if(i == this.childNodes.length) return null;
-    this.childNodes.splice(i, 1);
-    item.parentNode = null;
-    selectReindex(this);
-    mutFixup(this, 0, i, item);
-    return item;
+
+selp.insertBeforeNative = nodep.insertBefore;
+selp.insertBefore = function(c, item) {
+    if(!c) return null;
+    if(!item) return this.appendChild(c);
+    if(c.dom$class == "HTMLOptionElement") {
+        // side effect; option is freed even if it can't reconnect
+        c.remove();
+        if(c.defaultSelected) {
+            c.selected = true;
+            for(let i=0; i<this.childNodes.length; ++i)
+                if(this.childNodes[i] == item) {
+                    this.selectedIndex = i;
+                    break;
+                }
+        }
+    }
+    return this.insertBeforeNative(c, item);
 }
 
 // these routines do not account for optgroups
