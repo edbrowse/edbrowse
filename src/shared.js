@@ -5613,17 +5613,15 @@ so I don't even know if this makes sense.
 *********************************************************************/
 
 // I have some wrappers here to manage some weird side effects.
-selp.appendChildNative = nodep.appendChild;
 selp.appendChild = function(c) {
     if(!c) return null;
     if(c.dom$class == "HTMLOptionElement") {
         const l = this.childNodes.length;
         if(c.defaultSelected) c.selected = true, this.selectedIndex = l;
     }
-    return this.appendChildNative(c);
+    return nodep.appendChild.call(this, c);
 }
 
-selp.insertBeforeNative = nodep.insertBefore;
 selp.insertBefore = function(c, item) {
     if(!c) return null;
     if(!item) return this.appendChild(c);
@@ -5639,7 +5637,7 @@ selp.insertBefore = function(c, item) {
                 }
         }
     }
-    return this.insertBeforeNative(c, item);
+    return nodep.insertBefore.calle(this, c, item);
 }
 
 // these routines do not account for optgroups
