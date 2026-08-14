@@ -703,8 +703,9 @@ if(s === "field|set" &&
 a.push(top);
 if(top.childNodes) {
 // don't descend into another frame.
-// The frame has no children through childNodes, so we don't really need this line.
-if(!top.is$frame)
+// The frame has no children through childNodes, so we don't really need this part.
+// Nor should we dip into a template.
+if(!top.is$frame && nn != "template")
 for(let c of top.childNodes)
 a = a.concat(gebtn(c, s, false, all));
 }
@@ -723,10 +724,11 @@ function getElementsByName(s)
 function gebn(top, s, first) {
 let a = [];
 if(!first && top.nodeType != 1) return a;
+const nn = top.nodeName ? top.nodeName.toLowerCase() : "";
 if(!first && (s === '*' || top.getAttribute("name") === s))
 a.push(top);
 if(top.childNodes) {
-if(!top.is$frame)
+if(!top.is$frame && nn != "template")
 for(let c of top.childNodes)
 a = a.concat(gebn(c, s, false));
 }
@@ -792,17 +794,18 @@ function getElementsByClassName(s)
 function gebcn(top, sa, first) {
 let a = [];
 if(!first && top.nodeType != 1) return a;
+const nn = top.nodeName ? top.nodeName.toLowerCase() : "";
 if(!first && top.cl$present) {
 var ok = true;
-for(var i=0; i<sa.length; ++i) {
-var w = sa[i];
+for(let i=0; i<sa.length; ++i) {
+let w = sa[i];
 if(w === '*') { ok = true; break; }
 if(!top.classList.contains(w)) { ok = false; break; }
 }
 if(ok) a.push(top);
 }
 if(top.childNodes) {
-if(!top.is$frame)
+if(!top.is$frame && nn != "template")
 for(let c of top.childNodes)
 a = a.concat(gebcn(c, sa, false));
 }
@@ -3742,6 +3745,8 @@ function checkUpward(t)
         markNodeCollections(t);
         if(t.nodeType != 1) break; // stop at document
         const inclass = t.dom$class;
+        // we should never break out of a template
+        if(inclass == "HTMLTemplateElement") break;
         // tables do nest, often, so stop at the first table
         if(!tabledone && inclass == "HTMLTableElement") { tableReindex(t); tabledone = true; }
         // forms don't nest, but let's retain the design anyways.
