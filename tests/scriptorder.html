@@ -40,7 +40,8 @@ last = document.getElementById("last")
 // order should be capture, fire, bubble. Thus xyw
 // even though these are capture and bubble, the phase is 2
 function handle_c(e) {
-h += 'x'
+h += 'x';
+if(this.src.substr(-3) != ".js") h += "@7";
 if(e.target != last || e.currentTarget != last) h += "@4";
 if(e.eventPhase != 2) h += "@5";
 }
