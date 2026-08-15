@@ -1375,15 +1375,15 @@ passes:
 	}
 
     if (!async) {
-        if(startbrowse) {
-            cf = save_cf;
-            runOnload();
-            runConnectedCallback();
-            startbrowse = false;
-            change = true;
-        }
         async = true;
         goto passes;
+    }
+
+    if(startbrowse) {
+        cf = save_cf;
+        runOnload();
+        runConnectedCallback();
+        startbrowse = false, change = true;
     }
 
     if (change) {

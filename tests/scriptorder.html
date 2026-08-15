@@ -1,7 +1,7 @@
-<head><script> h = "a"; v = ""; onlink = false; </script>
-<LINK href="sample.css" rel=stylesheet type=text/css onload="onlink = true">
+<head><script> h = "a"; on_css_load = false; </script>
+<LINK href="sample.css" rel=stylesheet type=text/css onload="on_css_load = true">
 </head>
-<body onload="v += 'l' + arguments[0].eventPhase">
+<body onload="h += 'l' + arguments[0].eventPhase">
 <p id="show">start</p>
 <div id="hs"></div>
 <script id=last src=scriptord1.js defer onload="h += 'y'"></script>
@@ -54,23 +54,25 @@ last.addEventListener("load", handle_b, false);
 // adding it again does nothing
 last.addEventListener("load", handle_b, false);
 
-document.addEventListener("DOMContentLoaded", ()=>(v += 'j'));
+document.addEventListener("DOMContentLoaded", ()=>(h += "/j"));
 document.addEventListener("readystatechange", ()=>{
-if(document.readyState == "complete") v += 'k'; })
-addEventListener("load", ()=>(v += 'm'));
+if(document.readyState == "complete") h += 'k'; })
+addEventListener("load", ()=>(h += 'm'));
 
 // indicate we are in the middle and the timer hasn't run yet
 show.innerHTML = "mid"
 
-// set a timer in case that innerHTML script ran later
-// And to accommodate the src scripts deferred
+queueMicrotask(()=>{h += 's'});
+
+// set a show timer in case that innerHTML script ran later
+// And to accommodate the src scripts deferred and the microtask.
 setTimeout(()=>{
-h += `/${v}`
+if(this != window) h += "@6";
 // I wanna fold the css onload function into the timing,
 // but it fetches asynchronously in chrome, so I can't guarantee when it will happen.
 // I'll just make sure it happened by now.
-if(!onlink) h += '@3';
-const correct = "abcefghizxyw/jkl2m";
+if(!on_css_load) h += '@3';
+const correct = "abcefghsizxyw/jkl2m";
 if(h == correct) show.innerHTML = "ok";
 else show.innerHTML = `ok|bad order  ${h} should be ${correct}`}, 600)
 } catch(e) { show.innerHTML = "blowup " + e;}
