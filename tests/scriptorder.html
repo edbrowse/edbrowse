@@ -64,6 +64,8 @@ show.innerHTML = "mid"
 
 queueMicrotask(()=>{h += 's'});
 
+setTimeout(()=>{h += "/t"}, 300);
+
 // set a show timer in case that innerHTML script ran later
 // And to accommodate the src scripts deferred and the microtask.
 setTimeout(()=>{
@@ -72,7 +74,7 @@ if(this != window) h += "@6";
 // but it fetches asynchronously in chrome, so I can't guarantee when it will happen.
 // I'll just make sure it happened by now.
 if(!on_css_load) h += '@3';
-const correct = "abcefghsizxyw/jkl2m";
+const correct = "abcefghsizxyw/jkl2m/t";
 if(h == correct) show.innerHTML = "ok";
 else show.innerHTML = `ok|bad order  ${h} should be ${correct}`}, 600)
 } catch(e) { show.innerHTML = "blowup " + e;}
