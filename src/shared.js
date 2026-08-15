@@ -1723,6 +1723,10 @@ attrNameValid: function(n) {
         alert3("spaces in attribute name");
         return false;
     }
+    if(n.match(/=/)) {
+        alert3("= in attribute name");
+        return false;
+    }
     return true;
 },
 
