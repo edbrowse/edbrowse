@@ -1,6 +1,7 @@
 <body>
 <p id=show>start</p>
-<form action= http://localhost:1200>
+<form action= http://localhost:1200
+*#  :&quot;`@what=where>
   <fieldset>
     <legend>Please select your preferred contact method:</legend>
     <div id=under>
@@ -34,6 +35,9 @@ Fruit: <select name=fruit multiple>
 show = document.getElementById("show")
 msg = "ok"
 const form = document.querySelector("form");
+// test weird attribute names
+if(form.getAttributeNames().join(';') != 'action;*#;:&quot;`@what') msg += "|form has wrong attributes";
+if(form.getAttribute(':&quot;`@what') != "where") msg += "|what where";
 const el = form.elements
 const fs = el[0]; // fieldset
 const fsel = fs.elements; // field set elements

@@ -1476,11 +1476,12 @@ static void findAttributes(const char *start, const char *end)
 	if(*end == '>' && end[-1] == '/') --end;
 
 	while(s < end) {
-// look for a C identifier, then whitespace, then =
-		if(!isalphaByte(*s)) { ++s; continue; }
+// look for just about anything, then whitespace, then =
+		while(isspaceByte(*s) || *s == '=') ++s;
+		if(s == end) break;
 		a1 = s; // start of attribute
 		a2 = a1 + 1;
-		while(*a2 == '_' || *a2 == '-' || isalnumByte(*a2)) ++a2;
+		while(a2 < end && !isspaceByte(*a2) && *a2 != '=') ++a2;
 		for(s = a2; isspaceByte(*s); ++s)  ;
 		if(*s != '=' || s == end) {
 // it could be an attribute with no value, but then we need whitespace
@@ -1636,12 +1637,17 @@ void setTagAttr(Tag *t, const char *name, char *val)
 static void setAttrFromHTML(const char *a1, const char *a2, const char *v1, const char *v2)
 {
     char *w;
-    char save_c;
+    char save_c = *a2;
+    // this is cheating a bit; but I'll put it back
+    *(char*)a2 = 0;
+    // now we can use a1 as the name.
+    // You'd think we need to decode &stuff; here, but no.
+    // Everywhere else yes, but not here.
+    // So &half;=yes does not become ½=yes, the atribute name remains &half;
+    // But we decode within the attribute value.
     w = pullAnd(v1, v2, true);
-// yeah this is tacky, write on top of a const, but I'll put it back.
-    save_c = *a2, *(char*)a2 = 0;
-// remove cr lf from an input field -
-// should we remove it in general? I don't think so.
+    // remove cr lf from an input field -
+    // should we remove it in general? I don't think so.
     if(stringEqualCI(a1, "value")) {
         char *w1 , *w2;
         for(w1 = w2 = w; *w1; ++w1)
