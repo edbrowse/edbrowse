@@ -877,7 +877,8 @@ function dispatchEvent(e)
         // Should be bound to the node
         else if (typeof h.callback == "function") f = h.callback.bind(n);
         // An object method, don't muck with the binding
-        else if (typeof h.callback == "object") f = h.callback.handleEvent;
+        else if (typeof h.callback == "object")
+            f = (e) => h.callback.handleEvent(e); // needs to be method call
         if (!f) {
             dbg3(`could not find callback for ${hd}`, n);
             return !e.stop$propagating$immediate; // null listeners are allowed
