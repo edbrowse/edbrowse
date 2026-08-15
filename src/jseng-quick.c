@@ -3075,7 +3075,7 @@ typedef struct JSJobEntry {
     JSValue argv[];
 } JSJobEntry;
 
-int my_ExecutePendingJobs(void)
+int my_ExecutePendingJobs(int limit)
 {
     if(!JSRuntimeJobIndex) return 0; // we couldn't find the pending queue
 
@@ -3093,7 +3093,7 @@ int my_ExecutePendingJobs(void)
     list_for_each_safe(l, l1, jl) {
 /* stop now and then to let the user interact with edbrowse unless we're
 cleaning up when we really want to run all the finalizers */
-        if(cnt == 10 && !freeing_context) break;
+        if(limit && cnt == limit && !freeing_context) break;
         e = list_entry(l, JSJobEntry, link);
         ctx = e->ctx;
         if (freeing_context && ctx != freeing_context) continue;
@@ -3357,7 +3357,7 @@ static JSValue nat_jobs(JSContext *cx, JSValueConst this, int argc, JSValueConst
         (void) this;
         (void) argc;
         (void) argv;
-	my_ExecutePendingJobs();
+	my_ExecutePendingJobs(0);
 	my_ExecutePendingMessages();
 	my_ExecutePendingMessagePorts();
 	cw = save_cw, cf = save_cf;
@@ -3842,7 +3842,7 @@ single-threaded so we should be good */
     JS_RunGC(jsrt);
 /* quick uses pending jobs for finalizers; when freeing a context we simply
 clean up the pending jobs rather than run them as doing so is unsafe */
-    my_ExecutePendingJobs();
+    my_ExecutePendingJobs(0);
 /* This will either free the context or decrease its ref count so it can go on
 a future GC run. There's a possibility that what we need to do is check the
 liveness of the context and do something equivalent to the above in case
@@ -4206,7 +4206,7 @@ void jsClose(void)
 // release the timer for pending jobs
         domSetsTimeout(0, "-", 0, false);
 // clear out any orphan pending jobs, before shutdown
-        my_ExecutePendingJobs();
+        my_ExecutePendingJobs(0);
         JS_FreeRuntime(jsrt);
     }
 }

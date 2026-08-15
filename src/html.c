@@ -1280,6 +1280,13 @@ void runScriptsPending(bool startbrowse)
         dw_flush(0);
     }
 
+    if(startbrowse) {
+        // microtasks set up by inline scripts are suppose to run now.
+        // I don't know about promise jobs, but this line will run them too.
+        // If the microtask queues another microtask?   idk
+        my_ExecutePendingJobs(0);
+    }
+
 top:
 	change = false;
 
@@ -4240,7 +4247,7 @@ any of the timers.
 Loop back around, see if the user has typed a key, if not come right back
 on the same timer and do some more.
 *********************************************************************/
-		    if(my_ExecutePendingJobs()) goto done;
+		    if(my_ExecutePendingJobs(10)) goto done;
 		    if(my_ExecutePendingMessages()
 		    || my_ExecutePendingMessagePorts()) goto done;
 		}
