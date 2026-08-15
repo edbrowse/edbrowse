@@ -5302,6 +5302,26 @@ swde("SVGElement", class extends w.Element {
     static toString() { return "function SVGElement() { [native code] }"}
 })
 
+swde("SVGGraphicsElement", class extends w.SVGElement {
+    constructor() { super(); }
+    static toString() { return "function SVGGraphicsElement() { [native code] }"}
+})
+
+swde("SVGGeometryElement", class extends w.SVGGraphicsElement {
+    constructor() { super(); }
+    static toString() { return "function SVGGeometryElement() { [native code] }"}
+})
+
+swde("SVGSVGElement", class extends w.SVGGraphicsElement {
+    constructor() { super(); }
+    static toString() { return "function SVGSVGElement() { [native code] }"}
+})
+
+swde("SVGPathElement", class extends w.SVGGeometryElement {
+    constructor() { super(); }
+    static toString() { return "function SVGPathElement() { [native code] }"}
+})
+
 swde("Text", class extends w.HTMLElement {
     constructor()
     {

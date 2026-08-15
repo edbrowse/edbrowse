@@ -105,6 +105,7 @@ static const struct tagInfo availableTags[] = {
 	{"option", "a select option", TAGACT_OPTION, 0, 0},
 	{"ovb", "an overbar", TAGACT_OVB, 0, 0},
 	{"p", "a paragraph", TAGACT_P, 10, 1},
+	{"path", "an svg path", TAGACT_PATH, 0, 1},
 	{"pre", "a preformatted section", TAGACT_PRE, 10, 0},
 	{"q", "quoted text", TAGACT_BQ, 0, 1},
 	{"s", "strikethrough text", TAGACT_S, 0, 0},
@@ -4846,6 +4847,14 @@ Needless to say that's not good!
 
 	case TAGACT_LEGEND:
 		domLink(t, "HTMLLegendElement", 0, 0);
+		break;
+
+	case TAGACT_SVG:
+		domLink(t, "SVGSVGElement", 0, 0);
+		break;
+
+	case TAGACT_PATH:
+		domLink(t, "SVGPathElement", 0, 0);
 		break;
 
 	case TAGACT_BQ:
