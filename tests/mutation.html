@@ -193,11 +193,14 @@ log2 = log.replace(/(\{1:~SCRIPT\[]>\[HR]}) (.*)$/,
 }
 correct = // according to chrome
 ' {3:worm=round>flat} {OL:~LI[]>[LI]} {3:[]OL~>[BLOCKQUOTE]} {4:[P,P]>[SPAN,SPAN,SPAN]} {4:~SPAN[SPAN]>[]} {5:[SPAN]>[]} {4:~SPAN[]>[SPAN]} {6:~32[33]34~>[]} {6:~36[37]38~>[]} {6:[30]31~>[]} {4:~SPAN[]>[33,37,40,41,30]} {6:~32[34]35~>[]} {6:~36[38]39~>[]} {6:[31]32~>[]} {4:[]SPAN~>[34,38,42,43,31]} {6:~36[39]>[]} {4:~38[]42~>[39]} {6:[32]35~>[]} {4:~42[]43~>[32,"zz"]} {6:[35]36~>[]} {6:[36]>[]} {4:~39[42]32~>[35,"yy",36]} {6:[]>[SPAN,SPAN]} {5:r@*s=null>cat dog} {5:jam=boysenberry>null} {43:tick=null>tock} {42:up=null>down} {42:[]>["yesterday"]} {"yesterday":character=tomorrow>yesterday} {2:["start"]>["mid"]} {3:[]OL~>[BLOCKQUOTE]} {1:~SCRIPT[]>[HR]}';
-if(log2 != correct) msg += "|rules don't match";
-// make the rules one per line, for readability.
+const success = (log2 == correct);
+if(!success) msg += "|rules don't match";
 ob1.disconnect();
 ob2.disconnect();
-show.innerHTML = msg + "<br>" + log.replace(/} {/g, "}<br>{");
+// make the rules one per line, for readability.
+log2 = log2.replace(/} {/g, "}<br>{");
+if(!success) log2 = log2 + "<br>should be<br>" + correct.replace(/} {/g, "}<br>{");
+show.innerHTML = msg + "<br>" + log2;
 }, 600);
 
 } catch(e) { show.innerHTML = "blowup " + e;}

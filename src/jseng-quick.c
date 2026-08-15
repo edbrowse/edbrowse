@@ -763,11 +763,16 @@ static bool run_function_bool(JSContext *cx, JSValueConst parent, const char *na
 		JS_Release(cx, v);
 		return false;
 	}
-	if (seqno > 0)
-		debugPrint(dbl, "exec %s timer %d context %d", name, seqno, cf->gsn);
-	else
-		debugPrint(dbl, "exec %s", name);
-	r = JS_Call(cx, v, parent, 0, l);
+	if (seqno > 0) {
+	    debugPrint(dbl, "exec %s timer %d context %d", name, seqno, cf->gsn);
+	    // the timer object is our mythical creation, and shouldn't be "this"
+	    JSValue g = JS_GetGlobalObject(cx);
+	    r = JS_Call(cx, v, g, 0, l);
+	    JS_FreeValue(cx, g);
+	} else {
+	    debugPrint(dbl, "exec %s", name);
+	    r = JS_Call(cx, v, parent, 0, l);
+	}
 	grab(r);
 	JS_Release(cx, v);
 	if(!JS_IsException(r)) {
