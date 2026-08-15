@@ -1410,9 +1410,9 @@ function mutFixup(b, flavor, y, z) {
         })();
         if (!record) continue;
         const nl = o.notification$queue.length;
-        if(flavor == 1) alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno} attribute ${y}`);
-        else if(flavor == 2) alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno} characterData`);
-        else alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno} children`);
+        if(flavor == 1) alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno}: attribute ${y}`);
+        else if(flavor == 2) alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno}: characterData`);
+        else alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno}: children ${record.removedNodes.length}>${record.addedNodes.length}`);
         o.notification$queue.push(record);
         if (o.callback$queued) {
             alert3("mutFixup: callback already queued");
@@ -7072,7 +7072,7 @@ swpc("CustomEvent", class extends w.Event {
         super(etype, options);
 // no idea if the name option is actually valid but based on some js in the wild
         setEventOptions(this, options, {detail: null, name: ""});
-        alert3(`customEvent " ${etype} {typeof o}`);
+        alert3(`customEvent ${etype} opt ${typeof options}`);
     }
 })
 swpc("XMLHttpRequestEventTarget", class extends w.EventTarget {
