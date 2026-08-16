@@ -9,12 +9,15 @@
 // test mutation observers; this will be rather a bear.
 try {
 show = document.getElementById("show")
-isedbrowse = navigator.userAgent.substr(0, 8) == "edbrowse";
 msg = "ok";
 b = document.body;
 
-// record the change that was made in a log.
-log = "";
+/*
+    record the change that was made in a log. The order of mutation records
+    isn't defined so we can use sets for easier comparison and extraction of
+    mismatching records.
+*/
+log = new Set();
 function nodeString(t) {
 let s = null;
 if(t.nodeType == 1) s = t.getAttribute('n');
@@ -25,28 +28,29 @@ return t.nodeName ? t.nodeName : t.toString();
 
 const generalCallback = (mutationList, observer) => {
       for (const m of mutationList) {
-log += ` {${nodeString(m.target)}:`;
+let entry = `{${nodeString(m.target)}:`;
         if (m.type === "childList") {
-if(m.previousSibling) log += `~${nodeString(m.previousSibling)}`
-            log += "[";
+if(m.previousSibling) entry += `~${nodeString(m.previousSibling)}`
+            entry += "[";
 if(m.removedNodes) {
-for(let c of m.removedNodes) log += `${nodeString(c)},`
-log = log.replace(/,$/, "");
+for(let c of m.removedNodes) entry += `${nodeString(c)},`
+entry = entry.replace(/,$/, "");
 }
-log += ']';
-if(m.nextSibling) log += `${nodeString(m.nextSibling)}~`
-log += '>[';
+entry += ']';
+if(m.nextSibling) entry += `${nodeString(m.nextSibling)}~`
+entry += '>[';
 if(m.addedNodes) {
-for(let c of m.addedNodes) log += `${nodeString(c)},`
-log = log.replace(/,$/, "");
+for(let c of m.addedNodes) entry += `${nodeString(c)},`
+entry = entry.replace(/,$/, "");
 }
-log += ']';
+entry += ']';
         } else if (m.type === "attributes") {
-            log += `${m.attributeName}=${m.oldValue}>${m.target.getAttribute(m.attributeName)}`
+            entry += `${m.attributeName}=${m.oldValue}>${m.target.getAttribute(m.attributeName)}`
         } else if (m.type === "characterData") {
-            log += `character=${m.oldValue}>${m.target.data}`
+            entry += `character=${m.oldValue}>${m.target.data}`
         }
-log += '}';
+entry += '}';
+        log.add(entry);
     }
 };
 
@@ -168,39 +172,66 @@ The timer will fire in half a second and overwrite it.
 Still, this innerHTML changes the child under the show paragraph,
 so the almost last entry in the log will be {2:["start"]>["mid"]}
 text node with start is gone and now a text node with mid. */
-show.innerHTML = "mid" + log;
-if(log.length) msg += "|observers ran during the script";
+show.innerHTML = "mid";
+if(log.size) msg += "|observers ran during the script";
 
 // finally set a timer so all these observers can run asynchronously
 setTimeout(()=>{
-/* I'd like to compare the log with what we believe is correct.
-The test passes or fails.
-But do the rules appear in a different order in different browsers?
-No - the order is identical, fortunately, except for one thing.
-The second observer ob2.
-If I hadn't messed with that it would be an easy compare.
-But the ob2 record comes in before the <hr> record in chrome,
-and after in edbrowse.
-This isn't vital, order of mutation events is not prescribed,
-so I'm going to tweak the test a bit.
-Move the SCRIPT HR rule to the end in edbrowse.
-Then I can compare.
-I could have just sorted the rules, but that seems a bit heavy handed. */
-log2 = log;
-if(isedbrowse) {
-log2 = log.replace(/(\{1:~SCRIPT\[]>\[HR]}) (.*)$/,
-(a,b,c)=>{return c+' '+b});
-}
-correct = // according to chrome
-' {3:worm=round>flat} {OL:~LI[]>[LI]} {3:[]OL~>[BLOCKQUOTE]} {4:[P,P]>[SPAN,SPAN,SPAN]} {4:~SPAN[SPAN]>[]} {5:[SPAN]>[]} {4:~SPAN[]>[SPAN]} {6:~32[33]34~>[]} {6:~36[37]38~>[]} {6:[30]31~>[]} {4:~SPAN[]>[33,37,40,41,30]} {6:~32[34]35~>[]} {6:~36[38]39~>[]} {6:[31]32~>[]} {4:[]SPAN~>[34,38,42,43,31]} {6:~36[39]>[]} {4:~38[]42~>[39]} {6:[32]35~>[]} {4:~42[]43~>[32,"zz"]} {6:[35]36~>[]} {6:[36]>[]} {4:~39[42]32~>[35,"yy",36]} {6:[]>[SPAN,SPAN]} {5:r@*s=null>cat dog} {5:jam=boysenberry>null} {43:tick=null>tock} {42:up=null>down} {42:[]>["yesterday"]} {"yesterday":character=tomorrow>yesterday} {2:["start"]>["mid"]} {3:[]OL~>[BLOCKQUOTE]} {1:~SCRIPT[]>[HR]}';
-const success = (log2 == correct);
+// according to chrome and its upstream chromium
+correct = new Set([
+    '{3:worm=round>flat}',
+    '{OL:~LI[]>[LI]}',
+    '{3:[]OL~>[BLOCKQUOTE]}',
+    '{4:[P,P]>[SPAN,SPAN,SPAN]}',
+    '{4:~SPAN[SPAN]>[]}',
+    '{5:[SPAN]>[]}',
+    '{4:~SPAN[]>[SPAN]}',
+    '{6:~32[33]34~>[]}',
+    '{6:~36[37]38~>[]}',
+    '{6:[30]31~>[]}',
+    '{4:~SPAN[]>[33,37,40,41,30]}',
+    '{6:~32[34]35~>[]}',
+    '{6:~36[38]39~>[]}',
+    '{6:[31]32~>[]}',
+    '{4:[]SPAN~>[34,38,42,43,31]}',
+    '{6:~36[39]>[]}',
+    '{4:~38[]42~>[39]}',
+    '{6:[32]35~>[]}',
+    '{4:~42[]43~>[32,"zz"]}',
+    '{6:[35]36~>[]}',
+    '{6:[36]>[]}',
+    '{4:~39[42]32~>[35,"yy",36]}',
+    '{6:[]>[SPAN,SPAN]}',
+    '{5:r@*s=null>cat dog}',
+    '{5:jam=boysenberry>null}',
+    '{43:tick=null>tock}',
+    '{42:up=null>down}',
+    '{42:[]>["yesterday"]}',
+    '{"yesterday":character=tomorrow>yesterday}',
+    '{2:["start"]>["mid"]}',
+    '{3:[]OL~>[BLOCKQUOTE]}',
+    '{1:~SCRIPT[]>[HR]}',
+    '{1:~HR[]>[TEMPLATE]}'
+]);
+const success = !log.symmetricDifference(correct).size;
 if(!success) msg += "|rules don't match";
 ob1.disconnect();
 ob2.disconnect();
 // make the rules one per line, for readability.
-log2 = log2.replace(/} {/g, "}<br>{");
-if(!success) log2 = log2 + "<br>should be<br>" + correct.replace(/} {/g, "}<br>{");
-show.innerHTML = msg + "<br>" + log2;
+let output = "";
+function addLog(heading, entries)
+{
+    output += `<div><h2>${heading}</h2><ul>`;
+    for (const e of Array.from(entries).sort()) output += `<li>${e}</li>`;
+    output += "</ul></div>"
+}
+if (!success) {
+    addLog("Extra entries in log", log.difference(correct));
+    addLog("Missing entries in log", correct.difference(log));
+}
+addLog("Log", log);
+if(!success) addLog("Should be", correct);
+show.innerHTML = `${msg}<br>${output}`;
 }, 600);
 
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
@@ -228,4 +259,4 @@ Even more bizarre, I had to get rid of the newline at the end of this file -
 even that turned into a whitespace node which was added to the tree.
 So if you edit this, don't let your editor put a newline at the end.
 edbrowse won't - unless you muck with the last line. */
-</script><hr extra=tag></body>
+</script><hr extra=tag><template><div><p>Shouldn't be logged</p></div></template></body>
