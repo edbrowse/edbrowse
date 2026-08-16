@@ -625,14 +625,6 @@ Tag *newTag(const Frame *f, const char *name)
 		else
 			cw->inputlist = t;
 	}
-	if (t->action == TAGACT_OPTION) {
-		for (t1 = cw->optlist; t1; t1 = t1->same)
-			t2 = t1;
-		if (t2)
-			t2->same = t;
-		else
-			cw->optlist = t;
-	}
 	return t;
 }
 
@@ -810,7 +802,7 @@ void freeTags(Window *w)
 	free(w->tags);
 	w->tags = 0;
 	w->numTags = w->allocTags = w->deadTags = 0;
-	w->inputlist = w->scriptlist = w->optlist = w->linklist = 0;
+	w->inputlist = w->scriptlist = w->linklist = 0;
 	w->framelist = 0;
 }
 
@@ -4219,29 +4211,6 @@ void htmlInputHelper(Tag *t)
 
 	// the submit fields can have a name, but they don't have to
 	formControl(t, (itype > INP_SUBMIT));
-}
-
-static void fillEmptySelect(Tag *sel)
-{
-	Tag *t;
-	const char *z;
-	int zv;
-	if(sel->multiple | sel->disabled) return;
-	if(sel->lic) return;
-// setting size to something > 1 disables this behavior.
-	if((z = attribVal(sel, "size")) && (zv = stringIsNum(z)) && zv > 1)
-		return;
-	for (t = cw->optlist; t; t = t->same) {
-		if (t->controller != sel) continue;
-		if(t->disabled ||
-		(t->parent && t->parent->action == TAGACT_OPTG && t->parent->disabled))
-			continue;
-// this is the first option
-		break;
-	}
-	if(!t) return; // no options possible
-	t->checked = t->rchecked = true;
-	sel->lic = 1; // now 1 item selected
 }
 
 static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)

@@ -94,6 +94,67 @@ void jSideEffects(void)
 	debugPrint(4, "jSideEffects ends");
 }
 
+// getElementsByTagName("option")
+static Tag **optArray;
+static int optAlloc, optCount;
+static void gatherOptions1(Tag *t);
+void gatherOptions(const Tag *select)
+{
+    optCount = 0;
+    optAlloc = 100;
+    optArray = allocMem(optAlloc * sizeof(Tag*));
+    // select won't change, only options below it.
+    gatherOptions1((Tag *)select);
+    optArray[optCount] = 0;
+}
+
+static void gatherOptions1(Tag *t)
+{
+    Tag *c;
+    if(t->action == TAGACT_OPTION) {
+        if(optCount + 1 == optAlloc) {
+            optAlloc += 100;
+            optArray = reallocMem(optArray, optAlloc*sizeof(Tag*));
+        }
+        optArray[optCount++] = t;
+        if(t->jslink) { // has js set value and text?
+            char *v = get_property_string_t(t, "value");
+            if(v) nzFree(t->value), t->value = v;
+            v = get_property_string_t(t, "text");
+            if(v) nzFree(t->textval), t->textval = v;
+            t->checked = get_property_bool_t(t, "selected");
+        }
+    }
+    for(c = t->firstchild; c; c = c->sibling)
+        gatherOptions1(c);
+    }
+
+// This is part of building a select list from html.
+// Is the first item selected by default?
+void fillEmptySelect(Tag *sel)
+{
+    Tag *t, **w;
+    const char *z;
+    int zv;
+    if(sel->multiple | sel->disabled) return;
+    if(sel->lic) return;
+    // setting size to something > 1 disables this behavior.
+    if((z = attribVal(sel, "size")) && (zv = stringIsNum(z)) && zv > 1)
+        return;
+    gatherOptions(sel);
+    for(w = optArray; (t = *w); ++w) {
+        if(t->disabled ||
+        (t->parent && t->parent->action == TAGACT_OPTG && t->parent->disabled))
+            continue;
+        // this is the first option
+        break;
+    }
+    nzFree0(optArray);
+    if(!t) return; // no options possible
+    t->checked = t->rchecked = true;
+    sel->lic = 1; // now 1 item selected
+}
+
 static bool inputDisabled(const Tag *t);
 static bool inputHidden(const Tag *t);
 static bool inputReadonly(const Tag *t);
@@ -102,12 +163,11 @@ static Tag *locateOptionByName(const Tag *sel,
 					  const char *name, int *pmc,
 					  bool exact)
 {
-	Tag *t, *em = 0, *pm = 0;
+	Tag *t, **w, *em = 0, *pm = 0;
 	int pmcount = 0;	/* partial match count */
 	const char *s;
 
-	for (t = cw->optlist; t; t = t->same) {
-		if (!controlledBy(t, sel)) continue;
+	for(w = optArray; (t = *w); ++w) {
 		if (!(s = t->textval)) continue;
 		if(inputHidden(t)) continue;
 		if (stringEqualCI(s, name)) {
@@ -131,11 +191,10 @@ static Tag *locateOptionByName(const Tag *sel,
 
 static Tag *locateOptionByNum(const Tag *sel, int n)
 {
-	Tag *t;
+	Tag *t, **w;
 	int cnt = 0;
 
-	for (t = cw->optlist; t; t = t->same) {
-		if (!controlledBy(t, sel)) continue;
+	for(w = optArray; (t = *w); ++w) {
 		if (!t->textval) continue;
 		++cnt;
 		if(inputHidden(t)) continue;
@@ -148,7 +207,7 @@ static bool
 locateOptions(const Tag *sel, const char *input,
 	      char **disp_p, char **val_p, bool setcheck)
 {
-	Tag *t;
+	Tag *t, **w;
 	char *disp, *val;
 	int disp_l, val_l, val_count;
 	int len = strlen(input);
@@ -156,6 +215,7 @@ locateOptions(const Tag *sel, const char *input,
 	const char *s, *e;	/* start and end of an option */
 	char *iopt;		/* individual option */
 
+	gatherOptions(sel);
 	iopt = (char *)allocMem(len + 1);
 	disp = initString(&disp_l);
 	val = initString(&val_l);
@@ -165,8 +225,8 @@ locateOptions(const Tag *sel, const char *input,
 /* Uncheck all existing options, then check the ones selected. */
 		if (sel->jslink && allowJS)
 			set_property_number_t(sel, "selectedIndex", -1);
-		for (t = cw->optlist; t; t = t->same) {
-			if (controlledBy(t, sel) && t->textval) {
+		for(w = optArray; (t = *w); ++w) {
+			if (t->textval) {
 				t->checked = false;
 				if (t->jslink && allowJS)
 					set_property_bool_t(t, "selected",   false);
@@ -250,6 +310,7 @@ locateOptions(const Tag *sel, const char *input,
 		*val_p = val_count ? val : 0;
 	if (disp_p)
 		*disp_p = disp;
+	nzFree0(optArray);
 	free(iopt);
 	return true;
 
@@ -257,6 +318,7 @@ fail:
 	free(iopt);
 	nzFree(val);
 	nzFree(disp);
+	nzFree0(optArray);
 	if (val_p)
 		*val_p = 0;
 	if (disp_p)
@@ -1747,10 +1809,10 @@ static bool inputRequired(const Tag *t)
 // Show an input field
 void infShow(int tagno, const char *search)
 {
-	Tag *t = tagList[tagno], *v;
-	const char *s;
-	int cnt;
-	bool show;
+    Tag *t = tagList[tagno], *v, **w;
+    const char *s;
+    int cnt = 0;
+    bool show = false;
 
 	connectDatalist(t);
 
@@ -1761,12 +1823,11 @@ void infShow(int tagno, const char *search)
 	if (t->multiple)
 		eb_printf(" multiple");
 	if (t->itype == INP_SELECT) {
-		for (v = cw->optlist; v; v = v->same) {
-			if (!controlledBy(v, t)) continue;
-			if (!v->textval) continue;
-			if(inputHidden(v)) break;
-		}
-		if(v) eb_printf(" with hidden options");
+	    gatherOptions(t);
+	for (w = optArray; (v = *w); ++w) {
+	        if(inputHidden(v)) break;
+	    }
+	    if(v) eb_printf(" with hidden options");
 	}
 	if (t->itype == INP_TEXT && t->lic)
 		eb_printf("[%d]", t->lic);
@@ -1809,32 +1870,28 @@ void infShow(int tagno, const char *search)
 
 // display the options in a pick list
 // If a search string is given, display the options containing that string.
-	cnt = 0;
-	show = false;
-	for (v = cw->optlist; v; v = v->same) {
-		if (!controlledBy(v, t)) continue;
-		if (!v->textval) continue;
-		++cnt;
-		if(inputHidden(v)) continue;
-		if (*search && !strcasestr(v->textval, search))
-			continue;
-		if(v->custom_h) {
-			eb_printf("    %s", v->custom_h);
-			if(v->parent && v->parent->action == TAGACT_OPTG && inputDisabled(v->parent))
-				eb_printf("🛑");
-			eb_printf("\n");
-		}
-		show = true;
-		eb_printf("%3d %s", cnt, v->textval);
-		if(inputDisabled(v)) eb_printf(" 🛑");
-		eb_printf("\n");
+	for (w = optArray; (v = *w); ++w) {
+	    ++cnt;
+	    if(inputHidden(v)) continue;
+	    if (*search && !strcasestr(v->textval, search)) continue;
+	    if(v->custom_h) {
+	        eb_printf("    %s", v->custom_h);
+	        if(v->parent && v->parent->action == TAGACT_OPTG && inputDisabled(v->parent))
+	            eb_printf("🛑");
+	        eb_printf("\n");
+	    }
+	    show = true;
+	    eb_printf("%3d %s", cnt, v->textval);
+	    if(inputDisabled(v)) eb_printf(" 🛑");
+	    eb_printf("\n");
 	}
 	if (!show) {
-		if (!*search)
-			i_puts(MSG_NoOptions);
-		else
-			i_printf(MSG_NoOptionsMatch, search);
+	    if (!*search)
+	        i_puts(MSG_NoOptions);
+	    else
+	        i_printf(MSG_NoOptionsMatch, search);
 	}
+    nzFree0(optArray);
 }
 
 static bool inputDisabled(const Tag *t)
@@ -2164,18 +2221,19 @@ fail:
 // return an allocated string containing the text entries for the checked options
 char *displayOptions(const Tag *sel)
 {
-	const Tag *t;
+	Tag *t, **w;
 	char *opt;
 	int opt_l;
 
 	opt = initString(&opt_l);
-	for (t = cw->optlist; t; t = t->same) {
-		if (!controlledBy(t, sel)) continue;
+	gatherOptions(sel);
+	for (w = optArray; (t = *w); ++w) {
 		if (!t->checked) continue;
 		if (*opt)
 			stringAndChar(&opt, &opt_l, selsep);
 		stringAndString(&opt, &opt_l, t->textval);
 	}
+	nzFree0(optArray);
 
 	return opt;
 }
@@ -2649,11 +2707,12 @@ Here is a small page to test some of these select option cases.
 			char *display = getFieldFromBuffer(t->seqno);
 			char *s, *e;
 			if (!display) {	/* off the air */
-				Tag *v;
+				Tag *v, **w;
 /* revert back to reset state */
-				for (v = cw->optlist; v; v = v->same)
-					if (controlledBy(v, t))
-						v->checked = v->rchecked;
+				gatherOptions(t);
+				for(w = optArray; (v = *w); ++w)
+					v->checked = v->rchecked;
+				nzFree0(optArray);
 				display = displayOptions(t);
 			}
 			rc = locateOptions(t, display, 0, &dynamicvalue, false);
@@ -2677,7 +2736,9 @@ Here is a small page to test some of these select option cases.
 // setting size to something > 1 disables this behavior.
 			if((z = attribVal(t, "size")) && (zv = stringIsNum(z)) && zv > 1)
 				goto options_ok;
+   gatherOptions(t);
 			const Tag *u = locateOptionByNum(t, 1);
+			nzFree0(optArray);
 			if(u && stringEqual(u->textval, display) && !*u->value &&
 			!(u->parent && u->parent->action == TAGACT_OPTG)) {
 				nzFree(display);
@@ -3119,21 +3180,23 @@ void domSetsTagValue(Tag *t, const char *newtext)
 
 bool charInOptions(char c)
 {
-	const Window *w;
-	Tag *t;
-	int i;
-	Tag *sel;
-	for(i = 1; i <= maxSession; ++i) {
-		for(w = sessionList[i].lw; w; w = w->prev) {
-			if(!w->browseMode) continue;
-			for (t = w->optlist; t; t = t->same)
-				if(t->textval && strchr(t->textval, c) &&
-				(sel = findOpenTag(t, TAGACT_INPUT)) &&
-				sel->itype == INP_SELECT && sel->multiple)
-					return true;
-		}
-	}
-	return false;
+    const Window *w;
+    Tag *t;
+    int i, n;
+    Tag *sel;
+    for(i = 1; i <= maxSession; ++i) {
+        for(w = sessionList[i].lw; w; w = w->prev) {
+            if(!w->browseMode) continue;
+            for (n = 0; n < w->numTags; ++n) {
+                t = w->tags[n];
+                if(t->textval && strchr(t->textval, c) &&
+                (sel = findOpenTag(t, TAGACT_INPUT)) &&
+                sel->itype == INP_SELECT && sel->multiple)
+                    return true;
+            }
+        }
+    }
+    return false;
 }
 
 void charFixOptions(char c)

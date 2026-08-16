@@ -485,7 +485,7 @@ struct ebWindow {
 	struct htmlTag **tags;
 	int numTags, allocTags, deadTags;
 int ehsn;
-	struct htmlTag *scriptlist, *inputlist, *optlist, *linklist;
+	struct htmlTag *scriptlist, *inputlist, *linklist;
 	struct htmlTag *framelist;
 	bool mustrender:1;
 	bool sank:1; /* jSyncup has been run */

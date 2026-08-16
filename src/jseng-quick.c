@@ -2073,13 +2073,6 @@ JSValueConst a_j, JSValueConst b_j)
 		return;
 	}
 
-// options are relinked by rebuildSelectors, not here.
-	if (stringEqual(p_name, "option"))
-		return;
-
-	if (stringEqual(a_name, "option"))
-		return;
-
 	parent = tagFromObject(p_j);
 // If parent node has been removed, we don't have to keep its linkage current.
 	if (!parent)
@@ -3978,150 +3971,12 @@ if(extra == 4)
     connectTagObject(t, io);
 }
 
-/*********************************************************************
-Javascript sometimes builds or rebuilds a submenu, based upon your selection
-in a primary menu. These new options must map back to html tags,
-and then to the dropdown list as you interact with the form.
-This is tested in jsrt - select a state,
-whereupon the colors below, that you have to choose from, can change.
-This does not easily fold into rerender(),
-it must be rerun after javascript activity, e.g. in jSideEffects().
-*********************************************************************/
-
 static void rebuildSelector(Tag *sel, JSValue oa, int len2)
 {
-	int i2 = 0;
-	bool check2;
-	char *s;
-	const char *selname;
-	bool changed = false;
-	Tag *t, *t0 = 0;
-	JSValue oo;		/* option object */
-	JSContext *cx = sel->f0->cx;
-
-	selname = sel->name;
-	if (!selname)
-		selname = "?";
-	debugPrint(4, "testing selector %s %d", selname, len2);
-	sel->lic = (sel->multiple ? 0 : -1);
-	t = cw->optlist;
-
-	while (t && i2 < len2) {
-		bool connect_o = false;
-		t0 = t;
-/* there is more to both lists */
-		if (!controlledBy(t, sel)) {
-			t = t->same;
-			continue;
-		}
-
-/* find the corresponding option object */
-		oo = get_array_element_object(cx, oa, i2);
-		if(JS_IsUndefined(oo)) {
-// Wow this shouldn't happen.
-// Guess I'll just pretend the array stops here.
-			len2 = i2;
-			break;
-		}
-
-		if (JS_VALUE_GET_PTR(*((JSValue*)t->jv)) != JS_VALUE_GET_PTR(oo)) {
-			debugPrint(5, "oo switch");
-/*********************************************************************
-Ok, we freed up the old options, and garbage collection
-could well kill the tags that went with these options,
-i.e. the tags we're looking at now.
-I'm bringing the tags back to life.
-*********************************************************************/
-			t->dead = false;
-			disconnectTagObject(t);
-			connectTagObject(t, oo);
-			connect_o = true;
-		}
-
-		t->rchecked = get_property_bool(cx, oo, "defaultSelected");
-		check2 = get_property_bool(cx, oo, "selected");
-		if (check2) {
-			if (sel->multiple)
-				++sel->lic;
-			else
-				sel->lic = i2;
-		}
-		++i2;
-		if (t->checked != check2)
-			changed = true;
-		t->checked = check2;
-		s = get_property_string(cx, oo, "text");
-		if ((s && !t->textval) || !stringEqual(t->textval, s)) {
-			nzFree(t->textval);
-			t->textval = s;
-			changed = true;
-		} else
-			nzFree(s);
-		s = get_property_string(cx, oo, "value");
-		if ((s && !t->value) || !stringEqual(t->value, s)) {
-			nzFree(t->value);
-			t->value = s;
-		} else
-			nzFree(s);
-		t = t->same;
-		if(!connect_o)
-			JS_Release(cx, oo);
-	}
-
-/* one list or the other or both has run to the end */
-	if (i2 == len2) {
-		for (; t; t = t->same) {
-			if (!controlledBy(t, sel)) {
-				t0 = t;
-				continue;
-			}
-/* option is gone in js, disconnect this option tag from its select */
-			disconnectTagObject(t);
-			t->controller = 0;
-			t->action = TAGACT_NOP;
-			if (t0)
-				t0->same = t->same;
-			else
-				cw->optlist = t->same;
-			changed = true;
-		}
-	} else if (!t) {
-		for (; i2 < len2; ++i2) {
-			oo = get_array_element_object(cx, oa, i2);
-			if(JS_IsUndefined(oo))
-				break;
-			t = newTag(sel->f0, "option");
-			t->lic = i2;
-// I set controller for legacy, but we don't use it.
-			t->controller = sel;
-			connectTagObject(t, oo);
-			t->step = 2;	// already decorated
-			t->textval = get_property_string(cx, oo, "text");
-			t->value = get_property_string(cx, oo, "value");
-			t->checked = get_property_bool(cx, oo, "selected");
-			if (t->checked) {
-				if (sel->multiple)
-					++sel->lic;
-				else
-					sel->lic = i2;
-			}
-			t->rchecked = get_property_bool(cx, oo, "defaultSelected");
-			changed = true;
-		}
-	}
-
-	if (!changed)
-		return;
-	debugPrint(4, "selector %s has changed", selname);
-
-	s = displayOptions(sel);
-	if (!s)
-		s = emptyString;
-	domSetsTagValue(sel, s);
-	nzFree(s);
-
-	if (!sel->multiple)
-		set_property_number(cx, *((JSValue*)sel->jv), "selectedIndex", sel->lic);
+    char *s = displayOptions(sel);
+    if (!s) s = emptyString;
+    domSetsTagValue(sel, s);
+    nzFree(s);
 }
 
 void rebuildSelectors(void)

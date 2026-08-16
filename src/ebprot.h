@@ -156,6 +156,7 @@ bool varExpand(const char *line, char **newline);
 // sourcefile=html.c
 void dwStart(void);
 bool tagHandler(int seqno, const char *name);
+void fillEmptySelect(Tag *sel);
 void jSyncup(bool fromtimer, const Tag *active);
 void jSideEffects(void);
 void jClearSync(void);

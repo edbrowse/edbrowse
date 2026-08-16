@@ -5749,6 +5749,9 @@ selp.insertBefore = function(c, item) {
 
 // these routines do not account for optgroups
 selp.add = function(o, idx) {
+    // have to turn the object Option into a proper node
+    // with a corresponding tag in C.
+    domLinkage('c', o, "option");
     const n = this.options.length;
     if(typeof idx != "number" || idx < 0 || idx > n) idx = n;
     if(idx == n) this.appendChild(o);
@@ -6927,11 +6930,7 @@ case "frame": c = new w.HTMLFrameElement; break;
 case "iframe": c = new w.HTMLIFrameElement; break;
 case "select": c = new w.HTMLSelectElement; break;
 case "optgroup": c = new w.HTMLOptGroupElement; break;
-case "option":
-c = new w.Option;
-// we don't log options because rebuildSelectors() checks
-// the dropdown lists after every js run.
-return c;
+case "option": c = new w.Option; break;
 case "form": c = new w.HTMLFormElement; break;
 case "fieldset": c = new w.HTMLFieldSetElement; break;
 case "legend": c = new w.HTMLLegendElement; break;
