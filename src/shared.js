@@ -1873,7 +1873,7 @@ if(!(this.eb$xml || this instanceof w.SVGElement)) name = name.toLowerCase();
     if(!w.eb$push$attributes) {
         if(name == "id" || name == "class" || name == "name")
             markUpwardCollections(this)
-        if((name == "id" || name == "name") &&
+        if(name == "name" &&
         this.form && this.form.dom$class == "HTMLFormElement")
             formReindex(this.form);
     }
@@ -1958,7 +1958,7 @@ delete this.attributes[i];
 if(name !== "length") delete this.attributes[name]
     if(name == "id" || name == "name" || name == "class")
         markUpwardCollections(this);
-    if((name == "id" || name == "name") &&
+    if(name == "name" &&
     this.form && this.form.dom$class == "HTMLFormElement")
         formReindex(this.form);
     mutFixup(this, 1, name, a.value);

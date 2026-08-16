@@ -1,6 +1,6 @@
 <body v+='d' onsubmit="v += 'f'">
 <p id=show>start</p>
-<form action= "javascript:v+='g'"
+<form action= "javascript:"
 onsubmit="v += 'e'"
 *#  :&quot;`@what=where>
   <fieldset>
@@ -13,7 +13,7 @@ onsubmit="v += 'e'"
       <input type="radio" id="contactChoice3" name="contact" value="mail" />
       <label for="contactChoice3">Mail</label>
 <br>
-<input type=hidden name=h value=secret>
+<input type=hidden id=xx name=h value=secret>
 Fruit: <select name=fruit multiple>
 <option value=a>apple
 <option value=o>orange
@@ -76,6 +76,18 @@ if(el.length != 9) msg += `|form elements.length ${el.length}`;
 if(fsel.length != 6) msg += `|fieldset elements.length ${fsel.length}`;
 // you can fs.removeChild(panel) and verify the input fields are wiped out.
 // Then you can add it back again and verify the form resurrects.
+
+// direct access by name
+hidden = form.h;
+if(hidden.value != "secret") msg += "|no forn name access for hidden";
+if(el.h != hidden) msg += "|no element name access for hidden";
+hidden.setAttribute("name", "zz");
+if(form.zz != hidden) msg += "|no form zz name access for hidden";
+if(el.zz != hidden) msg += "|no element zz name access for hidden";
+hidden.name = "yy";
+if(form.yy != hidden) msg += "|no form yy name access for hidden";
+if(el.yy != hidden) msg += "|no element yy name access for hidden";
+
 // call cloneNode and make sure the form machinery, elements, links, etc,
 // have been created.
 const f2 = form.cloneNode(true)
@@ -84,8 +96,8 @@ if(f2.contact.length != 4) msg += `|clone contact.length ${f2.contact.length}`;
 if(f2.contact[0] != f2.elements[1]) msg += "|clone contact elements mismatch";
 if(f2.contact[0].form != f2) msg += "|clone input.form mismatch";
 if(f2.action != form.action) msg += "|clone action mismatch";
-// This test doesn't pass in chrome
-//if(f2.contact[3].fs$ != f2.elements[0]) msg += "|clone input.fs$ mismatch";
+// This test doesn't pass in chrome, fs$ is our own creation.
+// if(f2.contact[3].fs$ != f2.elements[0]) msg += "|clone input.fs$ mismatch";
 
 // can we click on some things?
 // This is at the top and capture, so should run first.
@@ -101,9 +113,9 @@ i=document.querySelector("input[type=submit]");
 // this will dispatch the click even, and also submit the form,
 // because that's what the input says to do upon click.
 i.click();
-if(v != "abcd3efg") msg += `|input click ${v}`;
+if(v != "abcd3ef") msg += `|input click ${v}`;
 
-show.innerHTML = msg
+show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>
 </body>

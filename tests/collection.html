@@ -20,7 +20,7 @@ b.appendChild(q1); // puts it in i
 if(i.length != 2) msg += `|bad collection length ${i.length}`;
 if(i.constructor.prototype.item != i.item) msg += "|id displaced the instance method item";
 // we can change the id directly or by setAtribute, the spec says it's the same.
-// Thus we have getter and setter on HTMLElement to do that.
+// Thus we have getter and setter on Element to do that.
 // So setAttribute also has to see if the item is part of an HTMLCollection
 // and make that update as well.
 q1.id = "q1"
