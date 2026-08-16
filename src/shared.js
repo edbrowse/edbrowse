@@ -4726,14 +4726,17 @@ swde("Element", class extends w.Node {
             break;
         }
     }
+
+// attributes are on demand
+    get attributes() {
+        if(!this.attributes$2)
+            odp(this, "attributes$2", {value:new w.NamedNodeMap});
+        return this.attributes$2;
+    }
+
 })
 let elemp = w.Element.prototype;
 
-// attributes are on demand
-odp(elemp, "attributes", { get: function(){ if(!this.attributes$2) {
-odp(this, "attributes$2", {value:new w.NamedNodeMap})
-}
-return this.attributes$2}})
 ; (function(){ const list = [
 "hasAttribute", "hasAttributeNS", "getAttributeNames",
 "getAttribute", "getAttributeNS", "getAttributeNode",
