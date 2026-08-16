@@ -701,6 +701,9 @@ a.push(top);
 if(s === "field|set" &&
 (nn == "input" || nn == "select" || nn == "textarea" || nn == "button"))
 a.push(top);
+if(s === "form|set" &&
+(nn == "input" || nn == "select" || nn == "textarea" || nn == "button" || nn == "fieldset"))
+a.push(top);
 if(top.childNodes) {
 // don't descend into another frame.
 // The frame has no children through childNodes, so we don't really need this part.
@@ -3642,23 +3645,6 @@ function tableReindex(t)
     tableReindex1(t);
 }
 
-// More efficient than querySelectorAll.
-// Assumes there is never a form within a form; hence all input
-/// elements below belong to this form.
-function gatherInputElements(t)
-{
-let a = [];
-if(t.nodeType == 1) {
-let inclass = t.dom$class;
-if(inclass && (
-inclass == "HTMLInputElement" || inclass == "HTMLTextAreaElement" || inclass == "HTMLSelectElement" || inclass == "HTMLButtonElement" || inclass == "HTMLFieldSetElement"))
-a.push(t);
-}
-for(let c of t.childNodes)
-a = a.concat(gatherInputElements(c));
-return a;
-}
-
 function formReindex(f)
 {
     const isform = f.dom$class === "HTMLFormElement";
@@ -3707,9 +3693,10 @@ function formReindex(f)
         delete f[name];
         delete el[name];
     }
-    const ilist = gatherInputElements(f);
+    // Assumes there is never a form within a form; hence all input
+    // elements below belong to this form.
+    const ilist = gebtn(f, (isform ? "form|set" : "field|set"), false, false);
     for (let i of ilist) {
-        if(i.dom$class == "HTMLFieldSetElement" && !isform) continue;
         el.push(i);
         i[backlink] = f;
         name = i.name;
