@@ -3897,10 +3897,11 @@ void establish_js_option(Tag *t, Tag *sel, Tag *og)
     selobj = *((JSValue*)sel->jv);
     oo = instantiate(cx, selobj, 0, "HTMLOptionElement");
     connectTagObject(t, oo);
-    // have to established checked before we call the next function
     set_property_string(cx, oo, "text", t->textval);
     set_property_string(cx, oo, "value", t->value);
-    set_property_bool(cx, oo, "selected", t->checked);
+    // have to established checked before we call the next function
+    // we don't need the side effects, this is from html and we build as we go.
+    set_property_bool(cx, oo, "selected$2", t->checked);
     set_property_bool(cx, oo, "defaultSelected", t->checked);
     if (t->checked && !sel->multiple)
         set_property_number(cx, selobj, "selectedIndex", t->lic);
