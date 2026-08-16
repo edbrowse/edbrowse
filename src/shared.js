@@ -1060,7 +1060,12 @@ function addEventListener(evtype, handler, iscapture)
     if (typeof handler == "function") h.callback = handler;
     else if (typeof handler == "object" && typeof h.handleEvent == "function")
         h.callback = handler;
-    else throw TypeError("Invalid event handler");
+    else {
+        if (db$flags(1))
+            alert3(`listen ${this.nodeName}.${ev} tag ${this.eb$seqno} invalid`);
+        // some libraries do this as a "test"
+        return;
+    }
     const ev = `on${evtype}`;
     const evarray = `${ev}$$array`; // array of handlers
     // legacy, iscapture could be boolean, or object, or missing
