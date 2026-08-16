@@ -5744,7 +5744,7 @@ selp.insertBefore = function(c, item) {
                 }
         }
     }
-    return nodep.insertBefore.calle(this, c, item);
+    return nodep.insertBefore.call(this, c, item);
 }
 
 // these routines do not account for optgroups
@@ -5752,8 +5752,9 @@ selp.add = function(o, idx) {
     const n = this.options.length;
     if(typeof idx != "number" || idx < 0 || idx > n) idx = n;
     if(idx == n) this.appendChild(o);
-    else this.insertBefore(o, this.childNodes[idx]);
+    else this.insertBefore(o, this.options[idx]);
 }
+
 selp.remove = function(idx) {
     const n = this.options.length;
     if(typeof idx == "number" && idx >= 0 && idx < n)

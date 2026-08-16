@@ -128,6 +128,15 @@ if(sso[0] != lemon) msg += "|lemon not in select";
 button.click();
 if(v != "abcd3") msg += `|button v ${v}`;
 if(log.innerText != "yy=secret\nfruit=l\n") msg += "improper log after button";
+o = new Option("peach", 'p');
+sel.add(o);
+o = new Option("blueberry", 'b');
+sel.add(o, 1);
+o.selected = true;
+v = ""; for(let c of so) v += c.value;
+if(v != "abolp") msg += `|fruits after add ${v}`;
+v = ""; for(let c of sso) v += c.value;
+if(v != "bl") msg += `|selected fruits after add ${v}`;
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
