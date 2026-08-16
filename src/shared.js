@@ -3798,6 +3798,7 @@ function swde(cls, exp, changeable=true)
 {
     odp(w, cls, {value:exp, writable:changeable, configurable:changeable});
     odp(w[cls].prototype, "dom$class", {value: cls.replace(/^z\$/, "")});
+    eval(`w["${cls}"].toString = ()=>{ return "function ${cls}() { [native code] }"}`);
 }
 
 // Establish properties under document, as we did with window.
@@ -3860,7 +3861,6 @@ swde("URL", class extends w.Object {
         if(arguments.length == 2) h= resolveURL(arguments[1], arguments[0]);
         this.href = h;
     }
-    static toString() { return "function URL() { [native code] }"}
 })
 // z$URL is a synonym, for our own purposes.
 swp("z$URL", w.URL)
@@ -4084,14 +4084,12 @@ swde("Attr", class extends w.Object {
         super();
         this.ownerDocument = d; this.name = ""
     }
-    static toString() { return "function Attr() { [native code] }"}
     isId() { return this.name === "id"; }
     cloneNode = cloneAttr;
 }, false);
 
 swde("Validity", class extends w.Object {
     constructor() { super(); }
-    static toString() { return "function Validity() { [native code] }"}
 })
 
 /*********************************************************************
@@ -4124,7 +4122,6 @@ return !(this.valueMissing)}})
 
 swde("EventTarget", class extends w.Object {
     constructor() { super(); }
-    static toString() { return "function EventTarget() { [native code] }"}
 })
 let evtgtp = w.EventTarget.prototype
 evtgtp.addEventListener = addEventListener
@@ -4139,7 +4136,6 @@ swde("Node", class extends w.EventTarget {
         odp(this, "childNodes", {value: []})
         odp(this, "parentNode", {value: null, writable: true, configurable:true})
     }
-    static toString() { return "function Node() { [native code] }"}
 
     /* Set innerHTML, and then read it back; it's not an exact copy.
     If I don't close <li>, when it comes back out, there is a closing </li> tag.
@@ -4579,13 +4575,11 @@ swde("Document", class extends w.Node {
         });
         this.readyState$2 = "interactive";
     }
-    static toString() { return "function Document() { [native code] }"}
 
     toString() { return "[object HTMLDocument]" };
 });
 swde("HTMLDocument", class extends w.Document {
     constructor() { super(); }
-    static toString() { return "function HTMLDocument() { [native code] }"}
 }) // legacy
 let docp = w.Document.prototype;
 docp.activeElement = null;
@@ -4664,7 +4658,6 @@ swde("Window", class extends w.EventTarget {
             eb$newLocation('p' + w.eb$ctx + newloc+ '\n' + winname);
         this.opener = w;
     }
-    static toString() { return "function Window() { [native code] }"}
 })
 
 // window.open is the same as new window, just pass the args through
@@ -4674,7 +4667,6 @@ w.open = function(a, b) {
 
 swde("Element", class extends w.Node {
     constructor() { super(); }
-    static toString() { return "function Element() { [native code] }"}
 
     insertAdjacentElement(pos, e) {
         let n, p = this.parentNode;
@@ -5146,7 +5138,6 @@ for(let k of [
 // The html element, which is the DOM nodes that you know and love.
 swde("HTMLElement", class extends w.Element {
     constructor() { super(); }
-    static toString() { return "function HTMLElement() { [native code] }"}
 
     // style object is on demand
     get style()
@@ -5299,7 +5290,6 @@ helemp.offsetLeft = 0.0;
 
 swde("SVGElement", class extends w.Element {
     constructor() { super(); }
-    static toString() { return "function SVGElement() { [native code] }"}
 })
 // html element and svg elements are separate branches of the inheritance
 // tree, but they are both nodeType 1.
@@ -5307,82 +5297,66 @@ w.SVGElement.prototype.nodeType = 1;
 
 swde("SVGGraphicsElement", class extends w.SVGElement {
     constructor() { super(); }
-    static toString() { return "function SVGGraphicsElement() { [native code] }"}
 })
 
 swde("SVGTitleElement", class extends w.SVGElement {
     constructor() { super(); }
-    static toString() { return "function SVGTitleElement() { [native code] }"}
 })
 
 swde("SVGStyleElement", class extends w.SVGElement {
     constructor() { super(); }
-    static toString() { return "function SVGStyleElement() { [native code] }"}
 })
 
 swde("SVGStopElement", class extends w.SVGElement {
     constructor() { super(); }
-    static toString() { return "function SVGStopElement() { [native code] }"}
 })
 
 swde("SVGMaskElement", class extends w.SVGElement {
     constructor() { super(); }
-    static toString() { return "function SVGMaskElement() { [native code] }"}
 })
 
 swde("SVGGradientElement", class extends w.SVGElement {
     constructor() { super(); }
-    static toString() { return "function SVGGradientElement() { [native code] }"}
 })
 
 swde("SVGLinearGradientElement", class extends w.SVGGradientElement {
     constructor() { super(); }
-    static toString() { return "function SVGLinearGradientElement() { [native code] }"}
 })
 
 swde("SVGGeometryElement", class extends w.SVGGraphicsElement {
     constructor() { super(); }
-    static toString() { return "function SVGGeometryElement() { [native code] }"}
 })
 
 swde("SVGDefsElement", class extends w.SVGGraphicsElement {
     constructor() { super(); }
-    static toString() { return "function SVGDefsElement() { [native code] }"}
 })
 
 swde("SVGUseElement", class extends w.SVGGraphicsElement {
     constructor() { super(); }
-    static toString() { return "function SVGUseElement() { [native code] }"}
 })
 
 swde("SVGPolygonElement", class extends w.SVGGeometryElement {
     constructor() { super(); }
-    static toString() { return "function SVGPolygonElement() { [native code] }"}
 })
 
 swde("SVGRectElement", class extends w.SVGGeometryElement {
     constructor() { super(); }
-    static toString() { return "function SVGRectElement() { [native code] }"}
 })
 
 swde("SVGEllipseElement", class extends w.SVGGeometryElement {
     constructor() { super(); }
-    static toString() { return "function SVGEllipseElement() { [native code] }"}
 })
 
 swde("SVGGElement", class extends w.SVGGraphicsElement {
     constructor() { super(); }
-    static toString() { return "function SVGGElement() { [native code] }"}
 })
 
 swde("SVGSVGElement", class extends w.SVGGraphicsElement {
     constructor() { super(); }
-    static toString() { return "function SVGSVGElement() { [native code] }"}
 })
 
 swde("SVGPathElement", class extends w.SVGGeometryElement {
     constructor() { super(); }
-    static toString() { return "function SVGPathElement() { [native code] }"}
 })
 
 swde("Text", class extends w.HTMLElement {
@@ -5393,7 +5367,6 @@ swde("Text", class extends w.HTMLElement {
         // data always has to be a string
         if(arguments.length > 0) this.data$2 += arguments[0];
     }
-    static toString() { return "function Text() { [native code] }"}
 })
 
 let textp = w.Text.prototype;
@@ -5426,7 +5399,6 @@ swde("Comment", class extends w.HTMLElement {
         super();
         this.data = t;
     }
-    static toString() { return "function Comment() { [native code] }"}
 })
 let cmtp = w.Comment.prototype;
 cmtp.nodeName = cmtp.tagName = "#comment";
@@ -5441,7 +5413,6 @@ return c;
 
 swde("DocumentFragment", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function DocumentFragment() { [native code] }"}
 })
 
 let fragp = w.DocumentFragment.prototype;
@@ -5454,12 +5425,10 @@ return c;
 
 swde("CharacterData", class extends w.Node {
     constructor() { super(); }
-    static toString() { return "function CharacterData() { [native code] }"}
 })
 
 swde("ProcessingInstruction", class extends w.CharacterData {
     constructor() { super(); }
-    static toString() { return "function ProcessingInstruction() { [native code] }"}
 })
 let pip = w.ProcessingInstruction.prototype;
 pip.sheet = null;
@@ -5533,7 +5502,6 @@ this.removeChild(this.cells[n]);
 // classes and prototypes for table, sections, row, cell
 swde("HTMLTableSectionElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLTableSectionElement() { [native code] }"}
 })
 swde("z$tBody", class extends w.HTMLTableSectionElement {
     constructor() {
@@ -5565,7 +5533,6 @@ swde("HTMLTableElement", class extends w.HTMLElement {
         this.rows = new w.Array;
         this.tBodies = new w.Array;
     }
-    static toString() { return "function HTMLTableElement() { [native code] }"}
 })
 
 swde("HTMLTableRowElement", class extends w.HTMLElement {
@@ -5574,11 +5541,9 @@ swde("HTMLTableRowElement", class extends w.HTMLElement {
         super();
         this.cells = new w.Array;
     }
-    static toString() { return "function HTMLTableRowElement() { [native code] }"}
 })
 swde("HTMLTableCellElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLTableCellElement() { [native code] }"}
 })
 let tablep = w.HTMLTableElement.prototype;
 let tablesecp = w.HTMLTableSectionElement.prototype;
@@ -5628,7 +5593,6 @@ swde("HTMLOptionElement", class extends w.HTMLElement {
         if (arguments.length > 0) this.text = arguments[0];
         if (arguments.length > 1) this.value = arguments[1];
     }
-    static toString() { return "function HTMLOptionElement() { [native code] }"}
 })
 swpc("Option", w.HTMLOptionElement)
 let optp = w.HTMLOptionElement.prototype;
@@ -5639,7 +5603,6 @@ optp.text = optp.value = "";
 
 swde("HTMLOptGroupElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLOptGroupElement() { [native code] }"}
 })
 let optgp = w.HTMLOptGroupElement.prototype;
 optgp.nodeName = optgp.tagName = "OPTGROUP";
@@ -5654,7 +5617,6 @@ swde("HTMLSelectElement", class extends w.HTMLElement {
         this.validity = new w.Validity;
         this.validity.owner = this;
     }
-    static toString() { return "function HTMLSelectElement() { [native code] }"}
 
     get value() {
         const a = this.options;
@@ -5784,15 +5746,12 @@ swde("HTMLInputElement", class extends w.HTMLElement {
         this.validity = new w.Validity;
         this.validity.owner = this;
     }
-    static toString() { return "function HTMLInputElement() { [native code] }"}
 })
 swde("HTMLButtonElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLButtonElement() { [native code] }"}
 })
 swde("HTMLTextAreaElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLTextAreaElement() { [native code] }"}
 })
 
 let inputp = w.HTMLInputElement.prototype;
@@ -5969,7 +5928,6 @@ swde("HTMLFormElement", class extends w.HTMLElement {
         this.elements = new w.Array;
         this.elements.toString = ()=>{return "HTMLFormControlsCollection"}
     }
-    static toString() { return "function HTMLFormElement() { [native code] }"}
 
     get length() { return this.elements.length}
 })
@@ -5984,7 +5942,6 @@ swde("HTMLFieldSetElement", class extends w.HTMLElement {
         this.elements = new w.Array;
         this.elements.toString = ()=>{ return '[object HTMLCollection]'}
     }
-    static toString() { return "function HTMLFieldSetElement() { [native code] }"}
 
      checkValidity() { return true; }
      reportValidity() { return true; }
@@ -6001,7 +5958,6 @@ swde("HTMLLegendElement", class extends w.HTMLElement {
     constructor() {
         super();
     }
-    static toString() { return "function HTMLLegendElement() { [native code] }"}
     get form() {
         let p = this.parentNode;
         return p && p.dom$class == "HTMLFieldSetElement" ? p.form : null;
@@ -6012,19 +5968,16 @@ swde("HTMLTitleElement", class extends w.HTMLElement {
     constructor() {
         super();
     }
-    static toString() { return "function HTMLTitleElement() { [native code] }"}
 })
 
 swde("HTMLQuoteElement", class extends w.HTMLElement {
     constructor() {
         super();
     }
-    static toString() { return "function HTMLQuoteElement() { [native code] }"}
 })
 
 swde("HTMLImageElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLImageElement() { [native code] }"}
 })
 swpc("Image", w.HTMLImageElement)
 
@@ -6037,7 +5990,6 @@ set:function(v) { this.setAttribute("alt", v);
 
 swde("HTMLScriptElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLScriptElement() { [native code] }"}
 })
 w.HTMLScriptElement.supports = function(t) {
 if(typeof t != "string") return false;
@@ -6063,57 +6015,47 @@ scriptp.text = "";
 // the all important <a>, the whole point of the internet
 swde("HTMLAnchorElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLAnchorElement() { [native code] }"}
 })
 
 // classes that support lists in html
 swde("HTMLOListElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLOListElement() { [native code] }"}
 })
 
 swde("HTMLUListElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLUListElement() { [native code] }"}
 })
 swde("HTMLDListElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLDListElement() { [native code] }"}
 })
 
 swde("HTMLLIElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLLIElement() { [native code] }"}
 })
 
 swde("HTMLLabelElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLLabelElement() { [native code] }"}
 })
 let labelp = w.HTMLLabelElement.prototype;
 odp(labelp, "htmlFor", { get: function() { return this.getAttribute("for"); }, set: function(h) { this.setAttribute("for", h); }})
 
 swde("HTMLHRElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLHRElement() { [native code] }"}
 })
 
 // <head> and friends
 swde("HTMLHeadElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLHeadElement() { [native code] }"}
 }, false)
 
 swde("HTMLMetaElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLMetaElement() { [native code] }"}
 }, false)
 
 let metap = w.HTMLMetaElement.prototype;
 odp(metap, "httpEquiv", { get: function() { return this.getAttribute("http-equiv"); }, set: function(h) { this.setAttribute("http-equiv", h); }})
 swde("HTMLBaseElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLBaseElement() { [native code] }"}
 }, false)
 
 swde("z$Title", class extends w.HTMLElement {
@@ -6125,7 +6067,6 @@ get: function(){ return this.firstChild && this.firstChild.nodeName == "#text" &
 });
 swde("HTMLLinkElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLLinkElement() { [native code] }"}
 }, false)
 
 // It's a list but why would it ever be more than one?
@@ -6140,7 +6081,6 @@ return a;
 // <body>
 swde("HTMLBodyElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLBodyElement() { [native code] }"}
 }, false)
 
 let bodyp = w.HTMLBodyElement.prototype;
@@ -6177,7 +6117,6 @@ htmlp.scrollLeft = 0;
 // is there a difference between DocType ad DocumentType?
 swde("DocType", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function DocType() { [native code] }"}
 })
 
 w.DocType.prototype.nodeType = 10;
@@ -6187,7 +6126,6 @@ swpc("DocumentType", w.DocType)
 // <div> <p> <span>
 swde("HTMLDivElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLDivElement() { [native code] }"}
 })
 
 let divp = w.HTMLDivElement.prototype;
@@ -6196,11 +6134,9 @@ divp.align = "left";
 
 swde("HTMLParagraphElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLParagraphElement() { [native code] }"}
 })
 swde("HTMLSpanElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLSpanElement() { [native code] }"}
 })
 let spanp = w.HTMLSpanElement.prototype;
 spanp.doScroll = eb$voidfunction;
@@ -6208,7 +6144,6 @@ spanp.doScroll = eb$voidfunction;
 // h1 through h6 and our own classes for header footer
 swde("HTMLHeadingElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLHeadingElement() { [native code] }"}
 })
 swde("z$Header", class extends w.HTMLElement {
     constructor() { super(); }
@@ -6220,7 +6155,6 @@ swde("z$Footer", class extends w.HTMLElement {
 // media and audio
 swde("HTMLMediaElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLMediaElement() { [native code] }"}
 })
 let mediap = w.HTMLMediaElement.prototype;
 mediap.autoplay = false;
@@ -6245,7 +6179,6 @@ swde("HTMLAudioElement", class extends w.HTMLMediaElement {
         if (typeof t == "string") this.src = t;
         if (typeof t == "object") this.src = t.toString();
     }
-    static toString() { return "function HTMLAudioElement() { [native code] }"}
 })
 swpc("Audio", w.HTMLAudioElement)
 w.HTMLAudioElement.prototype.nodeName = "AUDIO"
@@ -6270,17 +6203,14 @@ swde("AudioContext", class extends w.Object {
         this.suspend = eb$voidfunction;
         this.close = eb$voidfunction;
     }
-    static toString() { return "function AudioContext() { [native code] }"}
 })
 
 swde("HTMLObjectElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLObjectElement() { [native code] }"}
 })
 
 swde("HTMLTemplateElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLTemplateElement() { [native code] }"}
 })
 
 odp(w.HTMLTemplateElement.prototype, "content", {
@@ -6299,7 +6229,6 @@ return frag
 
 swde("HTMLDetailsElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLDetailsElement() { [native code] }"}
 })
 let detp = w.HTMLDetailsElement.prototype;
 odp(detp, "open", {
@@ -6309,16 +6238,13 @@ set:function(v) { this.setAttribute("open", v);}});
 
 swde("ShadowRoot", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function ShadowRoot() { [native code] }"}
 })
 
 swde("HTMLAreaElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLAreaElement() { [native code] }"}
 })
 swde("HTMLFrameElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLFrameElement() { [native code] }"}
 })
 let framep = w.HTMLFrameElement.prototype;
 framep.is$frame = true;
@@ -6328,7 +6254,6 @@ odp(framep, "contentWindow", { get: eb$getter_cw});
 // These may be different but for now I'm calling them the same.
 swde("HTMLIFrameElement", class extends w.HTMLFrameElement {
     constructor() { super(); }
-    static toString() { return "function HTMLIFrameElement() { [native code] }"}
 })
 
 /*********************************************************************
@@ -6474,7 +6399,6 @@ function dhp(obj, ev)
 // into the prototype, I have to set it in the constructor.
 swde("HTMLCanvasElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLCanvasElement() { [native code] }"}
     getContext(x)
     {
         return {
@@ -6548,7 +6472,6 @@ swde("CSSStyleDeclaration", class extends w.HTMLElement {
         odp(this, "style$2", {value:this});
         odp(this, "element", {value:null, writable:true});
     }
-    static toString() { return "function CSSStyleDeclaration() { [native code] }"}
 
     toString() { return "style object" };
     // sheet on demand
@@ -6785,7 +6708,6 @@ let csdp = w.CSSStyleDeclaration.prototype;
 
 swde("HTMLStyleElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLStyleElement() { [native code] }"}
     get css$data()
     {
         let s = "";
@@ -6798,18 +6720,15 @@ swde("HTMLStyleElement", class extends w.HTMLElement {
 
 swde("CSSRule", class extends w.Object {
     constructor() {super(); this.cssText=""; }
-    static toString() { return "function CSSRule() { [native code] }"}
     toString() { return this.cssText; }
 })
 
 // This isn't really right, but it's easy
 swde("CSSRuleList", class extends w.Array {
     constructor() { super(); }
-    static toString() { return "function CSSRuleList() { [native code] }"}
 })
 swde("CSSStyleSheet", class extends w.Object {
     constructor() { super(); this.cssRules = new w.CSSRuleList; }
-    static toString() { return "function CSSStyleSheet() { [native code] }"}
 })
 let cssp = w.CSSStyleSheet.prototype;
 cssp.insertRule = function(r, idx) {
@@ -6828,7 +6747,6 @@ cssp.addRule = function(sel, r, idx) {
 
 swde("HTMLTimeElement", class extends w.HTMLElement {
     constructor() { super(); }
-    static toString() { return "function HTMLTimeElement() { [native code] }"}
 }, false)
 let timep = w.HTMLTimeElement.prototype;
 odp(timep, "dateTime", {get: function(){return this.getAttribute("datetime")}})
@@ -6860,7 +6778,6 @@ swde("CDATASection", class extends w.Text {
         super();
         this.data = t;
     }
-    static toString() { return "function CDATASection() { [native code] }"}
 })
 
 let cdatap = w.CDATASection.prototype;
@@ -7230,7 +7147,6 @@ swde("XMLHttpRequest", class extends w.EventTarget {
         this.status = 0;
         this.statusText = "";
     }
-    static toString() { return "function XMLHttpRequest() { [native code] }"}
     toString (){ return "[object XMLHttpRequest]"; }
 })
 let xmlp = w.XMLHttpRequest.prototype;

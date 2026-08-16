@@ -21,6 +21,7 @@ if(frag.ownerDocument != document) msg += "|frag bad owner"
 frag.appendChild(document.createElement("hr"))
 frag.appendChild(document.createElement("hr"))
 frag.appendChild(document.createElement("hr"))
+if(HTMLHRElement != "function HTMLHRElement() { [native code] }") msg += "|bad HR static toString";
 hr = frag.firstChild
 b.appendChild(frag)
 if(frag.children.length) msg += "|lines did not leave frag"
