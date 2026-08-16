@@ -5125,6 +5125,21 @@ for(let k of [
 "replaceChild" , "remove" , "closest" , "attachShadow" , "injectSetup" ])
     eval(`Object.defineProperty(elemp.${k}, "toString", {value: ()=>{return "function ${k}() {\\n    [native code]\\n}"}})`);
 
+// name property spills up and down for input, acid test 53
+function nameSpill(n)
+{
+    const dc = n.dom$class;
+    return  dc == "HTMLInputElement" ||
+    dc == "HTMLButtonElement" ||
+    dc == "HTMLSelectElement" ||
+    dc == "HTMLFormElement" ||
+    dc == "HTMLImageElement" ||
+    dc == "HTMLIFrameElement" ||
+    dc == "HTMLFrameElement" ||
+    dc == "HTMLTextAreaElement" ||
+    dc == "HTMLAnchorElement";
+}
+
 // The html element, which is the DOM nodes that you know and love.
 swde("HTMLElement", class extends w.Element {
     constructor() { super(); }
@@ -5145,62 +5160,53 @@ swde("HTMLElement", class extends w.Element {
         const t = this.getAttribute("disabled");
         return !(t === null || t === false || t === "false" || t === 0 || t === '0');
     }
-
     set disabled(v) { this.setAttribute("disabled", v); }
-    /*
-        per mdn the click method simulates a mouse click. Based on the examples
-        I'm taking that to mean dispatch the relevant event.
-    */
+
+get hidden()
+{
+    const t = this.getAttribute("hidden");
+    return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true;
+}
+set hidden(v) { this.setAttribute("hidden", v);}
+
+    get name()
+    {
+        if(!nameSpill(this)) return this.name$2 ;
+        let t = this.getAttribute("name");
+        if(t === null) t = "" // name was never defined
+        if(t === undefined) t = "";
+        // if defined it should always be a string
+        return typeof t == "string" ? t : t.toString();
+    }
+
+    set name(n)
+    {
+        if(!nameSpill(this)) {
+            odp(this, "name$2", {value:n,writable:true,configurable:true});
+            return;
+        }
+        this.setAttribute("name", n);
+        const f = this.form;
+        if(f && f.dom$class == "HTMLFormElement")
+            formReindex(f);
+    }
+
+    get title() {
+        const t = this.getAttribute("title");
+        // acid test 3 has numbers for titles
+        const y = typeof t;
+        return y == "string" || y == "number" ? t : undefined;
+    }
+    set title(v) { this.setAttribute("title", v);}
+
+//     per mdn the click method simulates a mouse click. Based on the examples
+//     I'm taking that to mean dispatch the relevant event.
     click()
     {
         if (!this.disabled) this.dispatchEvent(new w.MouseEvent("click"));
     }
 })
 let helemp = w.HTMLElement.prototype;
-// name property spills up and down for input, acid test 53
-function nameSpill(n) {
-    const dc = n.dom$class;
-    return  dc == "HTMLInputElement" ||
-    dc == "HTMLButtonElement" ||
-    dc == "HTMLSelectElement" ||
-    dc == "HTMLFormElement" ||
-    dc == "HTMLImageElement" ||
-    dc == "HTMLIFrameElement" ||
-    dc == "HTMLFrameElement" ||
-    dc == "HTMLTextAreaElement" ||
-    dc == "HTMLAnchorElement";
-}
-odp(helemp, "name", {
-get: function() {
-if(!nameSpill(this)) return this.name$2 ;
-let t = this.getAttribute("name");
-if(t === null) t = "" // name was never defined
-if(t === undefined) t = ""
-// if defined it should always be a string
-return typeof t == "string" ? t : t.toString(); },
-set: function(n) {
-if(!nameSpill(this)) { odp(this, "name$2", {value:n,writable:true,configurable:true}); return}
-const f = this.form;
-if(f && f.dom$class == "HTMLFormElement") {
-const oldname = this.getAttribute("name");
-if(oldname && f[oldname] == this) delete f[oldname];
-if(oldname && f.elements[oldname] == this) delete f.elements[oldname];
-if(!f[n]) f[n] = this;
-if(!f.elements[n]) f.elements[n] = this;
-}
-this.setAttribute("name", n);
-}});
-odp(helemp, "title", {
-get:function(){ const t = this.getAttribute("title");
-// in the real world this is always a string, but acid test 3 has numbers for titles
-const y = typeof t;
-return y == "string" || y == "number" ? t : undefined; },
-set:function(v) { this.setAttribute("title", v);}});
-// almost anything can be hidden, an entire div section, etc
-odp(helemp, "hidden", {
-get:function(){ const t = this.getAttribute("hidden");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("hidden", v);}});
 helemp.nodeType = 1;
 
 // helper functions for textContent
