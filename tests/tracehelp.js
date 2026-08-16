@@ -7,7 +7,9 @@ That might be 200,000 trace messages.
 Also, alert doesn't work in headless chrome.
 So we capture the output in a string instead.
 Then put it in a textarea so it will not be parsed by html.
-Then put that in the show paragraph. */
+Then put that in the show paragraph.
+You can add in your own alerts, into the js file,
+providing useful information beyond the tracing. */
 
 tlog = ""; // trace log
 show = document.getElementById("show");

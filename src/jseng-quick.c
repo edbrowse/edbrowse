@@ -3923,8 +3923,8 @@ int extra) // bits: radio, window, document, unknown
     JSContext *cx = cf->cx;
     JSValue owner = JS_NULL;
     JSValue io = JS_UNDEFINED;	// the input object
+    int action = t->action;
     uchar isunknown = (extra&8);
-// some strings from the html tag
     	static const char * const z_list[] = {
         "Header", "Footer", "Title", "Datalist",
         "tHead", "tBody", "tFoot", "HTML", 0};
@@ -3957,10 +3957,21 @@ if(extra == 4)
     if(t->action != TAGACT_DOCTYPE) {
         if(!stringEqual(t->nodeNameU, "CDATA") &&
         !stringEqual(t->nodeNameU, "COMMENT")) {
-            char *js_node = ((t->action == TAGACT_UNKNOWN ||
-            cf->xmlMode) ? t->nodeName : t->nodeNameU);
+            char *js_node = cloneString(t->nodeName);
+            if(!cf->xmlMode) {
+                if((action >= TAGACT_SVG && action <= TAGACT_POLYGON) ||
+                stringEqual(classname, "SVGStyleElement") ||
+                stringEqual(classname, "SVGTitleElement")) {
+                    caseShift(js_node, 'l');
+                    if(stringEqual(js_node, "lineargradient"))
+                        js_node[6] = 'G';
+                } else {
+                    caseShift(js_node, 'u');
+                }
+            }
             define_hidden_property_string(cx, io, "nodeName", js_node);
             define_hidden_property_string(cx, io, "tagName", js_node);
+            nzFree(js_node);
         }
     }
     connectTagObject(t, io);

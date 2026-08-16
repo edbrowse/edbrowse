@@ -47,6 +47,7 @@ static const struct tagInfo availableTags[] = {
 	{"comment", "a comment", TAGACT_COMMENT, 0, 2},
 	{"datalist", "an input list", TAGACT_DATAL, 0, 0},
 	{"dd", "a definition", TAGACT_DD, 1, 4},
+	{"defs", "an svg definition", TAGACT_DEFS, 0, 0},
 	{"del", "deleted text", TAGACT_DEL, 0, 0},
 	{"details", "details", TAGACT_DET, 10, 1},
 	{"dfn", "definition text", TAGACT_JS, 0, 0},
@@ -57,6 +58,7 @@ static const struct tagInfo availableTags[] = {
 	{"document", "a document", TAGACT_DOC, 5, 1},
 	{"dt", "a term", TAGACT_DT, 2, 4},
 	{"element", "an input element", TAGACT_INPUT, 0, 4},
+	{"ellipse", "an svg ellipse", TAGACT_ELLIPSE, 0, 0},
 	{"em", "emphasized text", TAGACT_EM, 0, 0},
 	{"embed", "embedded html", TAGACT_MUSIC, 0, 0},
 	{"fieldset", "a field set", TAGACT_FIELDSET, 10, 1},
@@ -69,6 +71,8 @@ static const struct tagInfo availableTags[] = {
 	{"fragment", "a document fragment", TAGACT_FRAG, 5, 1},
 	{"frame", "a frame", TAGACT_FRAME, 2, 0},
 	{"frameset", "a frame set", TAGACT_JS, 0, 0},
+	{"g", "an svg group", TAGACT_G, 0, 0},
+	{"gradient", "an svg gradient", TAGACT_GRADIENT, 0, 0},
 	{"h1", "a level 1 header", TAGACT_H, 10, 1},
 	{"h2", "a level 2 header", TAGACT_H, 10, 1},
 	{"h3", "a level 3 header", TAGACT_H, 10, 1},
@@ -90,9 +94,11 @@ static const struct tagInfo availableTags[] = {
 	{"label", "a label", TAGACT_LABEL, 0, 0},
 	{"legend", "a legend", TAGACT_LEGEND, 0, 0},
 	{"li", "a list item", TAGACT_LI, 1, 5},
+	{"lineargradient", "an svg linear gradient", TAGACT_LINEARGRADIENT, 0, 0},
 	{"link", "a link tag", TAGACT_LINK, 0, 4},
 	{"listing", "a listing", TAGACT_PRE, 1, 0},
 	{"map", "a map of images", TAGACT_NOP, 5, 0},
+	{"mask", "an svg mask", TAGACT_MASK, 0, 0},
 	{"menu", "a menu", TAGACT_NOP, 5, 0},
 	{"meta", "a meta tag", TAGACT_META, 0, 4},
 	{"nav", "a navigation section", TAGACT_DIV, 5, 1},
@@ -105,9 +111,11 @@ static const struct tagInfo availableTags[] = {
 	{"option", "a select option", TAGACT_OPTION, 0, 0},
 	{"ovb", "an overbar", TAGACT_OVB, 0, 0},
 	{"p", "a paragraph", TAGACT_P, 10, 1},
-	{"path", "an svg path", TAGACT_PATH, 0, 1},
+	{"path", "an svg path", TAGACT_PATH, 0, 0},
+	{"polygon", "an svg polygon", TAGACT_POLYGON, 0, 0},
 	{"pre", "a preformatted section", TAGACT_PRE, 10, 0},
 	{"q", "quoted text", TAGACT_BQ, 0, 1},
+	{"rect", "an svg rectangle", TAGACT_RECT, 0, 0},
 	{"s", "strikethrough text", TAGACT_S, 0, 0},
 	{"samp", "a block of sample text", TAGACT_NOP, 0, 0},
 	{"script", "a script", TAGACT_SCRIPT, 0, 3},
@@ -115,13 +123,14 @@ static const struct tagInfo availableTags[] = {
 	{"select", "an option list", TAGACT_SELECT, 0, 0},
 	{"source", "source of audio or video", TAGACT_SOURCE, 0, 4},
 	{"span", "an html span", TAGACT_SPAN, 0, 1},
+	{"stop", "an svg stop", TAGACT_STOP, 0, 0},
 	{"strike", "emphasized text", TAGACT_JS, 0, 0},
 	{"strong", "emphasized text", TAGACT_STRONG, 0, 0},
 	{"style", "a style tag", TAGACT_STYLE, 0, 2},
 	{"sub", "a subscript", TAGACT_SUB, 0, 0},
 	{"summary", "summary of details", TAGACT_SUMMARY, 10, 1},
 	{"sup", "a superscript", TAGACT_SUP, 0, 0},
-	{"svg", "an svg image", TAGACT_SVG, 0, 1},
+	{"svg", "an svg image", TAGACT_SVG, 0, 0},
 	{"table", "a table", TAGACT_TABLE, 10, 1},
 	{"tbody", "a table body", TAGACT_TBODY, 0, 1},
 	{"td", "a table entry", TAGACT_TD, 0, 1},
@@ -137,6 +146,7 @@ static const struct tagInfo availableTags[] = {
 	{"tt", "teletype", TAGACT_NOP, 0, 0},
 	{"u", "underlined text", TAGACT_U, 0, 0},
 	{"ul", "a bullet list", TAGACT_UL, 10, 1},
+	{"use", "an svg use", TAGACT_USE, 0, 0},
 	{"var", "variable text", TAGACT_JS, 0, 0},
 	{"video", "video passage", TAGACT_MUSIC, 0, 0},
 	{"xmp", "an example", TAGACT_PRE, 1, 0},
@@ -1278,7 +1288,7 @@ With this understanding, we can, and should, scan for </script
 			continue;
 		}
 
-		if(stringEqual(lowname, "style")) {
+		if(stringEqual(lowname, "style") && !findOpenSVG(working_t)) {
 // this is like script; leave it alone!
 			if(!(lt = strcasestr(seek, "</style"))) {
 				scannerError1("open style at line %d, html parsing stops here", ln);
@@ -4309,11 +4319,11 @@ static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
 		break;
 
 	case TAGACT_TITLE:
-		if((t->controller = findOpenTag(t, TAGACT_SVG))) {
-// this is title for svg, not for the document.
-// Just turn things into span.
-			t->action = t->controller->action = TAGACT_SPAN;
-			break;
+		if(findOpenTag(t, TAGACT_BODY)) {
+		    // this is title for some body tag, not for the document.
+		    // <title> is grossly overloaded.
+		    // Means something completely different if in svg.
+		    break;
 		}
 		currentTitle = (opentag ? t : 0);
 		break;
@@ -4451,7 +4461,8 @@ static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
 		break;
 
 	case TAGACT_STYLE:
-		currentStyle = opentag ? t : 0;
+		if(!findOpenSVG(t))
+			currentStyle = opentag ? t : 0;
 		break;
 
 	case TAGACT_SELECT:
@@ -4802,12 +4813,15 @@ Needless to say that's not good!
 		break;
 
 	case TAGACT_STYLE:
-		domLink(t, "HTMLStyleElement", 0, 4);
-		a = attribVal(t, "type");
-		if (!a) a = emptyString;
-// if type is spilldown then we don't need this line.
-		set_property_string_t(t, "type", a);
-		break;
+	    if(findOpenSVG(t))
+	        domLink(t, "SVGStyleElement", 0, 4);
+	    else
+	        domLink(t, "HTMLStyleElement", 0, 4);
+	    a = attribVal(t, "type");
+	    if (!a) a = emptyString;
+            // if type is spilldown then we don't need this line.
+	    set_property_string_t(t, "type", a);
+	    break;
 
 	case TAGACT_COMMENT:
 		domLink(t, "Comment", 0, 4);
@@ -4855,6 +4869,46 @@ Needless to say that's not good!
 
 	case TAGACT_PATH:
 		domLink(t, "SVGPathElement", 0, 0);
+		break;
+
+	case TAGACT_POLYGON:
+		domLink(t, "SVGPolygonElement", 0, 0);
+		break;
+
+	case TAGACT_ELLIPSE:
+		domLink(t, "SVGEllipseElement", 0, 0);
+		break;
+
+	case TAGACT_RECT:
+		domLink(t, "SVGRectElement", 0, 0);
+		break;
+
+	case TAGACT_GRADIENT:
+		domLink(t, "SVGGradientElement", 0, 0);
+		break;
+
+	case TAGACT_LINEARGRADIENT:
+		domLink(t, "SVGLinearGradientElement", 0, 0);
+		break;
+
+	case TAGACT_DEFS:
+		domLink(t, "SVGDefsElement", 0, 0);
+		break;
+
+	case TAGACT_STOP:
+		domLink(t, "SVGStopElement", 0, 0);
+		break;
+
+	case TAGACT_MASK:
+		domLink(t, "SVGMaskElement", 0, 0);
+		break;
+
+	case TAGACT_USE:
+		domLink(t, "SVGUseElement", 0, 0);
+		break;
+
+	case TAGACT_G:
+		domLink(t, "SVGGElement", 0, 0);
 		break;
 
 	case TAGACT_BQ:
@@ -5013,6 +5067,13 @@ Needless to say that's not good!
 		break;
 
 	case TAGACT_TITLE:
+		if(findOpenTag(t, TAGACT_BODY)) {
+		    if(findOpenSVG(t))
+		        domLink(t, "SVGTitleElement", 0, 0);
+		    else
+		        domLink(t, "HTMLTitleElement", 0, 0);
+		    break;
+		}
 		if (cw->htmltitle)
 			set_property_string_doc(cf, "title", cw->htmltitle);
 		domLink(t, "Title", 0, 4);
@@ -5104,32 +5165,25 @@ Needless to say that's not good!
 
 static void pushAttributes(const Tag *t)
 {
-	int i;
-	const char **a = t->attributes;
-	const char **v = t->atvals;
-	const char *u;
-	char *x;
-	if (!a)
-		return;
-
-	set_property_bool_win(cf, "eb$push$attributes", true);
-	for (i = 0; a[i]; ++i) {
-// html tags and attributes are case insensitive.
-// That's why the entire getAttribute system drops names to lower case.
-		u = v[i];
-		if (!u)
-			u = emptyString;
-		x = cloneString(a[i]);
-		if(!cf->xmlMode) caseShift(x, 'l');
-
-		run_function_twostring_t(t, "setAttribute", x, u);
-// special case, classname sets the class.
-// Are there others like this?
-		if(stringEqual(x, "classname"))
-			run_function_twostring_t(t, "setAttribute", "class", u);
-		nzFree(x);
-	}
-	set_property_bool_win(cf, "eb$push$attributes", false);
+    int i;
+    const char **a = t->attributes;
+    const char **v = t->atvals;
+    const char *u;
+    if (!a) return;
+    set_property_bool_win(cf, "eb$push$attributes", true);
+    for (i = 0; a[i]; ++i) {
+        u = v[i];
+        if (!u) u = emptyString;
+        // allow setAttribute to drop this to lower case, if it's an html element.
+        // If it's an svg element, it shouldn't do that.
+        // Leave that in the hands of javascript.
+        run_function_twostring_t(t, "setAttribute", a[i], u);
+        // special case, classname sets the class.
+        // doesn't javascript do this for us?
+        if(stringEqualCI(a[i], "classname"))
+            run_function_twostring_t(t, "setAttribute", "class", u);
+    }
+    set_property_bool_win(cf, "eb$push$attributes", false);
 }
 
 /* decorate the tree of nodes with js objects */

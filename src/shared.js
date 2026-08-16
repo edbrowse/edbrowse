@@ -1797,9 +1797,9 @@ name == "checked" && nn == "input";
 },
 
 getAttribute: function(name) {
-var a, w = my$win();
+let a, w = my$win();
 if(!attr.attrNameValid(name)) return null;
-if(!this.eb$xml) name = name.toLowerCase();
+if(!(this.eb$xml || this instanceof w.SVGElement)) name = name.toLowerCase();
 if(attr.implicitMember(this, name)) return null;
 // has to be a real attribute
 if(!this.attributes$2) return null;
@@ -1841,9 +1841,9 @@ hasAttributeNS: function(space, name) { return this.getAttributeNS(space, name) 
 setAttribute: function(name, v) {
     var a, w = my$win();
 if(!attr.attrNameValid(name)) return;
-    if(!this.eb$xml) name = name.toLowerCase();
+if(!(this.eb$xml || this instanceof w.SVGElement)) name = name.toLowerCase();
 // special code for style
-    if(name == "style" && this.style.dom$class == "CSSStyleDeclaration") {
+    if(name == "style" && this.style && this.style.dom$class == "CSSStyleDeclaration") {
         this.style.cssText = v;
 }
     if(attr.implicitMember(this, name)) return;
@@ -1920,13 +1920,12 @@ this.setAttribute(name, v);
 },
 
 removeAttribute: function(name) {
+const w = my$win();
 if(!attr.attrNameValid(name)) return;
-if(!this.eb$xml)     name = name.toLowerCase();
+if(!(this.eb$xml || this instanceof w.SVGElement)) name = name.toLowerCase();
 // special code for style
-if(name == "style") {
-if(this.style$2 && this.style$2.dom$class == "CSSStyleDeclaration")
+if(name == "style" && this.style$2 && this.style$2.dom$class == "CSSStyleDeclaration")
 delete this.style$2;
-}
 if(!this.attributes$2) return;
 if(name.substr(0,5) == "data-") {
 var n = dataCamel(name);
@@ -1966,9 +1965,10 @@ this.removeAttribute(name);
 
 // this returns null if no such attribute.
 getAttributeNode: function(name) {
+const w = my$win();
 if(!this.attributes$2) return null;
 if(!attr.attrNameValid(name)) return null;
-    name = name.toLowerCase();
+if(!(this.eb$xml || this instanceof w.SVGElement)) name = name.toLowerCase();
 var a;
 if(name === "length") {
 a = null
@@ -1982,7 +1982,7 @@ return a;
 // b replaces a if a is present
 setAttributeNode: function(b) {
 if(typeof b != "object" || typeof b.name != "string") return null;
-var     a, name = b.name.toLowerCase();
+let     a, name = b.name;
 if(name === "length") {
 a = null
 for(var i=0; i<this.attributes.length; ++i)
@@ -1999,7 +1999,7 @@ return a
 
 removeAttributeNode: function(b) {
 if(typeof b != "object" || typeof b.name != "string") return null;
-var     name = b.name.toLowerCase();
+let     name = b.name;
 if(name === "length") {
 let i;
 for(i=0; i<this.attributes.length; ++i)
@@ -5301,15 +5301,78 @@ swde("SVGElement", class extends w.Element {
     constructor() { super(); }
     static toString() { return "function SVGElement() { [native code] }"}
 })
+// html element and svg elements are separate branches of the inheritance
+// tree, but they are both nodeType 1.
+w.SVGElement.prototype.nodeType = 1;
 
 swde("SVGGraphicsElement", class extends w.SVGElement {
     constructor() { super(); }
     static toString() { return "function SVGGraphicsElement() { [native code] }"}
 })
 
+swde("SVGTitleElement", class extends w.SVGElement {
+    constructor() { super(); }
+    static toString() { return "function SVGTitleElement() { [native code] }"}
+})
+
+swde("SVGStyleElement", class extends w.SVGElement {
+    constructor() { super(); }
+    static toString() { return "function SVGStyleElement() { [native code] }"}
+})
+
+swde("SVGStopElement", class extends w.SVGElement {
+    constructor() { super(); }
+    static toString() { return "function SVGStopElement() { [native code] }"}
+})
+
+swde("SVGMaskElement", class extends w.SVGElement {
+    constructor() { super(); }
+    static toString() { return "function SVGMaskElement() { [native code] }"}
+})
+
+swde("SVGGradientElement", class extends w.SVGElement {
+    constructor() { super(); }
+    static toString() { return "function SVGGradientElement() { [native code] }"}
+})
+
+swde("SVGLinearGradientElement", class extends w.SVGGradientElement {
+    constructor() { super(); }
+    static toString() { return "function SVGLinearGradientElement() { [native code] }"}
+})
+
 swde("SVGGeometryElement", class extends w.SVGGraphicsElement {
     constructor() { super(); }
     static toString() { return "function SVGGeometryElement() { [native code] }"}
+})
+
+swde("SVGDefsElement", class extends w.SVGGraphicsElement {
+    constructor() { super(); }
+    static toString() { return "function SVGDefsElement() { [native code] }"}
+})
+
+swde("SVGUseElement", class extends w.SVGGraphicsElement {
+    constructor() { super(); }
+    static toString() { return "function SVGUseElement() { [native code] }"}
+})
+
+swde("SVGPolygonElement", class extends w.SVGGeometryElement {
+    constructor() { super(); }
+    static toString() { return "function SVGPolygonElement() { [native code] }"}
+})
+
+swde("SVGRectElement", class extends w.SVGGeometryElement {
+    constructor() { super(); }
+    static toString() { return "function SVGRectElement() { [native code] }"}
+})
+
+swde("SVGEllipseElement", class extends w.SVGGeometryElement {
+    constructor() { super(); }
+    static toString() { return "function SVGEllipseElement() { [native code] }"}
+})
+
+swde("SVGGElement", class extends w.SVGGraphicsElement {
+    constructor() { super(); }
+    static toString() { return "function SVGGElement() { [native code] }"}
 })
 
 swde("SVGSVGElement", class extends w.SVGGraphicsElement {
@@ -5943,6 +6006,13 @@ swde("HTMLLegendElement", class extends w.HTMLElement {
         let p = this.parentNode;
         return p && p.dom$class == "HTMLFieldSetElement" ? p.form : null;
     }
+})
+
+swde("HTMLTitleElement", class extends w.HTMLElement {
+    constructor() {
+        super();
+    }
+    static toString() { return "function HTMLTitleElement() { [native code] }"}
 })
 
 swde("HTMLQuoteElement", class extends w.HTMLElement {
@@ -6865,7 +6935,6 @@ alert3("bad createElement(" + t + ')');
 return null;
 }
 
-let unknown = false;
 switch(t) {
 case "shadowroot": c = new w.ShadowRoot; break;
 case "body": c = new w.HTMLBodyElement; break;
@@ -6879,7 +6948,6 @@ case "link": c = new w.HTMLLinkElement; break;
 case "meta": c = new w.HTMLMetaElement; break;
 case "cssstyledeclaration":
 c = new w.CSSStyleDeclaration; c.element = null; break;
-case "style": c = new w.HTMLStyleElement; break;
 case "script": c = new w.HTMLScriptElement; break;
 case "template": c = new w.HTMLTemplateElement; break;
 case "document": c = new w.Document; break;
@@ -6889,6 +6957,14 @@ case "span": c = new w.HTMLSpanElement; break;
 case "label": c = new w.HTMLLabelElement; break;
 case "hr": c = new w.HTMLHRElement; break;
 case "blockquote": case "q": c = new w.HTMLQuoteElement; break;
+case "title":
+// in isolation, I have no idea if this is an html title or an svg title.
+// we just have to guess.
+c = new w.HTMLTitleElement; break;
+case "style":
+// in isolation, I have no idea if this is an html title or an svg title.
+// we just have to guess.
+c = new w.HTMLStyleElement; break;
 case "p": c = new w.HTMLParagraphElement; break;
 case "ol": c = new w.HTMLOListElement; break;
 case "ul": c = new w.HTMLUListElement; break;
@@ -6924,12 +7000,22 @@ case "textarea": c = new w.HTMLTextAreaElement; break;
 case "element": c = new w.Element; break;
 case "button": c = new w.HTMLButtonElement; break;
 case "svg": c = new w.SVGElement; break;
+case "path": c = new w.SVGPathElement; break;
+case "gradient": c = new w.SVGGradientElement; break;
+case "lineargradient": c = new w.SVGLinearGradientElement; break;
+case "defs": c = new w.SVGDefsElement; break;
+case "stop": c = new w.SVGStopElement; break;
+case "mask": c = new w.SVGMaskElement; break;
+case "use": c = new w.SVGUseElement; break;
+case "g": c = new w.SVGGElement; break;
+case "polygon": c = new w.SVGPolygonElement; break;
+case "rect": c = new w.SVGRectElement; break;
+case "ellipse": c = new w.SVGEllipseElement; break;
 case "article": case "section": c = new w.HTMLElement; break;
 case "time": c = new w.HTMLTimeElement; break;
 default:
-unknown = true;
 // alert("createElement default " + s);
-c = new w.HTMLUnknownElement;
+c = new w.HTMLElement;
 }
 
 // Split on : if this comes from a name space
@@ -6939,7 +7025,14 @@ if(colon.length == 2) {
     odp(c, "tagName", {value:t,writable:true,configurable:true});
     c.prefix = colon[0], c.localName = colon[1];
 } else if(c.nodeType == 1) {
-    let s2 = (unknown || this.eb$xml) ? s : s.toUpperCase();
+    let s2 = s;
+    if(!this.eb$xml) { // not xml, we have to fix the case
+        if(c instanceof w.SVGElement) {
+            s2 = s.toLowerCase();
+            // how many of these compound words are there?
+            if(s2 == "lineargradient") s2 = "linearGradient";
+        } else s2 = s.toUpperCase();
+    }
     odp(c, "nodeName", {value:s2,writable:true,configurable:true});
     odp(c, "tagName", {value:s2,writable:true,configurable:true});
 }
