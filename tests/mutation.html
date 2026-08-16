@@ -49,8 +49,14 @@ entry += ']';
         } else if (m.type === "characterData") {
             entry += `character=${m.oldValue}>${m.target.data}`
         }
-entry += '}';
-        log.add(entry);
+        entry += "}";
+        let count = 0;
+        let entry2;
+        do {
+            ++count;
+            entry2 = `${entry}(${count})`; 
+        } while(log.has(entry2));
+        log.add(entry2);
     }
 };
 
@@ -179,39 +185,39 @@ if(log.size) msg += "|observers ran during the script";
 setTimeout(()=>{
 // according to chrome and its upstream chromium
 correct = new Set([
-    '{3:worm=round>flat}',
-    '{OL:~LI[]>[LI]}',
-    '{3:[]OL~>[BLOCKQUOTE]}',
-    '{4:[P,P]>[SPAN,SPAN,SPAN]}',
-    '{4:~SPAN[SPAN]>[]}',
-    '{5:[SPAN]>[]}',
-    '{4:~SPAN[]>[SPAN]}',
-    '{6:~32[33]34~>[]}',
-    '{6:~36[37]38~>[]}',
-    '{6:[30]31~>[]}',
-    '{4:~SPAN[]>[33,37,40,41,30]}',
-    '{6:~32[34]35~>[]}',
-    '{6:~36[38]39~>[]}',
-    '{6:[31]32~>[]}',
-    '{4:[]SPAN~>[34,38,42,43,31]}',
-    '{6:~36[39]>[]}',
-    '{4:~38[]42~>[39]}',
-    '{6:[32]35~>[]}',
-    '{4:~42[]43~>[32,"zz"]}',
-    '{6:[35]36~>[]}',
-    '{6:[36]>[]}',
-    '{4:~39[42]32~>[35,"yy",36]}',
-    '{6:[]>[SPAN,SPAN]}',
-    '{5:r@*s=null>cat dog}',
-    '{5:jam=boysenberry>null}',
-    '{43:tick=null>tock}',
-    '{42:up=null>down}',
-    '{42:[]>["yesterday"]}',
-    '{"yesterday":character=tomorrow>yesterday}',
-    '{2:["start"]>["mid"]}',
-    '{3:[]OL~>[BLOCKQUOTE]}',
-    '{1:~SCRIPT[]>[HR]}',
-    '{1:~HR[]>[TEMPLATE]}'
+    '{3:worm=round>flat}(1)',
+    '{OL:~LI[]>[LI]}(1)',
+    '{3:[]OL~>[BLOCKQUOTE]}(1)',
+    '{4:[P,P]>[SPAN,SPAN,SPAN]}(1)',
+    '{4:~SPAN[SPAN]>[]}(1)',
+    '{5:[SPAN]>[]}(1)',
+    '{4:~SPAN[]>[SPAN]}(1)',
+    '{6:~32[33]34~>[]}(1)',
+    '{6:~36[37]38~>[]}(1)',
+    '{6:[30]31~>[]}(1)',
+    '{4:~SPAN[]>[33,37,40,41,30]}(1)',
+    '{6:~32[34]35~>[]}(1)',
+    '{6:~36[38]39~>[]}(1)',
+    '{6:[31]32~>[]}(1)',
+    '{4:[]SPAN~>[34,38,42,43,31]}(1)',
+    '{6:~36[39]>[]}(1)',
+    '{4:~38[]42~>[39]}(1)',
+    '{6:[32]35~>[]}(1)',
+    '{4:~42[]43~>[32,"zz"]}(1)',
+    '{6:[35]36~>[]}(1)',
+    '{6:[36]>[]}(1)',
+    '{4:~39[42]32~>[35,"yy",36]}(1)',
+    '{6:[]>[SPAN,SPAN]}(1)',
+    '{5:r@*s=null>cat dog}(1)',
+    '{5:jam=boysenberry>null}(1)',
+    '{43:tick=null>tock}(1)',
+    '{42:up=null>down}(1)',
+    '{42:[]>["yesterday"]}(1)',
+    '{"yesterday":character=tomorrow>yesterday}(1)',
+    '{2:["start"]>["mid"]}(1)',
+    '{3:[]OL~>[BLOCKQUOTE]}(2)',
+    '{1:~SCRIPT[]>[HR]}(1)',
+    '{1:~HR[]>[TEMPLATE]}(1)'
 ]);
 const success = !log.symmetricDifference(correct).size;
 if(!success) msg += "|rules don't match";
@@ -219,18 +225,18 @@ ob1.disconnect();
 ob2.disconnect();
 // make the rules one per line, for readability.
 let output = "";
-function addLog(heading, entries)
+function addOutput(heading, entries)
 {
     output += `<div><h2>${heading}</h2><ul>`;
-    for (const e of Array.from(entries).sort()) output += `<li>${e}</li>`;
+    for (const e of entries) output += `<li>${e}</li>`;
     output += "</ul></div>"
 }
 if (!success) {
-    addLog("Extra entries in log", log.difference(correct));
-    addLog("Missing entries in log", correct.difference(log));
+    addOutput("Extra entries in log", log.difference(correct));
+    addOutput("Missing entries in log", correct.difference(log));
 }
-addLog("Log", log);
-if(!success) addLog("Should be", correct);
+addOutput("Log", log);
+if(!success) addOutput("Should be", correct);
 show.innerHTML = `${msg}<br>${output}`;
 }, 600);
 
