@@ -889,7 +889,7 @@ MutationObserver.prototype.observe = function(target, cfg) {
         the config is passed in by reference.
     */
     const cfg_copy = structuredClone(cfg);
-    this.observe$target(target, cfg_copy);
+    if (!this.observe$target(target, cfg_copy)) return; // unobservable
     if(cfg_copy.subtree)
         this.observe$subtree(target, cfg_copy);
 }
@@ -897,6 +897,11 @@ MutationObserver.prototype.observe$target = function (target, cfg, dbg=alert3) {
     // May have other valid targets so don't disconnect
     if(typeof cfg != "object" || !(target instanceof Node))
         throw new TypeError("invalid argument types");
+    // Are there other unobservable elements?
+    if (target.nodeName && target.nodeName == "TEMPLATE") {
+        dbg(`not observing ${target.dom$class} tag ${target.eb$seqno} config ${JSON.stringify(cfg)}`)
+        return false;
+    }
     dbg(`observing ${target.dom$class} tag ${target.eb$seqno} config ${JSON.stringify(cfg)}`)
     this.targets.set(target, cfg);
     this.active = true;
@@ -905,6 +910,7 @@ MutationObserver.prototype.observe$target = function (target, cfg, dbg=alert3) {
         Object.defineProperty(target, "eb$observers", {value: new Set});
     }
     target.eb$observers.add(this);
+    return true;
 }
 MutationObserver.prototype.observe$subtree = function(target, cfg) {
     /* If we're observing subtrees then we need to directly observe those
@@ -922,7 +928,8 @@ MutationObserver.prototype.observe$subtree = function(target, cfg) {
     let n;
     while (i < a.length) {
         n = a[i++];
-        if (!this.targets.has(n)) this.observe$target(n, cfg, alert4);
+        if (!this.targets.has(n))
+            if (!this.observe$target(n, cfg, alert4)) continue;
         if (n.is$frame) continue;
         if (n.childNodes) a.push(...n.childNodes);
     }
