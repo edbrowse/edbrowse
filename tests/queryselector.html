@@ -208,6 +208,6 @@ if(li.closest("div:nth-of-type(odd)") ||
 li.closest("p") !== null) msg += "|closest found wrong nodes";
 
 show.innerHTML = msg;
-} catch(e) { show.innerHTML = "blowup " + e;}
+} catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/, "<br>");}
 </script>
 </body>

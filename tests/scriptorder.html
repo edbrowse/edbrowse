@@ -78,6 +78,6 @@ if(!on_css_load) h += '@3';
 const correct = "abcefghsizxyw/jkl2m/t";
 if(h == correct) show.innerHTML = "ok";
 else show.innerHTML = `ok|bad order  ${h} should be ${correct}`}, 600)
-} catch(e) { show.innerHTML = "blowup " + e;}
+} catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>
 </body>

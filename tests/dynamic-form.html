@@ -28,6 +28,7 @@ Fruit: <select name=fruit multiple>
 <pre id="log"></pre>
 
 <script>
+try {
 // if you press the show button, it shows you the choices you made -
 // what will be sent to the server by this form.
 // Thus it has an interactive capability, which you can test in edbrowse,
@@ -83,5 +84,6 @@ if(f2.action != form.action) msg += "|clone action mismatch";
 // This test doesn't pass in chrome
 //if(f2.contact[3].fs$ != f2.elements[0]) msg += "|clone input.fs$ mismatch";
 show.innerHTML = msg
+} catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>
 </body>

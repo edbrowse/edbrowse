@@ -27,6 +27,7 @@ background: bbb;
 font-family:  monospace
 "></div> 
 <script> 
+try {
 let show = document.getElementById("show")
 let h = "";
 for (let i = 1; i <= 2; i++) {
@@ -42,5 +43,6 @@ const correct = "div1:34|padding-top|padding-right|padding-bottom|padding-left|s
 if(h == correct) show.innerHTML = "ok";
 else show.innerHTML = "mismatch";
 document.getElementById("items").innerHTML = h.replace(/\|/g, "<br>");
+} catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>
 </body>

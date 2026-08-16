@@ -6,6 +6,9 @@
 <area href=http://nuts.com>area</area>
 <script>
 // test the behavior of the getElements functions
+// when multiple scripts are involed, use the broken flag so we don't
+// just march on after a javascript error.
+broken = false;
 try {
 show = document.getElementById("show")
 b = document.body
@@ -43,10 +46,11 @@ delete q2.cllass;
 q2.className = "shoe"
 if(ac.length != 2 || an.length > 1) msg += "|q2 didn't enter ac after className change"
 // now we're going to leave js, bring in an html node, and go back to js.
-} catch(e) { show.innerHTML = "blowup " + e;}
+} catch(e) { broken = true; show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>
 <br class=shoe>
 <script>
+if(!broken) {
 try {
 if(ac.length != 3) msg += "|&lt;br&gt; didn't enter ac"
 if(ac.item(2).nodeName != "BR") msg+= "|br not in position"
@@ -66,12 +70,14 @@ if(mid[0] != q2) msg += "|mid didn't pick up q2"
 // stop again and this time a tag will become part of a body collection.
 // This is not a document collection, and is not rebuilt before each script,
 // but it is rebuilt when class is set on the hr tag, so we're ok.
-} catch(e) { show.innerHTML = "blowup " + e;}
+} catch(e) { broken = true; show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
+}
 </script>
 
 <hr class="boot slipper shoe sandal">
 
 <script>
+if(!broken) {
 try {
 // lastChild is the script we are running right now
 hr = b.lastChild. previousElementSibling
@@ -88,12 +94,14 @@ if(at[2] != water) msg += "|water node not brought in by id"
 if(at.xyz != water) msg += "|no xyz reference"
 // inline tag without name or class
 bat = b.getElementsByTagName("span")
-} catch(e) { show.innerHTML = "blowup " + e;}
+} catch(e) { broken = true; show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
+}
 </script>
 
 <span></span>
 
 <script>
+if(!broken) {
 try {
 if(bat.length != 1) msg += `|inline &lt;span&gt; not in the collection length ${bat.length}`
 document.writeln("<span></span>")
@@ -148,5 +156,6 @@ names = a2.getAttributeNames();
 if(names.length != 1 || names[0] != "href") msg += "|bad a2 attribute names"
 
 show.innerHTML = msg;
-} catch(e) { show.innerHTML = "blowup " + e;}
+} catch(e) { broken = true; show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
+}
 </script>

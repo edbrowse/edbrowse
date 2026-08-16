@@ -61,5 +61,5 @@ if(i.q1 != q1) msg += "|q1 reference is lost after replacement"
 if(i.namedItem("q1") != q1) msg += "|q1 named reference is lost after replacement"
 if(i.q0 != q0) msg += "|q0 reference is lost after replacement"
 show.innerHTML = msg;
-} catch(e) { show.innerHTML = "blowup " + e;}
+} catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>

@@ -223,5 +223,5 @@ if(cn[0].nextElementSibling != cn[1] || cn[1].previousElementSibling != cn[0]) m
 if(cn[0].previousElementSibling != null || cn[1].nextElementSibling != null) mnsg += "|notnull element sibling";
 
 show.innerHTML = msg;
-} catch(e) { show.innerHTML = "blowup " + e;}
+} catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>

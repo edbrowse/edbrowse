@@ -203,7 +203,7 @@ if(!success) log2 = log2 + "<br>should be<br>" + correct.replace(/} {/g, "}<br>{
 show.innerHTML = msg + "<br>" + log2;
 }, 600);
 
-} catch(e) { show.innerHTML = "blowup " + e;}
+} catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 
 /* As mentioned above, the records produced herein are not the entire log.
 The next tag, <hr>, after script, is added to the tree,
