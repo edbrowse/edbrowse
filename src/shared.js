@@ -3081,6 +3081,9 @@ function jtfn0(all, a, b) {
 if(b == "\n" && a.match(/\n/)) return a+b;
 // I don't want to match on function(){var either.
 if(b != "\n" && !a.match(/\n/)) return a+b;
+// I'm looking for for(i = 0; i < n; ++i) {
+// but I can get for (var i = !1;;) switch (t) {
+if(a.indexOf("switch") >= 0) return a + b;
 var w = my$win();
 var c = w.$jt$c;
 var sn = w.$jt$sn;
