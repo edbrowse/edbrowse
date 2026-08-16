@@ -3750,6 +3750,18 @@ function selectReindex(t)
     }
 }
 
+function selectReindex2(t) {
+    while(t) {
+        if(t.nodeType != 1) break; // stop at document
+        if(t.dom$class == "HTMLSelectElement") {
+            selectReindex(t);
+            return;
+        }
+        if(t.dom$class == "HTMLFormElement") return;
+        t = t.parentNode;
+    }
+}
+
 function checkUpward(t)
 {
     let tabledone = false, formdone = false, selectdone = false;
@@ -5598,10 +5610,18 @@ swde("HTMLOptionElement", class extends w.HTMLElement {
 })
 swpc("Option", w.HTMLOptionElement)
 let optp = w.HTMLOptionElement.prototype;
-optp.selected = false;
+optp.selected$2 = false;
 optp.defaultSelected = false;
 optp.nodeName = optp.tagName = "OPTION";
 optp.text = optp.value = "";
+odp(optp, "selected", {
+get: function() { return this.selected$2; },
+set: function(v) {
+if(typeof v != "boolean") v = false;
+if(v == this.selected$2) return; // no change
+this.selected$2 = v;
+selectReindex2(this);
+}});
 
 swde("HTMLOptGroupElement", class extends w.HTMLElement {
     constructor() { super(); }
@@ -6907,7 +6927,6 @@ case "iframe": c = new w.HTMLIFrameElement; break;
 case "select": c = new w.HTMLSelectElement; break;
 case "option":
 c = new w.Option;
-c.selected = true; // jquery says we should do this
 // we don't log options because rebuildSelectors() checks
 // the dropdown lists after every js run.
 return c;

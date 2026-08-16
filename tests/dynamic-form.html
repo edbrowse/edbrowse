@@ -57,7 +57,7 @@ button.addEventListener("click", (event) => {
   const data = new FormData(form);
   let output = "";
   for (const entry of data) {
-    output = `${output}${entry[0]}=${entry[1]}\r`;
+    output = `${output}${entry[0]}=${entry[1]}\n`;
   }
   log.innerText = output;
   event.preventDefault();
@@ -114,6 +114,20 @@ i=document.querySelector("input[type=submit]");
 // because that's what the input says to do upon click.
 i.click();
 if(v != "abcd3ef") msg += `|input click ${v}`;
+
+// select an option, push the button
+sel = b.querySelector("select");
+window.s3 = sel;
+so = sel.options; // live array
+sso = sel.selectedOptions;
+if(so.length != 3 || sso.length != 0) msg += "|bad initial option count";
+lemon = so[2];
+if(lemon.text != "lemon" || lemon.value != "l" || lemon.selected) msg += "|bad lemon";
+lemon.selected = true;
+if(sso[0] != lemon) msg += "|lemon not in select";
+button.click();
+if(v != "abcd3") msg += `|button v ${v}`;
+if(log.innerText != "yy=secret\nfruit=l\n") msg += "improper log after button";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
