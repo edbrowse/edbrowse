@@ -6925,6 +6925,7 @@ case "fragment": c = new w.DocumentFragment; break;
 case "frame": c = new w.HTMLFrameElement; break;
 case "iframe": c = new w.HTMLIFrameElement; break;
 case "select": c = new w.HTMLSelectElement; break;
+case "optgroup": c = new w.HTMLOptGroupElement; break;
 case "option":
 c = new w.Option;
 // we don't log options because rebuildSelectors() checks
