@@ -1870,8 +1870,13 @@ if(!(this.eb$xml || this instanceof w.SVGElement)) name = name.toLowerCase();
     // side effects of id, name, class
     // no need for collectoin side effects if parsing - we will be marking
     // all collections as out of date after the parse is finished.
-    if(!w.eb$push$attributes && (name == "id" || name == "class" || name == "name"))
-markUpwardCollections(this)
+    if(!w.eb$push$attributes) {
+        if(name == "id" || name == "class" || name == "name")
+            markUpwardCollections(this)
+        if((name == "id" || name == "name") &&
+        this.form && this.form.dom$class == "HTMLFormElement")
+            formReindex(this.form);
+    }
 
     // names that spill down into the actual property
     if(attr.spilldown(this, name)) this[name] = v;
@@ -1928,7 +1933,7 @@ if(name == "style" && this.style$2 && this.style$2.dom$class == "CSSStyleDeclara
 delete this.style$2;
 if(!this.attributes$2) return;
 if(name.substr(0,5) == "data-") {
-var n = dataCamel(name);
+let n = dataCamel(name);
 if(this.dataset$2 && this.dataset$2[n]) delete this.dataset$2[n];
 }
 // the only simple spilldown is value, we shouldn't delete value, so just set it to ""
@@ -1936,15 +1941,14 @@ if(attr.spilldown(this, name)) this[name] = "";
 if(attr.spilldownResolve(this, name)) delete this[name];
 if(attr.spilldownResolveURL(this, name)) delete this[name];
 if(attr.spilldownBool(this, name)) delete this[name];
-var a;
+let a, i, found = false;
 if(name === "length") {
 a = null
-for(var i=0; i<this.attributes.length; ++i)
+for(i=0; i<this.attributes.length; ++i)
 if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
-} else a = this.attributes[name]
+} else a = this.attributes[name];
 if(!a) return;
 // Have to roll our own splice.
-var i, found = false;
 for(i=0; i<this.attributes.length-1; ++i) {
 if(!found && this.attributes[i] == a) found = true;
 if(found) this.attributes[i] = this.attributes[i+1];
@@ -1952,9 +1956,12 @@ if(found) this.attributes[i] = this.attributes[i+1];
 this.attributes.length = i;
 delete this.attributes[i];
 if(name !== "length") delete this.attributes[name]
-if(name == "id" || name == "name" || name == "class")
-markUpwardCollections(this)
-mutFixup(this, 1, name, a.value);
+    if(name == "id" || name == "name" || name == "class")
+        markUpwardCollections(this);
+    if((name == "id" || name == "name") &&
+    this.form && this.form.dom$class == "HTMLFormElement")
+        formReindex(this.form);
+    mutFixup(this, 1, name, a.value);
 },
 
 removeAttributeNS: function(space, name) {
@@ -4658,6 +4665,19 @@ w.open = function(a, b) {
 swde("Element", class extends w.Node {
     constructor() { super(); }
 
+// the all important id property
+    get id() {
+        let t = this.getAttribute("id");
+        if(t === null) t = "" // id was never defined
+        if(t === undefined) t = "";
+        // if defined it should always be a string
+        return typeof t == "string" ? t : t.toString();
+    }
+    set id(v) { this.setAttribute("id", v)}
+
+// carry the xml indicator from the document down to all the elements inside it.
+    get eb$xml() { return this.ownerDocument.eb$xml}
+
     insertAdjacentElement(pos, e) {
         let n, p = this.parentNode;
         if(!p || typeof pos != "string") return null;
@@ -4706,9 +4726,6 @@ swde("Element", class extends w.Node {
     }
 })
 let elemp = w.Element.prototype;
-
-// carry the xml indicator from the document down to all the elements inside it.
-odp(elemp, "eb$xml", {get: function() { return this.ownerDocument.eb$xml}})
 
 // attributes are on demand
 odp(elemp, "attributes", { get: function(){ if(!this.attributes$2) {
@@ -5035,14 +5052,6 @@ return c; },
 set: function(h) {
 this.setAttribute("class", h)}})
 
-odp(elemp, "id", {
-get:function(){ let t = this.getAttribute("id");
-if(t === null) t = "" // id was never defined
-if(t === undefined) t = ""
-// if defined it should always be a string
-return typeof t == "string" ? t : t.toString(); },
-set:function(v) { this.setAttribute("id", v)}});
-
 odp(elemp, "outerHTML", { get: function() { return htmlString(this);},
 set: function(h) { outer$1(this,h); }});
 
@@ -5186,9 +5195,6 @@ set hidden(v) { this.setAttribute("hidden", v);}
             return;
         }
         this.setAttribute("name", n);
-        const f = this.form;
-        if(f && f.dom$class == "HTMLFormElement")
-            formReindex(f);
     }
 
     get title() {
