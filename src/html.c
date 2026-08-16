@@ -19,7 +19,6 @@ uchar browseLocal;
 bool showall, textd = true, doColors;
 bool do_pjobs = true;
 
-static Tag *js_reset, *js_submit;
 static const int asyncTimer = 700;
 
 // start a document.write on current frame, i.e. cf
@@ -1392,20 +1391,6 @@ passes:
     }
 
     cf = save_cf;
-
-	if ((t = js_reset)) {
-		js_reset = 0;
-		formReset(t);
-	}
-
-	if ((t = js_submit)) {
-		char *post;
-		bool rc;
-		js_submit = 0;
-		rc = infPush(t->seqno, &post);
-		if (rc) gotoLocation(post, 0, false, t->f0);
-		else showError();
-	}
 }
 
 void preFormatCheck(int tagno, bool * pretag, bool * slash)
@@ -2988,7 +2973,7 @@ fail:
 				setError(MSG_NJNoForm);
 				goto fail;
 			}
-			jsRunScript_t(form, action, 0, 0);
+			jsRunScript_t(form, action + 11, 0, 0);
 		}
 		goto success;
 	}
@@ -3097,10 +3082,15 @@ success:
 
 void domSubmitsForm(Tag *t, bool reset)
 {
-	if (reset)
-		js_reset = t;
-	else
-		js_submit = t;
+    if (reset) {
+        formReset(t);
+    } else {
+        char *post;
+        bool rc = infPush(t->seqno, &post);
+        if (rc) {
+            if(post) gotoLocation(post, 0, false, t->f0);
+        } else showError();
+    }
 }
 
 void domSetsTagValue(Tag *t, const char *newtext)

@@ -1,6 +1,7 @@
-<body>
+<body v+='d' onsubmit="v += 'f'">
 <p id=show>start</p>
-<form action= http://localhost:1200
+<form action= "javascript:v+='g'"
+onsubmit="v += 'e'"
 *#  :&quot;`@what=where>
   <fieldset>
     <legend>Please select your preferred contact method:</legend>
@@ -21,11 +22,12 @@ Fruit: <select name=fruit multiple>
     </div>
   </fieldset>
     <div>
-      <button type="submit">Show</button>
-<input type=submit name=act value=Send>
+      <button type="submit" onclick="v += 'c'">Show</button>
+<input type=submit name=act value=Send onclick="v += 'c'">
     </div>
 </form>
 <pre id="log"></pre>
+<div></div>
 
 <script>
 try {
@@ -34,10 +36,11 @@ try {
 // Thus it has an interactive capability, which you can test in edbrowse,
 // but is not available through chrome.
 show = document.getElementById("show")
+b = document.body;
 msg = "ok"
 const form = document.querySelector("form");
 // test weird attribute names
-if(form.getAttributeNames().join(';') != 'action;*#;:&quot;`@what') msg += "|form has wrong attributes";
+if(form.getAttributeNames().join(';') != 'action;onsubmit;*#;:&quot;`@what') msg += "|form has wrong attributes";
 if(form.getAttribute(':&quot;`@what') != "where") msg += "|what where";
 const el = form.elements
 const fs = el[0]; // fieldset
@@ -83,6 +86,23 @@ if(f2.contact[0].form != f2) msg += "|clone input.form mismatch";
 if(f2.action != form.action) msg += "|clone action mismatch";
 // This test doesn't pass in chrome
 //if(f2.contact[3].fs$ != f2.elements[0]) msg += "|clone input.fs$ mismatch";
+
+// can we click on some things?
+// This is at the top and capture, so should run first.
+window.addEventListener("click", ()=>{v = 'a'}, true);
+document.addEventListener("click", ()=>{v += 'b'}, true);
+// this one is for bubble.
+// use a real function not arow function, so we can tap into this
+b.addEventListener("click", function(e) { v += this.getAttribute("v+") + e.eventPhase}, false);
+// you can click on almost anything, even a div section
+b.querySelector("div").click();
+if(v != "abd3") msg += `|div click ${v}`;
+i=document.querySelector("input[type=submit]");
+// this will dispatch the click even, and also submit the form,
+// because that's what the input says to do upon click.
+i.click();
+if(v != "abcd3efg") msg += `|input click ${v}`;
+
 show.innerHTML = msg
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>
