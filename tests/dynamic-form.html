@@ -18,6 +18,9 @@ Fruit: <select name=fruit multiple>
 <option value=a>apple
 <option value=o>orange
 <option value=l>lemon
+<optgroup label=berries>
+<option value=r>raspberry
+</optgroup>
 </select>
     </div>
   </fieldset>
@@ -120,7 +123,7 @@ sel = b.querySelector("select");
 window.s3 = sel;
 so = sel.options; // live array
 sso = sel.selectedOptions;
-if(so.length != 3 || sso.length != 0) msg += "|bad initial option count";
+if(so.length != 4 || sso.length != 0) msg += "|bad initial option count";
 lemon = so[2];
 if(lemon.text != "lemon" || lemon.value != "l" || lemon.selected) msg += "|bad lemon";
 lemon.selected = true;
@@ -130,13 +133,23 @@ if(v != "abcd3") msg += `|button v ${v}`;
 if(log.innerText != "yy=secret\nfruit=l\n") msg += "improper log after button";
 o = new Option("peach", 'p');
 sel.add(o);
-o = new Option("blueberry", 'b');
+o = new Option("cherry", 'c');
 sel.add(o, 1);
 o.selected = true;
 v = ""; for(let c of so) v += c.value;
-if(v != "abolp") msg += `|fruits after add ${v}`;
+if(v != "acolrp") msg += `|fruits after add ${v}`;
 v = ""; for(let c of sso) v += c.value;
-if(v != "bl") msg += `|selected fruits after add ${v}`;
+if(v != "cl") msg += `|selected fruits after add ${v}`;
+og = sel.querySelector("optgroup");
+o = new Option("blueberry", 'b');
+sel.add(o,4);
+if(og.childElementCount != 2) msg += "|expected two berries";
+sel.remove(2);
+sel.lastElementChild.selected = true;
+v = ""; for(let c of so) v += c.value;
+if(v != "aclbrp") msg += `|fruits after remove ${v}`;
+v = ""; for(let c of sso) v += c.value;
+if(v != "clp") msg += `|selected fruits after remove ${v}`;
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

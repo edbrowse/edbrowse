@@ -4088,7 +4088,6 @@ static int nopt;		/* number of options */
 // None of these tags nest, so it is reasonable to talk about
 // the current open tag.
 static Tag *currentForm, *currentSel, *currentOpt;
-static const char *optg; // option group
 static Tag *currentTitle, *currentTA, *currentStyle;
 static Tag *currentA, *currentAudio, *currentScript;
 static char *radioCheck;
@@ -4374,17 +4373,9 @@ static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
 		}
 		break;
 
-	case TAGACT_OPTG:
-		if(opentag)
-			optg = attribVal(t, "label");
-		else
-			optg = 0;
-		break;
-
 	case TAGACT_OPTION:
 		if (!opentag) {
 			currentOpt = 0;
-			optg = 0;
 // in datalist, the text becomes the value
 			if(currentSel && currentSel->action == TAGACT_DATAL) {
 				if(!t->value) t->value = emptyString;
@@ -4410,7 +4401,6 @@ static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
 		t->textval = emptyString;
 		if (!currentSel) {
 			debugPrint(3, "option appears outside a select statement");
-			optg = 0;
 			break;
 		}
 		t->lic = nopt++;
@@ -4422,11 +4412,6 @@ static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
 				++currentSel->lic;
 			}
 		}
-		if(optg && *optg) {
-// borrow custom_h, opt group is like a custom header
-			t->custom_h = cloneString(optg);
-			optg = 0;
-		}
 		break;
 
 	case TAGACT_STYLE:
@@ -4436,7 +4421,6 @@ static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
 
 	case TAGACT_SELECT:
 	case TAGACT_DATAL:
-		optg = 0;
 		if (opentag) {
 			currentSel = t;
 			nopt = 0;
@@ -4585,7 +4569,6 @@ void prerender(int start)
 	currentTitle = currentScript = currentTA = NULL;
 currentAudio = NULL;
 	currentStyle = NULL;
-	optg = NULL;
 	nzFree0(radioCheck);
 	pc.liftup = false;
 	pc.callback = prerenderNode;

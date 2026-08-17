@@ -5747,8 +5747,13 @@ selp.add = function(o, idx) {
     domLinkage('c', o, "option");
     const n = this.options.length;
     if(typeof idx != "number" || idx < 0 || idx > n) idx = n;
-    if(idx == n) this.appendChild(o);
-    else this.insertBefore(o, this.options[idx]);
+    if(idx == n) {
+        this.appendChild(o);
+    } else {
+        // Determine the parent; we might be adding to an option group.
+        const p = this.options[idx].parentNode;
+        p.insertBefore(o, this.options[idx]);
+    }
 }
 
 selp.remove = function(idx) {

@@ -1871,19 +1871,37 @@ void infShow(int tagno, const char *search)
 // display the options in a pick list
 // If a search string is given, display the options containing that string.
 	for (w = optArray; (v = *w); ++w) {
+	    Tag *x, *og = 0; // option group
+	    if(v->parent && v->parent->action == TAGACT_OPTG)
+	        og = v->parent;
+	    if(og) {
+	        for(x = og->firstchild; x != v; x = x->sibling)
+	            if(x->action == TAGACT_OPTION) break;
+	        if(x == v) { // first option in the group
+	            const char *l1 = attribVal(og, "label");
+	            const char *l2 = get_property_string_t(og, "label");
+	            const char *l3 = "option group";
+	            if(l1) l3 = l1;
+	            if(l2) l3 = l2;
+	            eb_printf("%s {", l3);
+	            if(inputDisabled(og)) eb_printf(" 🛑");
+	            eb_printf("\n");
+	            cnzFree(l2);
+ 	        }
+	    }
 	    ++cnt;
 	    if(inputHidden(v)) continue;
 	    if (*search && !strcasestr(v->textval, search)) continue;
-	    if(v->custom_h) {
-	        eb_printf("    %s", v->custom_h);
-	        if(v->parent && v->parent->action == TAGACT_OPTG && inputDisabled(v->parent))
-	            eb_printf("🛑");
-	        eb_printf("\n");
-	    }
 	    show = true;
-	    eb_printf("%3d %s", cnt, v->textval);
+	    eb_printf("%s%3d %s", (og ? "  " : ""), cnt, v->textval);
 	    if(inputDisabled(v)) eb_printf(" 🛑");
 	    eb_printf("\n");
+	    if(og) {
+	        for(x = v->sibling; x; x = x->sibling)
+	            if(x->action == TAGACT_OPTION) break;
+	        if(!x) // last option in the group
+	            eb_printf("}\n");
+	    }
 	}
 	if (!show) {
 	    if (!*search)
