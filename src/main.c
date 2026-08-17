@@ -82,8 +82,11 @@ static void finishBrowse(void)
 	if (!tagList)
 		return;
 // set all scripts to complete
-	for (t = cw->scriptlist; t; t = t->same)
-		t->step = 6;
+    for (j = 0; j < cw->numTags; ++j) {
+        t = cw->tags[j];
+        if(t->action == TAGACT_SCRIPT)
+            t->step = 6;
+    }
 // kill any timers or pendings
 	for (f = &cw->f0; f; f = f->next)
 		delTimers(f);

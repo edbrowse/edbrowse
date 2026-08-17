@@ -96,28 +96,30 @@ void jSideEffects(void)
 
 // getElementsByTagName("option")
 static Tag **optArray;
-static int optAlloc, optCount;
-static void gatherOptions1(Tag *t);
-void gatherOptions(const Tag *select)
+static int optAlloc, optCount, optAction;
+static void gatherTags1(Tag *t);
+static void gatherTags(const Tag *select, int action)
 {
     optCount = 0;
     optAlloc = 100;
+    // free the old one then allocate new
+    nzFree(optArray);
     optArray = allocMem(optAlloc * sizeof(Tag*));
-    // select won't change, only options below it.
-    gatherOptions1((Tag *)select);
+    optAction = action;
+    gatherTags1((Tag *)select);
     optArray[optCount] = 0;
 }
 
-static void gatherOptions1(Tag *t)
+static void gatherTags1(Tag *t)
 {
     Tag *c;
-    if(t->action == TAGACT_OPTION) {
+    if(t->action == optAction) {
         if(optCount + 1 == optAlloc) {
             optAlloc += 100;
             optArray = reallocMem(optArray, optAlloc*sizeof(Tag*));
         }
         optArray[optCount++] = t;
-        if(t->jslink) { // has js set value and text?
+        if(optAction == TAGACT_OPTION && t->jslink) { // has js set value and text?
             char *v = get_property_string_t(t, "value");
             if(v) nzFree(t->value), t->value = v;
             v = get_property_string_t(t, "text");
@@ -126,7 +128,7 @@ static void gatherOptions1(Tag *t)
         }
     }
     for(c = t->firstchild; c; c = c->sibling)
-        gatherOptions1(c);
+        gatherTags1(c);
     }
 
 // This is part of building a select list from html.
@@ -141,7 +143,7 @@ void fillEmptySelect(Tag *sel)
     // setting size to something > 1 disables this behavior.
     if((z = attribVal(sel, "size")) && (zv = stringIsNum(z)) && zv > 1)
         return;
-    gatherOptions(sel);
+    gatherTags(sel, TAGACT_OPTION);
     for(w = optArray; (t = *w); ++w) {
         if(t->disabled ||
         (t->parent && t->parent->action == TAGACT_OPTG && t->parent->disabled))
@@ -149,7 +151,6 @@ void fillEmptySelect(Tag *sel)
         // this is the first option
         break;
     }
-    nzFree0(optArray);
     if(!t) return; // no options possible
     t->checked = t->rchecked = true;
     sel->lic = 1; // now 1 item selected
@@ -215,7 +216,7 @@ locateOptions(const Tag *sel, const char *input,
 	const char *s, *e;	/* start and end of an option */
 	char *iopt;		/* individual option */
 
-	gatherOptions(sel);
+	gatherTags(sel, TAGACT_OPTION);
 	iopt = (char *)allocMem(len + 1);
 	disp = initString(&disp_l);
 	val = initString(&val_l);
@@ -310,7 +311,6 @@ locateOptions(const Tag *sel, const char *input,
 		*val_p = val_count ? val : 0;
 	if (disp_p)
 		*disp_p = disp;
-	nzFree0(optArray);
 	free(iopt);
 	return true;
 
@@ -318,7 +318,6 @@ fail:
 	free(iopt);
 	nzFree(val);
 	nzFree(disp);
-	nzFree0(optArray);
 	if (val_p)
 		*val_p = 0;
 	if (disp_p)
@@ -1199,23 +1198,18 @@ static void dw_flush(Tag *t)
             strstr(keep, "<body>")+6);
         cf->dw_clobber = true;
     } else {
-        Tag *t1 = 0, *u;
+        int start = cw->numTags, j;
+        Tag *u;
         stringAndString(&keep, &keep_l, "</body>");
-    if(t) {
-            for (u = t; u; u = u->same) t1 = u;
-            // t1 is now last real script in the list.
-            // it could be t.
-            // now link these new nodes under the parent of the script
-            t = t->parent;
-        }
+        if(t) t = t->parent;
         // if t is null, then put these nodes under <body>
         // t might have removed itself from the tree, no parent,
         // or we might be writing outside the context of a script.
         runGeneratedHtml(t ? t : cf->bodytag, keep);
-        if(!t1) t1 = cw->scriptlist;
-        else t1 = t1->same;
-        for(u = t1; u; u = u->same)
+        for(j = start; j < cw->numTags; ++j) {
+            u = tagList[j];
             if (u->jslink) loadScriptData(u);
+        }
     }
     nzFree(keep);
 }
@@ -1327,7 +1321,7 @@ static void runConnectedCallback(void);
 void runScriptsPending(bool startbrowse)
 {
 	Tag *t;
-	int n;
+	int j, n;
 	bool change, async;
 	Frame *f, *save_cf = cf;
 
@@ -1351,10 +1345,11 @@ void runScriptsPending(bool startbrowse)
 top:
 	change = false;
 
-	for (t = cw->scriptlist; t; t = t->same) {
-//		printf("script %d step %d\n", t->seqno, t->step);
-		if (t->dead || !t->jslink || t->step >= 3)
-			continue;
+	for (j = 0; j < cw->numTags; ++j) {
+		t = tagList[j];
+		//		printf("script %d step %d\n", t->seqno, t->step);
+		if(t->action != TAGACT_SCRIPT) continue;
+		if (t->dead || !t->jslink || t->step >= 3) continue;
 // don't execute a script until it is linked into the tree.
 		if(!isRooted(t)) continue;
 		cf = t->f0;
@@ -1365,9 +1360,10 @@ top:
 	async = false;
 passes:
 
-	for (t = cw->scriptlist; t; t = t->same) {
-		if (t->dead || !t->jslink || t->step >= 5 || t->step <= 2)
-			continue;
+	for (j = 0; j < cw->numTags; ++j) {
+		t = tagList[j];
+		if(t->action != TAGACT_SCRIPT) continue;
+		if (t->dead || !t->jslink || t->step >= 5 || t->step <= 2) continue;
 // js may have upgraded step
 		if((n = get_property_number_t(t, "eb$step")) > 4) {
 			t->step = n;
@@ -1823,7 +1819,7 @@ void infShow(int tagno, const char *search)
 	if (t->multiple)
 		eb_printf(" multiple");
 	if (t->itype == INP_SELECT) {
-	    gatherOptions(t);
+	    gatherTags(t, TAGACT_OPTION);
 	for (w = optArray; (v = *w); ++w) {
 	        if(inputHidden(v)) break;
 	    }
@@ -1910,7 +1906,6 @@ closegroup:
 	    else
 	        i_printf(MSG_NoOptionsMatch, search);
 	}
-    nzFree0(optArray);
 }
 
 static bool inputDisabled(const Tag *t)
@@ -2245,14 +2240,13 @@ char *displayOptions(const Tag *sel)
 	int opt_l;
 
 	opt = initString(&opt_l);
-	gatherOptions(sel);
+	gatherTags(sel, TAGACT_OPTION);
 	for (w = optArray; (t = *w); ++w) {
 		if (!t->checked) continue;
 		if (*opt)
 			stringAndChar(&opt, &opt_l, selsep);
 		stringAndString(&opt, &opt_l, t->textval);
 	}
-	nzFree0(optArray);
 
 	return opt;
 }
@@ -2728,10 +2722,9 @@ Here is a small page to test some of these select option cases.
 			if (!display) {	/* off the air */
 				Tag *v, **w;
 /* revert back to reset state */
-				gatherOptions(t);
+				gatherTags(t, TAGACT_OPTION);
 				for(w = optArray; (v = *w); ++w)
 					v->checked = v->rchecked;
-				nzFree0(optArray);
 				display = displayOptions(t);
 			}
 			rc = locateOptions(t, display, 0, &dynamicvalue, false);
@@ -2755,9 +2748,8 @@ Here is a small page to test some of these select option cases.
 // setting size to something > 1 disables this behavior.
 			if((z = attribVal(t, "size")) && (zv = stringIsNum(z)) && zv > 1)
 				goto options_ok;
-   gatherOptions(t);
+   gatherTags(t, TAGACT_OPTION);
 			const Tag *u = locateOptionByNum(t, 1);
-			nzFree0(optArray);
 			if(u && stringEqual(u->textval, display) && !*u->value &&
 			!(u->parent && u->parent->action == TAGACT_OPTG)) {
 				nzFree(display);
