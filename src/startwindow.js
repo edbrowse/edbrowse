@@ -184,11 +184,15 @@ class Eb$IterableWeakMap {
 // modern version to establish a dom object
 function swdo(c, changeable=true)
 {
-    c.prototype.dom$class = c.name.replace(/^z\$/, "");
+    const v = c.name.replace(/^z\$/, "");
+    odp(c.prototype, "dom$class", {value:v});
+    // Makes sure toString returns [object dom$class] in modern es6
+    odp(c.prototype, Symbol.toStringTag, {value: v});
     /* if we don't set the property then the class can be referenced from
         within this window but isn't a property of the window
     */
     c.toString = () => `function ${c.name}() { [native code] }`
+
     odp(window, c.name, {value:c, writable:changeable, configurable:changeable});
 }
 
@@ -207,16 +211,6 @@ swdo(EventTarget);
 // * don't understand all the error codes and subcodes.
 // This is just a stub for now, to make acid 25 work.
 Error.prototype.NAMESPACE_ERR = 1;
-
-/*
-use dom$class to adjust output of toString function
-document.createElement("div").toString() says "[object HTMLDivElement]" as
-it should; this is important to some js libraries and websites!
-
-The default toString function returns [Object type] where type comes from the
-Symbol.toStringTag property of the object in question if it returns a string.
-*/
-odp(Object.prototype, Symbol.toStringTag, { get() { return this.dom$class; } })
 
 // link functions in the shared window to this window
 for(let f of ["my$win", "my$doc", "natok", "UnsupportedError", "db$flags",

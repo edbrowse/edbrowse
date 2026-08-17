@@ -3814,8 +3814,10 @@ function swpp(c, inherit) {
 function swde(cls, exp, changeable=true)
 {
     odp(w, cls, {value:exp, writable:changeable, configurable:changeable});
-    odp(w[cls].prototype, "dom$class", {value: cls.replace(/^z\$/, "")});
-    eval(`w["${cls}"].toString = ()=>{ return "function ${cls}() { [native code] }"}`);
+    const v = cls.replace(/^z\$/, "");
+    odp(w[cls].prototype, Symbol.toStringTag, {value: v});
+    odp(w[cls].prototype, "dom$class", {value: v});
+    w[cls].toString = () => `function ${cls}() { [native code] }`;
 }
 
 // Establish properties under document, as we did with window.
