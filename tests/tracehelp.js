@@ -9,11 +9,13 @@ So we capture the output in a string instead.
 Then put it in a textarea so it will not be parsed by html.
 Then put that in the show paragraph.
 You can add in your own alerts, into the js file,
-providing useful information beyond the tracing. */
+providing useful information beyond the tracing.
+Don't look for the show paragraph yet, that is first in the body,
+and we're probably processing this now, in the head section.
+That paragraph will be there, when needed, when the deferred scripts run. */
 
 tlog = ""; // trace log
-show = document.getElementById("show");
-showmsg = "";
+// show = document.getElementById("show");
 // In case we have to do some things differently in the two browsers.
 isedbrowse = navigator.userAgent.substr(0, 8) == "edbrowse";
 
@@ -133,6 +135,7 @@ document.body.appendChild(s);
 
 function traceShow()
 {
+let show = document.getElementById("show");
 show.innerHTML = "<textarea>\n" + tlog + "</textarea>";
 }
 
