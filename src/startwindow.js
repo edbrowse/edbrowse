@@ -76,7 +76,6 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
 this.odp = Object.defineProperty;
 // remember, we can't use odp inside function that run later:
 // constructors, setters, methods, etc.
-
 // set a window property, unseen, unchanging
 this.swp = function(k, v) { odp(window, k, {value:v})}
 // visible (enumerable), but still protected
@@ -181,6 +180,28 @@ class Eb$IterableWeakMap {
         return this.#refSet.size;
     }
 }
+
+// modern version to establish a dom object
+function swdo(c, changeable=true)
+{
+    c.prototype.dom$class = c.name.replace(/^z\$/, "");
+    /* if we don't set the property then the class can be referenced from
+        within this window but isn't a property of the window
+    */
+    odp(window, c.name, {value:c, writable:changeable, configurable:changeable});
+}
+
+class EventTarget
+{
+    // in a static initialisation block this is the constructor
+    static {
+        const tp = this.prototype;
+        tp.addEventListener = mw$.addEventListener;
+        tp.removeEventListener = mw$.removeEventListener;
+        tp.dispatchEvent = mw$.dispatchEvent;
+    }
+}
+swdo(EventTarget);
 
 // * don't understand all the error codes and subcodes.
 // This is just a stub for now, to make acid 25 work.

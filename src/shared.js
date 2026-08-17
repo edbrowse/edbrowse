@@ -4128,14 +4128,6 @@ odp(valp, "valid", {
 get: function() { // only need to check items with getters
 return !(this.valueMissing)}})
 
-swde("EventTarget", class extends w.Object {
-    constructor() { super(); }
-})
-let evtgtp = w.EventTarget.prototype
-evtgtp.addEventListener = addEventListener
-evtgtp.removeEventListener = removeEventListener
-evtgtp.dispatchEvent = dispatchEvent
-
 swde("Node", class extends w.EventTarget {
     constructor()
     {
