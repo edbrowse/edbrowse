@@ -5211,6 +5211,9 @@ set hidden(v) { this.setAttribute("hidden", v);}
     }
     set title(v) { this.setAttribute("title", v);}
 
+    get role() { return this.getAttribute("role"); }
+    set role(v) { this.setAttribute("role", v); }
+
 //     per mdn the click method simulates a mouse click. Based on the examples
 //     I'm taking that to mean dispatch the relevant event.
     click()
@@ -5552,6 +5555,7 @@ swde("HTMLTableRowElement", class extends w.HTMLElement {
 })
 swde("HTMLTableCellElement", class extends w.HTMLElement {
     constructor() { super(); }
+
 })
 let tablep = w.HTMLTableElement.prototype;
 let tablesecp = w.HTMLTableSectionElement.prototype;
@@ -6003,6 +6007,10 @@ swde("HTMLQuoteElement", class extends w.HTMLElement {
 
 swde("HTMLImageElement", class extends w.HTMLElement {
     constructor() { super(); }
+
+    get alt() { return this.getAttribute("alt"); }
+    set alt(v) { this.setAttribute("alt", v); }
+
 })
 swpc("Image", w.HTMLImageElement)
 
@@ -6015,6 +6023,20 @@ set:function(v) { this.setAttribute("alt", v);
 
 swde("HTMLScriptElement", class extends w.HTMLElement {
     constructor() { super(); }
+
+    get defer() {
+        let t = this.getAttribute("defer");
+        return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true;
+    }
+    set defer(v) { this.setAttribute("defer", v); }
+
+    get type() {
+        let t = this.getAttribute("type");
+        if(!t) t = "";
+        return t;
+    }
+    set type(v) { this.setAttribute("type", v); }
+
 })
 w.HTMLScriptElement.supports = function(t) {
 if(typeof t != "string") return false;
@@ -6027,19 +6049,13 @@ odp(scriptp, "async", {
 get:function(){ var t = this.getAttribute("async");
 return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
 set:function(v) { this.setAttribute("async", v);}})
-odp(scriptp, "defer", {
-get:function(){ var t = this.getAttribute("defer");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("defer", v);}})
-odp(scriptp, "type", {
-get:function(){ var t = this.getAttribute("type"); if(!t) t = ""; return t;},
-set:function(v) { this.setAttribute("type", v)}})
 scriptp.eb$step = 0;
 scriptp.text = "";
 
 // the all important <a>, the whole point of the internet
 swde("HTMLAnchorElement", class extends w.HTMLElement {
     constructor() { super(); }
+
 })
 
 // classes that support lists in html

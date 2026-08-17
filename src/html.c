@@ -1965,7 +1965,7 @@ static const char *imageAlt(const Tag *t)
 {
 	char *u, *v;
 	if (allowJS && t->jslink)
-		u = get_js_attribute(t, "alt");
+		u = get_property_string_t(t, "alt");
 	else
 		u = cloneString(attribVal(t, "alt"));
 //	stripTag(u);
@@ -4864,11 +4864,8 @@ static int ariaHeadingLevel(const Tag *t)
 {
 	const char *role, *lvl;
 	int n;
-#if 0
-// This works on the attribute system, not on properties,
-// look into this later.
 	if(allowJS && t->jslink) {
-		char *r = get_js_attribute(t, "role");
+		char *r = get_property_string_t(t, "role");
 		if(stringEqual(r, "heading")) {
 			nzFree(r);
 			char *l = get_js_attribute(t, "aria-level");
@@ -4880,7 +4877,6 @@ static int ariaHeadingLevel(const Tag *t)
 		}
 		nzFree(r);
 	}
-#endif
 	role = attribVal(t, "role");
 	if(!stringEqual(role, "heading")) return 0;
 	lvl = attribVal(t, "aria-level");
@@ -5311,7 +5307,7 @@ nocolor:
 					deltag = t;
 					break;
 				} else if (t->jslink     && (a =
-					get_js_attribute(t, "title"))) {
+					get_property_string_t(t, "title"))) {
 // <a title=x>   x appears on hover
 					++hovcount;
 					if (showall) {
@@ -5353,7 +5349,7 @@ nocolor:
 		if (!t->firstchild && opentag && !al) {
 			tit1 = attribVal(t, "title");
 			if (allowJS && t->jslink)
-				tit2 = get_js_attribute(t, "title");
+				tit2 = get_property_string_t(t, "title");
 		}
 // If an onclick function, then turn this into a hyperlink, thus clickable.
 // At least one site adds the onclick function via javascript, not html.
