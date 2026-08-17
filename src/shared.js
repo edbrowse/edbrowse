@@ -3798,18 +3798,7 @@ function swp(k, v) { odp(w, k, {value:v})}
 function swpv(k, v) { odp(w, k, {value:v,enumerable:true})}
 // set window property unseen, but changeable
 function swpc(k, v) { odp(w, k, {value:v, writable:true, configurable:true})}
-// establish the prototype, for inheritance, then set dom$class.
-// If our made-up class is z$Foo, dom$class becomes Foo.
-// (we only have a couple of these).
-// the letters mean set window property prototype.
-function swpp(c, inherit) {
-    const v = c.replace(/^z\$/, "");
-    if(inherit)
-        odp(w[c], "prototype", {value:new inherit});
-    else
-        odp(w[c], "prototype", {value:new w.Object});
-    odp(w[c].prototype, "dom$class", {value:v});
-}
+
 // Establish DOM elements in the window for modern classes
 function swde(cls, exp, changeable=true)
 {
@@ -7253,9 +7242,9 @@ function cel_getName(name) {
     return this.map.has(name) ? name : null;
 }
 
-swpc("CustomElementRegistry", function(){
-this.map = new w.Map})
-swpp("CustomElementRegistry", null);
+swde("CustomElementRegistry", class extends w.Object {
+    constructor() { super(); this.map = new w.Map; }
+})
 let cerp = w.CustomElementRegistry.prototype;
 cerp.define = cel_define;
 cerp.get = cel_get;
