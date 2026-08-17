@@ -1890,12 +1890,13 @@ void infShow(int tagno, const char *search)
  	        }
 	    }
 	    ++cnt;
-	    if(inputHidden(v)) continue;
-	    if (*search && !strcasestr(v->textval, search)) continue;
+	    if(inputHidden(v)) goto closegroup;
+	    if (*search && !strcasestr(v->textval, search)) goto closegroup;
 	    show = true;
 	    eb_printf("%s%3d %s", (og ? "  " : ""), cnt, v->textval);
 	    if(inputDisabled(v)) eb_printf(" 🛑");
 	    eb_printf("\n");
+closegroup:
 	    if(og) {
 	        for(x = v->sibling; x; x = x->sibling)
 	            if(x->action == TAGACT_OPTION) break;
