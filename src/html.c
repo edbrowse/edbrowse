@@ -1284,7 +1284,7 @@ I will disconnect here, and also check for inxhr in runOnload().
     }
 
 // If no language is specified, javascript is default.
-    a = get_property_string_t(t, "language");
+    a = get_js_attribute(t, "language");
     if (a && *a && (!memEqualCI(a, "javascript", 10) || isalphaByte(a[10]))) {
         debugPrint(3, "script tag %d language %s not executed", t->seqno, a);
         cnzFree(a);
@@ -1789,7 +1789,7 @@ static void connectDatalist(Tag *t)
 		return;
 	lista = attribVal(t, "list");
 	if(t->jslink && allowJS)
-		listj = get_property_string_t(t, "list");
+		listj = get_js_attribute(t, "list");
 	if(listj && *listj)
 		lista = listj;
 	if(!lista)
@@ -1879,7 +1879,7 @@ void infShow(int tagno, const char *search)
 	            if(x->action == TAGACT_OPTION) break;
 	        if(x == v) { // first option in the group
 	            const char *l1 = attribVal(og, "label");
-	            const char *l2 = get_property_string_t(og, "label");
+	            const char *l2 = get_js_attribute(og, "label");
 	            const char *l3 = "option group";
 	            if(l1) l3 = l1;
 	            if(l2) l3 = l2;
@@ -1965,7 +1965,7 @@ static const char *imageAlt(const Tag *t)
 {
 	char *u, *v;
 	if (allowJS && t->jslink)
-		u = get_property_string_t(t, "alt");
+		u = get_js_attribute(t, "alt");
 	else
 		u = cloneString(attribVal(t, "alt"));
 //	stripTag(u);
@@ -2559,9 +2559,9 @@ static bool formSubmit(const Tag *form, const Tag *submit, bool dopost, const ch
 	if(submit) {
 		eo1 = attribVal(submit, "formenctype"), eo2 = 0;
 		if(submit->jslink && allowJS)
-			eo2 = get_property_string_t(submit, "formenctype");
-		if(eo2 && *eo2)
-			eo1 = eo2;
+			eo2 = get_js_attribute(submit, "formenctype");
+		if(eo2 && *eo2) eo1 = eo2;
+  printf("eo2 %s\n", eo2);
 		if(eo1 && *eo1) {
 			fsep = '&';
 			if (stringEqualCI(eo1, "multipart/form-data"))
@@ -2633,9 +2633,8 @@ skip_encode:
 			value = (cf->charset ? cf->charset : "UTF-8");
 			eo1 = attribVal(form, "accept-charset"), eo2 = 0;
 			if(form->jslink && allowJS)
-				eo2 = get_property_string_t(form, "accept-charset");
-			if(eo2 && *eo2)
-				eo1 = eo2;
+				eo2 = get_js_attribute(form, "accept-charset");
+			if(eo2 && *eo2) eo1 = eo2;
 			if(eo1 && *eo1)
 				value = eo1;
 			postNameVal(name, value, fsep, false);
@@ -3006,7 +3005,7 @@ bool infPush(int tagno, char **post_string)
 		va = attribVal(t, "formmethod");
 		vj = 0;
 		if(t->jslink && allowJS)
-			vj = get_property_string_t(t, "formMethod");
+			vj = get_js_attribute(t, "formMethod");
 		if(vj && *vj)
 			va = vj;
 		if(va && *va) {
@@ -3019,7 +3018,7 @@ bool infPush(int tagno, char **post_string)
 		nzFree(vj);
 		va = attribVal(t, "formaction");
 		if(t->jslink && allowJS)
-			action2 = vj = get_property_string_t(t, "formAction");
+			action2 = vj = get_js_attribute(t, "formAction");
 		if(vj && *vj)
 			va = vj;
 		if(va && *va)
@@ -4869,10 +4868,10 @@ static int ariaHeadingLevel(const Tag *t)
 // This works on the attribute system, not on properties,
 // look into this later.
 	if(allowJS && t->jslink) {
-		char *r = get_property_string_t(t, "role");
+		char *r = get_js_attribute(t, "role");
 		if(stringEqual(r, "heading")) {
 			nzFree(r);
-			char *l = get_property_string_t(t, "aria-level");
+			char *l = get_js_attribute(t, "aria-level");
 			n = l ? atoi(l) : 2;
 			nzFree(l);
 			if(n < 1) n = 1;
@@ -5312,7 +5311,7 @@ nocolor:
 					deltag = t;
 					break;
 				} else if (t->jslink     && (a =
-					get_property_string_t(t, "title"))) {
+					get_js_attribute(t, "title"))) {
 // <a title=x>   x appears on hover
 					++hovcount;
 					if (showall) {
@@ -5354,7 +5353,7 @@ nocolor:
 		if (!t->firstchild && opentag && !al) {
 			tit1 = attribVal(t, "title");
 			if (allowJS && t->jslink)
-				tit2 = get_property_string_t(t, "title");
+				tit2 = get_js_attribute(t, "title");
 		}
 // If an onclick function, then turn this into a hyperlink, thus clickable.
 // At least one site adds the onclick function via javascript, not html.
