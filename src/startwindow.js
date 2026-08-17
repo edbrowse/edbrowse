@@ -91,7 +91,8 @@ this.swpp = function(c, inherit) {
     const v = c.replace(/^z\$/, "");
     if(inherit)
         odp(window[c], "prototype", {value:new inherit})
-    odp(window[c].prototype, "dom$class", {value:v})
+    odp(window[c].prototype, "dom$class", {value:v});
+    odp(window[c].prototype, Symbol.toStringTag, {value:v});
 }
 
 // set document property, analogs of the set window property functions
