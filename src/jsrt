@@ -1159,7 +1159,7 @@ addEventListener("hashchange", ()=>alert("hash is now " + location.hash));
 
 function xmlTest() {
 var xml_string = '<p><p><dIv>inside</dIv></p></p><script src="http://nothing.nowhere.com/nonsense.js"></scr' + 'ipt>'
-var o = DOMParser().parseFromString(xml_string, "text/xml");
+var o = new DOMParser().parseFromString(xml_string, "text/xml");
 if(!o.eb$xml) fail(270);
 // make sure paragraphs nest, as they should in xml
 var p2 = o.firstChild.firstChild;

@@ -3240,9 +3240,8 @@ swap = list[i], list[i] = list[i+1], list[i+1] = swap, change = true;
 }
 }
 
-function DOMParser() {
-return {
-parseFromString: function(t,y) {
+function DOMParser() {}
+DOMParser.prototype.parseFromString = function(t,y) {
 var d = my$doc();
 if(y == "text/html" || y == "text/xml") {
 var v = d.createElement("iframe");
@@ -3263,7 +3262,7 @@ alert3("trying to use the DOMParser\n" + y + " <<< ");
 alert4(t);
 alert3(">>>");
 return d.createTextNode("DOMParser not yet implemented");
-}}}
+}
 
 // XMLHttpRequest methods. These could all be in setupClasses(), but there are
 // a lot of them and rather complex.
