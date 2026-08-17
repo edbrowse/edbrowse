@@ -2336,6 +2336,8 @@ static void formReset(const Tag *form)
 			continue;
 		if (!controlledBy(t, form)) continue;
 		itype = t->itype;
+		// hidden fields do not revert
+		if(itype == INP_HIDDEN) continue;
 		if (itype != INP_SELECT) {
 			resetVar(t);
 			continue;
