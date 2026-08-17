@@ -5959,7 +5959,7 @@ swde("HTMLFormElement", class extends w.HTMLElement {
 
 let formp = w.HTMLFormElement.prototype;
 formp.submit = eb$formSubmit;
-formp.reset = eb$formReset;
+formp.reset = function() { let e = new w.Event("reset"); this.dispatchEvent(e); eb$formReset.call(this); }
 
 swde("HTMLFieldSetElement", class extends w.HTMLElement {
     constructor() {

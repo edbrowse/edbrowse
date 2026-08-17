@@ -1,8 +1,10 @@
-<body v+='d' onsubmit="v += 'f'">
+<body v+='d' onsubmit="v += 'f'" onreset="v='bodyreset'">
 <p id=show>start</p>
 <form action= "javascript:"
 onsubmit="v += 'e'"
 *#  :&quot;`@what=where>
+<input name=me type=text value="Yogi Bear">
+<br>
   <fieldset>
     <legend>Please select your preferred contact method:</legend>
     <div id=under>
@@ -12,7 +14,7 @@ onsubmit="v += 'e'"
       <label for="contactChoice2">Phone</label>
       <input type="radio" id="contactChoice3" name="contact" value="mail" />
       <label for="contactChoice3">Mail</label>
-<br>
+<br id=end-choices>
 <input type=hidden id=xx name=h value=secret>
 Fruit: <select name=fruit multiple>
 <option value=a>apple
@@ -37,7 +39,6 @@ try {
 // if you press the show button, it shows you the choices you made -
 // what will be sent to the server by this form.
 // Thus it has an interactive capability, which you can test in edbrowse,
-// but is not available through chrome.
 show = document.getElementById("show")
 b = document.body;
 msg = "ok"
@@ -46,11 +47,11 @@ const form = document.querySelector("form");
 if(form.getAttributeNames().join(';') != 'action;onsubmit;*#;:&quot;`@what') msg += "|form has wrong attributes";
 if(form.getAttribute(':&quot;`@what') != "where") msg += "|what where";
 const el = form.elements
-const fs = el[0]; // fieldset
+const fs = el[1]; // fieldset
 const fsel = fs.elements; // field set elements
 const legend = fs.querySelector("legend")
-if(el.length != 8) msg += `|form elements.length ${el.length}`;
-if(fsel.length != 5) msg += `|fieldset elements.length ${fsel.length}`;
+if(el.length != 9) msg += `|form elements.length ${el.length}`;
+if(fsel.length != 5) msg += `|nts.length ${fsel.length}`;
 if(legend.form != form) msg += "bad legend.form";
 const log = document.querySelector("#log");
 // push Show and see the fields.
@@ -72,10 +73,10 @@ i.type="radio";
 i.name="contact";
 i.value="carrier pigeon";
 const panel = document.getElementById("under");
-const br = form.querySelector("br");
+const br = form.querySelector("#end-choices");
 panel.insertBefore(i, br);
 panel.insertBefore(document.createTextNode(" Pigeon"), br);
-if(el.length != 9) msg += `|form elements.length ${el.length}`;
+if(el.length != 10) msg += `|updated form elements.length ${el.length}`;
 if(fsel.length != 6) msg += `|fieldset elements.length ${fsel.length}`;
 // you can fs.removeChild(panel) and verify the input fields are wiped out.
 // Then you can add it back again and verify the form resurrects.
@@ -96,9 +97,9 @@ if(el.yy != hidden) msg += "|no element yy name access for hidden";
 const f2 = form.cloneNode(true)
 if(f2.getAttributeNames().join(';') != 'action;onsubmit;*#;:&quot;`@what') msg += "|f2 has wrong attributes";
 if(typeof f2.onsubmit != "function") msg += "|f2.onsubmit not a function";
-if(f2.elements.length != 9) msg += `|clone elements.length ${f2.elements.length}`;
+if(f2.elements.length != 10) msg += `|clone elements.length ${f2.elements.length}`;
 if(f2.contact.length != 4) msg += `|clone contact.length ${f2.contact.length}`;
-if(f2.contact[0] != f2.elements[1]) msg += "|clone contact elements mismatch";
+if(f2.contact[0] != f2.elements[2]) msg += "|clone contact elements mismatch";
 if(f2.contact[0].form != f2) msg += "|clone input.form mismatch";
 if(f2.action != form.action) msg += "|clone action mismatch";
 // This test doesn't pass in chrome, fs$ is our own creation.
@@ -132,7 +133,7 @@ lemon.selected = true;
 if(sso[0] != lemon) msg += "|lemon not in select";
 button.click();
 if(v != "abcd3") msg += `|button v ${v}`;
-if(log.innerText != "yy=secret\nfruit=l\n") msg += "improper log after button";
+if(log.innerText != "me=Yogi Bear\nyy=secret\nfruit=l\n") msg += "improper log after button";
 o = new Option("peach", 'p');
 sel.add(o);
 o = new Option("cherry", 'c');
@@ -155,23 +156,25 @@ if(v != "clp") msg += `|selected fruits after remove ${v}`;
 
 // choose a method of contact, and pseudo run the form again.
 document.removeEventListener("click", handle_b, true);
-q = b.querySelectorAll("input[type=radio");
+q = b.querySelectorAll("input[type=radio]");
 i = q[3];
 i.click();
 if(v != "ad3") msg += `|pigeon click ${v}`;
 if(!i.checked) msg += "|pigeon not checked";
 hidden.value = "special";
+form.me.value = "Boo-Boo";
 button.click();
-if(log.innerText != "contact=carrier pigeon\nyy=special\nfruit=c\nfruit=l\nfruit=p\n") msg += "|improper log after second button";
+if(log.innerText != "me=Boo-Boo\ncontact=carrier pigeon\nyy=special\nfruit=c\nfruit=l\nfruit=p\n") msg += "|improper log after second button";
 
 // there is no reset button to push, but I can call the method directly
 form.reset();
+if(v != "bodyreset") msg += "|onreset didn't run";
 v = ""; for(let c of so) v += c.value;
 if(v != "aclbrp") msg += `|fruits after reset ${v}`;
 if(sso.length) msg += `|selected fruits after reset ${v}`;
 // hidden fields do not go back upon form reset.
 button.click();
-if(log.innerText != "yy=special\n") msg += "|improper log after reset";
+if(log.innerText != "me=Yogi Bear\nyy=special\n") msg += "|improper log after reset";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
