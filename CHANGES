@@ -17,6 +17,8 @@ class HTMLElement extends Element extends Node etc.
 Implement HTMLCollection, and let the getElements functions use these
 collections to present live data to the user.
 
+Restructure selectors and options to be more dynamic, as js changes options underneat us.
+
 3.8.17
 
 Fix some makefile issues, and warnings across different compilers.
