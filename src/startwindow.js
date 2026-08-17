@@ -208,20 +208,15 @@ swdo(EventTarget);
 // This is just a stub for now, to make acid 25 work.
 Error.prototype.NAMESPACE_ERR = 1;
 
-// use dom$class to make our own toString function, so that
-// document.createElement("div").toString() says "[object HTMLDiv?Element]" as it should
-// This is important to some websites!
-swp("toString$nat", toString);
-/* toString has to be replaceable by other websites, which happens more often
-than you think. Apparently sometimes people also want to grab the toString
-function directly from an object and expect to be able to call it without the
-lack of a this binding causing problems. */
-this.toString = Object.prototype.toString = function() {
-    return this ? (
-        this.dom$class ? "[object "+this.dom$class+"]" : toString$nat.call(this)
-    ) : toString$nat.call(this);
-}
-odp(window, "toString", {enumerable:false})
+/*
+use dom$class to adjust output of toString function
+document.createElement("div").toString() says "[object HTMLDivElement]" as
+it should; this is important to some js libraries and websites!
+
+The default toString function returns [Object type] where type comes from the
+Symbol.toStringTag property of the object in question if it returns a string.
+*/
+odp(Object.prototype, Symbol.toStringTag, { get() { return this.dom$class; } })
 
 // link functions in the shared window to this window
 for(let f of ["my$win", "my$doc", "natok", "UnsupportedError", "db$flags",
