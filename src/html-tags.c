@@ -608,15 +608,6 @@ Tag *newTag(const Frame *f, const char *name)
 		else
 			cw->framelist = t;
 	}
-	if (t->action == TAGACT_INPUT || t->action == TAGACT_SELECT ||
-	    t->action == TAGACT_TA) {
-		for (t1 = cw->inputlist; t1; t1 = t1->same)
-			t2 = t1;
-		if (t2)
-			t2->same = t;
-		else
-			cw->inputlist = t;
-	}
 	return t;
 }
 
@@ -769,33 +760,30 @@ void freeTags(Window *w)
 	int i, n;
 	Tag *t, **e;
 
-/* if not browsing ... */
-	if (!(e = w->tags))
-		return;
+// if not browsing ...
+	if (!w->tags) return;
 
 /* drop empty textarea buffers created by this session */
-	for (t = w->inputlist; t; t = t->same) {
-		if (t->action != TAGACT_INPUT)
-			continue;
-		if (t->itype != INP_TA)
-			continue;
-// 0 means no side buffer; -1 means the text is inline,
-// a trick when the text can be contained on one line and doesn't need a buffer.
-		if ((n = t->lic) <= 0)
-			continue;
-		freeEmptySideBuffer(n);
-	}			// loop over tags
+    for (e = w->tags, i = 0; i < w->numTags; ++i, ++e) {
+    	t = *e;
+    	if (t->action != TAGACT_INPUT) continue;
+    	if (t->itype != INP_TA) continue;
+    	// 0 means no side buffer; -1 means the text is inline,
+    	// a trick when the text can be contained on one
+    	// line and doesn't need a buffer.
+    	if ((n = t->lic) <= 0) continue;
+    	freeEmptySideBuffer(n);
+    } // loop over tags
 
-	for (i = 0; i < w->numTags; ++i, ++e) {
-		t = *e;
-		freeTag(t);
-	}
+    for (e = w->tags, i = 0; i < w->numTags; ++i, ++e) {
+        t = *e;
+        freeTag(t);
+    }
 
-	free(w->tags);
-	w->tags = 0;
-	w->numTags = w->allocTags = w->deadTags = 0;
-	w->inputlist = w->linklist = 0;
-	w->framelist = 0;
+    free(w->tags);
+    w->tags = 0;
+    w->numTags = w->allocTags = w->deadTags = 0;
+    w->framelist = w->linklist = 0;
 }
 
 // When window first opens, reserve space for 512 tags.

@@ -339,7 +339,7 @@ that's the way it goes.
 void jSyncup(bool fromtimer, const Tag *active)
 {
     Tag *t;
-    int itype, j, cx;
+    int itype, j, k, cx;
     char *value, *cxbuf;
 
     if (!cw->browseMode)
@@ -354,10 +354,11 @@ void jSyncup(bool fromtimer, const Tag *active)
     if(active)
         set_property_object_doc(cf, "activeElement", active);
 
-    for (t = cw->inputlist; t; t = t->same) {
+    for (k = 0; k < cw->numTags; ++k) {
+        t = tagList[k];
+        if(t->action != TAGACT_INPUT) continue;
         itype = t->itype;
-        if (itype <= INP_HIDDEN)
-            continue;
+        if (itype <= INP_HIDDEN) continue;
 
         if (itype >= INP_RADIO) {
             int checked = fieldIsChecked(t->seqno);
@@ -2029,7 +2030,6 @@ static size_t utf8length(const char *s)
 bool infReplace(int tagno, char *newtext, bool notify)
 {
 	Tag *t = tagList[tagno];
-	const Tag *v;
 	const Tag *form = findOpenTag(t, TAGACT_FORM);
 	char *display = 0;
 	int itype = t->itype;
@@ -2184,20 +2184,18 @@ bool infReplace(int tagno, char *newtext, bool notify)
 		}
 	}
 
-	if (itype == INP_RADIO && form && t->name && *newtext == '+') {
-/* clear the other radio button */
-		for (v = cw->inputlist; v; v = v->same) {
-			if (!controlledBy(v, form)) continue;
-			if (v->itype != INP_RADIO)
-				continue;
-			if (!v->name)
-				continue;
-			if (!stringEqual(v->name, t->name))
-				continue;
-			if (fieldIsChecked(v->seqno) == true)
-				updateFieldInBuffer(v->seqno, "-", false, true);
-		}
-	}
+    if (itype == INP_RADIO && form && t->name && *newtext == '+') {
+        // clear the other radio button
+        Tag *v, **w;
+        gatherTags(form, TAGACT_INPUT);
+        for(w = optArray; (v = *w); ++w) {
+            if (v->itype != INP_RADIO) continue;
+            if (!v->name) continue;
+            if (!stringEqual(v->name, t->name)) continue;
+            if (fieldIsChecked(v->seqno) == true)
+                updateFieldInBuffer(v->seqno, "-", false, true);
+        }
+    }
 
 	if (itype != INP_SELECT) {
 		updateFieldInBuffer(tagno, newtext, notify, true);
@@ -2321,6 +2319,7 @@ static void formReset(const Tag *form)
 
 	for (i = 0; i < cw->numTags; ++i) {
 		t = tagList[i];
+		if (!controlledBy(t, form)) continue;
 		if (t->action == TAGACT_OPTION) {
 			resetVar(t);
 			continue;
@@ -2328,7 +2327,6 @@ static void formReset(const Tag *form)
 
 		if (t->action != TAGACT_INPUT)
 			continue;
-		if (!controlledBy(t, form)) continue;
 		itype = t->itype;
 		// hidden fields do not revert
 		if(itype == INP_HIDDEN) continue;
@@ -2338,21 +2336,21 @@ static void formReset(const Tag *form)
 		}
 		if (t->jslink && allowJS)
 			set_property_number_t(t, "selectedIndex", -1);
-	}			/* loop over tags */
+	}			// loop over tags
 
-/* loop again to look for select, now that options are set */
-	for (t = cw->inputlist; t; t = t->same) {
+// loop again to look for select, now that options are set
+	for (i = 0; i < cw->numTags; ++i) {
+		t = tagList[i];
 		if (!controlledBy(t, form)) continue;
 		itype = t->itype;
-		if (itype != INP_SELECT)
-			continue;
+		if (itype != INP_SELECT) continue;
 		display = displayOptions(t);
 		updateFieldInBuffer(t->seqno, display, false, false);
 		nzFree(t->value);
 		t->value = display;
 /* this should now be the same as t->rvalue, but I guess I'm
  * not going to check for that, or take advantage of it. */
-	}			/* loop over tags */
+	}			// loop over tags
 
 	if (debugLevel >= 1)
 		i_puts(MSG_FormReset);
@@ -2522,15 +2520,14 @@ postNameVal(const char *name, const char *val, char fsep, uchar isfile)
 
 static bool formSubmit(const Tag *form, const Tag *submit, bool dopost, const char *const prot)
 {
-	const Tag *t;
+	Tag *t, **w;
 	int j, itype;
 	char *name, *dynamicvalue = NULL;
 /* dynamicvalue needs to be freed with nzFree. */
 	const char *value;
 	char fsep = '&';	/* field separator */
 	bool requireName = true; // only include form controls with a non-blank name attribute
-	bool rc;
-	bool bval;
+	bool rc, bval;
 	const char *eo1; // enctype override from attribute
 	char *eo2; // enctype override from js
 
@@ -2582,8 +2579,8 @@ skip_encode:
 		fsep = 'g';
 	}
 
-	for (t = cw->inputlist; t; t = t->same) {
-		if (!controlledBy(t, form)) continue;
+	gatherTags(form, TAGACT_INPUT);
+	for(w = optArray; (t = *w); ++w) {
 		itype = t->itype;
 		if (itype <= INP_SUBMIT && t != submit) continue;
 		if (inputDisabled(t)) continue;
