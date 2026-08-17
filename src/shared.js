@@ -1644,11 +1644,15 @@ function runScriptWhenAttached(s) {
         }
         alert3("exec attached")
         d.currentScript = c;
-        if(c.text.match(/(bp|trace)@\(/)) {
-            // Oops, have to expand for tracing
-            w.eval(c.text.replace(/(,?) *(trace|bp)@\((\w+)\) *([,;]?)/g, traceBreakReplace))
-        } else {
-            w.eval(c.text)
+        try {
+            if(c.text.match(/(bp|trace)@\(/)) {
+                // Oops, have to expand for tracing
+                w.eval(c.text.replace(/(,?) *(trace|bp)@\((\w+)\) *([,;]?)/g, traceBreakReplace))
+            } else {
+                w.eval(c.text)
+            }
+        } catch(e) {
+            alert3(e);
         }
         alert3("exec complete")
         // remote scripts not executed here, so we don't have to worry about onload
