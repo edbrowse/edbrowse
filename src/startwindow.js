@@ -188,6 +188,7 @@ function swdo(c, changeable=true)
     /* if we don't set the property then the class can be referenced from
         within this window but isn't a property of the window
     */
+    c.toString = () => `function ${c.name}() { [native code] }`
     odp(window, c.name, {value:c, writable:changeable, configurable:changeable});
 }
 
