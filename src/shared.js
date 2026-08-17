@@ -5787,20 +5787,15 @@ if(nn == "BUTTON" || (nn == "INPUT" &&
 let e = new w.MouseEvent("click");
 if(!this.dispatchEvent(e)) return;
 // do what the tag says to do
-if(this.form && this.form.dom$class == "HTMLFormElement") {
-if(t == "submit") {
-e = new w.Event;
-e.initEvent("submit", true, true);
-if(this.dispatchEvent(e) && this.form.submit)
-this.form.submit();
-}
-if(t == "reset") {
-e = new w.Event;
-e.initEvent("reset", true, true);
-if(this.dispatchEvent(e) && this.form.reset)
-this.form.reset();
-}
-}
+    if(this.form && this.form.dom$class == "HTMLFormElement") {
+        if(t == "submit") {
+            e = new w.Event;
+            e.initEvent("submit", true, true);
+            if(this.dispatchEvent(e)) this.form.submit();
+        }
+        if(t == "reset")
+            this.form.reset();
+    }
 if(t != "checkbox" && t != "radio") return;
 this.checked$2 = (this.checked$2 ? false : true);
 // if it's radio and checked we need to uncheck the others.
@@ -5953,7 +5948,7 @@ swde("HTMLFormElement", class extends w.HTMLElement {
 
 let formp = w.HTMLFormElement.prototype;
 formp.submit = eb$formSubmit;
-formp.reset = function() { let e = new w.Event("reset"); this.dispatchEvent(e); eb$formReset.call(this); }
+formp.reset = eb$formReset;
 
 swde("HTMLFieldSetElement", class extends w.HTMLElement {
     constructor() {

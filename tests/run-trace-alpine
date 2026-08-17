@@ -38,6 +38,7 @@ I don't call chrome again; that should not change.
 Unless you upgrade chrome or get a more recent snapshot of the js library etc.
 This is the same philosophy as the other tests in this directory -
 I only run the edbrowse side of things.
+
 This is not included in the runtests script.
 It's a bit different, and understanding the
 discrepancies, if any, is much more involved.

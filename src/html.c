@@ -2561,7 +2561,6 @@ static bool formSubmit(const Tag *form, const Tag *submit, bool dopost, const ch
 		if(submit->jslink && allowJS)
 			eo2 = get_js_attribute(submit, "formenctype");
 		if(eo2 && *eo2) eo1 = eo2;
-  printf("eo2 %s\n", eo2);
 		if(eo1 && *eo1) {
 			fsep = '&';
 			if (stringEqualCI(eo1, "multipart/form-data"))
@@ -2934,56 +2933,45 @@ bool infPush(int tagno, char **post_string)
 		return true;
 	}
 // Now submit or reset
-	if (itype == INP_RESET) {
-		if (!form) {
-			setError(MSG_NotInForm);
-			return false;
-		}
+    if (itype == INP_RESET) {
+        if (!form) {
+            setError(MSG_NotInForm);
+            return false;
+        }
 // Before we reset, run the onreset code.
-// I read somewhere that onreset and onsubmit only run if you
-// pushed the button - rather like onclick.
-// Thus t, the reset button, must be nonzero.
-		if (post_string) {
-			if (t && tagHandler(form->seqno, "onreset")) {
-				if (!allowJS)
-					runningError(MSG_NJNoReset);
-				else {
-					rc = true;
-					if (form->jslink)
-						rc = run_event_t(form, "onreset");
-					if (!rc)
-						return true;
-					if (js_redirects)
-						return true;
-				}
-			}		/* onreset */
-			formReset(form);
-		}
-		return true;
-	}
+        if (tagHandler(form->seqno, "onreset")) {
+            if (!allowJS) runningError(MSG_NJNoReset);
+            else {
+                rc = true;
+                if (form->jslink)
+                    rc = bubble_event_t(form, "onreset");
+                if (!rc) return true;
+                if (js_redirects) return true;
+            }
+        }        /* onreset */
+        formReset(form);
+        return true;
+    }
+
 // now it's submit
 	if (!form && !(t && t->onclick)) {
 		setError(MSG_NotInForm);
 		return false;
 	}
 // <button> could turn into submit, which we don't want to do if it is not in a form.
-	if (!form)
-		return true;
+	if (!form) return true;
+
 	// Before we submit, run the onsubmit code
-	if (post_string) {
-		if (t && tagHandler(form->seqno, "onsubmit")) {
-			if (!allowJS)
-				runningError(MSG_NJNoSubmit);
-			else {
-				rc = true;
-				if (form->jslink)
-					rc = bubble_event_t(form, "onsubmit");
-				if (!rc) return true;
-				if (js_redirects)
-					return true;
-			}
-		}
-	}
+        if (t && tagHandler(form->seqno, "onsubmit")) {
+            if (!allowJS) runningError(MSG_NJNoSubmit);
+            else {
+                rc = true;
+                if (form->jslink)
+                    rc = bubble_event_t(form, "onsubmit");
+                if (!rc) return true;
+                if (js_redirects) return true;
+            }
+        }
 
 	dopost = form->post;
 	action = form->href;
@@ -3163,11 +3151,14 @@ success:
 
 void domSubmitsForm(Tag *t, bool reset)
 {
+    bool rc;
     if (reset) {
-        formReset(t);
+        // not going through infPush, so post the onreset event
+        if(bubble_event_t(t, "onreset"))
+            formReset(t);
     } else {
         char *post;
-        bool rc = infPush(t->seqno, &post);
+        rc = infPush(t->seqno, &post);
         if (rc) {
             if(post) gotoLocation(post, 0, false, t->f0);
         } else showError();

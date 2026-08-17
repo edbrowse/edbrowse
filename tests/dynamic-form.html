@@ -42,7 +42,7 @@ try {
 show = document.getElementById("show")
 b = document.body;
 msg = "ok"
-const form = document.querySelector("form");
+form = document.querySelector("form");
 // test weird attribute names
 if(form.getAttributeNames().join(';') != 'action;onsubmit;*#;:&quot;`@what') msg += "|form has wrong attributes";
 if(form.getAttribute(':&quot;`@what') != "where") msg += "|what where";
@@ -175,6 +175,9 @@ if(sso.length) msg += `|selected fruits after reset ${v}`;
 // hidden fields do not go back upon form reset.
 button.click();
 if(log.innerText != "me=Yogi Bear\nyy=special\n") msg += "|improper log after reset";
+v = "j";
+form.submit();
+if(v != "j") msg += `|form submit ${v}`
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
