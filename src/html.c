@@ -1041,11 +1041,13 @@ fail:
 void loadFinishCSS(void)
 {
 	Tag *t;
-	for (t = cw->linklist; t; t = t->same) {
-		if (t->dead || !t->jslink || t->step != 3)
-			continue;
+	int i;
+	for (i = 0; i < cw->numTags; ++i) {
+		t = tagList[i];
+		if(t->action != TAGACT_LINK) continue;
+		if (t->dead || !t->jslink || t->step != 3) continue;
 		if(cf != t->f0) continue; // some other frame
-// don't need css until it is linked into the tree.
+		// don't need css until it is linked into the tree.
 		if(!isRooted(t)) continue;
 		if (intFlag) {
 			t->step = 6;
@@ -1411,7 +1413,9 @@ passes:
 	}
 
 // after each pass, see if there is a link onload to run.
-	for (t = cw->linklist; t; t = t->same) {
+	for (j = 0; j < cw->numTags; ++j) {
+		t = tagList[j];
+		if(t->action != TAGACT_LINK) continue;
 		if(t->lic == 1 && t->jslink && !t->dead &&
 		save_cf == t->f0) {
 			cf = save_cf;

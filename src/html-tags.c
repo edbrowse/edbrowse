@@ -592,14 +592,6 @@ Tag *newTag(const Frame *f, const char *name)
 	t->nodeNameU = cloneString(name);
 	caseShift(t->nodeNameU, 'u');
 	pushTag(t);
-	if (t->action == TAGACT_LINK) {
-		for (t1 = cw->linklist; t1; t1 = t1->same)
-			t2 = t1;
-		if (t2)
-			t2->same = t;
-		else
-			cw->linklist = t;
-	}
 	if (t->action == TAGACT_FRAME) {
 		for (t1 = cw->framelist; t1; t1 = t1->same)
 			t2 = t1;
@@ -783,7 +775,7 @@ void freeTags(Window *w)
     free(w->tags);
     w->tags = 0;
     w->numTags = w->allocTags = w->deadTags = 0;
-    w->framelist = w->linklist = 0;
+    w->framelist = 0;
 }
 
 // When window first opens, reserve space for 512 tags.
