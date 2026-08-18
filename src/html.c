@@ -1366,11 +1366,19 @@ void runScriptsPending(bool startbrowse)
         dw_flush(0);
     }
 
+/* Pending jobs, e.g. microtasks or promise jobs etc, set up by
+the inline scripts, are suppose to run now, before the deferred scripts.
+What if the microtask queues another microtaslk?
+The second task is put on the end of the queue while the first one runs,
+and it might be run as a matter of course - or not.
+I know it is run by chrome. So I'll run this routine up to 5 times.
+By then I should have executed all the pending jobs that should be run.
+If not then it's probably an infinite loop, and we should move on. */
     if(startbrowse) {
-        // microtasks set up by inline scripts are suppose to run now.
-        // I don't know about promise jobs, but this line will run them too.
-        // If the microtask queues another microtask?   idk
-        my_ExecutePendingJobs(0);
+        int k;
+        for(k = 0; k < 5; ++k) {
+            if(my_ExecutePendingJobs(0)) break;
+        }
     }
 
 top:
