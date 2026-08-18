@@ -146,7 +146,7 @@ if(v != "cl") msg += `|selected fruits after add ${v}`;
 og = sel.querySelector("optgroup");
 o = new Option("blueberry", 'b');
 sel.add(o,4);
-if(og.childElementCount != 2) msg += "|expected two berries";
+if(og.childElementCount != 2) msg += "|expected 2 berries";
 sel.remove(2);
 sel.lastElementChild.selected = true;
 v = ""; for(let c of so) v += c.value;
@@ -166,15 +166,28 @@ form.me.value = "Boo-Boo";
 button.click();
 if(log.innerText != "me=Boo-Boo\ncontact=carrier pigeon\nyy=special\nfruit=c\nfruit=l\nfruit=p\n") msg += "|improper log after second button";
 
+// put an option on the end of the option group, which cannot be done by sel.add
+o = document.createElement("option");
+o.text = "boysenberry";
+o.value = 'y';
+o.selected = true;
+og.appendChild(o);
+if(og.childElementCount != 3) msg += "|expected 3 berries";
+v = ""; for(let c of so) v += c.value;
+if(v != "aclbryp") msg += `|fruits after append ${v}`;
+v = ""; for(let c of sso) v += c.value;
+if(v != "clyp") msg += `|selected fruits after append ${v}`;
+
 // there is no reset button to push, but I can call the method directly
 form.reset();
 if(v != "bodyreset") msg += "|onreset didn't run";
 v = ""; for(let c of so) v += c.value;
-if(v != "aclbrp") msg += `|fruits after reset ${v}`;
+if(v != "aclbryp") msg += `|fruits after reset ${v}`;
 if(sso.length) msg += `|selected fruits after reset ${v}`;
 // hidden fields do not go back upon form reset.
 button.click();
 if(log.innerText != "me=Yogi Bear\nyy=special\n") msg += "|improper log after reset";
+// and the form submit function, rather than a click
 v = "j";
 form.submit();
 if(v != "j") msg += `|form submit ${v}`
