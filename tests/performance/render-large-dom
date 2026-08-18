@@ -1,0 +1,51 @@
+#!/bin/sh
+
+cd "$(dirname "$0")" || exit 1
+program=../../src/edbrowse
+runs=${1:-5}
+
+case $runs in
+*[!0-9]* | "") echo "usage: $0 [number of runs]" >&2; exit 1 ;;
+0) echo "$0: need at least one run" >&2; exit 1 ;;
+esac
+if [ ! -x "$program" ]; then
+	echo "$0: $program not built" >&2
+	exit 1
+fi
+# We need the elapsed time of the whole process, so this is GNU time,
+# not the time builtin of the shell.
+if [ ! -x /usr/bin/time ]; then
+	echo "$0: /usr/bin/time is required" >&2
+	exit 1
+fi
+
+timings=$(mktemp)
+trap 'rm -f "$timings"' EXIT HUP INT TERM
+
+i=0
+while [ "$i" -lt "$runs" ]; do
+	/usr/bin/time -a -o "$timings" -f %e "$program" -c /dev/null \
+	    large-dom.html >/dev/null <<'EOF'
+b
+/run
+i1*
+i1*
+i1*
+i1*
+i1*
+i1*
+i1*
+i1*
+i1*
+i1*
+q
+EOF
+	i=$((i + 1))
+done
+
+printf 'seconds:'
+sort -n "$timings" | while read -r value; do
+	printf ' %s' "$value"
+done
+printf '\nmedian: '
+sort -n "$timings" | awk -v n="$runs" 'NR == int((n + 1) / 2) { print; exit }'

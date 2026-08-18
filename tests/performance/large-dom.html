@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<head>
+<style>
+.item { color: black; }
+</style>
+</head>
+<body>
+<input type="button" value="run" onclick="window.renderCount++">
+<script>
+window.renderCount = 0;
+let h = "";
+for (let i = 0; i < 5000; ++i)
+	h += "<span class=item>item " + i + "</span>";
+document.write(h);
+</script>
+<p>ok</p>
+</body>
+</html>
