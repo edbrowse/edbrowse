@@ -219,10 +219,22 @@ if(v != "dcb") msg += `|wrong animals ${v}`
 v = ""; for(let c of sso) v += c.value;
 if(v != "d") msg += `|no dog default ${v}`;
 if(s1.selectedIndex != 0) msg += `|bad dog index ${s1.selectedIndex}`;
-so[1].selected = true; // this should unselect the dog
+so[1].selected = true; // this should deselect the dog
 v = ""; for(let c of sso) v += c.value;
 if(v != "c") msg += `|no cat replace ${v}`;
 if(s1.selectedIndex != 1) msg += `|bad cat index ${s1.selectedIndex}`;
+so[1].selected = false;
+// not allowed to deselect
+if(sso.length == 0) msg += "|cat went away";
+// bringing in an option default selected - becomes selected
+o = new Option("goldfish", 'g');
+o.defaultSelected = true;
+s1.add(o);
+v = ""; for(let c of so) v += c.value;
+if(v != "dcbg") msg += "|goldfish not added";
+v = ""; for(let c of sso) v += c.value;
+if(v != "g") msg += "|goldfish not selected";
+if(s1.selectedIndex != 3) msg += "|bad goldfish index";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
