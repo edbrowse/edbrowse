@@ -336,6 +336,7 @@ But these only live in <head> if browseMail is true.
     {"p",0,0, 2, 1, "blockquote"},
     {"pre", 0, 0, 2, 0, 0},
     {"script", 0, 0, 1, 0, 0},
+    {"section", 0, 1, 0, 0, 0},
     {"source", 1, 0, 0, 0, 0},
 // youtube has <span> in its head section. Don't know why.
     {"span",0,1, 1, 0, 0},
