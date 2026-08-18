@@ -1572,27 +1572,32 @@ bool htmlTest(void)
 	int j, ln;
 	char look[12];
 	for (ln = 1; ln <= cw->dol; ++ln) {
-		char *p = (char *)fetchLine(ln, -1);
+		pst line = fetchLine(ln, -1);
+		char *p = (char *)line;
+// How much text is on this line, not counting the newline that ends it.
+// Every comparison below is a fixed length one, and a line can be shorter
+// than the thing we are comparing it against, so they all have to be capped.
+		int plen = pstLength(line) - 1;
 // special xml indicator of my own creation
-		if(ln == 1 && !memcmp(p, "`~*xml}@;", 9))
+		if(ln == 1 && plen >= 9 && !memcmp(p, "`~*xml}@;", 9))
 			return true;
-		while (isspaceByte(*p) && *p != '\n')
-			++p;
-		if (*p == '\n')
+		while (plen && isspaceByte(*p))
+			++p, --plen;
+		if (!plen)
 			continue;	// skip blank line
 		if (*p != '<') return false;
 // check for <!doctype and other things
-		if (memEqualCI(p + 1, "!doctype", 8))
+		if (plen >= 9 && memEqualCI(p + 1, "!doctype", 8))
 			return true;
-		if (memEqualCI(p + 1, "?xml", 4))
+		if (plen >= 5 && memEqualCI(p + 1, "?xml", 4))
 			return true;
-		if (memEqualCI(p + 1, "!--", 3))
+		if (plen >= 4 && memEqualCI(p + 1, "!--", 3))
 			return true;
-		if (memEqualCI(p + 1, "!if", 3))
+		if (plen >= 4 && memEqualCI(p + 1, "!if", 3))
 			return true;
 // If it starts with <tag, for any tag we recognize,
 // we'll call it good.
-		for (j = 1; j < 10; ++j) {
+		for (j = 1; j < 10 && j < plen; ++j) {
 			if (!isalnumByte(p[j]))
 				break;
 			look[j - 1] = p[j];
