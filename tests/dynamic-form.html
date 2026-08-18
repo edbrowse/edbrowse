@@ -16,7 +16,7 @@ onsubmit="v += 'e'"
       <label for="contactChoice3">Mail</label>
 <br id=end-choices>
 <input type=hidden id=xx name=h value=secret>
-Fruit: <select name=fruit multiple>
+Fruit: <select name=fruit multiple=elephant>
 <option value=a>apple
 <option value=o>orange
 <option value=l>lemon
@@ -124,6 +124,7 @@ if(v != "abcd3ef") msg += `|input click ${v}`;
 
 // select an option, push the button
 sel = b.querySelector("select");
+if(sel.multiple !== true) msg += "|select not multiple";
 so = sel.options; // live array
 sso = sel.selectedOptions;
 if(so.length != 4 || sso.length != 0) msg += "|bad initial option count";

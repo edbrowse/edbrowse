@@ -1802,8 +1802,8 @@ spilldownCompile: function(t, name) {
 
 spilldownBool: function(t, name) {
 if(!t.nodeName) return false;
-var nn = t.nodeName.toLowerCase();
-return name == "aria-hidden" ||
+let nn = t.nodeName.toLowerCase();
+return name == "ariahidden" ||
 name == "selected" && nn == "option" ||
 name == "checked" && nn == "input";
 },
@@ -1903,12 +1903,8 @@ if(!(this.eb$xml || this instanceof w.SVGElement)) name = name.toLowerCase();
 // This one is required by acid test 43, I don't understand it at all.
         if(name == "checked" && v == "checked")
             this.defaultChecked = true;
-        else {
-// is a nonsense string like blah, true or false? I don't know.
-// For now I'll assume it's true.
-            v = (v === "false" ? false : true);
-            this[name] = v;
-        }
+        else
+            this[name] = true;
     }
     if(attr.spilldownCompile(this, name)) {
         const name2 = name + "$2"
@@ -1952,7 +1948,6 @@ if(this.dataset$2 && this.dataset$2[n]) delete this.dataset$2[n];
 if(attr.spilldown(this, name)) this[name] = "";
 if(attr.spilldownResolve(this, name)) delete this[name];
 if(attr.spilldownResolveURL(this, name)) delete this[name];
-if(attr.spilldownBool(this, name)) delete this[name];
 let a, i, found = false;
 if(name === "length") {
 a = null
@@ -2211,7 +2206,7 @@ item == "disconnectedCallback$pending") continue;
 // can you clone or import a node from an xml frame? Maybe.
 if(item == "eb$xml") continue;
 // these are spilldown from the attributes, and will be copied over as attributes
-if(item == "aria-hidden") continue;
+if(item == "ariaHidden") continue;
 if(debug) alert3("copy boolean " + item + " = " + node1[item]);
 node2[item] = node1[item];
 continue;
@@ -3012,7 +3007,7 @@ var s1; // original style object
 var s2; // computed style object
 var w = my$win();
 if(!t) return 0;
-if(t.hidden || t["aria-hidden"]) return 1;
+if(t.hidden || t.ariaHidden) return 1;
 if(w.rr$start) {
 cssGather(false, w);
 delete w.rr$start;
@@ -5158,21 +5153,8 @@ swde("HTMLElement", class extends w.Element {
         }
         return this.style$2;
     }
-
-    // almost anything can be disabled, an entire div section, etc
-    get disabled()
-    {
-        const t = this.getAttribute("disabled");
-        return !(t === null || t === false || t === "false" || t === 0 || t === '0');
-    }
-    set disabled(v) { this.setAttribute("disabled", v); }
-
-get hidden()
-{
-    const t = this.getAttribute("hidden");
-    return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true;
-}
-set hidden(v) { this.setAttribute("hidden", v);}
+    get hidden() { return this.hasAttribute("hidden"); }
+    set hidden(v) { if(v === false) this.removeAttribute("hidden"); else this.setAttribute("hidden", ""); }
 
     get name()
     {
@@ -5213,6 +5195,7 @@ set hidden(v) { this.setAttribute("hidden", v);}
 })
 let helemp = w.HTMLElement.prototype;
 helemp.nodeType = 1;
+helemp.ariaHidden = false;
 
 // helper functions for textContent
 // First function is recursive and gathers text and data sections.
@@ -5595,6 +5578,13 @@ swde("HTMLOptionElement", class extends w.HTMLElement {
         if (arguments.length > 0) this.text = arguments[0];
         if (arguments.length > 1) this.value = arguments[1];
     }
+    get selected() { return this.selected$2; }
+    set selected(v) {
+        if(v !== false) v = true;
+        if(v == this.selected$2) return; // no change
+        this.selected$2 = v;
+        selectReindex2(this);
+    }
 })
 swpc("Option", w.HTMLOptionElement)
 let optp = w.HTMLOptionElement.prototype;
@@ -5602,15 +5592,6 @@ optp.selected$2 = false;
 optp.defaultSelected = false;
 optp.nodeName = optp.tagName = "OPTION";
 optp.text = optp.value = "";
-odp(optp, "selected", {
-get: function() { return this.selected$2; },
-set: function(v) {
-if(typeof v != "boolean") v = false;
-if(v == this.selected$2) return; // no change
-this.selected$2 = v;
-selectReindex2(this);
-}});
-
 swde("HTMLOptGroupElement", class extends w.HTMLElement {
     constructor() { super(); }
 })
@@ -5637,35 +5618,19 @@ swde("HTMLSelectElement", class extends w.HTMLElement {
     get type() {
         return this.multiple ? "select-multiple" : "select-one";
     }
-
-    get multiple() {
-        const t = this.getAttribute("multiple");
-        return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true;
-    }
-
-    set type(v) {
-        this.setAttribute("multiple", v);
-    }
-
+    get multiple() { return this.hasAttribute("multiple"); }
+    set multiple(v) { if(v === false) this.removeAttribute("multiple"); else this.setAttribute("multiple", ""); }
+    get disabled() { return this.hasAttribute("disabled"); }
+    set disabled(v) { if(v === false) this.removeAttribute("disabled"); else this.setAttribute("disabled", ""); }
+    get required() { return this.hasAttribute("required"); }
+    set required(v) { if(v === false) this.removeAttribute("required"); else this.setAttribute("required", ""); }
     get size() {
         const t = this.getAttribute("size");
         if(typeof t == "number") return t;
         if(typeof t == "string" && t.match(/^\d+$/)) return parseInt(t);
         return 0;
     }
-
-    set size(v) {
-        this.setAttribute("size", v);
-    }
-
-    get required() {
-        const t = this.getAttribute("required");
-        return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true;
-    }
-
-    set required(v) {
-        this.setAttribute("required", v);
-    }
+    set size(v) { this.setAttribute("size", v); }
 })
 
 const selp = w.HTMLSelectElement.prototype;
@@ -5765,17 +5730,47 @@ swde("HTMLInputElement", class extends w.HTMLElement {
         this.validity = new w.Validity;
         this.validity.owner = this;
     }
+    get checked() { return this.checked$2; }
+    set checked(v) {
+        if(v !== false) v = true;
+        if(v == this.checked$2) return; // no change
+        this.checked$2 = v;
+        // if it's radio and checked we need to uncheck the others.
+        let nn = this.nodeName, t = this.type, e;
+        if(this.form && this.checked$2 && t == "radio" &&
+        (nn = this.name) && (e = this.form[nn]) && Array.isArray(e)) {
+            for(let i=0; i<e.length; ++i)
+                if(e[i] != this) e[i].checked$2 = false;
+        } else // try it another way
+            if(this.checked$2 && t == "radio" && this.parentNode && (e = this.parentNode.childNodes) && (nn = this.name)) {
+                for(let i=0; i<e.length; ++i)
+                    if(e[i].nodeName == "INPUT" && e[i].type == t && e[i].name == nn &&e[i] != this) e[i].checked$2 = false;
+        }
+    }
+    get readOnly() { return this.hasAttribute("readonly"); }
+    set readOnly(v) { if(v === false) this.removeAttribute("readonly"); else this.setAttribute("readonly", ""); }
+    get multiple() { return this.hasAttribute("multiple"); }
+    set multiple(v) { if(v === false) this.removeAttribute("multiple"); else this.setAttribute("multiple", ""); }
+    get disabled() { return this.hasAttribute("disabled"); }
+    set disabled(v) { if(v === false) this.removeAttribute("disabled"); else this.setAttribute("disabled", ""); }
+    get required() { return this.hasAttribute("required"); }
+    set required(v) { if(v === false) this.removeAttribute("required"); else this.setAttribute("required", ""); }
 })
 swde("HTMLButtonElement", class extends w.HTMLElement {
     constructor() { super(); }
 })
 swde("HTMLTextAreaElement", class extends w.HTMLElement {
     constructor() { super(); }
+    get readOnly() { return this.hasAttribute("readonly"); }
+    set readOnly(v) { if(v === false) this.removeAttribute("readonly"); else this.setAttribute("readonly", ""); }
+    get required() { return this.hasAttribute("required"); }
+    set required(v) { if(v === false) this.removeAttribute("required"); else this.setAttribute("required", ""); }
 })
 
 let inputp = w.HTMLInputElement.prototype;
 let buttonp = w.HTMLButtonElement.prototype;
 let tareap = w.HTMLTextAreaElement.prototype;
+inputp.checked$2 = false;
 
 // we need a couple of helper functions for clicking on a radio input field
 function clickfn() {
@@ -5811,22 +5806,6 @@ if(e[i].nodeName == "INPUT" && e[i].type == t && e[i].name == nn &&e[i] != this)
 }
 }
 
-function checkset(n) {
-if(typeof n !== "boolean") n = false;
-this.checked$2 = n;
-var nn = this.nodeName, t = this.type, e;
-// if it's radio and checked we need to uncheck the others.
-if(this.form && this.checked$2 && t == "radio" &&
-(nn = this.name) && (e = this.form[nn]) && Array.isArray(e)) {
-for(var i=0; i<e.length; ++i)
-if(e[i] != this) e[i].checked$2 = false;
-} else // try it another way
-if(this.checked$2 && t == "radio" && this.parentNode && (e = this.parentNode.childNodes) && (nn = this.name)) {
-for(var i=0; i<e.length; ++i)
-if(e[i].nodeName == "INPUT" && e[i].type == t && e[i].name == nn &&e[i] != this) e[i].checked$2 = false;
-}
-}
-
 // and a getter and setter for value, so that it can be reflected in C,
 // and you can see it on screen, and it can be sent to the server via a form.
 function getvalue()
@@ -5853,11 +5832,6 @@ if(typeof dir == "string") this.selectionDirection = dir;
 }
 inputp.select = eb$voidfunction;
 inputp.click = clickfn;
-// We only need this in the rare case of setting click and clearing
-// the other radio buttons. acid test 43
-odp(inputp, "checked", {
-get: function() { return this.checked$2 ? true : false; },
-set: checkset});
 // type property is automatically in the getAttribute system, acid test 53
 odp(inputp, "type", {
 get:function(){ var t = this.getAttribute("type");
@@ -5874,18 +5848,6 @@ get:function(){ var t = this.getAttribute("placeholder");
 var y = typeof t;
 return y == "string" || y == "number" ? t : ""; },
 set:function(v) { this.setAttribute("placeholder", v);}});
-odp(inputp, "multiple", {
-get:function(){ var t = this.getAttribute("multiple");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("multiple", v);}});
-odp(inputp, "required", {
-get:function(){ var t = this.getAttribute("required");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("required", v);}});
-odp(inputp, "readOnly", {
-get:function(){ let t = this.getAttribute("readonly");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("readonly", v);}});
 odp(inputp, "step", {
 get:function(){ var t = this.getAttribute("step");
 var y = typeof t;
@@ -5926,14 +5888,6 @@ get:function(){ var t = this.getAttribute("placeholder");
 var y = typeof t;
 return y == "string" || y == "number" ? t : ""; },
 set:function(v) { this.setAttribute("placeholder", v);}});
-odp(tareap, "required", {
-get:function(){ var t = this.getAttribute("required");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("required", v);}});
-odp(tareap, "readOnly", {
-get:function(){ var t = this.getAttribute("readonly");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("readonly", v);}});
 
 // the html form
 swde("HTMLFormElement", class extends w.HTMLElement {
@@ -6009,11 +5963,10 @@ set:function(v) { this.setAttribute("alt", v);
 swde("HTMLScriptElement", class extends w.HTMLElement {
     constructor() { super(); }
 
-    get defer() {
-        let t = this.getAttribute("defer");
-        return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true;
-    }
-    set defer(v) { this.setAttribute("defer", v); }
+    get defer() { return this.hasAttribute("defer"); }
+    set defer(v) { if(v === false) this.removeAttribute("defer"); else this.setAttribute("defer", ""); }
+    get async() { return this.hasAttribute("async"); }
+    set async(v) { if(v === false) this.removeAttribute("async"); else this.setAttribute("async", ""); }
 
     get type() {
         let t = this.getAttribute("type");
@@ -6030,10 +5983,6 @@ if(t.match(/\bjavascript\b/)) return true;
 if(t.match(/\bjson\b/)) return true;
 return false}
 let scriptp = w.HTMLScriptElement.prototype;
-odp(scriptp, "async", {
-get:function(){ var t = this.getAttribute("async");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("async", v);}})
 scriptp.eb$step = 0;
 scriptp.text = "";
 
@@ -6794,8 +6743,7 @@ swde("z$Datalist", class extends w.HTMLElement {
 }, false)
 
 odp(w.z$Datalist.prototype, "multiple", {
-get:function(){ var t = this.getAttribute("multiple");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
+get:function(){ return this.hasAttribute("multiple"); },
 set:function(v) { this.setAttribute("multiple", v);}});
 
 swde("CDATASection", class extends w.Text {

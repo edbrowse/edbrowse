@@ -1,9 +1,6 @@
 #!/bin/sh
 
-# ask crome whether a class and attribute has spillup and spilldown.
-# Not a perfect test; some attributes only accept a discrete set of values.
-# See spilldownboolcheck for boolean.
-# You will need your config file and the chrome plugin for this to work.
+# A version of spilldowncheck for boolean attributes.
 
 keep=n
 if [ $# -a "$1" = -k ]
@@ -14,14 +11,13 @@ fi
 
 if [ $# != 2 ]
 then
-echo "usage spilldowncheck [-k] nodeName attribute"
+echo "usage spilldownboolcheck [-k] nodeName attribute"
 exit 1
 fi
 
 node="$1"
 attr="$2"
 
-# anything we send to chrome has to end in .html
 file=spilltest.html
 cat <<! >$file
 <head></head><body>
@@ -33,9 +29,19 @@ msg="";
 s = document.createElement("$node");
 msg += ':' + s["$attr"] + ':' + s.getAttribute("$attr");
 s["$attr"] = "abc";
+msg += '@' + s["$attr"] + ':' + s.getAttribute("$attr");
+s["$attr"] = false;
+msg += ':' + s["$attr"] + ':' + s.getAttribute("$attr");
+s["$attr"] = true;
 msg += ':' + s["$attr"] + ':' + s.getAttribute("$attr");
 s.setAttribute("$attr", "xyz");
+msg += '@' + s["$attr"] + ':' + s.getAttribute("$attr");
+s.setAttribute("$attr", false);
 msg += ':' + s["$attr"] + ':' + s.getAttribute("$attr");
+s.setAttribute("$attr", true);
+msg += ':' + s["$attr"] + ':' + s.getAttribute("$attr");
+s.removeAttribute("$attr");
+msg += '@' + s["$attr"] + ':' + s.getAttribute("$attr");
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e; }
 </script></body>
