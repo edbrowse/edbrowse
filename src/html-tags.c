@@ -576,7 +576,7 @@ past_html_close_semantics:
 static void pushTag(Tag *t);
 Tag *newTag(const Frame *f, const char *name)
 {
-	Tag *t, *t1, *t2 = 0;
+	Tag *t;
 	const struct tagInfo *ti = name2tagInfo(name);
 	if (!ti) {
 		debugPrint(4, "warning, created node %s reverts to generic", name);
@@ -592,14 +592,6 @@ Tag *newTag(const Frame *f, const char *name)
 	t->nodeNameU = cloneString(name);
 	caseShift(t->nodeNameU, 'u');
 	pushTag(t);
-	if (t->action == TAGACT_FRAME) {
-		for (t1 = cw->framelist; t1; t1 = t1->same)
-			t2 = t1;
-		if (t2)
-			t2->same = t;
-		else
-			cw->framelist = t;
-	}
 	return t;
 }
 
@@ -775,7 +767,6 @@ void freeTags(Window *w)
     free(w->tags);
     w->tags = 0;
     w->numTags = w->allocTags = w->deadTags = 0;
-    w->framelist = 0;
 }
 
 // When window first opens, reserve space for 512 tags.

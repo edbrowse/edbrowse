@@ -1428,7 +1428,9 @@ passes:
 // If a frame has an onload function, that function might need to run.
 // We don't get to wait around for on-demand expansion; we have to expand.
 // Fortunately this doesn't happen often.
-	for (t = cw->framelist; t; t = t->same) {
+	for (j = 0; j < cw->numTags; ++j) {
+		t = tagList[j];
+		if(t->action != TAGACT_FRAME) continue;
 		if(!t->f1 && // not expanded yet
 		!t->expf && // we haven't tried to expand it yet
 		isRooted(t) && // it's in our tree
