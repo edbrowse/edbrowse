@@ -1,0 +1,61 @@
+<head>
+<script>expanded = false;</script>
+</head><body>
+<p id=show>start</p>
+<iframe src=http://www.edbrowse.org/frm1.html
+name=butterfly
+onload="expanded = true">
+you shouldn't see this stuff
+</iframe>
+<script>
+/* frames from the internet, or frames internally generated.
+This can be run by edbrowse locally. Just type b.
+We don't have a lot of cross origin concerns.
+But chrome does.
+To perform this test in chrome, you need a copy of this file on edbrowse.org.
+Write out the url http://www.edbrowse.org/frames.html
+then invoke <chromeline. */
+
+try {
+show = document.getElementById("show")
+msg = "ok";
+if(frames.length != 1) msg += `|initial frame count ${frames.length}`;
+f1 = frames[0]; // force expansion in edbrowse
+b = document.body;
+
+// There's a slot for the frame, but it loads asynchronously.
+// We can't test for anything related to this frame now.
+// Have to put it in a timer.
+// While we're waiting, let's make an internal frame.
+f2 = document.createElement("iframe");
+if(frames.length != 1) msg += "|frames length changed too early";
+b.appendChild(f2);
+if(frames.length != 2) msg += "|frames length not 2";
+f2w = f2.contentWindow;
+f2d = f2.contentDocument;
+if(f2d.body.nodeName != "BODY") msg += "|no f2 body";
+s2 = document.createElement("script");
+s2.text = "document.zz = 234";
+if(s2.ownerDocument != document) msg += "|bad s2 owner before attach";
+f2d.body.appendChild(s2);
+if(f2d.zz != 234) msg += "|script in frame didn't run";
+if(f2w.top != window) msg += "|bad top";
+if(f2w.parent != window) msg += "|bad parent";
+if(f2d.body.ownerDocument != f2d) msg += "|bad f2 body owner";
+if(s2.ownerDocument != f2d) msg += "|bad s2 owner after attach";
+
+setTimeout(()=>{
+if(!expanded) msg += "|frame onload didn't run";
+if(f1.zz != 789) msg += "|zz not found";
+f1b = f1.document.body;
+h1 = f1b.querySelector("h1");
+if(!h1) msg += "|didn't find h1";
+if(h1.textContent != "Simple Frame") msg += "|wrong h1 content";
+if(b.querySelector("h1")) msg += "|found h1 by qsa from top frame";
+q = b.getElementsByTagName("h1");
+if(q.length) msg += "|found h1 by tag name from top frame";
+show.innerHTML = msg;
+}, 300);
+
+} catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
+</script>
