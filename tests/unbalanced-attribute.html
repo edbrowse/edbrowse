@@ -1,0 +1,14 @@
+<!--
+The quote after style= never closes, the bad html that usps.gov used to send.
+The scanner has to fall back to the first > it saw while quoted, otherwise the
+rest of the page is swallowed by the attribute.
+There is no script here on purpose.  The quotes in a checking script would
+themselves open and close the runaway attribute, and then the test would be
+measuring the script rather than the scanner.  So this one is judged by what
+it renders: line 1 is ok only if the div tag ended where it should.
+-->
+<body>
+<div id=sample style="max-width: 820px!important;>
+ok
+</div>
+</body>

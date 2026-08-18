@@ -1,0 +1,15 @@
+<body>
+<p id=show>start</p>
+<div id=sample data-html="prefix >
+&lt;html&gt;
+&lt;body&gt;raw source&lt;/body&gt;
+&lt;/html&gt;
+suffix">visible</div>
+<script>
+let expected = "prefix >\n<html>\n<body>raw source</body>\n</html>\nsuffix"
+let show = document.getElementById("show")
+let sample = document.getElementById("sample")
+show.innerHTML = sample.getAttribute("data-html") == expected &&
+sample.textContent == "visible" ? "ok" : "multiline attribute leaked into text"
+</script>
+</body>

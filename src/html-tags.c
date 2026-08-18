@@ -992,11 +992,12 @@ But then I get this from usps.gov:
 <table role="presentation" width="100%"         style="padding-bottom: 30px; max-width: 820px!important;>
 Unbalanced quotes, bad html, somehow tidy knows what to do with it.
 I haven't given the tidy team enough credit.
-So my compromise is to take the first literal > if the quoted
-string that contains the > would run past end of line.
-That makes acid3 and usps.gov happy.
-But some web pages are all on a line to save bits,
-so also break out at >< like a new tag is starting.
+So my compromise is to remember the first literal > seen inside the current
+quoted string, and fall back to it only if that quote never closes.
+u is therefore reset whenever a quote opens or closes; it is a rescue point
+for a runaway attribute, not a running memory of the whole tag.
+A newline is valid inside a quoted attribute, and srcdoc-like attributes can
+carry an entire html document, so a newline can no longer end the tag.
 Then this was found in the wild.
 <a nofollow=<"" href="https://foo.bar.com">hello</a>
 I watch for =< and let < slide past in this case.
@@ -1006,18 +1007,22 @@ and so that is not implemented.
 
 		for(gt = t, qc = 0; *gt; ++gt) {
 			if(qc) {
-				if(qc == *gt) qc = 0; // unquote
+				if(qc == *gt) {
+					qc = 0; // unquote
+					u = 0;
+					continue;
+				}
 				if(*gt == '>' && !u) u = gt;
-				if(*gt == '\n' && u) { gt = u; break; }
-				if(*gt == '>' && gt[1] == '<' && u) { gt = u; break; }
 				continue;
 			}
 			if(*gt == '<' && gt > t && gt[-1] == '=') continue;
 			if(*gt == '<' || *gt == '>') break;
 			if(*gt == '"' || *gt == '\'') qc = *gt, u = 0;
 		}
+		if(!*gt && qc && u)
+			gt = u;
 
-		if(!gt) {
+		if(!*gt) {
 			printf("open tag %s, html parsing stops here\n", tagname);
 			goto stop;
 		}
