@@ -235,6 +235,19 @@ if(v != "dcbg") msg += "|goldfish not added";
 v = ""; for(let c of sso) v += c.value;
 if(v != "g") msg += "|goldfish not selected";
 if(s1.selectedIndex != 3) msg += "|bad goldfish index";
+// remove bird, then goldfish, the latter not allowed.
+s1.remove(2);
+v = ""; for(let c of so) v += c.value;
+if(v != "dcg") msg += "|bird not gone";
+v = ""; for(let c of sso) v += c.value;
+if(v != "g") msg += "|goldfish disturbed by bird";
+if(s1.selectedIndex != 2) msg += "|index not decremented";
+s1.remove(2);
+v = ""; for(let c of so) v += c.value;
+if(v != "dc") msg += "|goldfish remains";
+v = ""; for(let c of sso) v += c.value;
+if(v != "d") msg += "|goldfish not dog";
+if(s1.selectedIndex != 0) msg += "|index not 0 after goldfish action";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

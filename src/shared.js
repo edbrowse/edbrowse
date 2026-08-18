@@ -5652,6 +5652,36 @@ swde("HTMLSelectElement", class extends w.HTMLElement {
         return 0;
     }
     set size(v) { this.setAttribute("size", v); }
+
+    add(o, idx)
+    {
+        // have to turn the object Option into a proper node
+        // with a corresponding tag in C.
+        domLinkage('c', o, "option");
+        const n = this.options.length;
+        // first option to a pick-one list is automatically selected
+        if(!n && !this.multiple) o.selected$2 = true;
+        if(typeof idx != "number" || idx < 0 || idx > n) idx = n;
+        if(idx == n) {
+            this.appendChild(o);
+        } else {
+            // Determine the parent; we might be adding to an option group.
+            const p = this.options[idx].parentNode;
+            p.insertBefore(o, this.options[idx]);
+        }
+    }
+
+    remove(idx)
+    {
+        const n = this.options.length;
+        if(typeof idx == "number" && idx >= 0 && idx < n) {
+            // if removing the only selected option, revert to the first one.
+            const only = !this.multiple && this.options[idx].selected;
+            this.removeChild(this.options[idx]);
+            if(only && n > 1) this.options[0].selected = true;
+        }
+    }
+
 })
 
 const selp = w.HTMLSelectElement.prototype;
@@ -5725,30 +5755,6 @@ selp.insertBefore = function(c, item) {
     // now select this one, possibly unselecting the others.
     c.selected = was_selected;
     return c;
-}
-
-// these routines do not account for optgroups
-selp.add = function(o, idx) {
-    // have to turn the object Option into a proper node
-    // with a corresponding tag in C.
-    domLinkage('c', o, "option");
-    const n = this.options.length;
-    // first option to a pick-one list is automatically selected
-    if(!n && !this.multiple) o.selected$2 = true;
-    if(typeof idx != "number" || idx < 0 || idx > n) idx = n;
-    if(idx == n) {
-        this.appendChild(o);
-    } else {
-        // Determine the parent; we might be adding to an option group.
-        const p = this.options[idx].parentNode;
-        p.insertBefore(o, this.options[idx]);
-    }
-}
-
-selp.remove = function(idx) {
-    const n = this.options.length;
-    if(typeof idx == "number" && idx >= 0 && idx < n)
-    this.removeChild(this.options[idx]);
 }
 
 // input, textarea, button; the other input classes
