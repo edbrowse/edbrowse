@@ -157,14 +157,21 @@ if(v != "clp") msg += `|selected fruits after remove ${v}`;
 // choose a method of contact, and pseudo run the form again.
 document.removeEventListener("click", handle_b, true);
 q = b.querySelectorAll("input[type=radio]");
-i = q[3];
-i.click();
+i4 = q[3];
+i3 = q[2];
+i4.click();
 if(v != "ad3") msg += `|pigeon click ${v}`;
-if(!i.checked) msg += "|pigeon not checked";
+if(!i4.checked) msg += "|pigeon not checked";
 hidden.value = "special";
 form.me.value = "Boo-Boo";
 button.click();
 if(log.innerText != "me=Boo-Boo\ncontact=carrier pigeon\nyy=special\nfruit=c\nfruit=l\nfruit=p\n") msg += "|improper log after second button";
+
+// check a different radio button
+i3.click();
+if(!i3.checked || i4.checked) msg += "|pigeon not unchecked";
+i4.checked = true;
+if(!i4.checked || i3.checked) msg += "|mail not unchecked";
 
 // put an option on the end of the option group, which cannot be done by sel.add
 o = document.createElement("option");
