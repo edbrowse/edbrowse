@@ -186,6 +186,7 @@ v = ""; for(let c of so) v += c.value;
 if(v != "aclbryp") msg += `|fruits after append ${v}`;
 v = ""; for(let c of sso) v += c.value;
 if(v != "clyp") msg += `|selected fruits after append ${v}`;
+if(sel.selectedIndex != 1 || sel.value != "c") msg += "|first selection charry not in value";
 
 // there is no reset button to push, but I can call the method directly
 form.reset();
@@ -248,6 +249,7 @@ if(v != "dc") msg += "|goldfish remains";
 v = ""; for(let c of sso) v += c.value;
 if(v != "d") msg += "|goldfish not dog";
 if(s1.selectedIndex != 0) msg += "|index not 0 after goldfish action";
+if(s1.value != 'd') msg += "|s1.value didn't go back to d";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

@@ -3737,11 +3737,11 @@ function selectReindex(t)
     const o = t.options;
     const a = t.selectedOptions;
     o.length = 0; a.length = 0;
-    if(!t.multiple) t.selectedIndex = -1;
+    t.selectedIndex = -1;
     for(const c of gebtn(t, "option", false, false)) {
         if(c.selected) {
             a.push(c);
-            if(!t.multiple) t.selectedIndex = o.length;
+            if(t.selectedIndex < 0) t.selectedIndex = o.length;
         }
         o.push(c);
     }
@@ -5633,7 +5633,7 @@ swde("HTMLSelectElement", class extends w.HTMLElement {
     get value() {
         const a = this.options;
         const n = this.selectedIndex;
-        return (this.multiple || n < 0 || n >= a.length) ? "" : a[n].value;
+        return (n < 0 || n >= a.length) ? "" : a[n].value;
     }
 
     get type() {
@@ -5652,6 +5652,42 @@ swde("HTMLSelectElement", class extends w.HTMLElement {
         return 0;
     }
     set size(v) { this.setAttribute("size", v); }
+
+// I have some wrappers here to manage some weird side effects.
+    appendChild(c)
+    {
+        if(!c) return null;
+        if(c.dom$class != "HTMLOptionElement")
+            return nodep.appendChild.call(this, c);
+        if(c.defaultSelected) c.selected$2 = true;
+        // add first, then select, so the setter can deselect the others.
+        const was_selected = c.selected;
+        c.selected$2 = false;
+        // this append will perform the reindex, and rebuild options and selectedOptions
+        nodep.appendChild.call(this, c);
+        // now select this one, possibly unselecting the others.
+        c.selected = was_selected;
+        return c;
+    }
+
+    insertBefore(c, item)
+    {
+        if(!c) return null;
+        if(!item) return this.appendChild(c);
+        if(c.dom$class != "HTMLOptionElement")
+            return nodep.insertBefore.call(this, c, item);
+        // side effect; option is freed even if it can't reconnect
+        c.remove();
+        if(c.defaultSelected) c.selected$2 = true;
+        // add first, then select, so the setter can deselect the others.
+        const was_selected = c.selected;
+        c.selected$2 = false;
+        // this insert will perform the reindex, and rebuild options and selectedOptions
+        nodep.insertBefore.call(this, c, item);
+        // now select this one, possibly unselecting the others.
+        c.selected = was_selected;
+        return c;
+    }
 
     add(o, idx)
     {
@@ -5708,54 +5744,6 @@ function option_from_html(o){
 }
 optgp.option_from_html = option_from_html;
 selp.option_from_html = option_from_html;
-
-/*********************************************************************
-Look out! Select class maintains an array of options beneath,
-just as Form maintains an array of elements beneath, so you'd
-think we could copy the form code and tweak a few things, but no.
-Options under select lists are maintained by rebuildSelectors in jseng-quick.c.
-That is how we synchronize option lists.
-So we don't want to synchronize by side-effects.
-In other words, we don't want to pass the actions back to edbrowse,
-as appendChild does. So I kinda have to reproduce what they do
-here, with just js, and no action in C.
-Actually we shouldn't be calling this routine at all; should be calling add(),
-so I don't even know if this makes sense.
-*********************************************************************/
-
-// I have some wrappers here to manage some weird side effects.
-selp.appendChild = function(c) {
-    if(!c) return null;
-    if(c.dom$class != "HTMLOptionElement")
-        return nodep.appendChild.call(this, c);
-    if(c.defaultSelected) c.selected$2 = true;
-    // add first, then select, so the setter can deselect the others.
-    const was_selected = c.selected;
-    c.selected$2 = false;
-    // this append will perform the reindex, and rebuild options and selectedOptions
-    nodep.appendChild.call(this, c);
-    // now select this one, possibly unselecting the others.
-    c.selected = was_selected;
-    return c;
-}
-
-selp.insertBefore = function(c, item) {
-    if(!c) return null;
-    if(!item) return this.appendChild(c);
-    if(c.dom$class != "HTMLOptionElement")
-        return nodep.insertBefore.call(this, c, item);
-    // side effect; option is freed even if it can't reconnect
-    c.remove();
-    if(c.defaultSelected) c.selected$2 = true;
-    // add first, then select, so the setter can deselect the others.
-    const was_selected = c.selected;
-    c.selected$2 = false;
-    // this insert will perform the reindex, and rebuild options and selectedOptions
-    nodep.insertBefore.call(this, c, item);
-    // now select this one, possibly unselecting the others.
-    c.selected = was_selected;
-    return c;
-}
 
 // input, textarea, button; the other input classes
 swde("HTMLInputElement", class extends w.HTMLElement {
