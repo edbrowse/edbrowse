@@ -96,30 +96,29 @@ void jSideEffects(void)
 
 // getElementsByTagName("option")
 static Tag **optArray;
-static int optAlloc, optCount, optAction;
-static void gatherTags1(Tag *t);
-static void gatherTags(const Tag *select, int action)
+static int optAlloc, optCount;
+static void gatherOptions1(Tag *t);
+static void gatherOptions(const Tag *start)
 {
     optCount = 0;
     optAlloc = 100;
     // free the old one then allocate new
     nzFree(optArray);
     optArray = allocMem(optAlloc * sizeof(Tag*));
-    optAction = action;
-    gatherTags1((Tag *)select);
+    gatherOptions1((Tag *)start);
     optArray[optCount] = 0;
 }
 
-static void gatherTags1(Tag *t)
+static void gatherOptions1(Tag *t)
 {
     Tag *c;
-    if(t->action == optAction) {
+    if(t->action == TAGACT_OPTION) {
         if(optCount + 1 == optAlloc) {
             optAlloc += 100;
             optArray = reallocMem(optArray, optAlloc*sizeof(Tag*));
         }
         optArray[optCount++] = t;
-        if(optAction == TAGACT_OPTION && t->jslink) { // has js set value and text?
+        if(t->jslink) { // has js set value and text?
             char *v = get_property_string_t(t, "value");
             if(v) nzFree(t->value), t->value = v;
             v = get_property_string_t(t, "text");
@@ -128,7 +127,36 @@ static void gatherTags1(Tag *t)
         }
     }
     for(c = t->firstchild; c; c = c->sibling)
-        gatherTags1(c);
+        gatherOptions1(c);
+    }
+
+// getElementsByTagName("input")
+static Tag **inpArray;
+static int inpAlloc, inpCount;
+static void gatherInputs1(Tag *t);
+static void gatherInputs(const Tag *start)
+{
+    inpCount = 0;
+    inpAlloc = 100;
+    // free the old one then allocate new
+    nzFree(inpArray);
+    inpArray = allocMem(inpAlloc * sizeof(Tag*));
+    gatherInputs1((Tag *)start);
+    inpArray[inpCount] = 0;
+}
+
+static void gatherInputs1(Tag *t)
+{
+    Tag *c;
+    if(t->action == TAGACT_INPUT) {
+        if(inpCount + 1 == inpAlloc) {
+            inpAlloc += 100;
+            inpArray = reallocMem(inpArray, inpAlloc*sizeof(Tag*));
+        }
+        inpArray[inpCount++] = t;
+    }
+    for(c = t->firstchild; c; c = c->sibling)
+        gatherInputs1(c);
     }
 
 // This is part of building a select list from html.
@@ -143,7 +171,7 @@ void fillEmptySelect(Tag *sel)
     // setting size to something > 1 disables this behavior.
     if((z = attribVal(sel, "size")) && (zv = stringIsNum(z)) && zv > 1)
         return;
-    gatherTags(sel, TAGACT_OPTION);
+    gatherOptions(sel);
     for(w = optArray; (t = *w); ++w) {
         if(t->disabled ||
         (t->parent && t->parent->action == TAGACT_OPTG && t->parent->disabled))
@@ -216,7 +244,7 @@ locateOptions(const Tag *sel, const char *input,
 	const char *s, *e;	/* start and end of an option */
 	char *iopt;		/* individual option */
 
-	gatherTags(sel, TAGACT_OPTION);
+	gatherOptions(sel);
 	iopt = (char *)allocMem(len + 1);
 	disp = initString(&disp_l);
 	val = initString(&val_l);
@@ -1826,7 +1854,7 @@ void infShow(int tagno, const char *search)
 	if (t->multiple)
 		eb_printf(" multiple");
 	if (t->itype == INP_SELECT) {
-	    gatherTags(t, TAGACT_OPTION);
+	    gatherOptions(t);
 	for (w = optArray; (v = *w); ++w) {
 	        if(inputHidden(v)) break;
 	    }
@@ -2193,8 +2221,8 @@ bool infReplace(int tagno, char *newtext, bool notify)
     if (itype == INP_RADIO && form && t->name && *newtext == '+') {
         // clear the other radio button
         Tag *v, **w;
-        gatherTags(form, TAGACT_INPUT);
-        for(w = optArray; (v = *w); ++w) {
+        gatherInputs(form);
+        for(w = inpArray; (v = *w); ++w) {
             if (v->itype != INP_RADIO) continue;
             if (!v->name) continue;
             if (!stringEqual(v->name, t->name)) continue;
@@ -2244,7 +2272,7 @@ char *displayOptions(const Tag *sel)
 	int opt_l;
 
 	opt = initString(&opt_l);
-	gatherTags(sel, TAGACT_OPTION);
+	gatherOptions(sel);
 	for (w = optArray; (t = *w); ++w) {
 		if (!t->checked) continue;
 		if (*opt)
@@ -2585,8 +2613,8 @@ skip_encode:
 		fsep = 'g';
 	}
 
-	gatherTags(form, TAGACT_INPUT);
-	for(w = optArray; (t = *w); ++w) {
+	gatherInputs(form);
+	for(w = inpArray; (t = *w); ++w) {
 		itype = t->itype;
 		if (itype <= INP_SUBMIT && t != submit) continue;
 		if (inputDisabled(t)) continue;
@@ -2723,12 +2751,12 @@ Here is a small page to test some of these select option cases.
 			char *display = getFieldFromBuffer(t->seqno);
 			char *s, *e;
 			if (!display) {	/* off the air */
-				Tag *v, **w;
-/* revert back to reset state */
-				gatherTags(t, TAGACT_OPTION);
-				for(w = optArray; (v = *w); ++w)
-					v->checked = v->rchecked;
-				display = displayOptions(t);
+			    Tag *v2, **w2;
+			    /* revert back to reset state */
+			    gatherOptions(t);
+			    for(w2 = optArray; (v2 = *w2); ++w2)
+			        v2->checked = v2->rchecked;
+			    display = displayOptions(t);
 			}
 			rc = locateOptions(t, display, 0, &dynamicvalue, false);
 //			printf("disp<%s>dyn<%s>\n", display, dynamicvalue);
@@ -2751,7 +2779,7 @@ Here is a small page to test some of these select option cases.
 // setting size to something > 1 disables this behavior.
 			if((z = attribVal(t, "size")) && (zv = stringIsNum(z)) && zv > 1)
 				goto options_ok;
-   gatherTags(t, TAGACT_OPTION);
+   gatherOptions(t);
 			const Tag *u = locateOptionByNum(t, 1);
 			if(u && stringEqual(u->textval, display) && !*u->value &&
 			!(u->parent && u->parent->action == TAGACT_OPTG)) {

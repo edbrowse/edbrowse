@@ -6,7 +6,7 @@
 # You will need your config file and the chrome plugin for this to work.
 
 keep=n
-if [ $# -a "$1" = -k ]
+if [ $# != 0 -a "$1" = -k ]
 then
 keep=y
 shift

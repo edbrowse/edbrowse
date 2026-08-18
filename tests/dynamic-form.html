@@ -125,6 +125,7 @@ if(v != "abcd3ef") msg += `|input click ${v}`;
 // select an option, push the button
 sel = b.querySelector("select");
 if(sel.multiple !== true) msg += "|select not multiple";
+if(sel.type !== "select-multiple") msg += "|select wrong type";
 so = sel.options; // live array
 sso = sel.selectedOptions;
 if(so.length != 4 || sso.length != 0) msg += "|bad initial option count";
@@ -191,7 +192,7 @@ form.reset();
 if(v != "bodyreset") msg += "|onreset didn't run";
 v = ""; for(let c of so) v += c.value;
 if(v != "aclbryp") msg += `|fruits after reset ${v}`;
-if(sso.length) msg += `|selected fruits after reset ${v}`;
+if(sso.length) msg += "|selected fruits after reset";
 // hidden fields do not go back upon form reset.
 button.click();
 if(log.innerText != "me=Yogi Bear\nyy=special\n") msg += "|improper log after reset";
@@ -199,6 +200,29 @@ if(log.innerText != "me=Yogi Bear\nyy=special\n") msg += "|improper log after re
 v = "j";
 form.submit();
 if(v != "j") msg += `|form submit ${v}`
+
+// a select 1 list is different, and in some ways more complicated
+s1 = document.createElement("select");
+if(s1.multiple !== false) msg += "|select not 1";
+if(s1.type !== "select-one") msg += "|s1 wrong type";
+if(s1.selectedIndex !== -1) msg += "|s1 wrong index";
+o = new Option("dog", 'd');
+s1.add(o);
+o = new Option("cat", 'c');
+s1.add(o);
+o = new Option("bird", 'b');
+s1.add(o);
+so = s1.options;
+sso = s1.selectedOptions;
+v = ""; for(let c of so) v += c.value;
+if(v != "dcb") msg += `|wrong animals ${v}`
+v = ""; for(let c of sso) v += c.value;
+if(v != "d") msg += `|no dog default ${v}`;
+if(s1.selectedIndex != 0) msg += `|bad dog index ${s1.selectedIndex}`;
+so[1].selected = true; // this should unselect the dog
+v = ""; for(let c of sso) v += c.value;
+if(v != "c") msg += `|no cat replace ${v}`;
+if(s1.selectedIndex != 1) msg += `|bad cat index ${s1.selectedIndex}`;
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

@@ -3737,9 +3737,13 @@ function selectReindex(t)
     const o = t.options;
     const a = t.selectedOptions;
     o.length = 0; a.length = 0;
+    if(!t.multiple) t.selectedIndex = -1;
     for(const c of gebtn(t, "option", false, false)) {
+        if(c.selected) {
+            a.push(c);
+            if(!t.multiple) t.selectedIndex = o.length;
+        }
         o.push(c);
-        if(c.selected) a.push(c);
     }
 }
 
@@ -5583,6 +5587,20 @@ swde("HTMLOptionElement", class extends w.HTMLElement {
         if(v !== false) v = true;
         if(v == this.selected$2) return; // no change
         this.selected$2 = v;
+        // if selected within a pick-one list, we need to unselect the others.
+        // This is like checking a radio button, although simpler,
+        // because this time we have an options array to key on.
+        // We need to find the containing select, or we can't get started.
+        let sel = this.parentNode;
+        while(sel) {
+            if(sel.nodeType != 1) break;
+            if(sel.nodeName == "SELECT") break;
+            sel = sel.parentNode;
+        }
+        if(v && sel && sel.nodeName == "SELECT" && !sel.multiple) {
+            for(let c of sel.options)
+                if(c != this) c.selected$2 = false;
+        }
         selectReindex2(this);
     }
 })
@@ -5675,29 +5693,33 @@ so I don't even know if this makes sense.
 // I have some wrappers here to manage some weird side effects.
 selp.appendChild = function(c) {
     if(!c) return null;
-    if(c.dom$class == "HTMLOptionElement") {
-        const l = this.childNodes.length;
-        if(c.defaultSelected) c.selected = true, this.selectedIndex = l;
-    }
-    return nodep.appendChild.call(this, c);
+    if(c.dom$class != "HTMLOptionElement")
+        return nodep.appendChild.call(this, c);
+    if(c.defaultSelected) c.selected = true;
+    // add first, then select, so the setter can deselect the others.
+    const was_selected = c.selected;
+    // this append will perform the reindex, and rebuild options and selectedOptions
+    nodep.appendChild.call(this, c);
+    // now select this one, possibly unselecting the others.
+    c.selected = was_selected;
+    return c;
 }
 
 selp.insertBefore = function(c, item) {
     if(!c) return null;
     if(!item) return this.appendChild(c);
-    if(c.dom$class == "HTMLOptionElement") {
-        // side effect; option is freed even if it can't reconnect
-        c.remove();
-        if(c.defaultSelected) {
-            c.selected = true;
-            for(let i=0; i<this.childNodes.length; ++i)
-                if(this.childNodes[i] == item) {
-                    this.selectedIndex = i;
-                    break;
-                }
-        }
-    }
-    return nodep.insertBefore.call(this, c, item);
+    if(c.dom$class != "HTMLOptionElement")
+        return nodep.insertBefore.call(this, c, item);
+    // side effect; option is freed even if it can't reconnect
+    c.remove();
+    if(c.defaultSelected) c.selected = true;
+    // add first, then select, so the setter can deselect the others.
+    const was_selected = c.selected;
+    // this insert will perform the reindex, and rebuild options and selectedOptions
+    nodep.insertBefore.call(this, c, item);
+    // now select this one, possibly unselecting the others.
+    c.selected = was_selected;
+    return c;
 }
 
 // these routines do not account for optgroups
@@ -5706,6 +5728,8 @@ selp.add = function(o, idx) {
     // with a corresponding tag in C.
     domLinkage('c', o, "option");
     const n = this.options.length;
+    // first option to a pick-one list is automatically selected
+    if(!n && !this.multiple) o.selected$2 = true;
     if(typeof idx != "number" || idx < 0 || idx > n) idx = n;
     if(idx == n) {
         this.appendChild(o);
@@ -5736,17 +5760,27 @@ swde("HTMLInputElement", class extends w.HTMLElement {
         if(v == this.checked$2) return; // no change
         this.checked$2 = v;
         // if it's radio and checked we need to uncheck the others.
-        let nn = this.nodeName, t = this.type, e;
-        if(this.form && this.checked$2 && t == "radio" &&
-        (nn = this.name) && (e = this.form[nn]) && Array.isArray(e)) {
+        if(!v) return;
+        if(this.type != "radio") return;
+        let nn = this.name, e;
+        if(!nn) return;
+        if(this.form && (e = this.form[nn]) && Array.isArray(e)) {
             for(let i=0; i<e.length; ++i)
                 if(e[i] != this) e[i].checked$2 = false;
-        } else // try it another way
-            if(this.checked$2 && t == "radio" && this.parentNode && (e = this.parentNode.childNodes) && (nn = this.name)) {
-                for(let i=0; i<e.length; ++i)
-                    if(e[i].nodeName == "INPUT" && e[i].type == t && e[i].name == nn &&e[i] != this) e[i].checked$2 = false;
+            return;
+        }
+        // Try it another way.
+        // This asumes all radio buttons are below the same parent,
+        // which is not guaranteed
+        if(this.parentNode && (e = this.parentNode.childNodes)) {
+            for(let i=0; i<e.length; ++i)
+                if(e[i].nodeName == "INPUT" && e[i].type == "radio" && 
+                e[i].name == nn &&e[i] != this)
+                    e[i].checked$2 = false;
+            return;
         }
     }
+
     get readOnly() { return this.hasAttribute("readonly"); }
     set readOnly(v) { if(v === false) this.removeAttribute("readonly"); else this.setAttribute("readonly", ""); }
     get multiple() { return this.hasAttribute("multiple"); }

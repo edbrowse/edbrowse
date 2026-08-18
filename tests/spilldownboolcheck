@@ -3,7 +3,7 @@
 # A version of spilldowncheck for boolean attributes.
 
 keep=n
-if [ $# -a "$1" = -k ]
+if [ $# != 0 -a "$1" = -k ]
 then
 keep=y
 shift
