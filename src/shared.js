@@ -1625,11 +1625,28 @@ function runScriptWhenAttached(s) {
     const w = isRooted(s); // the rooting window
     if(!w) return;
     const d = w.document;
-    const inbrowse = (d.readyState != "complete");
-    const save_current = d.currentScript;
-    let list = gebtn(s, "script", true, false);
+
+    // Before we look for scripts to run, we might need to change
+    // the owner document of everything newly attached. It doesn't happen often,
+    // but can, when a node is created in another frame, then attached in this one.
+    // Well if it ever happens, we have to handle it.
+    let list = gebtn(s, "*", true, false);
     // our getElements functions never include the top node,
     // but in this case we might want to.
+    list.splice(0, 0, s);
+    for(let c of list) {
+        if(c.ownerDocument == d) continue; // high runner case
+        c.ownerDocument = d;
+        if(c.attributes$2)
+            for(let i = 0; i < c.attributes.length; ++i)
+                c.attributes[i].ownerDocument = d;
+    }
+
+    const inbrowse = (d.readyState != "complete");
+    const save_current = d.currentScript;
+
+    // ok, now look for scripts.
+    list = gebtn(s, "script", true, false);
     if(s.dom$class == "HTMLScriptElement") 
         list.splice(0, 0, s);
     for(let c of list) {
@@ -1874,6 +1891,7 @@ if(!(this.eb$xml || this instanceof w.SVGElement)) name = name.toLowerCase();
         oldv = a.value;
     }
     a.value = v;
+    a.ownerDocument = this.ownerDocument;
 
     if(name.substr(0,5) == "data-") {
         this.dataset[dataCamel(name)] = v;
@@ -2004,7 +2022,7 @@ if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
 } else a = this.attributes[name];
 if(!a) a = null; else this.removeAttribute(name);
 this.attributes.push(b);
-if(name !== "length") this.attributes[name] = b
+if(name !== "length") this.attributes[name] = b;
 // there are a lot of side effects I don't want to repeat here,
 // like dataset and mutFixup and so on, so just invoke
 this.setAttribute(name, b.value)

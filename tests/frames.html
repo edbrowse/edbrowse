@@ -36,6 +36,7 @@ f2d = f2.contentDocument;
 if(f2d.body.nodeName != "BODY") msg += "|no f2 body";
 s2 = document.createElement("script");
 s2.text = "document.zz = 234";
+s2.setAttribute("a", 1);
 if(s2.ownerDocument != document) msg += "|bad s2 owner before attach";
 f2d.body.appendChild(s2);
 if(f2d.zz != 234) msg += "|script in frame didn't run";
@@ -43,6 +44,13 @@ if(f2w.top != window) msg += "|bad top";
 if(f2w.parent != window) msg += "|bad parent";
 if(f2d.body.ownerDocument != f2d) msg += "|bad f2 body owner";
 if(s2.ownerDocument != f2d) msg += "|bad s2 owner after attach";
+if(s2.attributes[0].ownerDocument != f2d) msg += "|bad s2 attr a owner after attach";
+s2.setAttribute("b", 2);
+if(s2.attributes[1].ownerDocument != f2d) msg += "|bad s2 attr b owner after attach";
+s2.remove();
+if(s2.ownerDocument != f2d) msg += "|bad s2 owner after detach";
+s2.setAttribute("c", 3);
+if(s2.attributes[2].ownerDocument != f2d) msg += "|bad s2 attr c owner after attach";
 
 setTimeout(()=>{
 if(!expanded) msg += "|frame onload didn't run";
