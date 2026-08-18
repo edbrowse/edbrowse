@@ -3430,8 +3430,9 @@ void js_main(void)
 JSValue mwo; // master window object
 	JSValue r;
 	void **lp;
+	size_t jsrt_size;
 #define MAX_JSRT 2048
-	uchar save_jsrt[MAX_JSRT];
+	void *save_jsrt[MAX_JSRT / sizeof(void *)];
 
 	if(js_running)
 		return;
@@ -3615,25 +3616,38 @@ JS_NewCFunction(mwc, nat_set_value, "set_value", 2), 0);
 
 	JS_FreeValue(mwc, mwo);
 
-	memcpy(save_jsrt, jsrt, MAX_JSRT);
-		JS_EnqueueJob(mwc, firstPending, 0, NULL);
+	jsrt_size = js_malloc_usable_size_rt(jsrt, jsrt);
+	if(jsrt_size > MAX_JSRT)
+		jsrt_size = MAX_JSRT;
+// An allocator that doesn't implement usable size leaves us with no safe
+// bound, and then we simply don't look. Say so, because the symptom,
+// no promises and no post messages, is a long way from the cause.
+	if(!jsrt_size)
+		debugPrint(1, "quickjs does not report the size of its runtime allocation, the pending jobs queue cannot be located");
+	memcpy(save_jsrt, jsrt, jsrt_size);
+	JS_EnqueueJob(mwc, firstPending, 0, NULL);
 // Early variables change, related to memory allocation, so start at 64.
 // Even if I started at 0, I would determine that they don't point to the jobs
 // queue, and move on, and find the queue later.
 // A false positive is virtually impossible.
-// False negative only if the struct is larger than 512,
+// False negative only if the queue lies beyond our search range,
 // or if the 64-bit pointers aren't 8 byte aligned.
-	for(lp = (void**)((char*)jsrt + 64); lp < (void**)((char*)jsrt+MAX_JSRT); ++lp) {
-		if(*lp != *((void**)save_jsrt + (lp-(void**)jsrt))) {
+// Don't even form the starting pointer unless the runtime is big enough to
+// hold a list head at byte 64.
+	if(jsrt_size >= 64 + 2 * sizeof(void *)) {
+		for(lp = (void**)((char*)jsrt + 64);
+		    (char *)(lp + 2) <= (char*)jsrt + jsrt_size; ++lp) {
+			if(*lp != save_jsrt[lp - (void**)jsrt]) {
 // validate that the list has just this one entry,
 // and that the context and function are correct.
 // If all these tests pass, it is a virtual guarantee we have found the queue,
 // and, we have the right structures for the list container and the job entry.
-			JSJobEntry *je = *lp;
-			if(je && je == lp[1] && je->ctx == mwc &&
-			je->job_func == firstPending) {
-				JSRuntimeJobIndex = (char*)lp - (char*)jsrt;
-				break;
+				JSJobEntry *je = *lp;
+				if(je && je == lp[1] && je->ctx == mwc &&
+				je->job_func == firstPending) {
+					JSRuntimeJobIndex = (char*)lp - (char*)jsrt;
+					break;
+				}
 			}
 		}
 	}
