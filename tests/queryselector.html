@@ -80,6 +80,16 @@ q = div1.querySelectorAll("div")
 if(q.length) msg += "|querySelectorAll includes its top"
 q = div1.querySelector("div")
 if(q !== null) msg += "|querySelector includes its top"
+fake = {eb$seqno: div1.eb$seqno}
+q = div1.querySelector.call(fake, "h1")
+if(q !== null) msg += "|forged seqno selects from another node"
+getterRan = false
+Object.defineProperty(fake, "eb$seqno", {get: function() {
+	getterRan = true
+	return div1.eb$seqno
+}})
+q = div1.querySelector.call(fake, "h1")
+if(getterRan) msg += "|seqno getter ran during native lookup"
 
 // modifiers. There are dozens of these, we haven't implemented them all.
 q = b.querySelectorAll(":first-child")

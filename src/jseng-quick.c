@@ -190,7 +190,7 @@ static void processError(JSContext * cx);
 static void uptrace(JSContext * cx, JSValueConst node);
 static bool jsCheckAndThrow(JSContext * cx);
 #define jsInterruptCheck(cx) if(jsCheckAndThrow(cx)) return JS_EXCEPTION
-static Tag *tagFromObject(JSValueConst v);
+static Tag *tagFromObject(JSContext *cx, JSValueConst v);
 static int run_function_onearg(JSContext *cx, JSValueConst parent, const char *name, JSValueConst child);
 static bool run_event(JSContext *cx, JSValueConst obj, const char *evname);
 
@@ -412,7 +412,7 @@ static JSValue nat_set_innerHTML(JSContext * cx, JSValueConst this, int argc, JS
 {
     jsInterruptCheck(cx);
     const char *h = JS_ToCString(cx, argv[1]);
-    Tag *t = tagFromObject(argv[0]);
+    Tag *t = tagFromObject(cx, argv[0]);
     if(t) {
         html_from_setter(t, h);
     } else {
@@ -426,7 +426,7 @@ static JSValue nat_set_innerHTML(JSContext * cx, JSValueConst this, int argc, JS
 static JSValue nat_set_value(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
 	debugPrint(5, "setter v in");
-    Tag *t = tagFromObject(argv[0]);
+    Tag *t = tagFromObject(cx, argv[0]);
     if(t) {
         const char *h = JS_ToCString(cx, argv[1]);
         char *k = cloneString(h); // our own copy
@@ -1427,17 +1427,53 @@ void reconnectTagObject(Tag *t)
 	connectTagObject(t, cdo);
 }
 
-static Tag *tagFromObject(JSValueConst v)
+/*********************************************************************
+connectTagObject() stamps the sequence number onto every tag object,
+so we can index the tag array directly instead of scanning it.
+Read it as an own data property, and never through the ordinary property
+machinery: a getter on a forged receiver must not run while we are in the
+middle of a native dom call.
+The number is only a hint, it comes from the js world after all.
+The pointer comparison below is what actually establishes the tag,
+and if anything doesn't line up we return 0 and the caller scans.
+*********************************************************************/
+
+static Tag *tagFromSeqno(JSContext *cx, JSValueConst v)
+{
+	JSPropertyDescriptor d;
+	JSAtom a = JS_NewAtom(cx, "eb$seqno");
+	Tag *t = 0;
+	int seqno;
+	if(JS_GetOwnProperty(cx, &d, v, a) > 0) {
+		if(!(d.flags & JS_PROP_GETSET) && JS_IsNumber(d.value) &&
+		!JS_ToInt32(cx, &seqno, d.value) &&
+		seqno >= 0 && seqno < cw->numTags)
+			t = tagList[seqno];
+		JS_Release(cx, d.value);
+		JS_Release(cx, d.getter);
+		JS_Release(cx, d.setter);
+	}
+	JS_FreeAtom(cx, a);
+	if(t && !(t->jslink && !t->dead &&
+	JS_VALUE_GET_PTR(*((JSValue*)t->jv)) == JS_VALUE_GET_PTR(v)))
+		t = 0;
+	return t;
+}
+
+static Tag *tagFromObject(JSContext *cx, JSValueConst v)
 {
 	int i;
+	Tag *t;
 	if (!tagList)
 		i_printfExit(MSG_NullListInform);
 	if(!JS_IsObject(v)) {
 		debugPrint(3, "tagFromObject(nothing)");
 		return 0;
 	}
+	if((t = tagFromSeqno(cx, v)))
+		return t;
 	for (i = 0; i < cw->numTags; ++i) {
-		Tag *t = tagList[i];
+		t = tagList[i];
 		if (t->jslink && JS_VALUE_GET_PTR(*((JSValue*)t->jv)) == JS_VALUE_GET_PTR(v) && !t->dead)
 			return t;
 	}
@@ -1902,7 +1938,7 @@ static JSValue getter_cd(JSContext * cx, JSValueConst this, int argc, JSValueCon
 	jsInterruptCheck(cx);
 	Tag *t;
 	JSValue ao; // alternate object
-	t = tagFromObject(this);
+	t = tagFromObject(cx, this);
 	if(!t)
 		goto fail;
 	if(!t->f1)
@@ -1927,7 +1963,7 @@ static JSValue getter_cw(JSContext * cx, JSValueConst this, int argc, JSValueCon
 	jsInterruptCheck(cx);
 	Tag *t;
 	JSValue ao; // alternate object
-	t = tagFromObject(this);
+	t = tagFromObject(cx, this);
 	if(!t)
 		goto fail;
 	if(!t->f1)
@@ -1955,7 +1991,7 @@ static JSValue nat_unframe(JSContext * cx, JSValueConst this, int argc, JSValueC
 		int i, n;
 		Tag *t, *cdt;
 		Frame *f, *f1;
-		t = tagFromObject(argv[0]);
+		t = tagFromObject(cx, argv[0]);
 		if (!t) {
 			debugPrint(3, "unframe couldn't find tag");
 			goto done;
@@ -2005,7 +2041,7 @@ static JSValue nat_unframe2(JSContext * cx, JSValueConst this, int argc, JSValue
         (void) cx;
         (void) this;
 	if(argc >= 1 && JS_IsObject(argv[0])) {
-		Tag *t = tagFromObject(argv[0]);
+		Tag *t = tagFromObject(cx, argv[0]);
 		if(t)
 			t->contracted = remember_contracted;
 	}
@@ -2073,11 +2109,11 @@ JSValueConst a_j, JSValueConst b_j)
 		return;
 	}
 
-	parent = tagFromObject(p_j);
+	parent = tagFromObject(cx, p_j);
 // If parent node has been removed, we don't have to keep its linkage current.
 	if (!parent)
 		return;
-	if(!(add = tagFromObject(a_j))) {
+	if(!(add = tagFromObject(cx, a_j))) {
 		grab(a_j);
 		add = tagFromObject2(JS_DupValue(cx, a_j), a_name);
 	}
@@ -2119,7 +2155,7 @@ JSValueConst a_j, JSValueConst b_j)
 				   "linkage cycle, cannot link %s %d into %s %d",
 				   a_name, add->seqno, p_name, parent->seqno);
 			if (type == 'b') {
-				before = tagFromObject(b_j);
+				before = tagFromObject(cx, b_j);
 				debugPrint(3, "before %s %d", b_name,
 					   (before ? before->seqno : -1));
 			}
@@ -2135,7 +2171,7 @@ JSValueConst a_j, JSValueConst b_j)
 	}
 
 	if (type == 'b') {	/* insertBefore */
-		before = tagFromObject(b_j);
+		before = tagFromObject(cx, b_j);
 // creating a new tag won't help here; this object has to be
 // in the tree, or how can we insert before?
 		if(!before)
@@ -2724,7 +2760,7 @@ static JSValue nat_resolveURL(JSContext * cx, JSValueConst this, int argc, JSVal
 
 static JSValue nat_formSubmit(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
-    Tag *t = tagFromObject(this);
+    Tag *t = tagFromObject(cx, this);
     if(t && t->action == TAGACT_FORM) {
         debugPrint(3, "submit form tag %d", t->seqno);
         domSubmitsForm(t, false);
@@ -2739,7 +2775,7 @@ static JSValue nat_formSubmit(JSContext * cx, JSValueConst this, int argc, JSVal
 
 static JSValue nat_formReset(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
-    Tag *t = tagFromObject(this);
+    Tag *t = tagFromObject(cx, this);
     if(t && t->action == TAGACT_FORM) {
         debugPrint(3, "reset form tag %d", t->seqno);
         domSubmitsForm(t, true);
@@ -2856,7 +2892,7 @@ static JSValue objectize(JSContext *cx, Tag **tlist)
 
 // Turn start into a tag, or 0 if start is doc or win for the current frame.
 // Return false if we can't turn it into a tag within the current window.
-static bool rootTag(JSValue start, Tag **tp)
+static bool rootTag(JSContext *cx, JSValue start, Tag **tp)
 {
 	Tag *t;
 	*tp = 0;
@@ -2864,7 +2900,7 @@ static bool rootTag(JSValue start, Tag **tp)
 	JS_VALUE_GET_PTR(start) == JS_VALUE_GET_PTR(*((JSValue*)cf->winobj)) ||
 	JS_VALUE_GET_PTR(start) == JS_VALUE_GET_PTR(*((JSValue*)cf->docobj)))
 		return true;
-	t = tagFromObject(start);
+	t = tagFromObject(cx, start);
 	if(!t)
 		return false;
 	*tp = t;
@@ -2888,7 +2924,7 @@ static JSValue nat_qsa(JSContext * cx, JSValueConst this, int argc, JSValueConst
 // If you just call querySelectorAll, this is undefined.
 // Then there's window.querySelectorAll and document.querySelectorAll
 // rootTag() checks for all these cases.
-	if(!rootTag(start, &t)) {
+	if(!rootTag(cx, start, &t)) {
 		a = objectize(cx, 0);
 	} else {
 		tlist = querySelectorAll(selstring, t);
@@ -2912,7 +2948,7 @@ static JSValue nat_qs(JSContext * cx, JSValueConst this, int argc, JSValueConst 
 	}
 	if (JS_IsUndefined(start))
 		start = this;
-	if(!rootTag(start, &t)) {
+	if(!rootTag(cx, start, &t)) {
 		JS_FreeCString(cx, selstring);
 /* I'm not sure if this ever happens in the wild but I'm assuming the same as
 for a non-match here and returning null as code seems to explicitly check for
@@ -2936,7 +2972,7 @@ static JSValue nat_qs0(JSContext * cx, JSValueConst this, int argc, JSValueConst
 	const char *selstring = JS_ToCString(cx, argv[0]);
         (void) argc;
 	start = this;
-	if(!rootTag(start, &t)) {
+	if(!rootTag(cx, start, &t)) {
 		JS_FreeCString(cx, selstring);
 		return JS_FALSE;
 	}
@@ -2953,7 +2989,7 @@ static JSValue nat_cssApply(JSContext * cx, JSValueConst this, int argc, JSValue
 	Tag *t;
 	JS_ToInt32(cx, &n, argv[0]);
 	JS_ToInt32(cx, &pe, argv[2]);
-	t = tagFromObject(node);
+	t = tagFromObject(cx, node);
 	if(t)
 		cssApply(n, t, pe);
 	else
