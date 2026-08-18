@@ -2,7 +2,15 @@
 <LINK href="sample.css" rel=stylesheet type=text/css onload="on_css_load = true">
 </head>
 <body onload="h += 'l' + arguments[0].eventPhase">
-<p id="show">start</p>
+<p id=show>start</p>
+<p>The slashes delimit sections.</p>
+<ol>
+<li>Produced directly by the inline script.
+<li>Microtasks or other pending jobs produced by the inline scripts.
+<li>The deferred scripts, and any onload functions associated with those scripts.
+<li>The document onload functions, be they inline or attached events.
+<li>A timer, half a second after the document is completely rendered.
+</ol>
 <div id="hs"></div>
 <script id=last src=scriptord1.js defer onload="h += 'y'"></script>
 <script>
@@ -32,7 +40,7 @@ document.write(" <script> h += 'f'<" + "/script> ")
 h += 'g'
 // this one is deferred probably because it is remote
 document.write("<script src=scriptord2.js> <" + "/script>")
-h += 'h'
+h += "h / "
 
 // put a couple of handlers on the scrip load. this is just a warmup -
 // we need a file for testing events.
@@ -55,7 +63,7 @@ last.addEventListener("load", handle_b, false);
 // adding it again does nothing
 last.addEventListener("load", handle_b, false);
 
-document.addEventListener("DOMContentLoaded", ()=>(h += "/j"));
+document.addEventListener("DOMContentLoaded", ()=>(h += " / j"));
 document.addEventListener("readystatechange", ()=>{
 if(document.readyState == "complete") h += 'k'; })
 addEventListener("load", ()=>(h += 'm'));
@@ -63,9 +71,29 @@ addEventListener("load", ()=>(h += 'm'));
 // indicate we are in the middle and the timer hasn't run yet
 show.innerHTML = "mid"
 
-queueMicrotask(()=>{h += 's'});
+/*
+microTasks, Promises, finalizations, produced by this script
+These go in their own section, before deferred scripts.
+I set up a finalization, wich injects the letter o.
+It is first in its section in edbrowse, but it doesn't run at all
+in Chrome, and I can't force it to run, so I have to omit this test -
+cool as it is.
+fg = new FinalizationRegistry((f) => {h += f});
+fg.register({}, 'o');
+*/
 
-setTimeout(()=>{h += "/t"}, 300);
+// the microtask queues yet another microtask
+queueMicrotask(()=>{
+h += 's';
+queueMicrotask(()=>{h += 'S'});
+});
+
+// the promise queues yet another promise
+prom = Promise.resolve('p');
+prom = prom.then((f)=>{h += f; return 'P'});
+prom.then((f)=>{h += f});
+
+setTimeout(()=>{h += " / t"}, 300);
 
 // set a show timer in case that innerHTML script ran later
 // And to accommodate the src scripts deferred and the microtask.
@@ -75,9 +103,9 @@ if(this != window) h += "@6";
 // but it fetches asynchronously in chrome, so I can't guarantee when it will happen.
 // I'll just make sure it happened by now.
 if(!on_css_load) h += '@3';
-const correct = "abcefghsizxyw/jkl2m/t";
-if(h == correct) show.innerHTML = "ok";
-else show.innerHTML = `ok|bad order  ${h} should be ${correct}`}, 600)
+const correct = "abcefgh / spSP / izxyw / jkl2m / t";
+if(h == correct) show.innerHTML = `ok<br>${correct}`;
+else show.innerHTML = `ok|bad order  ${h}<br>should be ${correct}`}, 600)
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>
 </body>
