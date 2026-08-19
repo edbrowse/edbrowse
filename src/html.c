@@ -1377,7 +1377,7 @@ If not then it's probably an infinite loop, and we should move on. */
     if(startbrowse) {
         int k;
         for(k = 0; k < 5; ++k) {
-            if(my_ExecutePendingJobs(0)) break;
+            if(!my_ExecutePendingJobs(0)) break;
         }
     }
 
