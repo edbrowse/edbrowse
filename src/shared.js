@@ -1737,6 +1737,17 @@ like form.setAttribute("elements", "xx") or some such.
 I call these implicit members, we shouldn't overwrite them.
 *********************************************************************/
 
+/*********************************************************************
+Every getAttribute checks the name through attrNameValid, and rendering a page
+calls getAttribute several times for every node, so this runs millions of
+times on a large page and is worth a moment's care.
+A regex literal builds a new RegExp object each time it is evaluated, so keep
+these two out here where they are built once.  And test() is the cheap way to
+ask; match() goes the long way round through Symbol.match, assembling a flags
+string and a result array that nobody ever looks at.
+*********************************************************************/
+var attrNameSpace = /\s/, attrNameEquals = /=/;
+
 this.attr = {
 
 // As far as I can tell, anything can be an attribute name,
@@ -1748,11 +1759,26 @@ attrNameValid: function(n) {
         return false;
     }
     if(typeof n != "string") n = n.toString();
-    if(n.match(/\s/)) {
+// Almost every name is letters, digits and dashes, and such a name obviously
+// holds no whitespace and no = sign, so we are done without waking the regex
+// engine at all. class, id and role come through here for every node on every
+// render, and that is what this loop is for.
+    var plain = true;
+    for(var i = 0; i < n.length; ++i) {
+        var c = n.charCodeAt(i);
+        if(c >= 97 && c <= 122) continue; // a-z
+        if(c >= 65 && c <= 90) continue; // A-Z
+        if(c >= 48 && c <= 57) continue; // 0-9
+        if(c == 45 || c == 95 || c == 58) continue; // - _ :
+        plain = false;
+        break;
+    }
+    if(plain) return true;
+    if(attrNameSpace.test(n)) {
         alert3("spaces in attribute name");
         return false;
     }
-    if(n.match(/=/)) {
+    if(attrNameEquals.test(n)) {
         alert3("= in attribute name");
         return false;
     }
