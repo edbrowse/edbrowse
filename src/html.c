@@ -1580,25 +1580,26 @@ bool htmlTest(void)
 		pst line = fetchLine(ln, -1);
 		char *p = (char *)line;
 // How much text is on this line, not counting the newline that ends it.
-// Every comparison below is a fixed length one, and a line can be shorter
-// than the thing we are comparing it against, so they all have to be capped.
+// Good to know, but we don't really need it; memEqualCI steps byte for byte,
+// and will not go past the end of line, since nothing I am searching for
+// contains \n
 		int plen = pstLength(line) - 1;
-// special xml indicator of my own creation
+// special xml indicator of my own creation. Check for plen here,
+// because we don't know how memcmp works inside.
 		if(ln == 1 && plen >= 9 && !memcmp(p, "`~*xml}@;", 9))
 			return true;
 		while (plen && isspaceByte(*p))
 			++p, --plen;
-		if (!plen)
-			continue;	// skip blank line
+		if (!plen) continue;	// skip blank line
 		if (*p != '<') return false;
 // check for <!doctype and other things
-		if (plen >= 9 && memEqualCI(p + 1, "!doctype", 8))
+		if (memEqualCI(p + 1, "!doctype", 8))
 			return true;
-		if (plen >= 5 && memEqualCI(p + 1, "?xml", 4))
+		if (memEqualCI(p + 1, "?xml", 4))
 			return true;
-		if (plen >= 4 && memEqualCI(p + 1, "!--", 3))
+		if (memEqualCI(p + 1, "!--", 3))
 			return true;
-		if (plen >= 4 && memEqualCI(p + 1, "!if", 3))
+		if (memEqualCI(p + 1, "!if", 3))
 			return true;
 // If it starts with <tag, for any tag we recognize,
 // we'll call it good.
