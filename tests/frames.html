@@ -14,7 +14,11 @@ cross-origin concerns. Just type b.
 However, chrome does.
 To perform this test in chrome, you need a copy of this file on edbrowse.org.
 Write out the url http://www.edbrowse.org/frames.html
-then invoke <chromeline. */
+then invoke <chromeline.
+Because of timing considerations with loading the frames,
+and our plugin watching for page updates, the chrome test doesn't work for me
+unless I have it all on a local website on my machine, with /etc/hosts
+pointing edbrowse.org to my machine, and so on. */
 
 try {
 show = document.getElementById("show")
@@ -60,6 +64,14 @@ p2 = f2d.body.firstChild;
 if(p2.nodeName != "P") msg += "|couldn't find paragraph";
 if(p2.ownerDocument != f2d) msg += "|bad owner of innerHTML nodes";
 
+// Add an image to the tree; make sure it appears in the subframe images.
+img = document.createElement("img");
+img.setAttribute("alt", "nothing here");
+if(img.alt != "nothing here") msg += "|no alt spilldown";
+f2d.body.appendChild(img);
+if(f2d.images[0] != img) msg += "|img not found in images";
+if(document.images.length) msg += "|img found in document.images";
+
 // Before we set the timer, change the location of the generated frame, to a real frame.
 // This must also be on the edbrowse website.
 // It happens asynchronously in chrome, so we have to check within the timer.
@@ -88,7 +100,7 @@ if(!h1) msg += "|didn't find f2 h1";
 if(h1.textContent != "Second Frame") msg += "|wrong f2 h1 content";
 
 show.innerHTML = msg;
-}, 300);
+}, 800);
 
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 
@@ -115,7 +127,7 @@ I think it was the fourth of July.
 <h1>Second Frame</h1>
 <p>
 Does anybody really know what time it is?
-Does anybody care?
+Does anybody really care?
 </p></body>
 *********************************************************************/
 </script></body>
