@@ -18,6 +18,7 @@ Thus it can be set by gcc -D to overwrite the default of 1.
 
 #include "eb.h"
 
+#include <malloc.h>
 #include <stddef.h>
 #include <sys/utsname.h>
 
@@ -3652,18 +3653,27 @@ JS_NewCFunction(mwc, nat_set_value, "set_value", 2), 0);
 	JS_DefinePropertyValueStr(mwc, mwo, "trace_string", JS_NewAtomString(mwc, trace_string + 1), 0);
 
 	JS_FreeValue(mwc, mwo);
-
-	jsrt_size = js_malloc_usable_size_rt(jsrt, jsrt);
-	if(jsrt_size > MAX_JSRT)
+// Copied from js__malloc_usable_size quickjs-ng cutils.h without win32
+// We use the default allocator which uses the system malloc functions
+// if that changes change this
+#if defined(__APPLE__)
+        jsrt_size = malloc_size(jsrt);
+#elif defined(__linux__) || defined(__ANDROID__) || defined(__CYGWIN__) || defined(__FreeBSD__) || defined(__GLIBC__)
+        jsrt_size = malloc_usable_size((void *)jsrt);
+#else
+        jsrt_size = 0;
+#endif
+        debugPrint(4, "quickjs runtime size %lu", jsrt_size);
+	if(jsrt_size > MAX_JSRT) {
+                debugPrint(3, "quickjs runtime size %lu > limit %lu, falling back to limit", jsrt_size, MAX_JSRT);
 		jsrt_size = MAX_JSRT;
+            }
 // An allocator that doesn't implement usable size leaves us with no safe
 // bound, and then we simply don't look. Say so, because the symptom,
 // no promises and no post messages, is a long way from the cause.
 	if(!jsrt_size)
-		debugPrint(1, "quickjs does not report the size of its runtime allocation, the pending jobs queue cannot be located");
-	// jsrt_size comes out 8. That's useless, and bogus.
-	// Stand in with our max value for now, because we have to right the ship.
-	jsrt_size = MAX_JSRT;
+		debugPrint(1, "Do not know how to find the size of the js runtime allocation, the pending jobs queue cannot be located");
+
 	memcpy(save_jsrt, jsrt, jsrt_size);
 	JS_EnqueueJob(mwc, firstPending, 0, NULL);
 // Early variables change, related to memory allocation, so start at 64.
