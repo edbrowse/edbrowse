@@ -3653,9 +3653,13 @@ JS_NewCFunction(mwc, nat_set_value, "set_value", 2), 0);
 	JS_DefinePropertyValueStr(mwc, mwo, "trace_string", JS_NewAtomString(mwc, trace_string + 1), 0);
 
 	JS_FreeValue(mwc, mwo);
-// Copied from js__malloc_usable_size quickjs-ng cutils.h without win32
-// We use the default allocator which uses the system malloc functions
-// if that changes change this
+// Copied from js__malloc_usable_size in quickjs-ng cutils.h without win32
+// We use the default allocation functions which use malloc etc
+// If we ever provide custom allocation functions, or the library switches its
+// defaults, this will need to change
+// Note here that we are talking about the underlying allocation functions not
+// the library's internal allocation mechanism as that is only used after allocating the runtime
+
 #if defined(__APPLE__)
         jsrt_size = malloc_size(jsrt);
 #elif defined(__linux__) || defined(__ANDROID__) || defined(__CYGWIN__) || defined(__FreeBSD__) || defined(__GLIBC__)
