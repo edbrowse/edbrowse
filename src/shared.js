@@ -4736,6 +4736,15 @@ swde("Element", class extends w.Node {
     }
     set id(v) { this.setAttribute("id", v)}
 
+    get lang() {
+        let t = this.getAttribute("lang");
+        if(t === null) t = "" // lang was never defined
+        if(t === undefined) t = "";
+        // if defined it should always be a string
+        return typeof t == "string" ? t : t.toString();
+    }
+    set lang(v) { this.setAttribute("lang", v)}
+
 // carry the xml indicator from the document down to all the elements inside it.
     get eb$xml() { return this.ownerDocument.eb$xml}
 
