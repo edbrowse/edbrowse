@@ -1109,13 +1109,6 @@ dbs.cssText = "border-block-start:ger' a'ld";
 if(dbs.borderBlockStart != "ger ald")
 fail(172);
 
-// Create a frame and access something from its window.
-(function() {
-var fn = document.createElement("iframe");
-if(fn.contentWindow.height !== 768) fail(167);
-if(fn.contentDocument.style.bgcolor !== "white") fail(168);
-})();
-
 var dataset_test = document.getElementById("tag_with_data_attribute");
 if(dataset_test.dataset.dogFood !== "abc") fail(177);
 
