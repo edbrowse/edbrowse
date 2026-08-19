@@ -170,7 +170,6 @@ void runScriptNow(Frame *runframe, Tag *t);
 bool isRooted(const Tag *t);
 void runScriptsPending(bool startbrowse);
 void preFormatCheck(int tagno, bool * pretag, bool * slash);
-char *htmlParse(char *buf, int remote);
 bool htmlTest(void);
 bool browseCurrentBuffer(const char *suffix, bool plain) ;
 void infShow(int tagno, const char *search);

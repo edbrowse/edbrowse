@@ -1524,7 +1524,7 @@ static bool jsDoorway(void)
 	return false;
 }
 
-char *htmlParse(char *buf, int remote)
+static char *htmlParse(char *buf, int remote)
 {
 	char *a, *newbuf;
 

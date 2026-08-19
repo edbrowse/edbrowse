@@ -3655,6 +3655,7 @@ JS_NewCFunction(mwc, nat_set_value, "set_value", 2), 0);
 	JS_DefinePropertyValueStr(mwc, mwo, "trace_string", JS_NewAtomString(mwc, trace_string + 1), 0);
 
 	JS_FreeValue(mwc, mwo);
+
 // Copied from js__malloc_usable_size in quickjs-ng cutils.h without win32
 // We use the default allocation functions which use malloc etc
 // If we ever provide custom allocation functions, or the library switches its
