@@ -3787,7 +3787,6 @@ void rerender(int rr_command)
 	}
 
 	cw->mustrender = false;
-	time(&cw->nextrender);
 	if(cw->rr_throttle == 0) cw->rr_throttle = 1;
 	if(cw->rr_throttle < rr_interval) {
 		cw->rr_throttle *= 3;
@@ -3795,7 +3794,7 @@ void rerender(int rr_command)
 		cw->rr_throttle /= 2;
 	}
 	if(cw->rr_throttle > rr_interval) cw->rr_throttle = rr_interval;
-	cw->nextrender += cw->rr_throttle;
+// nextrender is stamped at the end, when we know how long this took.
 	hovcount = invcount = injcount = rrcount = 0;
 
 // not sure if we have to do this here
@@ -3807,9 +3806,9 @@ void rerender(int rr_command)
 	}
 // screen snap, to compare with the new screen.
 	if (!unfoldBufferW(cw, false, &snap, &j)) {
-		snap = 0;
+		snap = newbuf = 0;
 		puts("no screen snap available");
-		return;
+		goto done;
 	}
 
 /* and the new screen */
@@ -3844,9 +3843,7 @@ void rerender(int rr_command)
 	if (stringEqual(newbuf, snap)) {
 		if (rr_command > 0)
 			i_puts(MSG_NoChange);
-		nzFree(newbuf);
-		nzFree(snap);
-		return;
+		goto done;
 	}
 
 /* mark dot, so it stays in place */
@@ -3951,6 +3948,15 @@ and new internal numbers each time, and that use to trip this algorithm.
 done:
 	nzFree(newbuf);
 	nzFree(snap);
+/*********************************************************************
+Start the clock now, when the work is done, not when it began.
+Rendering a large page can take longer than the throttle interval, and if we
+stamp the start then nextrender is already in the past when we get here.
+The next command rerenders again, and the one after that, and edbrowse spends
+all of its time rendering instead of listening to you.
+*********************************************************************/
+	time(&cw->nextrender);
+	cw->nextrender += cw->rr_throttle;
 }
 
 /* mark the tags on the deleted lines as deleted */
