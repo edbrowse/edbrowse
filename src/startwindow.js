@@ -220,6 +220,7 @@ for(let f of ["my$win", "my$doc", "natok", "UnsupportedError", "db$flags",
 "dumptree", "uptrace", "by_esn", "showscripts", "searchscripts",
 "showframes", "snapshot", "aloop",
 "set_location_hash", "NodeFilter", "tableReindex", "formReindex", "selectReindex",
+"markAllCollections", "markUpwardCollections",
 "mutFixup", "makeSheets"])
     swp(f, mw$[f]);
 for(let f of ["confirm", "prompt", "close"])
@@ -486,9 +487,6 @@ sdp("scripts", document.getElementsByTagName("script"))
 sdp("images", document.getElementsByTagName("img"))
 // styleSheets is a placeholder for now; I don't know what to do with it.
 sdp("styleSheets", [])
-
-swp("markAllCollections", mw$.markAllCollections)
-swp("markUpwardCollections", mw$.markUpwardCollections)
 
 swpc("frames$2", []);
 swpv("frames", {})

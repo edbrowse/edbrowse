@@ -4175,6 +4175,7 @@ swde("Node", class extends w.EventTarget {
             this.value = h;
             return;
         }
+
         this.inner$HTML = h;
         // Put some tags around the html so we can parse it.
         h = `<body>${h}</body>`;
@@ -4185,8 +4186,21 @@ swde("Node", class extends w.EventTarget {
         for(let i = 0; i < c1.length; ++i)
             c2[i] = c1[i], c2[i].parentNode = null;
         c1.length = 0;
+
         // native function to parse the new html
         set_innerHTML(this, h);
+
+        // Change live arrays, like getElementsByTagName,
+        // that might now contain these nodes.
+        markUpwardCollections(this);
+
+        // Why would I call runScripts on the new nodes? Scripts created
+        // by innerHTML do not run. Well, that function also resets ownerDocument,
+        // and we might need to do that if one frame inserts,
+        // via innerHTML, nodes into another frame.
+        // Very rare, but it's possible.
+        runScriptWhenAttached(this);
+
         // c2 is the old nodes, for the observers.
         w.mutFixup(this, 0, c1, c2);
     }
