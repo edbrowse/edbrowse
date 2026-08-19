@@ -788,7 +788,7 @@ int htmlScanner(const char *htmltext, Tag *above, int isgen)
 	int i, startpos;
 	const char *lt; // les than sign
 	const char *gt; // greater than sign
-	const char *s, *t, *u;
+	const char *s, *t, *u = NULL;
 	char *w;
 	bool slash; // </foo>
 	bool ws; // all whitespace
