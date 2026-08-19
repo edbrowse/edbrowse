@@ -25,6 +25,7 @@ try {
 show = document.getElementById("show")
 b = document.body
 msg = "ok"
+isedbrowse = navigator.userAgent.substr(0, 8) == "edbrowse";
 // I wanted to do some shorthand, but chrome won't except it,
 // qsa = document.querySelectorAll
 // so we have to write it out every time.
@@ -80,9 +81,16 @@ q = div1.querySelectorAll("div")
 if(q.length) msg += "|querySelectorAll includes its top"
 q = div1.querySelector("div")
 if(q !== null) msg += "|querySelector includes its top"
+
+if(isedbrowse) {
+// Some tests to make sure native code is using eb$seqno properly,
+// and cannot be hijacked.
+// This is meaningless outside the context of edbrowse,
+// and throws chrome off the track, to where it can't continue.
 fake = {eb$seqno: div1.eb$seqno}
 q = div1.querySelector.call(fake, "h1")
 if(q !== null) msg += "|forged seqno selects from another node"
+
 getterRan = false
 Object.defineProperty(fake, "eb$seqno", {get: function() {
 	getterRan = true
@@ -90,6 +98,7 @@ Object.defineProperty(fake, "eb$seqno", {get: function() {
 }})
 q = div1.querySelector.call(fake, "h1")
 if(getterRan) msg += "|seqno getter ran during native lookup"
+}
 
 // modifiers. There are dozens of these, we haven't implemented them all.
 q = b.querySelectorAll(":first-child")
