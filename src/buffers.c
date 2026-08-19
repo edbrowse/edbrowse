@@ -62,6 +62,11 @@ int undo1line;
 static int undoField;
 void undoSpecialClear(void) { nzFree0(undoSpecial), undo1line = 0; }
 static uchar noStack;		// don't stack up edit sessions
+// rf rebuilds the buffer in a new window, so dot does not survive on its
+// own. f_dot already carries the line across browse and unbrowse; this is
+// the same idea for refresh. Store globally because the window that will
+// hold the refreshed file does not exist yet.
+static int refresh_dot;
 static bool globalMode;		/* in the midst of a g// command */
 static bool inscript;		/* run from inside an edbrowse function */
 static int lastq, lastqq;
@@ -5457,6 +5462,7 @@ pwd:
 		}
 		if (cw->browseMode)
 			cmd = 'b';
+		refresh_dot = cw->dot;
 		noStack = 2;
 		allocatedLine = allocMem(strlen(cf->fileName) + 3);
 		sprintf(allocatedLine, "%c %s", cmd, cf->fileName);
@@ -9306,16 +9312,22 @@ afterdelete:
 // but it's not so we have to jump to one of these cases.
 
 success:
+	if (refresh_dot) {
+		cw->dot = refresh_dot <= cw->dol ? refresh_dot : cw->dol;
+		refresh_dot = 0;
+	}
 	nzFree(allocatedLine);
         --nesting;
 	return true;
 
 fail:
+	refresh_dot = 0;
 	nzFree(allocatedLine);
         --nesting;
 	return false;
 
 failg:
+	refresh_dot = 0;
 	nzFree(allocatedLine);
         --nesting;
 	return globalMode = false;
