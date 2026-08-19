@@ -5600,6 +5600,7 @@ swde("HTMLOptionElement", class extends w.HTMLElement {
         if (arguments.length > 0) this.text = arguments[0];
         if (arguments.length > 1) this.value = arguments[1];
     }
+    selected$2 = false;
     get selected() { return this.selected$2; }
     set selected(v) {
         if(v !== false) v = true;
@@ -5627,7 +5628,6 @@ swde("HTMLOptionElement", class extends w.HTMLElement {
 })
 swpc("Option", w.HTMLOptionElement)
 let optp = w.HTMLOptionElement.prototype;
-optp.selected$2 = false;
 optp.defaultSelected = false;
 optp.nodeName = optp.tagName = "OPTION";
 optp.text = optp.value = "";
@@ -5771,6 +5771,7 @@ swde("HTMLInputElement", class extends w.HTMLElement {
         this.validity = new w.Validity;
         this.validity.owner = this;
     }
+    checked$2 = false;
     get checked() { return this.checked$2; }
     set checked(v) {
         if(v !== false) v = true;
@@ -5821,7 +5822,6 @@ swde("HTMLTextAreaElement", class extends w.HTMLElement {
 let inputp = w.HTMLInputElement.prototype;
 let buttonp = w.HTMLButtonElement.prototype;
 let tareap = w.HTMLTextAreaElement.prototype;
-inputp.checked$2 = false;
 
 // we need a couple of helper functions for clicking on a radio input field
 function clickfn() {
