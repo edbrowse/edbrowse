@@ -34,6 +34,7 @@ bool isDataURI(const char *u){ return false; }
 void unpercentString(char *s) {}
 void eb_variables(void) {}
 int is_tdchar(const char *s) { return 0; }
+char *get_property_string_t(const Tag *t, const char *name) { return ""; }
 
 static JSValue g0; // first global object
 static JSContext *cx0;
