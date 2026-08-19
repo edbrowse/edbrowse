@@ -145,11 +145,13 @@ static void grabover(void)
 #define grab(v) grab2(v, __LINE__)
 #define release(v) release2(v, __LINE__)
 #define JS_Release(c, v) release(v),JS_FreeValue(c, v)
+#define JS_ReleaseRT(r, v) release(v),JS_FreeValueRT(r, v)
 #else
 #define grab(v)
 #define release(v)
 #define grabover()
 #define JS_Release(c, v) JS_FreeValue(c, v)
+#define JS_ReleaseRT(r, v) JS_FreeValueRT(r, v)
 #endif
 
 const char *jsSourceFile;	// sourcefile providing the javascript
@@ -1418,7 +1420,19 @@ void disconnectTagObject(Tag *t)
 {
 	if (!t->jslink)
 		return;
-	JS_Release(t->f0->cx, *((JSValue*)t->jv));
+/*********************************************************************
+The context this tag was decorated in can be gone already.
+Replacing a frame frees the context of the page that used to be there, while
+underKill() leaves the tags of that page connected to js on purpose, so they
+are still connected when the window is finally torn down and we get here.
+A value is counted against the runtime and not against any one context, so we
+can still let go of our reference; we just can't reach it through a context
+that isn't there any more.
+*********************************************************************/
+	if (t->f0->cx)
+		JS_Release(t->f0->cx, *((JSValue*)t->jv));
+	else
+		JS_ReleaseRT(jsrt, *((JSValue*)t->jv));
 	free(t->jv);
 	t->jv = 0;
 	t->jslink = false;
