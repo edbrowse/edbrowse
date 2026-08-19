@@ -6,10 +6,36 @@ MKDIR ?= mkdir
 # may need to be set to pkgconf on some systems but most still come with the
 # link to the older name
 PKG_CONFIG ?= pkg-config
+
+#  Where is quickjs-ng?
+#  It isn't always under $(PREFIX). Debian puts the headers in
+#  /usr/include/qjs and the library in the multiarch directory, and ships a
+#  pkg-config file that says so, so ask pkg-config and save everybody the
+#  trouble of setting variables by hand.
+#  If pkg-config doesn't know either, we fall back to $(PREFIX) as always.
+#  Naming any of PREFIX, QUICKJS_INCLUDE, QUICKJS_LIB or QUICKJS_LIB_NAME
+#  turns this off; if you have said where quickjs is then that is where it is.
+#  This has to be decided before the ?= lines below, because ?= would make an
+#  unset variable look as though it had been set right here.
+QUICKJS_PKG ?= qjs
+quickjs_told ::= $(strip $(foreach v,PREFIX QUICKJS_INCLUDE QUICKJS_LIB QUICKJS_LIB_NAME,\
+$(filter-out undefined default,$(origin $(v)))))
+ifeq ($(quickjs_told),)
+quickjs_from_pkg ::= $(shell $(PKG_CONFIG) --exists $(QUICKJS_PKG) 2>/dev/null && echo yes)
+endif
+
 PREFIX ?= /usr/local
 QUICKJS_INCLUDE ?= $(PREFIX)/include
 QUICKJS_LIB ?= $(PREFIX)/lib
 QUICKJS_LIB_NAME ?= qjs
+
+ifeq ($(quickjs_from_pkg),yes)
+quickjs_cflags ::= $(shell $(PKG_CONFIG) --cflags $(QUICKJS_PKG))
+quickjs_libs ::= $(shell $(PKG_CONFIG) --libs $(QUICKJS_PKG))
+else
+quickjs_cflags = -I$(QUICKJS_INCLUDE)
+quickjs_libs = -L$(QUICKJS_LIB) -l$(QUICKJS_LIB_NAME)
+endif
 INSTALLBASE ?= $(shell realpath "$(DESTDIR)/$(PREFIX)")
 DOCDIR ?= $(INSTALLBASE)/share/doc/edbrowse
 BINDIR ?= $(INSTALLBASE)/bin
@@ -30,7 +56,7 @@ install_file = $(call install_generic,$(1),$(FILEMODE),$(2))
 DEPENDENCIES ?= libcurl odbc libpcre2-8 readline openssl
 dependency_cflags ::= $(shell $(PKG_CONFIG) --cflags $(DEPENDENCIES))
 dependency_libs ::= $(shell $(PKG_CONFIG) --libs $(DEPENDENCIES))
-CFLAGS += -Wall -D_FILE_OFFSET_BITS=64 -Wno-trigraphs $(dependency_cflags) -I$(QUICKJS_INCLUDE)
+CFLAGS += -Wall -D_FILE_OFFSET_BITS=64 -Wno-trigraphs $(dependency_cflags) $(quickjs_cflags)
 
 EDBR_JS_ASSETS = shared.js startwindow.js demin.js
 # if you don't want the deminimizer - but it only adds 130K to the executable...
@@ -51,7 +77,7 @@ ifneq ($(EBPROF),)
 endif
 
 # LDFLAGS for quickjs loading.
-QUICKJS_LDFLAGS = -L$(QUICKJS_LIB) -l$(QUICKJS_LIB_NAME) -ldl
+QUICKJS_LDFLAGS = $(quickjs_libs) -ldl
 ifeq ($(shell uname),Linux)
 	QUICKJS_LDFLAGS += -latomic
 endif
@@ -127,9 +153,9 @@ js_hello_v8 : js_hello_v8.cpp
 	g++ -I/usr/include/v8 js_hello_v8.cpp -lv8 -lstdc++ -o js_hello_v8
 
 js_hello_quick : js_hello_quick.c stringfile.o msg-strings.o ebrc.o format.o
-	$(CC) $(CFLAGS) js_hello_quick.c stringfile.o msg-strings.o ebrc.o format.o -o js_hello_quick -L/usr/local/lib -lqjs -lm -lpthread
+	$(CC) $(CFLAGS) js_hello_quick.c stringfile.o msg-strings.o ebrc.o format.o -o js_hello_quick $(quickjs_libs) -lm -lpthread
 
 js0: js0.c
-	$(CC) js0.c -L/usr/local/lib -lqjs -lm -o js0
+	$(CC) $(quickjs_cflags) js0.c $(quickjs_libs) -lm -o js0
 
 hello: js_hello_quick js0

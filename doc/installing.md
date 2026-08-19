@@ -80,6 +80,17 @@ you may need to set the `$PREFIX`,
 or `$QUICKJS_INCLUDE` and `$QUICKJS_LIB` variables appropriately, when you make edbrowse.
 Under normal circumstances, make will just work.
 
+If your distribution packages quickjs-ng, it probably installs a pkg-config
+file along with it, and then make asks pkg-config where the header and the
+library are and you don't have to set anything at all.
+Debian is one of these; it puts the header in /usr/include/qjs, which is not a
+place make would have looked on its own.
+Naming any of `$PREFIX`, `$QUICKJS_INCLUDE`, `$QUICKJS_LIB` or
+`$QUICKJS_LIB_NAME` turns this off, on the grounds that if you have said where
+quickjs is then that is where it is.
+The module asked about is `qjs`; set `$QUICKJS_PKG` if yours goes by another
+name.
+
 quickjs-ng is a fork of the original project quickjs.
 You can, as an alternative, build edbrowse against the original project
 quickjs. Unfortunately versioning in quickjs is less clear and thus it is
