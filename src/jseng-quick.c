@@ -2624,6 +2624,8 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 	    } else if(pd == 1) {
         	createFormattedString(&a, "%s\1`b64+%s",
 	        incoming_url, incoming_payload);
+	    } else {
+		a = cloneString(incoming_url);
 	    }
 	} else {
 	a = cloneString(incoming_url);
