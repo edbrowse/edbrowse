@@ -3091,8 +3091,19 @@ fail:
 			}
 		} else if (!stringEqualCI(prot, "https") &&
 			   !stringEqualCI(prot, "gophers")) {
-			setError(MSG_SubmitProtBad, prot);
-			goto fail;
+/*********************************************************************
+A protocol with a plugin behind it can take a form as well as a link.
+The plugin is handed the action with the form data appended, ?data for get
+and \1data for post, which is the same string the http path would have used;
+runPluginCommand passes it through as %i. Without this, a plugin can show
+you a page but you can never fill anything in on it, which rules out search
+boxes, logins, and every site that is a form with a website around it.
+*********************************************************************/
+			uchar sxfirst = 2;	// match on protocol only
+			if (!findMimeByURL(action, &sxfirst)) {
+				setError(MSG_SubmitProtBad, prot);
+				goto fail;
+			}
 		}
 	}
 
