@@ -1354,6 +1354,7 @@ void runScriptsPending(bool startbrowse)
 	Tag *t;
 	int j, n;
 	bool change, async;
+	Window *save_cw = cw;
 	Frame *f, *save_cf = cf;
 
     // Manage document.write outside the context of a script.
@@ -1379,6 +1380,9 @@ If not then it's probably an infinite loop, and we should move on. */
         for(k = 0; k < 5; ++k) {
             if(!my_ExecutePendingJobs(0)) break;
         }
+// my_ExecutePendingJobs() moves cw and cf to whichever frame owns each job.
+        cw = save_cw;
+        cf = save_cf;
     }
 
 top:
@@ -1491,6 +1495,7 @@ passes:
         goto top;
     }
 
+    cw = save_cw;
     cf = save_cf;
 }
 

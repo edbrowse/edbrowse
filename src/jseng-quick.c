@@ -160,13 +160,28 @@ static bool js_running;
 static JSContext *mwc; // master window context
 static JSContext *freeing_context = NULL;
 static Frame *freeing_frame = NULL;
+
+// Look for the frame in one window only. Sets cw and cf if it is there.
+// A null window is not an error, it just doesn't have the frame.
+static bool frameFromContextInWindow(jsobjtype cx, Window *w)
+{
+    Frame *f;
+    if(!w) return false;
+    for (f = &w->f0; f; f = f->next) {
+        if(f->cx == cx) {
+            cf = f, cw = w;
+            return true;
+        }
+    }
+    return false;
+}
+
 // Find window and frame based on the js context. Set cw and cf accordingly.
 // This is inefficient, but is not called very often.
 static bool frameFromContext(jsobjtype cx)
 {
     int i;
     Window *w;
-    Frame *f;
 // It's ridiculous to fish around for the frame when we know what it is.
     if(freeing_frame) {
         cf = freeing_frame, cw = cf->owner;
@@ -174,14 +189,9 @@ static bool frameFromContext(jsobjtype cx)
     }
     if(cx == mwc) return false;
     for (i = 1; i <= maxSession; ++i) {
-        for (w = sessionList[i].lw; w; w = w->prev) {
-            for (f = &(w->f0); f; f = f->next) {
-                if(f->cx == cx) {
-                    cf = f, cw = w;
-                    return true;
-                }
-            }
-        }
+        for (w = sessionList[i].lw; w; w = w->prev)
+            if(frameFromContextInWindow(cx, w))
+                return true;
     }
     return false;
 }
@@ -3113,6 +3123,13 @@ int my_ExecutePendingJobs(int limit)
     JSJobEntry *e;
     struct list_head *l, *l1;
     int i, cnt = 0;
+/* Running a job moves cw and cf to the frame that owns it, and we don't put
+them back, so every caller has to restore them.
+foreground_cw is the window we were called from, the one being browsed.
+It is null while freeing a context: cleanup runs the finalizers after the
+window has already been freed, so cw is a stale pointer by then and must not
+be looked at. freeing_frame tells us the frame in that case anyways. */
+    Window *foreground_cw = (freeing_context ? NULL : cw);
     struct list_head *jl = (struct list_head *)((char*)jsrt + JSRuntimeJobIndex);
 
 // high runner case
@@ -3126,8 +3143,11 @@ cleaning up when we really want to run all the finalizers */
         e = list_entry(l, JSJobEntry, link);
         ctx = e->ctx;
         if (freeing_context && ctx != freeing_context) continue;
-// This line resets cw and cf, and we don't put it back, so the calling routine must restore it!
-        if (!frameFromContext(ctx)) {
+// A window being browsed is not linked into its session stack until parsing
+// finishes, so look in it first; frameFromContext() walks the sessions and
+// would not find it there.
+        if(!frameFromContextInWindow(ctx, foreground_cw) &&
+        !frameFromContext(ctx)) {
             if(ctx == mwc)
                 debugPrint(3, "frameFromContext finds master window");
             else {
@@ -3155,7 +3175,10 @@ cleaning up when we really want to run all the finalizers */
 // Browsing a new web page in the current session pushes the old one, like ^z
 // in Linux. The prior page suspends, and the timers and pendings suspend.
 // ^ is like fg, bringing it back to life.
-        if(!freeing_context && sessionList[cw->sno].lw != cw) continue;
+// The window being browsed isn't on its session stack yet, so it doesn't look
+// like a foreground window, but it is the one we are working on, so run it.
+        if(!freeing_context && cw != foreground_cw &&
+        sessionList[cw->sno].lw != cw) continue;
 
         if(debugLevel >= 3) {
             int jj = -1; // -1 = we're freeing the context

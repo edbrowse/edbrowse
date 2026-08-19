@@ -36,6 +36,21 @@ status=1
 fi
 done
 
+t=pending-navigation.html
+$program -c /dev/null $t >$outfile <<!
+b
+/go
+g
+1
+q
+!
+result=`tail -1 $outfile`
+rm $outfile
+if [ "$result" != ok ]; then
+echo "$t failed $result"
+status=1
+fi
+
 # acid3 is third party, and doesn't follow our format.
 # The pass fail message is on line 3, not line 1.
 t=acid3
