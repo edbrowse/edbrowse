@@ -892,6 +892,14 @@ struct desc {
 	struct rule *rules;
 	int highspec;		// specificity when this descriptor matches
 	bool underat, fromstyle;
+/*********************************************************************
+What the node must be for this descriptor to have any chance at all.
+Every selector in the group has to demand the same thing, else we can't
+say anything about the group and these are null.
+They point into the selector strings, and are not allocated separately.
+See cssSetKeys() for how they are derived and cssKeyMatch() for their use.
+*********************************************************************/
+	const char *keytag, *keyclass, *keyid;
 };
 
 // selector
@@ -1388,6 +1396,77 @@ static void loadPack(const char *lhs, const char *rhs)
 }
 
 // The input string is assumed allocated, it could be reallocated.
+/*********************************************************************
+A page carries thousands of css rules, and getComputedStyle asks about every
+node on the page, every time we render. Testing every rule against every node
+is the bulk of the work, and nearly all of it fails on the very first thing
+the rule asks for: the wrong tag, or a class the node doesn't carry.
+
+So write that first demand down while we are compiling the selectors, and let
+cssApply() check it directly, instead of descending into the matcher to find
+out. Only the base node of the chain can be used this way; div p demands a <p>
+and says nothing about the node's ancestors, which is exactly what we want.
+
+A group like h1, h2, .title makes no single demand, so it gets no key and is
+tested the long way as before.
+*********************************************************************/
+
+// The class and id modifiers were rewritten as [class~=foo] and [id=foo]
+// when they were parsed; these are the offsets of foo.
+#define CLASSMOD_SKIP 8
+#define IDMOD_SKIP 4
+
+static void cssSetKeys(struct desc *d1)
+{
+	struct desc *d;
+	struct sel *sel;
+	struct mod *mod;
+
+	for (d = d1; d; d = d->next) {
+		bool first = true;
+		if (d->error)
+			continue;
+		for (sel = d->selectors; sel; sel = sel->next) {
+			const char *seltag = 0, *selclass = 0, *selid = 0;
+			const struct asel *a = sel->chain;
+			if (sel->error)
+				continue;
+// only the base of the chain speaks about the node itself
+			if (!a || a->combin != ',')
+				goto nokey;
+			seltag = a->tag;
+			for (mod = a->modifiers; mod; mod = mod->next) {
+				if (mod->negate || !mod->part[0])
+					continue;
+				if (mod->isclass && !selclass)
+					selclass = mod->part + CLASSMOD_SKIP;
+				if (mod->isid && !selid)
+					selid = mod->part + IDMOD_SKIP;
+			}
+			if (first) {
+				d->keytag = seltag;
+				d->keyclass = selclass;
+				d->keyid = selid;
+				first = false;
+				continue;
+			}
+// a later selector in the group; keep only what they agree on
+			if (!seltag || !d->keytag ||
+			    !stringEqual(seltag, d->keytag))
+				d->keytag = 0;
+			if (!selclass || !d->keyclass ||
+			    !stringEqual(selclass, d->keyclass))
+				d->keyclass = 0;
+			if (!selid || !d->keyid ||
+			    !stringEqual(selid, d->keyid))
+				d->keyid = 0;
+		}
+		continue;
+nokey:
+		d->keytag = d->keyclass = d->keyid = 0;
+	}
+}
+
 static struct desc *cssPieces(char *s)
 {
 	int bc = 0;		// brace count
@@ -1836,6 +1915,8 @@ lastrule:
 		if (across)
 			d->error = ec;
 	}
+
+	cssSetKeys(d1);
 
 	cssPiecesPrint(d1);
 
@@ -3713,6 +3794,37 @@ the css rules. If there's ever a document.head.getComputedStyle or some such,
 where "this" is not the window object, then we have to make some changes.
 *********************************************************************/
 
+// Is name one of the whitespace separated words in the node's class?
+// This is the test that qsaMatch() makes for a class modifier.
+static bool tagHasClass(const Tag *t, const char *name)
+{
+	const char *v = t->jclass, *q;
+	int l = strlen(name);
+	if (!v || !l)
+		return false;
+	while ((q = strstr(v, name))) {
+		v = q + l;
+		if (q > t->jclass && !isspaceByte(q[-1]))
+			continue;
+		if (*v && !isspaceByte(*v))
+			continue;
+		return true;
+	}
+	return false;
+}
+
+// Can this descriptor match this node at all? See cssSetKeys().
+static bool cssKeyMatch(const struct desc *d, const Tag *t)
+{
+	if (d->keytag && (!t->nodeNameU || !stringEqual(t->nodeNameU, d->keytag)))
+		return false;
+	if (d->keyid && !stringEqual(t->id ? t->id : emptyString, d->keyid))
+		return false;
+	if (d->keyclass && !tagHasClass(t, d->keyclass))
+		return false;
+	return true;
+}
+
 void cssApply(int frameNumber, Tag *t, int pe)
 {
 	Frame *save_cf = cf;
@@ -3747,6 +3859,7 @@ void cssApply(int frameNumber, Tag *t, int pe)
 		if(d->error) continue;
 		if(!d->prop_ok) continue;
 		if(visibility_only && !d->visrel) continue;
+		if(!cssKeyMatch(d, t)) continue;
 		if (qsaMatchGroup(t, d))
 			do_rules(0, d->rules, d->highspec);
 	}
