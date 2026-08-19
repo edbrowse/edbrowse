@@ -155,14 +155,13 @@ relative
 complete
 body loading
 847
-lines 37 through 42 have been added
 ```
 
 	[after a delay of 10 seconds]
 
 ```
 10 seconds have passed!
-lines 43 through 44 have been added
+lines 37 through 38 have been added
 ```
 
 Type ,p to see the page, if you wish, as though it were ed.

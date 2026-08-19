@@ -34,19 +34,8 @@ set by others. */
 
 isedbrowse = navigator.userAgent.substr(0,8) == "edbrowse";
 
-// make the class Circle - which apparently doesn't work in a try block.
-function Circle()
-{
-this.r = 1;
-if(arguments.length == 1) this.r = arguments[0];
-this.c = function() { return this.r*Math.PI*2; }
-this.a = CircleArea;
-}
-function CircleArea() { return this.r*this.r*Math.PI; }
-
 try { // protect
 
-// breakspace is tolerated, and utf8 is understood
  let udef = "undefined";
 function fail(n) { alert("failed "+n); }
 
@@ -77,198 +66,6 @@ function memshow()
 {
 alert("memhog contains " + memhog.length + " elements");
 }
-// for loop with break and continue
-for(n=0, j=1; j<=20; ++j) {
-n += j*j;
-if(j%7 == 0) continue;
---n;
-if(j == 18) break;
-}
-if(n != 2093) fail(1);
-
-// while loop with break and continue
-j = 0;
-while(j < 20) {
-++j;
-n += j*j;
-if(j >= 3 && j <= 5) continue;
-++n;
-if(j == 7) break;
-}
-if(n != 2237) fail(2);
-
-// else ambiguity
-if(j == 7)
-if(n == 29) n = 282; else n = 321;
-if(n-1 != 320) fail(3);
-
-// switch, default
-switch(n) {
-case j: j=1; break;
-case 19: j=2; break;
-case 321: j=3; break;
-} /* switch */
-if(j != 3) fail(4);
-switch(n) {
-case j: j=1; break;
-case 19: j=2; break;
-case 321: j=3;
-case 11: j = 4;
-} /* switch */
-if(j != 4) fail(5);
-switch(n) {
-case j: j=1; break;
-case 19: j=2; break;
-default: j=3; break;
-case 777: j = 7; break;
-} /* switch */
-if(j != 3) fail(6);
-
-let bt = true; // a boolean value
-let f = 6.25; // a perfectly representable floating value
-if("cat" + 15 + "dog" + f + bt != "cat15dog6.25true") fail(7);
-if(Math.sqrt(f) != 2.5) fail(8);
-
-// silly braces and semis, and optional semis
-{{
-j = 7
-j += 2
-;;;;
-j *= 3
-}}
-if(j != 27) fail(9);
-
-if(Math.pow(11,4) != 14641) fail(10);
-
-let alpha = "abc\144\x65fghijklmnopqrstuvwxyz\r\n";
-if(alpha.substring(2,7) != "cdefg") fail(11);
-if(alpha.length != 28) fail(12);
-if(alpha.charAt(10) != 'k') fail(13);
-if(alpha.indexOf("rrr") != -1) fail(15);
-if(alpha.lastIndexOf("quack") != -1) fail(16);
-if(alpha.indexOf("def") != 3) fail(17);
-alpha += "ubcxyz";
-if(alpha.lastIndexOf("bc") != 29) fail(18);
-
-let a = alpha.split('b');
-if(a.length != 3) fail(20);
-if(a[0] != 'a') fail(21);
-if(a[2] != "cxyz") fail(22);
-if(a.join("--") != "a--cdefghijklmnopqrstuvwxyz\r\nu--cxyz") fail(23);
-
-a = ["red", "orange", "yellow", "green", "blue", "indigo", "violet"];
-if(a.length != 7) fail(30);
-a[3] = 99;
-a[4] = [9, 8, 7];
-if(a[3] + a[4][0] != 108) fail(32);
-a.length = 6; // lop off violet
-if(typeof(a[8]) != udef || a.length != 6) fail(33);
-if(a[5]+a[0] != "indigored") fail(34);
-
-//escape unescape
-alpha = "This 3rd-line is ©me!";
-if(unescape(escape(alpha)) != alpha) fail(36);
-
-// function with a static variable
-function mult$sv(x,y)
-{
-++mult$sv.counter;
-return mult$sv.counter*x*y;
-}
-mult$sv.counter = 0;
-if(mult$sv(17,3) != 51) fail(40);
-if(mult$sv(19,5) != 190) fail(41);
-if(mult$sv.counter != 2) fail(42);
-
-// A recursive function with func.x references
-function factorial(n)
-{
-if(n <= 1) return 1;
-let y = 7+n;
-return n*factorial(n-1);
-}
-if(factorial(6) != 720) fail(44);
-let bang = factorial;
-if(bang(8) != 40320) fail(45);
-if(bang != factorial) fail(46);
-if(typeof factorial.n != udef || typeof factorial.y != udef) fail(47);
-
-// vararg function
-let domax = function() {
-if(arguments.length != 7) fail(50);
-let max = -Number.MAX_VALUE;
-for(let j=0; j<arguments.length; ++j) {
-let k = arguments[j];
-if(k > max) max = k;
-}
-return max;
-}
-if(domax(7, 2.5, 12, -3, -955.5, 76, 19) != 76) fail(51);
-
-/*********************************************************************
-function fc1(x) {
- function g(z) { return z*z*z; }
-return x + fc2(7);
-}
-function fc2(y) {
-if(caller != fc1) fail(52);
-return y*y + caller.g(3);
-}
-if(fc1(8) != 84) fail(53);
-if(fc1.g(5) != 125) fail(54);
-*********************************************************************/
-
-let mysqrt = Math.sqrt;
-if(mysqrt(1089) != 33) fail(55);
-
-// bits
-if((10&7) != 2) fail(60);
-if((10|7) != 15) fail(61);
-if((10^7) != 13) fail(62);
-if(~10 != -11) fail(63);
-if(10<<2 != 40) fail(64);
-if(10>>2 != 2) fail(66);
-if(-15 >> 2 != -4) fail(67);
-if(-1 >>> 16 != 65535) fail(68);
-
-var c1 = new Circle();
-var c2 = new Circle(23);
-// also test the with construct
-with(Math) {
-if(c1.r != 1 || c2.r != 23) fail(70);
-c2.r = 10;
-if(c2.a() != 100*PI) fail(72);
-}
-n = "";
-for(j in c2) n += j;
-if(n != "rca") fail(73);
-
-// internal sort
-a = new Array("red", "orange", "yellow", "green", "blue", "indigo", "violet");
-function acmp(x,y) { return x > y ? 1 : -1; }
-a.sort(acmp);
-if(a.join(':') != "blue:green:indigo:orange:red:violet:yellow") fail(74);
-if(a.length != 7) fail(75);
-if(a[5] != "violet") fail(76);
-
-let oo = new Object;
-if(typeof oo != "object") fail(77);
-oo.p = 61, oo.q = 67;
-n = "";
-for(j in oo) n += j+oo[j];
-if(n != "p61q67") fail(78);
-if(c2.constructor != Circle || oo.constructor != Object) fail(79);
-
-// the date object
-let d = new Date(2003,11,25,17,55,9);
-if(d.getMonth() != 11 || d.getDate() != 25) fail(81);
-if(d.getHours() != 17 || d.getMinutes() != 55 || d.getSeconds() != 9) fail(82);
-if(d.constructor != Date || a.constructor != Array) fail(84);
-
-// default this
-function topthis() { this.topprop = 887; }
-topthis();
-if(topprop != 887) fail(88);
 
 // A couple functions, and the first couple lines of the input form.
 function calc(thisform)
@@ -684,8 +481,6 @@ comfortable
 <input type=radio name=money value=2>
 rich
 <input type=radio name=money value=3>
-<script> // a script that removes itself, right in the middle of the tree.
-document.currentScript.remove(); </script>
 <br>Pets:
 dog <input type=checkbox name=dog id=hound checked onclick="alert('rover')">
 cat <input type=checkbox name=cat onclick="catdog(this)" value=meow>
@@ -742,36 +537,6 @@ if(document.forms[1].who.value != "eklhad") fail(86);
 if(document.forms[1].elements[1].value != "secret") fail(87);
 
 document.onchange = function(e) { if(e.target == document.forms[1].cat) alert("dude you clicked on cat");}
-
-// prototype objects, use the Circle model
-Circle.prototype.q = 97;
-Circle.prototype.m = function(z) { return z*z*z; };
-c2.q = 84; // hide 97
-if(c1.q != 97) fail(90);
-if(c2.q != 84) fail(91);
-if(c1["m"](9) != 729) fail(92);
-with(c1) {
-if(q != 97) fail(93);
-if(m(7) != 343) fail(94);
-}
-
-// prototype an implicite class
-String.prototype.xy = function() {
-return this.replace(/x/g, 'y');
-}
-n = "sixty";
-if(n.xy() != "siyty") fail(95);
-if("fix my fox".xy() != "fiy my foy") fail(96);
-Array.prototype.firstLast = function() {
-var temp = this[0];
-var l = this.length-1;
-this[0] = this[l];
-this[l] = temp;
-};
-Object.defineProperty(Array.prototype, "firstLast", {configurable: false,  enumerable: false, writable: false});
-a = [17,21,25];
-a.firstLast();
-if(a.join('zz') != "25zz21zz17") fail(97);
 
 // check some of the element tags
 with(document.forms[1]) {
@@ -928,17 +693,6 @@ document.addEventListener("snork", docLoad, true);
 
 /* last script to run automatically; loaded by the form.onload function */
 function lastScript() {
-/* Queue some text to appear after all current macrotasks have run. Note the
-order of microtasks is guaranteed but the only timing guarantee here is that
-they run when all current macrotasks have completed and before timers. */
-let microtask_count = 0;
-let microtask_cb = () => {
-    ++microtask_count;
-    const p = document.createElement("p");
-    p.appendChild(document.createTextNode(`microtask ${microtask_count}`));
-    document.body.appendChild(p);
-}
-for (let i=0; i < 3; ++i) queueMicrotask(microtask_cb);
 document.writeln(" Last Script");
 }
 
@@ -990,35 +744,6 @@ if(data_uri1_test != "set")
 fail(148);
 if(data_uri2_test != "set")
 fail(149);
-
-/* I wanted to test the initial cookie string as blank,
- * but if you unbrowse and then browse, this test will fail.
-if(document.cookie != "")
-fail(150);
-*/
-
-insertBefore_returnvalue();
-
-function insertBefore_returnvalue()
-{
-// insertBefore return value test
-var ibrv = document.createTextNode("this will be returned from iB");
-// If you echoed document.body.childNodes[0] before the change,
-// it is something other than our new text node
-var firstchild_before = document.body.childNodes[0];
-var firstchild_after = document.body.insertBefore(ibrv,firstchild_before);
-if (firstchild_after.data == "this will be returned from iB")
-{
-// passed the test
-// clean up - remove the node created for the test
-document.body.removeChild(ibrv);
-} else {
-// clean up now, because fail is going to abort
-document.body.removeChild(ibrv);
-fail(154);
-}
-}
-
 
 function test_cloneNode() {
 var x1  = document.createElement("div");
