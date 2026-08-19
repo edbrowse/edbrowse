@@ -3661,6 +3661,9 @@ JS_NewCFunction(mwc, nat_set_value, "set_value", 2), 0);
 // no promises and no post messages, is a long way from the cause.
 	if(!jsrt_size)
 		debugPrint(1, "quickjs does not report the size of its runtime allocation, the pending jobs queue cannot be located");
+	// jsrt_size comes out 8. That's useless, and bogus.
+	// Stand in with our max value for now, because we have to right the ship.
+	jsrt_size = MAX_JSRT;
 	memcpy(save_jsrt, jsrt, jsrt_size);
 	JS_EnqueueJob(mwc, firstPending, 0, NULL);
 // Early variables change, related to memory allocation, so start at 64.
