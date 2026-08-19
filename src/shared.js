@@ -2612,7 +2612,18 @@ return s;
 // Thus we pass 10 as the third parameter to cssapply().
 function computeStyleInline(e) {
 var w = my$win();
-var s = new w.CSSStyleDeclaration;
+/*********************************************************************
+This is called for every node on the page, every time we render, and all the
+caller wants back is display, visibility and color.
+A CSSStyleDeclaration is a whole dom element - it descends from HTMLElement -
+so constructing one runs four constructors and hangs a childNodes array and
+several defined properties off it, none of which we are going to look at.
+Take the prototype and skip the constructors.  The default properties, the
+shorthand setters and dom$class all live on the prototype, so what comes back
+still behaves like a style object, both here and to the css code in C that
+writes into it through window.soj$.
+*********************************************************************/
+var s = Object.create(w.CSSStyleDeclaration.prototype);
 // don't put a style under a style.
 // There are probably other nodes I should skip too.
 if(e.nodeType != 1 ||
