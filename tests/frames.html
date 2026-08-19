@@ -60,18 +60,62 @@ p2 = f2d.body.firstChild;
 if(p2.nodeName != "P") msg += "|couldn't find paragraph";
 if(p2.ownerDocument != f2d) msg += "|bad owner of innerHTML nodes";
 
+// Before we set the timer, change the location of the generated frame, to a real frame.
+// This must also be on the edbrowse website.
+// It happens asynchronously in chrome, so we have to check within the timer.
+f2w.location = "http://www.edbrowse.org/frm2.html";
+
 setTimeout(()=>{
 if(!expanded) msg += "|frame onload didn't run";
-if(f1.zz != 789) msg += "|zz not found";
+if(f1.zz != 789) msg += "|f1.zz not found";
+if(f1.location != "http://www.edbrowse.org/frm1.html") msg += `|bad f1 location ${f1.location}`;
 f1b = f1.document.body;
 h1 = f1b.querySelector("h1");
-if(!h1) msg += "|didn't find h1";
-if(h1.textContent != "Simple Frame") msg += "|wrong h1 content";
+if(!h1) msg += "|didn't find f1 h1";
+if(h1.textContent != "Simple Frame") msg += "|wrong f1 h1 content";
 if(b.querySelector("h1")) msg += "|found h1 by qsa from top frame";
 q = b.getElementsByTagName("h1");
 if(q.length) msg += "|found h1 by tag name from top frame";
+
+if(frames.length != 2) msg += `|frame length ${frames.length} after frame replacement`;
+// In chrome or in edbrowse, we have to regrab f2 after replacement.
+// It's a new window, in the existing frame.
+f2 = frames[1];
+if(f2.zz != 987) msg += "|f2.zz not found";
+if(f2.location != "http://www.edbrowse.org/frm2.html") msg += `|bad f2 location ${f2.location}`;
+h1 = f2.document.querySelector("h1");
+if(!h1) msg += "|didn't find f2 h1";
+if(h1.textContent != "Second Frame") msg += "|wrong f2 h1 content";
+
 show.innerHTML = msg;
 }, 300);
 
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
-</script>
+
+/*********************************************************************
+I'll include the two frames that are referenced by this html,
+the two frames on edbrowse.org, the two frames you need to put on your website
+if you want to reproduce this test yourself.
+I had to muck with the closing script tags of course,
+or they would close this script.
+In the edbrowse test, the second script appears on the page.
+The first frame appears if you expand it.
+I'm not sure why the difference.
+
+<head></head><body>
+<script>zz = 789`/script>
+<h1>Simple Frame</h1>
+<p>
+Saturday, in the park.
+I think it was the fourth of July.
+</p></body>
+
+<head></head><body>
+<script>zz = 987`/script>
+<h1>Second Frame</h1>
+<p>
+Does anybody really know what time it is?
+Does anybody care?
+</p></body>
+*********************************************************************/
+</script></body>
