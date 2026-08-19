@@ -1746,7 +1746,7 @@ these two out here where they are built once.  And test() is the cheap way to
 ask; match() goes the long way round through Symbol.match, assembling a flags
 string and a result array that nobody ever looks at.
 *********************************************************************/
-var attrNameSpace = /\s/, attrNameEquals = /=/;
+const attrNameSpace = /\s/;
 
 this.attr = {
 
@@ -1766,20 +1766,17 @@ attrNameValid: function(n) {
     var plain = true;
     for(var i = 0; i < n.length; ++i) {
         var c = n.charCodeAt(i);
-        if(c >= 97 && c <= 122) continue; // a-z
-        if(c >= 65 && c <= 90) continue; // A-Z
-        if(c >= 48 && c <= 57) continue; // 0-9
-        if(c == 45 || c == 95 || c == 58) continue; // - _ :
+        if(c == 61) { // =
+            alert3("= in attribute name");
+            return false;
+        }
+        if(c > 32 && c <= 127) continue;
         plain = false;
         break;
     }
     if(plain) return true;
     if(attrNameSpace.test(n)) {
         alert3("spaces in attribute name");
-        return false;
-    }
-    if(attrNameEquals.test(n)) {
-        alert3("= in attribute name");
         return false;
     }
     return true;
