@@ -9,9 +9,9 @@ you shouldn't see this stuff
 </iframe>
 <script>
 /* frames from the internet, or frames internally generated.
-This can be run by edbrowse locally. Just type b.
-We don't have a lot of cross origin concerns.
-But chrome does.
+This can be run by edbrowse locally, because we don't have
+cross-origin concerns. Just type b.
+However, chrome does.
 To perform this test in chrome, you need a copy of this file on edbrowse.org.
 Write out the url http://www.edbrowse.org/frames.html
 then invoke <chromeline. */
@@ -31,6 +31,8 @@ f2 = document.createElement("iframe");
 if(frames.length != 1) msg += "|frames length changed too early";
 b.appendChild(f2);
 if(frames.length != 2) msg += "|frames length not 2";
+// edbrowse creates the empty window and document right away, chrome wait
+// til it is attached. Well we already attached it above.
 f2w = f2.contentWindow;
 f2d = f2.contentDocument;
 if(f2d.body.nodeName != "BODY") msg += "|no f2 body";
@@ -40,6 +42,8 @@ s2.setAttribute("a", 1);
 if(s2.ownerDocument != document) msg += "|bad s2 owner before attach";
 f2d.body.appendChild(s2);
 if(f2d.zz != 234) msg += "|script in frame didn't run";
+if(top != window) msg += "|bad self top";
+if(parent != window) msg += "|bad self parent";
 if(f2w.top != window) msg += "|bad top";
 if(f2w.parent != window) msg += "|bad parent";
 if(f2d.body.ownerDocument != f2d) msg += "|bad f2 body owner";
@@ -51,6 +55,10 @@ s2.remove();
 if(s2.ownerDocument != f2d) msg += "|bad s2 owner after detach";
 s2.setAttribute("c", 3);
 if(s2.attributes[2].ownerDocument != f2d) msg += "|bad s2 attr c owner after attach";
+f2d.body.innerHTML = "<p>frame created inline</p>";
+p2 = f2d.body.firstChild;
+if(p2.nodeName != "P") msg += "|couldn't find paragraph";
+if(p2.ownerDocument != f2d) msg += "|bad owner of innerHTML nodes";
 
 setTimeout(()=>{
 if(!expanded) msg += "|frame onload didn't run";

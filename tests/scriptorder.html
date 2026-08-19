@@ -27,9 +27,14 @@ div = document.getElementById("hs")
 // remember that the closing script tag can never appear, even in a string -
 // until you are really ready to close the script.
 div.innerHTML = "<script>h += 'd'<" + "/script>"
-if(div.firstChild.nodeName != "SCRIPT") h += "@1";
+sd = div.firstChild; // the script that appends d
+if(sd.nodeName != "SCRIPT") h += "@1";
 // the script produced by innerHTML doesn't run. I don't know why!
 // d will not appear in the string h.
+// Let's detatch and reattach and see if that changes anything.
+div.removeChild(sd);
+div.appendChild(sd);
+// Nope, didn't matter. d doesn't appear. scripts created by innerHTML seem to be still-born.
 h += 'e';
 // Always write html that is complete, so it triggers dw_flush_conditional
 document.write("<ol><li>apple<li>orange<li>lemon</ol>")
