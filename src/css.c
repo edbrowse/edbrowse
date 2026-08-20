@@ -2540,6 +2540,18 @@ static void cssPiecesPrint(const struct desc *d)
 					errorMessage[sel->error]);
 			chainPrint(sel->chain);
 		}
+
+		// print keys if any
+		if(d->keytag || d->keyid || d->keyclass) {
+			fprintf(cssfile, "🔑");
+			if(d->keytag) fprintf(cssfile, "%s", d->keytag);
+			fprintf(cssfile, "@");
+			if(d->keyid) fprintf(cssfile, "%s", d->keyid);
+			fprintf(cssfile, "@");
+			if(d->keyclass) fprintf(cssfile, "%s", d->keyclass);
+		}
+
+		// print rules here
 		fprintf(cssfile, "{");
 		for (r = d->rules; r; r = r->next)
 			fprintf(cssfile, "%s:%s;", r->atname, r->atval);
