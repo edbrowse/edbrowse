@@ -211,6 +211,10 @@ if(q.length != 3) msg += "|bad *"
 q = div3.querySelectorAll('*[n="6"]')
 if(q.length != 1) msg += "|bad *6"
 
+// a more complicated not
+q = b.querySelectorAll("p:not(div>p)");
+if(q.length != 1 || q[0].id != "show") msg += "|wrong p not below div";
+
 // matches is a form of querySelector. This is not at all the same
 // as match, which takes a regular expression.
 li = b.querySelector("li:last-child")

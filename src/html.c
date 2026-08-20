@@ -1374,7 +1374,7 @@ and it might be run as a matter of course - or not.
 I know it is run by chrome. So I'll run this routine up to 5 times.
 By then I should have executed all the pending jobs that should be run.
 If not then it's probably an infinite loop, and we should move on. */
-    if(startbrowse) {
+    if(startbrowse && do_pjobs) {
         int k;
         // run jobs for this window, this frame only.
         // document.write above might have changged cf.
