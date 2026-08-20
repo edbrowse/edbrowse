@@ -2760,7 +2760,7 @@ static bool inputLike(Tag *t, int flavor)
 Match a node against an atomic selector.
 One of t or obj should be nonzero. It's more efficient with t.
 If bulkmatch is true, then the document has loaded and no js has run.
-If t->jclass is not set, there's no point dipping into js
+If t->class is not set, there's no point dipping into js
 to see if it has been set dynamically by a script.
 This is only called from qsaMatchChain, as part of a chain of atomic selectors.
 That chain is considered, or not considered, based on before after hover
@@ -2825,7 +2825,7 @@ if(!t) {
 
 		if (mod->isclass
 		    && (bulkmatch || (gcsmatch && a->combin == ','))) {
-			char *v = t->jclass;
+			char *v = t->class;
 			char *u = p + 8;
 			int l = strlen(u);
 			char *q;
@@ -2833,7 +2833,7 @@ if(!t) {
 				v = emptyString;
 			while ((q = strstr(v, u))) {
 				v += l;
-				if (q > t->jclass && !isspaceByte(q[-1]))
+				if (q > t->class && !isspaceByte(q[-1]))
 					continue;
 				if (q[l] && !isspaceByte(q[l]))
 					continue;
@@ -3812,13 +3812,13 @@ where "this" is not the window object, then we have to make some changes.
 // This is the test that qsaMatch() makes for a class modifier.
 static bool tagHasClass(const Tag *t, const char *name)
 {
-	const char *v = t->jclass, *q;
+	const char *v = t->class, *q;
 	int l = strlen(name);
 	if (!v || !l)
 		return false;
 	while ((q = strstr(v, name))) {
 		v = q + l;
-		if (q > t->jclass && !isspaceByte(q[-1]))
+		if (q > t->class && !isspaceByte(q[-1]))
 			continue;
 		if (*v && !isspaceByte(*v))
 			continue;
@@ -3860,8 +3860,8 @@ void cssApply(int frameNumber, Tag *t, int pe)
 	gcsmatch = true, matchtype = pe;
 // defer to the js here;
 // then I don't have to get these attributes on every css rule.
-	nzFree(t->jclass);
-	t->jclass = get_js_attribute(t, "class");
+	nzFree(t->class);
+	t->class = get_js_attribute(t, "class");
 	nzFree(t->id);
 	t->id = get_js_attribute(t, "id");
 
@@ -4031,21 +4031,21 @@ Just the indifidual words and the whole thing.
 	h = allocMem(a * sizeof(struct hashhead));
 	for (i = j = 0; i < doclist_n; ++i) {
 		t = doclist[i];
-		if (!(t->jclass && t->jclass[0]))
+		if (!(t->class && t->class[0]))
 			continue;
 		if (j == a) {
 			a += 500;
 			h = reallocMem(h, a * sizeof(struct hashhead));
 		}
-		classcopy = cloneString(t->jclass);
+		classcopy = cloneString(t->class);
 		h[j].key = classcopy;
 		h[j].t = t;
 		++j;
 
-		if (!strpbrk(t->jclass, ws))
+		if (!strpbrk(t->class, ws))
 			continue;	// no spaces
 
-		classcopy = cloneString(t->jclass);
+		classcopy = cloneString(t->class);
 		s = classcopy;
 		while (isspaceByte(*s))
 			++s;

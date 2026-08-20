@@ -2238,12 +2238,6 @@ ab:
 	debugPrint(4, "fixup %s %d", a_name, t->seqno);
 	action = t->action;
 	cx = t->f0->cx;
-	nzFree(t->name);
-	t->name = get_property_string(cx, *((JSValue*)t->jv), "name");
-	nzFree(t->id);
-	t->id = get_property_string(cx, *((JSValue*)t->jv), "id");
-	nzFree(t->jclass);
-	t->jclass = get_property_string_t(t, "class");
 
 	switch (action) {
 	case TAGACT_INPUT:

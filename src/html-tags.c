@@ -709,7 +709,7 @@ static void freeTag(Tag *t)
 	nzFree(t->textval);
 	nzFree(t->name);
 	nzFree(t->id);
-	nzFree(t->jclass);
+	nzFree(t->class);
 	nzFree(t->nodeName);
 	nzFree(t->nodeNameU);
 	nzFree(t->value);
@@ -1519,13 +1519,7 @@ static void findAttributes(const char *start, const char *end)
 	if ((j = stringInListCI(t->attributes, "class")) >= 0) {
 		v = t->atvals[j];
 		if (v && !*v) v = 0;
-		t->jclass = cloneString(v);
-	}
-// classname is an alias for class
-	if ((j = stringInListCI(t->attributes, "classname")) >= 0) {
-		v = t->atvals[j];
-		if (v && !*v) v = 0;
-		t->jclass = cloneString(v);
+		t->class = cloneString(v);
 	}
 	if ((j = stringInListCI(t->attributes, "value")) >= 0) {
 		v = t->atvals[j];
@@ -4465,7 +4459,7 @@ Are there other situations where we need to supress meta processing?
 	case TAGACT_SPAN:
 		if (!opentag)
 			break;
-		if (!(a = t->jclass))
+		if (!(a = t->class))
 			break;
 		if (stringEqualCI(a, "sup"))
 			action = TAGACT_SUP;
@@ -5096,13 +5090,9 @@ static void pushAttributes(const Tag *t)
         u = v[i];
         if (!u) u = emptyString;
         // allow setAttribute to drop this to lower case, if it's an html element.
-        // If it's an svg element, it shouldn't do that.
+        // If it's an svg element, it won't do that.
         // Leave that in the hands of javascript.
         run_function_twostring_t(t, "setAttribute", a[i], u);
-        // special case, classname sets the class.
-        // doesn't javascript do this for us?
-        if(stringEqualCI(a[i], "classname"))
-            run_function_twostring_t(t, "setAttribute", "class", u);
     }
     set_property_bool_win(cf, "eb$push$attributes", false);
 }

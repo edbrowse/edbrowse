@@ -697,8 +697,7 @@ We need to review all this some day.
 *********************************************************************/
 
 	char *nodeName, *nodeNameU;
-// class is reserved word in c++, so use jclass for javascript class
-	char *name, *id, *jclass, *value, *href;
+	char *name, *id, *class, *value, *href;
 	const char *rvalue; /* for reset */
 	char *custom_h; // http headers for a frame or xhr tag
 	char *innerHTML; /* the html string under this tag */
