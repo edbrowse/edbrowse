@@ -71,11 +71,12 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
         this.document.getElementsByTagName = (t)=>[];
 }
 
-// We need some shorthand for this rather large file.
-// Think of these as macros; they are deleted at the end so they don't persist.
+/*
+    We need some shorthand for this rather large file.
+    Think of these as macros; they are deleted at the end so they don't persist.
+    As such you can't use them in anything that runs after that point.
+*/
 this.odp = Object.defineProperty;
-// remember, we can't use odp inside function that run later:
-// constructors, setters, methods, etc.
 // set a window property, unseen, unchanging
 this.swp = function(k, v) { odp(window, k, {value:v})}
 // visible (enumerable), but still protected
@@ -184,31 +185,24 @@ class Eb$IterableWeakMap {
 
 
 // modern version to establish a dom object
-function swdo(c, changeable=true)
+this.swdc = function (c, changeable=true)
 {
     const v = c.name.replace(/^z\$/, "");
-    odp(c.prototype, "dom$class", {value:v});
+    odp(c.prototype, "dom$class", {value: v});
     // Makes sure toString returns [object dom$class] in modern es6
     odp(c.prototype, Symbol.toStringTag, {value: v});
     /* if we don't set the property then the class can be referenced from
         within this window but isn't a property of the window
     */
     c.toString = () => `function ${c.name}() { [native code] }`
-
     odp(window, c.name, {value:c, writable:changeable, configurable:changeable});
 }
 
-class EventTarget
+this.swde = function (cls, exp, changeable=true)
 {
-    // in a static initialisation block this is the constructor
-    static {
-        const tp = this.prototype;
-        tp.addEventListener = mw$.addEventListener;
-        tp.removeEventListener = mw$.removeEventListener;
-        tp.dispatchEvent = mw$.dispatchEvent;
-    }
+    odp(exp, "name", {value: cls});
+    swdc(exp);
 }
-swdo(EventTarget);
 
 // * don't understand all the error codes and subcodes.
 // This is just a stub for now, to make acid 25 work.
@@ -221,7 +215,8 @@ for(let f of ["UnsupportedError",
 "showframes", "snapshot", "aloop",
 "set_location_hash", "NodeFilter", "tableReindex", "formReindex", "selectReindex",
 "markAllCollections", "markUpwardCollections",
-"mutFixup", "makeSheets", "gebtn"])
+"mutFixup", "makeSheets", "gebtn", "domLinkage", "set_innerHTML",
+"runScriptWhenAttached", "simpleHtmlEscape"])
     swp(f, mw$[f]);
 for(let f of ["close"])
     swpv(f, mw$[f]);
@@ -240,12 +235,125 @@ window.top = eb$top();
 window.parent = window.eb$parent();
 odp(window, "frameElement", {get: eb$frameElement,enumerable:true});
 
+class EventTarget
+{
+    // in a static initialisation block this is the constructor
+    static {
+        const tp = this.prototype;
+        tp.addEventListener = mw$.addEventListener;
+        tp.removeEventListener = mw$.removeEventListener;
+        tp.dispatchEvent = mw$.dispatchEvent;
+    }
+}
+swdc(EventTarget);
+
+class Node extends EventTarget
+{
+    constructor()
+    {
+        super();
+        // childNodes should be readonly; it is a live node list.
+        Object.defineProperty(this, "childNodes", {value: []})
+        Object.defineProperty(this, "parentNode", {value: null, writable: true, configurable:true})
+    }
+
+    /* Set innerHTML, and then read it back; it's not an exact copy.
+    If I don't close <li>, when it comes back out, there is a closing </li> tag.
+    The html syntax is cleaned up.
+    And whitespace between tag attributes is compressed.
+    Also, every attribute value is quoted, with double quotes,
+    even if I didn't quote it, or if I used single quotes.
+    One way I could approach this, from the edbrowse side, only requires
+    a few lines of code. It's sweet, but creats more problems than it solves.
+    Mostly because I don't preserve whitespace between tags. */
+    get innerHTML() {
+        // textarea is special
+        if(this.dom$class == "HTMLTextAreaElement") {
+            return simpleHtmlEscape(this.inner$HTML);
+        }
+        /*
+        const div = d.createElement('div')
+        div.innerHTML = this.inner$HTML;
+        let o = div.outerHTML;
+        // strip off <div> and </div>
+        const l = o.length;
+        return o.substr(5, l-11);
+        */
+        return this.inner$HTML;
+    }
+    set innerHTML(h) {
+        if(!h) h = "";
+        // textarea.innerHTML is special.
+        if(this.dom$class == "HTMLTextAreaElement") {
+            this.value = h;
+            return;
+        }
+
+        this.inner$HTML = h;
+        // Put some tags around the html so we can parse it.
+        h = `<body>${h}</body>`;
+        // Have to make a copy of the old nodes, the ones that are
+        // going to be displaced, for the mutation observers. Ugh!
+        let c1 = this.childNodes, c2 = [];
+        if(!c1) return; // should never happen
+        for(let i = 0; i < c1.length; ++i)
+            c2[i] = c1[i], c2[i].parentNode = null;
+
+        c1.length = 0;
+        // native function to parse the new html
+        set_innerHTML(this, h);
+        // Change live arrays, like getElementsByTagName,
+        // that might now contain these nodes.
+        markUpwardCollections(this);
+
+        // Why would I call runScripts on the new nodes? Scripts created
+        // by innerHTML do not run. Well, that function also resets ownerDocument,
+        // and we might need to do that if one frame inserts,
+        // via innerHTML, nodes into another frame.
+        // Very rare, but it's possible.
+        runScriptWhenAttached(this);
+
+        // c2 is the old nodes, for the observers.
+        mutFixup(this, 0, c1, c2);
+    }
+
+    // basic append, without C side efffects.
+    // This is called from C as we build the tree from html.
+    // Thus building the tree is already happening in C;
+    // it shouldn't happen twice.
+    // Note that it has to call mutFixup, since mutation observers
+    // can run even as the html tree is being built.  Ugh!
+    appendChild1(c)
+    {
+        this.childNodes.push(c);
+        c.parentNode = this;
+        mutFixup(this, 0, c, null);
+    }
+
+    appendChild2(c)
+    {
+        this.childNodes.push(c);
+        c.parentNode = this;
+        domLinkage('a', this, "", c); // C linkage
+    }
+
+    // like appendChild1 but without the mutations.
+    // Called from within innerHTML.
+    appendChild3(c)
+    {
+        this.childNodes.push(c);
+        c.parentNode = this;
+    }
+}
+swdc(Node);
+
+
 // Not quite right, still missing, at a minimum, whenDefined and upgrade
 class CustomElementRegistry
 {
     constructor()
     {
-        odp(this, "map", {value: new Map});
+        Object.defineProperty(this, "map", {value: new Map});
     }
 
     define(name, ctor, options)
@@ -1189,8 +1297,8 @@ if (!window.atob) {
 }
 // don't need these any more
 ;(function() {
-    let names_to_delete = ["odp",
+    let names_to_delete = [
     "swgs", "swp", "swpv", "swpc", "swpp",
-    "sdp", "sdpc", "nodep"];
+    "sdp", "sdpc", "nodep", "swdc", "swde", "odp"];
     for (let k of names_to_delete) delete window[k]
 })();
