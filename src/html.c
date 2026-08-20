@@ -1354,7 +1354,6 @@ void runScriptsPending(bool startbrowse)
 	Tag *t;
 	int j, n;
 	bool change, async;
-	Window *save_cw = cw;
 	Frame *f, *save_cf = cf;
 
     // Manage document.write outside the context of a script.
@@ -1377,12 +1376,14 @@ By then I should have executed all the pending jobs that should be run.
 If not then it's probably an infinite loop, and we should move on. */
     if(startbrowse) {
         int k;
-        for(k = 0; k < 5; ++k) {
-            if(!my_ExecutePendingJobs(0)) break;
-        }
-// my_ExecutePendingJobs() moves cw and cf to whichever frame owns each job.
-        cw = save_cw;
+        // run jobs for this window, this frame only.
+        // document.write above might have changged cf.
         cf = save_cf;
+        for(k = 0; k < 5; ++k) {
+            if(!my_ExecutePendingJobs(0, true)) break;
+        }
+        // Because we set current = true, only jobs within this frame will run.
+        // cw and cf did not change.
     }
 
 top:
@@ -1495,7 +1496,7 @@ passes:
         goto top;
     }
 
-    cw = save_cw;
+    // there is no other return but here; so this is where we restore cf
     cf = save_cf;
 }
 
@@ -4359,7 +4360,7 @@ any of the timers.
 Loop back around, see if the user has typed a key, if not come right back
 on the same timer and do some more.
 *********************************************************************/
-		    if(my_ExecutePendingJobs(10)) goto done;
+		    if(my_ExecutePendingJobs(10, false)) goto done;
 		    if(my_ExecutePendingMessages()
 		    || my_ExecutePendingMessagePorts()) goto done;
 		}

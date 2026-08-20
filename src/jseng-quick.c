@@ -184,22 +184,6 @@ static int js_eval_flag = JS_EVAL_TYPE_GLOBAL; // global, module etc
 static bool js_running;
 static JSContext *mwc; // master window context
 static JSContext *freeing_context = NULL;
-static Frame *freeing_frame = NULL;
-
-// Look for the frame in one window only. Sets cw and cf if it is there.
-// A null window is not an error, it just doesn't have the frame.
-static bool frameFromContextInWindow(jsobjtype cx, Window *w)
-{
-    Frame *f;
-    if(!w) return false;
-    for (f = &w->f0; f; f = f->next) {
-        if(f->cx == cx) {
-            cf = f, cw = w;
-            return true;
-        }
-    }
-    return false;
-}
 
 // Find window and frame based on the js context. Set cw and cf accordingly.
 // This is inefficient, but is not called very often.
@@ -207,16 +191,17 @@ static bool frameFromContext(jsobjtype cx)
 {
     int i;
     Window *w;
-// It's ridiculous to fish around for the frame when we know what it is.
-    if(freeing_frame) {
-        cf = freeing_frame, cw = cf->owner;
-        return true;
-    }
-    if(cx == mwc) return false;
+    Frame *f;
+    if(cx == mwc) return false; // should never happen
     for (i = 1; i <= maxSession; ++i) {
-        for (w = sessionList[i].lw; w; w = w->prev)
-            if(frameFromContextInWindow(cx, w))
-                return true;
+        for (w = sessionList[i].lw; w; w = w->prev) {
+            for (f = &(w->f0); f; f = f->next) {
+                if(f->cx == cx) {
+                    cf = f, cw = w;
+                    return true;
+                }
+            }
+        }
     }
     return false;
 }
@@ -3143,7 +3128,20 @@ typedef struct JSJobEntry {
     JSValue argv[];
 } JSJobEntry;
 
-int my_ExecutePendingJobs(int limit)
+/* Pending Jobs called from:
+1. The polling timer, with limit > 0.
+2. Browsing just before deferred scripts, with current = true.
+3. Freeing a context, with freeing_context not null.
+4. From the native method jobsPending().
+In (1), running a job moves cw and cf to the frame that owns it,
+and we don't put them back, so the caller has to restore them.
+In (2), cw and cf are valid, and should hold steady.
+In (3), cw and cf might not be valid.
+In (4), cw and cf are valid, but might move, and should be restored.
+Parameters:
+limit, return after this many jobs are run. 0 means no limit.
+current, only run jobs in the current window current frame */
+int my_ExecutePendingJobs(int limit, bool current)
 {
     if(!JSRuntimeJobIndex) return 0; // we couldn't find the pending queue
 
@@ -3152,13 +3150,6 @@ int my_ExecutePendingJobs(int limit)
     JSJobEntry *e;
     struct list_head *l, *l1;
     int i, cnt = 0;
-/* Running a job moves cw and cf to the frame that owns it, and we don't put
-them back, so every caller has to restore them.
-foreground_cw is the window we were called from, the one being browsed.
-It is null while freeing a context: cleanup runs the finalizers after the
-window has already been freed, so cw is a stale pointer by then and must not
-be looked at. freeing_frame tells us the frame in that case anyways. */
-    Window *foreground_cw = (freeing_context ? NULL : cw);
     struct list_head *jl = (struct list_head *)((char*)jsrt + JSRuntimeJobIndex);
 
 // high runner case
@@ -3168,46 +3159,34 @@ be looked at. freeing_frame tells us the frame in that case anyways. */
     list_for_each_safe(l, l1, jl) {
 /* stop now and then to let the user interact with edbrowse unless we're
 cleaning up when we really want to run all the finalizers */
-        if(limit && cnt == limit && !freeing_context) break;
+        if(limit && cnt == limit) break;
         e = list_entry(l, JSJobEntry, link);
         ctx = e->ctx;
-        if (freeing_context && ctx != freeing_context) continue;
-// A window being browsed is not linked into its session stack until parsing
-// finishes, so look in it first; frameFromContext() walks the sessions and
-// would not find it there.
-        if(!frameFromContextInWindow(ctx, foreground_cw) &&
-        !frameFromContext(ctx)) {
-            if(ctx == mwc)
-                debugPrint(3, "frameFromContext finds master window");
-            else {
-                debugPrint(3, "frameFromContext cannot find a frame for pointer %p", ctx);
-                debugPrint(3, "It is not safe to run this job (%d arguments), nor free it!", e->argc);
-                list_del(&e->link);
-
-// Freeing this job induces an instant core dump.
-// But leaving it around causes FreeRuntime to free it, thence a core dump.
-// So don't free it here, and do delete any such orphan jobs before JS_FreeRuntime().
-// This is a quickjs-ng bug, issue 1318, which was fixed on Feb 26, 2026.
-// I'm leaving this work around in place because it is safer, in general,
-// and I don't know which version of quickjs you are building against.
-#if 0
-                for(i = 0; i < e->argc; ++i)
-                    if (JS_IsLiveObject(jsrt, e->argv[i]))
-                        JS_FreeValueRT(jsrt, e->argv[i]);
-                js_free_rt(jsrt, e);
-#endif
-
+        if (freeing_context) {
+            if(ctx != freeing_context) continue;
+        }  else if(current) {
+            if(ctx != cf->cx) continue;
+            // now cw and cf remain in place and we're ready to run this job
+        } else {
+            if(!frameFromContext(ctx)) {
+                // this is bad, no frame found for this context
+                if(ctx == mwc)
+                    debugPrint(3, "frameFromContext finds master window");
+                else {
+                    debugPrint(3, "frameFromContext cannot find a frame for pointer %p", ctx);
+                    debugPrint(3, "It is not safe to run this job (%d arguments), nor free it!", e->argc);
+                    list_del(&e->link);
+                }
                 continue;
             }
+            // cw and cf have been set and we're ready to run this job
         }
 
 // Browsing a new web page in the current session pushes the old one, like ^z
-// in Linux. The prior page suspends, and the timers and pendings suspend.
-// ^ is like fg, bringing it back to life.
-// The window being browsed isn't on its session stack yet, so it doesn't look
-// like a foreground window, but it is the one we are working on, so run it.
-        if(!freeing_context && cw != foreground_cw &&
-        sessionList[cw->sno].lw != cw) continue;
+// in Linux. Only run jobs at the top of the session stack.
+// This is for the polling timer only, indicated by limit > 0.
+
+        if(limit &&  sessionList[cw->sno].lw != cw) continue;
 
         if(debugLevel >= 3) {
             int jj = -1; // -1 = we're freeing the context
@@ -3438,7 +3417,7 @@ static JSValue nat_jobs(JSContext *cx, JSValueConst this, int argc, JSValueConst
         (void) this;
         (void) argc;
         (void) argv;
-	my_ExecutePendingJobs(0);
+	my_ExecutePendingJobs(0, false);
 	my_ExecutePendingMessages();
 	my_ExecutePendingMessagePorts();
 	cw = save_cw, cf = save_cf;
@@ -3936,7 +3915,6 @@ void freeJSContext(Frame *f)
     Window *save_cw = cw;
     Frame *save_cf = cf;
     debugPrint(3, "begin js context cleanup for %d", f->gsn);
-    freeing_frame = f;
     freeing_context = f->cx;
 /* This looks mad on paper because it appears that we're going to lose our
 document and window objects as well as the context. However, from reading the
@@ -3954,7 +3932,7 @@ single-threaded so we should be good */
     JS_RunGC(jsrt);
 /* quick uses pending jobs for finalizers; when freeing a context we simply
 clean up the pending jobs rather than run them as doing so is unsafe */
-    my_ExecutePendingJobs(0);
+    my_ExecutePendingJobs(0, false);
 /* This will either free the context or decrease its ref count so it can go on
 a future GC run. There's a possibility that what we need to do is check the
 liveness of the context and do something equivalent to the above in case
@@ -3971,7 +3949,6 @@ are created by the above gc run they'll go away at some point */
     free(f->docobj);
     f->winobj = f->docobj = f->cx = 0;
     f->jslink = false;
-    freeing_frame = NULL;
     freeing_context = NULL;
     cw = save_cw, cf = save_cf;
 }
@@ -4191,8 +4168,9 @@ void jsClose(void)
         grabover();
 // release the timer for pending jobs
         domSetsTimeout(0, "-", 0, false);
-// clear out any orphan pending jobs, before shutdown
-        my_ExecutePendingJobs(0);
+// Clear out any orphan pending jobs, before shutdown.
+// We were doing this during debugging but it seems like a bad idea.
+//        my_ExecutePendingJobs(0, false);
         JS_FreeRuntime(jsrt);
     }
 }
