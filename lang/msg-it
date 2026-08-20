@@ -763,23 +763,23 @@ ripristino marcatore byte order
 0
 0
 impossibile elimina ..
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
+Impossibile inoltrare piu' di una mail
+Non è possibile combinare una presentazione alternativa con l'inoltro di mail
+la direttiva fwd deve precedere l'allegato
+il testo inoltrato deve essere una mail originale con headers
+impossibile inoltrare in modalità directory
+impossibile inoltrare in modalità database
+impossibile inoltrare in modalità IRC
+impossibile inoltrare in modalità email
+impossibile inoltrare un file vuoto
+impossibile inoltrare un file binario
+nessuna riga \"unformatted\"
+file mail raw %05d non trovato
+nessuna riga pendente
+troppi comandi annidati
+impossibile creare la stringa formattata; %s
+browsing già in corso in questa modalità
+La cartella temporanea %s esiste già
 0
 0
 0

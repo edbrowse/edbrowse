@@ -3828,6 +3828,26 @@ function checkUpward(t)
     }
 }
 
+const SVG_hierarchy = [
+"SVGElement,Element",
+"SVGGraphicsElement,SVGElement",
+"SVGTitleElement,SVGElement",
+"SVGStyleElement,SVGElement",
+"SVGStopElement,SVGElement",
+"SVGMaskElement,SVGElement",
+"SVGGradientElement,SVGElement",
+"SVGLinearGradientElement,SVGGradientElement",
+"SVGGeometryElement,SVGGraphicsElement",
+"SVGDefsElement,SVGGraphicsElement",
+"SVGUseElement,SVGGraphicsElement",
+"SVGPolygonElement,SVGGeometryElement",
+"SVGRectElement,SVGGeometryElement",
+"SVGEllipseElement,SVGGeometryElement",
+"SVGGElement,SVGGraphicsElement",
+"SVGSVGElement,SVGGraphicsElement",
+"SVGPathElement,SVGGeometryElement",
+];
+
 /*********************************************************************
 We can define (build) the various classes for the running window here,
 if we are always careful to use the window parameter w in everything we do,
@@ -5216,6 +5236,17 @@ function nameSpill(n)
     dc == "HTMLAnchorElement";
 }
 
+/* There are probably about a hundred SVG classes, and we pretty much
+don't care about them, except they have to exist.
+I can table-drive this - but not the map from html tags to classes,
+or the cases in createElement that generate these nodes. */
+for(let e of SVG_hierarchy) {
+    let e2 = e.split(',');
+    eval(`swde("${e2[0]}", class extends w.${e2[1]} { constructor() { super(); } })`);
+}
+// these have node type 1, just like HTMLElement.
+w.SVGElement.prototype.nodeType = 1;
+
 // The html element, which is the DOM nodes that you know and love.
 swde("HTMLElement", class extends w.Element {
     constructor() { super(); }
@@ -5347,77 +5378,6 @@ helemp.offsetHeight = 1.0;
 helemp.offsetWidth = 1.0;
 helemp.offsetTop = 0.0;
 helemp.offsetLeft = 0.0;
-
-swde("SVGElement", class extends w.Element {
-    constructor() { super(); }
-})
-// html element and svg elements are separate branches of the inheritance
-// tree, but they are both nodeType 1.
-w.SVGElement.prototype.nodeType = 1;
-
-swde("SVGGraphicsElement", class extends w.SVGElement {
-    constructor() { super(); }
-})
-
-swde("SVGTitleElement", class extends w.SVGElement {
-    constructor() { super(); }
-})
-
-swde("SVGStyleElement", class extends w.SVGElement {
-    constructor() { super(); }
-})
-
-swde("SVGStopElement", class extends w.SVGElement {
-    constructor() { super(); }
-})
-
-swde("SVGMaskElement", class extends w.SVGElement {
-    constructor() { super(); }
-})
-
-swde("SVGGradientElement", class extends w.SVGElement {
-    constructor() { super(); }
-})
-
-swde("SVGLinearGradientElement", class extends w.SVGGradientElement {
-    constructor() { super(); }
-})
-
-swde("SVGGeometryElement", class extends w.SVGGraphicsElement {
-    constructor() { super(); }
-})
-
-swde("SVGDefsElement", class extends w.SVGGraphicsElement {
-    constructor() { super(); }
-})
-
-swde("SVGUseElement", class extends w.SVGGraphicsElement {
-    constructor() { super(); }
-})
-
-swde("SVGPolygonElement", class extends w.SVGGeometryElement {
-    constructor() { super(); }
-})
-
-swde("SVGRectElement", class extends w.SVGGeometryElement {
-    constructor() { super(); }
-})
-
-swde("SVGEllipseElement", class extends w.SVGGeometryElement {
-    constructor() { super(); }
-})
-
-swde("SVGGElement", class extends w.SVGGraphicsElement {
-    constructor() { super(); }
-})
-
-swde("SVGSVGElement", class extends w.SVGGraphicsElement {
-    constructor() { super(); }
-})
-
-swde("SVGPathElement", class extends w.SVGGeometryElement {
-    constructor() { super(); }
-})
 
 swde("Text", class extends w.HTMLElement {
     constructor()
