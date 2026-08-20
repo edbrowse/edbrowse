@@ -3407,6 +3407,83 @@ static JSValue nat_gc(JSContext *cx, JSValueConst this, int argc, JSValueConst *
     return JS_UNDEFINED;
 }
 
+typedef JSValue native_fn(JSContext *cx, JSValueConst this, int argc, JSValueConst *argv);
+struct native_descriptor {
+    const char *name;
+    native_fn *f;
+    int argc;
+    int properties;
+};
+
+static const struct native_descriptor native_list[] = {
+    {"natok",  nat_ok, 1, JS_PROP_ENUMERABLE},
+    {"my$win",  nat_mywin, 0, 0},
+    {"my$doc",  nat_mydoc, 0, 0},
+    {"eb$getcook",  nat_getcook, 0, 0},
+    {"eb$setcook",  nat_setcook, 1, 0},
+    {"puts",  nat_puts, 1, JS_PROP_ENUMERABLE},
+    {"wlf",  nat_wlf, 2, JS_PROP_ENUMERABLE},
+    #if ! Q_NG
+    {"btoa",  nat_btoa, 1, JS_PROP_ENUMERABLE},
+    {"atob",  nat_atob, 1, JS_PROP_ENUMERABLE},
+    #endif
+    {"makeBoundary",  nat_makeBoundary, 0, 0},
+    {"eb$voidfunction",  nat_void, 0, JS_PROP_ENUMERABLE},
+    {"eb$nullfunction",  nat_null, 0, JS_PROP_ENUMERABLE},
+    {"eb$truefunction",  nat_true, 0, JS_PROP_ENUMERABLE},
+    {"eb$falsefunction",  nat_false, 0, JS_PROP_ENUMERABLE},
+    {"db$flags",  nat_dbf, 0, JS_PROP_ENUMERABLE},
+    {"logputs",  nat_logputs, 2, JS_PROP_ENUMERABLE},
+    {"prompt",  nat_prompt, 2, JS_PROP_ENUMERABLE},
+    {"confirm",  nat_confirm, 1, JS_PROP_ENUMERABLE},
+    {"color2rgb",  nat_rgb, 1, JS_PROP_ENUMERABLE},
+    {"win$close",  nat_win_close, 0, JS_PROP_ENUMERABLE},
+    {"fileModTime",  nat_modtime, 1, JS_PROP_ENUMERABLE},
+    {"resolveURL",  nat_resolveURL, 2, JS_PROP_ENUMERABLE},
+    {"eb$newLocation",  nat_new_location, 1, JS_PROP_ENUMERABLE},
+    {"domLinkage",  nat_linkage, 5, JS_PROP_ENUMERABLE},
+    {"cssDocLoad",  nat_css_start, 3, 0},
+    {"eb$cssText",  nat_cssText, 1, 0},
+    {"cssApply",  nat_cssApply, 3, 0},
+    {"eb$formSubmit",  nat_formSubmit, 0, 0},
+    {"eb$formReset",  nat_formReset, 0, 0},
+    {"eb$fetchHTTP",  nat_fetchHTTP, 4, 0},
+    {"querySelectorAll",  nat_qsa, 2, 0},
+    {"querySelector",  nat_qs, 2, 0},
+    {"querySelector0",  nat_qs0, 1, 0},
+    {"eb$getter_cd",  getter_cd, 0, 0},
+    {"eb$getter_cw",  getter_cw, 0, 0},
+    {"eb$unframe",  nat_unframe, 1, 0},
+    {"eb$unframe2",  nat_unframe2, 1, 0},
+    {"eb$playAudio",  nat_playAudio, 0, 0},
+    {"pendingJobs",  nat_jobs, 0, JS_PROP_ENUMERABLE},
+    {"set_innerHTML",  nat_set_innerHTML, 2, 0},
+    {"set_value",  nat_set_value, 2, 0},
+    {"eb$media", nat_media, 1, 0},
+    {"setTimeout", nat_setTimeout, 2, JS_PROP_CONFIGURABLE|JS_PROP_WRITABLE | JS_PROP_ENUMERABLE},
+    {"clearTimeout", nat_clearTimeout, 1, JS_PROP_CONFIGURABLE|JS_PROP_WRITABLE | JS_PROP_ENUMERABLE},
+    {"setInterval", nat_setInterval, 2, JS_PROP_CONFIGURABLE|JS_PROP_WRITABLE | JS_PROP_ENUMERABLE},
+    {"clearInterval", nat_clearTimeout, 1, JS_PROP_CONFIGURABLE|JS_PROP_WRITABLE | JS_PROP_ENUMERABLE},
+    {"eb$parent", nat_parent, 0, 0},
+    {"eb$top", nat_top, 0, 0},
+    {"eb$frameElement", nat_fe, 0, 0},
+    {"eb$hasFocus", nat_hasFocus, 0, 0},
+    {"eb$write", nat_doc_write, 0, 0},
+    {"eb$writeln", nat_doc_writeln, 0, 0},
+    {"eb$gc", nat_gc, 0, 0},
+    {0}
+};
+
+static void native_setup(JSContext *cx, JSValue w)
+{
+    const struct native_descriptor *d = native_list;
+    while(d->name) {
+        JS_DefinePropertyValueStr(cx, w, d->name,
+        JS_NewCFunction(cx, d->f, d->name, d->argc), d->properties);
+        ++d;
+    }
+}
+
 // push pending job onto the queue, just to find the queue.
 static JSValue firstPending(JSContext *ctx, int argc, JSValueConst *argv)
 {
@@ -3452,111 +3529,9 @@ JSValue mwo; // master window object
 	mwc = JS_NewContext(jsrt);
 	mwo = JS_GetGlobalObject(mwc);
 
-/*********************************************************************
-Why put native functions in the master window, to be shared?
-It's native, how much space can it take up?
-Well, it produces a function object, and this way all the windows
-can have pointers to those objects, instead of function objects per window.
-Ok, but that's pretty tiny.
-Well, all our js functions and classes call these native methods,
-and if any of these classes are in the master window,
-then the native methods have to be there too.
-*********************************************************************/
+    native_setup(mwc, mwo);
 
-    JS_DefinePropertyValueStr(mwc, mwo, "natok",
-JS_NewCFunction(mwc, nat_ok, "nat_ok", 1), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "my$win",
-JS_NewCFunction(mwc, nat_mywin, "mywin", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "my$doc",
-JS_NewCFunction(mwc, nat_mydoc, "mydoc", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$getcook",
-JS_NewCFunction(mwc, nat_getcook, "getcook", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$setcook",
-JS_NewCFunction(mwc, nat_setcook, "setcook", 1), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "puts",
-JS_NewCFunction(mwc, nat_puts, "puts", 1), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "wlf",
-JS_NewCFunction(mwc, nat_wlf, "wlf", 2), JS_PROP_ENUMERABLE);
-#if ! Q_NG
-    JS_DefinePropertyValueStr(mwc, mwo, "btoa",
-JS_NewCFunction(mwc, nat_btoa, "btoa", 1), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "atob",
-JS_NewCFunction(mwc, nat_atob, "atob", 1), JS_PROP_ENUMERABLE);
-#endif
-    JS_DefinePropertyValueStr(mwc, mwo, "makeBoundary",
-JS_NewCFunction(mwc, nat_makeBoundary, "makeBoundary", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$voidfunction",
-JS_NewCFunction(mwc, nat_void, "void", 0), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$nullfunction",
-JS_NewCFunction(mwc, nat_null, "null", 0), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$truefunction",
-JS_NewCFunction(mwc, nat_true, "true", 0), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$falsefunction",
-JS_NewCFunction(mwc, nat_false, "false", 0), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "db$flags",
-JS_NewCFunction(mwc, nat_dbf, "debug_flags", 0), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "logputs",
-JS_NewCFunction(mwc, nat_logputs, "logputs", 2), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "prompt",
-JS_NewCFunction(mwc, nat_prompt, "prompt", 2), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "confirm",
-JS_NewCFunction(mwc, nat_confirm, "confirm", 1), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "color2rgb",
-JS_NewCFunction(mwc, nat_rgb, "rgb", 1), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "win$close",
-JS_NewCFunction(mwc, nat_win_close, "win_close", 0), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "fileModTime",
-JS_NewCFunction(mwc, nat_modtime, "modtime", 1), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "resolveURL",
-JS_NewCFunction(mwc, nat_resolveURL, "resolveURL", 2), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$newLocation",
-JS_NewCFunction(mwc, nat_new_location, "new_location", 1), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "domLinkage",
-JS_NewCFunction(mwc, nat_linkage, "domLinkage", 5), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "setTimeout",
-JS_NewCFunction(mwc, nat_setTimeout, "setTimeout", 2), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "clearTimeout",
-JS_NewCFunction(mwc, nat_clearTimeout, "clearTimeout", 1), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "setInterval",
-JS_NewCFunction(mwc, nat_setInterval, "setInterval", 2), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "clearInterval",
-JS_NewCFunction(mwc, nat_clearTimeout, "clearInterval", 1), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "cssDocLoad",
-JS_NewCFunction(mwc, nat_css_start, "css_start", 3), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$cssText",
-JS_NewCFunction(mwc, nat_cssText, "cssText", 1), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "cssApply",
-JS_NewCFunction(mwc, nat_cssApply, "cssApply", 3), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$formSubmit",
-JS_NewCFunction(mwc, nat_formSubmit, "formSubmit", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$formReset",
-JS_NewCFunction(mwc, nat_formReset, "formReset", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$fetchHTTP",
-JS_NewCFunction(mwc, nat_fetchHTTP, "fetchHTTP", 4), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "querySelectorAll",
-JS_NewCFunction(mwc, nat_qsa, "qsa", 2), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "querySelector",
-JS_NewCFunction(mwc, nat_qs, "qs", 2), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "querySelector0",
-JS_NewCFunction(mwc, nat_qs0, "qs0", 1), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$getter_cd",
-JS_NewCFunction(mwc, getter_cd, "getter_cd", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$getter_cw",
-JS_NewCFunction(mwc, getter_cw, "getter_cw", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$unframe",
-JS_NewCFunction(mwc, nat_unframe, "unframe", 1), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$unframe2",
-JS_NewCFunction(mwc, nat_unframe2, "unframe2", 1), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "eb$playAudio",
-JS_NewCFunction(mwc, nat_playAudio, "play_audio", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "pendingJobs",
-JS_NewCFunction(mwc, nat_jobs, "jobspending", 0), JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(mwc, mwo, "set_innerHTML",
-JS_NewCFunction(mwc, nat_set_innerHTML, "set_innerHTML", 2), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "set_value",
-JS_NewCFunction(mwc, nat_set_value, "set_value", 2), 0);
-
-// shared functions and classes
+	// load and execute the shared window
 	jsSourceFile = "shared.js";
 	jsLineno = 1;
 	if (strstr(sharedJS, "bp@(")) {
@@ -3717,38 +3692,7 @@ static void createJSContext_0(Frame *f)
 // link to the master window
 	JS_DefinePropertyValueStr(cx, g, "mw$", JS_GetGlobalObject(mwc), 0);
 
-    JS_DefinePropertyValueStr(cx, g, "eb$media",
-JS_NewCFunction(cx, nat_media, "media", 1), 0);
-// Yes, there really are sites that overwrite setTimeout
-    JS_DefinePropertyValueStr(cx, g, "setTimeout",
-JS_NewCFunction(cx, nat_setTimeout, "setTimeout", 2),
-JS_PROP_CONFIGURABLE|JS_PROP_WRITABLE | JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(cx, g, "clearTimeout",
-JS_NewCFunction(cx, nat_clearTimeout, "clearTimeout", 1),
-JS_PROP_CONFIGURABLE|JS_PROP_WRITABLE | JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(cx, g, "setInterval",
-JS_NewCFunction(cx, nat_setInterval, "setInterval", 2),
-JS_PROP_CONFIGURABLE|JS_PROP_WRITABLE | JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(cx, g, "clearInterval",
-JS_NewCFunction(cx, nat_clearTimeout, "clearInterval", 1),
-JS_PROP_CONFIGURABLE|JS_PROP_WRITABLE | JS_PROP_ENUMERABLE);
-    JS_DefinePropertyValueStr(cx, g, "eb$parent",
-JS_NewCFunction(cx, nat_parent, "parent", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$top",
-JS_NewCFunction(cx, nat_top, "top", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$frameElement",
-JS_NewCFunction(cx, nat_fe, "fe", 0), 0);
-
-// these really belong in document, but I'm putting them in
-// window and we can copy them to document later.
-    JS_DefinePropertyValueStr(cx, g, "eb$hasFocus",
-JS_NewCFunction(cx, nat_hasFocus, "hasFocus", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$write",
-JS_NewCFunction(cx, nat_doc_write, "doc_write", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$writeln",
-JS_NewCFunction(cx, nat_doc_writeln, "doc_writeln", 0), 0);
-    JS_DefinePropertyValueStr(cx, g, "eb$gc",
-JS_NewCFunction(cx, nat_gc, "garbageCollect", 0), 0);
+    native_setup(cx, g);
 
 // The sequence is to set f->fileName, then createContext(), so for a short time,
 // we can rely on that variable.

@@ -215,16 +215,15 @@ swdo(EventTarget);
 Error.prototype.NAMESPACE_ERR = 1;
 
 // link functions in the shared window to this window
-for(let f of ["my$win", "my$doc", "natok", "UnsupportedError", "db$flags",
-"eb$voidfunction", "eb$nullfunction", "eb$truefunction", "eb$falsefunction",
-"eb$visible", "eb$newLocation", "alert3", "alert4",
+for(let f of ["UnsupportedError",
+"eb$visible", "alert3", "alert4",
 "dumptree", "uptrace", "by_esn", "showscripts", "searchscripts",
 "showframes", "snapshot", "aloop",
 "set_location_hash", "NodeFilter", "tableReindex", "formReindex", "selectReindex",
 "markAllCollections", "markUpwardCollections",
 "mutFixup", "makeSheets", "gebtn"])
     swp(f, mw$[f]);
-for(let f of ["confirm", "prompt", "close"])
+for(let f of ["close"])
     swpv(f, mw$[f]);
 for(let f of ["scroll", "scrollTo", "scrollBy", "scrollByLines", "scrollByPages"])
     swpv(f, mw$.eb$voidfunction);
