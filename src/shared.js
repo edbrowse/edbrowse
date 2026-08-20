@@ -1742,9 +1742,11 @@ Every getAttribute checks the name through attrNameValid, and rendering a page
 calls getAttribute several times for every node, so this runs millions of
 times on a large page and is worth a moment's care.
 A regex literal builds a new RegExp object each time it is evaluated, so keep
-these two out here where they are built once.  And test() is the cheap way to
+this one out here where it is built once.  And test() is the cheap way to
 ask; match() goes the long way round through Symbol.match, assembling a flags
 string and a result array that nobody ever looks at.
+And then ... we realize we don't need to check at all for getAttribute,
+it's faster to just see if it's there. We only need check on setAttribute.
 *********************************************************************/
 const attrNameSpace = /\s/;
 
@@ -1850,7 +1852,6 @@ name == "checked" && nn == "input";
 
 getAttribute: function(name) {
 let a, w = my$win();
-if(!attr.attrNameValid(name)) return null;
 if(!(this.eb$xml || this instanceof w.SVGElement)) name = name.toLowerCase();
 if(attr.implicitMember(this, name)) return null;
 // has to be a real attribute
@@ -1883,7 +1884,6 @@ return a;
 },
 
 getAttributeNS: function(space, name) {
-if(!attr.attrNameValid(name)) return null;
 if(space && !name.match(/:/)) name = space + ":" + name;
 return this.getAttribute(name);
 },
@@ -1975,7 +1975,6 @@ this.setAttribute(name, v);
 
 removeAttribute: function(name) {
 const w = my$win();
-if(!attr.attrNameValid(name)) return;
 if(!(this.eb$xml || this instanceof w.SVGElement)) name = name.toLowerCase();
 // special code for style
 if(name == "style" && this.style$2 && this.style$2.dom$class == "CSSStyleDeclaration")
@@ -2013,7 +2012,6 @@ if(name !== "length") delete this.attributes[name]
 },
 
 removeAttributeNS: function(space, name) {
-if(!attr.attrNameValid(name)) return;
 if(space && !name.match(/:/)) name = space + ":" + name;
 this.removeAttribute(name);
 },
@@ -2022,7 +2020,6 @@ this.removeAttribute(name);
 getAttributeNode: function(name) {
 const w = my$win();
 if(!this.attributes$2) return null;
-if(!attr.attrNameValid(name)) return null;
 if(!(this.eb$xml || this instanceof w.SVGElement)) name = name.toLowerCase();
 var a;
 if(name === "length") {
