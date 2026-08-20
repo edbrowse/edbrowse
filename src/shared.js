@@ -3853,7 +3853,8 @@ function swpc(k, v) { odp(w, k, {value:v, writable:true, configurable:true})}
 // Establish DOM elements in the window for modern classes
 function swde(cls, exp, changeable=true)
 {
-    odp(w, cls, {value:exp, writable:changeable, configurable:changeable});
+    odp(w, cls, {value: exp, writable: changeable, configurable: changeable});
+    odp(w[cls], "name", {value: cls});
     const v = cls.replace(/^z\$/, "");
     odp(w[cls].prototype, Symbol.toStringTag, {value: v});
     odp(w[cls].prototype, "dom$class", {value: v});
