@@ -30,8 +30,33 @@ Thus it can be set by gcc -D to overwrite the default of 1.
 #define wrap_IsArray(c,a) JS_IsArray(c,a)
 #endif
 
-// to track down memory leaks
-// Warning, if you turn this feature on it slows things down, a lot!
+static JSRuntime *jsrt;
+
+/*********************************************************************
+JS_FreeValue takes context as an argument,
+but only uses it to find the runtime that owns it.
+The heap lives in the runtime, not in each context.
+
+void JS_FreeValue(JSContext *ctx, JSValue v)
+{
+    JS_FreeValueRT(ctx->rt, v);
+}
+
+Edbrowse has only one quickjs runtime.
+Every context is owned by jsrt, points to jsrt, and we can skip that step.
+Also, a bug crept in where the context pointer was null.
+reexpandFrame() in http.c tried to replace a frame
+and the new web page didn't come in.
+The old context was freed and a new one was not created, leaving cx = null.
+The next JS_FreeValue call bounced off a null pointer and blew up.
+Such bugs can be avoided by simply using jsrt all the time.
+
+Define LEAK if you want to track down memory leaks relative to the
+quickjs heap.
+Warning, if you turn this feature on it slows things down, a lot!
+Also, I haven't used it in years so not sure if we've kept up with it.
+*********************************************************************/
+
 #ifdef LEAK
 // the quick js pointer
 struct qjp { struct qjp *next; void *ptr; short count; short lineno; };
@@ -145,20 +170,17 @@ static void grabover(void)
 
 #define grab(v) grab2(v, __LINE__)
 #define release(v) release2(v, __LINE__)
-#define JS_Release(c, v) release(v),JS_FreeValue(c, v)
-#define JS_ReleaseRT(r, v) release(v),JS_FreeValueRT(r, v)
+#define JS_Release(v) release(v),JS_FreeValueRT(jsrt, v)
 #else
 #define grab(v)
 #define release(v)
 #define grabover()
-#define JS_Release(c, v) JS_FreeValue(c, v)
-#define JS_ReleaseRT(r, v) JS_FreeValueRT(r, v)
+#define JS_Release(v) JS_FreeValueRT(jsrt, v)
 #endif
 
 const char *jsSourceFile;	// sourcefile providing the javascript
 int jsLineno;			// line number
 static int js_eval_flag = JS_EVAL_TYPE_GLOBAL; // global, module etc
-static JSRuntime *jsrt;
 static bool js_running;
 static JSContext *mwc; // master window context
 static JSContext *freeing_context = NULL;
@@ -244,7 +266,7 @@ static enum ej_proptype typeof_property(JSContext *cx, JSValueConst parent, cons
 	JSValue v = JS_GetPropertyStr(cx, parent, name);
 	enum ej_proptype l = top_proptype(cx, v);
 	grab(v);
-	JS_Release(cx, v);
+	JS_Release(v);
 	return l;
 }
 
@@ -271,7 +293,7 @@ static char *get_property_string(JSContext *cx, JSValueConst parent, const char 
 		if (!s0)
 			s0 = emptyString;
 	}
-	JS_Release(cx, v);
+	JS_Release(v);
 	return s0;
 }
 
@@ -295,7 +317,7 @@ static bool get_property_bool(JSContext *cx, JSValue parent, const char *name)
 		JS_ToInt32(cx, &n, v);
 		b = !!n;
 	}
-	JS_Release(cx, v);
+	JS_Release(v);
 	return b;
 }
 
@@ -314,7 +336,7 @@ static int get_property_number(JSContext *cx, JSValueConst parent, const char *n
 	if(JS_IsNumber(v))
 // This will truncate if the number is floating point, I think
 		JS_ToInt32(cx, &n, v);
-	JS_Release(cx, v);
+	JS_Release(v);
 	return n;
 }
 
@@ -335,7 +357,7 @@ static JSValue get_property_object(JSContext *cx, JSValueConst parent, const cha
 	grab(v);
 	if(JS_IsObject(v))
 		return v;
-	JS_Release(cx, v);
+	JS_Release(v);
 	return JS_UNDEFINED;
 }
 
@@ -395,7 +417,7 @@ static char *get_property_url(JSContext *cx, JSValueConst owner, bool action)
 // Don't use href$val, that's our baby, and lots of websites overload the URL
 // class with their own, which doesn't have the internal workings of ours.
 	s = get_property_string(cx, uo, "href");
-	JS_Release(cx, uo);
+	JS_Release(uo);
 	return s;
 }
 
@@ -417,7 +439,7 @@ char *get_style_string_t(const Tag *t, const char *name)
 	if(JS_IsUndefined(so))
 		return 0;
 	result = get_property_string(cx, so, name);
-	JS_Release(cx, so);
+	JS_Release(so);
 	return result;
 }
 
@@ -468,7 +490,7 @@ static void set_property_string(JSContext *cx, JSValueConst parent, const char *
         stringEqual(dcs, "HTMLTextAreaElement"))
             altname = "val$ue";
         JS_FreeCString(cx, dcs);
-        JS_Release(cx, dc);
+        JS_Release(dc);
     }
     if (!value) value = emptyString;
     JS_SetPropertyStr(cx, parent, (altname ? altname : name), JS_NewAtomString(cx, value));
@@ -620,21 +642,21 @@ static JSValue instantiate(JSContext *cx, JSValueConst parent, const char *name,
 		grab(v);
 		if(!JS_IsFunction(cx, v)) {
 			debugPrint(3, "no such class %s", classname);
-			JS_Release(cx, v);
+			JS_Release(v);
 			return JS_UNDEFINED;
 		}
 // l, the array of args, isn't initialized to anything,
 // but we are passing 0 for argc, so it shouldn't even look at l.
 		o = JS_CallConstructor(cx, v, 0, l);
 		grab(o);
-		JS_Release(cx, v);
+		JS_Release(v);
 		if(JS_IsException(o)) {
 			if (intFlag)
 				i_puts(MSG_Interrupted);
 			processError(cx);
 			debugPrint(3, "failure on new %s()", classname);
 			uptrace(cx, parent);
-			JS_Release(cx, o);
+			JS_Release(o);
 			return JS_UNDEFINED;
 		}
 	}
@@ -659,19 +681,19 @@ static JSValue instantiate_array_element(JSContext *cx, JSValueConst parent, int
 		grab(v);
 		if(!JS_IsFunction(cx, v)) {
 			debugPrint(3, "no such class %s", classname);
-			JS_Release(cx, v);
+			JS_Release(v);
 			return JS_UNDEFINED;
 		}
 		o = JS_CallConstructor(cx, v, 0, l);
 		grab(o);
-		JS_Release(cx, v);
+		JS_Release(v);
 		if(JS_IsException(o)) {
 			if (intFlag)
 				i_puts(MSG_Interrupted);
 			processError(cx);
 			debugPrint(3, "failure on new %s()", classname);
 			uptrace(cx, parent);
-			JS_Release(cx, o);
+			JS_Release(o);
 			return JS_UNDEFINED;
 		}
 	}
@@ -716,7 +738,7 @@ static JSValue instantiate_custom(JSContext *cx, JSValueConst parent,
     res = JS_Invoke(cx, g, a, 2, l);
     grab(res);
     JS_FreeAtom(cx, a);
-    JS_Release(cx, l[0]);
+    JS_Release(l[0]);
     return res;
 }
 
@@ -759,7 +781,7 @@ static bool run_function_bool(JSContext *cx, JSValueConst parent, const char *na
         grab(v);
         if(JS_IsNumber(v))
             JS_ToInt32(cx, &seqno, v);
-        JS_Release(cx, v);
+        JS_Release(v);
     }
     // other functions we might not want to see at debug 3
     if (stringEqual(name, "connectedCallbackStart") ||
@@ -773,7 +795,7 @@ static bool run_function_bool(JSContext *cx, JSValueConst parent, const char *na
     grab(v);
 	if(!JS_IsFunction(cx, v)) {
 		debugPrint(3, "no such function %s", name);
-		JS_Release(cx, v);
+		JS_Release(v);
 		return false;
 	}
 	if (seqno > 0) {
@@ -787,7 +809,7 @@ static bool run_function_bool(JSContext *cx, JSValueConst parent, const char *na
 	    r = JS_Call(cx, v, parent, 0, l);
 	}
 	grab(r);
-	JS_Release(cx, v);
+	JS_Release(v);
 	if(!JS_IsException(r)) {
 		bool rc = false;
 		debugPrint(dbl, "exec complete");
@@ -798,7 +820,7 @@ static bool run_function_bool(JSContext *cx, JSValueConst parent, const char *na
 			JS_ToInt32(cx, &n, r);
 			rc = !!n;
 		}
-		JS_Release(cx, r);
+		JS_Release(r);
 		return rc;
 	}
 // error in execution
@@ -835,7 +857,7 @@ void run_ontimer(const Frame *f, const char *backlink)
 		return;
 	}
 	run_function_bool(cx, to, "ontimer");
-	JS_Release(cx, to);
+	JS_Release(to);
 }
 
 // The single argument to the function has to be an object.
@@ -847,13 +869,13 @@ static int run_function_onearg(JSContext *cx, JSValueConst parent, const char *n
 	grab(v);
 	if(!JS_IsFunction(cx, v)) {
 		debugPrint(3, "no such function %s", name);
-		JS_Release(cx, v);
+		JS_Release(v);
 		return -1;
 	}
 	l[0] = child;
 	r = JS_Call(cx, v, parent, 1, l);
 	grab(r);
-	JS_Release(cx, v);
+	JS_Release(v);
 	if(!JS_IsException(r)) {
 		int rc = -1;
 		int32_t n = -1;
@@ -863,7 +885,7 @@ static int run_function_onearg(JSContext *cx, JSValueConst parent, const char *n
 			JS_ToInt32(cx, &n, r);
 			rc = n;
 		}
-		JS_Release(cx, r);
+		JS_Release(r);
 		return rc;
 	}
 // error in execution
@@ -872,7 +894,7 @@ static int run_function_onearg(JSContext *cx, JSValueConst parent, const char *n
 	processError(cx);
 	debugPrint(3, "failure on %s(obj)", name);
 	uptrace(cx, parent);
-	JS_Release(cx, r);
+	JS_Release(r);
 	return -1;
 }
 
@@ -906,17 +928,17 @@ static void run_function_onestring(JSContext *cx, JSValueConst parent, const cha
 	grab(v);
 	if(!JS_IsFunction(cx, v)) {
 		debugPrint(3, "no such function %s", name);
-		JS_Release(cx, v);
+		JS_Release(v);
 		return;
 	}
 	l[0] = JS_NewAtomString(cx, s);
 	grab(l[0]);
 	r = JS_Call(cx, v, parent, 1, l);
 	grab(r);
-	JS_Release(cx, v);
-	JS_Release(cx, l[0]);
+	JS_Release(v);
+	JS_Release(l[0]);
 	if(!JS_IsException(r)) {
-		JS_Release(cx, r);
+		JS_Release(r);
 		return;
 	}
 // error in execution
@@ -925,7 +947,7 @@ static void run_function_onestring(JSContext *cx, JSValueConst parent, const cha
 	processError(cx);
 	debugPrint(3, "failure on %s(%s)", name, s);
 	uptrace(cx, parent);
-	JS_Release(cx, r);
+	JS_Release(r);
 }
 
 void run_function_onestring_t(const Tag *t, const char *name, const char *s)
@@ -943,15 +965,15 @@ static char *run_function_onestring1(JSContext *cx, JSValueConst parent, const c
 	grab(v);
 	if(!JS_IsFunction(cx, v)) {
 		debugPrint(3, "no such function %s", name);
-		JS_Release(cx, v);
+		JS_Release(v);
 		return 0;
 	}
 	l[0] = JS_NewAtomString(cx, s);
 	grab(l[0]);
 	r = JS_Call(cx, v, parent, 1, l);
 	grab(r);
-	JS_Release(cx, v);
-	JS_Release(cx, l[0]);
+	JS_Release(v);
+	JS_Release(l[0]);
 	if(!JS_IsException(r)) {
 		char *result = 0;
 	enum ej_proptype proptype = top_proptype(cx, r);
@@ -963,7 +985,7 @@ static char *run_function_onestring1(JSContext *cx, JSValueConst parent, const c
 				result = cloneString(s);
 			JS_FreeCString(cx, s);
 		}
-		JS_Release(cx, r);
+		JS_Release(r);
 		return result;
 	}
 // error in execution
@@ -972,7 +994,7 @@ static char *run_function_onestring1(JSContext *cx, JSValueConst parent, const c
 	processError(cx);
 	debugPrint(3, "failure on %s(%s)", name, s);
 	uptrace(cx, parent);
-	JS_Release(cx, r);
+	JS_Release(r);
 	return 0;
 }
 
@@ -992,7 +1014,7 @@ static void run_function_twostring(JSContext *cx, JSValueConst parent, const cha
 	grab(v);
 	if(!JS_IsFunction(cx, v)) {
 		debugPrint(3, "no such function %s", name);
-		JS_Release(cx, v);
+		JS_Release(v);
 		return;
 	}
 	l[0] = JS_NewAtomString(cx, s1);
@@ -1001,11 +1023,11 @@ static void run_function_twostring(JSContext *cx, JSValueConst parent, const cha
 	grab(l[1]);
 	r = JS_Call(cx, v, parent, 2, l);
 	grab(r);
-	JS_Release(cx, v);
-	JS_Release(cx, l[0]);
-	JS_Release(cx, l[1]);
+	JS_Release(v);
+	JS_Release(l[0]);
+	JS_Release(l[1]);
 	if(!JS_IsException(r)) {
-		JS_Release(cx, r);
+		JS_Release(r);
 		return;
 	}
 // error in execution
@@ -1014,7 +1036,7 @@ static void run_function_twostring(JSContext *cx, JSValueConst parent, const cha
 	processError(cx);
 	debugPrint(3, "failure on %s(%s,%s)", name, s1, s2);
 	uptrace(cx, parent);
-	JS_Release(cx, r);
+	JS_Release(r);
 }
 
 void run_function_twostring_t(const Tag *t, const char *name, const char *s1, const char *s2)
@@ -1098,7 +1120,7 @@ static char *run_script(JSContext *cx, const char *s)
         if(s && *s) result = cloneString(s);
         JS_FreeCString(cx, s);
     } else processError(cx);
-    JS_Release(cx, r);
+    JS_Release(r);
     return result;
 }
 
@@ -1120,14 +1142,14 @@ void jsRunData(const Tag *t, const char *filename, int lineno, bool is_module)
 	if(!JS_IsString(v)) {
 // no data
 		jsSourceFile = 0;
-		JS_Release(cx, v);
+		JS_Release(v);
 		return;
 	}
 	s = JS_ToCString(cx, v);
 	if (!s || !*s) {
 		jsSourceFile = 0;
 		JS_FreeCString(cx, s);
-		JS_Release(cx, v);
+		JS_Release(v);
 		return;
 	}
 // have to set currentScript
@@ -1144,7 +1166,7 @@ void jsRunData(const Tag *t, const char *filename, int lineno, bool is_module)
 			i_puts(MSG_Interrupted);
 		if(JS_IsException(r))
 			processError(cx);
-		JS_Release(cx, r);
+		JS_Release(r);
 	}
 	JS_FreeCString(cx, s);
 	jsSourceFile = NULL;
@@ -1212,7 +1234,7 @@ static bool run_event(JSContext *cx, JSValueConst obj, const char *evname)
     set_property_bool(cx, eo, "eb$captures", false);
     set_property_bool(cx, eo, "bubbles", false);
     rc = run_function_onearg(cx, obj, "dispatchEvent", eo);
-    JS_Release(cx, eo);
+    JS_Release(eo);
     return rc;
 }
 
@@ -1257,7 +1279,7 @@ and that in turn could replace t with a new node, thereby disconnecting it.
 Seems contrived, but it actually happens.
 *********************************************************************/
 	if(t->jslink)
-	JS_Release(cx, e);
+	JS_Release(e);
 	return rc;
 }
 
@@ -1301,7 +1323,7 @@ static void uptrace(JSContext * cx, JSValueConst node)
 			strcpy(buf, nn);
 			JS_FreeCString(cx, nn);
 		} else strcpy(buf, "?");
-		JS_Release(cx, nnv);
+		JS_Release(nnv);
 		cnv = JS_GetPropertyStr(cx, node, "class");
 		grab(cnv);
 		if(JS_IsString(cnv)) {
@@ -1316,23 +1338,23 @@ static void uptrace(JSContext * cx, JSValueConst node)
 			JS_FreeCString(cx, cn);
 		}
 		debugPrint(3, "%s", buf);
-		JS_Release(cx, cnv);
+		JS_Release(cnv);
 		pn = JS_GetPropertyStr(cx, node, "parentNode");
 		grab(pn);
 		if(!first)
-			JS_Release(cx, node);
+			JS_Release(node);
 		first = false;
 		pntype = top_proptype(cx, pn);
 		if(pntype == EJ_PROP_NONE)
 			break;
 		if(pntype == EJ_PROP_NULL) {
 			debugPrint(3, "null");
-			JS_Release(cx, pn);
+			JS_Release(pn);
 			break;
 		}
 		if(pntype != EJ_PROP_OBJECT) {
 			debugPrint(3, "parentNode not object, type %d", pntype);
-			JS_Release(cx, pn);
+			JS_Release(pn);
 			break;
 		}
 // it's an object and we're ok to climb
@@ -1421,19 +1443,9 @@ void disconnectTagObject(Tag *t)
 {
 	if (!t->jslink)
 		return;
-/*********************************************************************
-The context this tag was decorated in can be gone already.
-Replacing a frame frees the context of the page that used to be there, while
-underKill() leaves the tags of that page connected to js on purpose, so they
-are still connected when the window is finally torn down and we get here.
-A value is counted against the runtime and not against any one context, so we
-can still let go of our reference; we just can't reach it through a context
-that isn't there any more.
-*********************************************************************/
-	if (t->f0->cx)
-		JS_Release(t->f0->cx, *((JSValue*)t->jv));
-	else
-		JS_ReleaseRT(jsrt, *((JSValue*)t->jv));
+// This is where the null context bug can occur, as described at the top
+// of this file. Since we are using jsrt directly it is no longer an issue.
+	JS_Release(*((JSValue*)t->jv));
 	free(t->jv);
 	t->jv = 0;
 	t->jslink = false;
@@ -1474,9 +1486,9 @@ static Tag *tagFromSeqno(JSContext *cx, JSValueConst v)
 		!JS_ToInt32(cx, &seqno, d.value) &&
 		seqno >= 0 && seqno < cw->numTags)
 			t = tagList[seqno];
-		JS_Release(cx, d.value);
-		JS_Release(cx, d.getter);
-		JS_Release(cx, d.setter);
+		JS_Release(d.value);
+		JS_Release(d.getter);
+		JS_Release(d.setter);
 	}
 	JS_FreeAtom(cx, a);
 	if(t && !(t->jslink && !t->dead &&
@@ -1943,8 +1955,8 @@ void forceFrameExpand(Tag *t)
 // acid3 test 14 and 15 need getElementsByTagName to exist.
 		JS_SetPropertyStr(cx, cd2, "getElementsByTagName",
 		JS_NewCFunction(cx, nat_array, "tagname_stub", 0));
-		JS_Release(cx, cd2);
-		JS_Release(cx, cw2);
+		JS_Release(cd2);
+		JS_Release(cw2);
 // technically this is loaded, even though could be error 404,
 // or incorect content type, etc.
 // The onload function didn't run after browse; run it now.
@@ -2093,7 +2105,7 @@ static const char *embedNodeName(JSContext * cx, JSValueConst obj)
                 copyString(b, nodeName, MAXTAGNAME);
 		JS_FreeCString(cx, nodeName);
 	}
-	JS_Release(cx, v);
+	JS_Release(v);
 	caseShift(b, 'l');
         cycle = (cycle + 1) % 3;
 	return b;
@@ -2407,7 +2419,7 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 	}
 	if(body)
 		JS_FreeCString(cx, body);
-	JS_Release(cx, r);
+	JS_Release(r);
 
 	sprintf(fpn, "timer$%d", timer_sn + 1);
 	if (cc_error)
@@ -2417,7 +2429,7 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 	if (JS_IsException(to)) {
 		processError(cx);
 		JS_FreeValue(cx, fo);
-		JS_Release(cx, to);
+		JS_Release(to);
 		debugPrint(5, "timer fail");
 		return JS_NULL;
 	}
@@ -3389,7 +3401,7 @@ bool my_ExecutePendingMessagePorts(void)
 			if(!wrap_IsArray(cx0, ra)) {
 // no registry, don't do anything.
 // This should never happen.
-				JS_Release(cx0, ra);
+				JS_Release(ra);
 				debugPrint(3, "context %d has no mp$registry", f0->gsn);
 				continue;
 			}
@@ -3409,9 +3421,9 @@ bool my_ExecutePendingMessagePorts(void)
 				} else {
 					debugPrint(3, "no frame for MessagePort.context %d", owner);
 				}
-				JS_Release(cx0, port);
+				JS_Release(port);
 			}
-			JS_Release(cx0, ra);
+			JS_Release(ra);
 		}
 	}
 	return rc;
@@ -3896,18 +3908,18 @@ static void setup_window_2(void)
 		mt->program[len] = save_c;
 		set_property_number(cx, po, "length", 1);
 		set_property_object(cx, po, "0", mo);
-		JS_Release(cx, mo);
-		JS_Release(cx, po);
+		JS_Release(mo);
+		JS_Release(po);
 	}
-	JS_Release(cx, navpi);
-	JS_Release(cx, navmt);
-	JS_Release(cx, nav);
+	JS_Release(navpi);
+	JS_Release(navmt);
+	JS_Release(nav);
 
 	hist = get_property_object(cx, w, "history");
 	if (JS_IsUndefined(hist))
 		return;
 	set_property_string(cx, hist, "current", cf->fileName);
-	JS_Release(cx, hist);
+	JS_Release(hist);
 
 	set_property_string(cx, d, "referrer", cw->referrer);
 	char *wpc; // webpage with secret code
@@ -3933,8 +3945,8 @@ references so all this does is decrease the ref counts by 1.
 Also note that, when running pending jobs, values referenced by the job args have their ref counts incremented so, even if something really odd is going on,
 they'll still be live for the purposes of that job function call.
 */
-    JS_Release(f->cx, *((JSValue*)f->docobj));
-    JS_Release(f->cx, *((JSValue*)f->winobj));
+    JS_Release(*((JSValue*)f->docobj));
+    JS_Release(*((JSValue*)f->winobj));
 
 /* Run GC explicitly prior to freeing the frame to at least have a chance of
 catching the finalisers. This actually runs over the whole runtime but js is
@@ -4108,7 +4120,7 @@ void rebuildSelectors(void)
 		if ((len = get_arraylength(cx, oa)) < 0)
 			continue;
 		rebuildSelector(t, oa, len);
-		JS_Release(cx, oa);
+		JS_Release(oa);
 	}
 }
 
@@ -4127,7 +4139,7 @@ int get_gcs_number(const char *name)
 		return -1;
 	}
 		l = get_property_number(cx, j, name);
-	JS_Release(cx, j);
+	JS_Release(j);
 	return l;
 }
 
@@ -4143,7 +4155,7 @@ void set_gcs_number(const char *name, int n)
 // this should not be enumerable
 	JS_DefinePropertyValueStr(cx, j, name, JS_NewInt32(cx, n),
 	JS_PROP_CONFIGURABLE|JS_PROP_WRITABLE);
-	JS_Release(cx, j);
+	JS_Release(j);
 }
 
 void set_gcs_bool(const char *name, bool v)
@@ -4156,7 +4168,7 @@ void set_gcs_bool(const char *name, bool v)
 		return;
 	}
 	set_property_bool(cx, j, name, v);
-	JS_Release(cx, j);
+	JS_Release(j);
 }
 
 void set_gcs_string(const char *name, const char *s)
@@ -4169,7 +4181,7 @@ void set_gcs_string(const char *name, const char *s)
 		return;
 	}
 	set_property_string(cx, j, name, s);
-	JS_Release(cx, j);
+	JS_Release(j);
 }
 
 void jsClose(void)
