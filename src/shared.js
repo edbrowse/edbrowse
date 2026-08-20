@@ -6934,23 +6934,11 @@ case "input": c = new w.HTMLInputElement; break;
 case "textarea": c = new w.HTMLTextAreaElement; break;
 case "element": c = new w.Element; break;
 case "button": c = new w.HTMLButtonElement; break;
-case "svg": c = new w.SVGElement; break;
-case "path": c = new w.SVGPathElement; break;
-case "gradient": c = new w.SVGGradientElement; break;
-case "lineargradient": c = new w.SVGLinearGradientElement; break;
-case "defs": c = new w.SVGDefsElement; break;
-case "stop": c = new w.SVGStopElement; break;
-case "mask": c = new w.SVGMaskElement; break;
-case "use": c = new w.SVGUseElement; break;
-case "g": c = new w.SVGGElement; break;
-case "polygon": c = new w.SVGPolygonElement; break;
-case "rect": c = new w.SVGRectElement; break;
-case "ellipse": c = new w.SVGEllipseElement; break;
 case "article": case "section": c = new w.HTMLElement; break;
 case "time": c = new w.HTMLTimeElement; break;
 default:
 // alert("createElement default " + s);
-c = new w.HTMLElement;
+c = new w.HTMLUnknownElement;
 }
 
 // Split on : if this comes from a name space
