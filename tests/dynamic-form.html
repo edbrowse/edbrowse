@@ -251,6 +251,19 @@ if(v != "d") msg += "|goldfish not dog";
 if(s1.selectedIndex != 0) msg += "|index not 0 after goldfish action";
 if(s1.value != 'd') msg += "|s1.value didn't go back to d";
 
+// search params has some similarity with form data
+usp = new URLSearchParams;
+so = sel.options;
+so[0].selected = so[3].selected = true;
+form.me.value = "yes: ⅔ × ½ = ⅓";
+for(const entry of new FormData(form)) usp.append(entry[0], entry[1]);
+// toString encodes it as per http get mathod
+if(usp != "me=yes%3A+%E2%85%94+%C3%97+%C2%BD+%3D+%E2%85%93&yy=special&fruit=a&fruit=b") msg += `|bad usp encoding ${usp}`;
+if(!usp.has("fruit")) msg += "|usp has no fruit";
+if(usp.has("vegetable")) msg += "|usp has vegetable";
+v = ""; for(let c of usp.keys()) v += ':' + c;
+if(v != ":me:yy:fruit:fruit") msg += `|usp bad keys ${v}`;
+
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>
