@@ -3812,23 +3812,23 @@ function checkUpward(t)
 }
 
 const SVG_hierarchy = [
-"SVGElement,Element",
-"SVGGraphicsElement,SVGElement",
-"SVGTitleElement,SVGElement",
-"SVGStyleElement,SVGElement",
-"SVGStopElement,SVGElement",
-"SVGMaskElement,SVGElement",
-"SVGGradientElement,SVGElement",
-"SVGLinearGradientElement,SVGGradientElement",
-"SVGGeometryElement,SVGGraphicsElement",
-"SVGDefsElement,SVGGraphicsElement",
-"SVGUseElement,SVGGraphicsElement",
-"SVGPolygonElement,SVGGeometryElement",
-"SVGRectElement,SVGGeometryElement",
-"SVGEllipseElement,SVGGeometryElement",
-"SVGGElement,SVGGraphicsElement",
-"SVGSVGElement,SVGGraphicsElement",
-"SVGPathElement,SVGGeometryElement",
+["SVGElement","Element"],
+["SVGGraphicsElement","SVGElement"],
+["SVGTitleElement","SVGElement"],
+["SVGStyleElement","SVGElement"],
+["SVGStopElement","SVGElement"],
+["SVGMaskElement","SVGElement"],
+["SVGGradientElement","SVGElement"],
+["SVGLinearGradientElement","SVGGradientElement"],
+["SVGGeometryElement","SVGGraphicsElement"],
+["SVGDefsElement","SVGGraphicsElement"],
+["SVGUseElement","SVGGraphicsElement"],
+["SVGPolygonElement","SVGGeometryElement"],
+["SVGRectElement","SVGGeometryElement"],
+["SVGEllipseElement","SVGGeometryElement"],
+["SVGGElement","SVGGraphicsElement"],
+["SVGSVGElement","SVGGraphicsElement"],
+["SVGPathElement","SVGGeometryElement"],
 ];
 
 /*********************************************************************
@@ -5224,10 +5224,9 @@ function nameSpill(n)
 don't care about them, except they have to exist.
 I can table-drive this - but not the map from html tags to classes,
 or the cases in createElement that generate these nodes. */
-for(let e of SVG_hierarchy) {
-    let e2 = e.split(',');
-    eval(`swde("${e2[0]}", class extends w.${e2[1]} { constructor() { super(); } })`);
-}
+for(const e of SVG_hierarchy)
+    swde(e[0], class extends w[e[1]] { constructor() { super(); } });
+
 // these have node type 1, just like HTMLElement.
 w.SVGElement.prototype.nodeType = 1;
 
