@@ -489,7 +489,6 @@ bool run_function_bool_t(const Tag *t, const char *name);
 bool run_function_bool_win(const Frame *f, const char *name);
 void forceFrameExpand(Tag *t);
 int my_ExecutePendingJobs(int limit, bool current);
-bool pendingJobsForCurrentWindow(void);
 bool my_ExecutePendingMessages(void);
 bool my_ExecutePendingMessagePorts(void);
 #if 0

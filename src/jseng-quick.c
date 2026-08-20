@@ -3132,7 +3132,7 @@ typedef struct JSJobEntry {
 1. The polling timer, with limit > 0.
 2. Browsing just before deferred scripts, with current = true.
 3. Freeing a context, with freeing_context not null.
-4. From the native method jobsPending().
+4. From the native method pendingJobs().
 In (1), running a job moves cw and cf to the frame that owns it,
 and we don't put them back, so the caller has to restore them.
 In (2), cw and cf are valid, and should hold steady.
@@ -3279,34 +3279,6 @@ and if that happens, then once again we need to free the context.
     }
 
     return cnt;
-}
-
-// see if any jobs would run, if you called the above
-bool pendingJobsForCurrentWindow(void)
-{
-    JSContext *ctx;
-    JSJobEntry *e;
-				struct list_head *l;
-	struct list_head *jl = (struct list_head *)((char*)jsrt + JSRuntimeJobIndex);
-
-// high runner case
-    if (list_empty(jl)) return false;
-
-    Window *save_cw = cw;
-    Frame *save_cf = cf;
-    bool rc = false;
-
-    list_for_each(l, jl) {
-	e = list_entry(l, JSJobEntry, link);
-	ctx = e->ctx;
-// This line resets cw and cf
-	if (!frameFromContext(ctx)) continue;
-	if(sessionList[cw->sno].lw != cw) continue;
-	rc = true;
-	break;
-    }
-    cw = save_cw, cf = save_cf;
-				return rc;
 }
 
 // don't need these quick macros any more
@@ -3577,7 +3549,7 @@ JS_NewCFunction(mwc, nat_unframe, "unframe", 1), 0);
 JS_NewCFunction(mwc, nat_unframe2, "unframe2", 1), 0);
     JS_DefinePropertyValueStr(mwc, mwo, "eb$playAudio",
 JS_NewCFunction(mwc, nat_playAudio, "play_audio", 0), 0);
-    JS_DefinePropertyValueStr(mwc, mwo, "jobsPending",
+    JS_DefinePropertyValueStr(mwc, mwo, "pendingJobs",
 JS_NewCFunction(mwc, nat_jobs, "jobspending", 0), JS_PROP_ENUMERABLE);
     JS_DefinePropertyValueStr(mwc, mwo, "set_innerHTML",
 JS_NewCFunction(mwc, nat_set_innerHTML, "set_innerHTML", 2), 0);
