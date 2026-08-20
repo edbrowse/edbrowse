@@ -215,7 +215,7 @@ for(let f of ["UnsupportedError",
 "showframes", "snapshot", "aloop",
 "set_location_hash", "NodeFilter", "tableReindex", "formReindex", "selectReindex",
 "markAllCollections", "markUpwardCollections",
-"mutFixup", "makeSheets", "gebtn", "domLinkage", "set_innerHTML",
+"mutFixup", "makeSheets", "gebtn",
 "runScriptWhenAttached", "simpleHtmlEscape"])
     swp(f, mw$[f]);
 for(let f of ["close"])
