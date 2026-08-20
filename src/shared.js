@@ -291,23 +291,6 @@ function wrapString()
     return Object.toString.bind(this)().replace(/\([\u0000-\uffff]*/, "() {\n    [native code]\n}");
 }
 
-function customizeInPlace(o1, custom)
-{
-// be sure to use createElement, so we get a tag in the C world
-    const d = my$doc();
-    const o2 = d.createElement(custom);
-// move o2 into the tree, where o1 was
-    let c;
-    while(c = o1.firstChild)
-        o2.appendChild(c);
-    o1.replaceWith(o2);
-    if(o1.attributes$2) {
-        for(var i=0; i<o1.attributes.length; ++i)
-            o2.setAttribute(o1.attributes[i].name, o1.attributes[i].value);
-    }
-    o2.connectedCallback$pending = true;
-}
-
 /*********************************************************************
 
 the HTMLCollection and NodeList classes.
@@ -7200,68 +7183,79 @@ xmlp.eb$mt = null;
 odp(xmlp, "readyState", {get: function(){
     return this.readyState$2 ? this.readyState$2 : 0}})
 
-// The custom element registry. It should be a class, with the instantiated
-// object holding the registry, but for now (legacy), it is an object
-// under window, which isn't quite right. First some helper functions.
-
-function cel_define(name, c, options) {
-    let ext = "";
-    if(typeof options == "object" && options.extends) ext = options.extends;
-    if(ext) alert3("define custom element " + name + " extends " + ext);
-    else alert3("define custom element " + name);
-    if(typeof name != "string") throw new w.DOMException("name is not a string");
-    if (!name.match(/.-./)) throw new w.DOMException(`name ${name} is invalid`);
-    if(this.map.has(name)) throw new UnsupportedError(`name ${name} already defined`);
-    if(typeof c != "function") throw new w.DOMException("not a function");
-    const o = {construct:c};
-    // what other stuff should we remember in o?
-    this.map.set(name, o);
-
-// check to see if we already have tags of this nature.
-// If so, I don't know what to do about it.
-const d = my$doc();
-    const a = gebtn(d, "*", true, false)
-    let cnt = 0;
-    for(let t of a)
-        if(t.tagName == name) {
-            customizeInPlace(t, name);
-            ++cnt;
-        }
-    if(cnt) alert3(`${cnt} ${name} tags already exist; these have beent customized retroactively`);
-}
-
-function cel_get(name) {
-    if(typeof name != "string") throw new w.DOMException("name is not a string");
-    /* It looks like we need to allow people to get whatever an return
-    undefined if it's not there which'll be the case if the name is invalid.
-    Since we're using a map to hold everything there's no risk of using this
-    to grab bits of the object hierarchy. */
-    const o = this.map.get(name);
-    return o ? o.construct : undefined;
-}
-
-function cel_has(name) {
-    if(typeof name != "string") throw new w.DOMException("name is not a string");
-    return this.map.has(name);
-}
-
-function cel_getName(name) {
-    if(typeof name != "string") throw new w.DOMException("name is not a string");
-    return this.map.has(name) ? name : null;
-}
 
 swde("CustomElementRegistry", class extends w.Object {
-    constructor() { super(); this.map = new w.Map; }
+    constructor()
+    {
+        super();
+        odp(this, "map", {value: new w.Map});
+    }
+
+    define(name, ctor, options)
+    {
+        let ext = "";
+        if(typeof options == "object" && options.extends) ext = options.extends;
+        if(ext) alert3("define custom element " + name + " extends " + ext);
+        else alert3("define custom element " + name);
+        if (typeof name != "string") throw new w.DOMException("name is not a string");
+        if (!name.match(/.-./)) throw new w.DOMException(`name ${name} is invalid`);
+        if (this.map.has(name)) throw new UnsupportedError(`name ${name} already defined`);
+        if (typeof ctor != "function") throw new w.DOMException("not a function");
+        const o = {construct: ctor};
+        // what other stuff should we remember in o?
+        this.map.set(name, o);
+        // check to see if we already have tags of this nature.
+        // If so replace them
+        const d = my$doc();
+        let cnt = 0;
+        for (const t of gebtn(d, "*", true, false)) {
+            if(t.tagName != name) continue;
+            // be sure to use createElement, so we get a tag in the C world
+            const replacemnet = d.createElement(name);
+            let child;
+            while (child = t.firstChild)
+                replacement.appendChild(child);
+
+            t.replaceWith(replacement);
+            if (t.attributes$2)
+                for (const attr of t.attributes)
+                    replacement.setAttribute(attr.name, attr.value);
+
+            replacement.connectedCallback$pending = true;
+            ++cnt;
+        }
+        if (cnt)
+            alert3(
+                `${cnt} ${name} tags already exist; these have been customized retroactively`
+            );
+    }
+
+    get(name)
+    {
+        if(typeof name != "string") throw new w.DOMException("name is not a string");
+        /* It looks like we need to allow people to get whatever an return
+        undefined if it's not there which'll be the case if the name is invalid.
+        Since we're using a map to hold everything there's no risk of using this
+        to grab bits of the object hierarchy. */
+        const o = this.map.get(name);
+        return o ? o.construct : undefined;
+    }
+
+    has(name)
+    {
+        if(typeof name != "string") throw new w.DOMException("name is not a string");
+        return this.map.has(name);
+    }
+
+    getName(name)
+    {
+        if(typeof name != "string") throw new w.DOMException("name is not a string");
+        return this.map.has(name) ? name : null;
+    }
 })
-let cerp = w.CustomElementRegistry.prototype;
-cerp.define = cel_define;
-cerp.get = cel_get;
-cerp.getName = cel_getName;
-cerp.has = cel_has;
 // create the global custom element registry for the page.
 // You create scope registries via new CustomElementRegistry.
 swpc("customElements", new w.CustomElementRegistry);
-
 }
 
 // placeholder for URL class. This has to be here for the Blob code.
