@@ -182,6 +182,7 @@ class Eb$IterableWeakMap {
     }
 }
 
+
 // modern version to establish a dom object
 function swdo(c, changeable=true)
 {
@@ -221,7 +222,7 @@ for(let f of ["my$win", "my$doc", "natok", "UnsupportedError", "db$flags",
 "showframes", "snapshot", "aloop",
 "set_location_hash", "NodeFilter", "tableReindex", "formReindex", "selectReindex",
 "markAllCollections", "markUpwardCollections",
-"mutFixup", "makeSheets"])
+"mutFixup", "makeSheets", "gebtn"])
     swp(f, mw$[f]);
 for(let f of ["confirm", "prompt", "close"])
     swpv(f, mw$[f]);
@@ -239,6 +240,81 @@ swp("dom$class", "Window")
 window.top = eb$top();
 window.parent = window.eb$parent();
 odp(window, "frameElement", {get: eb$frameElement,enumerable:true});
+
+// Not quite right, still missing, at a minimum, whenDefined and upgrade
+class CustomElementRegistry
+{
+    constructor()
+    {
+        odp(this, "map", {value: new Map});
+    }
+
+    define(name, ctor, options)
+    {
+        let ext = "";
+        if(typeof options == "object" && options.extends) ext = options.extends;
+        if(ext) alert3("define custom element " + name + " extends " + ext);
+        else alert3("define custom element " + name);
+        if (typeof name != "string") throw new DOMException("name is not a string");
+        if (!name.match(/.-./)) throw new DOMException(`name ${name} is invalid`);
+        if (this.map.has(name)) throw new UnsupportedError(`name ${name} already defined`);
+        if (typeof ctor != "function") throw new DOMException("not a function");
+        const o = {construct: ctor};
+        // what other stuff should we remember in o?
+        this.map.set(name, o);
+        // check to see if we already have tags of this nature.
+        // If so replace them
+        const d = my$doc();
+        let cnt = 0;
+        for (const t of gebtn(d, "*", true, false)) {
+            if(t.tagName != name) continue;
+            // be sure to use createElement, so we get a tag in the C world
+            const replacement = d.createElement(name);
+            let child;
+            while (child = t.firstChild)
+                replacement.appendChild(child);
+
+            t.replaceWith(replacement);
+            if (t.attributes$2)
+                for (const attr of t.attributes)
+                    replacement.setAttribute(attr.name, attr.value);
+
+            replacement.connectedCallback$pending = true;
+            ++cnt;
+        }
+        if (cnt)
+            alert3(
+                `${cnt} ${name} tags already exist; these have been customized retroactively`
+            );
+    }
+
+    get(name)
+    {
+        if(typeof name != "string") throw new DOMException("name is not a string");
+        /* It looks like we need to allow people to get whatever an return
+        undefined if it's not there which'll be the case if the name is invalid.
+        Since we're using a map to hold everything there's no risk of using this
+        to grab bits of the object hierarchy. */
+        const o = this.map.get(name);
+        return o ? o.construct : undefined;
+    }
+
+    has(name)
+    {
+        if(typeof name != "string") throw new DOMException("name is not a string");
+        return this.map.has(name);
+    }
+
+    getName(name)
+    {
+        if(typeof name != "string") throw new DOMException("name is not a string");
+        return this.map.has(name) ? name : null;
+    }
+}
+// create the global custom element registry for the page.
+// We don't have scoped custom element registries yet which is fine as it
+// isn't fully supported elsewhere
+swpv("customElements", new CustomElementRegistry);
 
 /*********************************************************************
     Originally I developed the shared window for efficiency.
