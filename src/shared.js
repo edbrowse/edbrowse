@@ -4914,39 +4914,51 @@ We set up for HR.onsubmit, for example; other browsers might not. */
 
 // replaceChildren not yet implemented
 
+    replaceChild(newc, oldc)
+    {
+        let lastentry, nextinline;
+        const l = this.childNodes.length;
+        for(let i=0; i<l; ++i) {
+            if(this.childNodes[i] != oldc) continue;
+            if(i == l-1) lastentry = true;
+            else {
+                lastentry = false;
+                nextinline = this.childNodes[i+1];
+            }
+            this.removeChild(oldc);
+            if(lastentry) this.appendChild(newc);
+            else this.insertBefore(newc, nextinline);
+            break;
+        }
+    }
+
+    remove()
+    {
+        if(this.parentNode)
+            this.parentNode.removeChild(this);
+    }
+
+/* I want a native method to go on the prototype, becoming an instance method,
+but a direct assignment puts it on "this", as part of the constructor,
+even though it's not in constructor.  Highly confusing!
+    matches = querySelector0;
+So I have to do something different.
+I could wrap it in a function but that offends me.
+Here is the way. */
+    static { this.prototype.matches = querySelector0; }
+
+    closest(s)
+    {
+        let u = this;
+        while(u.nodeType == 1) {
+            if(u.matches(s)) return u;
+            u = u.parentNode;
+        }
+        return null;
+    }
+
 })
 let elemp = w.Element.prototype;
-
-elemp.replaceChild = function(newc, oldc) {
-var lastentry;
-var l = this.childNodes.length;
-var nextinline;
-for(var i=0; i<l; ++i) {
-if(this.childNodes[i] != oldc)
-continue;
-if(i == l-1)
-lastentry = true;
-else {
-lastentry = false;
-nextinline = this.childNodes[i+1];
-}
-this.removeChild(oldc);
-if(lastentry)
-this.appendChild(newc);
-else
-this.insertBefore(newc, nextinline);
-break;
-}
-}
-
-elemp.remove = function() { if(this.parentNode) this.parentNode.removeChild(this)}
-
-elemp.matches = querySelector0;
-
-elemp.closest = function(s) {
-let u = this;
-while(u.nodeType == 1) { if(u.matches(s)) return u; u = u.parentNode; }
-return null}
 
 // helper functions that support Element.classList
 function classListRemove() {
