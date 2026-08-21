@@ -97,6 +97,7 @@ if(el.yy != hidden) msg += "|no element yy name access for hidden";
 const f2 = form.cloneNode(true)
 if(f2.getAttributeNames().join(';') != 'action;onsubmit;*#;:&quot;`@what') msg += "|f2 has wrong attributes";
 if(typeof f2.onsubmit != "function") msg += "|f2.onsubmit not a function";
+if(b.onchange !== null) msg += "|default onchange not null";
 if(f2.elements.length != 10) msg += `|clone elements.length ${f2.elements.length}`;
 if(f2.contact.length != 4) msg += `|clone contact.length ${f2.contact.length}`;
 if(f2.contact[0] != f2.elements[2]) msg += "|clone contact elements mismatch";

@@ -212,6 +212,20 @@ garden = "in an octopus' garden,<br>with you";
 ta.innerHTML = garden;
 if(ta.value != garden) msg += "|bad set textarea.innerHTML"
 
+// specialized code to guard against setAttribute length.
+// You'd think nobody would do this but I've seen it.
+place.setAttribute("length", "xyz");
+plat = place.attributes;
+if(place.getAttribute("length") != "xyz") msg += "|length not xyz";
+if(plat.length != 2) msg += "|length over tromped";
+if(plat.id != plat[0]) msg += "| place id link lost";
+if(plat[1].value != "xyz") msg += "|length value not in position 1";
+if(place.getAttributeNode("length") != plat[1]) msg += "|wrong getAttributeNode(length)";
+place.removeAttribute("length");
+if(place.getAttribute("length") !== null) msg += "|length not null";
+if(plat.length != 1) msg += "|length not back down to 1";
+if(plat.id != plat[0]) msg += "| place id link lost";
+
 // children
 div = document.createElement("div");
 div.innerHTML = "I'm so <em>excited</em>, and I just <u>can't hide it</u>.";
