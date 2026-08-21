@@ -69,6 +69,7 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
     this.Window = function(){}
     this.EventTarget = function(){}
     this.CSSStyleDeclaration = function(){}
+    this.querySelector0 = () => {};
         this.document.getElementsByTagName = (t)=>[];
 }
 
@@ -217,6 +218,8 @@ for(let f of ["UnsupportedError",
 "showframes", "snapshot", "aloop",
 "set_location_hash", "NodeFilter", "tableReindex", "formReindex", "selectReindex",
 "markAllCollections", "markUpwardCollections",
+"standard_events", "standard_event_classes", "standard_hashchange_classes",
+"dataCamel",
 "mutFixup", "makeSheets", "gebtn",
 "runScriptWhenAttached", "simpleHtmlEscape", "appendFragment",
 "appendFragment$nm", "insertFragment", "insertFragment$nm", "checkUpward"])
@@ -578,6 +581,913 @@ class Node extends EventTarget
 
 }
 swdc(Node);
+
+this.eb$push$attributes = false;
+
+class Element extends Node
+{
+    constructor() { super(); }
+
+// attributes are on demand
+    get attributes() {
+        if(!this.attributes$2)
+            odp(this, "attributes$2", {value:new NamedNodeMap});
+        return this.attributes$2;
+    }
+
+/* Some helper functions for the attribute system, which lives in the
+Element class. As far as I can tell, anything can be an attribute name,
+as long as it doesn't have whitespace. */
+    static attrNameValid(n)
+    {
+        // take care of null, undefined, and ""
+        if(!n && n !== 0) {
+            alert3("null attribute name");
+            return false;
+        }
+        if(typeof n != "string") n = n.toString();
+        for(let i = 0; i < n.length; ++i) {
+            let c = n.charCodeAt(i);
+            if(c == 61) { // =
+                alert3("= in attribute name");
+                return false;
+            }
+            if(c > 32 && c <= 127) continue;
+            // yes, nonbreakspace is considered whitespace
+            if(c == 9 || c == 10 || c == 12 || c == 13 || c == 32 || c == 160) {
+                alert3("spaces in attribute name");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    static attrNameImplicit(o, name)
+    {
+        return name === "elements" && o.dom$class == "HTMLFormElement" ||
+        name === "rows" && (o.dom$class == "HTMLTableElement" || o.dom$class == "tBody" || o.dom$class == "tHead" || o.dom$class == "tFoot") ||
+        name === "tBodies" && o.dom$class == "HTMLTableElement" ||
+        (name === "cells" || name === "rowIndex" || name === "sectionRowIndex") && o.dom$class == "HTMLTableRowElement" ||
+        name === "className" ||
+        name === "htmlFor" && o.dom$class == "HTMLLabelElement" ||
+        name === "httpEquiv" && o.dom$class == "HTMLMetaElement" ||
+        name === "options" && o.dom$class == "HTMLSelectElement" ||
+        name === "selectedOptions" && o.dom$class == "HTMLSelectElement";
+    }
+
+/* Here are some helper functions to manage spillup and spilldown.
+Spill up means we set the property and it sets the attribute.
+This has to be done by setters, it is not done here.
+Spilldown means we set the attribute and it spills down to the property.
+This has to be done by setAttribute - and sometimes additional processing
+is involved. Example: script.setAttribute("src", "file.html")
+is resolved against the base url as it spills down to the property.
+getAttribute still returns "file.html".
+If there is both spillup and spilldown, it is done by a getter and setter,
+holding the property foo in foo$2.
+You'll see this in the id property below. */
+
+    static spilldown(t, name)
+    {
+        const dc = t.dom$class;
+        return name == "value" && (dc == "HTMLInputElement" || dc == "HTMLTextAreaElement" || dc == "HTMLButtonElement");
+    }
+
+    static spilldownResolve(t, name)
+    {
+        if(!t.nodeName) return false;
+        const nn = t.nodeName.toLowerCase();
+        return name == "action" && nn == "form" ||
+        name == "data" && (nn == "object") ||
+        name == "src" && (nn == "img" || nn == "script" || nn == "audio" || nn == "video") ||
+        name == "href" && (nn == "link" || nn == "base");
+    }
+
+    static spilldownResolveURL(t, name)
+    {
+        if(!t.nodeName) return false;
+        const nn = t.nodeName.toLowerCase();
+        return name == "src" && (nn == "frame" || nn == "iframe") ||
+        name == "cite" && (nn == "q" || nn == "blockquote") ||
+        name == "href" && (nn == "a" || nn == "area");
+    }
+
+    static spilldownBool(t, name)
+    {
+        if(!t.nodeName) return false;
+        const nn = t.nodeName.toLowerCase();
+        return name == "ariahidden" ||
+        name == "selected" && nn == "option" ||
+        name == "checked" && nn == "input";
+    }
+
+/* Attributes that compile a string as part of spilldown.
+Use standard_event_classes, which is also used to create getters and setters
+for the on-events. That way we are consistent.
+edbrowse might be more general, and more permissive than other browsers.
+We set up for HR.onsubmit, for example; other browsers might not. */
+
+// get rid of the window[c] test when you can
+    static spilldownCompile(t, name)
+    {
+        for(const c of standard_event_classes)
+            if(window[c] && t instanceof window[c]) {
+                for(const evname of standard_events)
+                    if(evname == name) return true;
+            }
+        for(let c of standard_hashchange_classes)
+            if(window[c] && t instanceof window[c]) {
+                if("onhashchange" == name) return true;
+            }
+        return false;
+    }
+
+// Function to compile event handlers
+    static handlerCompile(f)
+    {
+        let cf; // the compiled function
+        try {
+            cf = eval(`(function(){${f}})`);
+        } catch(e) {
+    // Don't just use eb$truefunction; I want to put the text
+    // on function.body, for debugging, and that means I need my own function.
+            cf = eval("(function(){return true;})");
+            alert3(`handler syntax error <${f}>`);
+        }
+        cf.body = f;
+        cf.toString = function() { return this.body; }
+        return cf;
+    }
+
+// And now, the zoo of attribute methods.
+
+    getAttribute(name)
+        {
+        let a;
+        if(!(this.eb$xml || this instanceof SVGElement))
+            name = name.toLowerCase();
+        if(!this.attributes$2) return null;
+        if(name === "length") {
+            a = null;
+            for(let i=0; i<this.attributes.length; ++i)
+                if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
+        } else a = this.attributes[name]
+        if(!a) return null;
+        let v = a.value;
+        let t = typeof v;
+        if(t == "undefined" || v == null) return null;
+        // I stringify URL objects, should we do that to other objects?
+        if(t == 'object' && (v.dom$class == "URL" || v instanceof URL)) return v.toString();
+        // number, boolean, object; it goes back as it was put in.
+        return v;
+    }
+
+    hasAttribute(name) { return this.getAttribute(name) !== null; }
+
+    getAttributeNames(name)
+    {
+        const a = [];
+        if(!this.attributes$2) return a;
+        for(let l = 0; l < this.attributes$2.length; ++l)
+            a.push(this.attributes$2[l].name);
+        return a;
+    }
+
+    getAttributeNS(space, name)
+    {
+        if(space && !name.match(/:/)) name = space + ":" + name;
+        return this.getAttribute(name);
+    }
+
+    hasAttributeNS(space, name) { return this.getAttributeNS(space, name) !== null;}
+
+    setAttribute(name, v)
+    {
+        let a;
+        if(!Element.attrNameValid(name)) return;
+        if(!(this.eb$xml || this instanceof SVGElement)) name = name.toLowerCase();
+        // special code for style
+        if(name == "style" && this.style && this.style.dom$class == "CSSStyleDeclaration") {
+            this.style.cssText = v;
+        }
+        if(Element.attrNameImplicit(this, name)) return;
+        let oldv = null;
+        if(name === "length") {
+            a = null
+            for(let i=0; i<this.attributes.length; ++i)
+                if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
+        } else a = this.attributes[name]
+        if(!a) {
+            a = new Attr();
+            a.name = name;
+            this.attributes.push(a);
+            if(name !== "length") this.attributes[name] = a;
+        } else {
+            oldv = a.value;
+        }
+        a.value = v;
+        a.ownerDocument = this.ownerDocument;
+        if(name.substr(0,5) == "data-") {
+            this.dataset[dataCamel(name)] = v;
+        }
+        // side effects of id, name, class
+        // no need for collection side effects if parsing - we will be marking
+        // all collections as out of date after the parse is finished.
+        if(!eb$push$attributes) {
+            if(name == "id" || name == "class" || name == "name")
+                markUpwardCollections(this)
+            if(name == "name" &&
+            this.form && this.form.dom$class == "HTMLFormElement")
+                formReindex(this.form);
+        }
+        // names that spill down into the actual property
+        if(Element.spilldown(this, name)) this[name] = v;
+            // href$2 is not enumerable. cloneNode still works because it finds
+            // href in the attributes and copies it there,
+            // whence spilldown puts href$2 in node2.
+        // resulveURL can handle eb$base undefined
+        if(Element.spilldownResolve(this, name))
+            Object.defineProperty(this, "href$2", {value:resolveURL(window.eb$base, v),configurable:true,writable:true})
+        if(Element.spilldownResolveURL(this, name))
+            Object.defineProperty(this, "href$2", {value:new URL(resolveURL(window.eb$base, v)),configurable:true,writable:true})
+        if(Element.spilldownBool(this, name)) {
+            // This one is required by acid test 43.
+            if(name == "checked" && v == "checked")
+                this.defaultChecked = true;
+            else
+                this[name] = true;
+        }
+        if(Element.spilldownCompile(this, name)) {
+            const name2 = name + "$2";
+            if (db$flags(1))
+                alert3(`${(this[name2] ? "clobber": "create")} ${(this.nodeName ? this.nodeName : this.dom$class)}.${name}`);
+            if(typeof v === "string") v = Element.handlerCompile(v);
+            if(typeof v === "function") {
+                Object.defineProperty(this, name2, {
+                    value: v, writable: true, configurable: true});
+            } else delete this[name2];
+        }
+        /* If this is called while parsing html, to build the tree,
+        observers are not invoked. The tag is built in its entirety,
+    with its attributes, then attached to the tree.
+        so we only need see the attachment. On the other hand, if a
+        running script calls setAttribute, then we want to observe the change. */
+        if(!eb$push$attributes)
+            mutFixup(this, 1, name, oldv);
+    }
+
+    setAttributeNS(space, name, v)
+    {
+        if(!Element.attrNameValid(name)) return;
+        if(space && !name.match(/:/)) name = space + ":" + name;
+        this.setAttribute(name, v);
+    }
+
+    removeAttribute(name)
+    {
+        if(!(this.eb$xml || this instanceof SVGElement))
+            name = name.toLowerCase();
+        // special code for style
+        if(name == "style" && this.style$2 && this.style$2.dom$class == "CSSStyleDeclaration")
+            delete this.style$2;
+        if(!this.attributes$2) return;
+        if(name.substr(0,5) == "data-") {
+            let n = dataCamel(name);
+            if(this.dataset$2 && this.dataset$2[n])
+                delete this.dataset$2[n];
+        }
+        // the only simple spilldown is value, we shouldn't delete value,
+        // so just set it to ""
+        if(Element.spilldown(this, name)) this[name] = "";
+        if(Element.spilldownResolve(this, name)) delete this[name];
+        if(Element.spilldownResolveURL(this, name)) delete this[name];
+        let a = null, i, found = false;
+        if(name === "length") {
+            for(i=0; i<this.attributes.length; ++i)
+                if(this.attributes[i].name == name) {
+                    a = this.attributes[i];
+                    break;
+                }
+        } else a = this.attributes[name];
+        if(!a) return;
+        // Have to roll our own splice.
+        for(i=0; i<this.attributes.length-1; ++i) {
+            if(!found && this.attributes[i] == a) found = true;
+            if(found) this.attributes[i] = this.attributes[i+1];
+        }
+        this.attributes.length = i;
+        delete this.attributes[i];
+        if(name !== "length") delete this.attributes[name]
+        if(name == "id" || name == "name" || name == "class")
+            markUpwardCollections(this);
+        if(name == "name" &&
+        this.form && this.form.dom$class == "HTMLFormElement")
+            formReindex(this.form);
+        mutFixup(this, 1, name, a.value);
+    }
+
+    removeAttributeNS(space, name)
+    {
+        if(space && !name.match(/:/)) name = space + ":" + name;
+        this.removeAttribute(name);
+    }
+
+    // return null if no such attribute.
+    getAttributeNode(name)
+    {
+        if(!this.attributes$2) return null;
+        if(!(this.eb$xml || this instanceof SVGElement)) name = name.toLowerCase();
+        let a = null;
+        if(name === "length") {
+            for(let i=0; i<this.attributes.length; ++i)
+                if(this.attributes[i].name == name) {
+                    a = this.attributes[i];
+                    break;
+                }
+        } else a = this.attributes[name];
+        return a ? a : null;
+    }
+
+    // b replaces a if a is present
+    setAttributeNode(b)
+    {
+        if(typeof b != "object" || typeof b.name != "string")
+            return null;
+        let     a = null, name = b.name;
+        if(name === "length") {
+            for(let i=0; i<this.attributes.length; ++i)
+                if(this.attributes[i].name == name) {
+                    a = this.attributes[i];
+                    break;
+                }
+        } else a = this.attributes[name];
+        if(!a) a = null;
+        else this.removeAttribute(name);
+        this.attributes.push(b);
+        if(name !== "length") this.attributes[name] = b;
+        // there are a lot of side effects I don't want to repeat here,
+        // like dataset and mutFixup and so on, so just invoke:
+        this.setAttribute(name, b.value)
+        return a
+    }
+
+    removeAttributeNode(b)
+    {
+        if(typeof b != "object" || typeof b.name != "string")
+            return null;
+        let     name = b.name;
+        if(name === "length") {
+            let i;
+            for(i=0; i<this.attributes.length; ++i)
+                if(this.attributes[i] == b) break;
+            if(i == this.attributes.length) return null;
+        } else {
+            if(this.attributes[name] != b) return null;
+        }
+        this.removeAttribute(b.name)
+        return b
+    }
+
+// the all important id property
+// as mentioned earlier, this has both spillup and spilldown,
+// so is handled by getter and setter, using id$2
+    get id()
+    {
+        let t = this.getAttribute("id");
+        if(t === null) t = "" // id was never defined
+        if(t === undefined) t = "";
+        // if defined it should always be a string
+        return typeof t == "string" ? t : t.toString();
+    }
+    set id(v) { this.setAttribute("id", v)}
+
+    get lang()
+    {
+        let t = this.getAttribute("lang");
+        if(t === null) t = "" // lang was never defined
+        if(t === undefined) t = "";
+        // if defined it should always be a string
+        return typeof t == "string" ? t : t.toString();
+    }
+    set lang(v) { this.setAttribute("lang", v)}
+
+// carry the xml indicator from the document down to all the elements inside it.
+    get eb$xml() { return this.ownerDocument.eb$xml}
+
+    insertAdjacentElement(pos, e)
+    {
+        let n, p = this.parentNode;
+        if(!p || typeof pos != "string") return null;
+        switch(pos.toLowerCase()) {
+        case "beforebegin": return p.insertBefore(e, this);
+        case "afterend":
+            n = this.nextSibling;
+            return n ? p.insertBefore(e, n) : p.appendChild(e);
+        case "beforeend": return this.appendChild(e);
+        case "afterbegin": return this.prepend$child(e);
+        }
+        return null;
+    }
+
+    insertAdjacentText(pos, e)
+{
+        let n, p = this.parentNode;
+        if(!p || typeof pos != "string") return null;
+        if(typeof e != "string") return null;
+        e = document.createTextNode(e);
+        return this.insertAdjacentElement(pos, e);
+    }
+
+    insertAdjacentHTML(pos, h) {
+        // easiest implementation is just to use the power of innerHTML
+        let p = document.createElement("p");
+        p.innerHTML = h; // the magic
+        let s, parent = this.parentNode;
+        switch(pos) {
+        case "beforebegin":
+            while(s = p.firstChild)
+                parent.insertBefore(s, this);
+            break;
+        case "afterbegin":
+            while(s = p.lastChild)
+                this.insertBefore(s, this.firstChild);
+            break;
+        case "beforeend":
+            while(s = p.firstChild)
+                this.appendChild(s);
+            break;
+        case "afterend":
+            while(s = p.lastChild)
+                parent.insertBefore(s, this.nextSibling);
+            break;
+        }
+    }
+
+    get children()
+    {
+        let i = 0, node, nodes = this.childNodes, children = [];
+        if(!nodes) return children;
+        while(i<nodes.length) {
+            node = nodes[i++];
+            if (node.nodeType === 1)  children.push(node);
+        }
+        return children;
+    }
+
+    get childElementCount()
+    {
+        let z=0, u = this.childNodes;
+        if(!u) return z;
+        for(let i=0; i<u.length; ++i)
+            if(u[i].nodeType == 1) ++z;
+        return z;
+    }
+
+    get firstElementChild()
+    {
+        let u = this.childNodes;
+        if(!u) return null;
+        for(let i=0; i<u.length; ++i)
+            if(u[i].nodeType == 1) return u[i];
+        return null;
+    }
+
+    get lastElementChild()
+    {
+        let u = this.childNodes;
+        if(!u) return null;
+        for(let i=u.length-1; i>=0; --i)
+            if(u[i].nodeType == 1) return u[i];
+        return null;
+    }
+
+    static getElementSibling (obj,direction) {
+        const pn = obj.parentNode;
+        if(!pn) return null;
+        let j, l = pn.childNodes.length;
+        for (j=0; j<l; ++j)
+            if (pn.childNodes[j] == obj) break;
+        if (j == l) {
+            // child not found under parent, error
+            return null;
+        }
+        switch(direction) {
+        case "previous":
+            for(--j; j>=0; --j)
+                if(pn.childNodes[j].nodeType == 1)
+                    return pn.childNodes[j];
+            return null;
+        case "next":
+            for(++j; j<l; ++j)
+                if(pn.childNodes[j].nodeType == 1)
+                    return pn.childNodes[j];
+            return null;
+        default:
+            return null;
+        }
+    }
+
+    get nextElementSibling()
+    {
+        return Element.getElementSibling(this,"next");
+    }
+
+    get previousElementSibling()
+    {
+        return Element.getElementSibling(this,"previous");
+    }
+
+    append()
+    {
+        const additions = [];
+        for(let c of arguments) {
+            if(typeof c == "string") c = document.createTextNode(c);
+            if(c.nodeType == 11) { // descend into fragment
+                // make one mutation record to delete all the nodes under fragment
+                // but fragment isn't rooted and it shouldn't matter.
+                const deletions = [];
+                for(let f of Array.from(c.childNodes)) {
+                    if(f.nodeType == 11) { alert3("append fragment recursion"); continue; }
+                    c.removeChild$nm(f);
+                    this.appendChild$nm(f);
+                    additions.push(f);
+                    deletions.push(f);
+                }
+                checkUpward(c);
+                mutFixup(c, 0, 0, deletions);
+                continue;
+            }
+        c.remove();
+            this.appendChild$nm(c);
+            additions.push(c);
+        }
+        checkUpward(this);
+        mutFixup(this, 0, additions, null);
+    }
+
+    prepend()
+    {
+        const additions = [];
+        const first = this.firstChild;
+        for(let c of arguments) {
+            if(typeof c == "string") c = document.createTextNode(c);
+            if(c.nodeType == 11) { // descend into fragment
+                const deletions = [];
+                for(let f of Array.from(c.childNodes)) {
+                    if(f.nodeType == 11) { alert3("prepend fragment recursion"); continue; }
+                    c.removeChild$nm(f);
+                    this.insertBefore$nm(f, first);
+                    additions.push(f);
+                    deletions.push(f);
+                }
+                checkUpward(c);
+                mutFixup(c, 0, 0, deletions);
+                continue;
+            }
+        c.remove();
+            this.insertBefore$nm(c, first);
+            additions.push(c);
+        }
+        checkUpward(this);
+        mutFixup(this, 0, additions, null);
+    }
+
+    before()
+    {
+        const p = this.parentNode;
+        if(!p) return;
+        const additions = [];
+        for(let c of arguments) {
+            if(typeof c == "string") c = document.createTextNode(c);
+            if(c.nodeType == 11) { // descend into fragment
+                const deletions = [];
+                for(let f of Array.from(c.childNodes)) {
+                    if(f.nodeType == 11) { alert3("before fragment recursion"); continue; }
+                    c.removeChild$nm(f);
+                    p.insertBefore$nm(f, this);
+                    additions.push(f);
+                    deletions.push(f);
+                }
+                checkUpward(c);
+                mutFixup(c, 0, 0, deletions);
+                continue;
+            }
+        c.remove();
+            p.insertBefore$nm(c, this);
+            additions.push(c);
+        }
+        checkUpward(this);
+        mutFixup(p, 0, additions, null);
+    }
+
+    after()
+    {
+        const p = this.parentNode;
+        if(!p) return;
+        const n = this.nextSibling;
+        const additions = [];
+        for(let c of arguments) {
+            if(typeof c == "string") c = document.createTextNode(c);
+            if(c.nodeType == 11) { // descend into fragment
+                const deletions = [];
+                for(let f of Array.from(c.childNodes)) {
+                    if(f.nodeType == 11) { alert3("after fragment recursion"); continue; }
+                    c.removeChild$nm(f);
+                    p.insertBefore$nm(f, n);
+                    additions.push(f);
+                    deletions.push(f);
+                }
+                checkUpward(c);
+                mutFixup(c, 0, 0, deletions);
+                continue;
+            }
+        c.remove();
+            p.insertBefore$nm(c, n);
+            additions.push(c);
+        }
+        checkUpward(this);
+        mutFixup(p, 0, additions, null);
+    }
+
+    replaceWith()
+    {
+        const p = this.parentNode;
+        if(!p) return;
+        const n = this.nextSibling;
+        const additions = [];
+        for(let c of arguments) {
+            if(typeof c == "string") c = document.createTextNode(c);
+            if(c.nodeType == 11) { // descend into fragment
+                const deletions = [];
+                for(let f of Array.from(c.childNodes)) {
+                    if(f.nodeType == 11) { alert3("replaceWith fragment recursion"); continue; }
+                    c.removeChild$nm(f);
+                    p.insertBefore$nm(f, n);
+                    additions.push(f);
+                    deletions.push(f);
+                }
+                checkUpward(c);
+                mutFixup(c, 0, 0, deletions);
+                continue;
+            }
+        c.remove();
+            p.insertBefore$nm(c, n);
+            additions.push(c);
+        }
+        p.removeChild$nm(this);
+        checkUpward(p);
+        mutFixup(p, 0, additions, this);
+    }
+
+// replaceChildren not yet implemented
+
+    replaceChild(newc, oldc)
+    {
+        let lastentry, nextinline;
+        const l = this.childNodes.length;
+        for(let i=0; i<l; ++i) {
+            if(this.childNodes[i] != oldc) continue;
+            if(i == l-1) lastentry = true;
+            else {
+                lastentry = false;
+                nextinline = this.childNodes[i+1];
+            }
+            this.removeChild(oldc);
+            if(lastentry) this.appendChild(newc);
+            else this.insertBefore(newc, nextinline);
+            break;
+        }
+    }
+
+    remove()
+    {
+        if(this.parentNode)
+            this.parentNode.removeChild(this);
+    }
+
+/* I want a native method to go on the prototype, becoming an instance method,
+but a direct assignment puts it on "this", as part of the constructor,
+even though it's not in constructor.  Highly confusing!
+    matches = querySelector0;
+So I have to do something different.
+I could wrap it in a function but that offends me.
+Here is the way. */
+    static { this.prototype.matches = querySelector0; }
+
+    closest(s)
+    {
+        let u = this;
+        while(u.nodeType == 1) {
+            if(u.matches(s)) return u;
+            u = u.parentNode;
+        }
+        return null;
+    }
+
+    get className()
+    {
+        let c = this.getAttribute("class");
+        return c === null ? "" : c;
+    }
+    set className(h) { this.setAttribute("class", h); }
+
+// helper functions that support Element.classList
+    static { this.prototype.cl$present = true; }
+
+    static classListRemove()
+    {
+        for(let i=0; i<arguments.length; ++i) {
+            for(let j=0; j<this.length; ++j) {
+                if(arguments[i] != this[j]) continue;
+                this.splice(j, 1);
+                --j;
+            }
+        }
+        this.node.setAttribute("class", this.join(' '));
+    }
+
+    static classListAdd()
+    {
+        for(let i=0; i<arguments.length; ++i) {
+            let j;
+            for(j=0; j<this.length; ++j)
+                if(arguments[i] == this[j]) break;
+            if(j == this.length) this.push(arguments[i]);
+        }
+        this.node.setAttribute("class", this.join(' '));
+    }
+
+    static classListReplace(o, n)
+    {
+        if(!o) return;
+        if(!n) { this.remove(o); return; }
+        for(let j=0; j<this.length; ++j)
+            if(o == this[j]) { this[j] = n; break; }
+        this.node.setAttribute("class", this.join(' '));
+    }
+
+    static classListContains(t)
+    {
+        if(!t) return false;
+        for(let j=0; j<this.length; ++j)
+            if(t == this[j]) return true;
+        return false;
+    }
+
+    static classListToggle(t, force)
+    {
+        if(!t) return false;
+        if(arguments.length > 1) {
+            if(force) this.add(t); else this.remove(t);
+            return force;
+        }
+        if(this.contains(t)) { this.remove(t); return false; }
+        this.add(t); return true;
+    }
+
+    static classMake(node)
+    {
+        let c = node.getAttribute("class");
+        if(!c) c = "";
+        // turn string into array
+        let a = c.trim().split(/\s+/);
+        // remember the node you came from
+        a.node = node;
+        // attach helper functions
+        a.remove = Element.classListRemove;
+        a.add = Element.classListAdd;
+        a.replace = Element.classListReplace;
+        a.contains = Element.classListContains;
+        a.toggle = Element.classListToggle;
+        return a;
+    }
+
+    get classList() { return Element.classMake(this); }
+
+// this is recursive
+    static htmlString(t)
+    {
+        if(t.nodeType == 3) return t.data;
+        if(t.nodeType == 4) return "<![Cdata[" + t.text + "]]>";
+        if(t.nodeType == 8) return "<!--" + t.data + "-->";
+        if(t.nodeType != 1) return "";
+        let s = "<" + (t.nodeName ? t.nodeName.toLowerCase() : "x");
+        if(t.attributes$2) {
+            for(let l = 0; l < t.attributes$2.length; ++l) {
+                const a = t.attributes$2[l];
+                // we need to html escape certain characters, which I do a few of.
+                s += ` ${a.name}="${simpleHtmlEscape(a.value.toString())}"`
+            }
+        }
+        s += '>';
+        if(t.childNodes)
+            for(let i=0; i<t.childNodes.length; ++i)
+                s += Element.htmlString(t.childNodes[i]);
+        s += "</";
+        s += (t.nodeName ? t.nodeName.toLowerCase() : "x");
+        s += '>';
+        return s;
+    }
+
+    get outerHTML() { return Element.htmlString(this); }
+
+// Chrome does this with one mutation record.
+    set outerHTML(h)
+    {
+        const p = this.parentNode;
+        if(!p) return;
+        // fragment doesn't allow innerHTML so we have to put it somewhere else
+        let div = document.createElement("div"); // place to expand the html
+        div.innerHTML = h;
+        let frag = document.createDocumentFragment();
+        while(div.firstChild) frag.appendChild$nm(div.firstChild);
+        this.replaceWith(frag);
+    }
+
+    get shadowRoot()
+    {
+        let r = this.firstChild;
+        if(r && r.nodeName == "SHADOWROOT" && r.mode == "open") return r;
+        return null;
+    }
+
+    attachShadow(o)
+    {
+        // I should have a list of allowed tags here, but custom tags are allowed,
+        // and I don't know how to determine that,
+        // so I'll just reject a few tags.
+        let nn = this.nodeName;
+        if(nn == "A" || nn == "FRAME" || nn == "IFRAME" ||
+        nn == "#document" || nn == "#text" || nn == "#comment" ||
+        nn == "TABLE" || nn == "TH" || nn == "TD" || nn == "TR" || nn == "FORM" || nn == "INPUT" ||
+        nn == "SHADOWROOT") // no shadow root within a shadow root
+            return null;
+        let r = document.createElement("ShadowRoot");
+        this.appendChild(r);
+        r.mode = "open";
+        r.delegatesFocus = false;
+        r.slotAssignment = "";
+        if(typeof o == "object") {
+            if(o.mode) r.mode = o.mode;
+            if(o.delegatesFocus) r.delegatesFocus = o.delegatesFocus;
+            if(o.slotAssignment) r.slotAssignment = o.slotAssignment;
+        }
+        return r;
+    }
+
+// Visual. Doesn't mean anything to us, but should probably exist.
+    static {
+        const tp = this.prototype;
+        tp.clientTop = 0;
+        tp.clientHeight = 16;
+        tp.clientWidth = 120;
+        tp.scrollHeight = 16;
+        tp.scrollWidth = 120;
+        tp.scrollTop = 0;
+        tp.scrollLeft = 0;
+        tp.dir = "auto";
+        tp.scroll = eb$voidfunction;
+        tp.scrollBy = eb$voidfunction;
+        tp.scrollByLines = eb$voidfunction;
+        tp.scrollByPages = eb$voidfunction;
+        tp.scrollTo = eb$voidfunction;
+        tp.scrollIntoView = eb$voidfunction;
+    }
+
+// This is a manufactured method for css purposes,
+// to inject words or marks before or after a tag, marks that you don't see
+// unless you type showall, marks that nobody probably cares about anyways,
+// but I read about it in the spec and tried to make it happen.
+    injectSetup(which)
+    {
+        let z = this;
+        switch(which) {
+        case 'a':
+            if(!this.inj$after) {
+                z = this.appendChild(document.createTextNode())
+                odp(z, "inj$css", {value:true})
+                odp(this, "inj$after", {value:true})
+            } else z = this.lastChild;
+            break;
+        case 'b':
+            if(!this.inj$before) {
+                z = this.prepend$child(document.createTextNode())
+                odp(z, "inj$css", {value:true})
+                odp(this, "inj$before", {value:true})
+            } else z = this.firstChild;
+            break;
+        }
+        // establish the style object for the calling function in css.c
+        window.soj$ = z.style;
+    }
+
+}
+swdc(Element);
+
+for(let k of [
+    "attachShadow"])
+   eval(`Object.defineProperty(Element.prototype.${k}, "toString", {value: ()=>{return "function ${k}() {\\n    [native code]\\n}"}})`);
+
 // Not quite right, still missing, at a minimum, whenDefined and upgrade
 class CustomElementRegistry
 {
