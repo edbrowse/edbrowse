@@ -4873,35 +4873,36 @@ Here is the way. */
         tp.scrollIntoView = eb$voidfunction;
     }
 
-})
-
-let elemp = w.Element.prototype;
-
 // This is a manufactured method for css purposes,
 // to inject words or marks before or after a tag, marks that you don't see
 // unless you type showall, marks that nobody probably cares about anyways,
 // but I read about it in the spec and tried to make it happen.
-elemp.injectSetup = function(which) {
-let z = this;
-switch(which) {
-case 'a':
-if(!this.inj$after) {
-z = this.appendChild(d.createTextNode())
-odp(z, "inj$css", {value:true})
-odp(this, "inj$after", {value:true})
-} else z = this.lastChild;
-break;
-case 'b':
-if(!this.inj$before) {
-z = this.prepend$child(d.createTextNode())
-odp(z, "inj$css", {value:true})
-odp(this, "inj$before", {value:true})
-} else z = this.firstChild;
-break;
-}
-// establish the style object, for the calling function in css.c
-w.soj$ = z.style;
-}
+    injectSetup(which)
+    {
+        let z = this;
+        switch(which) {
+        case 'a':
+            if(!this.inj$after) {
+                z = this.appendChild(d.createTextNode())
+                odp(z, "inj$css", {value:true})
+                odp(this, "inj$after", {value:true})
+            } else z = this.lastChild;
+            break;
+        case 'b':
+            if(!this.inj$before) {
+                z = this.prepend$child(d.createTextNode())
+                odp(z, "inj$css", {value:true})
+                odp(this, "inj$before", {value:true})
+            } else z = this.firstChild;
+            break;
+        }
+        // establish the style object for the calling function in css.c
+        w.soj$ = z.style;
+    }
+
+})
+
+let elemp = w.Element.prototype;
 
 for(let k of [
 "append" , "prepend" , "before" , "after" , "replaceWith" ,
