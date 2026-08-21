@@ -4753,37 +4753,44 @@ We set up for HR.onsubmit, for example; other browsers might not. */
         return null;
     }
 
+    static getElementSibling (obj,direction) {
+        const pn = obj.parentNode;
+        if(!pn) return null;
+        let j, l = pn.childNodes.length;
+        for (j=0; j<l; ++j)
+            if (pn.childNodes[j] == obj) break;
+        if (j == l) {
+            // child not found under parent, error
+            return null;
+        }
+        switch(direction) {
+        case "previous":
+            for(--j; j>=0; --j)
+                if(pn.childNodes[j].nodeType == 1)
+                    return pn.childNodes[j];
+            return null;
+        case "next":
+            for(++j; j<l; ++j)
+                if(pn.childNodes[j].nodeType == 1)
+                    return pn.childNodes[j];
+            return null;
+        default:
+            return null;
+        }
+    }
+
+    get nextElementSibling()
+    {
+        return w.Element.getElementSibling(this,"next");
+    }
+
+    get previousElementSibling()
+    {
+        return w.Element.getElementSibling(this,"previous");
+    }
+
 })
 let elemp = w.Element.prototype;
-
-function getElementSibling (obj,direction) {
-const pn = obj.parentNode;
-if(!pn) return null;
-let j, l = pn.childNodes.length;
-for (j=0; j<l; ++j)
-if (pn.childNodes[j] == obj) break;
-if (j == l) {
-// child not found under parent, error
-return null;
-}
-switch(direction) {
-case "previous":
-for(--j; j>=0; --j)
-if(pn.childNodes[j].nodeType == 1) return pn.childNodes[j];
-return null;
-case "next":
-for(++j; j<l; ++j)
-if(pn.childNodes[j].nodeType == 1) return pn.childNodes[j];
-return null;
-default:
-// the function should always have been called with either 'previous' or 'next' specified
-return null;
-}
-}
-odp(elemp, "nextElementSibling", { get: function() {
-return getElementSibling(this,"next")} })
-odp(elemp, "previousElementSibling", { get: function() {
-return getElementSibling(this,"previous")} })
 
 elemp.append = function() {
     const additions = [];
