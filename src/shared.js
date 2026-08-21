@@ -4298,7 +4298,7 @@ as long as it doesn't have whitespace. */
 // Ok - how to reference these helper functions from the instance method.
 // If this was moved to startwindow I'd say Element.attrNameValid,
 // but can't do that here. So I'm going to do something ugly for now,
-// just to keep us going.    this.constructor.attrNameValid
+// just to keep us going.    w.Element.attrNameValid
 
     static attrNameImplicit(o, name)
     {
@@ -4441,13 +4441,13 @@ We set up for HR.onsubmit, for example; other browsers might not. */
     setAttribute(name, v)
     {
         let a;
-        if(!this.constructor.attrNameValid(name)) return;
+        if(!w.Element.attrNameValid(name)) return;
         if(!(this.eb$xml || this instanceof w.SVGElement)) name = name.toLowerCase();
         // special code for style
         if(name == "style" && this.style && this.style.dom$class == "CSSStyleDeclaration") {
             this.style.cssText = v;
         }
-        if(this.constructor.attrNameImplicit(this, name)) return;
+        if(w.Element.attrNameImplicit(this, name)) return;
         let oldv = null;
         if(name === "length") {
             a = null
@@ -4478,26 +4478,26 @@ We set up for HR.onsubmit, for example; other browsers might not. */
                 formReindex(this.form);
         }
         // names that spill down into the actual property
-        if(this.constructor.spilldown(this, name)) this[name] = v;
+        if(w.Element.spilldown(this, name)) this[name] = v;
             // href$2 not enumerable. cloneNode still works because it finds
             // href in the attributes and copies it there,
             // whence spilldown puts href$2 in node2.
-        if(this.constructor.spilldownResolve(this, name))
+        if(w.Element.spilldownResolve(this, name))
             Object.defineProperty(this, "href$2", {value:resolveURL(w.eb$base, v),configurable:true,writable:true})
-        if(this.constructor.spilldownResolveURL(this, name))
+        if(w.Element.spilldownResolveURL(this, name))
             Object.defineProperty(this, "href$2", {value:new (w.URL)(resolveURL(w.eb$base, v)),configurable:true,writable:true})
-        if(this.constructor.spilldownBool(this, name)) {
+        if(w.Element.spilldownBool(this, name)) {
             // This one is required by acid test 43.
             if(name == "checked" && v == "checked")
                 this.defaultChecked = true;
             else
                 this[name] = true;
         }
-        if(this.constructor.spilldownCompile(this, name)) {
-            const name2 = name + "$2"
+        if(w.Element.spilldownCompile(this, name)) {
+            const name2 = name + "$2";
             if (db$flags(1))
                 alert3(`${(this[name2] ? "clobber": "create")} ${(this.nodeName ? this.nodeName : this.dom$class)}.${name}`);
-            if(typeof v === "string") v = this.constructor.handlerCompile(v, w);
+            if(typeof v === "string") v = w.Element.handlerCompile(v, w);
             if(typeof v === "function") {
                 Object.defineProperty(this, name2, {
                     value: v, writable: true, configurable: true});
@@ -4514,7 +4514,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
 
     setAttributeNS(space, name, v)
     {
-        if(!this.constructor.attrNameValid(name)) return;
+        if(!w.Element.attrNameValid(name)) return;
         if(space && !name.match(/:/)) name = space + ":" + name;
         this.setAttribute(name, v);
     }
@@ -4534,9 +4534,9 @@ We set up for HR.onsubmit, for example; other browsers might not. */
         }
         // the only simple spilldown is value, we shouldn't delete value,
         // so just set it to ""
-        if(this.constructor.spilldown(this, name)) this[name] = "";
-        if(this.constructor.spilldownResolve(this, name)) delete this[name];
-        if(this.constructor.spilldownResolveURL(this, name)) delete this[name];
+        if(w.Element.spilldown(this, name)) this[name] = "";
+        if(w.Element.spilldownResolve(this, name)) delete this[name];
+        if(w.Element.spilldownResolveURL(this, name)) delete this[name];
         let a = null, i, found = false;
         if(name === "length") {
             for(i=0; i<this.attributes.length; ++i)
@@ -4699,44 +4699,46 @@ We set up for HR.onsubmit, for example; other browsers might not. */
         }
     }
 
+    get children()
+    {
+        let i = 0, node, nodes = this.childNodes, children = [];
+        if(!nodes) return children;
+        while(i<nodes.length) {
+            node = nodes[i++];
+            if (node.nodeType === 1)  children.push(node);
+        }
+        return children;
+    }
+
+    get childElementCount()
+    {
+        let z=0, u = this.childNodes;
+        if(!u) return z;
+        for(let i=0; i<u.length; ++i)
+            if(u[i].nodeType == 1) ++z;
+        return z;
+    }
+
+    get firstElementChild()
+    {
+        let u = this.childNodes;
+        if(!u) return null;
+        for(let i=0; i<u.length; ++i)
+            if(u[i].nodeType == 1) return u[i];
+        return null;
+    }
+
+    get lastElementChild()
+    {
+        let u = this.childNodes;
+        if(!u) return null;
+        for(let i=u.length-1; i>=0; --i)
+            if(u[i].nodeType == 1) return u[i];
+        return null;
+    }
+
 })
 let elemp = w.Element.prototype;
-
-// children is subtly different from childnodes; this code taken from
-// https://developer.mozilla.org/en-US/docs/Web/API/ParentNode/children
-odp(elemp, 'children', {
-get: function() {
-let i = 0, node, nodes = this.childNodes, children = new w.Array;
-if(!nodes) return children;
-while(i<nodes.length) {
-node = nodes[i++];
-if (node.nodeType === 1)  children.push(node);
-}
-return children;
-}})
-
-odp(elemp, "childElementCount", {
-get: function() {
-let z=0, u = this.childNodes;
-if(!u) return z;
-for(let i=0; i<u.length; ++i) if(u[i].nodeType == 1) ++z;
-return z}})
-
-odp(elemp, "firstElementChild", {
-get: function() {
-if(!thisNode(this)) return null;
-let u = this.childNodes;
-if(!u) return null;
-for(let i=0; i<u.length; ++i) if(u[i].nodeType == 1) return u[i];
-return null}});
-
-odp(elemp, "lastElementChild", {
-get: function() {
-if(!thisNode(this)) return null;
-let u = this.childNodes;
-if(!u) return null;
-for(let i=u.length-1; i>=0; --i) if(u[i].nodeType == 1) return u[i];
-return null}})
 
 function getElementSibling (obj,direction) {
 const pn = obj.parentNode;
