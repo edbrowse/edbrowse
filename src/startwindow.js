@@ -848,7 +848,6 @@ q.matches = eb$media(s);
 return q;
 })
 
-this.nodep = Node.prototype;
 
 sdp("implementation", {
 owner: document,
@@ -1300,6 +1299,6 @@ if (!window.atob) {
 ;(function() {
     let names_to_delete = [
     "swgs", "swp", "swpv", "swpc", "swpp",
-    "sdp", "sdpc", "nodep", "swdc", "swde", "odp"];
+    "sdp", "sdpc", "swdc", "swde", "odp"];
     for (let k of names_to_delete) delete window[k]
 })();
