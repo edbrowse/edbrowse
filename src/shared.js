@@ -4957,80 +4957,88 @@ Here is the way. */
         return null;
     }
 
-})
-let elemp = w.Element.prototype;
+    get className()
+    {
+        let c = this.getAttribute("class");
+        return c === null ? "" : c;
+    }
+    set className(h) { this.setAttribute("class", h); }
 
 // helper functions that support Element.classList
-function classListRemove() {
-for(var i=0; i<arguments.length; ++i) {
-for(var j=0; j<this.length; ++j) {
-if(arguments[i] != this[j]) continue;
-this.splice(j, 1);
---j;
-}
-}
-this.node.setAttribute("class", this.join(' '));
-}
+    static { this.prototype.cl$present = true; }
 
-function classListAdd() {
-for(var i=0; i<arguments.length; ++i) {
-for(var j=0; j<this.length; ++j)
-if(arguments[i] == this[j]) break;
-if(j == this.length) this.push(arguments[i]);
-}
-this.node.setAttribute("class", this.join(' '));
-}
+    static classListRemove()
+    {
+        for(let i=0; i<arguments.length; ++i) {
+            for(let j=0; j<this.length; ++j) {
+                if(arguments[i] != this[j]) continue;
+                this.splice(j, 1);
+                --j;
+            }
+        }
+        this.node.setAttribute("class", this.join(' '));
+    }
 
-function classListReplace(o, n) {
-if(!o) return;
-if(!n) { this.remove(o); return; }
-for(var j=0; j<this.length; ++j)
-if(o == this[j]) { this[j] = n; break; }
-this.node.setAttribute("class", this.join(' '));
-}
+    static classListAdd()
+    {
+        for(let i=0; i<arguments.length; ++i) {
+            let j;
+            for(j=0; j<this.length; ++j)
+                if(arguments[i] == this[j]) break;
+            if(j == this.length) this.push(arguments[i]);
+        }
+        this.node.setAttribute("class", this.join(' '));
+    }
 
-function classListContains(t) {
-if(!t) return false;
-for(var j=0; j<this.length; ++j)
-if(t == this[j]) return true;
-return false;
-}
+    static classListReplace(o, n)
+    {
+        if(!o) return;
+        if(!n) { this.remove(o); return; }
+        for(let j=0; j<this.length; ++j)
+            if(o == this[j]) { this[j] = n; break; }
+        this.node.setAttribute("class", this.join(' '));
+    }
 
-function classListToggle(t, force) {
-if(!t) return false;
-if(arguments.length > 1) {
-if(force) this.add(t); else this.remove(t);
-return force;
-}
-if(this.contains(t)) { this.remove(t); return false; }
-this.add(t); return true;
-}
+    static classListContains(t)
+    {
+        if(!t) return false;
+        for(let j=0; j<this.length; ++j)
+            if(t == this[j]) return true;
+        return false;
+    }
 
-function classList(node) {
-var c = node.getAttribute("class");
-if(!c) c = "";
-// turn string into array
-var a = c.replace(/^\s+/, "").replace(/\s+$/, "").split(/\s+/);
-// remember the node you came from
-a.node = node;
-// attach functions
-a.remove = classListRemove;
-a.add = classListAdd;
-a.replace = classListReplace;
-a.contains = classListContains;
-a.toggle = classListToggle;
-return a;
-}
+    static classListToggle(t, force)
+    {
+        if(!t) return false;
+        if(arguments.length > 1) {
+            if(force) this.add(t); else this.remove(t);
+            return force;
+        }
+        if(this.contains(t)) { this.remove(t); return false; }
+        this.add(t); return true;
+    }
 
-odp(elemp, "classList", { get : function() { return classList(this);}});
-elemp.cl$present = true;
-odp(elemp, "className", {
-get: function() {
-let c = this.getAttribute("class");
-if(c === null) return "";
-return c; },
-set: function(h) {
-this.setAttribute("class", h)}})
+    static classMake(node)
+    {
+        let c = node.getAttribute("class");
+        if(!c) c = "";
+        // turn string into array
+        let a = c.trim().split(/\s+/);
+        // remember the node you came from
+        a.node = node;
+        // attach helper functions
+        a.remove = w.Element.classListRemove;
+        a.add = w.Element.classListAdd;
+        a.replace = w.Element.classListReplace;
+        a.contains = w.Element.classListContains;
+        a.toggle = w.Element.classListToggle;
+        return a;
+    }
+
+    get classList() { return w.Element.classMake(this); }
+
+})
+let elemp = w.Element.prototype;
 
 odp(elemp, "outerHTML", { get: function() { return htmlString(this);},
 set: function(h) { outer$1(this,h); }});
@@ -5506,7 +5514,8 @@ swde("HTMLOptionElement", class extends w.HTMLElement {
         if (arguments.length > 0) this.text = arguments[0];
         if (arguments.length > 1) this.value = arguments[1];
     }
-    selected$2 = false;
+
+    static { this.prototype.selected$2 = false; }
     get selected() { return this.selected$2; }
     set selected(v) {
         if(v !== false) v = true;
@@ -5677,7 +5686,7 @@ swde("HTMLInputElement", class extends w.HTMLElement {
         this.validity = new w.Validity;
         this.validity.owner = this;
     }
-    checked$2 = false;
+    static { this.prototype.checked$2 = false; }
     get checked() { return this.checked$2; }
     set checked(v) {
         if(v !== false) v = true;
