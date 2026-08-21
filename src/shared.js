@@ -1726,8 +1726,24 @@ node2 = d.createDocumentFragment();
 else if(node1.dom$class == "CSSStyleDeclaration") {
 if(debug) alert3("skipping style object");
 return null;
-} else
+} else {
+/* Here's what we use to do.
 node2 = d.createElement(node1.nodeName);
+Simple - right?
+Picture this though.
+<svg><style></style></svg>
+In that context, the style tag becomes SVGStyleElement.
+If I simply create a new node based on nodeName, it becomes HTMLStyleElement.
+In other words, some tag names are ambiguous.
+They are determined by the context of the html around them,
+which I don't have.
+I need to make node2 based on the actual class of node1. */
+node2 = new node1.constructor;
+/* But createElement does more than just instantiate the class. */
+node2.nodeName = node1.nodeName;
+node2.tagName = node1.tagName;
+domLinkage('c', node2, node2.nodeName);
+}
 if(node1 == w0.cloneRoot1) w0.cloneRoot2 = node2;
 
 // now for strings and functions and such.
@@ -6826,30 +6842,6 @@ case "element": c = new w.Element; break;
 case "button": c = new w.HTMLButtonElement; break;
 case "article": case "section": c = new w.HTMLElement; break;
 case "time": c = new w.HTMLTimeElement; break;
-
-/* cases that create svg elements are wrong. Chrome doesn't do that.
-In chrome, document.createElement("svg") produces HTMLUnknownElement.
-I have to put some of them in here though, because of cloneNode.
-I did a shortcut: node2 = createElement(node1.nodeName).
-So if node2 is to be the proper object, same as node1, then I have
-to have these here.  Ugh!
-Some day we need to fix this.
-With these cases in place, the template fragment clones properly,
-the svg nodes are corect, and run-trace-alpine says ok. */
-
-case "svg": c = new w.SVGElement; break;
-case "path": c = new w.SVGPathElement; break;
-case "gradient": c = new w.SVGGradientElement; break;
-case "lineargradient": c = new w.SVGLinearGradientElement; break;
-case "defs": c = new w.SVGDefsElement; break;
-case "stop": c = new w.SVGStopElement; break;
-case "mask": c = new w.SVGMaskElement; break;
-case "use": c = new w.SVGUseElement; break;
-case "g": c = new w.SVGGElement; break;
-case "polygon": c = new w.SVGPolygonElement; break;
-case "rect": c = new w.SVGRectElement; break;
-case "ellipse": c = new w.SVGEllipseElement; break;
-
 default:
 // alert("createElement default " + s);
 c = new w.HTMLUnknownElement;
