@@ -2699,40 +2699,10 @@ return rc;
 
 // This is not comprehensive, but covers most cases,
 // and does what chrome does.
-function simpleHtmlEscape(h) {
+function simpleHtmlEscape(h)
+{
     // note that we have to replace & first.
     return h.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function htmlString(t) {
-    if(t.nodeType == 3) return t.data;
-    if(t.nodeType == 4) return "<![Cdata[" + t.text + "]]>";
-    if(t.nodeType == 8) return "<!--" + t.data + "-->";
-    if(t.nodeType != 1) return "";
-    let s = "<" + (t.nodeName ? t.nodeName.toLowerCase() : "x");
-    if(t.attributes$2) {
-        for(let l = 0; l < t.attributes$2.length; ++l) {
-            const a = t.attributes$2[l];
-            // we need to html escape certain characters, which I do a few of.
-            s += ` ${a.name}="${simpleHtmlEscape(a.value.toString())}"`
-        }
-    }
-    s += '>';
-    if(t.childNodes)
-        for(let i=0; i<t.childNodes.length; ++i)
-            s += htmlString(t.childNodes[i]);
-    s += "</";
-    s += (t.nodeName ? t.nodeName.toLowerCase() : "x");
-    s += '>';
-    return s;
-}
-
-function outer$1(t, h) {
-var p = t.parentNode;
-if(!p) return;
-t.innerHTML = h;
-while(t.lastChild) p.insertBefore(t.lastChild, t.nextSibling);
-p.removeChild(t);
 }
 
 // We need UnsupportedError for this
@@ -4097,8 +4067,7 @@ as long as it doesn't have whitespace. */
 
 // Ok - how to reference these helper functions from the instance method.
 // If this was moved to startwindow I'd say Element.attrNameValid,
-// but can't do that here. So I'm going to do something ugly for now,
-// just to keep us going.    w.Element.attrNameValid
+// but can't do that here, so settle for w.Element.attrNameValid
 
     static attrNameImplicit(o, name)
     {
@@ -4602,7 +4571,8 @@ We set up for HR.onsubmit, for example; other browsers might not. */
         mutFixup(this, 0, additions, null);
     }
 
-    prepend() {
+    prepend()
+    {
         const additions = [];
         const first = this.firstChild;
         for(let c of arguments) {
@@ -4629,7 +4599,8 @@ We set up for HR.onsubmit, for example; other browsers might not. */
         mutFixup(this, 0, additions, null);
     }
 
-    before() {
+    before()
+    {
         const p = this.parentNode;
         if(!p) return;
         const additions = [];
@@ -4657,7 +4628,8 @@ We set up for HR.onsubmit, for example; other browsers might not. */
         mutFixup(p, 0, additions, null);
     }
 
-    after() {
+    after()
+    {
         const p = this.parentNode;
         if(!p) return;
         const n = this.nextSibling;
@@ -4841,11 +4813,49 @@ Here is the way. */
 
     get classList() { return w.Element.classMake(this); }
 
-})
-let elemp = w.Element.prototype;
+// this is recursive
+    static htmlString(t)
+    {
+        if(t.nodeType == 3) return t.data;
+        if(t.nodeType == 4) return "<![Cdata[" + t.text + "]]>";
+        if(t.nodeType == 8) return "<!--" + t.data + "-->";
+        if(t.nodeType != 1) return "";
+        let s = "<" + (t.nodeName ? t.nodeName.toLowerCase() : "x");
+        if(t.attributes$2) {
+            for(let l = 0; l < t.attributes$2.length; ++l) {
+                const a = t.attributes$2[l];
+                // we need to html escape certain characters, which I do a few of.
+                s += ` ${a.name}="${simpleHtmlEscape(a.value.toString())}"`
+            }
+        }
+        s += '>';
+        if(t.childNodes)
+            for(let i=0; i<t.childNodes.length; ++i)
+                s += w.Element.htmlString(t.childNodes[i]);
+        s += "</";
+        s += (t.nodeName ? t.nodeName.toLowerCase() : "x");
+        s += '>';
+        return s;
+    }
 
-odp(elemp, "outerHTML", { get: function() { return htmlString(this);},
-set: function(h) { outer$1(this,h); }});
+    get outerHTML() { return w.Element.htmlString(this); }
+
+// do this in a way that won't make lots of mutation records
+    set outerHTML(h)
+    {
+        const p = this.parentNode;
+        if(!p) return;
+        const n = this.nextSibling; // could be null
+        p.removeChild(this); // one mutation record
+        this.innerHTML = h;
+        let frag = d.createDocumentFragment();
+        while(this.firstChild) frag.appendChild$nm(this.firstChild);
+        p.insertBefore(frag, n);
+    }
+
+})
+
+let elemp = w.Element.prototype;
 
 odp(elemp, "shadowRoot", {
 get:function(){
