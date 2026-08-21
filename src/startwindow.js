@@ -345,10 +345,17 @@ class Node extends EventTarget
         this.childNodes.push(c);
         c.parentNode = this;
     }
+
+    contains(n)
+    {
+        if (!n) return false;
+        if (n === this) return true;
+        for (let p = n; p && !p.is$frame; p = p.parentNode)
+            if (p === this) return true;
+        return false;
+    }
 }
 swdc(Node);
-
-
 // Not quite right, still missing, at a minimum, whenDefined and upgrade
 class CustomElementRegistry
 {

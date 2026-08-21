@@ -825,20 +825,6 @@ function markAllCollections()
         markNodeCollections(c);
 }
 
-function nodeContains(n) {  return cont(this, n); }
-
-function cont(top, n) {
-if(!top || !n) return false;
-let p;
-if(top === n) return true;
-while(p = n.parentNode) {
-n = p;
-if(n.is$frame) return false;
-if(n == top) return true;
-}
-return false;
-}
-
 function dispatchEvent(e)
 {
     // We've dispatched this now regardless of what happens next
@@ -3825,8 +3811,6 @@ odp( nodep, "dataset", { get: function(){
 if(!this.dataset$2)
 odp(this, "dataset$2", {value:new w.Object})
 return this.dataset$2}})
-
-nodep.contains = nodeContains;
 
 /*********************************************************************
 In the wild, I saw  validNode.firstChild.call(null).
@@ -9963,7 +9947,7 @@ Response.prototype.toString = function(){return "[object Response]"}
 
 // have these functions say "native code" when stringified
 for(let k of [
-getElementsByTagName, getElementsByClassName, getElementsByName, getElementById,nodeContains,
+getElementsByTagName, getElementsByClassName, getElementsByName, getElementById,
 dispatchEvent, addEventListener, removeEventListener,
 NodeFilter,createNodeIterator,createTreeWalker,
 runScriptWhenAttached, connectedCallbackCheck,
