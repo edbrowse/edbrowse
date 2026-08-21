@@ -1669,257 +1669,303 @@ function connectedCallbackCheck(t)
 const standard_event_classes = ["Element", "Document"];
 const standard_hashchange_classes = ["HTMLBodyElement", "SVGElement"];
 
-/*********************************************************************
-cloneNode creates a copy of the node and its children recursively.
-The argument 'deep' refers to whether or not the clone will recurs.
-clone1 is a helper function that is not tied to any particular prototype.
-into means we are cloning into this context, as in importNode().
-It's frickin complicated, so set cloneDebug to debug it.
-*********************************************************************/
+    /*********************************************************************
+    cloneNode creates a copy of the node and its children recursively.
+    The argument 'deep' refers to whether or not the clone will recurs.
+    clone1 is a helper function that is not tied to any particular prototype.
+    into means we are cloning into this context, as in importNode().
+    It's frickin complicated, so set cloneDebug to debug it.
+    *********************************************************************/
 
-function clone1(node1,deep, into)
+function cloneNodeHelper(root, deep, into)
 {
-var node2;
-var i, j;
-var kids = null;
-var debug = db$flags(2)
-var w0 = my$win()
-var w = w0
-// if cloneNode then refer to the window that created the node
-if(!into && node1.ownerDocument && node1.ownerDocument.defaultView)
-w = node1.ownerDocument.defaultView
-var d = w.document
+    // these days we always have cloneRoot1 = node1 so just do that
+    const cloneRoot1 = root;
+    let cloneRoot2;
+    const w0 = my$win();
+    const debug = db$flags(2);
 
-// WARNING: don't use instanceof Array here.
-// Array is a different class in another frame.
-if(Array.isArray(node1.childNodes))
-kids = node1.childNodes;
+    function clone1(node1)
+    {
+        let node2;
+        let i, j;
+        let kids = null;
 
-// We should always be cloning a node.
-if(debug) alert3("clone " + node1.nodeName + " {");
-if(debug) {
-if(kids) {
-if(kids.length) alert3("kids " + kids.length);
-} else alert3("no childNodes, type " + typeof node1.childNodes);
-}
+        let w = w0;
+        // if cloneNode then refer to the window that created the node
+        if (!into && node1.ownerDocument && node1.ownerDocument.defaultView)
+            w = node1.ownerDocument.defaultView
+        const d = w.document
 
-if(node1.nodeName == "#text")
-node2 = d.createTextNode(node1.data);
-else if(node1.nodeName == "#comment")
-node2 = d.createComment();
-else if(node1.nodeName == "#document-fragment")
-node2 = d.createDocumentFragment();
-else if(node1.dom$class == "CSSStyleDeclaration") {
-if(debug) alert3("skipping style object");
-return null;
-} else {
-/* Here's what we use to do.
-node2 = d.createElement(node1.nodeName);
-Simple - right?
-Picture this though.
-<svg><style></style></svg>
-In that context, the style tag becomes SVGStyleElement.
-If I simply create a new node based on nodeName, it becomes HTMLStyleElement.
-In other words, some tag names are ambiguous.
-They are determined by the context of the html around them,
-which I don't have.
-I need to make node2 based on the actual class of node1. */
-node2 = new node1.constructor;
-/* But createElement does more than just instantiate the class. */
-node2.nodeName = node1.nodeName;
-node2.tagName = node1.tagName;
-domLinkage('c', node2, node2.nodeName);
-}
-if(node1 == w0.cloneRoot1) w0.cloneRoot2 = node2;
+        // WARNING: don't use instanceof Array here.
+        // Array is a different class in another frame.
+        if (Array.isArray(node1.childNodes))
+            kids = node1.childNodes;
 
-// now for strings and functions and such.
-for (var item in node1) {
-// don't copy the things that come from prototype
-if(!node1.hasOwnProperty(item)) continue;
-
-// children already handled
-if(item === "childNodes" || item === "parentNode") continue;
-
-if(w0.Element.attrNameImplicit(node1, item)) continue;
-
-if (typeof node1[item] === 'function') {
-if(debug) alert3("copy function " + item);
-node2[item] = node1[item];
-continue;
-}
-
-if(node1[item] === node1) {
-if(debug) alert3("selflink through " + item);
-node2[item] = node2;
-continue;
-}
-
-// various kinds of arrays
-if(Array.isArray(node1[item])) {
-
-// event handlers shouldn't carry across.
-if(item.match(/^on[a-zA-Z]+\$\$array$/)) continue;
-
-if(node1.dom$class == "HTMLFormElement") {
-// form.elements is culled by attrNameImplicit(),
-// along with table.rows and tr.cells and many other derived arrays.
-// Arrays of radio buttons are not predictable and handled here.
-if(node1[item].length &&  typeof node1[item][0] == "object" &&
-node1[item][0].form == node1) continue;
-}
-
-node2[item] = new w.Array;
-if(debug) alert3("copy array " + item + " with " + node1[item].length + " members");
-for(i = 0; i < node1[item].length; ++i)
-node2[item].push(node1[item][i]);
-continue;
-}
-
-if(typeof node1[item] === "object") {
-// An object, but not an array.
-
-// skip the on-demand background objects
-if(item === "style$2") continue;
-if(item === "attributes$2") continue;
-if(item === "dataset$2") continue;
-if(item === "getElements$$cache") continue;
-if(item === "ownerDocument") continue; // handled by createElement
-if(item === "validity") continue; // created by constructor
-
-if(node1[item] === null) { node2[item] = null; continue; }
-
-// Check for URL objects.
-if(node1[item].dom$class == "URL") {
-var u = node1[item];
-if(debug) alert3("copy URL " + item);
-node2[item] = new w.z$URL(u.href);
-continue;
-}
-
-// some sites displace my URL with theirs
-if(node1[item] instanceof w.URL) {
-var u = node1[item];
-if(debug) alert3("copy URL " + item);
-node2[item] = new w.URL(u.toString());
-continue;
-}
-
-// link from fomr to input element will be built later
-if(node1.dom$class == "HTMLFormElement" &&
-node1[item].nodeType == 1 &&
-node1[item].form == node1)
-continue;
-
-// Look for a link from A to B within the tree of nodes,
-// A.foo = B, and try to preserve that link in the new tree, A1.foo = B1,
-// rather like tar or cpio preserving hard links.
-var p = findObject(node1[item]);
-if(p.length) {
-if(debug) alert3("link " + item + " " + p);
-node2[item] = correspondingObject(p);
-} else {
-// I don't think we should point to a generic object that we don't know anything about.
-if(debug) alert3("unknown object " + item);
-}
-continue;
-}
-
-if (typeof node1[item] === 'string') {
-// don't copy strings that are really setters; we'll be copying inner$html
-// as a true string so won't need to copy innerHTML, and shouldn't.
-if(item == "innerHTML")
-continue;
-if(item == "innerText")
-continue;
-if(item == "value" &&
-!Array.isArray(node1) && !(node1.dom$class == "HTMLOptionElement"))
-continue;
-if((item == "nodeName" || item == "tagName") && node1.nodeType == 1)
-continue;
-// these are spilldown from the attributes, and will be copied over as attributes
-if(item == "class" || item == "id") continue;
-if(debug) {
-var showstring = node1[item];
-if(showstring.length > 140) showstring = "long";
-alert3("copy string " + item + " = " + showstring);
-}
-node2[item] = node1[item];
-continue;
-}
-
-if (typeof node1[item] === 'number') {
-if(item == "eb$seqno") continue;
-if(item == "nodeType" && node1.nodeType == 1)
-continue;
-if(debug) alert3("copy number " + item + " = " + node1[item]);
-node2[item] = node1[item];
-continue;
-}
-
-if (typeof node1[item] === 'boolean') {
-if(item == "connectedCallback$pending" ||
-item == "disconnectedCallback$pending") continue;
-// can you clone or import a node from an xml frame? Maybe.
-if(item == "eb$xml") continue;
-// these are spilldown from the attributes, and will be copied over as attributes
-if(item == "ariaHidden") continue;
-if(debug) alert3("copy boolean " + item + " = " + node1[item]);
-node2[item] = node1[item];
-continue;
-}
-}
-
-if (node1.attributes$2) { // has attributes
-if(debug) alert3("copy attributes");
-for(var l=0; l<node1.attributes.length; ++l) {
-if(debug) alert3("copy attribute " + node1.attributes[l].name);
-node2.setAttribute(node1.attributes[l].name, node1.attributes[l].value);
-}
-}
-
-// copy style object if present and its subordinate strings.
-// This has to happen after the attributes.
-// In case the style property and getAttribute("style") disagree.
-    if (node1.style$2 && node1.style$2.dom$class == "CSSStyleDeclaration") {
-    if(debug) alert3("copy style");
-    // referencing it will create it
-    node2.style;
-    node2.style.element = node2;
-    for (var l in node1.style$2){
-        if(!node1.style$2.hasOwnProperty(l)) continue;
-        if (typeof node1.style$2[l] === 'string' ||
-        typeof node1.style$2[l] === 'number') {
-            if(debug) alert3("copy stattr " + l);
-            node2.style$2[l] = node1.style$2[l];
+        // We should always be cloning a node.
+        if (debug) alert3("clone " + node1.nodeName + " {");
+        if (debug) {
+            if (kids && kids.length) alert3("kids " + kids.length);
+            else alert3("no childNodes, type " + typeof node1.childNodes);
         }
-    }
-    }
 
-    if (deep && kids) {
-        for(i = 0; i < kids.length; ++i) {
-            let current_item = kids[i];
-            if(current_item.nodeType == 11) {
-                alert3("cannot clone a fragment, skipping this child.");
+        if (node1.nodeName == "#text")
+            node2 = d.createTextNode(node1.data);
+        else if (node1.nodeName == "#comment")
+            node2 = d.createComment();
+        else if (node1.nodeName == "#document-fragment")
+            node2 = d.createDocumentFragment();
+        else if (node1.dom$class == "CSSStyleDeclaration") {
+            if (debug) alert3("skipping style object");
+            return null;
+        }
+        else {
+            /* Here's what we use to do.
+            node2 = d.createElement(node1.nodeName);
+            Simple - right?
+            Picture this though.
+            <svg><style></style></svg>
+            In that context, the style tag becomes SVGStyleElement.
+            If I simply create a new node based on nodeName, it becomes HTMLStyleElement.
+            In other words, some tag names are ambiguous.
+            They are determined by the context of the html around them,
+            which I don't have.
+            I need to make node2 based on the actual class of node1. */
+            node2 = new node1.constructor;
+            // But createElement does more than just instantiate the class.
+            node2.nodeName = node1.nodeName;
+            node2.tagName = node1.tagName;
+            domLinkage('c', node2, node2.nodeName);
+        }
+        // track root node for corresponding object search
+        if (cloneRoot1 === node1) cloneRoot2 = node2;
+
+        // now for strings and functions and such.
+        for (const item in node1) {
+            // don't copy the things that come from prototype
+            if (!node1.hasOwnProperty(item)) continue;
+
+            // children already handled
+            if (item === "childNodes" || item === "parentNode") continue;
+
+            if (w0.Element.attrNameImplicit(node1, item)) continue;
+
+            if (typeof node1[item] === 'function') {
+                if (debug) alert3("copy function " + item);
+                node2[item] = node1[item];
                 continue;
             }
-// mutation observers don't apply to these newly created items.
-// I can call the faster, simpler appendChild method.
-            node2.appendChild$nm(clone1(current_item,deep, into));
+
+            if (node1[item] === node1) {
+                if (debug) alert3("selflink through " + item);
+                node2[item] = node2;
+                continue;
+            }
+
+            // various kinds of arrays
+            if (Array.isArray(node1[item])) {
+                // event handlers shouldn't carry across.
+                if (item.match(/^on[a-zA-Z]+\$\$array$/)) continue;
+                // form.elements is culled by attrNameImplicit(),
+                // along with table.rows and tr.cells and many other derived arrays.
+                // Arrays of radio buttons are not predictable and handled here.
+                if (
+                    node1.dom$class == "HTMLFormElement" &&
+                    node1[item].length &&
+                    typeof node1[item][0] == "object" &&
+                    node1[item][0].form == node1
+                ) continue;
+
+                node2[item] = new w.Array;
+                if (debug) alert3("copy array " + item + " with " + node1[item].length + " members");
+                for (const i of node1[item]) node2[item].push(i);
+                continue;
+            }
+
+            if (typeof node1[item] === "object") {
+                // An object, but not an array.
+                // skip the on-demand background objects
+                if (item === "style$2") continue;
+                if (item === "attributes$2") continue;
+                if (item === "dataset$2") continue;
+                if (item === "getElements$$cache") continue;
+                if (item === "ownerDocument") continue; // handled by createElement
+                if (item === "validity") continue; // created by constructor
+                if (node1[item] === null) { node2[item] = null; continue; }
+                // Check for URL objects.
+                if (node1[item].dom$class == "URL") {
+                    const u = node1[item];
+                    if (debug) alert3("copy URL " + item);
+                    node2[item] = new w.z$URL(u.href);
+                    continue;
+                }
+
+                // some sites displace my URL with theirs
+                if (node1[item] instanceof w.URL) {
+                    const u = node1[item];
+                    if (debug) alert3("copy URL " + item);
+                    node2[item] = new w.URL(u.toString());
+                    continue;
+                }
+
+                // link from form to input element will be built later
+                if(
+                    node1.dom$class == "HTMLFormElement" &&
+                    node1[item].nodeType == 1 &&
+                    node1[item].form == node1
+                ) continue;
+
+                // Look for a link from A to B within the tree of nodes,
+                // A.foo = B, and try to preserve that link in the new tree, A1.foo = B1,
+                // rather like tar or cpio preserving hard links.
+                const p = findObject(node1[item]);
+                if (p.length) {
+                    if(debug) alert3("link " + item + " " + p);
+                    node2[item] = correspondingObject(p);
+                }
+                else // I don't think we should point to a generic object that we don't know anything about.
+                    if (debug) alert3("unknown object " + item);
+
+                continue;
+            }
+
+            if (typeof node1[item] === 'string') {
+                // don't copy strings that are really setters; we'll be copying inner$html
+                // as a true string so won't need to copy innerHTML, and shouldn't.
+                if(item == "innerHTML")
+                    continue;
+                if (item == "innerText")
+                    continue;
+                if(
+                    item == "value" &&
+                    !Array.isArray(node1) &&
+                    !(node1.dom$class == "HTMLOptionElement")
+                ) continue;
+                if (
+                    (item == "nodeName" || item == "tagName") &&
+                    node1.nodeType == 1
+                ) continue;
+                // these are spilldown from the attributes, and will be copied over as attributes
+                if (item == "class" || item == "id") continue;
+                if(debug) {
+                    let showstring = node1[item];
+                    if(showstring.length > 140) showstring = "long";
+                    alert3("copy string " + item + " = " + showstring);
+                }
+                node2[item] = node1[item];
+                continue;
+            }
+            if (typeof node1[item] === 'number') {
+                if (item == "eb$seqno") continue;
+                if (item == "nodeType" && node1.nodeType == 1) continue;
+                if (debug) alert3("copy number " + item + " = " + node1[item]);
+                node2[item] = node1[item];
+                continue;
+            }
+
+            if (typeof node1[item] === 'boolean') {
+                if (
+                    item == "connectedCallback$pending" ||
+                    item == "disconnectedCallback$pending"
+                ) continue;
+                // can you clone or import a node from an xml frame? Maybe.
+                if (item == "eb$xml") continue;
+                // these are spilldown from the attributes, and will be copied over as attributes
+                if (item == "ariaHidden") continue;
+                if (debug) alert3("copy boolean " + item + " = " + node1[item]);
+                node2[item] = node1[item];
+                continue;
+            }
         }
+
+        if (node1.attributes$2) { // has attributes
+            if (debug) alert3("copy attributes");
+            for (let i=0; i < node1.attributes.length; ++i) {
+                const a = node1.attributes[i];
+                if(debug) alert3(`copy attribute ${a.name}`);
+                node2.setAttribute(a.name, a.value);
+            }
+        }
+
+        // copy style object if present and its subordinate strings.
+        // This has to happen after the attributes.
+        // In case the style property and getAttribute("style") disagree.
+        if (node1.style$2 && node1.style$2.dom$class == "CSSStyleDeclaration") {
+            if (debug) alert3("copy style");
+            // referencing it will create it
+            node2.style;
+            node2.style.element = node2;
+            for (const l in node1.style$2){
+                if (!node1.style$2.hasOwnProperty(l)) continue;
+                if (
+                    typeof node1.style$2[l] === 'string' ||
+                    typeof node1.style$2[l] === 'number'
+                ) {
+                    if (debug) alert3("copy stattr " + l);
+                    node2.style$2[l] = node1.style$2[l];
+                }
+            }
+        }
+
+        if (deep && kids) {
+            for(const k of kids) {
+                if(k.nodeType == 11) {
+                    alert3("cannot clone a fragment, skipping this child.");
+                    continue;
+                }
+                // mutation observers don't apply to these newly created items.
+                // I can call the faster, simpler appendChild method.
+                node2.appendChild$nm(clone1(k));
+            }
+        }
+
+        if (node1.nodeType == 1) {
+            if (
+                node1.dom$class == "HTMLFormElement" ||
+                node1.dom$class == "HTMLFieldSetElement"
+            ) formReindex(node2);
+
+            if (node1.dom$class == "HTMLTableElement") tableReindex(node2);
+            if (node1.dom$class == "HTMLSelectElement") selectReindex(node2);
+        }
+
+        if (debug) alert3("}");
+        return node2;
     }
 
-    if(node1.nodeType == 1) {
-        if(node1.dom$class == "HTMLFormElement" ||
-        node1.dom$class == "HTMLFieldSetElement")
-            formReindex(node2);
-        if(node1.dom$class == "HTMLTableElement")
-            tableReindex(node2);
-        if(node1.dom$class == "HTMLSelectElement")
-            selectReindex(node2);
+    // Find an object in a tree of nodes being cloned.
+    // Return a sequence of numbers, for children, from the root.
+    function findObject(t)
+    {
+        let p = "";
+        while (t != cloneRoot1) {
+            const up = t.parentNode;
+            if (!up || up.nodeType == 9 || !up.childNodes) return "";
+            let i;
+            for(i=0; i<up.childNodes.length; ++i)
+                if(up.childNodes[i] == t) break;
+            if(i == up.childNodes.length) return "";
+            p = "," + i + p;
+            t = up;
+        }
+        return p + ',';
     }
 
-    if(debug) alert3("}");
-    return node2;
+    // The inverse of the above.
+    function correspondingObject(p)
+    {
+        const c = cloneRoot2;
+        p = p.substr(1);
+        while (p) {
+            const j = p.replace(/,.*/, "");
+            if(!c.childNodes || j >= c.childNodes.length) return "";
+            c = c.childNodes[j];
+            p = p.replace(/^\d+,/, "");
+        }
+        return c;
+    }
+
+    return clone1(root);
 }
 
 /* an attempt at a structured clone implementation, definitely needs some work
@@ -2036,39 +2082,8 @@ function structuredClone(obj, options)
         }
         return new_obj;
     }
+
     return clone_helper(obj);
-}
-
-// Find an object in a tree of nodes being cloned.
-// Return a sequence of numbers, for children, from the root.
-function findObject(t) {
-var w = my$win();
-var p = "";
-while(t != w.cloneRoot1) {
-var up = t.parentNode;
-if(!up || up.nodeType == 9 || !up.childNodes) return "";
-var i;
-for(i=0; i<up.childNodes.length; ++i)
-if(up.childNodes[i] == t) break;
-if(i == up.childNodes.length) return "";
-p = "," + i + p;
-t = up;
-}
-return p + ',';
-}
-
-// The inverse of the above.
-function correspondingObject(p) {
-var w = my$win();
-var c = w.cloneRoot2;
-p = p.substr(1);
-while(p) {
-var j = p.replace(/,.*/, "");
-if(!c.childNodes || j >= c.childNodes.length) return "";
-c = c.childNodes[j];
-p = p.replace(/^\d+,/, "");
-}
-return c;
 }
 
 // simple function to clone Attr
@@ -3777,11 +3792,6 @@ return !(this.valueMissing)}})
 
 const thisNode = () => true;
 let nodep = w.Node.prototype;
-nodep.cloneNode = function(deep) {
-    w.cloneRoot1 = this;
-    return clone1 (this,deep, false);
-}
-
 nodep.querySelector = querySelector
 nodep.querySelectorAll = function(c,s) {
     return new w.NodeList(this, (n) => querySelectorAll.call(n,c,s));

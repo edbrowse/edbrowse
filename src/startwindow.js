@@ -574,6 +574,8 @@ class Node extends EventTarget
             this.parentNode && this.parentNode.nodeType == 1
         ) ? this.parentNode : null;
     }
+    cloneNode(deep) { return mw$.cloneNodeHelper(this,deep, false); }
+
 }
 swdc(Node);
 // Not quite right, still missing, at a minimum, whenDefined and upgrade
@@ -728,8 +730,7 @@ swp("removeEventListener", mw$.removeEventListener.bind(window))
 // of objects from another context into the current context.
 // Set the second parameter to true to indicate this.
 sdp("importNode", function(start,deep) {
-    window.cloneRoot1 = start;
-    return mw$.clone1 (start,deep, true);
+    return mw$.cloneNodeHelper(start,deep, true);
 })
 
 // link functions from the shared window into document
