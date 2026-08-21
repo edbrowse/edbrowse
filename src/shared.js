@@ -3777,42 +3777,6 @@ return !(this.valueMissing)}})
 
 const thisNode = () => true;
 let nodep = w.Node.prototype;
-
-// helper functions to get the next or previous sibling
-function getSibling (obj,direction) {
-const pn = obj.parentNode;
-if(!pn) return null;
-let j, l = pn.childNodes.length;
-for (j=0; j<l; ++j)
-if (pn.childNodes[j] == obj) break;
-if (j == l) {
-// child not found under parent, error
-return null;
-}
-switch(direction) {
-case "previous":
-return (j > 0 ? pn.childNodes[j-1] : null);
-case "next":
-return (j < l-1 ? pn.childNodes[j+1] : null);
-default:
-// the function should always have been called with either 'previous' or 'next' specified
-return null;
-}
-}
-
-odp(nodep, "nextSibling", { get: function() {
-return getSibling(this,"next")} })
-odp(nodep, "previousSibling", { get: function() {
-return getSibling(this,"previous")} })
-
-odp(nodep, "parentElement", {
-get: function() {
-if(!thisNode(this)) return null;
-return this.parentNode && this.parentNode.nodeType == 1 ?
-this.parentNode : null}})
-
-
-
 nodep.cloneNode = function(deep) {
     w.cloneRoot1 = this;
     return clone1 (this,deep, false);

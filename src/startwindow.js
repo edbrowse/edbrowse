@@ -541,6 +541,39 @@ class Node extends EventTarget
     }
 
     getClientRects() { return []; }
+
+    static getSibling(obj,direction)
+    {
+        const pn = obj.parentNode;
+        if (!pn) return null;
+        let j, l = pn.childNodes.length;
+        for (j=0; j<l; ++j)
+            if (pn.childNodes[j] == obj) break;
+        if (j == l) {
+            // child not found under parent, error
+            return null;
+        }
+        switch (direction) {
+            case "previous":
+                return (j > 0 ? pn.childNodes[j-1] : null);
+            case "next":
+                return (j < l-1 ? pn.childNodes[j+1] : null);
+            default:
+                // the function should always have been called with either 'previous' or 'next' specified
+            return null;
+        }
+    }
+
+    get nextSibling() { return Node.getSibling(this,"next"); }
+    get previousSibling() { return Node.getSibling(this,"previous"); }
+
+    get parentElement()
+    {
+
+        return (
+            this.parentNode && this.parentNode.nodeType == 1
+        ) ? this.parentNode : null;
+    }
 }
 swdc(Node);
 // Not quite right, still missing, at a minimum, whenDefined and upgrade
