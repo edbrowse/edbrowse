@@ -3547,7 +3547,7 @@ swde("URL", class extends w.Object {
         if(this.protocol$val) {
             // protocol includes the colon
             h = this.protocol$val;
-            var plc = h.toLowerCase();
+            let plc = h.toLowerCase();
             if(plc != "mailto:" && plc != "telnet:" && plc != "javascript:")
             h += "//";
         }
@@ -4334,7 +4334,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
             return null;
         let     a = null, name = b.name;
         if(name === "length") {
-            for(var i=0; i<this.attributes.length; ++i)
+            for(let i=0; i<this.attributes.length; ++i)
                 if(this.attributes[i].name == name) {
                     a = this.attributes[i];
                     break;
@@ -4628,7 +4628,8 @@ We set up for HR.onsubmit, for example; other browsers might not. */
         mutFixup(p, 0, additions, null);
     }
 
-    replaceWith() {
+    replaceWith()
+    {
         const p = this.parentNode;
         if(!p) return;
         const n = this.nextSibling;
@@ -4822,57 +4823,59 @@ Here is the way. */
         this.replaceWith(frag);
     }
 
+    get shadowRoot()
+    {
+        let r = this.firstChild;
+        if(r && r.nodeName == "SHADOWROOT" && r.mode == "open") return r;
+        return null;
+    }
+
+    attachShadow(o)
+    {
+        // I should have a list of allowed tags here, but custom tags are allowed,
+        // and I don't know how to determine that,
+        // so I'll just reject a few tags.
+        let nn = this.nodeName;
+        if(nn == "A" || nn == "FRAME" || nn == "IFRAME" ||
+        nn == "#document" || nn == "#text" || nn == "#comment" ||
+        nn == "TABLE" || nn == "TH" || nn == "TD" || nn == "TR" || nn == "FORM" || nn == "INPUT" ||
+        nn == "SHADOWROOT") // no shadow root within a shadow root
+            return null;
+        let r = d.createElement("ShadowRoot");
+        this.appendChild(r);
+        r.mode = "open";
+        r.delegatesFocus = false;
+        r.slotAssignment = "";
+        if(typeof o == "object") {
+            if(o.mode) r.mode = o.mode;
+            if(o.delegatesFocus) r.delegatesFocus = o.delegatesFocus;
+            if(o.slotAssignment) r.slotAssignment = o.slotAssignment;
+        }
+        return r;
+    }
+
+// Visual. Doesn't mean anything to us, but should probably exist.
+    static {
+        const tp = this.prototype;
+        tp.clientTop = 0;
+        tp.clientHeight = 16;
+        tp.clientWidth = 120;
+        tp.scrollHeight = 16;
+        tp.scrollWidth = 120;
+        tp.scrollTop = 0;
+        tp.scrollLeft = 0;
+        tp.dir = "auto";
+        tp.scroll = eb$voidfunction;
+        tp.scrollBy = eb$voidfunction;
+        tp.scrollByLines = eb$voidfunction;
+        tp.scrollByPages = eb$voidfunction;
+        tp.scrollTo = eb$voidfunction;
+        tp.scrollIntoView = eb$voidfunction;
+    }
+
 })
 
 let elemp = w.Element.prototype;
-
-odp(elemp, "shadowRoot", {
-get:function(){
-var r = this.firstChild;
-if(r && r.nodeName == "SHADOWROOT" && r.mode == "open") return r;
-return null;
-}});
-
-elemp.attachShadow = function(o){
-// I should have a list of allowed tags here, but custom tags are allowed,
-// and I don't know how to determine that,
-// so I'll just reject a few tags.
-var nn = this.nodeName;
-if(nn == "A" || nn == "FRAME" || nn == "IFRAME" | nn == "#document" || nn == "#text" || nn == "#comment" ||
-nn == "TABLE" || nn == "TH" || nn == "TD" || nn == "TR" || nn == "FORM" || nn == "INPUT" ||
-nn == "SHADOWROOT") // no shadow root within a shadow root
-return null;
-var r = d.createElement("ShadowRoot");
-this.appendChild(r);
-r.mode = "open";
-r.delegatesFocus = false;
-r.slotAssignment = "";
-if(typeof o == "object") {
-if(o.mode) r.mode = o.mode;
-if(o.delegatesFocus) r.delegatesFocus = o.delegatesFocus;
-if(o.slotAssignment) r.slotAssignment = o.slotAssignment;
-}
-return r;
-}
-
-// visual
-elemp.clientTop = 0;
-elemp.clientHeight = 16;
-elemp.clientWidth = 120;
-elemp.scrollHeight = 16;
-elemp.scrollWidth = 120;
-elemp.scrollTop = 0;
-elemp.scrollLeft = 0;
-elemp.dir = "auto";
-elemp.scroll = eb$voidfunction;
-elemp.scrollBy = eb$voidfunction;
-elemp.scrollByLines = eb$voidfunction;
-elemp.scrollByPages = eb$voidfunction;
-elemp.scrollTo = eb$voidfunction;
-elemp.scrollIntoView = eb$voidfunction;
-
-// the various aria properties, for assistive technologies;
-// these might be very important, but edbrowse doesn't honor any of them yet.
 
 // This is a manufactured method for css purposes,
 // to inject words or marks before or after a tag, marks that you don't see
