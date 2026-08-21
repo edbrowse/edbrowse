@@ -215,8 +215,11 @@ if(q.length != 1) msg += "|bad *6"
 q = b.querySelectorAll("p:not(div>p)");
 if(q.length != 1 || q[0].id != "show") msg += "|wrong p not below div";
 
+de = document.documentElement;
 q = document.querySelectorAll(":root,.shoe");
-if(q.length != 2 || q[0] != document.documentElement || q[1].nodeName != "DIV") msg += "|:root not found";
+if(q.length != 2 || q[0] != de || q[1].nodeName != "DIV") msg += "|:root not found";
+// as usual we won't find it if it is at the top
+if(de.querySelector(":root")) msg += "|root finds itself";
 
 // matches is a form of querySelector. This is not at all the same
 // as match, which takes a regular expression.
