@@ -3807,10 +3807,6 @@ return !(this.valueMissing)}})
 
 let nodep = w.Node.prototype;
 // dataset is on demand
-odp( nodep, "dataset", { get: function(){
-if(!this.dataset$2)
-odp(this, "dataset$2", {value:new w.Object})
-return this.dataset$2}})
 
 /*********************************************************************
 In the wild, I saw  validNode.firstChild.call(null).

@@ -72,12 +72,13 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
         this.document.getElementsByTagName = (t)=>[];
 }
 
+
+Object.defineProperty(this, "odp", {value: Object.defineProperty});
 /*
     We need some shorthand for this rather large file.
     Think of these as macros; they are deleted at the end so they don't persist.
     As such you can't use them in anything that runs after that point.
 */
-this.odp = Object.defineProperty;
 // set a window property, unseen, unchanging
 this.swp = function(k, v) { odp(window, k, {value:v})}
 // visible (enumerable), but still protected
@@ -353,6 +354,12 @@ class Node extends EventTarget
         for (let p = n; p && !p.is$frame; p = p.parentNode)
             if (p === this) return true;
         return false;
+    }
+
+    get dataset()
+    {
+        if (!this.dataset$2) odp(this, "dataset$2", {value: {}});
+            return this.dataset$2;
     }
 }
 swdc(Node);
@@ -1306,6 +1313,6 @@ if (!window.atob) {
 ;(function() {
     let names_to_delete = [
     "swgs", "swp", "swpv", "swpc", "swpp",
-    "sdp", "sdpc", "swdc", "swde", "odp"];
+    "sdp", "sdpc", "swdc", "swde"];
     for (let k of names_to_delete) delete window[k]
 })();
