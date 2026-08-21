@@ -218,7 +218,8 @@ for(let f of ["UnsupportedError",
 "set_location_hash", "NodeFilter", "tableReindex", "formReindex", "selectReindex",
 "markAllCollections", "markUpwardCollections",
 "mutFixup", "makeSheets", "gebtn",
-"runScriptWhenAttached", "simpleHtmlEscape"])
+"runScriptWhenAttached", "simpleHtmlEscape", "appendFragment",
+"appendFragment$nm", "insertFragment", "insertFragment$nm", "checkUpward"])
     swp(f, mw$[f]);
 for(let f of ["close"])
     swpv(f, mw$[f]);
@@ -360,6 +361,170 @@ class Node extends EventTarget
     {
         if (!this.dataset$2) odp(this, "dataset$2", {value: {}});
             return this.dataset$2;
+    }
+
+    hasChildNodes()
+    {
+        return (this.childNodes && this.childNodes.length);
+    }
+
+    /*********************************************************************
+    Before adding the element, appendChild makes another check;
+    if the child is already linked into the tree, then we have to unlink it first,
+    before we put it somewhere else.
+    This is a call to removeChild, also native, which unlinks in js,
+    and passses the remove side effect back to edbrowse.
+    The same reasoning holds for insertBefore.
+    These functions also check for a hierarchy cycle using isabove().
+    If such would appear, isabove throws an error.
+    So let's start with the helper function isabove.
+    *********************************************************************/
+
+    static isabove(a, b)
+    {
+        let j = 0;
+        while(b) {
+            if(b === a) {
+                let e = new Error;
+                e.HIERARCHY_REQUEST_ERR = e.code = 3;
+                throw e;
+            }
+            if(++j == 1000) {
+                alert3("isabove loop");
+                break;
+            }
+            b = b.parentNode;
+        }
+    }
+
+    appendChild(c)
+    {
+        if(!c) return null;
+        if(c.nodeType == 11) return appendFragment(this, c);
+        Node.isabove(c, this);
+        if(c.parentNode) c.parentNode.removeChild(c);
+        this.appendChild2(c);
+        // a text node won't change the structure of the form, or the html collection
+        if(c.nodeType != 3) {
+            checkUpward(this);
+            runScriptWhenAttached(c);
+        }
+        // a text node can have an observer - for CharacterData
+        mutFixup(this, 0, c, null);
+        return c;
+    }
+
+    appendChild$nm(c)
+    {
+        if(!c) return null;
+        if(c.nodeType == 11) return appendFragment$nm(this, c);
+        Node.isabove(c, this);
+        if(c.parentNode) c.parentNode.removeChild$nm(c);
+        this.appendChild2(c);
+        if(c.nodeType != 3)
+            runScriptWhenAttached(c);
+        return c;
+    }
+
+    // this is an internal function, and it doesn't watch for fragment
+    prepend$child(c)
+    {
+        let v;
+        Node.isabove(c, this);
+        if(this.childNodes.length) v = this.insertBefore(c, this.childNodes[0]);
+        else v = this.appendChild(c);
+        return v;
+    }
+
+    prepend$child$nm(c)
+    {
+
+        let v;
+        Node.isabove(c, this);
+        if(this.childNodes.length) v = this.insertBefore$nm(c, this.childNodes[0]);
+        else v = this.appendChild$nm(c);
+        return v;
+    }
+
+    insertBefore(c, t)
+    {
+        if(!c) return null;
+        if(!t) return this.appendChild(c);
+        Node.isabove(c, this);
+        if(c.nodeType == 11) return insertFragment(this, c, t);
+        if(c.parentNode) c.parentNode.removeChild(c);
+        const cn = this.childNodes;
+        const l = cn.length;
+        let mark = -1;
+        for(let i = 0; i < l; ++i)
+            if(t == cn[i]) mark = i;
+        if(mark < 0) return null;
+        cn.splice(mark, 0, c);
+        c.parentNode = this;
+        domLinkage('b', this, "", c, t); // update the tree in C
+        if (c.nodeType != 3) {
+            checkUpward(this);
+            runScriptWhenAttached(c);
+        }
+        mutFixup(this, 0, c, null);
+        return c;
+    }
+
+    insertBefore$nm(c, t)
+    {
+        if(!c) return null;
+        if(!t) return this.appendChild$nm(c);
+        Node.isabove(c, this);
+        if (c.nodeType == 11) return insertFragment$nm(this, c, t);
+        if (c.parentNode) c.parentNode.removeChild$nm(c);
+        const cn = this.childNodes;
+        const l = cn.length;
+        let mark = -1;
+        for(let i = 0; i < l; ++i)
+            if (t == cn[i]) mark = i;
+        if (mark < 0) return null;
+        cn.splice(mark, 0, c);
+        c.parentNode = this;
+        domLinkage('b', this, "", c, t); // update the tree in C
+        if (c.nodeType != 3)
+            runScriptWhenAttached(c);
+        return c;
+    }
+
+    removeChild(c)
+    {
+        if (!c) return null;
+        const cn = this.childNodes;
+        const l = cn.length;
+        let mark = -1;
+        for (let i = 0; i < l; ++i)
+            if (c == cn[i]) { mark = i; break; }
+        if (mark < 0) return null;
+        cn.splice(mark, 1);
+        c.parentNode = null;
+        domLinkage('r', this, "", c);
+        if (c.nodeType != 3) {
+            checkUpward(this);
+        }
+        // passing an integer as third argument is a special case, only from here.
+        mutFixup(this, 0, mark, c);
+        return c;
+    }
+
+    // like the above but with no mutation records
+    removeChild$nm(c)
+    {
+        if(!c) return null;
+        const cn = this.childNodes;
+        const l = cn.length;
+        let mark = -1;
+        for (let i = 0; i < l; ++i)
+            if (c == cn[i]) { mark = i; break; }
+        if (mark < 0) return null;
+        cn.splice(mark, 1);
+        c.parentNode = null;
+        domLinkage('r', this, "", c);
+        return c;
     }
 }
 swdc(Node);
