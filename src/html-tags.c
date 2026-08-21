@@ -4718,7 +4718,7 @@ Needless to say that's not good!
 		break;
 
 	case TAGACT_HTML:
-		domLink(t, "HTML", 0, 4);
+		domLink(t, "HTMLHtmlElement", 0, 4);
 		cf->htmltag = t;
 		set_property_string_win(cf, "eb$base", cf->fileName);
 		break;

@@ -5969,7 +5969,22 @@ swde("HTMLHRElement", class extends w.HTMLElement {
     constructor() { super(); }
 })
 
-// <head> and friends
+swde("HTMLHtmlElement", class extends w.HTMLElement {
+    constructor() { super(); }
+}, false)
+let htmlp = w.HTMLHtmlElement.prototype;
+odp(htmlp, "eb$win", {get: function(){return this.parentNode ? this.parentNode.defaultView : undefined}});
+// Some screen attributes that are suppose to be there.
+htmlp.doScroll = eb$voidfunction;
+htmlp.clientHeight = 768;
+htmlp.clientWidth = 1024;
+htmlp.offsetHeight = 768;
+htmlp.offsetWidth = 1024;
+htmlp.scrollHeight = 768;
+htmlp.scrollWidth = 1024;
+htmlp.scrollTop = 0;
+htmlp.scrollLeft = 0;
+
 swde("HTMLHeadElement", class extends w.HTMLElement {
     constructor() { super(); }
 }, false)
@@ -6021,24 +6036,6 @@ bodyp.scrollTop = 0;
 bodyp.scrollLeft = 0;
 // secret way of setting body.innerHTML
 bodyp.eb$dbih = function(s){this.innerHTML = s}
-
-// fake class to support <html>
-swde("z$HTML", class extends w.HTMLElement {
-    constructor() { super(); }
-}, false)
-
-let htmlp = w.z$HTML.prototype;
-odp(htmlp, "eb$win", {get: function(){return this.parentNode ? this.parentNode.defaultView : undefined}});
-// Some screen attributes that are suppose to be there.
-htmlp.doScroll = eb$voidfunction;
-htmlp.clientHeight = 768;
-htmlp.clientWidth = 1024;
-htmlp.offsetHeight = 768;
-htmlp.offsetWidth = 1024;
-htmlp.scrollHeight = 768;
-htmlp.scrollWidth = 1024;
-htmlp.scrollTop = 0;
-htmlp.scrollLeft = 0;
 
 // is there a difference between DocType ad DocumentType?
 swde("DocType", class extends w.HTMLElement {
@@ -6726,7 +6723,7 @@ for(let c of [
 "HTMLScriptElement", "HTMLStyleElement",
 "HTMLTimeElement", "HTMLUnknownElement",
 "ProcessingInstruction", "Text", "DocumentFragment",
-"z$Datalist", "z$HTML", "z$Title", "z$tCap"]) {
+"z$Datalist", "z$Title", "z$tCap"]) {
     odp(w[c].prototype, "innerHTML", {
         get: function(){ return this.inner$html},
         set: function(h){this.inner$HTML = h}})
@@ -6793,7 +6790,7 @@ c = new w.CSSStyleDeclaration; c.element = null; break;
 case "script": c = new w.HTMLScriptElement; break;
 case "template": c = new w.HTMLTemplateElement; break;
 case "document": c = new w.Document; break;
-case "root": c = new w.z$HTML; s = "html"; break;
+case "root": c = new w.HTMLHtmlElement; s = "html"; break;
 case "div": c = new w.HTMLDivElement; break;
 case "span": c = new w.HTMLSpanElement; break;
 case "label": c = new w.HTMLLabelElement; break;
