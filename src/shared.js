@@ -4789,152 +4789,153 @@ We set up for HR.onsubmit, for example; other browsers might not. */
         return w.Element.getElementSibling(this,"previous");
     }
 
-})
-let elemp = w.Element.prototype;
-
-elemp.append = function() {
-    const additions = [];
-    for(let c of arguments) {
-        if(typeof c == "string") c = d.createTextNode(c);
-        if(c.nodeType == 11) { // descend into fragment
-            // make one mutation record to delete all the nodes under fragment
-            // but fragment isn't rooted and it shouldn't matter.
-            const deletions = [];
-            for(let f of c.children) {
-                if(typeof f == "string") f = d.createTextNode(f);
-                if(f.nodeType == 11) { alert3("append fragment recursion"); continue; }
-                c.removeChild$nm(f);
-                this.appendChild$nm(f);
-                additions.push(f);
-                deletions.push(f);
+    append()
+    {
+        const additions = [];
+        for(let c of arguments) {
+            if(typeof c == "string") c = d.createTextNode(c);
+            if(c.nodeType == 11) { // descend into fragment
+                // make one mutation record to delete all the nodes under fragment
+                // but fragment isn't rooted and it shouldn't matter.
+                const deletions = [];
+                for(let f of c.children) {
+                    if(typeof f == "string") f = d.createTextNode(f);
+                    if(f.nodeType == 11) { alert3("append fragment recursion"); continue; }
+                    c.removeChild$nm(f);
+                    this.appendChild$nm(f);
+                    additions.push(f);
+                    deletions.push(f);
+                }
+                checkUpward(c);
+                mutFixup(c, 0, 0, deletions);
+                continue;
             }
-            checkUpward(c);
-            mutFixup(c, 0, 0, deletions);
-            continue;
+        c.remove();
+            this.appendChild$nm(c);
+            additions.push(c);
         }
-    c.remove();
-        this.appendChild$nm(c);
-        additions.push(c);
+        checkUpward(this);
+        mutFixup(this, 0, additions, null);
     }
-    checkUpward(this);
-    mutFixup(this, 0, additions, null);
-}
 
-elemp.prepend = function() {
-    const additions = [];
-    const first = this.firstChild;
-    for(let c of arguments) {
-        if(typeof c == "string") c = d.createTextNode(c);
-        if(c.nodeType == 11) { // descend into fragment
-            const deletions = [];
-            for(let f of c.children) {
-                if(typeof f == "string") f = d.createTextNode(f);
-                if(f.nodeType == 11) { alert3("prepend fragment recursion"); continue; }
-                c.removeChild$nm(f);
-                this.insertBefore$nm(f, first);
-                additions.push(f);
-                deletions.push(f);
+    prepend() {
+        const additions = [];
+        const first = this.firstChild;
+        for(let c of arguments) {
+            if(typeof c == "string") c = d.createTextNode(c);
+            if(c.nodeType == 11) { // descend into fragment
+                const deletions = [];
+                for(let f of c.children) {
+                    if(typeof f == "string") f = d.createTextNode(f);
+                    if(f.nodeType == 11) { alert3("prepend fragment recursion"); continue; }
+                    c.removeChild$nm(f);
+                    this.insertBefore$nm(f, first);
+                    additions.push(f);
+                    deletions.push(f);
+                }
+                checkUpward(c);
+                mutFixup(c, 0, 0, deletions);
+                continue;
             }
-            checkUpward(c);
-            mutFixup(c, 0, 0, deletions);
-            continue;
+        c.remove();
+            this.insertBefore$nm(c, first);
+            additions.push(c);
         }
-    c.remove();
-        this.insertBefore$nm(c, first);
-        additions.push(c);
+        checkUpward(this);
+        mutFixup(this, 0, additions, null);
     }
-    checkUpward(this);
-    mutFixup(this, 0, additions, null);
-}
 
-elemp.before = function() {
-    const p = this.parentNode;
-    if(!p) return;
-    const additions = [];
-    for(let c of arguments) {
-        if(typeof c == "string") c = d.createTextNode(c);
-        if(c.nodeType == 11) { // descend into fragment
-            const deletions = [];
-            for(let f of c.children) {
-                if(typeof f == "string") f = d.createTextNode(f);
-                if(f.nodeType == 11) { alert3("before fragment recursion"); continue; }
-                c.removeChild$nm(f);
-                p.insertBefore$nm(f, this);
-                additions.push(f);
-                deletions.push(f);
+    before() {
+        const p = this.parentNode;
+        if(!p) return;
+        const additions = [];
+        for(let c of arguments) {
+            if(typeof c == "string") c = d.createTextNode(c);
+            if(c.nodeType == 11) { // descend into fragment
+                const deletions = [];
+                for(let f of c.children) {
+                    if(typeof f == "string") f = d.createTextNode(f);
+                    if(f.nodeType == 11) { alert3("before fragment recursion"); continue; }
+                    c.removeChild$nm(f);
+                    p.insertBefore$nm(f, this);
+                    additions.push(f);
+                    deletions.push(f);
+                }
+                checkUpward(c);
+                mutFixup(c, 0, 0, deletions);
+                continue;
             }
-            checkUpward(c);
-            mutFixup(c, 0, 0, deletions);
-            continue;
+        c.remove();
+            p.insertBefore$nm(c, this);
+            additions.push(c);
         }
-    c.remove();
-        p.insertBefore$nm(c, this);
-        additions.push(c);
+        checkUpward(this);
+        mutFixup(p, 0, additions, null);
     }
-    checkUpward(this);
-    mutFixup(p, 0, additions, null);
-}
 
-elemp.after = function() {
-    const p = this.parentNode;
-    if(!p) return;
-    const n = this.nextSibling;
-    const additions = [];
-    for(let c of arguments) {
-        if(typeof c == "string") c = d.createTextNode(c);
-        if(c.nodeType == 11) { // descend into fragment
-            const deletions = [];
-            for(let f of c.children) {
-                if(typeof f == "string") f = d.createTextNode(f);
-                if(f.nodeType == 11) { alert3("after fragment recursion"); continue; }
-                c.removeChild$nm(f);
-                p.insertBefore$nm(f, n);
-                additions.push(f);
-                deletions.push(f);
+    after() {
+        const p = this.parentNode;
+        if(!p) return;
+        const n = this.nextSibling;
+        const additions = [];
+        for(let c of arguments) {
+            if(typeof c == "string") c = d.createTextNode(c);
+            if(c.nodeType == 11) { // descend into fragment
+                const deletions = [];
+                for(let f of c.children) {
+                    if(typeof f == "string") f = d.createTextNode(f);
+                    if(f.nodeType == 11) { alert3("after fragment recursion"); continue; }
+                    c.removeChild$nm(f);
+                    p.insertBefore$nm(f, n);
+                    additions.push(f);
+                    deletions.push(f);
+                }
+                checkUpward(c);
+                mutFixup(c, 0, 0, deletions);
+                continue;
             }
-            checkUpward(c);
-            mutFixup(c, 0, 0, deletions);
-            continue;
+        c.remove();
+            p.insertBefore$nm(c, n);
+            additions.push(c);
         }
-    c.remove();
-        p.insertBefore$nm(c, n);
-        additions.push(c);
+        checkUpward(this);
+        mutFixup(p, 0, additions, null);
     }
-    checkUpward(this);
-    mutFixup(p, 0, additions, null);
-}
 
-elemp.replaceWith = function() {
-    const p = this.parentNode;
-    if(!p) return;
-    const n = this.nextSibling;
-    const additions = [];
-    for(let c of arguments) {
-        if(typeof c == "string") c = d.createTextNode(c);
-        if(c.nodeType == 11) { // descend into fragment
-            const deletions = [];
-            for(let f of c.children) {
-                if(typeof f == "string") f = d.createTextNode(f);
-                if(f.nodeType == 11) { alert3("replaceWith fragment recursion"); continue; }
-                c.removeChild$nm(f);
-                p.insertBefore$nm(f, n);
-                additions.push(f);
-                deletions.push(f);
+    replaceWith() {
+        const p = this.parentNode;
+        if(!p) return;
+        const n = this.nextSibling;
+        const additions = [];
+        for(let c of arguments) {
+            if(typeof c == "string") c = d.createTextNode(c);
+            if(c.nodeType == 11) { // descend into fragment
+                const deletions = [];
+                for(let f of c.children) {
+                    if(typeof f == "string") f = d.createTextNode(f);
+                    if(f.nodeType == 11) { alert3("replaceWith fragment recursion"); continue; }
+                    c.removeChild$nm(f);
+                    p.insertBefore$nm(f, n);
+                    additions.push(f);
+                    deletions.push(f);
+                }
+                checkUpward(c);
+                mutFixup(c, 0, 0, deletions);
+                continue;
             }
-            checkUpward(c);
-            mutFixup(c, 0, 0, deletions);
-            continue;
+        c.remove();
+            p.insertBefore$nm(c, n);
+            additions.push(c);
         }
-    c.remove();
-        p.insertBefore$nm(c, n);
-        additions.push(c);
+        p.removeChild$nm(this);
+        checkUpward(p);
+        mutFixup(p, 0, additions, this);
     }
-    p.removeChild$nm(this);
-    checkUpward(p);
-    mutFixup(p, 0, additions, this);
-}
 
 // replaceChildren not yet implemented
+
+})
+let elemp = w.Element.prototype;
 
 elemp.replaceChild = function(newc, oldc) {
 var lastentry;
