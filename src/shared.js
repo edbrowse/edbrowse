@@ -1683,372 +1683,21 @@ function connectedCallbackCheck(t)
 const standard_event_classes = ["Element", "Document"];
 const standard_hashchange_classes = ["HTMLBodyElement", "SVGElement"];
 
-// Function to compile event handlers
-function handlerCompile(f, w)
+/* attrNameImplicit() is a workaround, when setAttribute is doing something
+it shouldn't, like form.setAttribute("elements", "xx"), or some such.
+I call these implicit members, we shouldn't overwrite them. */
+function attrNameImplicit(o, name)
 {
-    let cf; // the compiled function
-    try {
-        cf = w.eval(`(function(){${f}})`);
-    } catch(e) {
-// Don't just use eb$truefunction; I want to put the text
-// on function.body, for debugging, and that means I need my own function.
-        cf = w.eval("(function(){return true;})");
-        alert3(`handler syntax error <${f}>`);
-    }
-    cf.body = f;
-    cf.toString = function() { return this.body; }
-    return cf;
+    return name === "elements" && o.dom$class == "HTMLFormElement" ||
+    name === "rows" && (o.dom$class == "HTMLTableElement" || o.dom$class == "tBody" || o.dom$class == "tHead" || o.dom$class == "tFoot") ||
+    name === "tBodies" && o.dom$class == "HTMLTableElement" ||
+    (name === "cells" || name === "rowIndex" || name === "sectionRowIndex") && o.dom$class == "HTMLTableRowElement" ||
+    name === "className" ||
+    name === "htmlFor" && o.dom$class == "HTMLLabelElement" ||
+    name === "httpEquiv" && o.dom$class == "HTMLMetaElement" ||
+    name === "options" && o.dom$class == "HTMLSelectElement" ||
+    name === "selectedOptions" && o.dom$class == "HTMLSelectElement";
 }
-
-/*********************************************************************
-The attribute system is complex, with many functions
-and many surprising side effects.
-Most of these functions could be private node methods in setupClasses(),
-but it's a lot of code, and would disrupt the flow.
-So instead I gather them all here in one attr object.
-along with some helper functions to manage spillup and spilldown.
-Spill up means we set the property and it sets the attribute.
-This has to be done by setters, it is not done here.
-Spilldown means we set the attribute and it spills down to the property.
-This has to be done by setAttribute, and sometimes additional processing
-is involved. Example: script.setAttribute("src", "file.html")
-is resolved against the base url as it spills down to the property.
-getAttribute still gets "file.html".
-But before we get to that, implicitMember() is a workaround,
-when setAttribute is doing something it shouldn't,
-like form.setAttribute("elements", "xx") or some such.
-I call these implicit members, we shouldn't overwrite them.
-*********************************************************************/
-
-/*********************************************************************
-Every getAttribute checks the name through attrNameValid, and rendering a page
-calls getAttribute several times for every node, so this runs millions of
-times on a large page and is worth a moment's care.
-A regex literal builds a new RegExp object each time it is evaluated, so keep
-this one out here where it is built once.  And test() is the cheap way to
-ask; match() goes the long way round through Symbol.match, assembling a flags
-string and a result array that nobody ever looks at.
-And then ... we realize we don't need to check at all for getAttribute,
-it's faster to just see if it's there. We only need check on setAttribute.
-*********************************************************************/
-const attrNameSpace = /\s/;
-
-this.attr = {
-
-// As far as I can tell, anything can be an attribute name,
-// as long as it doesn't have whitespace.
-attrNameValid: function(n) {
-    // take care of null, undefined, and ""
-    if(!n && n !== 0) {
-        alert3("null attribute name");
-        return false;
-    }
-    if(typeof n != "string") n = n.toString();
-// Almost every name is letters, digits and dashes, and such a name obviously
-// holds no whitespace and no = sign, so we are done without waking the regex
-// engine at all. class, id and role come through here for every node on every
-// render, and that is what this loop is for.
-    var plain = true;
-    for(var i = 0; i < n.length; ++i) {
-        var c = n.charCodeAt(i);
-        if(c == 61) { // =
-            alert3("= in attribute name");
-            return false;
-        }
-        if(c > 32 && c <= 127) continue;
-        plain = false;
-        break;
-    }
-    if(plain) return true;
-    if(attrNameSpace.test(n)) {
-        alert3("spaces in attribute name");
-        return false;
-    }
-    return true;
-},
-
-// a reserved method in NamedNodeMap
-attrNameReserved(n) {
-    return n == "length";
-},
-
-implicitMember: function(o, name) {
-return name === "elements" && o.dom$class == "HTMLFormElement" ||
-name === "rows" && (o.dom$class == "HTMLTableElement" || o.dom$class == "tBody" || o.dom$class == "tHead" || o.dom$class == "tFoot") ||
-name === "tBodies" && o.dom$class == "HTMLTableElement" ||
-(name === "cells" || name === "rowIndex" || name === "sectionRowIndex") && o.dom$class == "HTMLTableRowElement" ||
-name === "className" ||
-name === "htmlFor" && o.dom$class == "HTMLLabelElement" ||
-name === "httpEquiv" && o.dom$class == "HTMLMetaElement" ||
-name === "options" && o.dom$class == "HTMLSelectElement" ||
-name === "selectedOptions" && o.dom$class == "HTMLSelectElement";
-},
-
-spilldown: function(t, name) {
-    let dc = t.dom$class;
-    return name == "value" && (dc == "HTMLInputElement" || dc == "HTMLTextAreaElement" || dc == "HTMLButtonElement");
-},
-
-spilldownResolveURL: function(t, name) {
-if(!t.nodeName) return false;
-var nn = t.nodeName.toLowerCase();
-return name == "src" && (nn == "frame" || nn == "iframe") ||
-name == "cite" && (nn == "q" || nn == "blockquote") ||
-name == "href" && (nn == "a" || nn == "area");
-},
-
-spilldownResolve: function(t, name) {
-if(!t.nodeName) return false;
-var nn = t.nodeName.toLowerCase();
-return name == "action" && nn == "form" ||
-name == "data" && (nn == "object") ||
-name == "src" && (nn == "img" || nn == "script" || nn == "audio" || nn == "video") ||
-name == "href" && (nn == "link" || nn == "base");
-},
-
-// Attributes that compile a string as part of spilldown.
-// this function should agree with the criteria for the getters below,
-// that return null if no property was set.
-// This function and the getters below are rather permissive,
-// taking action on many tags that might not allow onclick etc.
-spilldownCompile: function(t, name) {
-    let w = my$win();
-// can we get window from the tag? Might be more accurate.
-    if(t.ownerDocument && typeof t.ownerDocument.defaultView == "object")
-        w = t.ownerDocument.defaultView;
-    for(let c of standard_event_classes) if(t instanceof w[c]) {
-        for(let evname of standard_events) if(evname == name) return true;
-    }
-    for(let c of standard_hashchange_classes) if(t instanceof w[c]) {
-        if("onhashchange" == name) return true;
-    }
-    return false;
-},
-
-spilldownBool: function(t, name) {
-if(!t.nodeName) return false;
-let nn = t.nodeName.toLowerCase();
-return name == "ariahidden" ||
-name == "selected" && nn == "option" ||
-name == "checked" && nn == "input";
-},
-
-getAttribute: function(name) {
-let a, w = my$win();
-if(!(this.eb$xml || this instanceof w.SVGElement)) name = name.toLowerCase();
-if(attr.implicitMember(this, name)) return null;
-// has to be a real attribute
-if(!this.attributes$2) return null;
-if(name === "length") {
-a = null
-for(var i=0; i<this.attributes.length; ++i)
-if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
-} else a = this.attributes[name]
-if(!a) return null;
-var v = a.value;
-var t = typeof v;
-if(t == "undefined" || v == null) return null;
-// I stringify URL objects, should we do that to other objects?
-if(t == 'object' && (v.dom$class == "URL" || v instanceof w.URL)) return v.toString();
-// number, boolean, object; it goes back as it was put in.
-return v; },
-
-hasAttribute: function(name) { return this.getAttribute(name) !== null; },
-
-getAttributeNames: function(name) {
-var w = my$win();
-var a = new w.Array;
-if(!this.attributes$2) return a;
-for(var l = 0; l < this.attributes$2.length; ++l) {
-var z = this.attributes$2[l].name;
-a.push(z);
-}
-return a;
-},
-
-getAttributeNS: function(space, name) {
-if(space && !name.match(/:/)) name = space + ":" + name;
-return this.getAttribute(name);
-},
-
-hasAttributeNS: function(space, name) { return this.getAttributeNS(space, name) !== null;},
-
-setAttribute: function(name, v) {
-    var a, w = my$win();
-if(!attr.attrNameValid(name)) return;
-if(!(this.eb$xml || this instanceof w.SVGElement)) name = name.toLowerCase();
-// special code for style
-    if(name == "style" && this.style && this.style.dom$class == "CSSStyleDeclaration") {
-        this.style.cssText = v;
-}
-    if(attr.implicitMember(this, name)) return;
-    var oldv = null;
-    if(name === "length") {
-        a = null
-        for(var i=0; i<this.attributes.length; ++i)
-            if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
-    } else a = this.attributes[name]
-    if(!a) {
-        a = new w.Attr();
-        a.name = name;
-        this.attributes.push(a);
-        if(name !== "length") this.attributes[name] = a
-    } else {
-        oldv = a.value;
-    }
-    a.value = v;
-    a.ownerDocument = this.ownerDocument;
-
-    if(name.substr(0,5) == "data-") {
-        this.dataset[dataCamel(name)] = v;
-    }
-
-    // side effects of id, name, class
-    // no need for collectoin side effects if parsing - we will be marking
-    // all collections as out of date after the parse is finished.
-    if(!w.eb$push$attributes) {
-        if(name == "id" || name == "class" || name == "name")
-            markUpwardCollections(this)
-        if(name == "name" &&
-        this.form && this.form.dom$class == "HTMLFormElement")
-            formReindex(this.form);
-    }
-
-    // names that spill down into the actual property
-    if(attr.spilldown(this, name)) this[name] = v;
-        // href$2 not enumerable. cloneNode still works because it finds
-        // href in the attributes and copies it there,
-        // whence spilldown puts href$2 in node2.
-    if(attr.spilldownResolve(this, name))
-        Object.defineProperty(this, "href$2", {value:resolveURL(w.eb$base, v),configurable:true,writable:true})
-    if(attr.spilldownResolveURL(this, name))
-        Object.defineProperty(this, "href$2", {value:new (w.URL)(resolveURL(w.eb$base, v)),configurable:true,writable:true})
-    if(attr.spilldownBool(this, name)) {
-// This one is required by acid test 43, I don't understand it at all.
-        if(name == "checked" && v == "checked")
-            this.defaultChecked = true;
-        else
-            this[name] = true;
-    }
-    if(attr.spilldownCompile(this, name)) {
-        const name2 = name + "$2"
-        if (db$flags(1))
-            alert3(`${(this[name2] ? "clobber": "create")} ${(this.nodeName ? this.nodeName : this.dom$class)}.${name}`);
-        if(typeof v === "string") v = handlerCompile(v, w);
-        if(typeof v === "function") {
-            Object.defineProperty(this, name2, {
-                value: v, writable: true, configurable: true});
-        } else delete this[name2];
-    }
-
-    /* If this is called while parsing html, to build the tree,
-    observers are not invoked. In other browsers, the tag is built
-    in its entirety, with its attributes, then attached to the tree.
-    so we only need see the attachment. On the other hand, if a
-    running script calls setAttribute, then we want to observe the change. */
-    if(!w.eb$push$attributes)
-        mutFixup(this, 1, name, oldv);
-},
-
-setAttributeNS: function(space, name, v) {
-if(!attr.attrNameValid(name)) return;
-if(space && !name.match(/:/)) name = space + ":" + name;
-this.setAttribute(name, v);
-},
-
-removeAttribute: function(name) {
-const w = my$win();
-if(!(this.eb$xml || this instanceof w.SVGElement)) name = name.toLowerCase();
-// special code for style
-if(name == "style" && this.style$2 && this.style$2.dom$class == "CSSStyleDeclaration")
-delete this.style$2;
-if(!this.attributes$2) return;
-if(name.substr(0,5) == "data-") {
-let n = dataCamel(name);
-if(this.dataset$2 && this.dataset$2[n]) delete this.dataset$2[n];
-}
-// the only simple spilldown is value, we shouldn't delete value, so just set it to ""
-if(attr.spilldown(this, name)) this[name] = "";
-if(attr.spilldownResolve(this, name)) delete this[name];
-if(attr.spilldownResolveURL(this, name)) delete this[name];
-let a, i, found = false;
-if(name === "length") {
-a = null
-for(i=0; i<this.attributes.length; ++i)
-if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
-} else a = this.attributes[name];
-if(!a) return;
-// Have to roll our own splice.
-for(i=0; i<this.attributes.length-1; ++i) {
-if(!found && this.attributes[i] == a) found = true;
-if(found) this.attributes[i] = this.attributes[i+1];
-}
-this.attributes.length = i;
-delete this.attributes[i];
-if(name !== "length") delete this.attributes[name]
-    if(name == "id" || name == "name" || name == "class")
-        markUpwardCollections(this);
-    if(name == "name" &&
-    this.form && this.form.dom$class == "HTMLFormElement")
-        formReindex(this.form);
-    mutFixup(this, 1, name, a.value);
-},
-
-removeAttributeNS: function(space, name) {
-if(space && !name.match(/:/)) name = space + ":" + name;
-this.removeAttribute(name);
-},
-
-// this returns null if no such attribute.
-getAttributeNode: function(name) {
-const w = my$win();
-if(!this.attributes$2) return null;
-if(!(this.eb$xml || this instanceof w.SVGElement)) name = name.toLowerCase();
-var a;
-if(name === "length") {
-a = null
-for(var i=0; i<this.attributes.length; ++i)
-if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
-} else a = this.attributes[name]
-if(!a) return null;
-return a;
-},
-
-// b replaces a if a is present
-setAttributeNode: function(b) {
-if(typeof b != "object" || typeof b.name != "string") return null;
-let     a, name = b.name;
-if(name === "length") {
-a = null
-for(var i=0; i<this.attributes.length; ++i)
-if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
-} else a = this.attributes[name];
-if(!a) a = null; else this.removeAttribute(name);
-this.attributes.push(b);
-if(name !== "length") this.attributes[name] = b;
-// there are a lot of side effects I don't want to repeat here,
-// like dataset and mutFixup and so on, so just invoke
-this.setAttribute(name, b.value)
-return a
-},
-
-removeAttributeNode: function(b) {
-if(typeof b != "object" || typeof b.name != "string") return null;
-let     name = b.name;
-if(name === "length") {
-let i;
-for(i=0; i<this.attributes.length; ++i)
-if(this.attributes[i] == b) break;
-if(i == this.attributes.length) return null;
-} else {
-if(this.attributes[name] != b) return null;
-}
-this.removeAttribute(b.name)
-return b
-},
-
-}
-Object.freeze(attr)
 
 /*********************************************************************
 cloneNode creates a copy of the node and its children recursively.
@@ -2105,7 +1754,7 @@ if(!node1.hasOwnProperty(item)) continue;
 // children already handled
 if(item === "childNodes" || item === "parentNode") continue;
 
-if(attr.implicitMember(node1, item)) continue;
+if(attrNameImplicit(node1, item)) continue;
 
 if (typeof node1[item] === 'function') {
 if(debug) alert3("copy function " + item);
@@ -2126,7 +1775,7 @@ if(Array.isArray(node1[item])) {
 if(item.match(/^on[a-zA-Z]+\$\$array$/)) continue;
 
 if(node1.dom$class == "HTMLFormElement") {
-// form.elements is culled by implicitMember(),
+// form.elements is culled by attrNameImplicit(),
 // along with table.rows and tr.cells and many other derived arrays.
 // Arrays of radio buttons are not predictable and handled here.
 if(node1[item].length &&  typeof node1[item][0] == "object" &&
@@ -4624,11 +4273,366 @@ w.open = function(a, b) {
     return new w.Window(a, b);
 }
 
-swde("Element", class extends w.Node {
+/* Some helper functions for the attribute system, which lives in the
+Element class. As far as I can tell, anything can be an attribute name,
+as long as it doesn't have whitespace. */
+const attrNameWhitespace = /\s/;
+function attrNameValid(n)
+{
+    // take care of null, undefined, and ""
+    if(!n && n !== 0) {
+        alert3("null attribute name");
+        return false;
+    }
+    if(typeof n != "string") n = n.toString();
+    let plain = true;
+    for(let i = 0; i < n.length; ++i) {
+        let c = n.charCodeAt(i);
+        if(c == 61) { // =
+            alert3("= in attribute name");
+            return false;
+        }
+        if(c > 32 && c <= 127) continue;
+        plain = false;
+        break;
+    }
+    if(plain) return true;
+    if(attrNameWhitespace.test(n)) {
+        alert3("spaces in attribute name");
+        return false;
+    }
+    return true;
+}
+
+// attrNameImplicit should go here, but cloneNode uses it,
+// so fix this up later.
+
+/* Here are some helper functions to manage spillup and spilldown.
+Spill up means we set the property and it sets the attribute.
+This has to be done by setters, it is not done here.
+Spilldown means we set the attribute and it spills down to the property.
+This has to be done by setAttribute - and sometimes additional processing
+is involved. Example: script.setAttribute("src", "file.html")
+is resolved against the base url as it spills down to the property.
+getAttribute still returns "file.html".
+If there is both spillup and spilldown, it is done by a getter and setter,
+holding the property foo in foo$2.
+You'll see this in Element.id below. */
+function spilldown(t, name)
+{
+    const dc = t.dom$class;
+    return name == "value" && (dc == "HTMLInputElement" || dc == "HTMLTextAreaElement" || dc == "HTMLButtonElement");
+}
+
+function spilldownResolve(t, name)
+{
+    if(!t.nodeName) return false;
+    const nn = t.nodeName.toLowerCase();
+    return name == "action" && nn == "form" ||
+    name == "data" && (nn == "object") ||
+    name == "src" && (nn == "img" || nn == "script" || nn == "audio" || nn == "video") ||
+    name == "href" && (nn == "link" || nn == "base");
+}
+
+function spilldownResolveURL(t, name)
+{
+    if(!t.nodeName) return false;
+    const nn = t.nodeName.toLowerCase();
+    return name == "src" && (nn == "frame" || nn == "iframe") ||
+    name == "cite" && (nn == "q" || nn == "blockquote") ||
+    name == "href" && (nn == "a" || nn == "area");
+}
+
+function spilldownBool(t, name)
+{
+    if(!t.nodeName) return false;
+    const nn = t.nodeName.toLowerCase();
+    return name == "ariahidden" ||
+    name == "selected" && nn == "option" ||
+    name == "checked" && nn == "input";
+}
+
+/* Attributes that compile a string as part of spilldown.
+Use standard_event_classes, which is also used to create getters and setters
+for the on-events. That way we are consistent.
+edbrowse might be more general, and more permissive than other browsers.
+We set up for HR.onsubmit, for example; other browsers might not. */
+function spilldownCompile(t, name)
+{
+    for(const c of standard_event_classes)
+        if(t instanceof w[c]) {
+            for(const evname of standard_events)
+                if(evname == name) return true;
+        }
+        for(let c of standard_hashchange_classes)
+            if(t instanceof w[c]) {
+                if("onhashchange" == name) return true;
+        }
+    return false;
+}
+
+// Function to compile event handlers
+function handlerCompile(f)
+{
+    let cf; // the compiled function
+    try {
+        cf = w.eval(`(function(){${f}})`);
+    } catch(e) {
+// Don't just use eb$truefunction; I want to put the text
+// on function.body, for debugging, and that means I need my own function.
+        cf = w.eval("(function(){return true;})");
+        alert3(`handler syntax error <${f}>`);
+    }
+    cf.body = f;
+    cf.toString = function() { return this.body; }
+    return cf;
+}
+
+swde("Element", class extends w.Node
+{
     constructor() { super(); }
 
+// attributes are on demand
+    get attributes() {
+        if(!this.attributes$2)
+            odp(this, "attributes$2", {value:new w.NamedNodeMap});
+        return this.attributes$2;
+    }
+
+// And now, the zoo of attribute methods.
+
+    getAttribute(name)
+        {
+        let a;
+        if(!(this.eb$xml || this instanceof w.SVGElement))
+            name = name.toLowerCase();
+        if(attrNameImplicit(this, name)) return null;
+        if(!this.attributes$2) return null;
+        if(name === "length") {
+            a = null;
+            for(let i=0; i<this.attributes.length; ++i)
+                if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
+        } else a = this.attributes[name]
+        if(!a) return null;
+        let v = a.value;
+        let t = typeof v;
+        if(t == "undefined" || v == null) return null;
+        // I stringify URL objects, should we do that to other objects?
+        if(t == 'object' && (v.dom$class == "URL" || v instanceof w.URL)) return v.toString();
+        // number, boolean, object; it goes back as it was put in.
+        return v;
+    }
+
+    hasAttribute(name) { return this.getAttribute(name) !== null; }
+
+    getAttributeNames(name)
+    {
+        const a = [];
+        if(!this.attributes$2) return a;
+        for(let l = 0; l < this.attributes$2.length; ++l)
+            a.push(this.attributes$2[l].name);
+        return a;
+    }
+
+    getAttributeNS(space, name)
+    {
+        if(space && !name.match(/:/)) name = space + ":" + name;
+        return this.getAttribute(name);
+    }
+
+    hasAttributeNS(space, name) { return this.getAttributeNS(space, name) !== null;}
+
+    setAttribute(name, v)
+    {
+        let a;
+        if(!attrNameValid(name)) return;
+        if(!(this.eb$xml || this instanceof w.SVGElement)) name = name.toLowerCase();
+        // special code for style
+        if(name == "style" && this.style && this.style.dom$class == "CSSStyleDeclaration") {
+            this.style.cssText = v;
+        }
+        if(attrNameImplicit(this, name)) return;
+        let oldv = null;
+        if(name === "length") {
+            a = null
+            for(let i=0; i<this.attributes.length; ++i)
+                if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
+        } else a = this.attributes[name]
+        if(!a) {
+            a = new w.Attr();
+            a.name = name;
+            this.attributes.push(a);
+            if(name !== "length") this.attributes[name] = a;
+        } else {
+            oldv = a.value;
+        }
+        a.value = v;
+        a.ownerDocument = this.ownerDocument;
+        if(name.substr(0,5) == "data-") {
+            this.dataset[dataCamel(name)] = v;
+        }
+        // side effects of id, name, class
+        // no need for collection side effects if parsing - we will be marking
+        // all collections as out of date after the parse is finished.
+        if(!w.eb$push$attributes) {
+            if(name == "id" || name == "class" || name == "name")
+                markUpwardCollections(this)
+            if(name == "name" &&
+            this.form && this.form.dom$class == "HTMLFormElement")
+                formReindex(this.form);
+        }
+        // names that spill down into the actual property
+        if(spilldown(this, name)) this[name] = v;
+            // href$2 not enumerable. cloneNode still works because it finds
+            // href in the attributes and copies it there,
+            // whence spilldown puts href$2 in node2.
+        if(spilldownResolve(this, name))
+            Object.defineProperty(this, "href$2", {value:resolveURL(w.eb$base, v),configurable:true,writable:true})
+        if(spilldownResolveURL(this, name))
+            Object.defineProperty(this, "href$2", {value:new (w.URL)(resolveURL(w.eb$base, v)),configurable:true,writable:true})
+        if(spilldownBool(this, name)) {
+            // This one is required by acid test 43.
+            if(name == "checked" && v == "checked")
+                this.defaultChecked = true;
+            else
+                this[name] = true;
+        }
+        if(spilldownCompile(this, name)) {
+            const name2 = name + "$2"
+            if (db$flags(1))
+                alert3(`${(this[name2] ? "clobber": "create")} ${(this.nodeName ? this.nodeName : this.dom$class)}.${name}`);
+            if(typeof v === "string") v = handlerCompile(v, w);
+            if(typeof v === "function") {
+                Object.defineProperty(this, name2, {
+                    value: v, writable: true, configurable: true});
+            } else delete this[name2];
+        }
+        /* If this is called while parsing html, to build the tree,
+        observers are not invoked. The tag is built in its entirety,
+    with its attributes, then attached to the tree.
+        so we only need see the attachment. On the other hand, if a
+        running script calls setAttribute, then we want to observe the change. */
+        if(!w.eb$push$attributes)
+            mutFixup(this, 1, name, oldv);
+    }
+
+    setAttributeNS(space, name, v)
+    {
+        if(!attrNameValid(name)) return;
+        if(space && !name.match(/:/)) name = space + ":" + name;
+        this.setAttribute(name, v);
+    }
+
+    removeAttribute(name)
+    {
+        if(!(this.eb$xml || this instanceof w.SVGElement))
+            name = name.toLowerCase();
+        // special code for style
+        if(name == "style" && this.style$2 && this.style$2.dom$class == "CSSStyleDeclaration")
+            delete this.style$2;
+        if(!this.attributes$2) return;
+        if(name.substr(0,5) == "data-") {
+            let n = dataCamel(name);
+            if(this.dataset$2 && this.dataset$2[n])
+                delete this.dataset$2[n];
+        }
+        /// the only simple spilldown is value, we shouldn't delete value,
+        /// so just set it to ""
+        if(spilldown(this, name)) this[name] = "";
+        if(spilldownResolve(this, name)) delete this[name];
+        if(spilldownResolveURL(this, name)) delete this[name];
+        let a = null, i, found = false;
+        if(name === "length") {
+            for(i=0; i<this.attributes.length; ++i)
+                if(this.attributes[i].name == name) {
+                    a = this.attributes[i];
+                    break;
+                }
+        } else a = this.attributes[name];
+        if(!a) return;
+        // Have to roll our own splice.
+        for(i=0; i<this.attributes.length-1; ++i) {
+            if(!found && this.attributes[i] == a) found = true;
+            if(found) this.attributes[i] = this.attributes[i+1];
+        }
+        this.attributes.length = i;
+        delete this.attributes[i];
+        if(name !== "length") delete this.attributes[name]
+        if(name == "id" || name == "name" || name == "class")
+            markUpwardCollections(this);
+        if(name == "name" &&
+        this.form && this.form.dom$class == "HTMLFormElement")
+            formReindex(this.form);
+        mutFixup(this, 1, name, a.value);
+    }
+
+    removeAttributeNS(space, name)
+    {
+        if(space && !name.match(/:/)) name = space + ":" + name;
+        this.removeAttribute(name);
+    }
+
+    // return null if no such attribute.
+    getAttributeNode(name)
+    {
+        if(!this.attributes$2) return null;
+        if(!(this.eb$xml || this instanceof w.SVGElement)) name = name.toLowerCase();
+        let a = null;
+        if(name === "length") {
+            for(let i=0; i<this.attributes.length; ++i)
+                if(this.attributes[i].name == name) {
+                    a = this.attributes[i];
+                    break;
+                }
+        } else a = this.attributes[name];
+        return a ? a : null;
+    }
+
+    // b replaces a if a is present
+    setAttributeNode(b)
+    {
+        if(typeof b != "object" || typeof b.name != "string")
+            return null;
+        let     a = null, name = b.name;
+        if(name === "length") {
+            for(var i=0; i<this.attributes.length; ++i)
+                if(this.attributes[i].name == name) {
+                    a = this.attributes[i];
+                    break;
+                }
+        } else a = this.attributes[name];
+        if(!a) a = null;
+        else this.removeAttribute(name);
+        this.attributes.push(b);
+        if(name !== "length") this.attributes[name] = b;
+        // there are a lot of side effects I don't want to repeat here,
+        // like dataset and mutFixup and so on, so just invoke:
+        this.setAttribute(name, b.value)
+        return a
+    }
+
+    removeAttributeNode(b)
+    {
+        if(typeof b != "object" || typeof b.name != "string")
+            return null;
+        let     name = b.name;
+        if(name === "length") {
+            let i;
+            for(i=0; i<this.attributes.length; ++i)
+                if(this.attributes[i] == b) break;
+            if(i == this.attributes.length) return null;
+        } else {
+            if(this.attributes[name] != b) return null;
+        }
+        this.removeAttribute(b.name)
+        return b
+    }
+
 // the all important id property
-    get id() {
+// as mentioned earlier, this has both spillup and spilldown,
+// so is handled by getter and setter, using id$2
+    get id()
+    {
         let t = this.getAttribute("id");
         if(t === null) t = "" // id was never defined
         if(t === undefined) t = "";
@@ -4637,7 +4641,8 @@ swde("Element", class extends w.Node {
     }
     set id(v) { this.setAttribute("id", v)}
 
-    get lang() {
+    get lang()
+    {
         let t = this.getAttribute("lang");
         if(t === null) t = "" // lang was never defined
         if(t === undefined) t = "";
@@ -4649,7 +4654,8 @@ swde("Element", class extends w.Node {
 // carry the xml indicator from the document down to all the elements inside it.
     get eb$xml() { return this.ownerDocument.eb$xml}
 
-    insertAdjacentElement(pos, e) {
+    insertAdjacentElement(pos, e)
+    {
         let n, p = this.parentNode;
         if(!p || typeof pos != "string") return null;
         switch(pos.toLowerCase()) {
@@ -4663,7 +4669,8 @@ swde("Element", class extends w.Node {
     return null;
     }
 
-    insertAdjacentText(pos, e) {
+    insertAdjacentText(pos, e)
+{
         let n, p = this.parentNode;
         if(!p || typeof pos != "string") return null;
         if(typeof e != "string") return null;
@@ -4696,23 +4703,8 @@ swde("Element", class extends w.Node {
         }
     }
 
-// attributes are on demand
-    get attributes() {
-        if(!this.attributes$2)
-            odp(this, "attributes$2", {value:new w.NamedNodeMap});
-        return this.attributes$2;
-    }
-
 })
 let elemp = w.Element.prototype;
-
-; (function(){ const list = [
-"hasAttribute", "hasAttributeNS", "getAttributeNames",
-"getAttribute", "getAttributeNS", "getAttributeNode",
-"setAttribute", "setAttributeNS", "setAttributeNode",
-"removeAttribute", "removeAttributeNS", "removeAttributeNode"];
-for (let k of list) elemp[k] = attr[k]
-})();
 
 // children is subtly different from childnodes; this code taken from
 // https://developer.mozilla.org/en-US/docs/Web/API/ParentNode/children
@@ -9952,7 +9944,7 @@ for(let k of [
 getElementsByTagName, getElementsByClassName, getElementsByName, getElementById,nodeContains,
 dispatchEvent, addEventListener, removeEventListener,
 NodeFilter,createNodeIterator,createTreeWalker,
-runScriptWhenAttached, connectedCallbackCheck, handlerCompile,
+runScriptWhenAttached, connectedCallbackCheck,
 getComputedStyle,
 URL, TextEncoder, TextDecoder])
     Object.defineProperty(k, "toString",{value:wrapString});

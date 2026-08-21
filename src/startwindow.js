@@ -65,6 +65,7 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
 // classes that setupClasses would have built, but didn't.
     this.URL = function(){}
     this.Node = function(){}
+    this.Element = function(){}
     this.Window = function(){}
     this.EventTarget = function(){}
     this.CSSStyleDeclaration = function(){}
@@ -976,9 +977,9 @@ this.attributes$2.ownerDocument = my$doc()
 }
 return this.attributes$2}})
 // tell me we don't have to do NS versions of all these.
-cn.getAttribute = cn.getItem = mw$.attr.getAttribute;
-cn.setAttribute = cn.setItem = mw$.attr.setAttribute;
-cn.removeAttribute = cn.removeItem = mw$.attr.removeAttribute;
+cn.getAttribute = cn.getItem = Element.prototype.getAttribute;
+cn.setAttribute = cn.setItem = Element.prototype.setAttribute;
+cn.removeAttribute = cn.removeItem = Element.prototype.removeAttribute;
 cn.clear = function() {
 var l;
 while(l = this.attributes.length)
