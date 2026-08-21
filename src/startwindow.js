@@ -526,6 +526,21 @@ class Node extends EventTarget
         domLinkage('r', this, "", c);
         return c;
     }
+
+    get firstChild()
+    {
+        return (
+            this.childNodes && this.childNodes.length
+        ) ? this.childNodes[0] : null;
+    }
+    get lastChild()
+    {
+        return (
+            this.childNodes && this.childNodes.length
+        ) ? this.childNodes[this.childNodes.length-1] : null;
+    }
+
+    getClientRects() { return []; }
 }
 swdc(Node);
 // Not quite right, still missing, at a minimum, whenDefined and upgrade

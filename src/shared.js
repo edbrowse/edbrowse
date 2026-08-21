@@ -3807,19 +3807,6 @@ return !(this.valueMissing)}})
 
 const thisNode = () => true;
 let nodep = w.Node.prototype;
-odp(nodep, "firstChild", {
-get: function() {
-if(!thisNode(this)) return null;
-return (this.childNodes && this.childNodes.length) ?
-this.childNodes[0] : null; },
-configurable:true})
-
-odp(nodep, "lastChild", {
-get: function() {
-if(!thisNode(this)) return null;
-return (this.childNodes && this.childNodes.length) ?
-this.childNodes[this.childNodes.length-1] : null},
-configurable:true})
 
 // helper functions to get the next or previous sibling
 function getSibling (obj,direction) {
@@ -3854,7 +3841,7 @@ if(!thisNode(this)) return null;
 return this.parentNode && this.parentNode.nodeType == 1 ?
 this.parentNode : null}})
 
-nodep.getClientRects = function(){ return new w.Array; }
+
 
 nodep.cloneNode = function(deep) {
     w.cloneRoot1 = this;
