@@ -4,6 +4,7 @@
 <div n=4><p>1</p><p>2</p></div>
 <div n=5 jam=boysenberry><span>c</span></div>
 <div n=6><span n=30></span><span n=31></span><span n=32></span><span n=33></span><span n=34></span><span n=35></span><span n=36></span><span n=37></span><span n=38></span><span n=39></span></div>
+<i><div n=17>turtle</div></i>
 
 <script>
 // test mutation observers; this will be rather a bear.
@@ -172,6 +173,10 @@ it's not clear that Text has an attribute system at all.
 characterData is triggered by accessing data directly. Like this. */
 node42.firstChild.data = "yesterday";
 
+// We tried innerHTML, let's try outerHTML.
+node17 = makeNode(17);
+node17.outerHTML = "<span>you can</span> go <span>your own way</span>";
+
 /* log is still empty, because these observers run asynchronously.
 change it to middle so we know we got this far.
 The timer will fire in half a second and overwrite it.
@@ -214,6 +219,7 @@ correct = new Set([
     '{42:up=null>down}(1)',
     '{42:[]>["yesterday"]}(1)',
     '{"yesterday":character=tomorrow>yesterday}(1)',
+    '{I:[17]>[SPAN," go ",SPAN]}(1)',
     '{2:["start"]>["mid"]}(1)',
     '{3:[]OL~>[BLOCKQUOTE]}(2)',
     '{1:~SCRIPT[]>[HR]}(1)',

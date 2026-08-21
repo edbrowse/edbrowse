@@ -4551,8 +4551,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
                 // make one mutation record to delete all the nodes under fragment
                 // but fragment isn't rooted and it shouldn't matter.
                 const deletions = [];
-                for(let f of c.children) {
-                    if(typeof f == "string") f = d.createTextNode(f);
+                for(let f of Array.from(c.childNodes)) {
                     if(f.nodeType == 11) { alert3("append fragment recursion"); continue; }
                     c.removeChild$nm(f);
                     this.appendChild$nm(f);
@@ -4579,8 +4578,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
             if(typeof c == "string") c = d.createTextNode(c);
             if(c.nodeType == 11) { // descend into fragment
                 const deletions = [];
-                for(let f of c.children) {
-                    if(typeof f == "string") f = d.createTextNode(f);
+                for(let f of Array.from(c.childNodes)) {
                     if(f.nodeType == 11) { alert3("prepend fragment recursion"); continue; }
                     c.removeChild$nm(f);
                     this.insertBefore$nm(f, first);
@@ -4608,8 +4606,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
             if(typeof c == "string") c = d.createTextNode(c);
             if(c.nodeType == 11) { // descend into fragment
                 const deletions = [];
-                for(let f of c.children) {
-                    if(typeof f == "string") f = d.createTextNode(f);
+                for(let f of Array.from(c.childNodes)) {
                     if(f.nodeType == 11) { alert3("before fragment recursion"); continue; }
                     c.removeChild$nm(f);
                     p.insertBefore$nm(f, this);
@@ -4638,8 +4635,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
             if(typeof c == "string") c = d.createTextNode(c);
             if(c.nodeType == 11) { // descend into fragment
                 const deletions = [];
-                for(let f of c.children) {
-                    if(typeof f == "string") f = d.createTextNode(f);
+                for(let f of Array.from(c.childNodes)) {
                     if(f.nodeType == 11) { alert3("after fragment recursion"); continue; }
                     c.removeChild$nm(f);
                     p.insertBefore$nm(f, n);
@@ -4667,8 +4663,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
             if(typeof c == "string") c = d.createTextNode(c);
             if(c.nodeType == 11) { // descend into fragment
                 const deletions = [];
-                for(let f of c.children) {
-                    if(typeof f == "string") f = d.createTextNode(f);
+                for(let f of Array.from(c.childNodes)) {
                     if(f.nodeType == 11) { alert3("replaceWith fragment recursion"); continue; }
                     c.removeChild$nm(f);
                     p.insertBefore$nm(f, n);
@@ -4840,17 +4835,17 @@ Here is the way. */
 
     get outerHTML() { return w.Element.htmlString(this); }
 
-// do this in a way that won't make lots of mutation records
+// Chrome does this with one mutation record.
     set outerHTML(h)
     {
         const p = this.parentNode;
         if(!p) return;
-        const n = this.nextSibling; // could be null
-        p.removeChild(this); // one mutation record
-        this.innerHTML = h;
+        // fragment doesn't allow innerHTML so we have to put it somewhere else
+        let div = d.createElement("div"); // place to expand the html
+        div.innerHTML = h;
         let frag = d.createDocumentFragment();
-        while(this.firstChild) frag.appendChild$nm(this.firstChild);
-        p.insertBefore(frag, n);
+        while(div.firstChild) frag.appendChild$nm(div.firstChild);
+        this.replaceWith(frag);
     }
 
 })
