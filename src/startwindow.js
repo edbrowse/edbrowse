@@ -1808,7 +1808,6 @@ class Text extends HTMLElement
         // note that nodeName is lower case
         tp.nodeName = tp.tagName = "#text";
         tp.nodeType = 3;
-        tp.data$2 = "";
     }
 
     get data() { return this.data$2; }
@@ -1823,6 +1822,25 @@ class Text extends HTMLElement
     }
 }
 swdc(Text);
+
+// <!--   -->
+class Comment extends HTMLElement
+{
+    constructor()
+    {
+        super();
+        this.data = "";
+        // data always has to be a string
+        if(arguments.length > 0) this.data += arguments[0];
+    }
+    static {
+        const tp = this.prototype;
+        // note that nodeName is lower case
+        tp.nodeName = tp.tagName = "#comment";
+        tp.nodeType = 8;
+    }
+}
+swdc(Comment);
 
 // <p>
 class HTMLParagraphElement extends HTMLElement
@@ -1856,7 +1874,7 @@ swdc(HTMLSpanElement);
 // Overwrite the innerHTML setter so it doesn't do anything.
 for(let c of [
 DocType, HTMLMetaElement, HTMLLinkElement, HTMLTitleElement,
-HTMLBaseElement, Text,
+HTMLBaseElement, Text, Comment,
 ]) {
     odp(c.prototype, "innerHTML", {
         get: function(){ return this.inner$HTML},

@@ -3747,17 +3747,6 @@ domLinkage('c', c, "text");
 return c;
 }
 
-swde("Comment", class extends w.HTMLElement {
-    constructor(t)
-    {
-        super();
-        this.data = t;
-    }
-})
-let cmtp = w.Comment.prototype;
-cmtp.nodeName = cmtp.tagName = "#comment";
-cmtp.nodeType = 8;
-
 docp.createComment = function(t) {
 if(t == undefined) t = "";
 const c = new w.Comment(t);
@@ -5064,7 +5053,7 @@ return c;
 // html classes that shouldn't have html underneath them.
 // Overwrite the innerHTML setter so it doesn't do anything.
 for(let c of [
-"CDATASection", "CSSStyleDeclaration", "CharacterData", "Comment",
+"CDATASection", "CSSStyleDeclaration", "CharacterData",
 "HTMLButtonElement", "HTMLCanvasElement",
 "HTMLFrameElement", "HTMLIFrameElement", "HTMLImageElement", "HTMLInputElement",
 "HTMLOptGroupElement", "HTMLOptionElement",

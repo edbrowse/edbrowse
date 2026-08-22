@@ -4,7 +4,7 @@
 <base href="http://yyz.rush.com/">
 </head>
 <body>
-<p id=show>start</p>
+<p id=show>start</p><!-- fun&lt;&gt; -->
 <div id=sample data-html="prefix >
 &lt;html&gt;
 &lt;body&gt;raw source&lt;/body&gt;
@@ -14,6 +14,7 @@ suffix">visible</div>
 try {
 show = document.getElementById("show")
 msg = "ok";
+b = document.body;
 head = document.head;
 title = head.querySelector("title");
 if(title.text != "multiline ½ z") msg += `|bad title ${title.text}`;
@@ -22,6 +23,18 @@ if(meta.httpEquiv != "yahoo") msg += `|bad equiv ${meta.httpEquiv}`;
 if(meta.content != "inside") msg += `|bad meta content ${meta.content}`;
 base = head.querySelector("base");
 if(base.href != "http://yyz.rush.com/") msg += `|base href wrong ${base.href}`;
+
+// comments don't appear in usual searches
+q = b.querySelectorAll("*");
+for(let c of q) if(c.nodeType == 8) msg += "|comment found by qsa";
+q = b.getElementsByTagName("*");
+for(let c of q) if(c.nodeType == 8) msg += "|comment found by getElements";
+cmt = show.nextElementSibling;
+if(cmt.nodeName != "DIV") msg += "|nextElement didn't jump over comment";
+cmt = show.nextSibling;
+if(cmt.nodeType != 8) msg += "|next didn't find comment";
+if(cmt.data != " fun&lt;&gt; ") msg += `|cmt data ${cmt.data}`;
+
 let expected = "prefix >\n<html>\n<body>raw source</body>\n</html>\nsuffix"
 let sample = document.getElementById("sample")
 if(sample.getAttribute("data-html") != expected) msg += `|bad data ${sample.getAttribute("data-html")}`;
