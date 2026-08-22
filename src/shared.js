@@ -4301,13 +4301,6 @@ odp(fsetp, "type", {value: "fieldset"})
 odp(fsetp, "validationMessage", {value: ""})
 odp(fsetp, "willValidate", {value: false})
 
-swde("z$Header", class extends w.HTMLElement {
-    constructor() { super(); }
-}, false)
-swde("z$Footer", class extends w.HTMLElement {
-    constructor() { super(); }
-}, false)
-
 // media and audio
 swde("HTMLMediaElement", class extends w.HTMLElement {
     constructor() { super(); }
@@ -5032,8 +5025,8 @@ case "ul": c = new w.HTMLUListElement; break;
 case "dl": c = new w.HTMLDListElement; break;
 case "li": c = new w.HTMLLIElement; break;
 case "h1": case "h2": case "h3": case "h4": case "h5": case "H6": c = new w.HTMLHeadingElement; break;
-case "header": c = new w.z$Header; break;
-case "footer": c = new w.z$Footer; break;
+case "header": c = new w.Header; break;
+case "footer": c = new w.Footer; break;
 case "table": c = new w.HTMLTableElement; break;
 case "tbody": c = new w.z$tBody; break;
 case "tr": c = new w.HTMLTableRowElement; break;

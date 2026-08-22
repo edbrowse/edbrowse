@@ -1982,6 +1982,22 @@ class HTMLHeadingElement extends HTMLElement
 }
 swdc(HTMLHeadingElement);
 
+// <header>
+class Header extends HTMLElement
+{
+    constructor() { super(); }
+    toString() { return '[object HTMLElement]'; }
+}
+swdc(Header);
+
+// <footer>
+class Footer extends HTMLElement
+{
+    constructor() { super(); }
+    toString() { return '[object HTMLElement]'; }
+}
+swdc(Footer);
+
 // <script>
 class HTMLScriptElement extends HTMLElement
 {
