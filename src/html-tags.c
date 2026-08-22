@@ -4989,9 +4989,10 @@ Needless to say that's not good!
 		        domLink(t, "HTMLTitleElement", 0, 0);
 		    break;
 		}
+		// at this point we should be under <head>
 		if (cw->htmltitle)
 			set_property_string_doc(cf, "title", cw->htmltitle);
-		domLink(t, "Title", 0, 4);
+		domLink(t, "HTMLTitleElement", 0, 4);
 		break;
 
 	case TAGACT_LINK:

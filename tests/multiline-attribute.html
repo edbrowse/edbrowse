@@ -1,3 +1,7 @@
+<head>
+<title>multiline &half; z</title>
+<meta http-equiv=yahoo>
+</head>
 <body>
 <p id=show>start</p>
 <div id=sample data-html="prefix >
@@ -6,10 +10,19 @@
 &lt;/html&gt;
 suffix">visible</div>
 <script>
+try {
+show = document.getElementById("show")
+head = document.head;
+title = head.querySelector("title");
+if(title.text != "multiline ½ z") msg += `|bad title ${title.text}`;
+meta = head.querySelector("meta");
+if(meta.httpEquiv != "yahoo") msg += `|bad equiv ${meta.httpEquiv}`;
+msg = "ok";
 let expected = "prefix >\n<html>\n<body>raw source</body>\n</html>\nsuffix"
-let show = document.getElementById("show")
 let sample = document.getElementById("sample")
-show.innerHTML = sample.getAttribute("data-html") == expected &&
-sample.textContent == "visible" ? "ok" : "multiline attribute leaked into text"
+if(sample.getAttribute("data-html") != expected) msg += `|bad data ${sample.getAttribute("data-html")}`;
+if(sample.textContent != "visible") msg += `|bad content ${sample.textContent}`;
+show.innerHTML = msg;
+} catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>
 </body>

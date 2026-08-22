@@ -4357,12 +4357,6 @@ swde("HTMLLegendElement", class extends w.HTMLElement {
     }
 })
 
-swde("HTMLTitleElement", class extends w.HTMLElement {
-    constructor() {
-        super();
-    }
-})
-
 swde("HTMLQuoteElement", class extends w.HTMLElement {
     constructor() {
         super();
@@ -4447,13 +4441,6 @@ swde("HTMLBaseElement", class extends w.HTMLElement {
     constructor() { super(); }
 }, false)
 
-swde("z$Title", class extends w.HTMLElement {
-    constructor() { super(); }
-}, false)
-odp(w.z$Title.prototype, "text", {
-get: function(){ return this.firstChild && this.firstChild.nodeName == "#text" && this.firstChild.data || "";}
-// setter should change the title of the document, not yet implemented
-});
 swpc("DocumentType", w.DocType)
 
 // <div> <p> <span>
@@ -5133,7 +5120,7 @@ for(let c of [
 "HTMLScriptElement", "HTMLStyleElement",
 "HTMLTimeElement", "HTMLUnknownElement",
 "ProcessingInstruction", "Text", "DocumentFragment",
-"z$Datalist", "z$Title", "z$tCap"]) {
+"z$Datalist", "z$tCap"]) {
     odp(w[c].prototype, "innerHTML", {
         get: function(){ return this.inner$html},
         set: function(h){this.inner$HTML = h}})

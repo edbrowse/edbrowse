@@ -1776,16 +1776,25 @@ class HTMLLinkElement extends HTMLElement
 }
 swdc(HTMLLinkElement);
 
+// <title>
+class HTMLTitleElement extends HTMLElement
+{
+    constructor() { super(); }
+    get text() { return this.firstChild && this.firstChild.nodeName == "#text" && this.firstChild.data || "";}
+    // setter should change the title of the document, not yet implemented
+}
+swdc(HTMLTitleElement);
+
 // At this point we have defined the HTMLElements.
 // Here are classes that don't support innerHTML.
 // Overwrite the innerHTML setter so it doesn't do anything.
 for(let c of [
-"DocType", "HTMLMetaElement", "HTMLLinkElement",
+DocType, HTMLMetaElement, HTMLLinkElement, HTMLTitleElement,
 ]) {
-    odp(window[c].prototype, "innerHTML", {
-        get: function(){ return this.inner$html},
+    odp(c.prototype, "innerHTML", {
+        get: function(){ return this.inner$HTML},
         set: function(h){this.inner$HTML = h}})
-    odp(window[c].prototype, "inner$HTML", {
+    odp(c.prototype, "inner$HTML", {
         value:"", writable:true});
 }
 
