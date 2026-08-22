@@ -1527,6 +1527,156 @@ for(const e of [
 // these have node type 1, just like HTMLElement.
 SVGElement.prototype.nodeType = 1;
 
+// The html element, which spanws the DOM nodes that you know and love.
+class HTMLElement extends Element
+{
+    constructor() { super(); }
+
+    static {
+        const tp = this.prototype;
+        tp.nodeType = 1;
+        tp.ariaHidden = false;
+    }
+
+    get nodeValue()
+    {
+        return this.nodeType == 3 ? this.data :
+        this.nodeType == 4 ? this.text : null;
+    }
+
+    set nodeValue(h)
+    {
+        if(this.nodeType == 3) this.data = h;
+        if (this.nodeType == 4) this.text = h ;
+    }
+
+// style object is on demand
+    get style()
+    {
+        if (!this.style$2) {
+            this.style$2 = new CSSStyleDeclaration;
+            this.style$2.element = this;
+        }
+        return this.style$2;
+    }
+
+    get hidden() { return this.hasAttribute("hidden"); }
+    set hidden(v) { if(v === false) this.removeAttribute("hidden"); else this.setAttribute("hidden", ""); }
+
+// name property spills up and down for input, acid test 53
+    static nameSpill(n)
+    {
+        const dc = n.dom$class;
+        return  dc == "HTMLInputElement" ||
+        dc == "HTMLButtonElement" ||
+        dc == "HTMLSelectElement" ||
+        dc == "HTMLFormElement" ||
+        dc == "HTMLImageElement" ||
+        dc == "HTMLIFrameElement" ||
+        dc == "HTMLFrameElement" ||
+        dc == "HTMLTextAreaElement" ||
+        dc == "HTMLAnchorElement";
+    }
+
+    get name()
+    {
+        if(!HTMLElement.nameSpill(this)) return this.name$2 ;
+        let t = this.getAttribute("name");
+        if(t === null) t = "" // name was never defined
+        if(t === undefined) t = "";
+        // if defined it should always be a string
+        return typeof t == "string" ? t : t.toString();
+    }
+
+    set name(n)
+    {
+        if(!HTMLElement.nameSpill(this)) {
+            odp(this, "name$2", {value:n,writable:true,configurable:true});
+            return;
+        }
+        this.setAttribute("name", n);
+    }
+
+    get title() {
+        const t = this.getAttribute("title");
+        // acid test 3 has numbers for titles
+        const y = typeof t;
+        return y == "string" || y == "number" ? t : undefined;
+    }
+    set title(v) { this.setAttribute("title", v);}
+
+    get role() { return this.getAttribute("role"); }
+    set role(v) { this.setAttribute("role", v); }
+
+    click()
+    {
+        if (!this.disabled) this.dispatchEvent(new MouseEvent("click"));
+    }
+
+// helper functions for textContent
+// First function is recursive and gathers text and data sections.
+    static gatherText(t)
+    {
+        let a = [];
+        if(t.nodeType == 3 || t.nodeType == 4) // text or cdata
+            a.push(t);
+        for(let c of t.childNodes)
+            a = a.concat(HTMLElement.gatherText(c));
+        return a;
+    }
+
+    static textUnder(top)
+    {
+        const nn = top.nodeName;
+        if(nn == "#text") return top.data;
+        if(nn == "SCRIPT" || nn == "#cdata-section") return top.text;
+        let answer = "", part;
+        const t = HTMLElement.gatherText(top);
+        for(let u of t) {
+            part = u.nodeValue;
+            if(part) answer += part;
+        }
+        return answer;
+    }
+
+    static newTextUnder(top, s)
+    {
+        if(top.nodeName == "#text") {
+            top.data = s;
+            // don't mutFixup here; the text setter does it
+            return;
+        }
+        const oldlist = Array.from(top.childNodes); // make a copy
+        while(top.firstChild)
+            top.removeChild$nm(top.firstChild);
+        // do nothing if s is undefined, or null, or the empty string
+        if(s) {
+            let newtext = document.createTextNode(s);
+            top.appendChild$nm(newtext);
+            mutFixup(top, 0, oldlist, [newtext]);
+        } else {
+            mutFixup(top, 0, oldlist, null);
+        }
+        checkUpward(top);
+    }
+
+get textContent() { return HTMLElement.textUnder(this); }
+set textContent(h) { return HTMLElement.newTextUnder(this, h); }
+get innerText() { return HTMLElement.textUnder(this); }
+set innerText(h) { return HTMLElement.newTextUnder(this, h); }
+
+// visual
+    static {
+        const tp = this.prototype;
+        tp.offsetHeight = 1.0;
+        tp.offsetWidth = 1.0;
+        tp.offsetTop = 0.0;
+        tp.offsetLeft = 0.0;
+    }
+
+}
+swdc(HTMLElement);
+
 // Not quite right, still missing, at a minimum, whenDefined and upgrade
 class CustomElementRegistry
 {
@@ -1550,12 +1700,11 @@ class CustomElementRegistry
         this.map.set(name, o);
         // check to see if we already have tags of this nature.
         // If so replace them
-        const d = my$doc();
         let cnt = 0;
-        for (const t of gebtn(d, "*", true, false)) {
+        for (const t of gebtn(document, "*", true, false)) {
             if(t.tagName != name) continue;
             // be sure to use createElement, so we get a tag in the C world
-            const replacement = d.createElement(name);
+            const replacement = document.createElement(name);
             let child;
             while (child = t.firstChild)
                 replacement.appendChild(child);
