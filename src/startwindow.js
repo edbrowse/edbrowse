@@ -1787,6 +1787,13 @@ class HTMLTitleElement extends HTMLElement
 }
 swdc(HTMLTitleElement);
 
+// <base>
+class HTMLBaseElement extends HTMLElement
+{
+    constructor() { super(); }
+}
+swdc(HTMLBaseElement);
+
 // <p>
 class HTMLParagraphElement extends HTMLElement
 {
@@ -1819,6 +1826,7 @@ swdc(HTMLSpanElement);
 // Overwrite the innerHTML setter so it doesn't do anything.
 for(let c of [
 DocType, HTMLMetaElement, HTMLLinkElement, HTMLTitleElement,
+HTMLBaseElement,
 ]) {
     odp(c.prototype, "innerHTML", {
         get: function(){ return this.inner$HTML},

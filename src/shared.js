@@ -4437,12 +4437,6 @@ swde("HTMLHRElement", class extends w.HTMLElement {
     constructor() { super(); }
 })
 
-swde("HTMLBaseElement", class extends w.HTMLElement {
-    constructor() { super(); }
-}, false)
-
-swpc("DocumentType", w.DocType)
-
 // h1 through h6 and our own classes for header footer
 swde("HTMLHeadingElement", class extends w.HTMLElement {
     constructor() { super(); }
@@ -5096,7 +5090,7 @@ return c;
 // Overwrite the innerHTML setter so it doesn't do anything.
 for(let c of [
 "CDATASection", "CSSStyleDeclaration", "CharacterData", "Comment",
-"HTMLBaseElement", "HTMLButtonElement", "HTMLCanvasElement",
+"HTMLButtonElement", "HTMLCanvasElement",
 "HTMLFrameElement", "HTMLIFrameElement", "HTMLImageElement", "HTMLInputElement",
 "HTMLOptGroupElement", "HTMLOptionElement",
 "HTMLScriptElement", "HTMLStyleElement",
@@ -5164,6 +5158,7 @@ case "image": t = "img";
 case "img": c = new w.HTMLImageElement; break;
 case "link": c = new w.HTMLLinkElement; break;
 case "meta": c = new w.HTMLMetaElement; break;
+case "base": c = new w.HTMLBaseElement; break;
 case "cssstyledeclaration":
 c = new w.CSSStyleDeclaration; c.element = null; break;
 case "script": c = new w.HTMLScriptElement; break;
