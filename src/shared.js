@@ -3738,31 +3738,6 @@ w.open = function(a, b) {
     return new w.Window(a, b);
 }
 
-swde("Text", class extends w.HTMLElement {
-    constructor()
-    {
-        super();
-        odp(this, "data$2", {value:"",writable:true});
-        // data always has to be a string
-        if(arguments.length > 0) this.data$2 += arguments[0];
-    }
-})
-
-let textp = w.Text.prototype;
-textp.nodeName = textp.tagName = "#text";
-textp.nodeType = 3;
-// setter insures data is always a string, because roving javascript might:
-// node.data = 7;  ...  if(node.data.match(/x/) ...
-// and boom! It blows up because Number doesn't have a match function.
-odp(textp, "data", {
-    get: function() { return this.data$2; },
-    set: function(s) {
-        const old = this.data$2;
-        this.data$2 = s + "";
-        mutFixup(this, 2, "text", old);
-    }
-})
-
 // Since we are createing all these classes here, does it make sense to
 // include the methods to properly instantiate those classes?  Perhaps.
 docp.createTextNode = function(t) {
@@ -5095,7 +5070,7 @@ for(let c of [
 "HTMLOptGroupElement", "HTMLOptionElement",
 "HTMLScriptElement", "HTMLStyleElement",
 "HTMLTimeElement", "HTMLUnknownElement",
-"ProcessingInstruction", "Text", "DocumentFragment",
+"ProcessingInstruction", "DocumentFragment",
 "z$Datalist", "z$tCap"]) {
     odp(w[c].prototype, "innerHTML", {
         get: function(){ return this.inner$html},

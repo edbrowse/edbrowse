@@ -1794,6 +1794,36 @@ class HTMLBaseElement extends HTMLElement
 }
 swdc(HTMLBaseElement);
 
+class Text extends HTMLElement
+{
+    constructor()
+    {
+        super();
+        odp(this, "data$2", {value:"",writable:true});
+        // data always has to be a string
+        if(arguments.length > 0) this.data$2 += arguments[0];
+    }
+    static {
+        const tp = this.prototype;
+        // note that nodeName is lower case
+        tp.nodeName = tp.tagName = "#text";
+        tp.nodeType = 3;
+        tp.data$2 = "";
+    }
+
+    get data() { return this.data$2; }
+    // setter insures data is always a string, because js might:
+    // t.data = 7;  ...  if(t.data.match(/x/) ...
+    // have to call mutFixup, observer could be watching by characterData
+    set data(h)
+    {
+        const old = this.data$2;
+        this.data$2 = h + "";
+        mutFixup(this, 2, "text", old);
+    }
+}
+swdc(Text);
+
 // <p>
 class HTMLParagraphElement extends HTMLElement
 {
@@ -1826,7 +1856,7 @@ swdc(HTMLSpanElement);
 // Overwrite the innerHTML setter so it doesn't do anything.
 for(let c of [
 DocType, HTMLMetaElement, HTMLLinkElement, HTMLTitleElement,
-HTMLBaseElement,
+HTMLBaseElement, Text,
 ]) {
     odp(c.prototype, "innerHTML", {
         get: function(){ return this.inner$HTML},
