@@ -4443,24 +4443,6 @@ swde("HTMLBaseElement", class extends w.HTMLElement {
 
 swpc("DocumentType", w.DocType)
 
-// <div> <p> <span>
-swde("HTMLDivElement", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-
-let divp = w.HTMLDivElement.prototype;
-divp.doScroll = eb$voidfunction;
-divp.align = "left";
-
-swde("HTMLParagraphElement", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-swde("HTMLSpanElement", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-let spanp = w.HTMLSpanElement.prototype;
-spanp.doScroll = eb$voidfunction;
-
 // h1 through h6 and our own classes for header footer
 swde("HTMLHeadingElement", class extends w.HTMLElement {
     constructor() { super(); }

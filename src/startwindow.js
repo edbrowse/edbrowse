@@ -1787,6 +1787,33 @@ class HTMLTitleElement extends HTMLElement
 }
 swdc(HTMLTitleElement);
 
+// <p>
+class HTMLParagraphElement extends HTMLElement
+{
+    constructor() { super(); }
+}
+swdc(HTMLParagraphElement);
+
+// <div>
+class HTMLDivElement extends HTMLElement
+{
+    constructor() { super(); }
+    static {
+        const tp = this.prototype;
+        tp.doScroll = eb$voidfunction;
+        tp.align = "left";
+    }
+}
+swdc(HTMLDivElement);
+
+// <span>
+class HTMLSpanElement extends HTMLElement
+{
+    constructor() { super(); }
+    static { this.prototype.doScroll = eb$voidfunction; }
+}
+swdc(HTMLSpanElement);
+
 // At this point we have defined the HTMLElements.
 // Here are classes that don't support innerHTML.
 // Overwrite the innerHTML setter so it doesn't do anything.
