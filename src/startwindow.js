@@ -1982,6 +1982,38 @@ class HTMLHeadingElement extends HTMLElement
 }
 swdc(HTMLHeadingElement);
 
+// <script>
+class HTMLScriptElement extends HTMLElement
+{
+    constructor() { super(); }
+
+    get defer() { return this.hasAttribute("defer"); }
+    set defer(v) { if(v === false) this.removeAttribute("defer"); else this.setAttribute("defer", ""); }
+    get async() { return this.hasAttribute("async"); }
+    set async(v) { if(v === false) this.removeAttribute("async"); else this.setAttribute("async", ""); }
+
+    get type() {
+        let t = this.getAttribute("type");
+        if(!t) t = "";
+        return t;
+    }
+    set type(v) { this.setAttribute("type", v); }
+
+    static supports(t) {
+        if(typeof t != "string") return false;
+        t = t.toLowerCase();
+        if(t.match(/\bjavascript\b/)) return true;
+        if(t.match(/\bjson\b/)) return true;
+        return false;
+    }
+    static {
+        const tp = this.prototype;
+        tp.eb$step = 0;
+        tp.text = "";
+    }
+}
+swdc(HTMLScriptElement);
+
 // At this point we have defined the HTMLElements.
 // Here are classes that don't support innerHTML.
 // Overwrite the innerHTML setter so it doesn't do anything.
@@ -1989,7 +2021,7 @@ for(let c of [
 DocType, HTMLMetaElement, HTMLLinkElement, HTMLTitleElement,
 HTMLBaseElement, Text, Comment,
 CharacterData,
-HTMLHRElement, HTMLImageElement,
+HTMLHRElement, HTMLImageElement, HTMLScriptElement,
 ]) {
     odp(c.prototype, "innerHTML", {
         get: function(){ return this.inner$HTML},

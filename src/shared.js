@@ -4301,32 +4301,6 @@ odp(fsetp, "type", {value: "fieldset"})
 odp(fsetp, "validationMessage", {value: ""})
 odp(fsetp, "willValidate", {value: false})
 
-swde("HTMLScriptElement", class extends w.HTMLElement {
-    constructor() { super(); }
-
-    get defer() { return this.hasAttribute("defer"); }
-    set defer(v) { if(v === false) this.removeAttribute("defer"); else this.setAttribute("defer", ""); }
-    get async() { return this.hasAttribute("async"); }
-    set async(v) { if(v === false) this.removeAttribute("async"); else this.setAttribute("async", ""); }
-
-    get type() {
-        let t = this.getAttribute("type");
-        if(!t) t = "";
-        return t;
-    }
-    set type(v) { this.setAttribute("type", v); }
-
-})
-w.HTMLScriptElement.supports = function(t) {
-if(typeof t != "string") return false;
-t = t.toLowerCase();
-if(t.match(/\bjavascript\b/)) return true;
-if(t.match(/\bjson\b/)) return true;
-return false}
-let scriptp = w.HTMLScriptElement.prototype;
-scriptp.eb$step = 0;
-scriptp.text = "";
-
 swde("z$Header", class extends w.HTMLElement {
     constructor() { super(); }
 }, false)
@@ -4967,7 +4941,7 @@ for(let c of [
 "HTMLButtonElement", "HTMLCanvasElement",
 "HTMLFrameElement", "HTMLIFrameElement", "HTMLInputElement",
 "HTMLOptGroupElement", "HTMLOptionElement",
-"HTMLScriptElement", "HTMLStyleElement",
+"HTMLStyleElement",
 "HTMLTimeElement", "HTMLUnknownElement",
 "DocumentFragment",
 "z$Datalist", "z$tCap"]) {
