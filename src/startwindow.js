@@ -1897,6 +1897,91 @@ class HTMLSpanElement extends HTMLElement
 }
 swdc(HTMLSpanElement);
 
+// <a>
+class HTMLAnchorElement extends HTMLElement
+{
+    constructor() { super(); }
+}
+swdc(HTMLAnchorElement);
+
+// <hr>
+class HTMLHRElement extends HTMLElement
+{
+    constructor() { super(); }
+}
+swdc(HTMLHRElement);
+
+// <legend>
+class HTMLLegendElement extends HTMLElement
+{
+    constructor() { super(); }
+    get form() {
+        let p = this.parentNode;
+        return p && p.dom$class == "HTMLFieldSetElement" ? p.form : null;
+    }
+}
+swdc(HTMLLegendElement);
+
+// <q>
+class HTMLQuoteElement extends HTMLElement
+{
+    constructor() { super(); }
+}
+swdc(HTMLQuoteElement);
+
+// <img>
+class HTMLImageElement extends HTMLElement
+{
+    constructor() { super(); }
+    get alt() { return this.getAttribute("alt"); }
+    set alt(v) { this.setAttribute("alt", v); }
+}
+swdc(HTMLImageElement);
+
+// <ol>
+class HTMLOListElement extends HTMLElement
+{
+    constructor() { super(); }
+}
+swdc(HTMLOListElement);
+
+// <ul>
+class HTMLUListElement extends HTMLElement
+{
+    constructor() { super(); }
+}
+swdc(HTMLUListElement);
+
+// <dl>
+class HTMLDListElement extends HTMLElement
+{
+    constructor() { super(); }
+}
+swdc(HTMLDListElement);
+
+// <li>
+class HTMLLIElement extends HTMLElement
+{
+    constructor() { super(); }
+}
+swdc(HTMLLIElement);
+
+// <label>
+class HTMLLabelElement extends HTMLElement
+{
+    constructor() { super(); }
+    get htmlFor() { return this.getAttribute("for"); }
+    set htmlFor(v) { this.setAttribute("for", v); }
+}
+swdc(HTMLLabelElement);
+
+// <h1>
+class HTMLHeadingElement extends HTMLElement
+{
+    constructor() { super(); }
+}
+swdc(HTMLHeadingElement);
+
 // At this point we have defined the HTMLElements.
 // Here are classes that don't support innerHTML.
 // Overwrite the innerHTML setter so it doesn't do anything.
@@ -1904,6 +1989,7 @@ for(let c of [
 DocType, HTMLMetaElement, HTMLLinkElement, HTMLTitleElement,
 HTMLBaseElement, Text, Comment,
 CharacterData,
+HTMLHRElement, HTMLImageElement,
 ]) {
     odp(c.prototype, "innerHTML", {
         get: function(){ return this.inner$HTML},

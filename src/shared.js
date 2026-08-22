@@ -4301,38 +4301,6 @@ odp(fsetp, "type", {value: "fieldset"})
 odp(fsetp, "validationMessage", {value: ""})
 odp(fsetp, "willValidate", {value: false})
 
-swde("HTMLLegendElement", class extends w.HTMLElement {
-    constructor() {
-        super();
-    }
-    get form() {
-        let p = this.parentNode;
-        return p && p.dom$class == "HTMLFieldSetElement" ? p.form : null;
-    }
-})
-
-swde("HTMLQuoteElement", class extends w.HTMLElement {
-    constructor() {
-        super();
-    }
-})
-
-swde("HTMLImageElement", class extends w.HTMLElement {
-    constructor() { super(); }
-
-    get alt() { return this.getAttribute("alt"); }
-    set alt(v) { this.setAttribute("alt", v); }
-
-})
-swpc("Image", w.HTMLImageElement)
-
-let imagep = w.HTMLImageElement.prototype;
-odp(imagep, "alt", {
-get:function(){ var t = this.getAttribute("alt");
-return typeof t == "string" ? t : undefined},
-set:function(v) { this.setAttribute("alt", v);
-}})
-
 swde("HTMLScriptElement", class extends w.HTMLElement {
     constructor() { super(); }
 
@@ -4359,42 +4327,6 @@ let scriptp = w.HTMLScriptElement.prototype;
 scriptp.eb$step = 0;
 scriptp.text = "";
 
-// the all important <a>, the whole point of the internet
-swde("HTMLAnchorElement", class extends w.HTMLElement {
-    constructor() { super(); }
-
-})
-
-// classes that support lists in html
-swde("HTMLOListElement", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-
-swde("HTMLUListElement", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-swde("HTMLDListElement", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-
-swde("HTMLLIElement", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-
-swde("HTMLLabelElement", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-let labelp = w.HTMLLabelElement.prototype;
-odp(labelp, "htmlFor", { get: function() { return this.getAttribute("for"); }, set: function(h) { this.setAttribute("for", h); }})
-
-swde("HTMLHRElement", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-
-// h1 through h6 and our own classes for header footer
-swde("HTMLHeadingElement", class extends w.HTMLElement {
-    constructor() { super(); }
-})
 swde("z$Header", class extends w.HTMLElement {
     constructor() { super(); }
 }, false)
@@ -5033,7 +4965,7 @@ return c;
 for(let c of [
 "CSSStyleDeclaration",
 "HTMLButtonElement", "HTMLCanvasElement",
-"HTMLFrameElement", "HTMLIFrameElement", "HTMLImageElement", "HTMLInputElement",
+"HTMLFrameElement", "HTMLIFrameElement", "HTMLInputElement",
 "HTMLOptGroupElement", "HTMLOptionElement",
 "HTMLScriptElement", "HTMLStyleElement",
 "HTMLTimeElement", "HTMLUnknownElement",
