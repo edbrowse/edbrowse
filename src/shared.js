@@ -3426,7 +3426,7 @@ This lets us put more software into the shared window.
 *********************************************************************/
 
 function setupClasses(w) {
-let d; // the document under window, which will be created below
+const d = w.document; // the document under window
 
 // we really need some shorthand here
 let odp = w.Object.defineProperty;
@@ -3585,11 +3585,6 @@ t = t.parentNode;
 return t1;
 }
 
-nodep.getElementsByTagName = getElementsByTagName;
-nodep.getElementsByName = getElementsByName;
-nodep.getElementsByClassName = getElementsByClassName;
-odp(nodep, "inner$HTML", {value:"", writable:true})
-
 // If all these Node methods return [native code], as they are
 // suppose to, then the same holds for the downstream classes,
 // like HTMLElement.appendChild etc.
@@ -3600,89 +3595,6 @@ for( let k of [
 "getBoundingClientRect", "compareDocumentPosition", "getRootNode"])
     // wrapString doesn't work here because they are anonymous functions
     eval(`Object.defineProperty(nodep.${k}, "toString", {value: ()=>{return "function ${k}() {\\n    [native code]\\n}"}})`);
-
-swde("Document", class extends w.Node {
-    constructor()
-    {
-        super();
-        odp(this, "id$hash", {value: new w.Map});
-        odp(this, "id$registry", {
-            value: new w.FinalizationRegistry(
-                (i) => {
-                    alert3(`GC triggers delete of element with id ${i} from id hash`);
-                    this.id$hash.delete(i);
-                }
-            )
-        });
-        this.readyState$2 = "interactive";
-    }
-
-    toString() { return "[object HTMLDocument]" };
-});
-swde("HTMLDocument", class extends w.Document {
-    constructor() { super(); }
-}) // legacy
-let docp = w.Document.prototype;
-docp.activeElement = null;
-odp(docp, "documentElement", {get: function() {
-  let e = this.lastChild;
-if(!e) { alert3("missing documentElement node"); return null; }
-if(e.nodeName.toUpperCase() != "HTML") alert3("html expected, got " + e.nodeName);
-return e
-}})
-
-// We need a helper function to get and set document.head and document.body.
-// But why would anyone ever want to set those?
-// Somebody did somewhere, or I wouldn't have written the function.
-// Probably an xml document.
-function getHeadBody(t, which) {
-    let e = t.documentElement;
-    if(!e) return null;
-    for(let i=0; i<e.childNodes.length; ++i)
-        if(e.childNodes[i].nodeName.toUpperCase() == which) return e.childNodes[i];
-    alert3(`missing ${which} node`); return null;
-}
-function setHeadBody(t, which, h) {
-    let i, e = t.documentElement;
-    if(!e) return;
-    for(i=0; i<e.childNodes.length; ++i)
-        if(e.childNodes[i].nodeName.toUpperCase() == which) break;
-    if(i < e.childNodes.length) e.removeChild(e.childNodes[i]);
-    else i=0;
-    if(h) {
-        if(h.nodeName.toUpperCase() != which) {
-            alert3(`${which} expected, but you passed in node ${h.nodeName}`);
-            h.nodeName = which;
-        }
-        if(i == e.childNodes.length) e.appendChild(h);
-        else e.insertBefore(h, e.childNodes[i]);
-    }
-}
-
-odp(docp, "head", {get: function() { return getHeadBody(this, "HEAD") },
-    set: function(h) { setHeadBody(this, "HEAD", h)}})
-odp(docp, "body", {get: function() { return getHeadBody(this, "BODY") },
-    set: function(h) { setHeadBody(this, "BODY", h)}})
-// scrollingElement makes no sense in edbrowse, I think body is our best bet
-odp(docp, "scrollingElement", {get: function() { return getHeadBody(this, "BODY")}})
-
-odp(docp, "URL", {get: function(){return this.location ? this.location.toString() : null}})
-odp(docp, "documentURI", {get: function(){return this.URL}})
-odp(docp, "cookie", { get: eb$getcook, set: eb$setcook});
-docp.defaultView = w
-// make sure readyState is readonly
-odp(docp, "readyState", {get: function(){
-    return this.readyState$2 ? this.readyState$2 : null}})
-docp.visibilityState = "visible"
-docp.getElementById = getElementById
-docp.nodeName = "#document"
-docp.tagName = "document"
-docp.nodeType = 9
-
-// create the document
-d = new w.HTMLDocument;
-swpv("document", d);
-nodep.ownerDocument = d;
 
 // Window constructor, passes the url back to edbrowse
 // so it can open a new web page.
@@ -3708,6 +3620,7 @@ w.open = function(a, b) {
 
 // Since we are createing all these classes here, does it make sense to
 // include the methods to properly instantiate those classes?  Perhaps.
+let docp = w.Document.prototype;
 docp.createTextNode = function(t) {
 if(t == undefined) t = "";
 const c = new w.Text(t);

@@ -62,18 +62,13 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
     this.mw$.dispatchEvent = () => undefined;
     this.mw$.addEventListener = () => undefined;
     this.mw$.removeEventListener = () => undefined;
+    this.mw$.getElementsByTagName = () => [];
     this.mw$.getComputedStyle = () => {};
     this.mw$.structuredClone = () => {};
     this.mw$.attr = {};
     this.mw$.setupClasses = () => {};
-// classes that setupClasses would have built, but didn't.
-    this.URL = function(){}
-    this.Node = function(){}
-    this.Element = function(){}
     this.Window = function(){}
-    this.EventTarget = function(){}
     this.CSSStyleDeclaration = function(){}
-        this.document.getElementsByTagName = (t)=>[];
 }
 
 
@@ -298,7 +293,8 @@ class Node extends EventTarget
         */
         return this.inner$HTML;
     }
-    set innerHTML(h) {
+    set innerHTML(h)
+    {
         if(!h) h = "";
         // textarea.innerHTML is special.
         if(this.dom$class == "HTMLTextAreaElement") {
@@ -332,6 +328,14 @@ class Node extends EventTarget
 
         // c2 is the old nodes, for the observers.
         mutFixup(this, 0, c1, c2);
+    }
+
+    static {
+        const tp = this.prototype;
+        tp.inner$HTML = "";
+        tp.getElementsByTagName = mw$.getElementsByTagName;
+        tp.getElementsByName = mw$.getElementsByName;
+        tp.getElementsByClassName = mw$.getElementsByClassName;
     }
 
     // basic append, without C side efffects.
@@ -588,6 +592,7 @@ class Node extends EventTarget
             this.parentNode && this.parentNode.nodeType == 1
         ) ? this.parentNode : null;
     }
+
     cloneNode(deep) { return mw$.cloneNodeHelper(this,deep, false); }
 
 }
@@ -1795,6 +1800,113 @@ class HTMLBaseElement extends HTMLElement
     constructor() { super(); }
 }
 swdc(HTMLBaseElement);
+
+// I have no idea which of these properties and methods belong
+// in Document, and which in HTMLDocument.
+class Document extends Node
+{
+    constructor()
+    {
+        super();
+        // the id$hash is suppose to make getElementById more efficient.
+        // I don't know if it's worth the complexity it introduces.
+        odp(this, "id$hash", {value: new Map});
+        odp(this, "id$registry", {
+            value: new FinalizationRegistry(
+                (i) => {
+                    alert3(`GC triggers delete of element with id ${i} from id hash`);
+                    this.id$hash.delete(i);
+                }
+            )
+        });
+        this.readyState$2 = "interactive";
+    }
+
+    toString() { return "[object Document]" };
+
+    static {
+        const tp = this.prototype;
+        tp.nodeName = "#document"
+        tp.tagName = "document"
+        tp.nodeType = 9
+        tp.activeElement = null;
+        tp.defaultView = window;
+        tp.visibilityState = "visible"
+        tp.getElementById = mw$.getElementById
+    }
+
+    get documentElement()
+    {
+        let e = this.lastChild;
+        if(!e) { alert3("missing documentElement node"); return null; }
+        if(e.nodeName.toUpperCase() != "HTML")
+            alert3("html expected, got " + e.nodeName);
+        return e
+    }
+
+// We need a helper function to get and set document.head and document.body.
+// But why would anyone ever want to set those?
+// Somebody did somewhere, or I wouldn't have written the function.
+// Probably an xml document.
+    static getHeadBody(t, which)
+        {
+        let e = t.documentElement;
+        if(!e) return null;
+        for(let i=0; i<e.childNodes.length; ++i)
+            if(e.childNodes[i].nodeName.toUpperCase() == which)
+                return e.childNodes[i];
+        alert3(`missing ${which} node`);
+        return null;
+    }
+
+    static setHeadBody(t, which, h)
+    {
+        let i, e = t.documentElement;
+        if(!e) return;
+        for(i=0; i<e.childNodes.length; ++i)
+            if(e.childNodes[i].nodeName.toUpperCase() == which) break;
+        if(i < e.childNodes.length) e.removeChild(e.childNodes[i]);
+        else i=0;
+        if(h) {
+            if(h.nodeName.toUpperCase() != which) {
+                alert3(`${which} expected, but you passed in node ${h.nodeName}`);
+                h.nodeName = which;
+            }
+            if(i == e.childNodes.length) e.appendChild(h);
+            else e.insertBefore(h, e.childNodes[i]);
+        }
+    }
+
+    get head() { return Document.getHeadBody(this, "HEAD") ; }
+    set head(h) { Document.setHeadBody(this, "HEAD", h) ; }
+    get body() { return Document.getHeadBody(this, "BODY") ; }
+    set body(h) { Document.setHeadBody(this, "BODY", h) ; }
+    // scrollingElement makes no sense in edbrowse, I think body is our best bet
+    get scrollingElement() { return this.body; }
+    get URL() { return this.location ? this.location.toString() : null }
+    get documentURI() { return this.URL}
+    // cookie getter setter are native; have to call them with this
+    get cookie() { return eb$getcook.call(this); }
+    set cookie(h) { eb$setcook.call(this, h); }
+
+    // make sure readyState is readonly
+    get readyState() { return this.readyState$2 ? this.readyState$2 : null}
+}
+swdc(Document);
+
+class HTMLDocument extends Document
+{
+    constructor() { super(); }
+    toString() { return "[object HTMLDocument]" };
+}
+swdc(HTMLDocument);
+
+// And now, drumroll please, as we create the document.
+odp(this, "document", {value: new HTMLDocument});
+
+// Now that we have document in hand, establish is as the ownerDocument
+// for all nodes created under this window.
+Node.prototype.ownerDocument = document;
 
 class Text extends HTMLElement
 {
