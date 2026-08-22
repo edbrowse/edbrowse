@@ -4268,21 +4268,6 @@ var y = typeof t;
 return y == "string" || y == "number" ? t : ""; },
 set:function(v) { this.setAttribute("placeholder", v);}});
 
-// the html form
-swde("HTMLFormElement", class extends w.HTMLElement {
-    constructor() {
-        super();
-        this.elements = new w.Array;
-        this.elements.toString = ()=>{return "HTMLFormControlsCollection"}
-    }
-
-    get length() { return this.elements.length}
-})
-
-let formp = w.HTMLFormElement.prototype;
-formp.submit = eb$formSubmit;
-formp.reset = eb$formReset;
-
 swde("HTMLFieldSetElement", class extends w.HTMLElement {
     constructor() {
         super();

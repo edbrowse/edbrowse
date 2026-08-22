@@ -41,6 +41,8 @@ this.eb$getter_cd = function() { return null}
 this.eb$getter_cw = function() { return null}
     this.querySelector0 = () => {};
     this.resolveURL = (base, h) => h;
+    this.eb$formSubmit = ()=>null;
+    this.eb$formReset = ()=>null;
 ;(function() { const void_functions = ["addEventListener",
     "removeEventListener",
     "eb$hasFocus", "eb$write", "eb$writeln"];
@@ -2029,6 +2031,24 @@ class HTMLScriptElement extends HTMLElement
     }
 }
 swdc(HTMLScriptElement);
+
+// <form>
+class HTMLFormElement extends HTMLElement
+{
+    constructor() {
+        super();
+        this.elements = [];
+    }
+    toString() {return "HTMLFormControlsCollection"; }
+    get length() { return this.elements.length; }
+
+    static {
+        const tp = this.prototype;
+        tp.submit = eb$formSubmit;
+        tp.reset = eb$formReset;
+    }
+}
+swdc(HTMLFormElement);
 
 // At this point we have defined the HTMLElements.
 // Here are classes that don't support innerHTML.
