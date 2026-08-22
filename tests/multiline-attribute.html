@@ -15,6 +15,7 @@ try {
 show = document.getElementById("show")
 msg = "ok";
 b = document.body;
+isedbrowse = navigator.userAgent.substr(0, 8) == "edbrowse";
 head = document.head;
 title = head.querySelector("title");
 if(title.text != "multiline ½ z") msg += `|bad title ${title.text}`;
@@ -34,6 +35,15 @@ if(cmt.nodeName != "DIV") msg += "|nextElement didn't jump over comment";
 cmt = show.nextSibling;
 if(cmt.nodeType != 8) msg += "|next didn't find comment";
 if(cmt.data != " fun&lt;&gt; ") msg += `|cmt data ${cmt.data}`;
+cmt = document.createTextNode(789);
+if(cmt.data !== "789") msg += "|text not 789";
+cmt = document.createComment("fluff");
+if(cmt.data !== "fluff") msg += "|comment not fluff";
+if(isedbrowse) {
+// chrome says this is not supported for html documents
+cmt = document.createCDATASection("northeast");
+if(cmt.data !== "northeast") msg += "|cdata not northeast";
+}
 
 let expected = "prefix >\n<html>\n<body>raw source</body>\n</html>\nsuffix"
 let sample = document.getElementById("sample")

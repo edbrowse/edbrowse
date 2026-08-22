@@ -1800,7 +1800,6 @@ class Text extends HTMLElement
     {
         super();
         odp(this, "data$2", {value:"",writable:true});
-        // data always has to be a string
         if(arguments.length > 0) this.data$2 += arguments[0];
     }
     static {
@@ -1823,6 +1822,23 @@ class Text extends HTMLElement
 }
 swdc(Text);
 
+class CDATASection extends Text
+{
+    constructor()
+    {
+        super();
+        this.data = "";
+        if(arguments.length > 0) this.data += arguments[0];
+    }
+    static {
+        const tp = this.prototype;
+        // note that nodeName is lower case
+        tp.nodeName = tp.tagName = "#cdata-section";
+        tp.nodeType = 4;
+    }
+}
+swdc(CDATASection);
+
 // <!--   -->
 class Comment extends HTMLElement
 {
@@ -1830,7 +1846,6 @@ class Comment extends HTMLElement
     {
         super();
         this.data = "";
-        // data always has to be a string
         if(arguments.length > 0) this.data += arguments[0];
     }
     static {
@@ -1874,7 +1889,7 @@ swdc(HTMLSpanElement);
 // Overwrite the innerHTML setter so it doesn't do anything.
 for(let c of [
 DocType, HTMLMetaElement, HTMLLinkElement, HTMLTitleElement,
-HTMLBaseElement, Text, Comment,
+HTMLBaseElement, Text, CDATASection, Comment,
 ]) {
     odp(c.prototype, "innerHTML", {
         get: function(){ return this.inner$HTML},

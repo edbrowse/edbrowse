@@ -5031,18 +5031,6 @@ odp(w.z$Datalist.prototype, "multiple", {
 get:function(){ return this.hasAttribute("multiple"); },
 set:function(v) { this.setAttribute("multiple", v);}});
 
-swde("CDATASection", class extends w.Text {
-    constructor(t)
-    {
-        super();
-        this.data = t;
-    }
-})
-
-let cdatap = w.CDATASection.prototype;
-cdatap.nodeName = cdatap.tagName = "#cdata-section";
-cdatap.nodeType = 4;
-
 docp.createCDATASection = function(t) {
 if(t == undefined) t = "";
 const c = new w.CDATASection(t);
@@ -5053,7 +5041,7 @@ return c;
 // html classes that shouldn't have html underneath them.
 // Overwrite the innerHTML setter so it doesn't do anything.
 for(let c of [
-"CDATASection", "CSSStyleDeclaration", "CharacterData",
+"CSSStyleDeclaration", "CharacterData",
 "HTMLButtonElement", "HTMLCanvasElement",
 "HTMLFrameElement", "HTMLIFrameElement", "HTMLImageElement", "HTMLInputElement",
 "HTMLOptGroupElement", "HTMLOptionElement",
