@@ -3766,16 +3766,6 @@ const c = this.createElement("fragment");
 return c;
 }
 
-swde("CharacterData", class extends w.Node {
-    constructor() { super(); }
-})
-
-swde("ProcessingInstruction", class extends w.CharacterData {
-    constructor() { super(); }
-})
-let pip = w.ProcessingInstruction.prototype;
-pip.sheet = null;
-
 // tables, table sections, rows, cells.
 // First some helper functions to add and remove rows from a table or section,
 // add and remove cells from a row.
@@ -5041,13 +5031,13 @@ return c;
 // html classes that shouldn't have html underneath them.
 // Overwrite the innerHTML setter so it doesn't do anything.
 for(let c of [
-"CSSStyleDeclaration", "CharacterData",
+"CSSStyleDeclaration",
 "HTMLButtonElement", "HTMLCanvasElement",
 "HTMLFrameElement", "HTMLIFrameElement", "HTMLImageElement", "HTMLInputElement",
 "HTMLOptGroupElement", "HTMLOptionElement",
 "HTMLScriptElement", "HTMLStyleElement",
 "HTMLTimeElement", "HTMLUnknownElement",
-"ProcessingInstruction", "DocumentFragment",
+"DocumentFragment",
 "z$Datalist", "z$tCap"]) {
     odp(w[c].prototype, "innerHTML", {
         get: function(){ return this.inner$html},

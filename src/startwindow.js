@@ -1857,6 +1857,19 @@ class Comment extends HTMLElement
 }
 swdc(Comment);
 
+class CharacterData extends Node
+{
+    constructor() { super(); }
+}
+swdc(CharacterData);
+
+class ProcessingInstruction extends CharacterData
+{
+    constructor() { super(); }
+    static { this.prototype.sheet = null; }
+}
+swdc(ProcessingInstruction);
+
 // <p>
 class HTMLParagraphElement extends HTMLElement
 {
@@ -1889,7 +1902,8 @@ swdc(HTMLSpanElement);
 // Overwrite the innerHTML setter so it doesn't do anything.
 for(let c of [
 DocType, HTMLMetaElement, HTMLLinkElement, HTMLTitleElement,
-HTMLBaseElement, Text, CDATASection, Comment,
+HTMLBaseElement, Text, Comment,
+CharacterData,
 ]) {
     odp(c.prototype, "innerHTML", {
         get: function(){ return this.inner$HTML},
