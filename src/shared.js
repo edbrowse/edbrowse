@@ -3981,26 +3981,16 @@ w.open = function(a, b) {
     return new w.Window(a, b);
 }
 
-// name property spills up and down for input, acid test 53
-function nameSpill(n)
-{
-    const dc = n.dom$class;
-    return  dc == "HTMLInputElement" ||
-    dc == "HTMLButtonElement" ||
-    dc == "HTMLSelectElement" ||
-    dc == "HTMLFormElement" ||
-    dc == "HTMLImageElement" ||
-    dc == "HTMLIFrameElement" ||
-    dc == "HTMLFrameElement" ||
-    dc == "HTMLTextAreaElement" ||
-    dc == "HTMLAnchorElement";
-}
-
 // The html element, which is the DOM nodes that you know and love.
 swde("HTMLElement", class extends w.Element {
     constructor() { super(); }
 
-    // style object is on demand
+    static {
+        const tp = this.prototype;
+        tp.nodeType = 1, tp.ariaHidden = false;
+    }
+
+// style object is on demand
     get style()
     {
         if (!this.style$2) {
@@ -4009,12 +3999,28 @@ swde("HTMLElement", class extends w.Element {
         }
         return this.style$2;
     }
+
     get hidden() { return this.hasAttribute("hidden"); }
     set hidden(v) { if(v === false) this.removeAttribute("hidden"); else this.setAttribute("hidden", ""); }
 
+// name property spills up and down for input, acid test 53
+    static nameSpill(n)
+    {
+        const dc = n.dom$class;
+        return  dc == "HTMLInputElement" ||
+        dc == "HTMLButtonElement" ||
+        dc == "HTMLSelectElement" ||
+        dc == "HTMLFormElement" ||
+        dc == "HTMLImageElement" ||
+        dc == "HTMLIFrameElement" ||
+        dc == "HTMLFrameElement" ||
+        dc == "HTMLTextAreaElement" ||
+        dc == "HTMLAnchorElement";
+    }
+
     get name()
     {
-        if(!nameSpill(this)) return this.name$2 ;
+        if(!w.HTMLElement.nameSpill(this)) return this.name$2 ;
         let t = this.getAttribute("name");
         if(t === null) t = "" // name was never defined
         if(t === undefined) t = "";
@@ -4024,7 +4030,7 @@ swde("HTMLElement", class extends w.Element {
 
     set name(n)
     {
-        if(!nameSpill(this)) {
+        if(!w.HTMLElement.nameSpill(this)) {
             odp(this, "name$2", {value:n,writable:true,configurable:true});
             return;
         }
@@ -4042,29 +4048,26 @@ swde("HTMLElement", class extends w.Element {
     get role() { return this.getAttribute("role"); }
     set role(v) { this.setAttribute("role", v); }
 
-//     per mdn the click method simulates a mouse click. Based on the examples
-//     I'm taking that to mean dispatch the relevant event.
     click()
     {
         if (!this.disabled) this.dispatchEvent(new w.MouseEvent("click"));
     }
-})
-let helemp = w.HTMLElement.prototype;
-helemp.nodeType = 1;
-helemp.ariaHidden = false;
 
 // helper functions for textContent
 // First function is recursive and gathers text and data sections.
-// Some internet code uses querySelectorAll("text,cdata"), but then I found
-// an internet article that says this can't work and shouldn't work.
-function gatherText(t) {
-let a = [];
-if(t.nodeType == 3 || t.nodeType == 4) // text or cdata
-a.push(t);
-for(let c of t.childNodes)
-a = a.concat(gatherText(c));
-return a;
-}
+    static gatherText(t)
+    {
+        let a = [];
+        if(t.nodeType == 3 || t.nodeType == 4) // text or cdata
+            a.push(t);
+        for(let c of t.childNodes)
+            a = a.concat(w.HTMLElement.gatherText(c));
+        return a;
+    }
+
+})
+
+let helemp = w.HTMLElement.prototype;
 
 function textUnder(top, flavor) {
 const nn = top.nodeName;
@@ -4072,7 +4075,7 @@ if(nn == "#text") return top.data;
 if(nn == "SCRIPT" || nn == "#cdata-section") return top.text;
 const pre = (nn=="PRE");
 let answer = "", part;
-const t = gatherText(top);
+const t = w.HTMLElement.gatherText(top);
 for(let u of t) {
 part = u.nodeValue;
 if(part) answer += part;
