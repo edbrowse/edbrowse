@@ -1901,7 +1901,19 @@ class Attr
         this.ownerDocument = document; this.name = "";
     }
     isId() { return this.name === "id"; }
-    static { this.prototype.cloneNode = mw$.cloneAttr; }
+
+// This is not use by cloneNode - that calls setAttribute to copy the Attrs.
+    cloneNode()
+    {
+        let w = window;
+        // if part of an html element, use its context
+        if(this.ownerDocument && this.ownerDocument.defaultView)
+            w = this.ownerDocument.defaultView;
+        const a = new w.Attr;
+        a.name = this.name, a.value = this.value;
+        return a
+    }
+
 }
 swdc(Attr);
 

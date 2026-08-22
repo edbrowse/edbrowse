@@ -2086,19 +2086,6 @@ function structuredClone(obj, options)
     return clone_helper(obj);
 }
 
-// simple function to clone Attr
-// not use by cloneNode - that calls setAttribute to do that function
-function cloneAttr()
-{
-var w = my$win()
-// if part of an html element, use its context
-if(this.ownerDocument && this.ownerDocument.defaultView)
-w = this.ownerDocument.defaultView
-var a = new w.Attr;
-a.name = this.name, a.value = this.value;
-return a
-}
-
 // for toolbar menubar etc
 this.generalbar = {}
 Object.defineProperty(generalbar, "visible", {value:true})
