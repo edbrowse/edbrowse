@@ -1751,11 +1751,36 @@ class HTMLBodyElement extends HTMLElement
 }
 swdc(HTMLBodyElement);
 
+// <meta>
+class HTMLMetaElement extends HTMLElement
+{
+    constructor() { super(); }
+    get httpEquiv() { return this.getAttribute("http-equiv"); }
+    set httpEquiv(h) { this.setAttribute("http-equiv", h); }
+}
+swdc(HTMLMetaElement);
+
+// <link>
+class HTMLLinkElement extends HTMLElement
+{
+    constructor() { super(); }
+    get relList()
+    {
+        // It's a list but why would it ever be more than one?
+        const a = [];
+        if(this.rel) a.push(this.rel);
+        // edbrowse only supports stylesheet
+        a.supports = (s) => s === "stylesheet";
+        return a;
+    }
+}
+swdc(HTMLLinkElement);
+
 // At this point we have defined the HTMLElements.
 // Here are classes that don't support innerHTML.
 // Overwrite the innerHTML setter so it doesn't do anything.
 for(let c of [
-"DocType",
+"DocType", "HTMLMetaElement", "HTMLLinkElement",
 ]) {
     odp(window[c].prototype, "innerHTML", {
         get: function(){ return this.inner$html},

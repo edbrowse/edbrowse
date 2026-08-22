@@ -4443,12 +4443,6 @@ swde("HTMLHRElement", class extends w.HTMLElement {
     constructor() { super(); }
 })
 
-swde("HTMLMetaElement", class extends w.HTMLElement {
-    constructor() { super(); }
-}, false)
-
-let metap = w.HTMLMetaElement.prototype;
-odp(metap, "httpEquiv", { get: function() { return this.getAttribute("http-equiv"); }, set: function(h) { this.setAttribute("http-equiv", h); }})
 swde("HTMLBaseElement", class extends w.HTMLElement {
     constructor() { super(); }
 }, false)
@@ -4460,19 +4454,6 @@ odp(w.z$Title.prototype, "text", {
 get: function(){ return this.firstChild && this.firstChild.nodeName == "#text" && this.firstChild.data || "";}
 // setter should change the title of the document, not yet implemented
 });
-swde("HTMLLinkElement", class extends w.HTMLElement {
-    constructor() { super(); }
-}, false)
-
-// It's a list but why would it ever be more than one?
-odp(w.HTMLLinkElement.prototype, "relList", {
-get: function() { var a = new w.Aray;
-if(this.rel) a.push(this.rel);
-// edbrowse only supports stylesheet
-a.supports = function(s) { return s === "stylesheet"; }
-return a;
-}})
-
 swpc("DocumentType", w.DocType)
 
 // <div> <p> <span>
@@ -5148,7 +5129,7 @@ for(let c of [
 "CDATASection", "CSSStyleDeclaration", "CharacterData", "Comment",
 "HTMLBaseElement", "HTMLButtonElement", "HTMLCanvasElement",
 "HTMLFrameElement", "HTMLIFrameElement", "HTMLImageElement", "HTMLInputElement",
-"HTMLLinkElement", "HTMLMetaElement", "HTMLOptGroupElement", "HTMLOptionElement",
+"HTMLOptGroupElement", "HTMLOptionElement",
 "HTMLScriptElement", "HTMLStyleElement",
 "HTMLTimeElement", "HTMLUnknownElement",
 "ProcessingInstruction", "Text", "DocumentFragment",
