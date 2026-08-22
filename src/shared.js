@@ -4268,24 +4268,6 @@ var y = typeof t;
 return y == "string" || y == "number" ? t : ""; },
 set:function(v) { this.setAttribute("placeholder", v);}});
 
-swde("HTMLFieldSetElement", class extends w.HTMLElement {
-    constructor() {
-        super();
-        this.elements = new w.Array;
-        this.elements.toString = ()=>{ return '[object HTMLCollection]'}
-    }
-
-     checkValidity() { return true; }
-     reportValidity() { return true; }
-    get length() { return this.elements.length}
-})
-
-let fsetp = w.HTMLFieldSetElement.prototype;
-fsetp.form = null;
-odp(fsetp, "type", {value: "fieldset"})
-odp(fsetp, "validationMessage", {value: ""})
-odp(fsetp, "willValidate", {value: false})
-
 // media and audio
 swde("HTMLMediaElement", class extends w.HTMLElement {
     constructor() { super(); }

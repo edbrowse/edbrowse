@@ -2050,6 +2050,29 @@ class HTMLFormElement extends HTMLElement
 }
 swdc(HTMLFormElement);
 
+// <fieldset>
+class HTMLFieldSetElement extends HTMLElement
+{
+    constructor() {
+        super();
+        this.elements = [];
+        this.elements.toString = ()=>{ return '[object HTMLCollection]'}
+    }
+         checkValidity() { return true; }
+         reportValidity() { return true; }
+    get length() { return this.elements.length}
+
+    static {
+        const tp = this.prototype;
+        tp.form = null;
+        tp.type = "fieldset";
+        tp.validationMessage = "";
+        tp.willValidate = false;
+        tp.reset = eb$formReset;
+    }
+}
+swdc(HTMLFieldSetElement);
+
 // At this point we have defined the HTMLElements.
 // Here are classes that don't support innerHTML.
 // Overwrite the innerHTML setter so it doesn't do anything.
