@@ -1,6 +1,6 @@
 <head>
 <title>multiline &half; z</title>
-<meta http-equiv=yahoo>
+<meta http-equiv=yahoo content=inside>
 </head>
 <body>
 <p id=show>start</p>
@@ -12,12 +12,13 @@ suffix">visible</div>
 <script>
 try {
 show = document.getElementById("show")
+msg = "ok";
 head = document.head;
 title = head.querySelector("title");
 if(title.text != "multiline ½ z") msg += `|bad title ${title.text}`;
 meta = head.querySelector("meta");
 if(meta.httpEquiv != "yahoo") msg += `|bad equiv ${meta.httpEquiv}`;
-msg = "ok";
+if(meta.content != "inside") msg += `|bad meta content ${meta.content}`;
 let expected = "prefix >\n<html>\n<body>raw source</body>\n</html>\nsuffix"
 let sample = document.getElementById("sample")
 if(sample.getAttribute("data-html") != expected) msg += `|bad data ${sample.getAttribute("data-html")}`;

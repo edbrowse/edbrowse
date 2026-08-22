@@ -1757,6 +1757,8 @@ class HTMLMetaElement extends HTMLElement
     constructor() { super(); }
     get httpEquiv() { return this.getAttribute("http-equiv"); }
     set httpEquiv(h) { this.setAttribute("http-equiv", h); }
+    get content() { return this.getAttribute("content"); }
+    set content(h) { this.setAttribute("content", h); }
 }
 swdc(HTMLMetaElement);
 
