@@ -2320,6 +2320,39 @@ class Attr
 }
 swdc(Attr);
 
+class Validity
+{
+/*********************************************************************
+All these should be getters, or should they?
+Consider the tooLong attribute.
+tooLong could compare the length of the input with the maxLength attribute,
+that's what the gettter would do, but edbrowse already does that at entry time.
+In general, shouldn't edbrowse check for most r all of these on entry,
+so that most of these wouldn't have to do anything?
+patternMismatch on email and url, etc.
+One thing that always has to be a getter is valueMissing,
+cause <input> starts out empty.
+*********************************************************************/
+    static {
+        const tp = this.prototype;
+        tp.badInput = tp.customError = tp.patternMismatch =
+        tp.rangeOverflow = tp.rangeUnderflow = tp.stepMismatch =
+        tp.tooLong = tp.tooShort =
+        tp.typeMismatch = false;
+    }
+    get valueMissing()
+    {
+        let o = this.owner;
+        return o.required && o.value == "";
+    }
+    get valid()
+    {
+        // we would only need to check items with getters
+        return !(this.valueMissing);
+    }
+}
+swdc(Validity);
+
 // Not quite right, still missing, at a minimum, whenDefined and upgrade
 class CustomElementRegistry
 {

@@ -3495,38 +3495,6 @@ swp("NodeList", new Proxy(Eb$NodeListHelper, {
     }
 }))
 
-swde("Validity", class extends w.Object {
-    constructor() { super(); }
-})
-
-/*********************************************************************
-All these should be getters, or should they?
-Consider the tooLong attribute.
-tooLong could compare the length of the input with the maxLength attribute,
-that's what the gettter would do, but edbrowse already does that at entry time.
-In general, shouldn't edbrowse check for most r all of these on entry,
-so then most of these wouldn't have to be getters?
-patternMismatch on email and url, etc.
-One thing that always has to be a getter is valueMissing,
-cause <input> starts out empty.
-And valid is a getter, true if everything else is false.
-*********************************************************************/
-let valp =w.Validity.prototype;
-valp.badInput =
-valp.customError =
-valp.patternMismatch =
-valp.rangeOverflow =
-valp.rangeUnderflow =
-valp.stepMismatch =
-valp.tooLong =
-valp.tooShort =
-valp.typeMismatch = false;
-odp(valp, "valueMissing", {
-get: function() {let o = this.owner;  return o.required && o.value == ""; }})
-odp(valp, "valid", {
-get: function() { // only need to check items with getters
-return !(this.valueMissing)}})
-
 const thisNode = () => true;
 let nodep = w.Node.prototype;
 nodep.querySelector = querySelector
