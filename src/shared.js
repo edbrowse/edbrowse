@@ -3987,7 +3987,20 @@ swde("HTMLElement", class extends w.Element {
 
     static {
         const tp = this.prototype;
-        tp.nodeType = 1, tp.ariaHidden = false;
+        tp.nodeType = 1;
+        tp.ariaHidden = false;
+    }
+
+    get nodeValue()
+    {
+        return this.nodeType == 3 ? this.data :
+        this.nodeType == 4 ? this.text : null;
+    }
+
+    set nodeValue(h)
+    {
+        if(this.nodeType == 3) this.data = h;
+        if (this.nodeType == 4) this.text = h ;
     }
 
 // style object is on demand
@@ -4065,66 +4078,50 @@ swde("HTMLElement", class extends w.Element {
         return a;
     }
 
+    static textUnder(top)
+    {
+        const nn = top.nodeName;
+        if(nn == "#text") return top.data;
+        if(nn == "SCRIPT" || nn == "#cdata-section") return top.text;
+        let answer = "", part;
+        const t = w.HTMLElement.gatherText(top);
+        for(let u of t) {
+            part = u.nodeValue;
+            if(part) answer += part;
+        }
+        return answer;
+    }
+
+    static newTextUnder(top, s)
+    {
+        if(top.nodeName == "#text") {
+            top.data = s;
+            // don't mutFixup here; the text setter does it
+            return;
+        }
+        const oldlist = Array.from(top.childNodes); // make a copy
+        while(top.firstChild)
+            top.removeChild$nm(top.firstChild);
+        // do nothing if s is undefined, or null, or the empty string
+        if(s) {
+            let newtext = d.createTextNode(s);
+            top.appendChild$nm(newtext);
+            mutFixup(top, 0, oldlist, [newtext]);
+        } else {
+            mutFixup(top, 0, oldlist, null);
+        }
+        checkUpward(top);
+    }
+
+get textContent() { return w.HTMLElement.textUnder(this); }
+set textContent(h) { return w.HTMLElement.newTextUnder(this, h); }
+get innerText() { return w.HTMLElement.textUnder(this); }
+set innerText(h) { return w.HTMLElement.newTextUnder(this, h); }
+
 })
 
 let helemp = w.HTMLElement.prototype;
 
-function textUnder(top, flavor) {
-const nn = top.nodeName;
-if(nn == "#text") return top.data;
-if(nn == "SCRIPT" || nn == "#cdata-section") return top.text;
-const pre = (nn=="PRE");
-let answer = "", part;
-const t = w.HTMLElement.gatherText(top);
-for(let u of t) {
-part = u.nodeValue;
-if(part) answer += part;
-}
-return answer;
-}
-
-function newTextUnder(top, s, flavor)
-{
-    if(top.nodeName == "#text") {
-        top.data = s;
-// don't mutFixup here; the text setter does it
-        return;
-    }
-    const oldlist = Array.from(top.childNodes); // make a copy
-// if innertext removes input nodes from a form,
-// or rows from a table, then using the faster and more direct
-// removeChild$nm will not keep the superstructure in sync.
-    let l = top.childNodes.length;
-    for(let i=l-1; i>=0; --i)
-        top.removeChild$nm(top.childNodes[i]);
-// do nothing if s is undefined, or null, or the empty string
-    if(s) {
-        let newtext = my$doc().createTextNode(s);
-        top.appendChild$nm(newtext);
-        mutFixup(top, 0, oldlist, [newtext]);
-    } else {
-        mutFixup(top, 0, oldlist, null);
-    }
-    checkUpward(top);
-}
-
-odp(helemp, "textContent", {
-get: function() { return textUnder(this, 0); },
-set: function(s) { return newTextUnder(this, s, 0); }});
-odp(helemp, "nodeValue", {
-get: function() {
-return this.nodeType == 3 ?
-this.data : this.nodeType == 4 ? this.text : null;},
-set: function(h) {
-if(this.nodeType == 3) this.data = h;
-if (this.nodeType == 4) this.text = h }})
-
-// spec says there is a difference between textContent and innerText,
-// but I don't think it's significant for edbrowse.
-odp(helemp, "innerText", {
-    get: function() { return textUnder(this, 0); },
-    set: function(s) { return newTextUnder(this, s, 0); },
-    configurable:true});
 // visual
 helemp.offsetHeight = 1.0;
 helemp.offsetWidth = 1.0;
