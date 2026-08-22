@@ -4443,10 +4443,6 @@ swde("HTMLHRElement", class extends w.HTMLElement {
     constructor() { super(); }
 })
 
-swde("HTMLHeadElement", class extends w.HTMLElement {
-    constructor() { super(); }
-}, false)
-
 swde("HTMLMetaElement", class extends w.HTMLElement {
     constructor() { super(); }
 }, false)
@@ -4476,24 +4472,6 @@ if(this.rel) a.push(this.rel);
 a.supports = function(s) { return s === "stylesheet"; }
 return a;
 }})
-
-// <body>
-swde("HTMLBodyElement", class extends w.HTMLElement {
-    constructor() { super(); }
-}, false)
-
-let bodyp = w.HTMLBodyElement.prototype;
-bodyp.doScroll = eb$voidfunction;
-bodyp.clientHeight = 768;
-bodyp.clientWidth = 1024;
-bodyp.offsetHeight = 768;
-bodyp.offsetWidth = 1024;
-bodyp.scrollHeight = 768;
-bodyp.scrollWidth = 1024;
-bodyp.scrollTop = 0;
-bodyp.scrollLeft = 0;
-// secret way of setting body.innerHTML
-bodyp.eb$dbih = function(s){this.innerHTML = s}
 
 swpc("DocumentType", w.DocType)
 

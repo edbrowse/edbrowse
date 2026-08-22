@@ -1698,6 +1698,7 @@ class DocType extends HTMLElement
 }
 swdc(DocType);
 
+// <html>
 class HTMLHtmlElement extends HTMLElement
 {
     constructor() { super(); }
@@ -1717,6 +1718,38 @@ class HTMLHtmlElement extends HTMLElement
     }
 }
 swdc(HTMLHtmlElement);
+
+// <head>
+class HTMLHeadElement extends HTMLElement
+{
+    constructor() { super(); }
+}
+swdc(HTMLHeadElement);
+
+// <body>
+class HTMLBodyElement extends HTMLElement
+{
+    constructor() { super(); }
+    static {
+        const tp = this.prototype;
+        // I don't know which classes should have these visual defaults.
+        // They're sort of all over the place.
+        tp.doScroll = eb$voidfunction;
+        tp.clientHeight = 768;
+        tp.clientWidth = 1024;
+        tp.offsetHeight = 768;
+        tp.offsetWidth = 1024;
+        tp.scrollHeight = 768;
+        tp.scrollWidth = 1024;
+        tp.scrollTop = 0;
+        tp.scrollLeft = 0;
+    }
+
+    // secret way of setting body.innerHTML
+    // used by document.write() when it clobbers the entire document
+    eb$dbih(s) { this.innerHTML = s; }
+}
+swdc(HTMLBodyElement);
 
 // At this point we have defined the HTMLElements.
 // Here are classes that don't support innerHTML.
