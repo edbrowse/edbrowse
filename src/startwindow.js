@@ -1686,6 +1686,51 @@ set innerText(h) { return HTMLElement.newTextUnder(this, h); }
 }
 swdc(HTMLElement);
 
+// Even before <html>, we might have a DocType directive.
+class DocType extends HTMLElement
+{
+    constructor() { super(); }
+    static {
+        const tp = this.prototype;
+        tp.nodeType = 10;
+        tp.nodeName = "DOCTYPE";
+    }
+}
+swdc(DocType);
+
+class HTMLHtmlElement extends HTMLElement
+{
+    constructor() { super(); }
+    // this getter is needed by the function isRooted()
+    get eb$win() { return this.parentNode ? this.parentNode.defaultView : undefined; }
+    static {
+        const tp = this.prototype;
+        tp.doScroll = eb$voidfunction;
+        tp.clientHeight = 768;
+        tp.clientWidth = 1024;
+        tp.offsetHeight = 768;
+        tp.offsetWidth = 1024;
+        tp.scrollHeight = 768;
+        tp.scrollWidth = 1024;
+        tp.scrollTop = 0;
+        tp.scrollLeft = 0;
+    }
+}
+swdc(HTMLHtmlElement);
+
+// At this point we have defined the HTMLElements.
+// Here are classes that don't support innerHTML.
+// Overwrite the innerHTML setter so it doesn't do anything.
+for(let c of [
+"DocType",
+]) {
+    odp(window[c].prototype, "innerHTML", {
+        get: function(){ return this.inner$html},
+        set: function(h){this.inner$HTML = h}})
+    odp(window[c].prototype, "inner$HTML", {
+        value:"", writable:true});
+}
+
 class URL
 {
     constructor()

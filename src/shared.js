@@ -4443,22 +4443,6 @@ swde("HTMLHRElement", class extends w.HTMLElement {
     constructor() { super(); }
 })
 
-swde("HTMLHtmlElement", class extends w.HTMLElement {
-    constructor() { super(); }
-}, false)
-let htmlp = w.HTMLHtmlElement.prototype;
-odp(htmlp, "eb$win", {get: function(){return this.parentNode ? this.parentNode.defaultView : undefined}});
-// Some screen attributes that are suppose to be there.
-htmlp.doScroll = eb$voidfunction;
-htmlp.clientHeight = 768;
-htmlp.clientWidth = 1024;
-htmlp.offsetHeight = 768;
-htmlp.offsetWidth = 1024;
-htmlp.scrollHeight = 768;
-htmlp.scrollWidth = 1024;
-htmlp.scrollTop = 0;
-htmlp.scrollLeft = 0;
-
 swde("HTMLHeadElement", class extends w.HTMLElement {
     constructor() { super(); }
 }, false)
@@ -4511,13 +4495,6 @@ bodyp.scrollLeft = 0;
 // secret way of setting body.innerHTML
 bodyp.eb$dbih = function(s){this.innerHTML = s}
 
-// is there a difference between DocType ad DocumentType?
-swde("DocType", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-
-w.DocType.prototype.nodeType = 10;
-w.DocType.prototype.nodeName = "DOCTYPE";
 swpc("DocumentType", w.DocType)
 
 // <div> <p> <span>
@@ -5191,7 +5168,7 @@ return c;
 // Overwrite the innerHTML setter so it doesn't do anything.
 for(let c of [
 "CDATASection", "CSSStyleDeclaration", "CharacterData", "Comment",
-"DocType", "HTMLBaseElement", "HTMLButtonElement", "HTMLCanvasElement",
+"HTMLBaseElement", "HTMLButtonElement", "HTMLCanvasElement",
 "HTMLFrameElement", "HTMLIFrameElement", "HTMLImageElement", "HTMLInputElement",
 "HTMLLinkElement", "HTMLMetaElement", "HTMLOptGroupElement", "HTMLOptionElement",
 "HTMLScriptElement", "HTMLStyleElement",
