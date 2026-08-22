@@ -1488,6 +1488,45 @@ for(let k of [
     "attachShadow"])
    eval(`Object.defineProperty(Element.prototype.${k}, "toString", {value: ()=>{return "function ${k}() {\\n    [native code]\\n}"}})`);
 
+/* Element bifurcates into HTMLElement and SVGElement.
+The former is far more important to us, as it becomes the classes
+driving the websites we hope to render.
+The latter is visual imagery, drawing pictures on the screen.
+But the SVG classes should exist.
+Javascript may reference them, and blow up if they're not there.
+Some of them have instance methods and properties, and maybe we need those too,
+but I hope not. I'm going to start with the classes themselves,
+and hope that is sufficient.
+If we need a few instance methods we can sprinkle them in;
+if we need a lot then we have to write out the classes long-hand.
+For now they are merely classes, and this is table driven.
+At some point we should check with the specs and create the whole SVG tree;
+it is merely a matter of enhancing this table. */
+
+for(const e of [
+["SVGElement","Element"],
+["SVGGraphicsElement","SVGElement"],
+["SVGTitleElement","SVGElement"],
+["SVGStyleElement","SVGElement"],
+["SVGStopElement","SVGElement"],
+["SVGMaskElement","SVGElement"],
+["SVGGradientElement","SVGElement"],
+["SVGLinearGradientElement","SVGGradientElement"],
+["SVGGeometryElement","SVGGraphicsElement"],
+["SVGDefsElement","SVGGraphicsElement"],
+["SVGUseElement","SVGGraphicsElement"],
+["SVGPolygonElement","SVGGeometryElement"],
+["SVGRectElement","SVGGeometryElement"],
+["SVGEllipseElement","SVGGeometryElement"],
+["SVGGElement","SVGGraphicsElement"],
+["SVGSVGElement","SVGGraphicsElement"],
+["SVGPathElement","SVGGeometryElement"],
+])
+    eval(`class ${e[0]} extends ${e[1]} { constructor() { super(); } }; swdc(${e[0]});`);
+
+// these have node type 1, just like HTMLElement.
+SVGElement.prototype.nodeType = 1;
+
 // Not quite right, still missing, at a minimum, whenDefined and upgrade
 class CustomElementRegistry
 {

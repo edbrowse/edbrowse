@@ -3431,26 +3431,6 @@ function checkUpward(t)
     }
 }
 
-const SVG_hierarchy = [
-["SVGElement","Element"],
-["SVGGraphicsElement","SVGElement"],
-["SVGTitleElement","SVGElement"],
-["SVGStyleElement","SVGElement"],
-["SVGStopElement","SVGElement"],
-["SVGMaskElement","SVGElement"],
-["SVGGradientElement","SVGElement"],
-["SVGLinearGradientElement","SVGGradientElement"],
-["SVGGeometryElement","SVGGraphicsElement"],
-["SVGDefsElement","SVGGraphicsElement"],
-["SVGUseElement","SVGGraphicsElement"],
-["SVGPolygonElement","SVGGeometryElement"],
-["SVGRectElement","SVGGeometryElement"],
-["SVGEllipseElement","SVGGeometryElement"],
-["SVGGElement","SVGGraphicsElement"],
-["SVGSVGElement","SVGGraphicsElement"],
-["SVGPathElement","SVGGeometryElement"],
-];
-
 /*********************************************************************
 We can define (build) the various classes for the running window here,
 if we are always careful to use the window parameter w in everything we do,
@@ -4015,16 +3995,6 @@ function nameSpill(n)
     dc == "HTMLTextAreaElement" ||
     dc == "HTMLAnchorElement";
 }
-
-/* There are probably about a hundred SVG classes, and we pretty much
-don't care about them, except they have to exist.
-I can table-drive this - but not the map from html tags to classes,
-or the cases in createElement that generate these nodes. */
-for(const e of SVG_hierarchy)
-    swde(e[0], class extends w[e[1]] { constructor() { super(); } });
-
-// these have node type 1, just like HTMLElement.
-w.SVGElement.prototype.nodeType = 1;
 
 // The html element, which is the DOM nodes that you know and love.
 swde("HTMLElement", class extends w.Element {
