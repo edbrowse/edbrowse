@@ -39,6 +39,8 @@ this.eb$top = function() { return this}
 this.eb$frameElement = function() { return this}
 this.eb$getter_cd = function() { return null}
 this.eb$getter_cw = function() { return null}
+    this.querySelector0 = () => {};
+    this.resolveURL = (base, h) => h;
 ;(function() { const void_functions = ["addEventListener",
     "removeEventListener",
     "eb$hasFocus", "eb$write", "eb$writeln"];
@@ -69,7 +71,6 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
     this.Window = function(){}
     this.EventTarget = function(){}
     this.CSSStyleDeclaration = function(){}
-    this.querySelector0 = () => {};
         this.document.getElementsByTagName = (t)=>[];
 }
 
@@ -1677,6 +1678,214 @@ set innerText(h) { return HTMLElement.newTextUnder(this, h); }
 }
 swdc(HTMLElement);
 
+class URL
+{
+    constructor()
+    {
+        let h = "";
+        if(arguments.length == 1) h= arguments[0];
+        if(arguments.length == 2) h= resolveURL(arguments[1], arguments[0]);
+        this.href = h;
+    }
+
+    rebuild() {
+        let h = "";
+        if(this.protocol$val) {
+            // protocol includes the colon
+            h = this.protocol$val;
+            let plc = h.toLowerCase();
+            if(plc != "mailto:" && plc != "telnet:" && plc != "javascript:")
+            h += "//";
+        }
+        if(this.host$val) {
+            h += this.host$val;
+        } else if(this.hostname$val) {
+            h += this.hostname$val;
+            if(this.port$val) h += ":" + this.port$val;
+        }
+        if(this.pathname$val) {
+            // pathname should always begin with /, should we check for that?
+            if(!this.pathname$val.match(/^\//))
+                h += "/";
+            h += this.pathname$val;
+        }
+        if(this.search$val) {
+            // search should always begin with ?, should we check for that?
+            h += this.search$val;
+        }
+        if(this.hash$val) {
+            // hash should always begin with #, should we check for that?
+            h += this.hash$val;
+        }
+        this.href$val = h;
+        if(this.eb$ctx) {
+            // replace the web page
+            eb$newLocation('r' + this.eb$ctx + this.href$val + '\n');
+        }
+    }
+
+    // I've seen websites hijack properties that are getters and setters,
+    // so we have to make sure these are writable, for such possibility.
+    get protocol() { return this.protocol$val; }
+    set protocol(v) { this.protocol$val = v; this.rebuild(); }
+    get pathname() { return this.pathname$val; }
+    set pathname(v) { this.pathname$val = v; this.rebuild(); }
+    get search() { return this.search$val; }
+    set search(v) { this.search$val = v; this.rebuild(); }
+    get searchParams() { return new URLSearchParams(this.search$val); }
+    get hash() { return this.hash$val; }
+    set hash(v) {
+        if(typeof v != "string") return;
+        if(!v.match(/^#/)) v = '#'+v;
+        this.hash$val = v;
+        this.rebuild();
+    }
+    get port() { return this.port$val; }
+    set port(v) {
+        this.port$val = v;
+        if(this.hostname$val.length)
+            this.host$val = this.hostname$val + ":" + v;
+        this.rebuild();
+    }
+    get hostname() { return this.hostname$val; }
+    set hostname(v) {
+        this.hostname$val = v;
+        if(this.port$val)
+            this.host$val = v + ":" +  this.port$val;
+        this.rebuild();
+    }
+    get host() { return this.host$val; }
+    set host(v) {
+        this.host$val = v;
+        if(v.match(/:/)) {
+            this.hostname$val = v.replace(/:.*/, "");
+            this.port$val = v.replace(/^.*:/, "");
+        } else {
+            this.hostname$val = v;
+            this.port$val = "";
+        }
+        this.rebuild();
+    }
+    get href() { return this.href$val; }
+
+// this setter is complicated so hang on
+    set href(v) {
+        let inconstruct = true, firstassign = false;
+        // if passed a url, turn it back into a string
+        if(v === null || v === undefined) v = "";
+        if(v.dom$class == "URL" || v instanceof URL) v = v.toString();
+        if(typeof v != "string") return;
+        if(v.substr(0,7) == "Wp`Set@") v = v.substr(7), firstassign = true;
+        // resolveURL is a native method in the shared window.
+        // It can accommodate null, if eb$base is not defined
+        v = resolveURL(window.eb$base, v);
+        // return or blow up if v is not a url; not yet implemented
+        if(typeof this.href$val == "string") inconstruct = false;
+        if(inconstruct) {
+            odp(this, "href$val", {enumerable:false, writable:true, value:v});
+            odp(this, "protocol$val", {enumerable:false, writable:true, value:""});
+            odp(this, "hostname$val", {enumerable:false, writable:true, value:""});
+            odp(this, "host$val", {enumerable:false, writable:true, value:""});
+            odp(this, "port$val", {enumerable:false, writable:true, value:""});
+            odp(this, "pathname$val", {enumerable:false, writable:true, value:""});
+            odp(this, "search$val", {enumerable:false, writable:true, value:""});
+            odp(this, "hash$val", {enumerable:false, writable:true, value:""});
+        } else {
+            this.href$val = v;
+            this.port$val = this.protocol$val = this.host$val = this.hostname$val = this.pathname$val = this.search$val = this.hash$val = "";
+        }
+        if(v.match(/^[a-zA-Z]*:/)) {
+            this.protocol$val = v.replace(/:.*/, "");
+            this.protocol$val += ":";
+            v = v.replace(/^[a-zA-z]*:\/*/, "");
+        }
+        if(v.match(/[/#?]/)) {
+            /* contains / ? or # */
+            this.host$val = v.replace(/[/#?].*/, "");
+            v = v.replace(/^[^/#?]*/, "");
+        } else {
+            /* no / ? or #, the whole thing is the host, www.foo.bar */
+            this.host$val = v;
+            v = "";
+        }
+        // Watch out, ipv6 has : in the middle.
+        if(this.host$val.substr(0,1) == '[') { // I'll assume this is ipv6
+            if(this.host$val.match(/]:/)) {
+                this.hostname$val = this.host$val.replace(/]:.*/, "]");
+                this.port$val = this.host$val.replace(/^.*]:/, "");
+            } else {
+                this.hostname$val = this.host$val;
+                //this.port$val = setDefaultPort(this.protocol$val);
+            }
+        } else {
+            if(this.host$val.match(/:/)) {
+                this.hostname$val = this.host$val.replace(/:.*/, "");
+                this.port$val = this.host$val.replace(/^.*:/, "");
+            } else {
+                this.hostname$val = this.host$val;
+                //this.port$val = setDefaultPort(this.protocol$val);
+            }
+        }
+        // perhaps set protocol to http if it looks like a url?
+        // as in edbrowse foo.bar.com
+        // Ends in standard tld, or looks like an ip4 address, or starts with www.
+        if(this.protocol$val == "" &&
+        (this.hostname$val.match(/\.(com|org|net|info|biz|gov|edu|us|uk|ca|au)$/) ||
+        this.hostname$val.match(/^\d+\.\d+\.\d+\.\d+$/) ||
+        this.hostname$val.match(/^\[[\da-fA-F:]+]$/) ||
+        this.hostname$val.match(/^www\..*\.[a-zA-Z]{2,}$/))) {
+            this.protocol$val = "http:";
+        }
+        if(v.match(/[#?]/)) {
+            this.pathname$val = v.replace(/[#?].*/, "");
+            v = v.replace(/^[^#?]*/, "");
+        } else {
+            this.pathname$val = v;
+            v = "";
+        }
+        if(this.pathname$val == "")
+            this.pathname$val = "/";
+        if(v.match(/#/)) {
+            this.search$val = v.replace(/#.*/, "");
+            this.hash$val = v.replace(/^[^#]*/, "");
+        } else {
+            this.search$val = v;
+        }
+        if(!firstassign && this.eb$ctx) {
+            // replace the web page
+            eb$newLocation('r' + this.eb$ctx + this.href$val + '\n');
+        }
+    }
+
+    toString() { return this.href$val; }
+
+// use toString in the following - in case they replace toString with their own function.
+// Don't just grab href$val, tempting as that may be.
+
+    get length() { return this.toString().length; }
+    concat(s) {  return this.toString().concat(s); }
+    startsWith(s) {  return this.toString().startsWith(s); }
+    endsWith(s) {  return this.toString().endsWith(s); }
+    includes(s) {  return this.toString().includes(s); }
+    split(s) {  return this.toString().split(s); }
+    match(s) {  return this.toString().match(s); }
+    replace(s, t) {  return this.toString().replace(s, t); }
+    indexOf(s) {  return this.toString().indexOf(s); }
+    lastIndexOf(s) {  return this.toString().lastIndexOf(s); }
+    charAt(n) {  return this.toString().charAt(n); }
+    charCodeAt(n) {  return this.toString().charCodeAt(n); }
+    substring(from, to) {  return this.toString().substring(from, to); }
+    substr(from, to) {  return this.toString().substr(from, to); }
+    slice(from, to) {  return this.toString().slice(from, to); }
+    toLowerCase() {  return this.toString().toLowerCase(); }
+    toUpperCase() {  return this.toString().toUpperCase(); }
+    trim() {  return this.toString().trim(); }
+}
+swdc(URL);
+
+// z$URL is a synonym, for our own purposes.
+swp("z$URL", URL)
+
 // Not quite right, still missing, at a minimum, whenDefined and upgrade
 class CustomElementRegistry
 {
@@ -2321,14 +2530,14 @@ odp(Array.prototype, "item", { enumerable: false});
 // current web page, But on the next call it has the side effect of replacing
 // the web page with the new url.
 odp(window, "location", {
-get: function() { return window.location$2; },
-set: function(h) {
-if(!window.location$2) {
-window.location$2 = new z$URL(h);
-} else {
-window.location$2.href = h;
-}
-}, enumerable:true});
+    get: function() { return window.location$2; },
+    set: function(h) {
+        if(!window.location$2) {
+            window.location$2 = new z$URL(h);
+        } else {
+            window.location$2.href = h;
+        }
+    }, enumerable:true});
 // We need location$2 so we can define origin and replace etc
 swpc("location$2", new URL)
 odp(location$2, "origin", {get:function(){
