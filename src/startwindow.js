@@ -188,7 +188,15 @@ class Eb$IterableWeakMap {
 }
 
 
-// modern version to establish a dom object
+/* Modern version to establish a dom object. Second parameter allows us
+to make it readonly, but I don't think we can ever do that.
+I ran this through chrome and it came out true.
+<body><p id=show>start</p> <script>
+    show = document.getElementById("show")
+    HTMLHRElement = f = function() {  show.innerHTML = "my own hr";}
+    show.innerHTML = (f == HTMLHRElement);
+</script>
+If we can replace a standard dom class, then I imagine we can replace anything! */
 this.swdc = function (c, changeable=true)
 {
     const v = c.name.replace(/^z\$/, "");
@@ -1885,6 +1893,17 @@ swdc(URL);
 
 // z$URL is a synonym, for our own purposes.
 swp("z$URL", URL)
+
+class Attr
+{
+    constructor()
+    {
+        this.ownerDocument = document; this.name = "";
+    }
+    isId() { return this.name === "id"; }
+    static { this.prototype.cloneNode = mw$.cloneAttr; }
+}
+swdc(Attr);
 
 // Not quite right, still missing, at a minimum, whenDefined and upgrade
 class CustomElementRegistry
