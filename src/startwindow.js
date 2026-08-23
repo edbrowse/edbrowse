@@ -319,7 +319,7 @@ class Node extends EventTarget
             return simpleHtmlEscape(this.inner$HTML);
         }
         /*
-        const div = d.createElement('div')
+        const div = document.createElement('div')
         div.innerHTML = this.inner$HTML;
         let o = div.outerHTML;
         // strip off <div> and </div>
@@ -2805,6 +2805,38 @@ class HTMLStyleElement extends HTMLElement
     }
 }
 swdc(HTMLStyleElement);
+
+// <template>
+class HTMLTemplateElement extends HTMLElement
+{
+    constructor() { super(); }
+
+// calling upon content performs the magic.
+    get content()
+    {
+        if(this.content$2) return this.content$2;
+        const frag = document.createDocumentFragment();
+        frag.ownerDocument = new Document;
+        // need to set its location to "about:blank" but I don't know how to do that.
+        // Lots of setters and getters involved in location, and the current window
+        // and document, and new documents created, and we need to sort all this out.
+        let c;
+        while(c = this.firstChild)
+            frag.appendChild(c);
+        odp(this, "content$2", {value:frag});
+        return frag;
+    }
+}
+swdc(HTMLTemplateElement);
+
+// <details>
+class HTMLDetailsElement extends HTMLElement
+{
+    constructor() { super(); }
+    get open() { return this.hasAttribute("open"); }
+    set open(v) { if(v === false) this.removeAttribute("open"); else this.setAttribute("open", ""); }
+}
+swdc(HTMLDetailsElement);
 
 // At this point we have defined the descendents of Node.
 // Here are classes that don't support innerHTML.

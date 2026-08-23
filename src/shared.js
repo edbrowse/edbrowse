@@ -3675,33 +3675,6 @@ swde("HTMLObjectElement", class extends w.HTMLElement {
     constructor() { super(); }
 })
 
-swde("HTMLTemplateElement", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-
-odp(w.HTMLTemplateElement.prototype, "content", {
-get: function() {
-if(this.content$2) return this.content$2;
-var c, frag = d.createDocumentFragment();
-frag.ownerDocument = new w.Document;
-// need to set its location to "about:blank" but I don't know how to do that.
-// Lots of setters and getters involved in location, and the current window
-// and document, and new documents created, and we need to sort all this out.
-while(c = this.firstChild)
-frag.appendChild(c)
-odp(this, "content$2", {value:frag})
-return frag
-}})
-
-swde("HTMLDetailsElement", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-let detp = w.HTMLDetailsElement.prototype;
-odp(detp, "open", {
-get:function(){ let t = this.getAttribute("open");
-return t === null || t === false || t === "false" || t === 0 || t === '0' ? false : true},
-set:function(v) { this.setAttribute("open", v);}});
-
 swde("ShadowRoot", class extends w.HTMLElement {
     constructor() { super(); }
 })
