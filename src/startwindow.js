@@ -2171,7 +2171,16 @@ class HTMLInputElement extends HTMLElement
         this.validity = new Validity;
         this.validity.owner = this;
     }
-    static { this.prototype.checked$2 = false; }
+
+    static {
+        const tp = this.prototype;
+        tp.checked$2 = false;
+        tp.selectionStart = 0;
+        tp.selectionEnd = -1;
+        tp.selectionDirection = "none";
+        tp.select = eb$voidfunction;
+    }
+
     get checked() { return this.checked$2; }
     set checked(v) {
         if(v !== false) v = true;
@@ -2272,6 +2281,54 @@ if this is a radio button. */
         }
     }
 
+// I don't know what this function does, something visual I think.
+    setSelectionRange(s, e, dir)
+    {
+        if(typeof s == "number") this.selectionStart = s;
+        if(typeof e == "number") this.selectionEnd = e;
+        if(typeof dir == "string") this.selectionDirection = dir;
+    }
+
+    get placeholder()
+    {
+        let t = this.getAttribute("placeholder");
+        let y = typeof t;
+        return y == "string" || y == "number" ? t : "";
+    }
+    set placeholder(v) { this.setAttribute("placeholder", v); }
+
+    get step()
+    {
+        let t = this.getAttribute("step");
+        let y = typeof t;
+        return y == "number" || y == "string" ? t : undefined;
+    }
+    set step(v) { this.setAttribute("step", v); }
+
+    get minLength()
+    {
+        let t = this.getAttribute("minlength");
+        let y = typeof t;
+        return y == "number" || y == "string" ? t : undefined;
+    }
+    set minLength(v) { this.setAttribute("minlength", v); }
+
+    get maxLength()
+    {
+        let t = this.getAttribute("maxlength");
+        let y = typeof t;
+        return y == "number" || y == "string" ? t : undefined;
+    }
+    set maxLength(v) { this.setAttribute("maxlength", v); }
+
+    get size()
+    {
+        let t = this.getAttribute("size");
+        let y = typeof t;
+        return y == "number" || y == "string" ? t : undefined;
+    }
+    set size(v) { this.setAttribute("size", v); }
+
 }
 swdc(HTMLInputElement);
 
@@ -2345,6 +2402,7 @@ DocType, HTMLMetaElement, HTMLLinkElement, HTMLTitleElement,
 HTMLBaseElement, Text, Comment,
 CharacterData,
 HTMLHRElement, HTMLImageElement, HTMLScriptElement,
+HTMLInputElement, HTMLButtonElement,
 ]) {
     odp(c.prototype, "innerHTML", {
         get: function(){ return this.inner$HTML},

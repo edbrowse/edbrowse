@@ -3973,45 +3973,7 @@ optgp.option_from_html = option_from_html;
 selp.option_from_html = option_from_html;
 
 // other methods and properties that haven't moved across yet.
-let inputp = w.HTMLInputElement.prototype;
 let tareap = w.HTMLTextAreaElement.prototype;
-
-inputp.selectionStart = 0;
-inputp.selectionEnd = -1;
-inputp.selectionDirection = "none";
-// I don't know what this function does, something visual I think.
-inputp.setSelectionRange = function(s, e, dir) {
-if(typeof s == "number") this.selectionStart = s;
-if(typeof e == "number") this.selectionEnd = e;
-if(typeof dir == "string") this.selectionDirection = dir;
-}
-inputp.select = eb$voidfunction;
-odp(inputp, "placeholder", {
-get:function(){ var t = this.getAttribute("placeholder");
-var y = typeof t;
-return y == "string" || y == "number" ? t : ""; },
-set:function(v) { this.setAttribute("placeholder", v);}});
-odp(inputp, "step", {
-get:function(){ var t = this.getAttribute("step");
-var y = typeof t;
-return y == "number" || y == "string" ? t : undefined},
-set:function(v) { this.setAttribute("step", v);}});
-odp(inputp, "minLength", {
-get:function(){ var t = this.getAttribute("minlength");
-var y = typeof t;
-return y == "number" || y == "string" ? t : undefined},
-set:function(v) { this.setAttribute("minlength", v);}});
-odp(inputp, "maxLength", {
-get:function(){ var t = this.getAttribute("maxlength");
-var y = typeof t;
-return y == "number" || y == "string" ? t : undefined},
-set:function(v) { this.setAttribute("maxlength", v);}});
-odp(inputp, "size", {
-get:function(){ var t = this.getAttribute("size");
-var y = typeof t;
-return y == "number" || y == "string" ? t : undefined},
-set:function(v) { this.setAttribute("size", v);}});
-
 odp(tareap, "innerText", {
 get: function() { return this.value},
 set: function(t) { this.value = t }});
@@ -4653,8 +4615,8 @@ return c;
 // Overwrite the innerHTML setter so it doesn't do anything.
 for(let c of [
 "CSSStyleDeclaration",
-"HTMLButtonElement", "HTMLCanvasElement",
-"HTMLFrameElement", "HTMLIFrameElement", "HTMLInputElement",
+"HTMLCanvasElement",
+"HTMLFrameElement", "HTMLIFrameElement",
 "HTMLOptGroupElement", "HTMLOptionElement",
 "HTMLStyleElement",
 "HTMLTimeElement", "HTMLUnknownElement",
