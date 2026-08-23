@@ -2602,6 +2602,164 @@ class HTMLFieldSetElement extends HTMLElement
 }
 swdc(HTMLFieldSetElement);
 
+// <thead> <tbody> <tfoot>
+class HTMLTableSectionElement extends HTMLElement
+{
+    constructor() { super(); this.rows = []; }
+
+    insertRow(idx)
+    {
+        if(idx === undefined) idx = -1;
+        if(typeof idx !== "number") return null;
+        const t = this;
+        const nrows = t.rows.length;
+        if(idx < 0) idx = nrows;
+        if(idx > nrows) return null;
+        const r = document.createElement("tr");
+        // called from table or section; if not table then it is a sectiont
+        if(t.dom$class != "HTMLTableElement") {
+            if(idx == nrows) t.appendChild(r);
+            else t.insertBefore(r, t.rows[idx]);
+            return r;
+        }
+        // That was the easy case - now add to a table.
+        // Put this row in the same section as the next row.
+        if(idx == nrows) {
+            if(nrows) t.rows[nrows-1].parentNode.appendChild(r);
+            else if(t.tHead) t.tHead.appendChild(r);
+            else if(t.tBodies.length) t.tBodies[0].appendChild(r);
+            else if(t.tFoot) t.tFoot.appendChild(r);
+            // No sections, what now? acid test 51 suggests it should not go into the table.
+        return r;
+        }
+        t.rows[idx].parentNode.insertBefore(r, t.rows[idx]);
+        return r;
+    }
+
+    deleteRow(r)
+        {
+        if(r.dom$class != "HTMLTableRowElement") return;
+        this.removeChild(r);
+    }
+}
+swdc(HTMLTableSectionElement);
+
+class z$tBody extends HTMLTableSectionElement
+{
+    constructor() { super(); }
+}
+swdc(z$tBody);
+
+class z$tHead extends HTMLTableSectionElement
+{
+    constructor() { super(); }
+}
+swdc(z$tHead);
+
+class z$tFoot extends HTMLTableSectionElement
+{
+    constructor() { super(); }
+}
+swdc(z$tFoot);
+
+class z$tCap extends HTMLElement
+{
+    constructor() { super(); }
+}
+swdc(z$tCap);
+
+class HTMLTableElement extends HTMLElement
+{
+    constructor()
+    {
+        super();
+        this.rows = [];
+        this.tBodies = [];
+    }
+
+    static {
+        const tp = this.prototype;
+        tp.insertRow = HTMLTableSectionElement.prototype.insertRow;
+        tp.deleteRow = HTMLTableSectionElement.prototype.deleteRow;
+    }
+
+    createCaption()
+    {
+        if(this.caption) return this.caption;
+        const c = document.createElement("caption");
+        this.appendChild(c);
+        return c;
+    }
+
+    deleteCaption()
+    {
+        if(this.caption) this.removeChild(this.caption);
+    }
+
+    createTHead()
+    {
+        if(this.tHead) return this.tHead;
+        const c = document.createElement("thead");
+        this.prepend$child(c);
+        return c;
+    }
+
+    deleteTHead()
+    {
+        if(this.tHead) this.removeChild(this.tHead);
+    }
+
+    createTFoot()
+    {
+        if(this.tFoot) return this.tFoot;
+        const c = document.createElement("tfoot");
+        this.insertBefore(c, this.caption);
+        return c;
+    }
+
+    deleteTFoot()
+    {
+        if(this.tFoot) this.removeChild(this.tFoot);
+    }
+
+}
+swdc(HTMLTableElement);
+
+class HTMLTableRowElement extends HTMLElement
+{
+    constructor() { super(); this.cells = []; }
+}
+swdc(HTMLTableRowElement);
+
+class HTMLTableCellElement extends HTMLElement
+{
+    constructor() { super(); }
+
+    insertCell(idx)
+    {
+        if(idx === undefined) idx = -1;
+        if(typeof idx !== "number") return null;
+        const t = this;
+        const n = t.childNodes.length;
+        if(idx < 0) idx = n;
+        if(idx > n) return null;
+        const r = document.createElement("td");
+        if(idx == n) t.appendChild(r);
+        else t.insertBefore(r, t.childNodes[idx]);
+        return r;
+    }
+
+    deleteCell(n)
+    {
+        const l = this.cells.length;
+        if(typeof n != "number") n = -1;
+        if(n == -1) n = 0;
+        if(n >= 0 && n < l)
+            this.removeChild(this.cells[n]);
+    }
+}
+swdc(HTMLTableCellElement);
+
 class HTMLStyleElement extends HTMLElement
 {
     constructor() { super(); }
