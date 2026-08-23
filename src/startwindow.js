@@ -419,6 +419,26 @@ class Node extends EventTarget
         tp.DOCUMENT_POSITION_FOLLOWING =4;
         tp.DOCUMENT_POSITION_CONTAINS =8;
         tp.DOCUMENT_POSITION_CONTAINED_BY =16;
+// visual
+        tp.clientHeight = 16;
+        tp.clientWidth = 120;
+        tp.scrollHeight = 16;
+        tp.scrollWidth = 120;
+        tp.scrollTop = 0;
+        tp.scrollLeft = 0;
+        tp.offsetHeight = 16;
+        tp.offsetWidth = 120;
+        tp.dir = "auto";
+    }
+
+    focus() { document.activeElement=this; }
+    blur() { document.activeElement=null; }
+    getBoundingClientRect() {
+        return {
+        top: 0, bottom: 0, left: 0, right: 0,
+        x: 0, y: 0,
+        width: 0, height: 0
+        }
     }
 
     querySelectorAll(c,s)

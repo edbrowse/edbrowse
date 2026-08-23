@@ -3495,27 +3495,6 @@ swp("NodeList", new Proxy(Eb$NodeListHelper, {
     }
 }))
 
-// visual
-const nodep = w.Node.prototype;
-nodep.clientHeight = 16;
-nodep.clientWidth = 120;
-nodep.scrollHeight = 16;
-nodep.scrollWidth = 120;
-nodep.scrollTop = 0;
-nodep.scrollLeft = 0;
-nodep.offsetHeight = 16;
-nodep.offsetWidth = 120;
-nodep.dir = "auto";
-nodep.focus = function(){d.activeElement=this}
-nodep.blur = function(){d.activeElement=null}
-nodep.getBoundingClientRect = function(){
-return {
-top: 0, bottom: 0, left: 0, right: 0,
-x: 0, y: 0,
-width: 0, height: 0
-}
-}
-
 // Since we are createing all these classes here, does it make sense to
 // include the methods to properly instantiate those classes?  Perhaps.
 let docp = w.Document.prototype;
