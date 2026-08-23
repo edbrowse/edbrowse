@@ -1648,19 +1648,23 @@ static JSValue nat_makeBoundary(JSContext * cx, JSValueConst this, int argc, JSV
 // object keys, just for debugging from jdb
 static JSValue nat_ok(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
-	uint32_t p_len = 0, i;
-	if(argc >= 1 && JS_IsObject(argv[0])) {
-		JSPropertyEnum *p_list;
-		JS_GetOwnPropertyNames(cx, &p_list, &p_len, argv[0], JS_GPN_STRING_MASK);
-		for(i=0; i<p_len; ++i) {
-			const char *s = JS_AtomToCString(cx, p_list[i].atom);
-			puts(s);
-			JS_FreeCString(cx, s);
-		}
-		JS_FreePropertyEnum(cx, p_list, p_len);
-	}
+    JSValue keys = JS_NewArray(cx);
+    if(argc >= 1 && JS_IsObject(argv[0])) {
+        int i;
+        JSPropertyEnum *p_list;
+        uint32_t p_len;
+        JS_GetOwnPropertyNames(cx, &p_list, &p_len, argv[0], JS_GPN_STRING_MASK);
+        for(i=0; i<p_len; ++i) {
+            JSAtom a = JS_NewAtomUInt32(cx, i);
+// Using AtomToValue, I think that allocates a value.
+// I don't think I should be using DupValue here, but I'm not sure.
+            JS_SetProperty(cx, keys, a, JS_AtomToValue(cx, p_list[i].atom));
+            JS_FreeAtom(cx, a);
+        }
+        JS_FreePropertyEnum(cx, p_list, p_len);
+    }
     (void) this;
-    return JS_NewInt32(cx, p_len);
+    return keys;
 }
 
 static JSValue nat_new_location(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
