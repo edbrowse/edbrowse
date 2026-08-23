@@ -41,6 +41,7 @@ this.eb$frameElement = function() { return this}
 this.eb$getter_cd = function() { return null}
 this.eb$getter_cw = function() { return null}
     this.querySelector0 = () => {};
+    this.querySelector = () => {};
     this.resolveURL = (base, h) => h;
     this.eb$formSubmit = ()=>null;
     this.eb$formReset = ()=>null;
@@ -401,6 +402,28 @@ class Node extends EventTarget
         tp.getElementsByTagName = mw$.getElementsByTagName;
         tp.getElementsByName = mw$.getElementsByName;
         tp.getElementsByClassName = mw$.getElementsByClassName;
+        tp.querySelector = querySelector
+// values for nodeType
+        tp.ELEMENT_NODE = 1
+        tp.TEXT_NODE = 3
+        tp.CDATA_SECTION_NODE = 4
+        tp.COMMENT_NODE = 8
+        tp.DOCUMENT_NODE = 9
+        tp.DOCUMENT_TYPE_NODE = 10
+        tp.DOCUMENT_FRAGMENT_NODE = 11
+// default tabIndex is 0 but running js can override this.
+        tp.tabIndex = 0
+// These are for the function compareDocumentPosition.
+        tp.DOCUMENT_POSITION_DISCONNECTED =1;
+        tp.DOCUMENT_POSITION_PRECEDING =2;
+        tp.DOCUMENT_POSITION_FOLLOWING =4;
+        tp.DOCUMENT_POSITION_CONTAINS =8;
+        tp.DOCUMENT_POSITION_CONTAINED_BY =16;
+    }
+
+    querySelectorAll(c,s)
+    {
+            return new NodeList(this, (n) => querySelectorAll.call(n,c,s));
     }
 
     // basic append, without C side efffects.
@@ -659,6 +682,55 @@ class Node extends EventTarget
     }
 
     cloneNode(deep) { return mw$.cloneNodeHelper(this,deep, false); }
+
+    compareDocumentPosition(z)
+    {
+        if(!z || z.nodeType != 1) return 0;
+        let y = this;
+        if(y === z) return 0;
+        let py = [], pz = []; // paths to root
+        for(let t = y; t; t = t.parentNode) {
+            py.push(t);
+            if(t.nodeType != 1) break; // document or fragment
+            if(t.is$frame) break;
+        }
+        for(let t = z; t; t = t.parentNode) {
+            pz.push(t);
+            if(t.nodeType != 1) break; // document or fragment
+            if(t.is$frame) break;
+        }
+        let root = null, i, j;
+        // this is inefficient, but paths aren't likely to be more than 6
+        for(i = 0; i < py.length; ++i) {
+            for(j = 0; j < pz.length; ++j)
+                if(py[i] == pz[j]) { root = py[i]; break; }
+                if(root) break;
+        }
+        if(!root) return this.DOCUMENT_POSITION_DISCONNECTED;
+        if(!i) return this.DOCUMENT_POSITION_FOLLOWING | this.DOCUMENT_POSITION_CONTAINED_BY;
+        if(!j) return this.DOCUMENT_POSITION_PRECEDING | this.DOCUMENT_POSITION_CONTAINS;
+        y = py[i-1], z = pz[j-1];
+        for(let t = y.nextSibling; t; t = t.nextSibling)
+            if(t == z) return this.DOCUMENT_POSITION_FOLLOWING;
+        for(let t = y.previousSibling; t; t = t.previousSibling)
+            if(t == z) return this.DOCUMENT_POSITION_PRECEDING;
+        // wow we should never be here. Don't know what to return.
+        return 0;
+    }
+
+getRootNode(o)
+{
+    let composed = false;
+    if(typeof o == "object" && o.composed) composed = true;
+    let t = this, t1 = this;
+    while(t) {
+        t1 = t;
+        if(t.nodeName == "#document") return t;
+        if(!composed && t.nodeName == "SHADOWROOT") return t;
+        t = t.parentNode;
+    }
+    return t1;
+}
 
 }
 swdc(Node);

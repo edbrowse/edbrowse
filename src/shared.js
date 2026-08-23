@@ -3495,14 +3495,8 @@ swp("NodeList", new Proxy(Eb$NodeListHelper, {
     }
 }))
 
-const thisNode = () => true;
-let nodep = w.Node.prototype;
-nodep.querySelector = querySelector
-nodep.querySelectorAll = function(c,s) {
-    return new w.NodeList(this, (n) => querySelectorAll.call(n,c,s));
-}
-
 // visual
+const nodep = w.Node.prototype;
 nodep.clientHeight = 16;
 nodep.clientWidth = 120;
 nodep.scrollHeight = 16;
@@ -3520,69 +3514,6 @@ top: 0, bottom: 0, left: 0, right: 0,
 x: 0, y: 0,
 width: 0, height: 0
 }
-}
-
-// constants
-nodep.ELEMENT_NODE = 1
-nodep.TEXT_NODE = 3
-nodep.CDATA_SECTION_NODE = 4
-nodep.COMMENT_NODE = 8
-nodep.DOCUMENT_NODE = 9
-nodep.DOCUMENT_TYPE_NODE = 10
-nodep.DOCUMENT_FRAGMENT_NODE = 11
-// default tabIndex is 0 but running js can override this.
-nodep.tabIndex = 0
-
-odp(nodep,"DOCUMENT_POSITION_DISCONNECTED",{value:1});
-odp(nodep,"DOCUMENT_POSITION_PRECEDING",{value:2});
-odp(nodep,"DOCUMENT_POSITION_FOLLOWING",{value:4});
-odp(nodep,"DOCUMENT_POSITION_CONTAINS",{value:8});
-odp(nodep,"DOCUMENT_POSITION_CONTAINED_BY",{value:16});
-nodep.compareDocumentPosition = function(z) {
-    if(!z || z.nodeType != 1) return 0;
-    let y = this;
-    if(y === z) return 0;
-    let py = [], pz = []; // paths to root
-    for(let t = y; t; t = t.parentNode) {
-        py.push(t);
-        if(t.nodeType != 1) break; // document or fragment
-        if(t.is$frame) break;
-    }
-    for(let t = z; t; t = t.parentNode) {
-        pz.push(t);
-        if(t.nodeType != 1) break; // document or fragment
-        if(t.is$frame) break;
-    }
-    let root = null, i, j;
-    // this is inefficient, but paths aren't likely to be more than 6
-    for(i = 0; i < py.length; ++i) {
-        for(j = 0; j < pz.length; ++j)
-            if(py[i] == pz[j]) { root = py[i]; break; }
-            if(root) break;
-    }
-    if(!root) return this.DOCUMENT_POSITION_DISCONNECTED;
-    if(!i) return this.DOCUMENT_POSITION_FOLLOWING | this.DOCUMENT_POSITION_CONTAINED_BY;
-    if(!j) return this.DOCUMENT_POSITION_PRECEDING | this.DOCUMENT_POSITION_CONTAINS;
-    y = py[i-1], z = pz[j-1];
-    for(let t = y.nextSibling; t; t = t.nextSibling)
-        if(t == z) return this.DOCUMENT_POSITION_FOLLOWING;
-    for(let t = y.previousSibling; t; t = t.previousSibling)
-        if(t == z) return this.DOCUMENT_POSITION_PRECEDING;
-    // wow we should never be here. Don't know what to return.
-    return 0;
-}
-
-nodep.getRootNode = function(o) {
-let composed = false;
-if(typeof o == "object" && o.composed) composed = true;
-let t = this, t1 = this;
-while(t) {
-t1 = t;
-if(t.nodeName == "#document") return t;
-if(!composed && t.nodeName == "SHADOWROOT") return t;
-t = t.parentNode;
-}
-return t1;
 }
 
 // Since we are createing all these classes here, does it make sense to
