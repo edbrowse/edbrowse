@@ -3800,49 +3800,6 @@ tablep.deleteTFoot = function() {
 if(this.tFoot) this.removeChild(this.tFoot);
 }
 
-// options, option groups, and the select element
-swde("HTMLOptionElement", class extends w.HTMLElement {
-    constructor()
-    {
-        super();
-        if (arguments.length > 0) this.text = arguments[0];
-        if (arguments.length > 1) this.value = arguments[1];
-    }
-
-    get disabled() { return this.hasAttribute("disabled"); }
-    set disabled(v) { if(v === false) this.removeAttribute("disabled"); else this.setAttribute("disabled", ""); }
-
-    static { this.prototype.selected$2 = false; }
-    get selected() { return this.selected$2; }
-    set selected(v) {
-        if(v !== false) v = true;
-        if(v == this.selected$2) return; // no change
-        // if selected within a pick-one list, we need to unselect the others.
-        // This is like checking a radio button, although simpler,
-        // because this time we have an options array to key on.
-        // We need to find the containing select, or we can't get started.
-        let sel = this.parentNode;
-        while(sel) {
-            if(sel.nodeType != 1) { this.selected$2 = v; return; }
-            if(sel.nodeName == "SELECT") break;
-            sel = sel.parentNode;
-        }
-        if(!sel) { this.selected$2 = v; return; }
-        // chrome doesn't let us deselect from a pick-one list.
-        if(!sel.multiple && !v) return;
-        this.selected$2 = v;
-        if(!sel.multiple) {
-            for(let c of sel.options)
-                if(c != this) c.selected$2 = false;
-        }
-        selectReindex(sel);
-    }
-})
-swpc("Option", w.HTMLOptionElement)
-let optp = w.HTMLOptionElement.prototype;
-optp.defaultSelected = false;
-optp.nodeName = optp.tagName = "OPTION";
-optp.text = optp.value = "";
 // media and audio
 swde("HTMLMediaElement", class extends w.HTMLElement {
     constructor() { super(); }
@@ -4475,7 +4432,6 @@ for(let c of [
 "CSSStyleDeclaration",
 "HTMLCanvasElement",
 "HTMLFrameElement", "HTMLIFrameElement",
-"HTMLOptionElement",
 "HTMLStyleElement",
 "HTMLTimeElement", "HTMLUnknownElement",
 "DocumentFragment",
