@@ -3596,28 +3596,6 @@ for( let k of [
     // wrapString doesn't work here because they are anonymous functions
     eval(`Object.defineProperty(nodep.${k}, "toString", {value: ()=>{return "function ${k}() {\\n    [native code]\\n}"}})`);
 
-// Window constructor, passes the url back to edbrowse
-// so it can open a new web page.
-swde("Window", class extends w.EventTarget {
-    constructor() {
-        super();
-        let newloc = "";
-        let winname = "";
-        if(arguments.length > 0) newloc = arguments[0];
-        if(arguments.length > 1) winname = arguments[1];
-        // I only do something if opening a new web page.
-        // If it's just a blank window, I don't know what to do with that.
-        if(newloc.length)
-            eb$newLocation('p' + w.eb$ctx + newloc+ '\n' + winname);
-        this.opener = w;
-    }
-})
-
-// window.open is the same as new window, just pass the args through
-w.open = function(a, b) {
-    return new w.Window(a, b);
-}
-
 // Since we are createing all these classes here, does it make sense to
 // include the methods to properly instantiate those classes?  Perhaps.
 let docp = w.Document.prototype;

@@ -49,6 +49,18 @@ let expected = "prefix >\n<html>\n<body>raw source</body>\n</html>\nsuffix"
 let sample = document.getElementById("sample")
 if(sample.getAttribute("data-html") != expected) msg += `|bad data ${sample.getAttribute("data-html")}`;
 if(sample.textContent != "visible") msg += `|bad content ${sample.textContent}`;
+
+// Test something that was surprisingly tricky to do within the framework
+// of quickjs. window is the global object and is an instance of Window,
+// which is a class of our own making.
+foo = 77; // not in strict mode
+window.bar = 88;
+if(window.foo != 77 || bar != 88) msg += "|window isn't global";
+delete foo; delete bar;
+if(!window instanceof Window) msg += "|window not Window";
+if(!window instanceof EventTarget) msg += "|window not EventTarget";
+if(!window.addEventListener) msg += "|no window event listener";
+
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>

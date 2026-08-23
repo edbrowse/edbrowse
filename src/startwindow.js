@@ -259,6 +259,41 @@ class EventTarget
 }
 swdc(EventTarget);
 
+// Window constructor, passes the url back to edbrowse
+// so it can open a new web page.
+class Window extends EventTarget
+{
+    constructor() {
+        super();
+        let newloc = "";
+        let winname = "";
+        if(arguments.length > 0) newloc = arguments[0];
+        if(arguments.length > 1) winname = arguments[1];
+        // I only do something if opening a new web page.
+        // If it's just a blank window, I don't know what to do with that.
+        if(newloc.length)
+            eb$newLocation('p' + eb$ctx + newloc+ '\n' + winname);
+        this.opener = window;
+    }
+}
+swdc(Window);
+
+// window.open is the same as new window, just pass the args through
+window.open = function(a, b) { return     new Window(a, b); }
+
+/*********************************************************************
+window is and must remain the global object.
+Plenty of sites set window.foo = something, then refer to foo.
+Conversely, plenty of sites set bar = something, then refer to window.bar.
+There is no compromise on this matter.
+At the same time, window has to be an instance of Window,
+has to be an instance of EventTarget.
+This line accomplishes that, and so far I haven't seen any side effects.
+I hope I never do, because there is no other way.
+*********************************************************************/
+
+Object.setPrototypeOf(window, Window.prototype);
+
 class Node extends EventTarget
 {
     constructor()
@@ -2771,7 +2806,7 @@ class HTMLStyleElement extends HTMLElement
 }
 swdc(HTMLStyleElement);
 
-// At this point we have defined the HTMLElements.
+// At this point we have defined the descendents of Node.
 // Here are classes that don't support innerHTML.
 // Overwrite the innerHTML setter so it doesn't do anything.
 for(let c of [
@@ -3153,19 +3188,6 @@ which is an instance of Document, as it should be.
 *********************************************************************/
 
 mw$.setupClasses(window);
-
-/*********************************************************************
-window is and must remain the global object.
-Plenty of sites set window.foo = something, then refer to foo.
-Conversely, plenty of sites set bar = something, then refer to window.bar.
-There is no compromise on this matter.
-At the same time, window has to be an instance of Window,
-has to be an instance of EventTarget.
-This line accomplishes that, and so far I haven't seen any side effects.
-I hope I never do, because I can't think of any other way.
-*********************************************************************/
-
-Object.setPrototypeOf(window, Window.prototype)
 
 // find the constructor for a custom element. This is part of html parsing.
 // It is either the original browse, innerHTML, or document.write.
