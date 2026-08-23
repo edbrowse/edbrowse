@@ -3972,115 +3972,11 @@ function option_from_html(o){
 optgp.option_from_html = option_from_html;
 selp.option_from_html = option_from_html;
 
-// input, textarea, button; the other input classes
-swde("HTMLInputElement", class extends w.HTMLElement {
-    constructor()
-    {
-        super();
-        this.validity = new w.Validity;
-        this.validity.owner = this;
-    }
-    static { this.prototype.checked$2 = false; }
-    get checked() { return this.checked$2; }
-    set checked(v) {
-        if(v !== false) v = true;
-        if(v == this.checked$2) return; // no change
-        this.checked$2 = v;
-        // if it's radio and checked we need to uncheck the others.
-        if(!v) return;
-        if(this.type != "radio") return;
-        let nn = this.name, e;
-        if(!nn) return;
-        if(this.form && (e = this.form[nn]) && Array.isArray(e)) {
-            for(let i=0; i<e.length; ++i)
-                if(e[i] != this) e[i].checked$2 = false;
-            return;
-        }
-        // Try it another way.
-        // This asumes all radio buttons are below the same parent,
-        // which is not guaranteed
-        if(this.parentNode && (e = this.parentNode.childNodes)) {
-            for(let i=0; i<e.length; ++i)
-                if(e[i].nodeName == "INPUT" && e[i].type == "radio" && 
-                e[i].name == nn &&e[i] != this)
-                    e[i].checked$2 = false;
-            return;
-        }
-    }
-
-    get readOnly() { return this.hasAttribute("readonly"); }
-    set readOnly(v) { if(v === false) this.removeAttribute("readonly"); else this.setAttribute("readonly", ""); }
-    get multiple() { return this.hasAttribute("multiple"); }
-    set multiple(v) { if(v === false) this.removeAttribute("multiple"); else this.setAttribute("multiple", ""); }
-    get disabled() { return this.hasAttribute("disabled"); }
-    set disabled(v) { if(v === false) this.removeAttribute("disabled"); else this.setAttribute("disabled", ""); }
-    get required() { return this.hasAttribute("required"); }
-    set required(v) { if(v === false) this.removeAttribute("required"); else this.setAttribute("required", ""); }
-})
-swde("HTMLButtonElement", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-swde("HTMLTextAreaElement", class extends w.HTMLElement {
-    constructor() { super(); }
-    get readOnly() { return this.hasAttribute("readonly"); }
-    set readOnly(v) { if(v === false) this.removeAttribute("readonly"); else this.setAttribute("readonly", ""); }
-    get required() { return this.hasAttribute("required"); }
-    set required(v) { if(v === false) this.removeAttribute("required"); else this.setAttribute("required", ""); }
-})
-
+// other methods and properties that haven't moved across yet.
 let inputp = w.HTMLInputElement.prototype;
 let buttonp = w.HTMLButtonElement.prototype;
 let tareap = w.HTMLTextAreaElement.prototype;
 
-// we need a couple of helper functions for clicking on a radio input field
-function clickfn() {
-if (this.disabled) return;
-let nn = this.nodeName, t = this.type;
-// as though the user had clicked on this
-if(nn == "BUTTON" || (nn == "INPUT" &&
-(t == "button" || t == "reset" || t == "submit" || t == "checkbox" || t == "radio"))) {
-let e = new w.MouseEvent("click");
-if(!this.dispatchEvent(e)) return;
-// do what the tag says to do
-    if(this.form && this.form.dom$class == "HTMLFormElement") {
-        if(t == "submit") {
-            e = new w.Event;
-            e.initEvent("submit", true, true);
-            if(this.dispatchEvent(e)) this.form.submit();
-        }
-        if(t == "reset")
-            this.form.reset();
-    }
-if(t != "checkbox" && t != "radio") return;
-this.checked$2 = (this.checked$2 ? false : true);
-// if it's radio and checked we need to uncheck the others.
-if(this.form && this.checked$2 && t == "radio" &&
-(nn = this.name) && (e = this.form[nn]) && Array.isArray(e)) {
-for(var i=0; i<e.length; ++i)
-if(e[i] != this) e[i].checked$2 = false;
-} else // try it another way
-if(this.checked$2 && t == "radio" && this.parentNode && (e = this.parentNode.childNodes) && (nn = this.name)) {
-for(var i=0; i<e.length; ++i)
-if(e[i].nodeName == "INPUT" && e[i].type == t && e[i].name == nn &&e[i] != this) e[i].checked$2 = false;
-}
-}
-}
-
-// and a getter and setter for value, so that it can be reflected in C,
-// and you can see it on screen, and it can be sent to the server via a form.
-function getvalue()
-{
-    return this.val$ue ? this.val$ue : "";
-}
-function setvalue(h)
-{
-    if(!h) return; // should never happen
-    this.val$ue = h;
-    // push this over to the c world.
-    set_value(this, h);
-}
-
-odp(inputp, "value", { get: getvalue, set: setvalue})
 inputp.selectionStart = 0;
 inputp.selectionEnd = -1;
 inputp.selectionDirection = "none";
@@ -4091,7 +3987,6 @@ if(typeof e == "number") this.selectionEnd = e;
 if(typeof dir == "string") this.selectionDirection = dir;
 }
 inputp.select = eb$voidfunction;
-inputp.click = clickfn;
 // type property is automatically in the getAttribute system, acid test 53
 odp(inputp, "type", {
 get:function(){ var t = this.getAttribute("type");
@@ -4129,7 +4024,6 @@ var y = typeof t;
 return y == "number" || y == "string" ? t : undefined},
 set:function(v) { this.setAttribute("size", v);}});
 
-buttonp.click = clickfn;
 // type property is automatically in the getAttribute system, acid test 59
 odp(buttonp, "type", {
 get:function(){ var t = this.getAttribute("type");
@@ -4137,7 +4031,6 @@ get:function(){ var t = this.getAttribute("type");
 return typeof t == "string" ? t.toLowerCase() : "submit"; },
 set:function(v) { this.setAttribute("type", v);}});
 
-odp(tareap, "value", { get: getvalue, set: setvalue})
 odp(tareap, "innerText", {
 get: function() { return this.value},
 set: function(t) { this.value = t }});

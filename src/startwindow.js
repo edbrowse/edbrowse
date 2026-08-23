@@ -2162,6 +2162,126 @@ class HTMLFormElement extends HTMLElement
 }
 swdc(HTMLFormElement);
 
+// <input>
+class HTMLInputElement extends HTMLElement
+{
+    constructor()
+    {
+        super();
+        this.validity = new Validity;
+        this.validity.owner = this;
+    }
+    static { this.prototype.checked$2 = false; }
+    get checked() { return this.checked$2; }
+    set checked(v) {
+        if(v !== false) v = true;
+        if(v == this.checked$2) return; // no change
+        this.checked$2 = v;
+        // if it's radio and checked we need to uncheck the others.
+        if(!v) return;
+        if(this.type != "radio") return;
+        let nn = this.name, e;
+        if(!nn) return;
+        if(this.form && (e = this.form[nn]) && Array.isArray(e)) {
+            for(let i=0; i<e.length; ++i)
+                if(e[i] != this) e[i].checked$2 = false;
+            return;
+        }
+        // Try it another way.
+        // This asumes all radio buttons are below the same parent,
+        // which is not guaranteed
+        if(this.parentNode && (e = this.parentNode.childNodes)) {
+            for(let i=0; i<e.length; ++i)
+                if(e[i].nodeName == "INPUT" && e[i].type == "radio" && 
+                e[i].name == nn &&e[i] != this)
+                    e[i].checked$2 = false;
+            return;
+        }
+    }
+
+    get readOnly() { return this.hasAttribute("readonly"); }
+    set readOnly(v) { if(v === false) this.removeAttribute("readonly"); else this.setAttribute("readonly", ""); }
+    get multiple() { return this.hasAttribute("multiple"); }
+    set multiple(v) { if(v === false) this.removeAttribute("multiple"); else this.setAttribute("multiple", ""); }
+    get disabled() { return this.hasAttribute("disabled"); }
+    set disabled(v) { if(v === false) this.removeAttribute("disabled"); else this.setAttribute("disabled", ""); }
+    get required() { return this.hasAttribute("required"); }
+    set required(v) { if(v === false) this.removeAttribute("required"); else this.setAttribute("required", ""); }
+    get value() { return this.val$ue ? this.val$ue : ""; }
+    set value(h) { if(h) { this.val$ue = h; set_value(this, h); } }
+
+/* HTMLElement has a click function, which dispatches the click event.
+This class, Input, has a click function that displaces that one.
+It dispatches the event, and then  performs the action of the input tag,
+as though the user had clicked on this item.
+This could be submitting a form, or deselecting the other radio buttons
+if this is a radio button. */
+    click()
+    {
+        if (this.disabled) return;
+        // dispatch the click event, as HTMLElement would have done.
+        let e = new MouseEvent("click");
+        if(!this.dispatchEvent(e)) return;
+        // click handlers did not say no - let's continue.
+        let nn = this.nodeName, t = this.type;
+        if(this.form && this.form.dom$class == "HTMLFormElement") {
+            if(t == "submit") {
+                e = new Event;
+                e.initEvent("submit", true, true);
+                if(this.dispatchEvent(e)) this.form.submit();
+            }
+            if(t == "reset") {
+                e = new Event;
+                e.initEvent("reset", true, true);
+                if(this.dispatchEvent(e)) this.form.reset();
+            }
+        }
+        if(t != "checkbox" && t != "radio") return;
+        this.checked$2 = !this.checked$2;
+        // if it's radio and checked we need to uncheck the others.
+        if(!this.checked$2) return;
+        if(t != "radio") return;
+        if(!(nn = this.name)) return;
+        if(this.form && (e = this.form[nn]) && Array.isArray(e)) {
+            for(let i=0; i<e.length; ++i)
+                if(e[i] != this) e[i].checked$2 = false;
+        } else // try it another way
+        if(this.parentNode && (e = this.parentNode.childNodes)) {
+            for(let i=0; i<e.length; ++i)
+                if(e[i].nodeName == "INPUT" && e[i].type == t && 
+                e[i].name == nn &&e[i] != this) e[i].checked$2 = false;
+        }
+    }
+
+}
+swdc(HTMLInputElement);
+
+// <button>
+class HTMLButtonElement extends HTMLElement
+{
+    constructor() { super(); }
+
+/* You can submit a form by a button, just like an input field type submit.
+The whole button input overlap is confusing as hell.
+Use the same click function as the Input class. */
+    static { this.prototype.click = HTMLInputElement.prototype.click; }
+
+}
+swdc(HTMLButtonElement);
+
+// <textarea>
+class HTMLTextAreaElement extends HTMLElement
+{
+    constructor() { super(); }
+    get readOnly() { return this.hasAttribute("readonly"); }
+    set readOnly(v) { if(v === false) this.removeAttribute("readonly"); else this.setAttribute("readonly", ""); }
+    get required() { return this.hasAttribute("required"); }
+    set required(v) { if(v === false) this.removeAttribute("required"); else this.setAttribute("required", ""); }
+    get value() { return this.val$ue ? this.val$ue : ""; }
+    set value(h) { if(h) { this.val$ue = h; set_value(this, h); } }
+}
+swdc(HTMLTextAreaElement);
+
 // <fieldset>
 class HTMLFieldSetElement extends HTMLElement
 {
