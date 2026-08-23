@@ -1904,9 +1904,20 @@ swdc(HTMLDocument);
 // And now, drumroll please, as we create the document.
 odp(this, "document", {value: new HTMLDocument});
 
-// Now that we have document in hand, establish is as the ownerDocument
+// Now that we have document in hand, establish it as the ownerDocument
 // for all nodes created under this window.
 Node.prototype.ownerDocument = document;
+
+class DocumentFragment extends HTMLElement
+{
+    constructor() { super(); }
+    static {
+        const tp = this.prototype;
+        tp.nodeType = 11;
+        tp.nodeName = tp.tagName = "#document-fragment";
+    }
+}
+swdc(DocumentFragment);
 
 class Text extends HTMLElement
 {
@@ -2591,15 +2602,27 @@ class HTMLFieldSetElement extends HTMLElement
 }
 swdc(HTMLFieldSetElement);
 
+class HTMLStyleElement extends HTMLElement
+{
+    constructor() { super(); }
+    get css$data() { // edbrowse feature
+        let s = ""; for(let c of this.childNodes)
+            if(c.nodeType == 3) s += c.data;
+        return s;
+    }
+}
+swdc(HTMLStyleElement);
+
 // At this point we have defined the HTMLElements.
 // Here are classes that don't support innerHTML.
 // Overwrite the innerHTML setter so it doesn't do anything.
 for(let c of [
 DocType, HTMLMetaElement, HTMLLinkElement, HTMLTitleElement,
 HTMLBaseElement, Text, Comment,
-CharacterData,
+CharacterData, DocumentFragment,
 HTMLHRElement, HTMLImageElement, HTMLScriptElement,
 HTMLInputElement, HTMLButtonElement, HTMLOptGroupElement, HTMLOptionElement,
+HTMLStyleElement,
 ]) {
     odp(c.prototype, "innerHTML", {
         get: function(){ return this.inner$HTML},

@@ -3635,13 +3635,6 @@ domLinkage('c', c, "comment");
 return c;
 }
 
-swde("DocumentFragment", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-
-let fragp = w.DocumentFragment.prototype;
-fragp.nodeType = 11;
-fragp.nodeName = fragp.tagName = "#document-fragment";
 docp.createDocumentFragment = function() {
 const c = this.createElement("fragment");
 return c;
@@ -4354,18 +4347,6 @@ let csdp = w.CSSStyleDeclaration.prototype;
     }
 })()
 
-swde("HTMLStyleElement", class extends w.HTMLElement {
-    constructor() { super(); }
-    get css$data()
-    {
-        let s = "";
-        for(let i=0; i<this.childNodes.length; ++i)
-            if(this.childNodes[i].nodeName == "#text")
-                s += this.childNodes[i].data;
-        return s;
-    }
-})
-
 swde("CSSRule", class extends w.Object {
     constructor() {super(); this.cssText=""; }
     toString() { return this.cssText; }
@@ -4432,9 +4413,7 @@ for(let c of [
 "CSSStyleDeclaration",
 "HTMLCanvasElement",
 "HTMLFrameElement", "HTMLIFrameElement",
-"HTMLStyleElement",
 "HTMLTimeElement", "HTMLUnknownElement",
-"DocumentFragment",
 "z$Datalist", "z$tCap"]) {
     odp(w[c].prototype, "innerHTML", {
         get: function(){ return this.inner$html},
