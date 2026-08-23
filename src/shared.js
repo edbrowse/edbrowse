@@ -3585,17 +3585,6 @@ t = t.parentNode;
 return t1;
 }
 
-// If all these Node methods return [native code], as they are
-// suppose to, then the same holds for the downstream classes,
-// like HTMLElement.appendChild etc.
-for( let k of [
-"hasChildNodes", "appendChild", "insertBefore", "removeChild",
-"getClientRects", "cloneNode", "querySelectorAll",
-"focus", "blur",
-"getBoundingClientRect", "compareDocumentPosition", "getRootNode"])
-    // wrapString doesn't work here because they are anonymous functions
-    eval(`Object.defineProperty(nodep.${k}, "toString", {value: ()=>{return "function ${k}() {\\n    [native code]\\n}"}})`);
-
 // Since we are createing all these classes here, does it make sense to
 // include the methods to properly instantiate those classes?  Perhaps.
 let docp = w.Document.prototype;

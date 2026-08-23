@@ -60,6 +60,14 @@ delete foo; delete bar;
 if(!window instanceof Window) msg += "|window not Window";
 if(!window instanceof EventTarget) msg += "|window not EventTarget";
 if(!window.addEventListener) msg += "|no window event listener";
+if(!document instanceof Document) msg += "|document not Document"
+if(!document instanceof HTMLDocument) msg += "|document not HTMLDocument"
+if(HTMLHRElement != "function HTMLHRElement() { [native code] }") msg += "|bad HR static toString";
+if(b.appendChild.toString() != "function appendChild() { [native code] }")
+msg += `|instance method toString ${b.appendChild}`;
+if(b.append.toString() != "function append() { [native code] }")
+msg += `|instance method toString ${b.append}`;
+// We tested one method from Node one from Element, I guess that's good enough.
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

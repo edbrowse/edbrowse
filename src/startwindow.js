@@ -36,6 +36,7 @@ this.db$flags = eb$falsefunction;
 this.eb$newLocation = function (s) { print("new location " + s)}
 this.eb$parent = function() { return this}
 this.eb$top = function() { return this}
+this.natok = ()=>[];
 this.eb$frameElement = function() { return this}
 this.eb$getter_cd = function() { return null}
 this.eb$getter_cw = function() { return null}
@@ -205,6 +206,35 @@ this.swdc = function (c, changeable=true)
     */
     c.toString = () => `function ${c.name}() { [native code] }`
     odp(window, c.name, {value:c, writable:changeable, configurable:changeable});
+
+/*********************************************************************
+In other browsers, native methods return a string with the function name
+and a function body [native code].
+function appendChild() { [native code] }
+Gatekeepers look for that, so we should do the same.
+I use a native method to get all keys, even those that are not enumerable.
+I check to make sure it's a function, aand HasOwn Property,
+so I'm not looking at a function in a prototype that is up the chain.
+Next check for getter setter; I don't want to mess with that.
+Just touching a getter throws everything off the tracks.
+That's not the end of the story however.
+I use eb$voidfunction as stub for a lot of instance methods,
+especially those that are visual.
+It is a function, and directly assigned to this prototype under a method name.
+I can't be wrapping eb$voidfunction in different strings, over and over again.
+So the last test asks whether the string contains [native code],
+that is to say, it's already a native function.
+*********************************************************************/
+    const p = c.prototype;
+    for(let f of natok(p)) {
+        const desc = Object.getOwnPropertyDescriptor(p, f);
+        if(!desc) continue; // not own property
+        if(desc.get || desc.set) continue;
+        if(typeof p[f] != "function") continue;
+        if(p[f].toString().indexOf("[native code]") > 0) continue;
+        p[f].toString = ()=>
+        `function ${f}() { [native code] }`;
+    }
 }
 
 this.swde = function (cls, exp, changeable=true)
@@ -1534,10 +1564,6 @@ Here is the way. */
 
 }
 swdc(Element);
-
-for(let k of [
-    "attachShadow"])
-   eval(`Object.defineProperty(Element.prototype.${k}, "toString", {value: ()=>{return "function ${k}() {\\n    [native code]\\n}"}})`);
 
 /* Element bifurcates into HTMLElement and SVGElement.
 The former is far more important to us, as it becomes the classes
