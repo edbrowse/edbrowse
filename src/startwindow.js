@@ -2885,12 +2885,6 @@ swdc(HTMLTableElement);
 class HTMLTableRowElement extends HTMLElement
 {
     constructor() { super(); this.cells = []; }
-}
-swdc(HTMLTableRowElement);
-
-class HTMLTableCellElement extends HTMLElement
-{
-    constructor() { super(); }
 
     insertCell(idx)
     {
@@ -2914,6 +2908,12 @@ class HTMLTableCellElement extends HTMLElement
         if(n >= 0 && n < l)
             this.removeChild(this.cells[n]);
     }
+}
+swdc(HTMLTableRowElement);
+
+class HTMLTableCellElement extends HTMLElement
+{
+    constructor() { super(); }
 }
 swdc(HTMLTableCellElement);
 
