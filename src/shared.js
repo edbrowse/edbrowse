@@ -3973,18 +3973,6 @@ optgp.option_from_html = option_from_html;
 selp.option_from_html = option_from_html;
 
 // other methods and properties that haven't moved across yet.
-let tareap = w.HTMLTextAreaElement.prototype;
-odp(tareap, "innerText", {
-get: function() { return this.value},
-set: function(t) { this.value = t }});
-odp(tareap, "type", {
-get: function() { return "textarea"}});
-odp(tareap, "placeholder", {
-get:function(){ var t = this.getAttribute("placeholder");
-var y = typeof t;
-return y == "string" || y == "number" ? t : ""; },
-set:function(v) { this.setAttribute("placeholder", v);}});
-
 // media and audio
 swde("HTMLMediaElement", class extends w.HTMLElement {
     constructor() { super(); }

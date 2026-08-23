@@ -2354,7 +2354,6 @@ class HTMLButtonElement extends HTMLElement
 The whole button input overlap is confusing.
 Use the same click function as the Input class. */
     static { this.prototype.click = HTMLInputElement.prototype.click; }
-
 }
 swdc(HTMLButtonElement);
 
@@ -2368,6 +2367,16 @@ class HTMLTextAreaElement extends HTMLElement
     set required(v) { if(v === false) this.removeAttribute("required"); else this.setAttribute("required", ""); }
     get value() { return this.val$ue ? this.val$ue : ""; }
     set value(h) { if(h) { this.val$ue = h; set_value(this, h); } }
+    get innerText() { return this.value }
+    set innerText(v) { this.value = t }
+    get type() { return "textarea"}
+    get placeholder()
+    {
+        let t = this.getAttribute("placeholder");
+        let y = typeof t;
+        return y == "string" || y == "number" ? t : "";
+    }
+    set placeholder(v) { this.setAttribute("placeholder", v); }
 }
 swdc(HTMLTextAreaElement);
 
