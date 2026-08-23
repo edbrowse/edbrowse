@@ -3679,22 +3679,6 @@ swde("ShadowRoot", class extends w.HTMLElement {
     constructor() { super(); }
 })
 
-swde("HTMLAreaElement", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-swde("HTMLFrameElement", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-let framep = w.HTMLFrameElement.prototype;
-framep.is$frame = true;
-odp(framep, "contentDocument", { get: eb$getter_cd});
-odp(framep, "contentWindow", { get: eb$getter_cw});
-
-// These may be different but for now I'm calling them the same.
-swde("HTMLIFrameElement", class extends w.HTMLFrameElement {
-    constructor() { super(); }
-})
-
 /*********************************************************************
 If foo is an anchor, then foo.href = "some_url"
 builds the url object. Same for frame.src, etc.
@@ -4210,7 +4194,6 @@ return c;
 for(let c of [
 "CSSStyleDeclaration",
 "HTMLCanvasElement",
-"HTMLFrameElement", "HTMLIFrameElement",
 "HTMLTimeElement", "HTMLUnknownElement",
 "z$Datalist",
 ]) {

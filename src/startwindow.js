@@ -2064,6 +2064,30 @@ class HTMLAnchorElement extends HTMLElement
 }
 swdc(HTMLAnchorElement);
 
+// <area>
+class HTMLAreaElement extends HTMLElement
+{
+    constructor() { super(); }
+}
+swdc(HTMLAreaElement);
+
+// <frame>
+class HTMLFrameElement extends HTMLElement
+{
+    constructor() { super(); }
+    get contentWindow() { return eb$getter_cw.call(this); }
+    get contentDocument() { return eb$getter_cd.call(this); }
+    static { this.prototype.is$frame = true; }
+}
+swdc(HTMLFrameElement);
+
+// <iframe>
+class HTMLIFrameElement extends HTMLFrameElement
+{
+    constructor() { super(); }
+}
+swdc(HTMLIFrameElement);
+
 // <hr>
 class HTMLHRElement extends HTMLElement
 {
@@ -2846,6 +2870,7 @@ DocType, HTMLMetaElement, HTMLLinkElement, HTMLTitleElement,
 HTMLBaseElement, Text, Comment,
 CharacterData, DocumentFragment,
 HTMLHRElement, HTMLImageElement, HTMLScriptElement,
+HTMLFrameElement,
 HTMLInputElement, HTMLButtonElement, HTMLOptGroupElement, HTMLOptionElement,
 HTMLStyleElement,
 ]) {
