@@ -2199,6 +2199,25 @@ class HTMLInputElement extends HTMLElement
         }
     }
 
+    get type()
+    {
+        let t = this.getAttribute("type");
+        if(!t || typeof t != "string") return "text";
+        t = t.toLowerCase();
+        if(t == "submit" || t == "reset" ||
+        t == "image" || t == "button" ||
+        t == "text" || t == "hidden" || t == "file" ||
+        t == "password" || t == "email" || t == "date" ||
+        t == "number" ||
+        t == "checkbox" || t == "radio") return t;
+        alert3(`unknown input type ${t}`);
+        // there are too many of these; I can't be sure; just return t;
+        return t;
+    }
+    set type(v) { this.setAttribute("type", v);
+                if(v.toLowerCase() == "checkbox" && !this.value) this.value = "on";
+    }
+
     get readOnly() { return this.hasAttribute("readonly"); }
     set readOnly(v) { if(v === false) this.removeAttribute("readonly"); else this.setAttribute("readonly", ""); }
     get multiple() { return this.hasAttribute("multiple"); }
@@ -2261,8 +2280,21 @@ class HTMLButtonElement extends HTMLElement
 {
     constructor() { super(); }
 
+    get type()
+    {
+        let t = this.getAttribute("type");
+        // default is submit, acid test 59
+        if(!t || typeof t != "string") return "submit";
+        t = t.toLowerCase();
+        if(t == "submit" || t == "reset" ||
+        t == "button" || t == "menu") return t;
+        alert3(`bad button type ${t}`);
+        return "submit";
+    }
+    set type(v) { this.setAttribute("type", v);}
+
 /* You can submit a form by a button, just like an input field type submit.
-The whole button input overlap is confusing as hell.
+The whole button input overlap is confusing.
 Use the same click function as the Input class. */
     static { this.prototype.click = HTMLInputElement.prototype.click; }
 

@@ -3974,7 +3974,6 @@ selp.option_from_html = option_from_html;
 
 // other methods and properties that haven't moved across yet.
 let inputp = w.HTMLInputElement.prototype;
-let buttonp = w.HTMLButtonElement.prototype;
 let tareap = w.HTMLTextAreaElement.prototype;
 
 inputp.selectionStart = 0;
@@ -3987,17 +3986,6 @@ if(typeof e == "number") this.selectionEnd = e;
 if(typeof dir == "string") this.selectionDirection = dir;
 }
 inputp.select = eb$voidfunction;
-// type property is automatically in the getAttribute system, acid test 53
-odp(inputp, "type", {
-get:function(){ var t = this.getAttribute("type");
-// no type, text is implied
-if(!t || typeof t != "string") t = "text";
-// input type is special, tidy converts it to lower case, so I will too.
-// Also acid test 54 requires it.
-return this.eb$xml ? t : t.toLowerCase(); },
-set:function(v) { this.setAttribute("type", v);
-if(v.toLowerCase() == "checkbox" && !this.value) this.value = "on";
-}});
 odp(inputp, "placeholder", {
 get:function(){ var t = this.getAttribute("placeholder");
 var y = typeof t;
@@ -4023,13 +4011,6 @@ get:function(){ var t = this.getAttribute("size");
 var y = typeof t;
 return y == "number" || y == "string" ? t : undefined},
 set:function(v) { this.setAttribute("size", v);}});
-
-// type property is automatically in the getAttribute system, acid test 59
-odp(buttonp, "type", {
-get:function(){ var t = this.getAttribute("type");
-// default is submit, acid test 59
-return typeof t == "string" ? t.toLowerCase() : "submit"; },
-set:function(v) { this.setAttribute("type", v);}});
 
 odp(tareap, "innerText", {
 get: function() { return this.value},
