@@ -3809,6 +3809,9 @@ swde("HTMLOptionElement", class extends w.HTMLElement {
         if (arguments.length > 1) this.value = arguments[1];
     }
 
+    get disabled() { return this.hasAttribute("disabled"); }
+    set disabled(v) { if(v === false) this.removeAttribute("disabled"); else this.setAttribute("disabled", ""); }
+
     static { this.prototype.selected$2 = false; }
     get selected() { return this.selected$2; }
     set selected(v) {
@@ -3840,139 +3843,6 @@ let optp = w.HTMLOptionElement.prototype;
 optp.defaultSelected = false;
 optp.nodeName = optp.tagName = "OPTION";
 optp.text = optp.value = "";
-swde("HTMLOptGroupElement", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-let optgp = w.HTMLOptGroupElement.prototype;
-optgp.nodeName = optgp.tagName = "OPTGROUP";
-
-swde("HTMLSelectElement", class extends w.HTMLElement {
-    constructor()
-    {
-        super();
-        this.selectedIndex = -1;
-        this.options = [];
-        this.selectedOptions = [];
-        this.validity = new w.Validity;
-        this.validity.owner = this;
-    }
-
-    get value() {
-        const a = this.options;
-        const n = this.selectedIndex;
-        return (n < 0 || n >= a.length) ? "" : a[n].value;
-    }
-
-    get type() {
-        return this.multiple ? "select-multiple" : "select-one";
-    }
-    get multiple() { return this.hasAttribute("multiple"); }
-    set multiple(v) { if(v === false) this.removeAttribute("multiple"); else this.setAttribute("multiple", ""); }
-    get disabled() { return this.hasAttribute("disabled"); }
-    set disabled(v) { if(v === false) this.removeAttribute("disabled"); else this.setAttribute("disabled", ""); }
-    get required() { return this.hasAttribute("required"); }
-    set required(v) { if(v === false) this.removeAttribute("required"); else this.setAttribute("required", ""); }
-    get size() {
-        const t = this.getAttribute("size");
-        if(typeof t == "number") return t;
-        if(typeof t == "string" && t.match(/^\d+$/)) return parseInt(t);
-        return 0;
-    }
-    set size(v) { this.setAttribute("size", v); }
-
-// I have some wrappers here to manage some weird side effects.
-    appendChild(c)
-    {
-        if(!c) return null;
-        if(c.dom$class != "HTMLOptionElement")
-            return nodep.appendChild.call(this, c);
-        if(c.defaultSelected) c.selected$2 = true;
-        // add first, then select, so the setter can deselect the others.
-        const was_selected = c.selected;
-        c.selected$2 = false;
-        // this append will perform the reindex, and rebuild options and selectedOptions
-        nodep.appendChild.call(this, c);
-        // now select this one, possibly unselecting the others.
-        c.selected = was_selected;
-        return c;
-    }
-
-    insertBefore(c, item)
-    {
-        if(!c) return null;
-        if(!item) return this.appendChild(c);
-        if(c.dom$class != "HTMLOptionElement")
-            return nodep.insertBefore.call(this, c, item);
-        // side effect; option is freed even if it can't reconnect
-        c.remove();
-        if(c.defaultSelected) c.selected$2 = true;
-        // add first, then select, so the setter can deselect the others.
-        const was_selected = c.selected;
-        c.selected$2 = false;
-        // this insert will perform the reindex, and rebuild options and selectedOptions
-        nodep.insertBefore.call(this, c, item);
-        // now select this one, possibly unselecting the others.
-        c.selected = was_selected;
-        return c;
-    }
-
-    add(o, idx)
-    {
-        // have to turn the object Option into a proper node
-        // with a corresponding tag in C.
-        domLinkage('c', o, "option");
-        const n = this.options.length;
-        // first option to a pick-one list is automatically selected
-        if(!n && !this.multiple) o.selected$2 = true;
-        if(typeof idx != "number" || idx < 0 || idx > n) idx = n;
-        if(idx == n) {
-            this.appendChild(o);
-        } else {
-            // Determine the parent; we might be adding to an option group.
-            const p = this.options[idx].parentNode;
-            p.insertBefore(o, this.options[idx]);
-        }
-    }
-
-    remove(idx)
-    {
-        const n = this.options.length;
-        if(typeof idx == "number" && idx >= 0 && idx < n) {
-            // if removing the only selected option, revert to the first one.
-            const only = !this.multiple && this.options[idx].selected;
-            this.removeChild(this.options[idx]);
-            if(only && n > 1) this.options[0].selected = true;
-        }
-    }
-
-})
-
-const selp = w.HTMLSelectElement.prototype;
-selp.selectReindexThis = ()=> { selectReindex(this); }
-
-// A helper function for <option> coming from html.
-function option_from_html(o){
-    this.childNodes.push(o);
-    o.parentNode = this;
-    let og = null; // option group
-    let select = this;
-    if(select.dom$class == "HTMLOptGroupElement") {
-        og = select;
-        while(select = select.parentNode) {
-            if(select.nodeType != 1) return; // should never happen
-            if(select.dom$class == "HTMLSelectElement") break;
-        }
-        if(!select) return;
-    }
-    select.options.push(o);
-    if(o.selected) select.selectedOptions.push(o);
-    o.form = select.form;
-    mutFixup(this, 0, o, null);
-}
-optgp.option_from_html = option_from_html;
-selp.option_from_html = option_from_html;
-
-// other methods and properties that haven't moved across yet.
 // media and audio
 swde("HTMLMediaElement", class extends w.HTMLElement {
     constructor() { super(); }
@@ -4605,7 +4475,7 @@ for(let c of [
 "CSSStyleDeclaration",
 "HTMLCanvasElement",
 "HTMLFrameElement", "HTMLIFrameElement",
-"HTMLOptGroupElement", "HTMLOptionElement",
+"HTMLOptionElement",
 "HTMLStyleElement",
 "HTMLTimeElement", "HTMLUnknownElement",
 "DocumentFragment",
