@@ -91,18 +91,6 @@ quickjs is then that is where it is.
 The module asked about is `qjs`; set `$QUICKJS_PKG` if yours goes by another
 name.
 
-quickjs-ng is a fork of the original project quickjs.
-You can, as an alternative, build edbrowse against the original project
-quickjs. Unfortunately versioning in quickjs is less clear and thus it is
-difficult to give exact version requirements other than that the version must
-be released after June 2025.
-the preprocessing symbol `Q_NG` is set to 1 for quickjs-ng, or 0 for quickjs.
-This is only used by the sourcefile `jseng-quick.c`,
-which is the gateway between edbrowse and quickjs.
-
-It is not possible to install both simultaneously.
-There is a conflict with the executable qjs.
-
 ##### readline
 
 Edbrowse supports using GNU readline for handling input. As such you need
@@ -120,18 +108,12 @@ then, if quickjs-ng is installed, just type:
 make
 ```
 
-However if quickjs is installed, use:
-
-```shell
-CPPFLAGS=-DQ_NG=0 QUICKJS_LIB_NAME=quickjs make
-```
-
-To build edbrowse against a quickjs project that is built locally, but not installed,
+To build edbrowse against a quickjs-ng project that is built locally, but not installed,
 set `QUICKJS_INCLUDE` and `QUICKJS_LIB` appropriately.
 Your make command might look like this:
 
 ```shell
-CPPFLAGS=-DQ_NG=0 QUICKJS_LIB_NAME=quickjs  QUICKJS_INCLUDE=/home/your_login/programs/qorig QUICKJS_LIB=/home/your_login/programs/qorig make
+QUICKJS_INCLUDE=/home/your_login/programs/q-ng QUICKJS_LIB=/home/your_login/programs/q-ng make
 ```
 
 In addition to quickjs-related variables,
