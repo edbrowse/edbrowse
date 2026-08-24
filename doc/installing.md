@@ -165,7 +165,7 @@ You should get something like this; if you do then all is well.
 relative
 complete
 body loading
-847
+825
 ```
 
 	[after a delay of 10 seconds]

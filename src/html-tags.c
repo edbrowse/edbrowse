@@ -3996,22 +3996,6 @@ static void insert_tbody1(Tag *s1, Tag *s2, Tag *tbl)
 	if (s1a == s2)		// nothing between
 		return;
 
-// Look for the direct html <table><tr><th>.
-// If th is anywhere else down the path, we won't find it.
-	if (!s1 && s1a->action == TAGACT_TR &&
-	    (u = s1a->firstchild) && stringEqual(u->info->name, "th") &&
-	    (u = u->sibling) && stringEqual(u->info->name, "th")) {
-		ns = newTag(cf, "thead");
-		tbl->firstchild = ns;
-		ns->parent = tbl;
-		ns->firstchild = s1a;
-		s1a->parent = ns;
-		ns->sibling = s1a->sibling;
-		s1a->sibling = 0;
-		s1 = ns;
-		s1a = s1->sibling;
-	}
-
 	for (u = s1a; u != s2; u = u->sibling)
 		if (tagBelow(u, TAGACT_TR))
 			break;
