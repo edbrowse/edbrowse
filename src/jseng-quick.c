@@ -3427,10 +3427,9 @@ JSValue mwo; // master window object
 		return;
 	}
 // default stack size is 256K, which is fine for normal use.
-// If we are deminizing code, the deminimizer is written in javascript,
+// If we are deminimizing code, the deminimizer is written in javascript,
 // and it eats up the stack.
-	if(WithDebugging)
-		JS_SetMaxStackSize(jsrt, 2048*1024);
+        JS_SetMaxStackSize(jsrt, 2048*1024);
 	mwc = JS_NewContext(jsrt);
 	mwo = JS_GetGlobalObject(mwc);
 

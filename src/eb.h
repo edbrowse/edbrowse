@@ -60,8 +60,6 @@ extern char frameContent[];
 	extern const char startWindowJS[];
 	extern const char deminJS[];
 	extern const char sharedJS[];
-// this is crude but it works.
-#define WithDebugging (strlen(deminJS) > 5000)
 
 #define cssDebugFile "/tmp/css"
 
