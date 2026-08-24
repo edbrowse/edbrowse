@@ -38,11 +38,12 @@ this.eb$parent = function() { return this}
 this.eb$top = function() { return this}
 this.natok = ()=>[];
 this.eb$frameElement = function() { return this}
-this.eb$getter_cd = function() { return null}
-this.eb$getter_cw = function() { return null}
-    this.querySelector0 = () => {};
-    this.querySelector = () => {};
+this.eb$getter_cd = ()=>null;
+this.eb$getter_cw = ()=>null;
+    this.querySelector0 = () => null;
+    this.querySelector = () => null;
     this.resolveURL = (base, h) => h;
+    this.eb$playAudio = ()=>null;
     this.eb$formSubmit = ()=>null;
     this.eb$formReset = ()=>null;
 ;(function() { const void_functions = ["addEventListener",
@@ -3077,8 +3078,7 @@ class HTMLTableElement extends HTMLElement
     {
         if(this.caption) return this.caption;
         const c = document.createElement("caption");
-        this.appendChild(c);
-        return c;
+        return this.appendChild(c);
     }
 
     deleteCaption()
@@ -3090,8 +3090,7 @@ class HTMLTableElement extends HTMLElement
     {
         if(this.tHead) return this.tHead;
         const c = document.createElement("thead");
-        this.prepend$child(c);
-        return c;
+        return this.prepend$child(c);
     }
 
     deleteTHead()
@@ -3103,8 +3102,7 @@ class HTMLTableElement extends HTMLElement
     {
         if(this.tFoot) return this.tFoot;
         const c = document.createElement("tfoot");
-        this.insertBefore(c, this.caption);
-        return c;
+        return this.insertBefore(c, this.caption);
     }
 
     deleteTFoot()
@@ -3213,6 +3211,139 @@ class HTMLTimeElement extends HTMLElement
 }
 swdc(HTMLTimeElement);
 
+class HTMLMediaElement extends HTMLElement
+{
+    constructor() { super(); }
+    static {
+        const tp = this.prototype;
+        tp.autoplay = false;
+        tp.muted = false;
+        tp.defaultMuted = false;
+        tp.paused = false;
+        tp.controls = false;
+        tp.controller = null;
+        tp.volume = 1.0;
+        tp.play = eb$playAudio;
+        tp.load = eb$voidfunction;
+        tp.pause = eb$voidfunction;
+    }
+    audioTracks = [];
+    videoTracks = [];
+    textTracks = [];
+}
+swdc(HTMLMediaElement);
+
+class HTMLAudioElement extends HTMLMediaElement
+{
+    constructor(t)
+    {
+        super();
+        // arg to constructor is the url of the audio
+        if (typeof t == "string") this.src = t;
+        if (typeof t == "object") this.src = t.toString();
+    }
+    static {
+        const tp = this.prototype;
+        tp.nodeName = "AUDIO";
+    }
+}
+swdc(HTMLAudioElement);
+window.Audio = HTMLAudioElement; // alias
+
+/*********************************************************************
+AudioContext, for playing music etc.
+This one we could implement, but I'm not sure if we should.
+If speech comes out of the same speakers as music, as it often does,
+you might not want to hear it, you might rather see the url, or have a button
+to push, and then you call up the music only if / when you want it.
+Not sure what to do, so it's pretty much stubs for now.
+*********************************************************************/
+
+class AudioContext
+{
+    static {
+        const tp = this.prototype;
+        tp.outputLatency = 1.0;
+        tp.createMediaElementSource = eb$voidfunction;
+        tp.createMediaStreamSource = eb$voidfunction;
+        tp.createMediaStreamDestination = eb$voidfunction;
+        tp.createMediaStreamTrackSource = eb$voidfunction;
+        tp.suspend = eb$voidfunction;
+        tp.close = eb$voidfunction;
+    }
+}
+swdc(AudioContext);
+
+// Canvas method draws a picture. That's meaningless for us,
+// but it still has to be there.
+class HTMLCanvasElement extends HTMLElement
+{
+    constructor() { super(); }
+    getContext(x)
+    {
+        return {
+            canvas: this,
+            addHitRegion: eb$nullfunction,
+            arc: eb$nullfunction,
+            arcTo: eb$nullfunction,
+            beginPath: eb$nullfunction,
+            bezierCurveTo: eb$nullfunction,
+            clearHitRegions: eb$nullfunction,
+            clearRect: eb$nullfunction,
+            clip: eb$nullfunction,
+            closePath: eb$nullfunction,
+            createImageData: eb$nullfunction,
+            createLinearGradient: eb$nullfunction,
+            createPattern: eb$nullfunction,
+            createRadialGradient: eb$nullfunction,
+            drawFocusIfNeeded: eb$nullfunction,
+            drawImage: eb$nullfunction,
+            drawWidgetAsOnScreen: eb$nullfunction,
+            drawWindow: eb$nullfunction,
+            ellipse: eb$nullfunction,
+            fill: eb$nullfunction,
+            fillRect: eb$nullfunction,
+            fillText: eb$nullfunction,
+            getImageData: eb$nullfunction,
+            getLineDash: eb$nullfunction,
+            isPointInPath: eb$nullfunction,
+            isPointInStroke: eb$nullfunction,
+            lineTo: eb$nullfunction,
+            measureText: function(s) {
+                // returns a TextMetrics object, whatever that is.
+                // Height and width will depend on the font, but this is just a stub.
+                return {height: 12, width: s.length * 7};
+            },
+            moveTo: eb$nullfunction,
+            putImageData: eb$nullfunction,
+            quadraticCurveTo: eb$nullfunction,
+            rect: eb$nullfunction,
+            removeHitRegion: eb$nullfunction,
+            resetTransform: eb$nullfunction,
+            restore: eb$nullfunction,
+            rotate: eb$nullfunction,
+            save: eb$nullfunction,
+            scale: eb$nullfunction,
+            scrollPathIntoView: eb$nullfunction,
+            setLineDash: eb$nullfunction,
+            setTransform: eb$nullfunction,
+            stroke: eb$nullfunction,
+            strokeRect: eb$nullfunction,
+            strokeText: eb$nullfunction,
+            transform: eb$nullfunction,
+            translate: eb$nullfunction 
+        }
+    }
+
+    get toDataURL()
+    {
+        if(this.height === 0  || this.width === 0) return "data:,";
+        // this is just a stub
+        return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAADElEQVQImWNgoBMAAABpAAFEI8ARAAAAAElFTkSuQmCC";
+    }
+}
+swdc(HTMLCanvasElement);
+
 // <snork>
 class HTMLUnknownElement extends HTMLElement
 {
@@ -3231,6 +3362,8 @@ HTMLHRElement, HTMLImageElement, HTMLScriptElement,
 HTMLFrameElement,
 HTMLInputElement, HTMLButtonElement, HTMLOptGroupElement, HTMLOptionElement,
 HTMLStyleElement,
+HTMLMediaElement, HTMLCanvasElement,
+HTMLTimeElement,
 ]) {
     odp(c.prototype, "innerHTML", {
         get: function(){ return this.inner$HTML},

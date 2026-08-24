@@ -3495,59 +3495,6 @@ swp("NodeList", new Proxy(Eb$NodeListHelper, {
     }
 }))
 
-// media and audio
-swde("HTMLMediaElement", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-let mediap = w.HTMLMediaElement.prototype;
-mediap.autoplay = false;
-mediap.muted = false;
-mediap.defaultMuted = false;
-mediap.paused = false;
-mediap.audioTracks = new w.Array;
-mediap.videoTracks = new w.Array;
-mediap.textTracks = new w.Array;
-mediap.controls = false;
-mediap.controller = null;
-mediap.volume = 1.0;
-mediap.play = eb$playAudio;
-mediap.load = eb$voidfunction;
-mediap.pause = eb$voidfunction;
-
-swde("HTMLAudioElement", class extends w.HTMLMediaElement {
-    constructor(t)
-    {
-        super();
-        // arg to constructor is the url of the audio
-        if (typeof t == "string") this.src = t;
-        if (typeof t == "object") this.src = t.toString();
-    }
-})
-swpc("Audio", w.HTMLAudioElement)
-w.HTMLAudioElement.prototype.nodeName = "AUDIO"
-
-/*********************************************************************
-AudioContext, for playing music etc.
-This one we could implement, but I'm not sure if we should.
-If speech comes out of the same speakers as music, as it often does,
-you might not want to hear it, you might rather see the url, or have a button
-to push, and then you call up the music only if / when you want it.
-Not sure what to do, so it's pretty much stubs for now.
-*********************************************************************/
-swde("AudioContext", class extends w.Object {
-    constructor()
-    {
-        super();
-        this.outputLatency = 1.0;
-        this.createMediaElementSource = eb$voidfunction;
-        this.createMediaStreamSource = eb$voidfunction;
-        this.createMediaStreamDestination = eb$voidfunction;
-        this.createMediaStreamTrackSource = eb$voidfunction;
-        this.suspend = eb$voidfunction;
-        this.close = eb$voidfunction;
-    }
-})
-
 /*********************************************************************
 If foo is an anchor, then foo.href = "some_url"
 builds the url object. Same for frame.src, etc.
@@ -3684,76 +3631,6 @@ function dhp(obj, ev)
     for(let obj of standard_hashchange_classes) dhp(obj, "onhashchange");
    dhp("Window", "onhashchange");
 })();
-
-// Canvas method draws a picture. That's meaningless for us,
-// but it still has to be there.
-// Because of the canvas element, I can't put the monster getContext function
-// into the prototype, I have to set it in the constructor.
-swde("HTMLCanvasElement", class extends w.HTMLElement {
-    constructor() { super(); }
-    getContext(x)
-    {
-        return {
-            canvas: this,
-            addHitRegion: eb$nullfunction,
-            arc: eb$nullfunction,
-            arcTo: eb$nullfunction,
-            beginPath: eb$nullfunction,
-            bezierCurveTo: eb$nullfunction,
-            clearHitRegions: eb$nullfunction,
-            clearRect: eb$nullfunction,
-            clip: eb$nullfunction,
-            closePath: eb$nullfunction,
-            createImageData: eb$nullfunction,
-            createLinearGradient: eb$nullfunction,
-            createPattern: eb$nullfunction,
-            createRadialGradient: eb$nullfunction,
-            drawFocusIfNeeded: eb$nullfunction,
-            drawImage: eb$nullfunction,
-            drawWidgetAsOnScreen: eb$nullfunction,
-            drawWindow: eb$nullfunction,
-            ellipse: eb$nullfunction,
-            fill: eb$nullfunction,
-            fillRect: eb$nullfunction,
-            fillText: eb$nullfunction,
-            getImageData: eb$nullfunction,
-            getLineDash: eb$nullfunction,
-            isPointInPath: eb$nullfunction,
-            isPointInStroke: eb$nullfunction,
-            lineTo: eb$nullfunction,
-            measureText: function(s) {
-                // returns a TextMetrics object, whatever that is.
-                // Height and width will depend on the font, but this is just a stub.
-                return {height: 12, width: s.length * 7};
-            },
-            moveTo: eb$nullfunction,
-            putImageData: eb$nullfunction,
-            quadraticCurveTo: eb$nullfunction,
-            rect: eb$nullfunction,
-            removeHitRegion: eb$nullfunction,
-            resetTransform: eb$nullfunction,
-            restore: eb$nullfunction,
-            rotate: eb$nullfunction,
-            save: eb$nullfunction,
-            scale: eb$nullfunction,
-            scrollPathIntoView: eb$nullfunction,
-            setLineDash: eb$nullfunction,
-            setTransform: eb$nullfunction,
-            stroke: eb$nullfunction,
-            strokeRect: eb$nullfunction,
-            strokeText: eb$nullfunction,
-            transform: eb$nullfunction,
-            translate: eb$nullfunction 
-        }
-    }
-})
-
-let canvasp = w.HTMLCanvasElement.prototype;
-canvasp.toDataURL = function() {
-if(this.height === 0  || this.width === 0) return "data:,";
-// this is just a stub
-return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAADElEQVQImWNgoBMAAABpAAFEI8ARAAAAAElFTkSuQmCC";
-}
 
 // The css style declaration - complicated by all the default values,
 // and the plethora of shorthand properties that we must expand.
@@ -4045,8 +3922,6 @@ set:function(v) { this.setAttribute("multiple", v);}});
 // Overwrite the innerHTML setter so it doesn't do anything.
 for(let c of [
 "CSSStyleDeclaration",
-"HTMLCanvasElement",
-"HTMLTimeElement", "HTMLUnknownElement",
 "z$Datalist",
 ]) {
     odp(w[c].prototype, "innerHTML", {
