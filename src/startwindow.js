@@ -1679,31 +1679,31 @@ For now they are merely classes, and this is table driven.
 At some point we should check with the specs and create the whole SVG tree;
 it is merely a matter of enhancing this table. */
 
-for(const e of [
-["SVGElement","Element"],
-["SVGGraphicsElement","SVGElement"],
-["SVGTitleElement","SVGElement"],
-["SVGStyleElement","SVGElement"],
-["SVGStopElement","SVGElement"],
-["SVGMaskElement","SVGElement"],
-["SVGGradientElement","SVGElement"],
-["SVGLinearGradientElement","SVGGradientElement"],
-["SVGGeometryElement","SVGGraphicsElement"],
-["SVGDefsElement","SVGGraphicsElement"],
-["SVGUseElement","SVGGraphicsElement"],
-["SVGPolygonElement","SVGGeometryElement"],
-["SVGRectElement","SVGGeometryElement"],
-["SVGEllipseElement","SVGGeometryElement"],
-["SVGGElement","SVGGraphicsElement"],
-["SVGSVGElement","SVGGraphicsElement"],
-["SVGPathElement","SVGGeometryElement"],
+for (const e of [
+    ["SVGElement", "Element"],
+    ["SVGGraphicsElement", "SVGElement"],
+    ["SVGTitleElement", "SVGElement"],
+    ["SVGStyleElement", "SVGElement"],
+    ["SVGStopElement", "SVGElement"],
+    ["SVGMaskElement", "SVGElement"],
+    ["SVGGradientElement", "SVGElement"],
+    ["SVGLinearGradientElement", "SVGGradientElement"],
+    ["SVGGeometryElement", "SVGGraphicsElement"],
+    ["SVGDefsElement", "SVGGraphicsElement"],
+    ["SVGUseElement", "SVGGraphicsElement"],
+    ["SVGPol[AygonElement", "SVGGeometryElement"],
+    ["SVGRectElement", "SVGGeometryElement"],
+    ["SVGEllipseElement", "SVGGeometryElement"],
+    ["SVGGElement", "SVGGraphicsElement"],
+    ["SVGSVGElement", "SVGGraphicsElement"],
+    ["SVGPathElement", "SVGGeometryElement"],
 ])
-    eval(`class ${e[0]} extends ${e[1]} { constructor() { super(); } }; swdc(${e[0]});`);
+    swde(e[0], class extends window[e[1]] { constructor() { super(); } });
 
 // these have node type 1, just like HTMLElement.
 SVGElement.prototype.nodeType = 1;
 
-// The html element, which spanws the DOM nodes that you know and love.
+// The html element, which spans the DOM nodes that you know and love.
 class HTMLElement extends Element
 {
     constructor() { super(); }
