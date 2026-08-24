@@ -1693,7 +1693,7 @@ for (const e of [
     ["SVGGeometryElement", "SVGGraphicsElement"],
     ["SVGDefsElement", "SVGGraphicsElement"],
     ["SVGUseElement", "SVGGraphicsElement"],
-    ["SVGPol[AygonElement", "SVGGeometryElement"],
+    ["SVGPolygonElement", "SVGGeometryElement"],
     ["SVGRectElement", "SVGGeometryElement"],
     ["SVGEllipseElement", "SVGGeometryElement"],
     ["SVGGElement", "SVGGraphicsElement"],
