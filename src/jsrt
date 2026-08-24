@@ -149,8 +149,6 @@ p_json.then(showcamp);
 <button onclick="awaitTest()">Await test</button>
 <button onclick="awaitFetchTest()">Await fetch test</button>
 <br>
-<label for="watch-things">Watch for changes</label>
-<input type="checkbox" id="watch-things" name="observe" />
 Interval
 <input type="checkbox" id="realtime" name="intervaltest" />
 <br>
@@ -158,30 +156,6 @@ Interval
  <span id=showcount><i>0</i></span> seconds
 </form>
 <script>
-// This'll be noisy when either box is checked
-const config = { attributes: true, childList: true, subtree: true , characterData: true};
-const callback = (mutationList, observer) => {
-      for (const mutation of mutationList) {
-        if (mutation.type === "childList") {
-            alert("A child node has been added or removed");
-        } else if (mutation.type === "attributes") {
-            alert(`The ${mutation.attributeName} attribute was modified.`);
-        } else if (mutation.type === "characterData") {
-            alert(`Character data was modified.`);
-        }
-    }
-};
-
-const observer = new MutationObserver(callback);
-function observerToggle() {
-    if (this.checked)
-        observer.observe(document.body, config);
-    else
-        observer.disconnect();
-}
-
-document.getElementById("watch-things").addEventListener("click", observerToggle);
-
 interval_count = 0;
 function increment() {
     ++interval_count;
