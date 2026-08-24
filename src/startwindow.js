@@ -65,6 +65,7 @@ this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
     this.mw$.dispatchEvent = () => undefined;
     this.mw$.addEventListener = () => undefined;
     this.mw$.removeEventListener = () => undefined;
+    this.mw$.xml = {};
     this.mw$.getElementsByTagName = () => [];
     this.mw$.getComputedStyle = () => {};
     this.mw$.structuredClone = () => {};
@@ -4024,6 +4025,202 @@ function dhp(obj, ev)
     for(let obj of standard_hashchange_classes) dhp(obj, "onhashchange");
    dhp("Window", "onhashchange");
 })();
+
+/* A bit hacky but this helper avoids setting something on the prototype of
+our event class. Note that it only works where the type of the options are the same as the defaults which seems to be the common case for events.
+*/
+function setEventOptions(event, options, defaults)
+{
+    if (!options)
+        for (const [k,v] of Object.entries(defaults))
+            odp(event, k, {value: v, enumerable: true, writable: true})
+    else
+        for (const [k,v] of Object.entries(defaults))
+            odp(event, k, {
+                value: (typeof options[k] === typeof v) ? options[k] : v,
+                enumerable: true,
+                writable: true
+            })
+}
+
+class Event
+{
+    constructor(etype, options)
+    {
+        odp(this, "timeStamp", {value: new Date().getTime(), enumerable: true});
+        if (typeof etype === "string")
+            odp(this, "type", {value: etype, enumerable: true});
+
+        setEventOptions(this, options, {bubbles: true, cancelable: true});
+        // in the edbrowse world, we have to say yes to capture,
+        // just as we have to say yes to bubble.
+        odp(this, "eb$captures", {value: true, writable: true});
+        odp(this, "defaultPrevented", {
+            value: false, writable: true, enumerable: true
+        });
+        this.currentTarget = null;
+        this.target = null;
+        this.eventPhase = 0;
+        odp(this, "eb$dispatched", {value: false, writable: true});
+        odp(this, "stop$propagating", {value: false, writable: true});
+        odp(this, "stop$propagating$immediate", {value: false, writable: true});
+    }
+
+    preventDefault() { if(this.cancelable) this.defaultPrevented = true; }
+    stopPropagation() { this.stop$propagating = true; }
+    stopImmediatePropagation() { this.stop$propagating$immediate = true; }
+
+// deprecated but a lot of people still use it.
+    initEvent(t, bubbles, cancel)
+    {
+// per spec do nothing if we're already dispatched
+        if (this.eb$dispatched) return;
+        this.type = t;
+        this.bubbles = bubbles;
+        this.cancelable = cancel;
+    }
+
+    initUIEvent(t, bubbles, cancel, unused, detail)
+    {
+        if (this.eb$dispatched) return;
+        this.type = t;
+        this.bubbles = bubbles;
+        this.cancelable = cancel;
+        this.detail = detail;
+    }
+
+    initCustomEvent(t, bubbles, cancel, detail)
+    {
+        if (this.eb$dispatched) return;
+        this.type = t, this.bubbles = bubbles;
+        this.cancelable = cancel;
+        this.detail = detail;
+    }
+}
+swdc(Event);
+
+// various flavors of events; I'm sure there are more than I have here.
+class HashChangeEvent extends Event
+{
+    constructor()
+    {
+        super("hashchange", {bubbles: false});
+        this.eb$captures = false;
+    }
+}
+swdc(HashChangeEvent);
+
+class MouseEvent extends Event
+{
+    constructor(etype, options)
+    {
+        super(etype, options);
+        setEventOptions(this, options, {
+            altKey: false,
+            ctrlKey: false,
+            shiftKey: false,
+            metaKey: false
+        });
+    }
+
+    initMouseEvent(...args) { this.initEvent(...args); }
+}
+swdc(MouseEvent);
+
+class KeyboardEvent extends Event
+{
+    constructor(t,o) { super(t,o); }
+}
+swdc(KeyboardEvent);
+
+class PromiseRejectionEvent extends Event
+{
+    constructor(t,o) { super(t,o); }
+}
+swdc(PromiseRejectionEvent);
+
+class CustomEvent extends Event
+{
+    constructor(etype, options)
+    {
+        super(etype, options);
+// no idea if the name option is actually valid but based on some js in the wild
+        setEventOptions(this, options, {detail: null, name: ""});
+        alert3(`customEvent ${etype} opt ${typeof options}`);
+    }
+}
+swdc(CustomEvent);
+
+class XMLHttpRequestEventTarget extends EventTarget
+{
+    constructor() { super(); }
+}
+swdc(XMLHttpRequestEventTarget);
+
+class XMLHttpRequestUpload extends XMLHttpRequestEventTarget
+{
+    constructor() { super(); }
+}
+swdc(XMLHttpRequestUpload);
+
+// Originally implemented by Yehuda Katz
+// And since then, from envjs, by Thatcher et al
+class XMLHttpRequest extends EventTarget
+{
+    constructor()
+    {
+        super();
+        this.headers = {};
+        this.responseHeaders = {};
+        this.upload = new XMLHttpRequestUpload;
+    }
+
+    static {
+        const tp = this.prototype;
+        // defined by the standard: http://www.w3.org/TR/XMLHttpRequest/#xmlhttprequest
+        // but not provided by Firefox.  Safari and others do define it.
+        tp.UNSENT = 0;
+        tp.OPEN = 1;
+        tp.HEADERS_RECEIVED = 2;
+        tp.LOADING = 3;
+        tp.DONE = 4;
+
+        tp.aborted = false;//non-standard
+        tp.withCredentials = true;
+        tp.readyState$2 = 0;
+        tp.async = false;
+        tp.responseText = "";
+        tp.response = "";
+        tp.responseXML = null;
+        tp.status = 0;
+        tp.statusText = "";
+        tp.eb$mt = null;
+
+    }
+
+    toString (){ return "[object XMLHttpRequest]"; }
+    // make sure readyState is readonly
+    get readyState() {     return this.readyState$2; }
+    overrideMimeType(t) { if(typeof t == "string") this.eb$mt = t; }
+}
+swdc(XMLHttpRequest);
+/* I'm going to set some instance methods, which are currently
+in the shared window. I could have set them in the section above.
+        tp.open = mw$.xml.open;
+But then swdc comes along and tries to wrap that function in a string
+    function open() { [native code] }
+but it can't because the shared window is frozen and that stuff is readonly
+and edbrowse blows up! So I have to put them here, after swdc is called.
+We may move all those functions to this page some day, maybe inside this class,
+as they are called nowhere else. Then you can delete all this stuff. */
+this.xmlp = XMLHttpRequest.prototype;
+    xmlp.open = mw$.xml.open;
+    xmlp.setRequestHeader = mw$.xml.srh;
+    xmlp.getResponseHeader = mw$.xml.grh;
+    xmlp.getAllResponseHeaders = mw$.xml.garh;
+    xmlp.send = mw$.xml.send;
+    xmlp.parseResponse = mw$.xml.parse;
+delete this.xmlp;
 
 class Attr
 {
