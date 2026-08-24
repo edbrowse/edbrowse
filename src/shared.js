@@ -3479,33 +3479,6 @@ swp("NodeList", new Proxy(Eb$NodeListHelper, {
     }
 }))
 
-swde("CSSRule", class extends w.Object {
-    constructor() {super(); this.cssText=""; }
-    toString() { return this.cssText; }
-})
-
-// This isn't really right, but it's easy
-swde("CSSRuleList", class extends w.Array {
-    constructor() { super(); }
-})
-swde("CSSStyleSheet", class extends w.Object {
-    constructor() { super(); this.cssRules = new w.CSSRuleList; }
-})
-let cssp = w.CSSStyleSheet.prototype;
-cssp.insertRule = function(r, idx) {
-    let list = this.cssRules;
-    (typeof idx == "number" && idx >= 0 && idx <= list.length || (idx = 0));
-    if (idx == list.length) list.push(r);
-    else list.splice(idx, 0, r);
-}
-cssp.addRule = function(sel, r, idx) {
-    let list = this.cssRules;
-    (typeof idx == "number" && idx >= 0 && idx <= list.length || (idx = list.length));
-    r = sel + "{" + r + "}";
-    if (idx == list.length) list.push(r);
-    else list.splice(idx, 0, r);
-}
-
 swde("z$Datalist", class extends w.HTMLElement {
     constructor() { super(); }
 }, false)
@@ -3517,7 +3490,6 @@ set:function(v) { this.setAttribute("multiple", v);}});
 // html classes that shouldn't have html underneath them.
 // Overwrite the innerHTML setter so it doesn't do anything.
 for(let c of [
-"CSSStyleDeclaration",
 "z$Datalist",
 ]) {
     odp(w[c].prototype, "innerHTML", {
