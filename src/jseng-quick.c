@@ -2,19 +2,8 @@
 This is the back-end process for javascript.
 We receive calls from edbrowse,
 getting and setting properties for various DOM objects.
-This is the quick js-ng version.
-If you revert back to quickjs, which was the original project,
-you will need to change the #include from quickjs.h to quickjs-libc.h,
-and include the context with every JS_IsArray() call.
-The ng fork determined, correctly, that the context is not used,
-and dropped it as a parameter.
-These changes are reflected in the symbol Q_NG, which should be 1 or 0.
-Thus it can be set by gcc -D to overwrite the default of 1.
+This is the quickjs-ng version.
 *********************************************************************/
-
-#ifndef Q_NG
-#define Q_NG 1
-#endif
 
 #include "eb.h"
 
@@ -22,13 +11,7 @@ Thus it can be set by gcc -D to overwrite the default of 1.
 #include <stddef.h>
 #include <sys/utsname.h>
 
-#if Q_NG
 #include "quickjs.h"
-#define wrap_IsArray(c,a) JS_IsArray(a)
-#else
-#include "quickjs-libc.h"
-#define wrap_IsArray(c,a) JS_IsArray(c,a)
-#endif
 
 static JSRuntime *jsrt;
 
@@ -228,7 +211,7 @@ static enum ej_proptype top_proptype(JSContext *cx, JSValueConst v)
 	int n;
 	if(JS_IsNull(v))
 		return EJ_PROP_NULL;
-	if(wrap_IsArray(cx, v))
+	if(JS_IsArray(v))
 		return EJ_PROP_ARRAY;
 	if(JS_IsFunction(cx, v))
 		return EJ_PROP_FUNCTION;
@@ -349,7 +332,7 @@ static JSValue get_property_object(JSContext *cx, JSValueConst parent, const cha
 // return -1 for error
 static int get_arraylength(JSContext *cx, JSValueConst a)
 {
-	if(!wrap_IsArray(cx, a))
+	if(!JS_IsArray(a))
 		return -1;
 	return get_property_number(cx, a, "length");
 }
@@ -1379,10 +1362,9 @@ static void processError(JSContext * cx)
 			if(p > stack && p[-1] == ')') --p;
 			while(p > stack && isdigitByte(p[-1])) --p;
 			if(p > stack && p[-1] == ':') --p;
-#if Q_NG
 			while(p > stack && isdigitByte(p[-1])) --p;
 			if(p > stack && p[-1] == ':') --p;
-#endif
+
 			if(*p == ':' && isdigitByte(p[1]))
 				lineno = atoi(p+1);
 			if(lineno < 0) lineno = 0;
@@ -1585,56 +1567,6 @@ static JSValue nat_array(JSContext * cx, JSValueConst this, int argc, JSValueCon
         (void) argv;
 	return JS_NewArray(cx);
 }
-
-#if ! Q_NG
-// base64 encode, already provided by quickjs-ng
-static JSValue nat_btoa(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
-{
-	char *t; // result
-	char *s = emptyString;
-	size_t len = 0;
-	JSValue v;
-	if(argc >= 1) {
-		const char *s0 = JS_ToCStringLen(cx, &len, argv[0]);
-		s = allocMem(len + 1);
-		memcpy(s, s0, len);
-		s[len] = 0;
-		JS_FreeCString(cx, s0);
-	}
-	t = base64Encode(s, len, false);
-	nzFree(s);
-	v = JS_NewAtomString(cx, t);
-	nzFree(t);
-        (void) this;
-	return v;
-}
-
-// base64 decode
-static JSValue nat_atob(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
-{
-	char *t1, *t2, *u;
-	const char *s = emptyString;
-	int len = 0;
-	JSValue v;
-	if(argc >= 1)
-		s = JS_ToCString(cx, argv[0]);
-	t1 = cloneString(s);
-	if(argc >= 1)
-		JS_FreeCString(cx, s);
-	t2 = t1 + strlen(t1);
-	if(t2 == t1) goto empty;
-	base64Decode(t1, &t2);
-// ignore errors for now.
-	u = iso12utf(t1, t2, &len);
-	nzFree(t1);
-	t1 = u;
-empty:
-	v = JS_NewStringLen(cx, t1, len);
-	nzFree(t1);
-        (void) this;
-	return v;
-}
-#endif
 
 static JSValue nat_makeBoundary(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
@@ -3253,27 +3185,6 @@ cleaning up when we really want to run all the finalizers */
         for(i = 0; i < e->argc; i++)
             JS_FreeValue(ctx, e->argv[i]);
         js_free(ctx, e);
-
-/*********************************************************************
-On June 28 2025, quickjs made a significant change, commit 458c34d.
-The context for a pending job would be duplicated via JS_DupContext(),
-which doesn't really duplicate, it increments the reference count.
-It is then our responsibility to free it, which doesn't really free it,
-it decrements the reference count. Like rm in Unix
-which doesn't really remove the file unless the link count drops to zero.
-If your quickjs is prior to this commit it will probably blow up,
-for then we would actually free the context, and then go on to try to use it.
-There isn't a version number I can key on, so I'll just do what I have to do
-and hope your quickjs is current.
-Then, in November of 2025, we switched to the quickjs-ng engine,
-and it does not do this odd behavior, so I don't want to free the context.
-But some day quickjs-ng might absorb that change from quickjs,
-and if that happens, then once again we need to free the context.
-*********************************************************************/
-
-#if ! Q_NG
-        JS_FreeContext(ctx);
-#endif
     }
 
     return cnt;
@@ -3347,7 +3258,7 @@ bool my_ExecutePendingMessagePorts(void)
 			g = *(JSValue*)f0->winobj;
 			ra = JS_GetPropertyStr(cx0, g, "mp$registry");
 			grab(ra);
-			if(!wrap_IsArray(cx0, ra)) {
+			if(!JS_IsArray(ra)) {
 // no registry, don't do anything.
 // This should never happen.
 				JS_Release(ra);
@@ -3421,10 +3332,6 @@ static const struct native_descriptor native_list[] = {
     {"eb$setcook",  nat_setcook, 1, 0},
     {"puts",  nat_puts, 1, JS_PROP_ENUMERABLE},
     {"wlf",  nat_wlf, 2, JS_PROP_ENUMERABLE},
-    #if ! Q_NG
-    {"btoa",  nat_btoa, 1, JS_PROP_ENUMERABLE},
-    {"atob",  nat_atob, 1, JS_PROP_ENUMERABLE},
-    #endif
     {"makeBoundary",  nat_makeBoundary, 0, 0},
     {"eb$voidfunction",  nat_void, 0, JS_PROP_ENUMERABLE},
     {"eb$nullfunction",  nat_null, 0, JS_PROP_ENUMERABLE},
@@ -3670,13 +3577,11 @@ static void createJSContext_0(Frame *f)
 		return;
 
 // quickjs-ng supports DOMException but doesn't add it to all contexts
-#if Q_NG
         if (JS_AddIntrinsicDOMException(cx)) {
             f->cx = NULL;
             JS_FreeContext(cx);
             return;
         }
-#endif
 	if(debugLevel == 3)
 		debugPrint(3, "create js context %d", f->gsn);
 	if(debugLevel >= 4)
@@ -4158,9 +4063,5 @@ void set_location_hash(const char *h)
 
 const char *jseng_version(void)
 {
-#if Q_NG
 	return JS_GetVersion();
-#else
-	return "unknown";
-#endif
 }
