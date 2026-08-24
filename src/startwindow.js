@@ -3095,7 +3095,7 @@ class HTMLTableElement extends HTMLElement
     {
         if(this.caption) return this.caption;
         const c = document.createElement("caption");
-        return this.appendChild(c);
+        return this.prepend$child(c);
     }
 
     deleteCaption()

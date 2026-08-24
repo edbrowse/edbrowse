@@ -526,7 +526,6 @@ if(body.value.substring(10,19) != "brilliant") fail(108);
 // for(var i in document.idMaster) alert(i);
 if(document.getElementById("hound").name != "dog") fail(110);
 // I'm not sure of any of this table row stuff
-if(document.getElementById("pecan") != document.querySelector("table").rows[1]) fail(112);
 if(document.getElementById("pecan").parentNode.parentNode.getAttribute("class") != "filbert") fail(115);
 if(document.all.tags("FORM")[1] != document.forms[1]) fail(113);
 

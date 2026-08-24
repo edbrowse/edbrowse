@@ -35,6 +35,7 @@ try {
 show = document.getElementById("show")
 msg = "ok";
 b = document.body;
+
 tab = document.getElementById("tab1");
 // A lot of structure is inferred from html.
 // Such structure has to be built specifically in javascript.
@@ -54,19 +55,24 @@ if(hrow != tab.rows[0]) msg += "|head row not first in table";
 if(hrow.cells.length != 3) msg += "|top row not 3 cells";
 if(hrow.cells[0].nodeName != "TH") msg += "|top row not TH";
 if(hrow.textContent != "firstmiddlelast") msg += "|wrong th text content";
-hrow = body2.firstElementChild; // head row though not properly tHead
+hrow = body2.firstElementChild; // the barney row
 if(hrow != tab.rows[3]) msg += "|barney row not fourth in table";
 if(hrow != body2.rows[0]) msg += "|barney row not first in body2";
 if(hrow.cells.length != 3) msg += "|barney row not 3 cells";
 if(hrow.cells[0].nodeName != "TD") msg += "|barney row not TD";
-if(hrow.textContent != "barneylrubble") msg += "|wrong th text content";
+if(hrow.textContent != "barneylrubble") msg += "|wrong td text content";
 hrow = tab.tFoot.rows[0];
 if(hrow != tab.rows[5]) msg += "|rockhead row not last in table";
 if(hrow.cells[2].firstChild.data != "rockhead") msg += "|couldn't find rockhead";
+
+// muck with the table dynamically. Everything should reindex.
 if(tab.caption.firstChild.data != "modern stone-age") msg += "|bad caption";
 tab.deleteCaption();
 if(tab.caption) msg += "|caption property not gone";
 if(tab.querySelector("caption")) msg += "|caption node not gone";
+tab.createCaption();
+tab.caption.textContent = "winston cigarettes";
+if(tab.caption != tab.firstChild) msg += "|caption not first child";
 // delete a cell, which makes it different from the other rows but that's ok
 hrow.deleteCell(1);
 if(hrow.cells.length != 2) msg += "|wrong cell count after delete";
@@ -79,7 +85,47 @@ ni.textContent = "v";
 hrow.insertBefore(ni, hrow.cells[1]);
 if(hrow.cells.length != 3) msg += "|wrong cell count after node insert";
 if(hrow.cells[2].firstChild.data != "rockhead") msg += "|rockhead didn't move";
-if(hrow.textContent != "joevrockhead") msg += "|rockhead didn't lose middle initial";
+if(hrow.textContent != "joevrockhead") msg += "|rockhead didn't gain middle initial";
+
+// delete row by nodes, add row by insertRow
+body2.firstElementChild.remove();
+if(tab.rows.length != 5) msg += "|total row count should be 5";
+if(body2.rows.length != 1) msg += `|body2 length ${body2.rows.length}`;
+if(body2.rows[0] != tab.rows[3]) msg += "|betty not fourth overall";
+if(body2.rows[0].cells[0].textContent != "betty") msg += "|betty expected";
+// before we add back in, let's review the indexes
+if(body1.rows[0].rowIndex != 0 || body1.rows[0].sectionRowIndex != 0) msg += "|bad row index on 0";
+if(body1.rows[1].rowIndex != 1 || body1.rows[1].sectionRowIndex != 1) msg += "|bad row index on 1";
+if(body1.rows[2].rowIndex != 2 || body1.rows[2].sectionRowIndex != 2) msg += "|bad row index on 2";
+if(body2.rows[0].rowIndex != 3 || body2.rows[0].sectionRowIndex != 0) msg += "|bad row index on 3";
+if(tab.tFoot.rows[0].rowIndex != 4 || tab.tFoot.rows[0].sectionRowIndex != 0) msg += "|bad row index on 4";
+
+tab = document.getElementById("tab2");
+// much like table 1 except there is no caption and a specific head section.
+tb = tab.tBodies;
+if(tb.length != 2) msg += `|wrong body count ${tb.length}`;
+if(tab.tHead.rows.length != 1) msg += "|no head row";
+if(tb[0].rows.length != 2 || tb[1].rows.length != 2) msg += "|row count not 2+2";
+if(tab.rows.length != 6) msg += `|2 total row count ${tab.rows.length}`;
+if(tab.tFoot.rows.length != 1) msg += "|2 no rows in footer";
+// not skipping past caption this time - but skipping past thead
+body1 = tab.firstElementChild.nextElementSibling;
+if(body1 != tab.tBodies[0]) msg += "|2 body not first tBodies";
+body2 = tab.tBodies[1];
+hrow = tab.tHead.rows[0]; // proper head row
+if(hrow != tab.rows[0]) msg += "|2 head row not first in table";
+if(hrow.cells.length != 3) msg += "|2 top row not 3 cells";
+if(hrow.cells[0].nodeName != "TH") msg += "|2 top row not TH";
+if(hrow.textContent != "firstmiddlelast") msg += "|2 wrong th text content";
+hrow = body2.firstElementChild; // the barney row
+if(hrow != tab.rows[3]) msg += "|2 barney row not fourth in table";
+if(hrow != body2.rows[0]) msg += "|2 barney row not first in body2";
+if(hrow.cells.length != 3) msg += "|2 barney row not 3 cells";
+if(hrow.cells[0].nodeName != "TD") msg += "|2 barney row not TD";
+if(hrow.textContent != "barneylrubble") msg += "|2 wrong td text content";
+hrow = tab.tFoot.rows[0];
+if(hrow != tab.rows[5]) msg += "|2 rockhead row not last in table";
+if(hrow.cells[2].firstChild.data != "rockhead") msg += "|2 couldn't find rockhead";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
