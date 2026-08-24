@@ -3033,10 +3033,15 @@ class HTMLTableSectionElement extends HTMLElement
         // Put this row in the same section as the next row.
         if(idx == nrows) {
             if(nrows) t.rows[nrows-1].parentNode.appendChild(r);
-            else if(t.tHead) t.tHead.appendChild(r);
             else if(t.tBodies.length) t.tBodies[0].appendChild(r);
-            else if(t.tFoot) t.tFoot.appendChild(r);
-            // No sections, what now? acid test 51 suggests it should not go into the table.
+            else {
+// No sections, what now? Chrome says to create a body.
+            const b = document.createElement("tbody");
+            b.appendChild(r);
+            this.appendChild(b);
+// Even if there was a footer, this body is appended after it,
+// which seems oddly out of order, but that's what chrome does.
+            }
         return r;
         }
         t.rows[idx].parentNode.insertBefore(r, t.rows[idx]);
