@@ -2170,7 +2170,7 @@ all those classes will exist. */
         case "tbody": c = new z$tBody; break;
         case "tr": c = new HTMLTableRowElement; break;
         case "td": c = new HTMLTableCellElement; break;
-        case "caption": c = new z$tCap; break;
+        case "caption": c = new HTMLTableCaptionElement; break;
         case "thead": c = new z$tHead; break;
         case "tfoot": c = new z$tFoot; break;
         case "canvas": c = new HTMLCanvasElement; break;
@@ -3051,11 +3051,12 @@ class z$tFoot extends HTMLTableSectionElement
 }
 swdc(z$tFoot);
 
-class z$tCap extends HTMLElement
+// <caption>
+class HTMLTableCaptionElement extends HTMLElement
 {
-    constructor() { super(); }
+    constructor() { super(); this.rows = []; }
 }
-swdc(z$tCap);
+swdc(HTMLTableCaptionElement);
 
 class HTMLTableElement extends HTMLElement
 {

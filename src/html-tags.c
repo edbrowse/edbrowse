@@ -39,7 +39,7 @@ static const struct tagInfo availableTags[] = {
 	{"br", "a line break", TAGACT_BR, 1, 4},
 	{"button", "a button", TAGACT_INPUT, 0, 1},
 	{"canvas", "a canvas", TAGACT_CANVAS, 0, 1},
-	{"caption", "a caption", TAGACT_NOP, 5, 0},
+	{"caption", "a caption", TAGACT_CAPTION, 5, 0},
 	{"cdata", "xml cdata", TAGACT_CDATA, 0, 2},
 	{"center", "centered text", TAGACT_P, 2, 5},
 	{"cite", "a citation", TAGACT_NOP, 0, 0},
@@ -4913,6 +4913,13 @@ Needless to say that's not good!
 		if ((above = t->controller) && above->jslink) {
 			domLink(t, "tFoot", above, 0);
 			set_property_object_t(above, "tFoot", t);
+		}
+		break;
+
+	case TAGACT_CAPTION:
+		if ((above = t->controller) && above->jslink) {
+			domLink(t, "HTMLTableCaptionElement", above, 0);
+			set_property_object_t(above, "caption", t);
 		}
 		break;
 
