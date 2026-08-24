@@ -3192,6 +3192,33 @@ class HTMLDetailsElement extends HTMLElement
 }
 swdc(HTMLDetailsElement);
 
+// <object>
+class HTMLObjectElement extends HTMLElement
+{
+    constructor() { super(); }
+}
+swdc(HTMLObjectElement);
+
+class ShadowRoot extends HTMLElement
+{
+    constructor() { super(); }
+}
+swdc(ShadowRoot);
+
+class HTMLTimeElement extends HTMLElement
+{
+    constructor() { super(); }
+    get dateTime(){return this.getAttribute("datetime") }
+}
+swdc(HTMLTimeElement);
+
+// <snork>
+class HTMLUnknownElement extends HTMLElement
+{
+    constructor() { super(); }
+}
+swdc(HTMLUnknownElement);
+
 // At this point we have defined the descendents of Node.
 // Here are classes that don't support innerHTML.
 // Overwrite the innerHTML setter so it doesn't do anything.

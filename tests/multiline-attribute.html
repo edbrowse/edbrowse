@@ -10,6 +10,7 @@
 &lt;body&gt;raw source&lt;/body&gt;
 &lt;/html&gt;
 suffix">visible</div>
+<wow></wow>
 <script>
 try {
 show = document.getElementById("show")
@@ -67,7 +68,9 @@ if(b.appendChild.toString() != "function appendChild() { [native code] }")
 msg += `|instance method toString ${b.appendChild}`;
 if(b.append.toString() != "function append() { [native code] }")
 msg += `|instance method toString ${b.append}`;
-// We tested one method from Node one from Element, I guess that's good enough.
+// We tested one method from Node, one from Element, I guess that's good enough.
+wow = b.querySelector("wow");
+if(!wow instanceof HTMLUnknownElement) msg += "|wow not unknown";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

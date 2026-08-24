@@ -3548,14 +3548,6 @@ swde("AudioContext", class extends w.Object {
     }
 })
 
-swde("HTMLObjectElement", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-
-swde("ShadowRoot", class extends w.HTMLElement {
-    constructor() { super(); }
-})
-
 /*********************************************************************
 If foo is an anchor, then foo.href = "some_url"
 builds the url object. Same for frame.src, etc.
@@ -4032,16 +4024,6 @@ cssp.addRule = function(sel, r, idx) {
     if (idx == list.length) list.push(r);
     else list.splice(idx, 0, r);
 }
-
-swde("HTMLTimeElement", class extends w.HTMLElement {
-    constructor() { super(); }
-}, false)
-let timep = w.HTMLTimeElement.prototype;
-odp(timep, "dateTime", {get: function(){return this.getAttribute("datetime")}})
-
-swde("HTMLUnknownElement", class extends w.HTMLElement {
-    constructor() { super(); }
-}, false)
 
 swde("z$Timer", class extends w.EventTarget {
     constructor()
