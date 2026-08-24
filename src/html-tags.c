@@ -3969,13 +3969,25 @@ static bool tagBelow(Tag *t, int action);
 
 static void insert_tbody(void)
 {
-	int i, end = cw->numTags;
+	int i, action, end = cw->numTags;
 	Tag *tbl, *s1, *s2;
 
 	for (i = 0; i < end; ++i) {
 		tbl = tagList[i];
 		if (tbl->action != TAGACT_TABLE) continue;
 		s1 = 0;
+
+// need to skip past caption - because chrome does
+        s2 = tbl->firstchild;
+        if(!s2) continue; // empty table
+        while(s2) {
+            action = s2->action;
+            if(action == TAGACT_TBODY || action == TAGACT_THEAD || action == TAGACT_TFOOT || action == TAGACT_TR) break;
+            if(action == TAGACT_CAPTION) { s1 = s2; break; }
+            s2 = s2->sibling;
+        }
+        // now s1 is 0, the start of the row, or the caption
+
 		do {
 			s2 = (s1 ? s1->sibling : tbl->firstchild);
 			while (s2 && s2->action != TAGACT_TBODY
@@ -4423,6 +4435,7 @@ Are there other situations where we need to supress meta processing?
 	case TAGACT_TBODY:
 	case TAGACT_THEAD:
 	case TAGACT_TFOOT:
+	case TAGACT_CAPTION:
 		if (opentag)
 			t->controller = findOpenTag(t, TAGACT_TABLE);
 		break;

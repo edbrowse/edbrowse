@@ -1,0 +1,86 @@
+<head></head><body>
+<p id=show>start</p>
+
+<table id=tab1>
+<caption>modern stone-age</caption>
+<tr><th>first</th><th>middle</th><th>last</th></tr>
+<tr><td>fred</td><td>t</td><td>flintstone</td></tr>
+<tr><td>wilma</td><td>p</td><td>flintstone</td></tr>
+<tbody>
+<tr><td>barney</td><td>l</td><td>rubble</td></tr>
+<tr><td>betty</td><td>l</td><td>rubble</td></tr>
+</tbody>
+<tfoot>
+<tr><td>joe</td><td>m</td><td>rockhead</td></tr>
+</table>
+
+<table id=tab2>
+<thead>
+<tr><th>first</th><th>middle</th><th>last</th></tr>
+</thead>
+<tr><td>fred</td><td>t</td><td>flintstone</td></tr>
+<tr><td>wilma</td><td>p</td><td>flintstone</td></tr>
+<tbody>
+<tr><td>barney</td><td>l</td><td>rubble</td></tr>
+<tr><td>betty</td><td>l</td><td>rubble</td></tr>
+</tbody>
+<tfoot>
+<tr><td>joe</td><td>m</td><td>rockhead</td></tr>
+</table>
+
+
+<script>
+// tables, rows, cells - a lot of stuff here.
+try {
+show = document.getElementById("show")
+msg = "ok";
+b = document.body;
+tab = document.getElementById("tab1");
+// A lot of structure is inferred from html.
+// Such structure has to be built specifically in javascript.
+// Rows are assumed to belong to a body. Then a new body comes along and that's ok.
+tb = tab.tBodies;
+if(tb.length != 2) msg += `|wrong body count ${tb.length}`;
+if(tab.tHead) msg += "|unexpected head";
+if(tb[0].rows.length != 3 || tb[1].rows.length != 2) msg += "|row count not 3+2";
+if(tab.rows.length != 6) msg += `|total row count ${tab.rows.length}`;
+if(tab.tFoot.rows.length != 1) msg += "|no rows in footer";
+// skip past caption
+body1 = tab.firstElementChild.nextElementSibling;
+if(body1 != tab.tBodies[0]) msg += "|body not first tBodies";
+body2 = tab.tBodies[1];
+hrow = body1.firstElementChild; // head row though not properly tHead
+if(hrow != tab.rows[0]) msg += "|head row not first in table";
+if(hrow.cells.length != 3) msg += "|top row not 3 cells";
+if(hrow.cells[0].nodeName != "TH") msg += "|top row not TH";
+if(hrow.textContent != "firstmiddlelast") msg += "|wrong th text content";
+hrow = body2.firstElementChild; // head row though not properly tHead
+if(hrow != tab.rows[3]) msg += "|barney row not fourth in table";
+if(hrow != body2.rows[0]) msg += "|barney row not first in body2";
+if(hrow.cells.length != 3) msg += "|barney row not 3 cells";
+if(hrow.cells[0].nodeName != "TD") msg += "|barney row not TD";
+if(hrow.textContent != "barneylrubble") msg += "|wrong th text content";
+hrow = tab.tFoot.rows[0];
+if(hrow != tab.rows[5]) msg += "|rockhead row not last in table";
+if(hrow.cells[2].firstChild.data != "rockhead") msg += "|couldn't find rockhead";
+if(tab.caption.firstChild.data != "modern stone-age") msg += "|bad caption";
+tab.deleteCaption();
+if(tab.caption) msg += "|caption property not gone";
+if(tab.querySelector("caption")) msg += "|caption node not gone";
+// delete a cell, which makes it different from the other rows but that's ok
+hrow.deleteCell(1);
+if(hrow.cells.length != 2) msg += "|wrong cell count after delete";
+if(hrow.cells[1].firstChild.data != "rockhead") msg += "|rockhead didn't move";
+// compare with the actual nodes
+if(hrow.textContent != "joerockhead") msg += "|rockhead didn't lose middle initial";
+// add a new cell back int
+ni = document.createElement("td");
+ni.textContent = "v";
+hrow.insertBefore(ni, hrow.cells[1]);
+if(hrow.cells.length != 3) msg += "|wrong cell count after node insert";
+if(hrow.cells[2].firstChild.data != "rockhead") msg += "|rockhead didn't move";
+if(hrow.textContent != "joevrockhead") msg += "|rockhead didn't lose middle initial";
+
+show.innerHTML = msg;
+} catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
+</script>

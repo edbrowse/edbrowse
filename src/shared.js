@@ -3210,7 +3210,7 @@ function cellReindex(r)
 {
     r.cells.length = 0; // crunch and rebuild
     for(let c of r.childNodes)
-        if(c.nodeName == "TD") r.cells.push(c);
+        if(c.nodeName == "TD" || c.nodeName == "TH") r.cells.push(c);
 }
 
 /*********************************************************************
