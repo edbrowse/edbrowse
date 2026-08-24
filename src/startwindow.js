@@ -5212,30 +5212,6 @@ if (!window.DOMException) {
     window.DOMException.prototype.constructor = DOMException
 }
 
-/* quickjs-ng has a native implementation of queueMicrotask but quickjs
-doesn't currently */
-if (!window.queueMicrotask) {
-    alert3("Using fallback for queueMicrotask");
-    swpv("queueMicrotask", function(f) {
-        if (typeof f !== "function") throw new TypeError("not a function");
-/* Per the spec we need to wait until after the caller's executed but before
-timers. This means we need to simulate with promises but the error handling
-isn't quite right as I can't find a way to rethrow outside the promise chain.
-This is simple and closer to the spec than we have been but better is to use the
-implementation provided by quickjs-ng. */
-        Promise.resolve().then(f).catch(
-            (e) => alert3("Error in microtask: " + e)
-        );
-    });
-}
-
-// quickjs-ng now has its own base64 handling
-if (!window.atob) {
-    alert3("Using fallback for atob and btoa");
-// if we're using our code for one we should for the other as well
-    swpc("atob", mw$.atob)
-    swpc("btoa", mw$.btoa)
-}
 // don't need these any more
 ;(function() {
     let names_to_delete = [
