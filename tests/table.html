@@ -135,6 +135,24 @@ if(body2.rows.length != 3) msg += "|expected 3 rows with hoppy";
 if(newrow.rowIndex != 5 || newrow.sectionRowIndex != 2) msg += "|bad hoppy rowIndex";
 if(tab.rows.length != 7) msg += "|expected 7 with hoppy";
 
+// add a row to the table not a section
+r2 = tab.insertRow();
+foot = tab.tFoot;
+if(foot.rows.length != 2) msg += "|foot not length 2";
+if(foot.rows[1] != r2) msg += "|r2 not at the end of foot";
+if(tab.rows.length != 8) msg += "|table length not 8";
+if(r2.rowIndex != 7 || r2.sectionRowIndex != 1) msg += "|bad anne rowIndex";
+r2.appendChild(document.createElement("td"));
+r2.appendChild(document.createElement("td"));
+r2.appendChild(document.createElement("td"));
+r2.cells[0].textContent = "anne";
+r2.cells[1].textContent = "p";
+r2.cells[2].textContent = "margrock";
+if(r2.cells.length != 3) msg += "|anne cells not length 3";
+
+tab1 = tab; // remember it for jdb
+
+// on to the second html table.
 tab = document.getElementById("tab2");
 // much like table 1 except there is no caption and a specific head section.
 tb = tab.tBodies;
@@ -163,6 +181,7 @@ if(hrow.textContent != "barneylrubble") msg += "|2 wrong td text content";
 hrow = tab.tFoot.rows[0];
 if(hrow != tab.rows[5]) msg += "|2 rockhead row not last in table";
 if(hrow.cells[2].firstChild.data != "rockhead") msg += "|2 couldn't find rockhead";
+tab.remove(); // don't need to see it on screen.
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
