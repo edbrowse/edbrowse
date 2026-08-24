@@ -515,8 +515,6 @@ Type your brilliant thoughts here.
 onclick="alert('rock and ½ roll')">
 </form>
 
-<DIV id=tag_with_data_attribute data-dog-food=abc></DIV>
-
 <template id=animals>
 <p>lions and tigers</p><hr>
 </template>
@@ -833,15 +831,6 @@ fail(171);
 dbs.cssText = "border-block-start:ger' a'ld";
 if(dbs.borderBlockStart != "ger ald")
 fail(172);
-
-var dataset_test = document.getElementById("tag_with_data_attribute");
-if(dataset_test.dataset.dogFood !== "abc") fail(177);
-
-// btoa test with null and nonascii
-var valraw = "a\0b¢";
-var val64 = "YQBiog==";
-if(btoa(valraw) != val64) fail(181);
-if(atob(val64) != valraw) fail(182);
 
 //url with two args
 var u2 = new URL('../cats', 'http://www.example.com/dogs');

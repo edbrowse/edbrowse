@@ -53,6 +53,7 @@ if(sample.dataset.html != expected) msg += "| sample html not found in dataset";
 if(sample.textContent != "visible") msg += `|bad content ${sample.textContent}`;
 
 // more dataset stuff
+if( sample.dataset.dogFood  != "chow") msg += "|dogFood didn't camel case";
 if( sample.dataset.fly  != "leash" ||
  sample.getAttribute( "data-fly" ) != "leash") msg += "|wrong fly=leash";
 sample.setAttribute( "data-fly" , "swat");
