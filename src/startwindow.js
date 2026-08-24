@@ -62,6 +62,8 @@ if(!window.mw$) {
 // mw$.share = 0 means I made up that window out of thin air
     this.mw$ = {share:0, URL:{}};
 this.mw$.alert = this.mw$.alert3 = this.mw$.alert4 = print
+    this.mw$.Eb$HTMLCollectionHelper = function() { }
+    this.mw$.Eb$NodeListHelper = function() { }
     this.mw$.dispatchEvent = () => undefined;
     this.mw$.addEventListener = () => undefined;
     this.mw$.removeEventListener = () => undefined;
@@ -4287,6 +4289,49 @@ cause <input> starts out empty.
 }
 swdc(Validity);
 
+/* The other half of the HTMLCollection mechanism as promised. Note that we
+proxy the class here rather than a constructed object so we can proxy the
+constructor as well as everything else. */
+swp("HTMLCollection", new Proxy(mw$.Eb$HTMLCollectionHelper, {
+    construct(target, args, new_target)
+    {
+        // We want to return a proxied version of the created object for our magic getter
+        return new Proxy(Reflect.construct(target, args, new_target), {
+            /* Trap all get calls, if it's a string use namedItem if a number I assume
+            an index so item. Check the instance first in all cases. */
+            get(target, property, receiver)
+            {
+                if (property in target || typeof property == "symbol") return Reflect.get(target, property, receiver);
+
+                let res;
+                /* Apparently numeric looking properties are actually passed
+                as strings so we have to check if the property converts to a
+                number in a way that passes the loose equality test */
+                if (Number(property) == property)
+                    res = target.item(property);
+                else
+                    res = target.namedItem(property);
+
+                return (res === null) ? undefined : res;
+            },
+        })
+    }
+}))
+
+swp("NodeList", new Proxy(mw$.Eb$NodeListHelper, {
+    construct(target, args, new_target)
+    {
+        return new Proxy(Reflect.construct(target, args, new_target), {
+            get(target, property, receiver)
+            {
+                if (property in target || typeof property == "symbol") return Reflect.get(target, property, receiver);
+                let res = target.item(property);
+                return (res === null) ? undefined : res;
+            },
+        })
+    }
+}))
+
 // Not quite right, still missing, at a minimum, whenDefined and upgrade
 class CustomElementRegistry
 {
@@ -4360,33 +4405,6 @@ class CustomElementRegistry
 // We don't have scoped custom element registries yet which is fine as it
 // isn't fully supported elsewhere
 swpv("customElements", new CustomElementRegistry);
-
-/*********************************************************************
-    Originally I developed the shared window for efficiency.
-    There's no point in "compiling" the entire dom every time we bring up a new web page. Other browsers don't do that!
-    That still holds but now there is another consideration: the context that holds startwindow.js never goes away, even if we free it.
-    So the less in startwindow, the better.
-    To this end I will try to move more stuff to the shared window.
-This includes the definition of most of the DOM classes.
-They still have to be "built" at runtime however; it's not a true compile.
-Here's why - using URL as an example.
-There are websites that replace URL.prototype.toString with their own function.
-They want to change the way URLs stringify, or whatever. I can't
-prevent sites from doing that, things might not work properly without it!
-So, if site A does that in the shared window, and site B invokes
-a.href.toString, directly or indirectly, B is calling a function from
-the unrelated website A.
-This could screw things up, or worse, site A could use it to hack into
-site B, hoping site B is your banking site or something important.
-So I can't define URL over there and say URL = mw$.url over here.
-However, the shared window can "build" the URL class over here,
-when asked to do so, and then the user is free to muck with the class
-or its prototype methods or anything else.
-So here is the line that does a lot, including the creation of the document object,
-which is an instance of Document, as it should be.
-*********************************************************************/
-
-mw$.setupClasses(window);
 
 // find the constructor for a custom element. This is part of html parsing.
 // It is either the original browse, innerHTML, or document.write.

@@ -445,13 +445,13 @@ function collectionSymbol(s)
     }
 })();
 
-class Eb$HTMLCollectionHelper extends Eb$CollectionHelper {
+globalThis.Eb$HTMLCollectionHelper = class  extends Eb$CollectionHelper {
     constructor(node, cb) { super(node, cb, true); }
     toString() { return "[object HTMLCollection]"; }
 }
 
 // Some node lists are live, most aren't so ignore changes by default
-class Eb$NodeListHelper extends Eb$CollectionHelper {
+globalThis.Eb$NodeListHelper = class extends Eb$CollectionHelper {
     constructor(node, cb, ignore=true)
     {
         /* If we're ignoring changes we want to hang on to refs as otherwise
@@ -2262,12 +2262,9 @@ return s;
 /*********************************************************************
 There are a lot of css shorthand propertie.
 Example: set margin to 10px and you are really setting
-maringTop = marginRight = marginBottom = marginLeft = 10px.
-You can set them individaully of course, but this is a shorthand.
+marginTop = marginRight = marginBottom = marginLeft = 10px.
+You can set them individually of course, but this is a shorthand.
 There are a lot of these and they don't all work the same way.
-I could put all these into setupClasses, as private style methods, but there's
-a lot of code here, and I feel it would disrupt the flow of that function.
-I'll keep it here, but all insode one object.
 *********************************************************************/
 
 this.cssShort = {
@@ -3399,85 +3396,6 @@ function checkUpward(t)
         if(!selectdone && inclass == "HTMLSelectElement") { selectReindex(t); selectdone = true; }
         t = t.parentNode;
     }
-}
-
-/*********************************************************************
-We can define (build) the various classes for the running window here,
-if we are always careful to use the window parameter w in everything we do,
-in creating objects and arrays, etc.
-This lets us put more software into the shared window.
-*********************************************************************/
-
-function setupClasses(w) {
-const d = w.document; // the document under window
-
-// we really need some shorthand here
-let odp = w.Object.defineProperty;
-// set window property (swp), invisible and unchangeable
-function swp(k, v) { odp(w, k, {value:v})}
-// visible (enumerable), but still protected
-function swpv(k, v) { odp(w, k, {value:v,enumerable:true})}
-// set window property unseen, but changeable
-function swpc(k, v) { odp(w, k, {value:v, writable:true, configurable:true})}
-
-// Establish DOM elements in the window for modern classes
-function swde(cls, exp, changeable=true)
-{
-    odp(w, cls, {value: exp, writable: changeable, configurable: changeable});
-    odp(w[cls], "name", {value: cls});
-    const v = cls.replace(/^z\$/, "");
-    odp(w[cls].prototype, Symbol.toStringTag, {value: v});
-    odp(w[cls].prototype, "dom$class", {value: v});
-    w[cls].toString = () => `function ${cls}() { [native code] }`;
-}
-
-// Establish properties under document, as we did with window.
-// These are not classes and will not have custom prototypes.
-function sdpc(k, v) { odp(d, k, {value:v, writable:true, configurable:true})}
-
-/* The other half of the HTMLCollection mechanism as promised. Note that we
-proxy the class here rather than a constructed object so we can proxy the
-constructor as well as everything else. */
-swp("HTMLCollection", new Proxy(Eb$HTMLCollectionHelper, {
-    construct(target, args, new_target)
-    {
-        // We want to return a proxied version of the created object for our magic getter
-        return new Proxy(Reflect.construct(target, args, new_target), {
-            /* Trap all get calls, if it's a string use namedItem if a number I assume
-            an index so item. Check the instance first in all cases. */
-            get(target, property, receiver)
-            {
-                if (property in target || typeof property == "symbol") return Reflect.get(target, property, receiver);
-
-                let res;
-                /* Apparently numeric looking properties are actually passed
-                as strings so we have to check if the property converts to a
-                number in a way that passes the loose equality test */
-                if (Number(property) == property)
-                    res = target.item(property);
-                else
-                    res = target.namedItem(property);
-
-                return (res === null) ? undefined : res;
-            },
-        })
-    }
-}))
-
-swp("NodeList", new Proxy(Eb$NodeListHelper, {
-    construct(target, args, new_target)
-    {
-        return new Proxy(Reflect.construct(target, args, new_target), {
-            get(target, property, receiver)
-            {
-                if (property in target || typeof property == "symbol") return Reflect.get(target, property, receiver);
-                let res = target.item(property);
-                return (res === null) ? undefined : res;
-            },
-        })
-    }
-}))
-
 }
 
 // placeholder for URL class. This has to be here for the Blob code.
