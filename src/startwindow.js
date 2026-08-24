@@ -3204,12 +3204,25 @@ class ShadowRoot extends HTMLElement
 }
 swdc(ShadowRoot);
 
+// <time>
 class HTMLTimeElement extends HTMLElement
 {
     constructor() { super(); }
     get dateTime(){return this.getAttribute("datetime") }
 }
 swdc(HTMLTimeElement);
+
+// This is for javascript timers. Each timer becomes an instance of this class.
+// This has nothing to do with HTMLTimeElement.
+class z$Timer extends EventTarget
+{
+    constructor()
+    {
+        super();
+        this.nodeName = "TIMER"
+    }
+}
+swdc(z$Timer, false);
 
 class HTMLMediaElement extends HTMLElement
 {

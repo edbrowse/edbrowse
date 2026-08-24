@@ -3902,14 +3902,6 @@ cssp.addRule = function(sel, r, idx) {
     else list.splice(idx, 0, r);
 }
 
-swde("z$Timer", class extends w.EventTarget {
-    constructor()
-    {
-        super();
-        this.nodeName = "TIMER"
-    }
-}, false)
-
 swde("z$Datalist", class extends w.HTMLElement {
     constructor() { super(); }
 }, false)
