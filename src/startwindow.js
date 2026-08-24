@@ -2914,6 +2914,15 @@ class HTMLSelectElement extends HTMLElement
 }
 swdc(HTMLSelectElement);
 
+// similar to a select list but I don't really understand it.
+class z$Datalist extends HTMLElement
+{
+    constructor() { super(); }
+    get multiple() { return this.hasAttribute("multiple"); }
+    set multiple(v) { if(v === false) this.removeAttribute("multiple"); else this.setAttribute("multiple", ""); }
+}
+swdc(z$Datalist);
+
 class HTMLOptGroupElement extends HTMLElement
 {
     constructor() { super(); }

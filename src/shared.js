@@ -3478,26 +3478,6 @@ swp("NodeList", new Proxy(Eb$NodeListHelper, {
     }
 }))
 
-swde("z$Datalist", class extends w.HTMLElement {
-    constructor() { super(); }
-}, false)
-
-odp(w.z$Datalist.prototype, "multiple", {
-get:function(){ return this.hasAttribute("multiple"); },
-set:function(v) { this.setAttribute("multiple", v);}});
-
-// html classes that shouldn't have html underneath them.
-// Overwrite the innerHTML setter so it doesn't do anything.
-for(let c of [
-"z$Datalist",
-]) {
-    odp(w[c].prototype, "innerHTML", {
-        get: function(){ return this.inner$html},
-        set: function(h){this.inner$HTML = h}})
-    odp(w[c].prototype, "inner$HTML", {
-    value:"", writable:true});
-}
-
 }
 
 // placeholder for URL class. This has to be here for the Blob code.
