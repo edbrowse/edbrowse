@@ -104,6 +104,36 @@ newrow.appendChild(document.createElement("td"));
 newrow.appendChild(document.createElement("td"));
 newrow.appendChild(document.createElement("td"));
 if(newrow.cells.length != 3) msg += `|newrow cell count ${newrow.cells.length}`;
+newrow.cells[0].textContent = "bambam";
+newrow.cells[1].textContent = "y";
+newrow.cells[2].textContent = "rubble";
+if(newrow.textContent != "bambamyrubble") msg += "|bambam expected";
+// we could insert this into section or into table.
+// but insertRow is going to make a new row for us
+r2 = body2.insertRow(1);
+if(body2.rows.length != 2) msg += "|body2 row length not 2 after insert";
+if(body2.rows[1] != r2) msg += "|body2 r2 mismatch";
+while(newrow.firstChild) r2.appendChild(newrow.firstChild);
+if(r2.textContent != "bambamyrubble") msg += "|bambam not in r2";
+if(r2.cells.length != 3) msg += "|bad cell count on r2";
+if(tab.rows.length != 6) msg += "|row count not back up to 6";
+if(body1.rows[0].rowIndex != 0 || body1.rows[0].sectionRowIndex != 0) msg += "|bad post row index on 0";
+if(body1.rows[1].rowIndex != 1 || body1.rows[1].sectionRowIndex != 1) msg += "|bad post row index on 1";
+if(body1.rows[2].rowIndex != 2 || body1.rows[2].sectionRowIndex != 2) msg += "|bad post row index on 2";
+if(body2.rows[0].rowIndex != 3 || body2.rows[0].sectionRowIndex != 0) msg += "|bad post row index on 3";
+if(body2.rows[1].rowIndex != 4 || body2.rows[1].sectionRowIndex != 1) msg += "|bad post row index on 4";
+if(tab.tFoot.rows[0].rowIndex != 5 || tab.tFoot.rows[0].sectionRowIndex != 0) msg += "|bad post row index on 5";
+// now add a row by nodes
+newrow.appendChild(document.createElement("td"));
+newrow.appendChild(document.createElement("td"));
+newrow.appendChild(document.createElement("td"));
+newrow.cells[0].textContent = "hoppy";
+newrow.cells[1].textContent = "g";
+newrow.cells[2].textContent = "rubble";
+body2.append(newrow);
+if(body2.rows.length != 3) msg += "|expected 3 rows with hoppy";
+if(newrow.rowIndex != 5 || newrow.sectionRowIndex != 2) msg += "|bad hoppy rowIndex";
+if(tab.rows.length != 7) msg += "|expected 7 with hoppy";
 
 tab = document.getElementById("tab2");
 // much like table 1 except there is no caption and a specific head section.
@@ -117,6 +147,8 @@ if(tab.tFoot.rows.length != 1) msg += "|2 no rows in footer";
 body1 = tab.firstElementChild.nextElementSibling;
 if(body1 != tab.tBodies[0]) msg += "|2 body not first tBodies";
 body2 = tab.tBodies[1];
+h1 = tab.tHead;
+if(tab.createTHead() != h1) msg += "|didn't get same head back";
 hrow = tab.tHead.rows[0]; // proper head row
 if(hrow != tab.rows[0]) msg += "|2 head row not first in table";
 if(hrow.cells.length != 3) msg += "|2 top row not 3 cells";
