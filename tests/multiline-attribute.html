@@ -9,7 +9,7 @@
 &lt;html&gt;
 &lt;body&gt;raw source&lt;/body&gt;
 &lt;/html&gt;
-suffix">visible</div>
+suffix" data-dog-food=chow data-fly=leash>visible</div>
 <wow></wow>
 <script>
 try {
@@ -49,7 +49,18 @@ if(cmt.data !== "northeast") msg += "|cdata not northeast";
 let expected = "prefix >\n<html>\n<body>raw source</body>\n</html>\nsuffix"
 let sample = document.getElementById("sample")
 if(sample.getAttribute("data-html") != expected) msg += `|bad data ${sample.getAttribute("data-html")}`;
+if(sample.dataset.html != expected) msg += "| sample html not found in dataset";
 if(sample.textContent != "visible") msg += `|bad content ${sample.textContent}`;
+
+// more dataset stuff
+if( sample.dataset.fly  != "leash" ||
+ sample.getAttribute( "data-fly" ) != "leash") msg += "|wrong fly=leash";
+sample.setAttribute( "data-fly" , "swat");
+if( sample.dataset.fly  != "swat" ||
+ sample.getAttribute( "data-fly" ) != "swat") msg += "|wrong fly=swat";
+sample.removeAttribute( "data-fly" );
+if( sample.dataset.fly  !== undefined ||
+ sample.getAttribute( "data-fly" ) !== null) msg += "|wrong fly=null";
 
 // Test something that was surprisingly tricky to do within the framework
 // of quickjs. window is the global object and is an instance of Window,
