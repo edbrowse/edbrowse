@@ -256,7 +256,6 @@ for(let f of ["UnsupportedError",
 "showframes", "snapshot", "aloop",
 "set_location_hash", "NodeFilter", "tableReindex", "formReindex", "selectReindex",
 "markAllCollections", "markUpwardCollections",
-"standard_events", "standard_event_classes", "standard_hashchange_classes",
 "dataCamel",
 "mutFixup", "makeSheets", "gebtn",
 "runScriptWhenAttached", "simpleHtmlEscape", "appendFragment",
@@ -757,6 +756,13 @@ getRootNode(o)
 swdc(Node);
 
 this.eb$push$attributes = false;
+this.        standard_events = ["onload", "onunload", "onclick", "onchange", "oninput",
+            "onsubmit", "onreset", "onmessage"];
+// there are lots more events, onmouseout etc, that we don't responnd to,
+// should we watch for them anyways?
+this.standard_event_classes = ["Element", "Document"];
+this.standard_hashchange_classes = ["HTMLBodyElement", "SVGElement"];
+
 
 class Element extends Node
 {
@@ -3591,7 +3597,141 @@ class URL
 swdc(URL);
 
 // z$URL is a synonym, for our own purposes.
-swp("z$URL", URL)
+swp("z$URL", URL);
+
+/*********************************************************************
+If foo is an anchor, then foo.href = "some_url"
+builds the url object. Same for frame.src, etc.
+I believe that a new URL should be resolved against the base, that is,
+/foobar becomes www.xyz.com/foobar, though I'm not sure.
+We ought not do this in the generic URL class, but for these assignments, I think yes.
+The URL class already resolves when updating a URL,
+so this is just for a new url A.href = "/foobar".
+There may be shortcuts associated with these url members.
+Some websites refer to A.protocol, which has not explicitly been set.
+I assume they mean A.href.protocol, the protocol of the url object.
+That suggests a loop over classes, then a loop over url components.
+*********************************************************************/
+
+(function() {
+    const cnlist = ["HTMLAnchorElement.href", "HTMLAreaElement.href",
+"HTMLFrameElement.src", "HTMLQuoteElement.cite"];
+    for (let k of cnlist) {
+        const s = k.split('.');
+        const cn = s[0]; // class name
+        const u = s[1]; // url name
+        odp(window[cn].prototype, u, {
+            get: function() { return this.href$2 ? this.href$2.href$val : ""; },
+            set: function(h)
+            {
+                if (h === null || h === undefined) h = "";
+                if (h instanceof URL || h.dom$class == "URL") h = h.toString();
+                if (typeof h != "string") {
+                    alert3(`href set ${typeof h}`);
+                    return;
+                }
+                if (!h) return;
+                let last_href = (this.href$2 ? this.href$2.toString() : null);
+                this.setAttribute(u, h);
+                // special code for setting frame.src, redirect to a new page.
+                h = this.href$2.href$val;
+                if (this.is$frame && this.eb$expf && last_href != h) {
+                    /*
+                        There is a nasty corner case here, dont know if it ever
+                        happens. What if we are replacing the running frame?
+                        window.parent.src = new_url; See if we can get around it
+                        this way.
+                    */
+                    if (window === this.contentWindow) {
+                        location = h;
+                        return;
+                    }
+                    delete this.eb$expf;
+                    eb$unframe(this); // fix links on the edbrowse side
+                    // I can force the opening of this new frame, but should I?
+                    this.contentDocument;
+                    eb$unframe2(this);
+                }
+            }
+        });
+        if(u == "cite") continue;
+        const piecelist = ["protocol", "pathname", "host", "search", "hostname", "port", "hash"];
+        for (let piece of piecelist)
+            odp(window[cn].prototype, piece, {
+                get: function() { return this.href$2 ? this.href$2[piece] : null; },
+                set: function(x) { if (this.href$2) this.href$2[piece] = x; }
+            });
+    }
+})();
+
+/*********************************************************************
+Ok - a.href has all the peices, a.protocol etc.
+I don't know if script.src does or not.
+I don't think so, so what follows is just like the above but without the pieces.
+If one of these classes is suppose to have pieces, then move it to the above,
+and also put it in spilldownResolveURL instead of spilldownResolve.
+*********************************************************************/
+
+(function() {
+    const cnlist = ["HTMLFormElement.action", "HTMLImageElement.src", "HTMLScriptElement.src",
+    "HTMLBaseElement.href", "HTMLLinkElement.href", "HTMLMediaElement.src",
+    "HTMLObjectElement.data"];
+    for(let k of cnlist) {
+        const s = k.split('.');
+        const cn = s[0]; // class name
+        const u = s[1]; // url name
+        odp(window[cn].prototype, u, {
+            get: function() { return this.href$2 ? this.href$2 : ""},
+            set: function(h) {
+                if (h instanceof URL || h.dom$class == "URL") h = h.toString();
+                if (h === null || h === undefined) h = "";
+                if (typeof h != "string") {
+                    alert3(`hrefset ${typeof h}`);
+                    return;
+                }
+                if (!h) return;
+                this.setAttribute(u, h);
+            }
+        });
+    }
+})();
+
+// We can set input.onclick = 'some code to execute";, then invoke
+// input.onclick() directly, which means it has to transmute to a function.
+// That requires a setter to compile the string, and a getter to return the function.
+
+(function() {
+// getter and setter - so that an unassigned handler returns null
+function dhp(obj, ev)
+{
+    const evprop = `${ev}$2`
+    odp(window[obj].prototype, ev, {
+        get: function() { return this[evprop] ? this[evprop] : null; },
+        set: function(f)
+        {
+            if (db$flags(1))
+                alert3(`${(this[evprop] ? "clobber": "create")} ${(this.nodeName ? this.nodeName : this.dom$class)}.${ev}`);
+// it should only be a function in the context of a direct assignment
+            if(typeof f === "function") {
+                odp(this, evprop, {
+                    value: f, writable: true, configurable: true});
+            }
+        }
+    });
+}
+
+    for(let obj of standard_event_classes) {
+        for(let evname of standard_events) dhp(obj, evname);
+    }
+
+// window has no attribute system - so include it here
+    for(let evname of standard_events) dhp("Window", evname);
+
+// onhashchange from certain places
+// Also HTMLFrameSetElement which we have not yet implemented.
+    for(let obj of standard_hashchange_classes) dhp(obj, "onhashchange");
+   dhp("Window", "onhashchange");
+})();
 
 class Attr
 {
