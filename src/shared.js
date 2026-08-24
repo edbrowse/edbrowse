@@ -3389,6 +3389,8 @@ function checkUpward(t)
         if(inclass == "HTMLTemplateElement") break;
         // tables do nest, often, so stop at the first table
         if(!tabledone && inclass == "HTMLTableElement") { tableReindex(t); tabledone = true; }
+        // isolated row, not in a table, still maintains cell count
+        if(!tabledone && inclass == "HTMLTableRowElement") cellReindex(t);
         // forms don't nest, but let's retain the design anyways.
         if(!formdone && inclass == "HTMLFormElement") { formReindex(t); formdone = true; }
         // fieldset can be inside a form, so don't set formdone just because we saw fieldset.

@@ -99,6 +99,11 @@ if(body1.rows[1].rowIndex != 1 || body1.rows[1].sectionRowIndex != 1) msg += "|b
 if(body1.rows[2].rowIndex != 2 || body1.rows[2].sectionRowIndex != 2) msg += "|bad row index on 2";
 if(body2.rows[0].rowIndex != 3 || body2.rows[0].sectionRowIndex != 0) msg += "|bad row index on 3";
 if(tab.tFoot.rows[0].rowIndex != 4 || tab.tFoot.rows[0].sectionRowIndex != 0) msg += "|bad row index on 4";
+newrow = document.createElement("tr");
+newrow.appendChild(document.createElement("td"));
+newrow.appendChild(document.createElement("td"));
+newrow.appendChild(document.createElement("td"));
+if(newrow.cells.length != 3) msg += `|newrow cell count ${newrow.cells.length}`;
 
 tab = document.getElementById("tab2");
 // much like table 1 except there is no caption and a specific head section.
