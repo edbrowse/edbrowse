@@ -3495,28 +3495,6 @@ swp("NodeList", new Proxy(Eb$NodeListHelper, {
     }
 }))
 
-// Since we are createing all these classes here, does it make sense to
-// include the methods to properly instantiate those classes?  Perhaps.
-let docp = w.Document.prototype;
-docp.createTextNode = function(t) {
-if(t == undefined) t = "";
-const c = new w.Text(t);
-domLinkage('c', c, "text");
-return c;
-}
-
-docp.createComment = function(t) {
-if(t == undefined) t = "";
-const c = new w.Comment(t);
-domLinkage('c', c, "comment");
-return c;
-}
-
-docp.createDocumentFragment = function() {
-const c = this.createElement("fragment");
-return c;
-}
-
 // media and audio
 swde("HTMLMediaElement", class extends w.HTMLElement {
     constructor() { super(); }
@@ -4081,13 +4059,6 @@ odp(w.z$Datalist.prototype, "multiple", {
 get:function(){ return this.hasAttribute("multiple"); },
 set:function(v) { this.setAttribute("multiple", v);}});
 
-docp.createCDATASection = function(t) {
-if(t == undefined) t = "";
-const c = new w.CDATASection(t);
-domLinkage('c', c, "cdata");
-return c;
-}
-
 // html classes that shouldn't have html underneath them.
 // Overwrite the innerHTML setter so it doesn't do anything.
 for(let c of [
@@ -4101,179 +4072,6 @@ for(let c of [
         set: function(h){this.inner$HTML = h}})
     odp(w[c].prototype, "inner$HTML", {
     value:"", writable:true});
-}
-
-// We've defined the HTMLElement classes, now let's create instances of them.
-docp.createElement = function(s) {
-let c;
-if(!s) { // a null or missing argument
-alert3("bad createElement( type" + typeof s + ')');
-return null;
-}
-let t = s.toLowerCase();
-
-// check for custom elements first
-let x = w.customElements.get(s);
-if(x) { // here we go
-    c = new x;
-    if(c.eb$appendChild0 !== w.Node.prototype.eb$appendChild0) {
-        alert3(`${s} is not an extension of Node, and may not work properly`);
-            // add the methods we need to make this behave like a node
-        // these are functions, not getters, like firstChild
-        for(let f of ["appendChild1", "appendChild2", "appendChild3",
-        "appendChild", "removeChild", "insertBefore", "prepend$child"])
-            c[f] = w.Node.prototype[f];
-        for(let f of ["getAttribute", "hasAttribute", "setAttribute",
-        "removeAttribute"])
-            c[f] = w.Element.prototype[f];
-        // It's not a Node, so we don't have childNodes yet.
-        odp(this, "childNodes", {value: new w.Array})
-        odp(this, "parentNode", {value: null, writable: true, configurable:true})
-    }
-    odp(c, "nodeName", {value:s,writable:true,configurable:true});
-    odp(c, "tagName", {value:s,writable:true,configurable:true});
-    odp(c, "connectedCallback$pending", {value:!!c.connectedCallback, writable:true})
-    domLinkage('c', c, t);
-    return c;
-}
-
-if(!t.match(/^[a-z:\d_-]+$/) || t.match(/^[\d_-]/)) {
-alert3("bad createElement(" + t + ')');
-// acid3 says we should throw an exception here.
-// But we get these kinds of strings from www.oranges.com all the time.
-// I'll just return null and tweak acid3 accordingly.
-// throw error code 5
-return null;
-}
-
-switch(t) {
-case "shadowroot": c = new w.ShadowRoot; break;
-case "body": c = new w.HTMLBodyElement; break;
-// is it ok that head isn't here?
-case "object": c = new w.HTMLObjectElement; break;
-case "a": c = new w.HTMLAnchorElement; break;
-case "area": c = new w.HTMLAreaElement; break;
-case "image": t = "img";
-case "img": c = new w.HTMLImageElement; break;
-case "link": c = new w.HTMLLinkElement; break;
-case "meta": c = new w.HTMLMetaElement; break;
-case "base": c = new w.HTMLBaseElement; break;
-case "cssstyledeclaration":
-c = new w.CSSStyleDeclaration; c.element = null; break;
-case "script": c = new w.HTMLScriptElement; break;
-case "template": c = new w.HTMLTemplateElement; break;
-case "document": c = new w.Document; break;
-case "root": c = new w.HTMLHtmlElement; s = "html"; break;
-case "div": c = new w.HTMLDivElement; break;
-case "span": c = new w.HTMLSpanElement; break;
-case "label": c = new w.HTMLLabelElement; break;
-case "hr": c = new w.HTMLHRElement; break;
-case "blockquote": case "q": c = new w.HTMLQuoteElement; break;
-case "title":
-// in isolation, I have no idea if this is an html title or an svg title.
-// we just have to guess.
-c = new w.HTMLTitleElement; break;
-case "style":
-// in isolation, I have no idea if this is an html title or an svg title.
-// we just have to guess.
-c = new w.HTMLStyleElement; break;
-case "p": c = new w.HTMLParagraphElement; break;
-case "ol": c = new w.HTMLOListElement; break;
-case "ul": c = new w.HTMLUListElement; break;
-case "dl": c = new w.HTMLDListElement; break;
-case "li": c = new w.HTMLLIElement; break;
-case "h1": case "h2": case "h3": case "h4": case "h5": case "H6": c = new w.HTMLHeadingElement; break;
-case "header": c = new w.Header; break;
-case "footer": c = new w.Footer; break;
-case "table": c = new w.HTMLTableElement; break;
-case "tbody": c = new w.z$tBody; break;
-case "tr": c = new w.HTMLTableRowElement; break;
-case "td": c = new w.HTMLTableCellElement; break;
-case "caption": c = new w.z$tCap; break;
-case "thead": c = new w.z$tHead; break;
-case "tfoot": c = new w.z$tFoot; break;
-case "canvas": c = new w.HTMLCanvasElement; break;
-case "audio": case "video": c = new w.HTMLAudioElement; break;
-case "fragment": c = new w.DocumentFragment; break;
-case "frame": c = new w.HTMLFrameElement; break;
-case "iframe": c = new w.HTMLIFrameElement; break;
-case "select": c = new w.HTMLSelectElement; break;
-case "optgroup": c = new w.HTMLOptGroupElement; break;
-case "option": c = new w.Option; break;
-case "form": c = new w.HTMLFormElement; break;
-case "fieldset": c = new w.HTMLFieldSetElement; break;
-case "legend": c = new w.HTMLLegendElement; break;
-case "input": c = new w.HTMLInputElement; break;
-case "textarea": c = new w.HTMLTextAreaElement; break;
-case "element": c = new w.Element; break;
-case "button": c = new w.HTMLButtonElement; break;
-case "article": case "section": c = new w.HTMLElement; break;
-case "time": c = new w.HTMLTimeElement; break;
-default:
-// alert("createElement default " + s);
-c = new w.HTMLUnknownElement;
-}
-
-// Split on : if this comes from a name space
-let colon = t.split(':');
-if(colon.length == 2) {
-    odp(c, "nodeName", {value:t,writable:true,configurable:true});
-    odp(c, "tagName", {value:t,writable:true,configurable:true});
-    c.prefix = colon[0], c.localName = colon[1];
-} else if(c.nodeType == 1) {
-    let s2 = s;
-    if(!this.eb$xml) { // not xml, we have to fix the case
-        if(c instanceof w.SVGElement) {
-            s2 = s.toLowerCase();
-            // how many of these compound words are there?
-            if(s2 == "lineargradient") s2 = "linearGradient";
-        } else s2 = s.toUpperCase();
-    }
-    odp(c, "nodeName", {value:s2,writable:true,configurable:true});
-    odp(c, "tagName", {value:s2,writable:true,configurable:true});
-}
-if(t == "input") { // name and type are automatic attributes acid test 53
-c.name = c.type = "";
-}
-domLinkage('c', c, s);
-return c;
-} 
-
-docp.createElementNS = function(nsurl,s) {
-let mismatch = false;
-let u = this.createElement(s);
-if(!u) return null;
-if(!nsurl) nsurl = "";
-u.namespaceURI = new w.z$URL(nsurl);
-// prefix and url have to fit together, I guess.
-// I don't understand any of this.
-if(!s.match(/:/)) {
-// no colon, let it pass
-u.prefix = "";
-u.localName = s.toLowerCase();
-u.tagName = u.nodeName = u.nodeName.toLowerCase();
-return u;
-}
-// There's a colon, and a prefix, and it has to be real.
-if(u.prefix == "prefix") {
-; // ok
-} else if(u.prefix == "html") {
-if(nsurl != "http://www.w3.org/1999/xhtml") mismatch = true;
-} else if(u.prefix == "svg") {
-if(nsurl != "http://www.w3.org/2000/svg") mismatch = true;
-} else if(u.prefix == "xbl") {
-if(nsurl != "http://www.mozilla.org/xbl") mismatch = true;
-} else if(u.prefix == "xul") {
-if(nsurl != "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul") mismatch = true;
-} else if(u.prefix == "xmlns") {
-if(nsurl != "http://www.w3.org/2000/xmlns/") mismatch = true;
-} else mismatch = true;
-if(mismatch) {
-alert3("bad createElementNS(" + nsurl + "," + s + ')');
-// throw error code 14
-return null;
-}
-return u;
 }
 
 /* A bit hacky but this helper avoids setting something on the prototype of
@@ -4350,8 +4148,6 @@ swpc("Event", class extends w.Object {
         this.detail = detail;
     }
 });
-
-docp.createEvent = function(unused) { return new w.Event; }
 
 // various flavors of events; I'm sure there are more than I have here.
 swpc("HashChangeEvent", class extends w.Event {

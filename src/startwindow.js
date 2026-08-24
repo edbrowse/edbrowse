@@ -2044,6 +2044,218 @@ class Document extends Node
 
     // make sure readyState is readonly
     get readyState() { return this.readyState$2 ? this.readyState$2 : null}
+
+/* The various create functions aren't just on document, they are instance
+methods of the Document class. Hence they belong here.
+createElement has a line that turns P into HTMLParagraphElement,
+although we haven't seen HTMLParagraphElement, or any of those classes yet.
+That's ok - by the time this function is actually invoked,
+all those classes will exist. */
+
+    createEvent(unused) { return new Event; }
+
+    createTextNode(t)
+    {
+        if(t == undefined) t = "";
+        const c = new Text(t);
+        domLinkage('c', c, "text");
+        return c;
+    }
+
+    createComment(t)
+    {
+        if(t == undefined) t = "";
+        const c = new Comment(t);
+        domLinkage('c', c, "comment");
+        return c;
+    }
+
+    createDocumentFragment()
+    {
+        const c = this.createElement("fragment");
+        return c;
+    }
+
+    createCDATASection(t)
+    {
+        if(t == undefined) t = "";
+        const c = new CDATASection(t);
+        domLinkage('c', c, "cdata");
+        return c;
+    }
+
+    createElement(s)
+    {
+        let c;
+        if(!s) { // a null or missing argument
+            alert3("bad createElement( type" + typeof s + ')');
+            return null;
+        }
+        let t = s.toLowerCase();
+
+// check for custom elements first
+        let x = customElements.get(s);
+        if(x) { // here we go
+            c = new x;
+            if(c.eb$appendChild0 !== Node.prototype.eb$appendChild0) {
+                alert3(`${s} is not an extension of Node, and may not work properly`);
+                // add the methods we need to make this behave like a node
+                // these are functions, not getters, like firstChild
+                for(let f of ["appendChild1", "appendChild2", "appendChild3",
+                "appendChild", "removeChild", "insertBefore", "prepend$child"])
+                    c[f] = Node.prototype[f];
+                for(let f of ["getAttribute", "hasAttribute", "setAttribute",
+                "removeAttribute"])
+                    c[f] = Element.prototype[f];
+                // It's not a Node, so we don't have childNodes yet.
+                odp(this, "childNodes", {value: []})
+                odp(this, "parentNode", {value: null, writable: true, configurable:true})
+            }
+            odp(c, "nodeName", {value:s,writable:true,configurable:true});
+            odp(c, "tagName", {value:s,writable:true,configurable:true});
+            odp(c, "connectedCallback$pending", {value:!!c.connectedCallback, writable:true})
+            domLinkage('c', c, t);
+            return c;
+        } // end of custom element
+
+        if(!t.match(/^[a-z:\d_-]+$/) || t.match(/^[\d_-]/)) {
+            alert3("bad createElement(" + t + ')');
+            // acid3 says we should throw an exception here.
+            // But we get these kinds of strings from www.oranges.com all the time.
+            // I'll just return null and tweak acid3 accordingly.
+            // throw error code 5
+            return null;
+        }
+
+        switch(t) {
+        case "shadowroot": c = new ShadowRoot; break;
+        case "head": c = new HTMLHeadElement; break;
+        case "body": c = new HTMLBodyElement; break;
+        case "object": c = new HTMLObjectElement; break;
+        case "a": c = new HTMLAnchorElement; break;
+        case "area": c = new HTMLAreaElement; break;
+        case "image": t = "img";
+        case "img": c = new HTMLImageElement; break;
+        case "link": c = new HTMLLinkElement; break;
+        case "meta": c = new HTMLMetaElement; break;
+        case "base": c = new HTMLBaseElement; break;
+        case "cssstyledeclaration":
+            c = new CSSStyleDeclaration; c.element = null; break;
+        case "script": c = new HTMLScriptElement; break;
+        case "template": c = new HTMLTemplateElement; break;
+        case "document": c = new Document; break;
+        case "root": c = new HTMLHtmlElement; s = "html"; break;
+        case "div": c = new HTMLDivElement; break;
+        case "span": c = new HTMLSpanElement; break;
+        case "label": c = new HTMLLabelElement; break;
+        case "hr": c = new HTMLHRElement; break;
+        case "blockquote": case "q": c = new HTMLQuoteElement; break;
+        case "title":
+            // in isolation, I have no idea if this is an html title or an svg title.
+            // we just have to guess.
+            c = new HTMLTitleElement; break;
+        case "style":
+            // in isolation, I have no idea if this is an html title or an svg title.
+            // we just have to guess.
+            c = new HTMLStyleElement; break;
+        case "p": c = new HTMLParagraphElement; break;
+        case "ol": c = new HTMLOListElement; break;
+        case "ul": c = new HTMLUListElement; break;
+        case "dl": c = new HTMLDListElement; break;
+        case "li": c = new HTMLLIElement; break;
+        case "h1": case "h2": case "h3": case "h4": case "h5": case "H6": c = new HTMLHeadingElement; break;
+        case "header": c = new Header; break;
+        case "footer": c = new Footer; break;
+        case "table": c = new HTMLTableElement; break;
+        case "tbody": c = new z$tBody; break;
+        case "tr": c = new HTMLTableRowElement; break;
+        case "td": c = new HTMLTableCellElement; break;
+        case "caption": c = new z$tCap; break;
+        case "thead": c = new z$tHead; break;
+        case "tfoot": c = new z$tFoot; break;
+        case "canvas": c = new HTMLCanvasElement; break;
+        case "audio": case "video": c = new HTMLAudioElement; break;
+        case "fragment": c = new DocumentFragment; break;
+        case "frame": c = new HTMLFrameElement; break;
+        case "iframe": c = new HTMLIFrameElement; break;
+        case "select": c = new HTMLSelectElement; break;
+        case "optgroup": c = new HTMLOptGroupElement; break;
+        case "option": c = new Option; break;
+        case "form": c = new HTMLFormElement; break;
+        case "fieldset": c = new HTMLFieldSetElement; break;
+        case "legend": c = new HTMLLegendElement; break;
+        case "input": c = new HTMLInputElement; break;
+        case "textarea": c = new HTMLTextAreaElement; break;
+        case "element": c = new Element; break;
+        case "button": c = new HTMLButtonElement; break;
+        case "article": case "section": c = new HTMLElement; break;
+        case "time": c = new HTMLTimeElement; break;
+        default:
+            // alert("createElement default " + s);
+            c = new HTMLUnknownElement;
+        }
+
+// Split on : if this comes from a name space
+        const colon = t.split(':');
+        if(colon.length == 2) {
+            odp(c, "nodeName", {value:t,writable:true,configurable:true});
+            odp(c, "tagName", {value:t,writable:true,configurable:true});
+            c.prefix = colon[0], c.localName = colon[1];
+        } else if(c.nodeType == 1) {
+            let s2 = s;
+            if(!this.eb$xml) { // not xml, we have to fix the case
+                if(c instanceof SVGElement) {
+                    s2 = s.toLowerCase();
+                    // how many of these compound words are there?
+                    if(s2 == "lineargradient") s2 = "linearGradient";
+                } else s2 = s.toUpperCase();
+            }
+            odp(c, "nodeName", {value:s2,writable:true,configurable:true});
+            odp(c, "tagName", {value:s2,writable:true,configurable:true});
+        }
+        if(t == "input") { // name and type are automatic attributes acid test 53
+            c.name = c.type = "";
+        }
+        domLinkage('c', c, s);
+        return c;
+    } 
+
+    createElementNS(nsurl,s)
+    {
+        let mismatch = false;
+        let u = this.createElement(s);
+        if(!u) return null;
+        if(!nsurl) nsurl = "";
+        u.namespaceURI = new z$URL(nsurl);
+        // prefix and url have to fit together, I guess.
+        if(!s.match(/:/)) {
+            // no colon, let it pass
+            u.prefix = "";
+            u.localName = s.toLowerCase();
+            u.tagName = u.nodeName = u.nodeName.toLowerCase();
+            return u;
+        }
+        // There's a colon, and a prefix, and it has to be real.
+        if(u.prefix == "prefix") {
+            ; // ok
+        } else if(u.prefix == "html") {
+            if(nsurl != "http://www.w3.org/1999/xhtml") mismatch = true;
+        } else if(u.prefix == "svg") {
+            if(nsurl != "http://www.w3.org/2000/svg") mismatch = true;
+        } else if(u.prefix == "xbl") {
+            if(nsurl != "http://www.mozilla.org/xbl") mismatch = true;
+        } else if(u.prefix == "xul") {
+            if(nsurl != "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul") mismatch = true;
+        } else if(u.prefix == "xmlns") {
+            if(nsurl != "http://www.w3.org/2000/xmlns/") mismatch = true;
+        } else mismatch = true;
+        if(mismatch) {
+            alert3("bad createElementNS(" + nsurl + "," + s + ')');
+            // throw error code 14
+            return null;
+        }
+        return u;
+    }
 }
 swdc(Document);
 
