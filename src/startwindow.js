@@ -3159,13 +3159,15 @@ class HTMLTableRowElement extends HTMLElement
         return r;
     }
 
-    deleteCell(n)
+    deleteCell(idx)
     {
+        if(idx === undefined) idx = -1;
+        if(typeof idx !== "number") return;
         const l = this.cells.length;
-        if(typeof n != "number") n = -1;
-        if(n == -1) n = 0;
-        if(n >= 0 && n < l)
-            this.removeChild(this.cells[n]);
+        if(!l) return; // nothing to delete
+        if(idx < 0) idx = l - 1;
+        if(idx >= l) return;
+        this.cells[idx].remove();
     }
 }
 swdc(HTMLTableRowElement);
