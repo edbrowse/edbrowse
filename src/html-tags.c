@@ -4855,7 +4855,7 @@ Needless to say that's not good!
 		break;
 
 	case TAGACT_DATAL:
-		domLink(t, "Datalist", 0, 4);
+		domLink(t, "HTMLDataListElement", 0, 4);
 		break;
 
 	case TAGACT_A:

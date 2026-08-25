@@ -93,14 +93,12 @@ this.swpc = function(k, v) { odp(window, k, {value:v, writable:true, configurabl
 
 // establish the prototype for inheritance, then set dom$class
 // this is called as each html element is built
-// If our made-up class is z$Foo, dom$class becomes Foo
 // Letters mean set window member prototype
 this.swpp = function(c, inherit) {
-    const v = c.replace(/^z\$/, "");
     if(inherit)
         odp(window[c], "prototype", {value:new inherit})
-    odp(window[c].prototype, "dom$class", {value:v});
-    odp(window[c].prototype, Symbol.toStringTag, {value:v});
+    odp(window[c].prototype, "dom$class", {value:c});
+    odp(window[c].prototype, Symbol.toStringTag, {value:c});
 }
 
 // set document property, analogs of the set window property functions
@@ -202,7 +200,7 @@ I ran this through chrome and it came out true.
 If we can replace a standard dom class, then I imagine we can replace anything! */
 this.swdc = function (c, changeable=true)
 {
-    const v = c.name.replace(/^z\$/, "");
+    const v = c.name;
     odp(c.prototype, "dom$class", {value: v});
     // Makes sure toString returns [object dom$class] in modern es6
     odp(c.prototype, Symbol.toStringTag, {value: v});
@@ -2915,14 +2913,14 @@ class HTMLSelectElement extends HTMLElement
 }
 swdc(HTMLSelectElement);
 
-// similar to a select list but I don't really understand it.
-class z$Datalist extends HTMLElement
+// <datalist>
+class HTMLDataListElement extends HTMLElement
 {
-    constructor() { super(); }
+    constructor() { super(); this.options = []; }
     get multiple() { return this.hasAttribute("multiple"); }
     set multiple(v) { if(v === false) this.removeAttribute("multiple"); else this.setAttribute("multiple", ""); }
 }
-swdc(z$Datalist);
+swdc(HTMLDataListElement);
 
 class HTMLOptGroupElement extends HTMLElement
 {

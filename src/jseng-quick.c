@@ -3833,14 +3833,6 @@ int extra) // bits: radio, window, document, unknown
     JSValue io = JS_UNDEFINED;	// the input object
     int action = t->action;
     uchar isunknown = (extra&8);
-    	static const char * const z_list[] = {
-"Datalist", 0};
-    char class_z[11]; // room for the largest in the list
-    const char *classtweak = classname;
-    if(stringInList(z_list, classname) >= 0) {
-        sprintf(class_z, "z$%s", classname);
-        classtweak = class_z;
-    }
 
     debugPrint(5, "domLink %s.%d",
        classname, extra);
@@ -3858,7 +3850,7 @@ if(extra == 4)
         io = instantiate_custom(cx, owner, classname);
     else
         io = instantiate(cx,
-        *((JSValue*)cf->winobj), 0, classtweak);
+        *((JSValue*)cf->winobj), 0, classname);
     if(JS_IsUndefined(io)) return;
 
     if(t->action != TAGACT_DOCTYPE) {
