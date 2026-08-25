@@ -3157,7 +3157,7 @@ all the div sections just below the current node.
 		    } else if (bulkmatch) {
 		        // disabled implies readonly
 		        rc = (t->rdonly | t-> disabled);
-		    } else rc = (get_property_bool_t(t, "readOnly") |
+		    } else rc = (get_property_bool_t(t, "readOnly") ||
 		        get_property_bool_t(t, "disabled"));
 		    if (p[6] == 'w') rc ^= 1;
 		    if (rc) goto next_mod;
