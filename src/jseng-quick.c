@@ -3834,8 +3834,7 @@ int extra) // bits: radio, window, document, unknown
     int action = t->action;
     uchar isunknown = (extra&8);
     	static const char * const z_list[] = {
-"Datalist",
-        "tHead", "tBody", "tFoot", 0};
+"Datalist", 0};
     char class_z[11]; // room for the largest in the list
     const char *classtweak = classname;
     if(stringInList(z_list, classname) >= 0) {

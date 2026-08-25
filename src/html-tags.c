@@ -4896,19 +4896,19 @@ Needless to say that's not good!
 
 	case TAGACT_TBODY:
 		if ((above = t->controller) && above->jslink)
-			domLink(t, "tBody", above, 0);
+			domLink(t, "HTMLTableSectionElement", above, 0);
 		break;
 
 	case TAGACT_THEAD:
 		if ((above = t->controller) && above->jslink) {
-			domLink(t, "tHead", above, 0);
+			domLink(t, "HTMLTableSectionElement", above, 0);
 			set_property_object_t(above, "tHead", t);
 		}
 		break;
 
 	case TAGACT_TFOOT:
 		if ((above = t->controller) && above->jslink) {
-			domLink(t, "tFoot", above, 0);
+			domLink(t, "HTMLTableSectionElement", above, 0);
 			set_property_object_t(above, "tFoot", t);
 		}
 		break;

@@ -807,7 +807,7 @@ as long as it doesn't have whitespace. */
     static attrNameImplicit(o, name)
     {
         return name === "elements" && o.dom$class == "HTMLFormElement" ||
-        name === "rows" && (o.dom$class == "HTMLTableElement" || o.dom$class == "tBody" || o.dom$class == "tHead" || o.dom$class == "tFoot") ||
+        name === "rows" && (o.dom$class == "HTMLTableElement" || o.dom$class == "HTMLTableSectionElement") ||
         name === "tBodies" && o.dom$class == "HTMLTableElement" ||
         (name === "cells" || name === "rowIndex" || name === "sectionRowIndex") && o.dom$class == "HTMLTableRowElement" ||
         name === "className" ||
@@ -2176,12 +2176,11 @@ all those classes will exist. */
         case "header": c = new Header; break;
         case "footer": c = new Footer; break;
         case "table": c = new HTMLTableElement; break;
-        case "tbody": c = new z$tBody; break;
         case "tr": c = new HTMLTableRowElement; break;
         case "td": c = new HTMLTableCellElement; break;
         case "caption": c = new HTMLTableCaptionElement; break;
-        case "thead": c = new z$tHead; break;
-        case "tfoot": c = new z$tFoot; break;
+        case "thead": case "tbody": case "tfoot":
+            c = new HTMLTableSectionElement; break;
         case "canvas": c = new HTMLCanvasElement; break;
         case "audio": case "video": c = new HTMLAudioElement; break;
         case "fragment": c = new DocumentFragment; break;
@@ -3061,24 +3060,6 @@ class HTMLTableSectionElement extends HTMLElement
     }
 }
 swdc(HTMLTableSectionElement);
-
-class z$tBody extends HTMLTableSectionElement
-{
-    constructor() { super(); }
-}
-swdc(z$tBody);
-
-class z$tHead extends HTMLTableSectionElement
-{
-    constructor() { super(); }
-}
-swdc(z$tHead);
-
-class z$tFoot extends HTMLTableSectionElement
-{
-    constructor() { super(); }
-}
-swdc(z$tFoot);
 
 // <caption>
 class HTMLTableCaptionElement extends HTMLElement
