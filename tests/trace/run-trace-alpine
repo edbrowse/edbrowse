@@ -1,0 +1,133 @@
+#!/bin/sh
+
+: "
+This is a nontrivial example of tracing.
+From a podcast, I found an instance of the alpine library (though renamed).
+I saw, with happiness, that this is the only (essential) js file the page uses.
+(Some websites use dozens.)
+I browsed the page, with dimin, with trace, and made a snapshot.
+The resulting javascript file is in this directory, alpine-trace.js.
+I addded in, after the fact, some helpful alerts. (see below)
+There is a function in tracehelp.js that expands these trace points
+into expressions that run under chrome or under edbrowse.
+You can call this function yes, But that has to be done at execution time.
+We can instead compile it, so to speak, using a perl script.
+tbr <alpine-trace.js >alpine-trace-batch.js
+If I didn't precompile these javascript files,
+then it has to run on a website, and that's more complicated.
+
+I then made moderate edits to the html, to access the traced js file
+instead of the original js file.
+See alpine-start.html in this directory.
+Review the <script> tags in the head section, and then <p id=show>
+just after <body>.
+That is the show paragraph, where the trace log will appear.
+
+At this point it is ready to trace under chrome or edbrowse.
+Use the argument c for chrome or e for edbrowse.
+No argument is the same as e.
+
+For chrome, you will need a config file that incorporates the chrome plugin.
+For edbrowse, it is best to use no config file at all,
+if you are running a test on the latest build.
+
+In chrome or edbrowse, you get <session text> at the top of the browsed page.
+Whence you can do this.
+
+ib2
+e2
+w trace.out
+
+And there it is, 22722 lines of output.
+
+This shell script is an automated way to run these trace procedures.
+You should only need to run chrome once.
+It won't change after that, unless you upgrade chrome or some such.
+But you can run edbrowse again and again,
+and compare with chrome after each build.
+
+On the first run I got lots of differences,
+but they were in a sort function -
+array.sort(compare) where compare is a function that had trace points injected.
+Different browsers will implement quicksort in different ways, and that
+hardly matters to us.
+So I removed those trace points and ran it again.
+You have to do some analysis, and remove some trace points that give
+no information, and (perhaps) add some alerts that give some needed information.
+Speaking of the latter, I have indeed added alerts to the traced js file.
+These are captured in the log, along with the trace points.
+
+There is another difference:
+Chrome converts the local file into a full url with file://, edbrowse does not.
+So I had to fix that.
+You'll see substitute commands below, using pwd.
+These will blow up if there are special characters, like *, in your local path.
+
+I added a line at the end of the js file,
+traceShow()
+That puts the log in the show paragraph.
+So that's the end of the log.
+It stops when the deferred script is finished.
+There is more activity: promise jobs, microtasks, etc,
+but those are asynchronous.
+It would be difficult to build a repeatable test based on that activity.
+So I stop when the script stops.
+If you want to trace those actions as well, then put this at the end:
+setTimeout(()=>traceShow(), 1400);
+The chrome application tries to wait a reasonable amount of time,
+for the page to settle down, so hopefully it will capture the log.
+Edbrowse would simply quit, unless you include tmwait in the batch commands.
+It is interesting to compare logs that go beyond the script, and into timers
+and promise jobs, but we can't reasonably expect them to be identical.
+"
+
+cd "$(dirname "$0")"
+program=../../src/edbrowse
+
+which=e
+if [ $# != 0 ]
+then
+which="$1"
+fi
+if [ "$which" != c -a "$which" != e ]
+then
+echo "usage run-trace-alpine [c|e]"
+exit 1
+fi
+
+if [ $which = c ]
+then
+# run on chrome
+edbrowse alpine-start.html <<!
+<chromethis
+1
+ib2
+e2
+,s;file://`pwd`/alpine-start.html;alpine-start.html;
+,s;`pwd`/alpine-start.html;/;
+w trace-alpine-chrome
+qt
+!
+
+exit 0
+fi
+
+# now it's edbrowse; run and compare to chrome
+$program -c /dev/null alpine-start.html <<!
+b
+1X
+ib2
+e2
+w trace-alpine-edbrowse
+qt
+!
+
+if cmp trace-alpine-chrome trace-alpine-edbrowse
+then
+echo ok
+rm trace-alpine-edbrowse
+exit 0
+fi
+
+#  cmp already printed the message.
+exit 1

@@ -1,0 +1,18 @@
+#!/bin/perl
+
+# This program converts a file that has edbrowse tracing in it,
+# lines with trace@(marker), into a file that is ready for batch tracing
+# by either edbrowse or chrome.
+# It is a simplified version of the traceBreakReplace function that runs
+# in realtime when edbrowse encounters javascript with trace@ in it.
+# tbr <infile >outfile
+
+while(<>) {
+# could be more than one trace@ on a line
+s/trace@/;trace@/g;
+s/, *;trace@/,trace@/g;
+s/(trace@\(\w+\))/$1;/g;
+s/(trace@\(\w+\)); *,/$1,/g;
+s/trace@\((\w+)\)/(function(l\$ne){ let v = trace\$ch(l\$ne); alert(v); })("$1")/g;
+print $_;
+}
