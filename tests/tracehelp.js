@@ -145,3 +145,12 @@ let ss = traceFetch(src);
 traceRun(ss);
 traceShow();
 }
+
+function traceAfterDelay(src, n)
+{
+let ss = traceFetch(src);
+traceRun(ss);
+setTimeout(()=>{
+traceShow();
+}, n);
+}
