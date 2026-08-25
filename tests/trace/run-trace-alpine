@@ -113,7 +113,7 @@ exit 0
 fi
 
 # now it's edbrowse; run and compare to chrome
-$program -c /dev/null alpine-start.html <<!
+$program -c "" alpine-start.html <<!
 b
 1X
 ib2

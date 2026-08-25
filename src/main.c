@@ -564,6 +564,7 @@ create in the old location to avoid surprises */
 			doConfig = false;
 		} else {
 			configFile = argv[1];
+			if(!*configFile) doConfig = false;
 			argv += 2, argc -= 2;
 		}
 	}

@@ -1833,6 +1833,10 @@ Continue until there are no errors.
 Processing of the config file stops at the first error, so you really want a clean run.
 
 <p>
+edbrowse -c "" skips the config file, and operates on the rest of the arguments.
+This is useful when you want edbrowse to perform the same way every time, regardless of changes to your config file, or differences among config files.
+
+<p>
 From within edbrowse, a file name of -c is treated as the config file.
 You can switch to a new session, view, edit, save, and reapply the config file without ever leaving edbrowse.
 
