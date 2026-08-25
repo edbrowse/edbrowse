@@ -3048,10 +3048,16 @@ class HTMLTableSectionElement extends HTMLElement
         return r;
     }
 
-    deleteRow(r)
+    deleteRow(idx)
         {
-        if(r.dom$class != "HTMLTableRowElement") return;
-        this.removeChild(r);
+        if(idx === undefined) idx = -1;
+        if(typeof idx !== "number") return;
+        const t = this;
+        const nrows = t.rows.length;
+        if(!nrows) return; // nothing to delete
+        if(idx < 0) idx = nrows - 1;
+        if(idx >= nrows) return;
+        t.rows[idx].remove();
     }
 }
 swdc(HTMLTableSectionElement);

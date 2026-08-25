@@ -186,7 +186,8 @@ tab.remove(); // don't need to see it on screen.
 // what if we insert into an empty table?
 tab = document.createElement("table");
 r2 = tab.insertRow(0);
-if(tab.tBodies.length != 1 || tab.tBodies[0].rows[0] != r2) msg += "|body not created";
+body1 = tab.tBodies[0];
+if(tab.tBodies.length != 1 || body1.rows[0] != r2) msg += "|body not created";
 if(tab.firstChild.nodeName != "TBODY") msg += "|created body not below";
 if(tab.firstChild.firstChild.nodeName != "TR") msg += "|row not below body below tab";
 if(r2.rowIndex != 0 || r2.sectionRowIndex != 0) msg += "|created r2 has wrong rowIndex";
@@ -200,6 +201,16 @@ if(tab.rows.length != 2) msg += "|length not 2 after r2 and r3";
 if(r2.sectionRowIndex != 0 || r3.sectionRowIndex != 0) msg += "|r2 r3 not 0 in section";
 // still, bodies should come before foot
 if(r3.rowIndex != 1 || r2.rowIndex != 0) msg += "|r2 not before r3";
+if(tab.rows[0] != r2 || tab.rows[1] != r3) msg += "|rows not linking to r2 and r3";
+r1 = tab.insertRow(0);
+body1 = tab.tBodies[0];
+if(r1 != body1.rows[0]) msg += "|r1 isn't first in body";
+if(r1 != tab.rows[0]) msg += "|r1 not first in table";
+if(body1.rows.length != 2) msg += "|body not r1 and r2";
+if(body1.rows[1] != r2) msg += "|r2 not second in body";
+tab.deleteRow(1);
+if(body1.rows.length != 1 || r1 != body1.rows[0]) msg += "|body should have only r1";
+if(r3 != tab.rows[1] || r3.rowIndex != 1) msg += "|r3 didn't slide back to position 1";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
