@@ -25,7 +25,7 @@ if($method eq "get") {
     print "get {\n";
     # get string should already be url encoded; I shouldn't have to ascify it
     print $ENV{"QUERY_STRING"};
-    print "}\n";
+    print "\n}\n";
 } elsif($method eq "post") {
     print "post{\n";
     print ascify($_) while(<>);

@@ -3081,15 +3081,20 @@ this.responseXML = (new (w.DOMParser)()).parseFromString(this.responseText, "tex
 }
 
 // I'll do the load events, not loadstart or progress or loadend etc.
+// readyState comes first though
 let e = new w.Event;
+e.initEvent("readystatechange", true, true);
+this.dispatchEvent(e);
+// now for onload
+e = new w.Event;
 e.initEvent("load", true, true);
 e.loaded = this.response.length;
 this.dispatchEvent(e);
 // I don't understand the upload object at all
-this.upload.dispatchEvent(e);
 e = new w.Event;
-e.initEvent("readystatechange", true, true);
-this.dispatchEvent(e);
+e.initEvent("load", true, true);
+e.loaded = this.response.length;
+this.upload.dispatchEvent(e);
 } else {
 this.status = 0;
 this.statusText = "network error";

@@ -1,0 +1,34 @@
+<head></head><body>
+<p id=show>start</p>
+<script>
+/* xhr tests, fetch test, await fetch test
+This requires a web server with the echo program installed.
+Currently using edbrowse.org, assuming it is so equipped.
+You can simply browse this program in edbrowse and that's fine,
+but for a chrome test, this program has to be on edbrowse.org,
+or the same site as the echo responder, to satisfy
+chrome's cross origin concerns. chromeline on this line.
+http://www.edbrowse.org/xhr.html
+*/
+try {
+show = document.getElementById("show")
+msg = "ok";
+b = document.body;
+echourl = "http://www.edbrowse.org/cgi-bin/echo";
+// do things synchronously for as long as we can.
+// Then some asynchronous stuff and we'll need a timer to check that.
+xhr = new XMLHttpRequest;
+// basic get ad post
+h = "";
+// events work even in the synchronous case
+xhr.onload = () => h+='o';
+handler_r = function(e) { if(this.readyState == 4) h += 'r'}
+xhr.addEventListener("readystatechange", handler_r);
+xhr.open("get", echourl + "?baked=beans%3c%3e", false);
+xhr.send("");
+if(h != "ro") msg += `|sync get events ${h}`;
+if(xhr.responseText != "get {\nbaked=beans%3c%3e\n}\n") msg += `|get response ${xhr.responseText}`;
+
+show.innerHTML = msg;
+} catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
+</script>
