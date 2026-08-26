@@ -68,6 +68,15 @@ echo "$t failed $result"
 status=1
 fi
 
+# the apline trace test is also nonstandard
+if ./trace/run-trace-alpine >/dev/null 2>&1
+then
+:
+else
+echo "trace alpine found discrepancies"
+status=1
+fi
+
 if [ $status = 0 ]; then echo ok; fi
 
 exit $status

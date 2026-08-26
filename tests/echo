@@ -1,0 +1,37 @@
+#!/usr/bin/perl
+#  Echo get parameters or post data, for debugging.
+# post data is encoded as ascii, since it could be binary.
+#  This program is intended to be run via an html server.
+# This supports xhr tests, fetch tests, etc.
+
+sub ascify($) {
+    my $l = shift;
+    my $j = length $l;
+    my $m = "";
+    return $m if ! $j;
+    for(my $i = 0; $i < $j; ++$i) {
+    my $c = substr($l, $i, 1);
+    my $o = ord $c;
+    if(($o >= 32 and $o < 127) or $o == 10) { $m .= $c; } else { $m .= sprintf("%%%02x", $o); }
+    }
+    #  last line of input might not have nl on the end
+    $m .= "\n" if ! (substr($l, $j-1, 1) eq "\n");
+    return $m;
+}
+
+print "Content-type: text/plain\n\n";
+$method = lc $ENV{"REQUEST_METHOD"};
+if($method eq "get") {
+    print "get {\n";
+    # get string should already be url encoded; I shouldn't have to ascify it
+    print $ENV{"QUERY_STRING"};
+    print "}\n";
+} elsif($method eq "post") {
+    print "post{\n";
+    print ascify($_) while(<>);
+    print "}\n";
+} else {
+    printf "unknown method: %s\n", $method;
+}
+
+exit 0;
