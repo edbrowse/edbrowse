@@ -1,0 +1,17 @@
+<head>
+<title>Sample page for Tracing</title>
+<script src=tracehelp.js></script>
+<script src=sample-trace-batch.js></script>
+</head>
+<body>
+<p id=show>start</p>
+<script>
+/* The sample file in this directory is from Microsoft online.
+It's large enough to deminimize and trace, but small enough
+to wrap your head around.
+(Some js libraries are ten thousand lines long.)
+This html file is merely a shell to call the traced version.
+tbr <sample-trace.js >sample-trace-batch.js
+*/
+traceShow();
+</script>
