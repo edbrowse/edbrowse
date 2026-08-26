@@ -50,6 +50,39 @@ cl = xhr.getResponseHeader("content-length");
 if(cl != 27) msg += `|sync get length ${cl}`;
 if(ct != "text/plain") msg += `|sync get type ${ct}`;
 
+/* sending a string with nonascii characters is bizarre under chrome.
+alpha turns into a weird chinese character.
+I think the high characters are already utf8 in the string, then xhr
+encodes those bytes into utf8 again.
+I don't understand what it is doing, I definitely can't replicate it,
+and I think clients are not suppose to do it.
+If you have nonascii data to send, encode it, such as url escape,
+or send it as a byte array, which is the next thing we will try. */
+xhr.open("post", echourl, false);
+a = new Uint8Array(6);
+a[0] = 71;
+a[1] = 0;
+a[2] = 163;
+a[3] = 101;
+a[4] = 110;
+a[5] = 100;
+xhr.send(a);
+if(xhr.response != "post {\nG%00%a3end\n}\n") msg += `|uint8 response ${xhr.response}`;
+xhr.open("post", echourl, false);
+a = new Uint16Array(4);
+a[0] = 0x3b1; // this is alpha
+a[1] = 0; // always good to test 0
+a[2] = 7; // test endian
+a[3] = 26984;
+xhr.send(a);
+if(xhr.response != "post {\n%b1%03%00%00%07%00hi\n}\n") msg += `|uint16 response ${xhr.response}`;
+xhr.open("post", echourl, false);
+a = new Uint32Array(2);
+a[0] = 1701605491;
+a[1] = 1684628590;
+xhr.send(a);
+if(xhr.response != "post {\nsplendid\n}\n") msg += `|uint32 response ${xhr.response}`;
+
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>
