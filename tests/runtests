@@ -69,9 +69,10 @@ status=1
 fi
 
 # the apline trace test is also nonstandard
-if false
-then
 # not everyone has the chrome plugin on their system
+# use t to include the trace test
+if [ $# != 0 -a "$1" = t ]
+then
 if ./trace/run-trace-alpine >/dev/null 2>&1
 then
 :
