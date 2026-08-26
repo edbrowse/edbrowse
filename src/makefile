@@ -101,7 +101,10 @@ DOCS := ../doc/usersguide.html ../doc/usersguide_fr.html
 $(EBOBJS) : eb.h ebprot.h messages.h
 dbodbc.o dbinfx.o dbops.o : dbapi.h
 
-startwindow.c: $(EDBR_JS_ASSETS)
+%.js-ok: %.js
+	qjs -C $< && touch $@
+
+startwindow.c: $(patsubst %.js,%.js-ok,$(EDBR_JS_ASSETS))
 	$(PERL) ../tools/buildsourcestring.pl $(EDBR_JS_ASSETS) startwindow.c
 
 ebrc.c: ../lang/ebrc-* ../doc/usersguide*.html
@@ -113,7 +116,7 @@ msg-strings.c: ../lang/msg-*
 # The implicit linking rule isn't good enough, because we don't have an
 # edbrowse.o object, and it expects one.
 edbrowse: $(EBOBJS)
-	$(CC) $(EBOBJS) $(LDFLAGS) -o $@
+	$(CC) $^ $(LDFLAGS) -o $@
 
 #  You probably need to be root to do this.
 install: install-edbrowse install-docs install-emojis install-plugins
@@ -141,7 +144,7 @@ dbinfx.o : dbinfx.ec
 #	esql $(ESQLDFLAGS) -o edbrowse-infx $(EBOBJS) dbops.o dbinfx.o $(LDFLAGS) -lduktape
 
 clean:
-	rm -f *.o edbrowse \
+	rm -f *.o *.js-ok edbrowse \
 	startwindow.c ebrc.c msg-strings.c
 
 # some hello world targets, for testing and debugging
@@ -157,3 +160,6 @@ js0: js0.c
 	$(CC) $(quickjs_cflags) js0.c $(quickjs_libs) -lm -o js0
 
 hello: js_hello_quick js0
+
+.PHONY: all clean install install-docs install-plugins install-edbrowse
+.PHONY: install-emojis

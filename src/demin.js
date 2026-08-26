@@ -3,6 +3,8 @@
 // snapshot https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.15.4/beautify.js
 // on 05/10/2026
 
+// Keep qjs syntax check happy
+if (!this.self) this.self = this;
 /* AUTO-GENERATED. DO NOT MODIFY. */
 /*
 
