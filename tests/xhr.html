@@ -34,6 +34,9 @@ if(cl != 26) msg += `|sync get length ${cl}`;
 // it's my echo program, and it prints out content type, so this should be
 // reliable on any server.
 if(ct != "text/plain") msg += `|sync get type ${ct}`;
+gar = xhr.getAllResponseHeaders();
+gar = gar.toLowerCase();
+if(gar.indexOf("content-length: 26\r\n") < 0) msg += "|no content length in gar";
 
 // try post, this time with search params, but I think they just stringify,
 // so might not be much different than a string.
