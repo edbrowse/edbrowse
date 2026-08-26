@@ -69,12 +69,16 @@ status=1
 fi
 
 # the apline trace test is also nonstandard
+if false
+then
+# not everyone has the chrome plugin on their system
 if ./trace/run-trace-alpine >/dev/null 2>&1
 then
 :
 else
 echo "trace alpine found discrepancies"
 status=1
+fi
 fi
 
 if [ $status = 0 ]; then echo ok; fi
