@@ -22,12 +22,33 @@ xhr = new XMLHttpRequest;
 h = "";
 // events work even in the synchronous case
 xhr.onload = () => h+='o';
-handler_r = function(e) { if(this.readyState == 4) h += 'r'}
+handler_r = function(e) { h += this.readyState}
 xhr.addEventListener("readystatechange", handler_r);
 xhr.open("get", echourl + "?baked=beans%3c%3e", false);
 xhr.send("");
-if(h != "ro") msg += `|sync get events ${h}`;
+if(h != "14o") msg += `|sync get events ${h}`;
 if(xhr.responseText != "get {\nbaked=beans%3c%3e\n}\n") msg += `|get response ${xhr.responseText}`;
+ct = xhr.getResponseHeader("cOntent-type");
+cl = xhr.getResponseHeader("content-length");
+if(cl != 26) msg += `|sync get length ${cl}`;
+// it's my echo program, and it prints out content type, so this should be
+// reliable on any server.
+if(ct != "text/plain") msg += `|sync get type ${ct}`;
+
+// try post, this time with search params, but I think they just stringify,
+// so might not be much different than a string.
+// This isn't like events; I can use the same xhr.
+h = "";
+usp = new URLSearchParams;
+usp.append("baked", "beans<>");
+xhr.open("post", echourl, false);
+xhr.send(usp);
+if(h != "14o") msg += `|sync post events ${h}`;
+if(xhr.responseText != "post {\nbaked=beans%3C%3E\n}\n") msg += `|post response ${xhr.responseText}`;
+ct = xhr.getResponseHeader("content-type");
+cl = xhr.getResponseHeader("content-length");
+if(cl != 27) msg += `|sync get length ${cl}`;
+if(ct != "text/plain") msg += `|sync get type ${ct}`;
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

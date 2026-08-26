@@ -27,7 +27,7 @@ if($method eq "get") {
     print $ENV{"QUERY_STRING"};
     print "\n}\n";
 } elsif($method eq "post") {
-    print "post{\n";
+    print "post {\n";
     print ascify($_) while(<>);
     print "}\n";
 } else {

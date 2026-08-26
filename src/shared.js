@@ -2914,8 +2914,9 @@ if (this.readyState < 3){
 throw new Error("INVALID_STATE_ERR");
 } else {
 returnedHeaders = new w.Array;
+header = header.toLowerCase();
 for (rHeader in this.responseHeaders) {
-if (rHeader.match(new RegExp(header, "i"))) {
+if(rHeader.toLowerCase() == header) {
 returnedHeaders.push(this.responseHeaders[rHeader]);
 }
 }
@@ -3070,7 +3071,7 @@ this.statusText = (code == 200 ? "OK" : "http error " + code);
 
 // Should we run the xml parser if the status was not 200?
 // And should we run it before the onreadystatechange function?
-let ct = this.getResponseHeader("^content-type$");
+let ct = this.getResponseHeader("content-type");
 if(!ct) ct = "text/xml"; // default
 // if overrideMimeType called, should we replace it in headers, or just here?
 if(this.eb$mt) ct = this.eb$mt;
