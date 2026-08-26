@@ -41,31 +41,7 @@ function fail(n) { alert("failed "+n); }
 
 let popwin = window.open("http://www.moreAndMoreCrap.com/BuyNow.html", "obnoxious_ad");
 
-var memhog = new Array();
-
 let n, j;
-
-function memfill()
-{
-// allow a user specifyable amount of objects to create
-// use the document.getElementById and element interface here
-let amount = parseInt(document.getElementById("fill_amount").value, 10);
-if (amount <= 0)
-{
-alert("You must provide a positive integer when specifying the number of objects to create");
-return;
-}
-for (n=0; n < amount; ++n)
-{
-memhog[n] = {};
-}
-alert("Array successfully created with " + amount + " objects");
-}
-
-function memshow()
-{
-alert("memhog contains " + memhog.length + " elements");
-}
 
 // A couple functions, and the first couple lines of the input form.
 function calc(thisform)
@@ -188,7 +164,7 @@ you shouldn't see this stuff
 
 <form method=POST name=questionnaire
 class=betty-boop
-action=http://localhost:1500/origact
+action=http://www.edbrowse.org/cgi-bin/echo
 onsubmit='return submitFunction(this)'
 onreset='return resetFunction()'>
 
@@ -460,12 +436,6 @@ dog <input type=checkbox name=dog id=hound checked onclick="alert('rover')">
 cat <input type=checkbox name=cat onclick="catdog(this)" value=meow>
 bird <input type=checkbox id=bird>
 rabbit <input type=checkbox name=rabbit>
-<div id=hog>
-Amount of objects to create <input type="text" id="fill_amount" name="fill_amount" value="2000000" />
-<input type=button name=hog value="memory hog" onclick=memfill()>
-<input type=button name=mclear value="memory clear" onclick="memhog.length = 0">
-<button onclick="memshow()" name="mshow">show memory length</button>
-</div>
 <br>
 <input type=button name=goodbye value="jump away"
 onclick="alert('page is being replaced'); window.location.href='http://www.cartercenter.org';">
@@ -967,9 +937,6 @@ if(o.type != "submit") fail(260);
 // if no handler given, the handler should come back null
 if(document.body.onclick !== null) fail(261)
 
-// delete the memory stuff from the form,
-// elements and links and so on should readjust.
-document.getElementById("hog").remove();
 if(isedbrowse) alert("relative");
 }
 relative();
