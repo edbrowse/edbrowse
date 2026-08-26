@@ -19,7 +19,7 @@ outfile=/tmp/runtests.out
 # and is more interactive.
 
 status=0
-for t in collection.html dynamic-form.html fragment.html frames.html getelem.html multiline-attribute.html mutation.html queryselector.html script-adds-nodes.html scriptorder.html style-shorthand.html table.html unbalanced-attribute.html
+for t in collection.html dynamic-form.html fragment.html frames.html getelem.html multiline-attribute.html mutation.html queryselector.html script-adds-nodes.html scriptorder.html style-shorthand.html table.html unbalanced-attribute.html xhr.html
 do
 $program -c /dev/null $t >$outfile <<!
 b

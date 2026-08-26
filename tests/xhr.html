@@ -83,6 +83,30 @@ a[1] = 1684628590;
 xhr.send(a);
 if(xhr.response != "post {\nsplendid\n}\n") msg += `|uint32 response ${xhr.response}`;
 
+// FormData is a whole nother beast
+xhr.open("post", echourl, false);
+fd = new FormData();
+fd.append("a", "simple @ascii");
+// once again we can't send utf8 in form data; chrome seems to puke on that.
+fd.append("b", "this is regular ascii but a long line longer than mime standard will allow so we'll see how the browser encodes it. It doesn't seem to matter how long it is it just sits on its own line.\nLine 2.");
+xhr.send(fd);
+r = xhr.response;
+// The browsers will send different boundaries, so we have to take it apart.
+// lop off post { and }
+r = r.substr(7);
+r = r.substr(0, r.length - 2);
+if(r.substr(0, 2) != "--") msg += "|fd doesn't begin with boundary";
+if(r.match(/(?<!%0d)\n/)) msg += "|\\n without prior \\r";
+r = r.replace(/%0d/g, "");
+r = r.split("\n");
+boundary = r[0];
+if(boundary != r[4]) msg += "|boundary expected at 4";
+if(boundary + "--" != r[9]) msg += "|boundary-- expected at 9";
+if(r[1] != 'Content-Disposition: form-data; name="a"') msg += `|content line 1 ${r[1]}`;
+if(r[5] != 'Content-Disposition: form-data; name="b"') msg += `|content line 5 ${r[5]}`;
+if(r[3] != "simple @ascii%07") msg += `|line 3 ${r[3]}`;
+if(r[8] != "Line 2.") msg += `|line 8 ${r[8]}`;
+
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>

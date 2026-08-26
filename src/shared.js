@@ -2960,13 +2960,20 @@ FormDataMultipart: function(f)
         s += `${b}\r\nContent-Disposition: form-data; name="${sanitizeName(entry[0])}"\r\n`;
         let b64 = false;
         const v = entry[1];
-        if(v.length > 70) b64 = true;
-        if(v.match(/[^ -~]/)) b64 = true;
+        // nothing seems to cause crome to encode64 the field.
         if(b64) s += "Content-Transfer-Encoding: base64\r\n";
         s += "\r\n";
-        s += b64 ? btoa(v).replace(/.{72}/g, (a)=>{return a+"\r\n"}) : v;
+        if(b64) {
+            s += btoa(v).replace(/.{72}/g, (a)=>{return a+"\r\n"});
+        } else {
+/* \n is replaced with \r\n. I don't know about \r on it's own.
+If we already have \r\n, we don't want to replace \n with \r\n again.
+This lets us use one of the most fun features of pcre, negative look behind. */
+            s += v.replace(/(?<!\r)\n/g, "\r\n");
+        }
         s += "\r\n";
     }
+    // last boundary has extra -- at the end
     if(b) s += `${b}--\r\n`;
     return s;
 },
