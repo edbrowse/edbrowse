@@ -30,7 +30,7 @@ let c=($zct[k]>=0?++$zct[k]:($zct[k]=1));
 return k+":"+c;
 }
 
-const trace_string = ";(function(l$ne){ let v = trace$ch(l$ne); alert(v); })(\"";
+const trace_string = "(function(l){ let v = trace$ch(l); alert(v); })(\"";
 
 function traceBreakReplace(all, precomma, operator, name, postcomma) {
 var r = precomma ? precomma : ';';

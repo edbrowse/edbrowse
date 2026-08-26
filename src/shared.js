@@ -1575,7 +1575,7 @@ change it in the other.
 
 function traceBreakReplace(all, precomma, operator, name, postcomma) {
 var r = precomma ? precomma : ';'
-r += operator == "bp" ? bp_string : trace_string
+r += (operator == "bp" ? bp_string : trace_string).substr(1);
 r += name + "\")";
 r += postcomma ? postcomma : ';'
 return r
