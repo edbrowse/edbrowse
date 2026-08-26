@@ -62,8 +62,12 @@ This is the javascript engine for edbrowse.
 Edbrowse is known to build against version 0.10.1 or later. At the time of writing the current version is 0.11.0.
 Earlier versions have not been tested.
 
-If it is already packaged then you can move on to the next step.
-If it is not packaged you will need to build it from source.
+If it is already packaged then you can move on to the next step. If it is not
+packaged you will need to build it from source. Please note that you'll need the
+`qjs` executable as well as the library to build as it is used during the build
+process to verify our code's compatibility with the version of quickjs-ng being
+linked against.
+
 ```shell
 git clone https://github.com/quickjs-ng/quickjs
 ```
@@ -77,7 +81,9 @@ make install
 
 If header and library are not installed in the usual places,
 you may need to set the `$PREFIX`,
-or `$QUICKJS_INCLUDE` and `$QUICKJS_LIB` variables appropriately, when you make edbrowse.
+or `$QUICKJS_INCLUDE` and `$QUICKJS_LIB` variables appropriately, when you make
+edbrowse. If the `qjs` executable is not on your path then you'll need to adjust
+`$PATH` to include it.
 Under normal circumstances, make will just work.
 
 If your distribution packages quickjs-ng, it probably installs a pkg-config
