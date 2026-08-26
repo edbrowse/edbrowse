@@ -144,11 +144,12 @@ if(tab.rows.length != 8) msg += "|table length not 8";
 if(r2.rowIndex != 7 || r2.sectionRowIndex != 1) msg += "|bad anne rowIndex";
 r2.appendChild(document.createElement("td"));
 r2.appendChild(document.createElement("td"));
-r2.appendChild(document.createElement("td"));
 r2.cells[0].textContent = "anne";
 r2.cells[1].textContent = "p";
+r2.insertCell();
 r2.cells[2].textContent = "margrock";
 if(r2.cells.length != 3) msg += "|anne cells not length 3";
+if(r2.textContent != "annepmargrock") msg += "|wrong margrock text";
 
 tab1 = tab; // remember it for jdb
 
