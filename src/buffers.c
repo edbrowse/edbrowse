@@ -5388,8 +5388,11 @@ pwd:
 			}
 			if (!envFile(t, &t))
 				return false;
-			if (!chdir(t))
-				goto pwd;
+			if (!chdir(t)) {
+				if (debugLevel >= 1)
+					goto pwd;
+				return true;
+			}
 			setError(MSG_CDInvalid);
 			return false;
 		}
