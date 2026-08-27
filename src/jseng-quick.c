@@ -2256,7 +2256,7 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 // be just one at the end, and it will become a timer property.
 	JSValue g;		// global object
 	bool cc_error = false;
-	int32_t n = 1000;		// default number of milliseconds
+	int32_t n = isInterval ? 1000 : 10;		// default number of milliseconds
 	JSValue r = JS_UNDEFINED;
 	const char *body; // function body
 	char fname[48];		/* function name */
@@ -2269,7 +2269,7 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 		return JS_NULL;
 
 	debugPrint(5, "timer in");
-// if second parameter is missing, leave milliseconds at 1000.
+// if second parameter is missing, leave milliseconds at its default.
 	if (argc > 1 && JS_IsNumber(argv[1]))
 		JS_ToInt32(cx, &n, argv[1]);
 
