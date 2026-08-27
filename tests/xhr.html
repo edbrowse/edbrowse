@@ -34,7 +34,9 @@ xhr.onload = () => h+='o';
 handler_r = function(e) { h += this.readyState}
 xhr.addEventListener("readystatechange", handler_r);
 xhr.open("get", echourl + "?baked=beans%3C%3E", false);
+if(xhr.status != 0) msg += "|status not 0";
 xhr.send("");
+if(xhr.status != 200) msg += "|status not 200";
 if(h != "14o") msg += `|sync get events ${h}`;
 if(xhr.responseText != "get {\nbaked=beans%3C%3E\n}\n") msg += `|get response ${xhr.responseText}`;
 ct = xhr.getResponseHeader("cOntent-type");
