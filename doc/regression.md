@@ -84,64 +84,30 @@ The next link is an ftp link, which we should test / verify now and then,
 although ftp sites are becoming scarce.
 Go to it if you wish, descend into a directory or file, then ^ back.
 
-Next is a line with 4 action buttons.
+Next is a line with 3 action buttons.
 The first button waits 5 seconds then sends you to a gopher site, to test the gopher protocol.
 This is a page replacement, you cannot return.
 
-The second button runs an xhr test.
-xhr is a system where javascript can go get a file from the internet.
-In this case it gets the home page from edbrowse.org.
-When the page is loaded it prints "readyState is now 1" from its readyState function,
-and  " base onload" from its onload function,
-and a description of the target from another onload function.
-If the data looks right it will say "looks good".
-Finally it prints "readyState is now 4", the code for complete.
-It may print more debugging messages at db3.
-
-The third button is an await test.
+The second button is an await test.
 await is a special command in javascript; connected with Promise objects.
 This is designed to await 5 seconds.
 It should say "done waiting", and "your 5 seconds are up, baby".
 
-The fourth button is an await fetch test.
+The third button is an await fetch test.
 The javascript fetch command uses await internally.
 Once again this command fetches the home page of edbrowse.org.
 If it succeeds it will print "camp Granada".
 
-The next line has two checkboxes.
-Enable the first box with i1=+.
-This activates an observer, which watches the entire page.
-It reports any changes to the tree of objects, or to the attributes.
-If you are quick on the draw, and activate it before the 10 second timer fires,
-then it will report that the TextNode was added to the page.
-You can test it yourself by changing the tree or the attributes.
-I assume you are familiar with jdb, the javascript debugger.
-Once you have entered the jdb world, type
-
-f = document.forms[0];
-
-It will print the result of this expression, which is the form object, or [object HTMLFormElement].
-Type dumptree(f) to see this form as a tree of objects.
-You will see the buttons with their text messages inside.
-Now set an attribute to trigger the observer.
-
-f.setAttribute("sky","gray")
-
-The observer sees this right away and reports, "The sky attribute was modified."
-
-You can also test character data, like this.
-
-tt = document.getElementById("ftp").firstChild
-tt.textContent = "some ftp site"
-
-The second checkbox activates a timer, which is displayed on the next line.
+The next line has a checkbox.
+Enable the box with i=+.
+This activates a timer, which is displayed on the same line.
 This timer updates once a second.
 Edbrowse rerenders every 20 seconds, so this should not overwhelm.
 Indeed, that is part of the test.
 Note the updated line as the timer runs.
 Type rr to rerender now, to see the value of the timer right now.
-Type i2=- to turn the timer off,
-whence the next line does not tick any more.
+Type i=- to turn the timer off,
+whence this line does not tick any more.
 
 Move down a couple lines, and we come to
 Frame {butterfly}, and there are a lot of things to test here.

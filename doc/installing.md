@@ -153,14 +153,14 @@ You should get something like this; if you do then all is well.
 relative
 complete
 body loading
-825
+810
 ```
 
 	[after a delay of 10 seconds]
 
 ```
 10 seconds have passed!
-lines 37 through 38 have been added
+lines 36 through 37 have been added
 ```
 
 Type ,p to see the page, if you wish, as though it were ed.

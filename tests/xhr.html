@@ -140,6 +140,23 @@ if(r[5] != 'Content-Disposition: form-data; name="b"') msg += `|content line 5 $
 if(r[3] != "simple @ascii%07") msg += `|line 3 ${r[3]}`;
 if(r[8] != "Line 2.") msg += `|line 8 ${r[8]}`;
 
-show.innerHTML = msg;
+// asynchronous stuff.
+h = ":";
+xhr1 = new XMLHttpRequest;
+xhr1.open("get", echourl + "?async1", true);
+xhr1.onload = () => h += "o1:";
+xhr1.addEventListener("readystatechange", function(e){
+if(this.readyState == 4)
+h += `r1${this.response.indexOf("async1") >= 0 ? "yes" : "no"}:`;
+});
+xhr1.addEventListener("load", function(e){
+h += `l1${this.response.indexOf("async1") >= 0 ? "yes" : "no"}:`;
+});
+xhr1.send();
+
+show.innerHTML = "mid";
+setTimeout(()=> {
+if(h != ":r1yes:o1:l1yes:") msg += `:async string ${h}`;
+show.innerHTML = msg; }, 1000);
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>

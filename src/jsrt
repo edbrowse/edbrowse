@@ -82,22 +82,6 @@ function gopherJump()
     setTimeout(() => window.location.href = "gopher://gopher.floodgap.com/1/", 5000);
 }
 
-// xhrTest() succeeds even if allowXHR is off, which is weird.
-// Not that I want it to fail if allowXHR is off either. IDK
-function xhrTest()
-{
-var xhr = new XMLHttpRequest;
-xhr.onload = () => alert("base onload");
-xhr.addEventListener("load", function(e){
- alert(`target ${e.target} phase ${e.eventPhase} response length ${this.responseText.length}`)
-if(this.responseText.indexOf("100% text based") > 0) alert("looks good"); else alert("search text not found");
-})
-xhr.addEventListener("readystatechange", function(e){
-alert(`ready state is now ${this.readyState}`)})
-xhr.open("get", "http://edbrowse.org", true);
-xhr.send("", 0);
-}
-
 async function awaitTest()
 {
 function resolveAfter5Seconds(x) {
@@ -121,14 +105,11 @@ p_json.then(showcamp);
 }
 </script>
 <button onclick="gopherJump()">Jump to gopherspace</button>
-<button onclick="xhrTest()">XHR test</button>
 <button onclick="awaitTest()">Await test</button>
 <button onclick="awaitFetchTest()">Await fetch test</button>
 <br>
 Interval
 <input type="checkbox" id="realtime" name="intervaltest" />
-<br>
-⏲
  <span id=showcount><i>0</i></span> seconds
 </form>
 <script>
