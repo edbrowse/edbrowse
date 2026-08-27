@@ -383,12 +383,15 @@ struct listHead {
 };
 
 /* Macros to loop through the items in a list. */
-#define foreach(e,l) for((e)=(l).next; \
-(e) != (void*)&(l); \
-(e) = ((struct listHead *)e)->next)
-#define foreachback(e,l) for((e)=(l).prev; \
-(e) != (void*)&(l); \
-(e) = ((struct listHead *)e)->prev)
+#define foreach(e,l) for(e=(l).next; \
+e != (void*)&(l); \
+e = ((struct listHead *)e)->next)
+#define foreach_safe(e, e1,l) for(e=(l).next, e1 = e->next; \
+e != (void*)&(l); \
+e = e1, e1 = ((struct listHead *)e)->next)
+#define foreachback(e,l) for(e=(l).prev; \
+e != (void*)&(l); \
+e = ((struct listHead *)e)->prev)
 
 // Point to the text of a line.
 struct lineMap {

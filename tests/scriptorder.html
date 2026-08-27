@@ -7,6 +7,7 @@
 <ol>
 <li>Produced directly by the inline script.
 <li>Microtasks or other pending jobs produced by the inline scripts.
+This includes timers with a delay of 0 milliseconds.
 <li>The deferred scripts, and any onload functions associated therewith.
 <li>The document onload functions, be they inline or attached events.
 <li>A timer, half a second after the document is completely rendered.
@@ -104,6 +105,7 @@ prom = Promise.resolve('p');
 prom = prom.then((f)=>{h += f; return 'P'});
 prom.then((f)=>{h += f});
 
+setTimeout(()=>{h += "0"});
 setTimeout(()=>{h += " / t"}, 300);
 
 // set a show timer in case that innerHTML script ran later
@@ -114,7 +116,7 @@ if(this != window) h += "@6";
 // but it fetches asynchronously in chrome, so I can't guarantee when it will happen.
 // I'll just make sure it happened by now.
 if(!on_css_load) h += '@3';
-const correct = "abcefgh / ospSP / izxyw / jkl2m / t";
+const correct = "abcefgh / ospSP0 / izxyw / jkl2m / t";
 if(h == correct) show.innerHTML = `ok<br>${correct}`;
 else show.innerHTML = `ok|bad order  ${h}<br>should be ${correct}`}, 600)
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

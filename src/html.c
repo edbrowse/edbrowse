@@ -1349,6 +1349,7 @@ I will disconnect here, and also check for inxhr in runOnload().
 
 static void runOnload(void);
 static void runConnectedCallback(void);
+static int runTimersNow(void);
 void runScriptsPending(bool startbrowse)
 {
 	Tag *t;
@@ -1377,10 +1378,11 @@ If not then it's probably an infinite loop, and we should move on. */
     if(startbrowse && do_pjobs) {
         int k;
         // run jobs for this window, this frame only.
-        // document.write above might have changged cf.
+        // document.write above, might have changed cf.
         cf = save_cf;
         for(k = 0; k < 5; ++k) {
-            if(!my_ExecutePendingJobs(0, true)) break;
+            if(!(my_ExecutePendingJobs(0, true) +
+            runTimersNow())) break;
         }
         // Because we set current = true, only jobs within this frame will run.
         // cw and cf did not change.
@@ -4155,7 +4157,7 @@ void domSetsTimeout(int n, const char *jsrc, const char *backlink, bool isInterv
 	if(stringEqual(jsrc, "@@pending"))
 		jt->pending = true;
 	else {
-	    if(!n) jt->now = true, puts("now");
+	    if(!n) jt->now = true;
 	    if (n < timerSpread) n = timerSpread;
 	}
 	if ((jt->isInterval = isInterval))
@@ -4499,6 +4501,19 @@ skip_execution:
 		if (jt->ms >= 1000)
 			jt->ms -= 1000, ++jt->sec;
 	}
+}
+
+static int runTimersNow(void)
+{
+    int cnt = 0;
+    struct jsTimer *t, *t1;
+    foreach_safe(t, t1, timerList) {
+        if(!t->now) continue;
+        if(t->f != cf) continue;
+runTimer0(t, cf);
+++cnt;
+    }
+    return cnt;
 }
 
 void showTimers(void)
