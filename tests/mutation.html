@@ -187,7 +187,7 @@ show.innerHTML = "mid";
 if(log.size) msg += "|observers ran during the script";
 
 // finally set a timer so all these observers can run asynchronously
-setTimeout(()=>{
+time_id = setTimeout(()=>{
 // according to chrome and its upstream chromium
 correct = new Set([
     '{3:worm=round>flat}(1)',
@@ -245,6 +245,7 @@ addOutput("Log", log);
 if(!success) addOutput("Should be", correct);
 show.innerHTML = `${msg}<br>${output}`;
 }, 600);
+if(typeof time_id != "number") msg += "|bad timer id";
 
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 

@@ -4240,8 +4240,10 @@ static struct jsTimer *soonest2(void)
             if(!allowJS || !gotimers) continue;
             w = t->f->owner;
             if(sessionList[w->sno].lw != w) continue;
-            if(t->isInterval) {
-                puts("intervals");
+// An asynchronous script or deferred fetch looks like an interval,
+// as we are polling it, but we don't want to forego tmwait because of that.
+            if(t->isInterval && !t->t) {
+                printf("timer%d is interval\n", t->tsn);
                 return 0;
             }
         }

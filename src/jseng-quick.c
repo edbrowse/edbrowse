@@ -2266,7 +2266,7 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 
 	g = *(JSValue*)cf->winobj;
 	if (argc == 0)
-		return JS_NULL;
+		return JS_UNDEFINED;
 
 	debugPrint(5, "timer in");
 // if second parameter is missing, leave milliseconds at its default.
@@ -2309,7 +2309,7 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 // Now looks like a function object, just like the previous case.
 	} else {
 // oops, not a function or a string.
-		return JS_NULL;
+		return JS_UNDEFINED;
 	}
 
 // pull the function name out of the body, if that makes sense.
@@ -2346,7 +2346,7 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 		JS_FreeValue(cx, fo);
 		JS_Release(to);
 		debugPrint(5, "timer fail");
-		return JS_NULL;
+		return JS_UNDEFINED;
 	}
 
 	JS_SetPropertyStr(cx, to, "ms", JS_NewInt32(cx, n));
@@ -2359,7 +2359,7 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 	debugPrint(5, "timer out");
 	release(to);
         (void) this;
-	return to;
+    return JS_NewInt32(cx, timer_sn);
 }
 
 static JSValue nat_setTimeout(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
@@ -2374,16 +2374,15 @@ static JSValue nat_setInterval(JSContext * cx, JSValueConst this, int argc, JSVa
 
 static JSValue nat_clearTimeout(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
-	int tsn;
-	char *fpn; // fake prop name
-	if(!argc || !JS_IsObject(argv[0]))
-		return JS_UNDEFINED;
-	tsn = get_property_number(cx, argv[0], "tsn");
-	fpn = get_property_string(cx, argv[0], "backlink");
-	domSetsTimeout(tsn, "-", fpn, false);
-	nzFree(fpn);
-        (void) this;
-	return JS_UNDEFINED;
+    int tsn;
+    char timername[20];
+    if(!argc || !JS_IsNumber(argv[0]))
+        return JS_UNDEFINED;
+    JS_ToInt32(cx, &tsn, argv[0]);
+    sprintf(timername, "timer$%d", tsn);
+    domSetsTimeout(tsn, "-", timername, false);
+    (void) this;
+    return JS_UNDEFINED;
 }
 
 static JSValue nat_win_close(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
