@@ -618,13 +618,6 @@ function lastScript() {
 document.writeln(" Last Script");
 }
 
-setTimeout("joker()", 10000);
-function joker() {
-if(isedbrowse) alert("10 seconds have passed!");
-var j = document.createTextNode(" And the timer text");
-document.body.appendChild(j);
-}
-
 // test the innerHTML feature
 if(!document.getElementById("sphere").innerHTML.match(/^Surface area/))
 fail(145);

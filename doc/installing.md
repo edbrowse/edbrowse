@@ -156,13 +156,6 @@ body loading
 810
 ```
 
-	[after a delay of 10 seconds]
-
-```
-10 seconds have passed!
-lines 36 through 37 have been added
-```
-
 Type ,p to see the page, if you wish, as though it were ed.
 Type q to exit.
 
