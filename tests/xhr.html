@@ -154,9 +154,28 @@ h += `l1${this.response.indexOf("async1") >= 0 ? "yes" : "no"}:`;
 });
 xhr1.send();
 
+/* await fetch test, which encompasses a lot of features.
+This requires a file on edbrowse.org:
+{"camp":"Granada"}
+We need an async function, or await doesn't work at all. */
+async function awaitFetchTest()
+{
+function showcamp(o) { h += "camp " + o.camp + ':'}
+const r = (await fetch("http://www.edbrowse.org/jscamp.json"));
+h += r.headers.get("content-length") + ':'; // should be 19
+// p_json is the promise of the json object
+const p_json = r.json();
+p_json.then(showcamp);
+}
+awaitFetchTest();
+
 show.innerHTML = "mid";
 setTimeout(()=> {
-if(h != ":r1yes:o1:l1yes:") msg += `:async string ${h}`;
+// things are all asynchronous, order not guaranteed
+if(h.indexOf(":r1yes:o1:l1yes:") < 0 ||
+h.indexOf(":19:") < 0 ||
+h.indexOf(":camp Granada:") < 0)
+msg += `:async string ${h}`;
 show.innerHTML = msg; }, 1000);
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>

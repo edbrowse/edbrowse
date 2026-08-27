@@ -83,20 +83,10 @@ The link goes no where.
 The next link is an ftp link, which we should test / verify now and then,
 although ftp sites are becoming scarce.
 Go to it if you wish, descend into a directory or file, then ^ back.
-
-Next is a line with 3 action buttons.
-The first button waits 5 seconds then sends you to a gopher site, to test the gopher protocol.
-This is a page replacement, you cannot return.
-
-The second button is an await test.
-await is a special command in javascript; connected with Promise objects.
-This is designed to await 5 seconds.
-It should say "done waiting", and "your 5 seconds are up, baby".
-
-The third button is an await fetch test.
-The javascript fetch command uses await internally.
-Once again this command fetches the home page of edbrowse.org.
-If it succeeds it will print "camp Granada".
+Another protocol to test, on the same line, is gopher.
+this is a button, rather than a link.
+It takes you to a gopher site, and unlike the ftp link, this is a replacement.
+You cannot ^ back.
 
 The next line has a checkbox.
 Enable the box with i=+.

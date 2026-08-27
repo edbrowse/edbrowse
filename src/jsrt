@@ -73,6 +73,8 @@ alert(e.stack);
 <H1> jsrt </H1>
 
 <a id=ftp href="ftp://ftp.netbsd.org/">NetBsd FTP site</a>
+<button onclick="gopherJump()">Jump to gopherspace</button>
+
 <form>
 <script>
 // these can't be in a try block
@@ -94,19 +96,7 @@ function greeting() { alert("done waiting"); return ", Baby"}
 alert(await resolveAfter5Seconds("your 5 seconds are up") + greeting())
 } // returns the Promise object
 
-async function awaitFetchTest()
-{
-function showcamp(o) { alert("camp " + o.camp); }
-const r = (await fetch("http://www.edbrowse.org/jscamp.json"));
-// p_json is the promise of the json object
-const p_json = r.json();
-if(r.headers.get("content-length") != 19) fail(179);
-p_json.then(showcamp);
-}
 </script>
-<button onclick="gopherJump()">Jump to gopherspace</button>
-<button onclick="awaitTest()">Await test</button>
-<button onclick="awaitFetchTest()">Await fetch test</button>
 <br>
 Interval
 <input type="checkbox" id="realtime" name="intervaltest" />
