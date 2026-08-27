@@ -12,7 +12,7 @@ sub ascify($) {
     for(my $i = 0; $i < $j; ++$i) {
     my $c = substr($l, $i, 1);
     my $o = ord $c;
-    if(($o >= 32 and $o < 127) or $o == 10) { $m .= $c; } else { $m .= sprintf("%%%02x", $o); }
+    if(($o >= 32 and $o < 127) or $o == 10) { $m .= $c; } else { $m .= uc sprintf("%%%02x", $o); }
     }
     #  last line of input might not have nl on the end
     $m .= "\n" if ! (substr($l, $j-1, 1) eq "\n");
@@ -24,14 +24,26 @@ $method = lc $ENV{"REQUEST_METHOD"};
 if($method eq "get") {
     print "get {\n";
     # get string should already be url encoded; I shouldn't have to ascify it
-    print $ENV{"QUERY_STRING"};
-    print "\n}\n";
+    my $qs = $ENV{"QUERY_STRING"};
+    print "$qs\n}\n";
+    if($qs eq "xyz") {
+# this is a back door to test setRequestHeader
+        my $l = $ENV{"HTTP_ACCEPT_LANGUAGE"};
+        print "language: $l\n" if $l;
+    }
 } elsif($method eq "post") {
     print "post {\n";
     print ascify($_) while(<>);
     print "}\n";
 } else {
     printf "unknown method: %s\n", $method;
+}
+
+$cookie = $ENV{"HTTP_COOKIE"};
+if($cookie) {
+    print "cookie {\n";
+    $cookie =~ s/; */\n/g;
+    print $cookie . "\n}\n";
 }
 
 exit 0;

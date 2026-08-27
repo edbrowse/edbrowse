@@ -7,7 +7,16 @@ Currently using edbrowse.org, assuming it is so equipped.
 You can simply browse this program in edbrowse and that's fine,
 but for a chrome test, this program has to be on edbrowse.org,
 or the same site as the echo responder, to satisfy
-chrome's cross origin concerns. chromeline on this line.
+chrome's cross origin concerns.
+But it's more complicated than that.
+Chrome won't behave for me unless that web server is local, and /etc/hosts
+is configured accordingly.
+127.0.0.1       localhost www.edbrowse.org
+If I do that it all works; if not, if I go across the internet,
+I get a blowup network error, cannot send.
+I don't understand why; but for now, I can edbrowse this and get ok,
+and I can <chromeline below, with apache2 web server responding to
+edbrowse.org on the current machine, and get ok.
 http://www.edbrowse.org/xhr.html
 */
 try {
@@ -24,10 +33,10 @@ h = "";
 xhr.onload = () => h+='o';
 handler_r = function(e) { h += this.readyState}
 xhr.addEventListener("readystatechange", handler_r);
-xhr.open("get", echourl + "?baked=beans%3c%3e", false);
+xhr.open("get", echourl + "?baked=beans%3C%3E", false);
 xhr.send("");
 if(h != "14o") msg += `|sync get events ${h}`;
-if(xhr.responseText != "get {\nbaked=beans%3c%3e\n}\n") msg += `|get response ${xhr.responseText}`;
+if(xhr.responseText != "get {\nbaked=beans%3C%3E\n}\n") msg += `|get response ${xhr.responseText}`;
 ct = xhr.getResponseHeader("cOntent-type");
 cl = xhr.getResponseHeader("content-length");
 if(cl != 26) msg += `|sync get length ${cl}`;
@@ -52,6 +61,25 @@ ct = xhr.getResponseHeader("content-type");
 cl = xhr.getResponseHeader("content-length");
 if(cl != 27) msg += `|sync get length ${cl}`;
 if(ct != "text/plain") msg += `|sync get type ${ct}`;
+xhr.removeEventListener("readystatechange", handler_r);
+delete xhr.onload;
+
+/* test setRequestHeader. I tried setting cookie, because echo will send
+that back to me, but chrome wouldn't do it.
+Probably some kind of security risk that I don't understand.
+So I settled on language, which most servers will provide
+through the environment, and hence I can echo it back.
+I use a back door of xyz. */
+xhrl = new XMLHttpRequest;
+xhrl.open("get", echourl + "?xyz", false);
+xhrl.setRequestHeader("accept-language", "pt_br");
+// second should concatenate
+xhrl.setRequestHeader("accept-language", "cz");
+xhrl.send();
+if(xhrl.response.substr(0, 11) != "get {\nxyz\n}") msg += "|no xyz";
+// some clients or servers include the native language of the computer,
+// so we just have to check for what we set.
+if(xhrl.response.indexOf("pt_br, cz") < 0) msg += `|wrong languages ${xhrl.response}`;
 
 /* sending a string with nonascii characters is bizarre under chrome.
 alpha turns into a weird chinese character.
@@ -70,7 +98,7 @@ a[3] = 101;
 a[4] = 110;
 a[5] = 100;
 xhr.send(a);
-if(xhr.response != "post {\nG%00%a3end\n}\n") msg += `|uint8 response ${xhr.response}`;
+if(xhr.response != "post {\nG%00%A3end\n}\n") msg += `|uint8 response ${xhr.response}`;
 xhr.open("post", echourl, false);
 a = new Uint16Array(4);
 a[0] = 0x3b1; // this is alpha
@@ -78,7 +106,7 @@ a[1] = 0; // always good to test 0
 a[2] = 7; // test endian
 a[3] = 26984;
 xhr.send(a);
-if(xhr.response != "post {\n%b1%03%00%00%07%00hi\n}\n") msg += `|uint16 response ${xhr.response}`;
+if(xhr.response != "post {\n%B1%03%00%00%07%00hi\n}\n") msg += `|uint16 response ${xhr.response}`;
 xhr.open("post", echourl, false);
 a = new Uint32Array(2);
 a[0] = 1701605491;
@@ -99,8 +127,8 @@ r = xhr.response;
 r = r.substr(7);
 r = r.substr(0, r.length - 2);
 if(r.substr(0, 2) != "--") msg += "|fd doesn't begin with boundary";
-if(r.match(/(?<!%0d)\n/)) msg += "|\\n without prior \\r";
-r = r.replace(/%0d/g, "");
+if(r.match(/(?<!%0D)\n/)) msg += "|\\n without prior \\r";
+r = r.replace(/%0D/g, "");
 r = r.split("\n");
 boundary = r[0];
 if(boundary != r[4]) msg += "|boundary expected at 4";

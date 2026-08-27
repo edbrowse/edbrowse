@@ -2903,7 +2903,9 @@ this.dispatchEvent(e);
 
 // set request header
 srh: function(header, value){
-this.headers[header] = value;
+    if(this.readyState != 1) return; // only in the open state
+    const previous = this.headers[header];
+    this.headers[header] = previous ? `${previous}, ${value}` : value;
 },
 
 // get response header
