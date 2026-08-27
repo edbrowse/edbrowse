@@ -4096,6 +4096,7 @@ struct jsTimer {
 	bool running;
 	bool deleted;
 	bool pending;
+	bool now;
 	int jump_sec;		/* for interval */
 	int jump_ms;
 	int tsn;
@@ -4113,7 +4114,7 @@ the spec says you can't run a timer less than 10 ms but here we currently use
 Timers often run faster than that but edbrowse can't keep up.
 We only rerender the screen every 20 seconds or so anyways.
 *********************************************************************/
-static const int timerSpread = 100;
+static const int timerSpread = 50;
 int timer_sn;			// timer sequence number
 
 void domSetsTimeout(int n, const char *jsrc, const char *backlink, bool isInterval)
@@ -4154,8 +4155,8 @@ void domSetsTimeout(int n, const char *jsrc, const char *backlink, bool isInterv
 	if(stringEqual(jsrc, "@@pending"))
 		jt->pending = true;
 	else {
-		if (n < timerSpread)
-			n = timerSpread;
+	    if(!n) jt->now = true, puts("now");
+	    if (n < timerSpread) n = timerSpread;
 	}
 	if ((jt->isInterval = isInterval))
 		jt->jump_sec = n / 1000, jt->jump_ms = n % 1000;
@@ -4489,8 +4490,7 @@ skip_execution:
 		}
 	} else {
 		int n = jt->jump_sec * 1000 + jt->jump_ms;
-		if (n < timerSpread)
-			n = timerSpread;
+		if (n < timerSpread) n = timerSpread;
 		if(timerspeed > 1 && !jt->pending && !jt->t &&
 		0x40000000 / timerspeed >= n)
 			n *= timerspeed;
