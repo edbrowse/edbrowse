@@ -2403,7 +2403,8 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 	JS_SetPropertyStr(cx, to, "tsn", JS_NewInt32(cx, ++timer_sn));
 	domSetsTimeout(n, fname, fpn, isInterval);
 	debugPrint(5, "timer out");
-	release(to);
+// Ref held in window (see backlink) so need to release here to prevent a leak
+	JS_Release(to);
         (void) this;
     return JS_NewInt32(cx, timer_sn);
 }
@@ -3472,6 +3473,11 @@ JSValue mwo; // master window object
 		fprintf(stderr, "Cannot create javascript runtime environment\n");
 		return;
 	}
+// Different to our own leak tracking; this is quickjs-ng provided. Note it
+// dumps output regardless of debug level.
+#ifdef QJS_LEAK_CHECK
+        JS_SetDumpFlags(jsrt, JS_DUMP_LEAKS | JS_DUMP_ATOM_LEAKS);
+#endif
 // default stack size is 256K, which is fine for normal use.
 // If we are deminimizing code, the deminimizer is written in javascript,
 // and it eats up the stack.
