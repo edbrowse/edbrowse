@@ -2248,6 +2248,49 @@ static JSValue nat_linkage(JSContext * cx, JSValueConst this, int argc, JSValueC
     return JS_UNDEFINED;
 }
 
+/*********************************************************************
+This function is similar to an observer watching for changes in character data.
+In fact there is already a setter on TextNode.data for that very purpose.
+If there are observers watching, it generates mutation records.
+Since we have a setter anyways, report any changes back to C
+via this native method. Thus the text fields are always up to date.
+I don't have to check with javascript every time I render every little
+piece of text. That should make the process more efficient.
+Note that this function uses the tag sequence number to identify the tag,
+not the tag object. That is also more efficient.
+I don't have to vector through tagFromObject().
+Why don't I do this more often?
+Example, why didn't I do it above, in nat_linkage?
+For one thing, when the type is c, we are creating the tag.
+It doesn't exist yet. I can't use its sequence number.
+I could use sequence numbers for a (append), or b (insert before),
+and that would be a tad faster; but confusing to sometimes use objects
+and sometimes sequence numbers.
+However, in other functions I can perhaps use sequence numbers,
+and I may start doing that in the future.
+*********************************************************************/
+
+static JSValue nat_characterData(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
+{
+    jsInterruptCheck(cx);
+    int seqno;
+    JS_ToInt32(cx, &seqno, argv[0]);
+    if(seqno < 0 || seqno >= cw->numTags) return JS_UNDEFINED;
+    Tag *t = tagList[seqno];
+    if(t->action != TAGACT_TEXT) return JS_UNDEFINED;
+    const char *datastring = JS_ToCString(cx, argv[1]);
+    if(!stringEqual(t->textval, datastring)) {
+        nzFree0(t->textval);
+// js heap might not be the same as our heap
+        if(datastring[0])
+            t->textval = cloneString(datastring);
+    }
+    JS_FreeCString(cx, datastring);
+(void)this;
+    (void)argc;
+    return JS_UNDEFINED;
+}
+
 static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv, bool isInterval)
 {
 	JSValue to;		// timer object
@@ -3348,7 +3391,8 @@ static const struct native_descriptor native_list[] = {
     {"fileModTime",  nat_modtime, 1, JS_PROP_ENUMERABLE},
     {"resolveURL",  nat_resolveURL, 2, JS_PROP_ENUMERABLE},
     {"eb$newLocation",  nat_new_location, 1, JS_PROP_ENUMERABLE},
-    {"domLinkage",  nat_linkage, 5, JS_PROP_ENUMERABLE},
+    {"domLinkage",  nat_linkage, 5, 0},
+    {"characterDataC",  nat_characterData, 2, 0},
     {"cssDocLoad",  nat_css_start, 3, 0},
     {"eb$cssText",  nat_cssText, 1, 0},
     {"cssApply",  nat_cssApply, 3, 0},
