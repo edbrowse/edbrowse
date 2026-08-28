@@ -216,3 +216,11 @@ if(r3 != tab.rows[1] || r3.rowIndex != 1) msg += "|r3 didn't slide back to posit
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>
+
+<button title=press2>press1</button>
+
+<script>
+// the last button tag is just to confirm that in the display,
+// aria-label takes precedence over title, over the text.
+b.querySelector("button").setAttribute("aria-label", "press3");
+</script>

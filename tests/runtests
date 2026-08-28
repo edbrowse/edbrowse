@@ -48,7 +48,9 @@ betty|l|rubble
 bambam|y|rubble
 hoppy|g|rubble
 joe|v|rockhead
-anne|p|margrock'
+anne|p|margrock
+
+<press3>'
 $program -c "" -d0 table.html <<!
 b
 et

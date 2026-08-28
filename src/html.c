@@ -4914,18 +4914,57 @@ static void td2columnHeading(const Tag *tr, const Tag *td)
 	}
 }
 
-// return allocated string, as it may come from js
+// return an allocated string, as it may come from js
 static char *arialabel(const Tag *t)
 {
-	const char *a;
-	if(allowJS && t->jslink) {
-		char *u = get_property_string_t(t, "aria-label");
-		if(u && *u)
-			return u;
-		nzFree(u);  // empty string?
-	}
-	a = attribVal(t, "aria-label");
-	return (a && *a) ? cloneString(a) : 0;
+    const char *a;
+    if(allowJS && t->jslink) {
+        char *u = get_js_attribute(t, "aria-label");
+        if(u && *u)
+            return u;
+        nzFree(u);  // empty string?
+    }
+    a = attribVal(t, "aria-label");
+    return (a && *a) ? cloneString(a) : 0;
+}
+
+static char *ariatitle(const Tag *t)
+{
+    const char *a;
+    if(allowJS && t->jslink) {
+        char *u = get_js_attribute(t, "title");
+        if(u && *u)
+            return u;
+        nzFree(u);
+    }
+    a = attribVal(t, "title");
+    return (a && *a) ? cloneString(a) : 0;
+}
+
+/*********************************************************************
+The next function looks for aria label, and if not found, it looks for title.
+That doesn't mean these two are on an equal footing.
+Label is an explanation of the area, often for blind people,
+and so we should really pay attention to that.
+title is something that pops up when you mouse over it.
+It can provide a summary of what is there, or more information,
+perhaps before you click on a link, so you know what you're doing.
+Since the title serves different purposes, it's hard to know what to do with it.
+If it's just a summary, a reminder, and the div contains an entire paragraph,
+we wouldn't want to replace that paragraph with the title.
+On the other hand, if it's a button, and the text just says push,
+and the title tells you what's going to happen when you press this button,
+then we want the title.
+It will depend on the tag, and perhaps other imperfect huristics.
+For some tags, like button, we will always want the aria label,
+and if not that then the title, and if neither of those then the text.
+So this next function is convenient for that.
+*********************************************************************/
+
+static char *arialabeltitle(Tag *t)
+{
+    char *a = arialabel(t);
+    return a ? a : ariatitle(t);
 }
 
 static int ariaHeadingLevel(const Tag *t)
@@ -5094,6 +5133,7 @@ static void renderNode(Tag *t, bool opentag, struct parseContext *pc)
 	bool endcolor;
 	bool retainTag;
 	const char *a;		// usually an attribute
+	char *al; // aria label, or sometimes title
 	char *u;
 	Tag *ltag;
 
@@ -5352,11 +5392,11 @@ nocolor:
 		if (t->href) {
 			if (opentag) {
 				sprintf(hnum, "%c%d{", InternalCodeChar, tagno);
-				if((a = arialabel(t))) {
+				if((al = arialabel(t))) {
 // for <a>,  aria-label replaces anything that was below; this takes precedence
 					ns_hnum();
-					stringAndString(&ns, &ns_l, a);
-					cnzFree(a);
+					stringAndString(&ns, &ns_l, al);
+					nzFree(al);
 					sprintf(hnum, "%c0}", InternalCodeChar);
 					ns_hnum();
 					deltag = t;
@@ -5397,7 +5437,7 @@ nocolor:
 	case TAGACT_SPAN: case TAGACT_DIV:
 		a = 0; { // satisfy the compiler and scope the next 3 variables
 // next three variables will remain null if opentag is false
-		char *al = opentag ? arialabel(t) : 0;
+		al = opentag ? arialabel(t) : 0;
 		const char *tit1 = 0;
 		char *tit2 = 0;
 // If nothing in the span then the title becomes important.
@@ -5674,11 +5714,9 @@ past_cell_paragraph:
 			break;
 		}
 // value has to be something.
-		if (!t->value)
-			t->value = emptyString;
+		if (!t->value) t->value = emptyString;
 		itype = t->itype;
-		if (itype == INP_HIDDEN)
-			break;
+		if (itype == INP_HIDDEN) break;
 		if (itype == INP_TA && t->lic >= 0) {
 			j = t->lic;
 			if (j)
@@ -5700,8 +5738,17 @@ past_cell_paragraph:
 		sprintf(hnum, "%c%d<", InternalCodeChar, tagno);
 		ns_hnum();
 // button stops here, until </button>
-		if (stringEqual(ti->name, "button"))
-			break;
+		if (stringEqual(ti->name, "button")) {
+// for a button, we prefer the aria label, or the title, to the text,
+// which is usually brief.
+		    if(!(al = arialabeltitle(t))) break;
+		    stringAndString(&ns, &ns_l, al);
+		    nzFree(al);
+		    sprintf(hnum, "%c0>", InternalCodeChar);
+		    ns_hnum();
+		    deltag = t;
+		    break;
+		}
 		if (itype < INP_RADIO) {
 			if (t->value[0])
 				stringAndString(&ns, &ns_l, t->value);
