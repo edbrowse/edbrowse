@@ -5392,8 +5392,8 @@ nocolor:
 		if (t->href) {
 			if (opentag) {
 				sprintf(hnum, "%c%d{", InternalCodeChar, tagno);
-				if((al = arialabel(t))) {
-// for <a>,  aria-label replaces anything that was below; this takes precedence
+				if((al = arialabeltitle(t))) {
+// for <a>,  aria-label or title replaces anything that was below
 					ns_hnum();
 					stringAndString(&ns, &ns_l, al);
 					nzFree(al);
@@ -5401,15 +5401,6 @@ nocolor:
 					ns_hnum();
 					deltag = t;
 					break;
-				} else if (t->jslink     && (a =
-					get_property_string_t(t, "title"))) {
-// <a title=x>   x appears on hover
-					++hovcount;
-					if (showall) {
-						stringAndString(&ns, &ns_l, a);
-						stringAndChar(&ns, &ns_l, ' ');
-					}
-					cnzFree(a);
 				}
 			} else // open or closed
 				sprintf(hnum, "%c0}", InternalCodeChar);
