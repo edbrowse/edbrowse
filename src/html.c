@@ -5426,34 +5426,21 @@ nocolor:
 // check for span onclick and make it look like a link.
 // Same for div, maybe for others too.
 	case TAGACT_SPAN: case TAGACT_DIV:
-		a = 0; { // satisfy the compiler and scope the next 3 variables
-// next three variables will remain null if opentag is false
-		al = opentag ? arialabel(t) : 0;
-		const char *tit1 = 0;
-		char *tit2 = 0;
-// If nothing in the span then the title becomes important.
-		if (!t->firstchild && opentag && !al) {
-			tit1 = attribVal(t, "title");
-			if (allowJS && t->jslink)
-				tit2 = get_property_string_t(t, "title");
-		}
+// don't overwrite text in <div> or in <span> with the title
+		al = 0;
+		if(opentag && !t->firstchild) al = arialabeltitle(t);
 // If an onclick function, then turn this into a hyperlink, thus clickable.
-// At least one site adds the onclick function via javascript, not html.
 		if (!t->onclick && opentag && t->jslink && handlerPresent(t, "onclick"))
 			t->onclick = true;
 		if (!(t->onclick & allowJS) || ahref_under(t) > 0) {
 // regular span, don't need title unless it is inside a link
 			if(opentag && !findOpenTag(t, TAGACT_A))
-				tit1 = 0, nzFree0(tit2);
-			if((al || tit1 || tit2) && action == TAGACT_DIV)
+				nzFree0(al);
+			if(al && action == TAGACT_DIV)
 				stringAndChar(&ns, &ns_l, '\n');
 			j = ns_l;
 			if (al) // aria-label
-				stringAndString(&ns, &ns_l, al), nzFree(al);
-			if (tit2) // allocated title
-				stringAndString(&ns, &ns_l, tit2), nzFree(tit2);
-			else if (tit1)
-				stringAndString(&ns, &ns_l, tit1);
+				stringAndString(&ns, &ns_l, al), nzFree0(al);
 			if(ns_l > j && t->firstchild)
 				stringAndChar(&ns, &ns_l, ' ');
 			goto nop;
@@ -5462,15 +5449,11 @@ nocolor:
 		if (opentag) {
 			sprintf(hnum, "%c%d{", InternalCodeChar, tagno);
 			ns_hnum();
-			if((al || tit1 || tit2) && action == TAGACT_DIV)
+			if(al && action == TAGACT_DIV)
 				stringAndChar(&ns, &ns_l, '\n');
 			j = ns_l;
 			if (al)
-				stringAndString(&ns, &ns_l, al), nzFree(al);
-			if (tit2) // allocated title
-				stringAndString(&ns, &ns_l, tit2), nzFree(tit2);
-			else if (tit1)
-				stringAndString(&ns, &ns_l, tit1);
+				stringAndString(&ns, &ns_l, al), nzFree0(al);
 			if((ns_l > j) && t->firstchild)
 				stringAndChar(&ns, &ns_l, ' ');
 		} else {
@@ -5479,7 +5462,7 @@ nocolor:
 			if (endcolor)
 				swapArrow();
 		}
-		}break;
+		break;
 
 	case TAGACT_BQ:
 		if (invisible)
