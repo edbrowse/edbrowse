@@ -3108,7 +3108,6 @@ all the div sections just below the current node.
 			ns = spreadKids(t);
 			rc = true;	// empty
 			for (i = 0; i < ns; ++i) {
-				char *v;
 				Tag *u;
 				ntype = sibs[i].nodeType;
 				if (ntype == 8)	// comment
@@ -3119,18 +3118,10 @@ all the div sections just below the current node.
 				}
 // text node has to be empty.
 				u = sibs[i].t;
-					if (bulkmatch) {
-						if (u->textval && *u->textval) {
-							rc = false;
-							break;
-						}
-						continue;
-					}
-				v = get_property_string_t(u, "data");
-				rc = (!v || !*v);
-				nzFree(v);
-				if (!rc)
+				if (u->textval && *u->textval) {
+					rc = false;
 					break;
+				}
 			}
 			nzFree(sibs);
 			if (rc)
@@ -3793,7 +3784,7 @@ so this might be wrong but it gets around that test.
 	s_attr = attrify(t, s);
 	nzFree(s);
 	s = s_attr;
-	set_property_string_t(tn, "data", s);
+	set_property_string_t(tn, "data$2", s);
 	nzFree(s);
 	set_property_bool_t(tn, "inj$css", true);
 }

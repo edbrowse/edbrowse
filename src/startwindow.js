@@ -2066,6 +2066,7 @@ all those classes will exist. */
         if(t == undefined) t = "";
         const c = new Text(t);
         domLinkage('c', c, "text");
+        characterDataC(c.eb$seqno, c.data$2);
         return c;
     }
 
@@ -2313,6 +2314,8 @@ class Text extends HTMLElement
     {
         const old = this.data$2;
         this.data$2 = h + "";
+        // pass the change back to C to render
+        characterDataC(this.eb$seqno, this.data$2);
         mutFixup(this, 2, "text", old);
     }
 }

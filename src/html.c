@@ -4979,12 +4979,6 @@ static int ahref_under(const Tag *t)
 			if(u->href) return 1;
 		}
 		if(u->action == TAGACT_TEXT) {
-			if (u->jslink) {
-// defer to the javascript text.
-				char *w = get_property_string_t(u, "data");
-				if (w)
-					nzFree(u->textval), u->textval = w;
-			}
 			const char *s = u->textval;
 			if(!s) s = emptyString;
 			while(*s) { if(!isspaceByte(*s)) return -1; ++s; }
@@ -5315,13 +5309,6 @@ nocolor:
 
 	switch (action) {
 	case TAGACT_TEXT:
-		if (t->jslink) {
-		    // defer to the javascript text.
-		    // either we query js every time, on every piece of text, as we do now,
-		    // or we include a setter so that Text.data assignment has a side effect.
-		    char *u = get_property_string_t(t, "data");
-		    if (u) nzFree(t->textval), t->textval = u;
-		}
 		if (!t->textval) break;
 		if (!invisible) {
 // I'm not gonna include the node numbers for all the text nodes;

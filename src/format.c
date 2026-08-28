@@ -7,11 +7,6 @@
 bool isBlankTag(Tag *t)
 {
     if(t->action != TAGACT_TEXT) return false;
-    // we may not have rendered this text node yet - check with javascript
-    if (t->jslink) {
-        char *u = get_property_string_t(t, "data");
-        if (u) nzFree(t->textval), t->textval = u;
-    }
     const char *s = t->textval;
     if(!s) return true;
     while(*s) {
