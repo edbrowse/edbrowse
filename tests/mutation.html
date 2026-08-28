@@ -223,7 +223,8 @@ correct = new Set([
     '{2:["start"]>["mid"]}(1)',
     '{3:[]OL~>[BLOCKQUOTE]}(2)',
     '{1:~SCRIPT[]>[HR]}(1)',
-    '{1:~HR[]>[TEMPLATE]}(1)'
+    '{1:~HR[]>["lasttext"]}(1)',
+    '{1:~"lasttext"[]>[TEMPLATE]}(1)'
 ]);
 const success = !log.symmetricDifference(correct).size;
 if(!success) msg += "|rules don't match";
@@ -272,4 +273,4 @@ Even more bizarre, I had to get rid of the newline at the end of this file -
 even that turned into a whitespace node which was added to the tree.
 So if you edit this, don't let your editor put a newline at the end.
 edbrowse won't - unless you muck with the last line. */
-</script><hr extra=tag><template><div><p>Shouldn't be logged</p></div></template></body>
+</script><hr extra=tag>lasttext<template><div><p>Shouldn't be logged</p></div></template></body>

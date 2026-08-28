@@ -4704,9 +4704,17 @@ Needless to say that's not good!
 	case TAGACT_TEXT:
 		debugPrint(5, "domText");
 		establish_js_textnode(t);
-// nodeName and nodeType set in constructor
-		if (t->jslink)
-			set_property_string_t(t, "data", t->textval);
+/*********************************************************************
+nodeName and nodeType are set in constructor, don't have to set them here.
+We are about to set data to the text under this tag - and data
+has a setter - why is it ok to skip that and go directly to data$2?
+The setter calls mutFixup, but this is a newly created, isolated node,
+there are no observers and no mutation records.
+The setter also calls a native metho to push the data back
+into the C world, but this is the C world, and the data is already set.
+So it's much more efficient to go straight to the underlying data$2.
+*********************************************************************/
+		set_property_string_t(t, "data$2", t->textval);
 		break;
 
 	case TAGACT_DOCTYPE:
