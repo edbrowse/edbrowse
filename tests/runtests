@@ -21,7 +21,7 @@ outfile=/tmp/runtests.out
 status=0
 for t in collection.html dynamic-form.html fragment.html frames.html getelem.html multiline-attribute.html mutation.html queryselector.html script-adds-nodes.html scriptorder.html style-shorthand.html table.html unbalanced-attribute.html xhr.html
 do
-$program -c /dev/null $t >$outfile <<!
+$program -c "" $t >$outfile <<!
 b
 tmwait
 rr
@@ -36,8 +36,35 @@ status=1
 fi
 done
 
+# The table test adds rows and cells, deletes rows and cells;
+# we should make sure it is rendered properly on the screen.
+t1='ok
+
+winston cigarettes
+first|middle|last
+fred|t|flintstone
+wilma|p|flintstone
+betty|l|rubble
+bambam|y|rubble
+hoppy|g|rubble
+joe|v|rockhead
+anne|p|margrock'
+$program -c "" -d0 table.html <<!
+b
+et
+w $outfile
+q
+!
+t2=`cat $outfile`
+if [ "$t1" != "$t2" ]
+then
+echo "table output has changed"
+status=1
+fi
+rm $outfile
+
 t=pending-navigation.html
-$program -c /dev/null $t >$outfile <<!
+$program -c "" $t >$outfile <<!
 b
 /go
 g
@@ -54,7 +81,7 @@ fi
 # acid3 is third party, and doesn't follow our format.
 # The pass fail message is on line 3, not line 1.
 t=acid3
-$program -c /dev/null $t >$outfile <<!
+$program -c "" $t >$outfile <<!
 b
 tmwait
 rr
