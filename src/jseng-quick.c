@@ -426,7 +426,6 @@ void set_property_object_t(const Tag *t, const char *name, const Tag *t2)
 
 static void set_array_element_object(JSContext *cx, JSValueConst parent, int idx, JSValueConst child)
 {
-// do we even need the atom, I don't know what an atom is
 	JSAtom a = JS_NewAtomUInt32(cx, idx);
 	JS_SetProperty(cx, parent, a, JS_DupValue(cx, child));
 	JS_FreeAtom(cx, a);
@@ -598,7 +597,7 @@ static bool run_function_bool(JSContext *cx, JSValueConst parent, const char *na
 	if(cx != cf->cx) {
 		JSValue g = JS_GetGlobalObject(cx);
 		int jj = get_property_number(cx, g, "eb$ctx");
-		JS_FreeValue(cx, g);
+		JS_Release(g);
 		debugPrint(3, "running function %s in context %d but current context is %d", name, jj, cf->gsn);
 // run it anyways and hope we know what we're doing
 	}
@@ -630,7 +629,7 @@ static bool run_function_bool(JSContext *cx, JSValueConst parent, const char *na
 	    // the timer object is our mythical creation, and shouldn't be "this"
 	    JSValue g = JS_GetGlobalObject(cx);
 	    r = JS_Call(cx, v, g, 0, l);
-	    JS_FreeValue(cx, g);
+	    JS_Release(g);
 	} else {
 	    debugPrint(dbl, "exec %s", name);
 	    r = JS_Call(cx, v, parent, 0, l);
@@ -1217,8 +1216,8 @@ static void processError(JSContext * cx)
 		JS_FreeCString(cx, stack);
 	}
 	JS_FreeCString(cx, msg);
-	JS_FreeValue(cx, sv);
-	JS_FreeValue(cx, exc);
+	JS_Release(sv);
+	JS_Release(exc);
 }
 
 // This function takes over the JSValue, the caller should not free it.
@@ -2167,13 +2166,13 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 		if (JS_IsException(fo)) {
 			processError(cx);
 			cc_error = true;
-			JS_FreeValue(cx, fo);
+			JS_Release(fo);
 			fo = JS_NewCFunction(cx, nat_void, "void", 0);
 		}
 		if (!JS_IsFunction(cx, fo)) {
 			debugPrint(3, "compiled string '%s' does not produce a function", body);
 			cc_error = true;
-			JS_FreeValue(cx, fo);
+			JS_Release(fo);
 			fo = JS_NewCFunction(cx, nat_void, "void", 0);
 		}
 // Now looks like a function object, just like the previous case.
@@ -2671,7 +2670,7 @@ static JSValue nat_setcook(JSContext * cx, JSValueConst this, int argc, JSValueC
 			const char *u = JS_ToCString(cx, v);
 			receiveCookie(u, newcook);
 			JS_FreeCString(cx, u);
-			JS_FreeValue(cx, v);
+			JS_Release(v);
 		}
 	}
 	JS_FreeCString(cx, newcook);
@@ -3010,14 +3009,14 @@ cleaning up when we really want to run all the finalizers */
                     set_array_element_object(ctx, v, jj, e->argv[0]);
                 else
                     set_array_element_object(ctx, v, jj, JS_UNDEFINED);
-                JS_FreeValue(ctx, v);
+                JS_Release(v);
                 v = JS_GetPropertyStr(ctx, g, "$pjobsa");
                 if(e->argc == 5)
                     set_array_element_object(ctx, v, jj, e->argv[4]);
                 else
                     set_array_element_object(ctx, v, jj, JS_UNDEFINED);
-                JS_FreeValue(ctx, v);
-                JS_FreeValue(ctx, g);
+                JS_Release(v);
+                JS_Release(g);
             }
             const char *pbool = ""; // promise bool indicator
 // fourth argument to a promise call is bool, don't know what it means.
@@ -3043,16 +3042,16 @@ cleaning up when we really want to run all the finalizers */
 // So I check for that.
             if(!freeing_context && JS_IsException(res)) processError(ctx);
             debugPrint(3, "exec complete");
-            JS_FreeValue(ctx, res);
+            JS_Release(res);
             if(debugLevel >= 3 && debugPromise && e->argc == 5) {
                 e->argv[1] = arg1native;
-                JS_FreeValue(ctx, v);
-                JS_FreeValue(ctx, g);
+                JS_Release(v);
+                JS_Release(g);
             }
         }
         ++cnt;
         for(i = 0; i < e->argc; i++)
-            JS_FreeValue(ctx, e->argv[i]);
+            JS_Release(e->argv[i]);
         js_free(ctx, e);
     }
 
@@ -3356,21 +3355,21 @@ JSValue mwo; // master window object
 // cause this stuff starts from main().
 	if(JS_IsException(r))
 		processError(mwc);
-	JS_FreeValue(mwc, r);
+	JS_Release(r);
 
 	jsSourceFile = "demin.js";
 	r = JS_Eval(mwc, deminJS, strlen(deminJS),
 	jsSourceFile, JS_EVAL_TYPE_GLOBAL);
 	if(JS_IsException(r))
 		processError(mwc);
-	JS_FreeValue(mwc, r);
+	JS_Release(r);
 
 	jsSourceFile = 0;
 	JS_DefinePropertyValueStr(mwc, mwo, "share", JS_NewInt32(mwc, 2), JS_PROP_ENUMERABLE);
 	JS_DefinePropertyValueStr(mwc, mwo, "bp_string", JS_NewString(mwc, bp_string + 1), 0);
 	JS_DefinePropertyValueStr(mwc, mwo, "trace_string", JS_NewString(mwc, trace_string + 1), 0);
 
-	JS_FreeValue(mwc, mwo);
+	JS_Release(mwo);
 
 // Copied from js__malloc_usable_size in quickjs-ng cutils.h without win32
 // We use the default allocation functions which use malloc etc
