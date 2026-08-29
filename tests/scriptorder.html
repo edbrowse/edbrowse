@@ -103,7 +103,7 @@ queueMicrotask(()=>{h += 'S'});
 
 prom = Promise.resolve('p');
 prom = prom.then((f)=>{h += f; return 'P'});
-prom.then((f)=>{h += f});
+prom.then((f)=>{h += f}).catch(()=> h += "@8");
 
 setTimeout(()=>{h += "0"});
 setTimeout(()=>{h += " / t"}, 300);
