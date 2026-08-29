@@ -979,17 +979,18 @@ void jsRunData(const Tag *t, const char *filename, int lineno, bool is_module)
 			processError(cx);
 		JS_Release(r);
 	}
-	JS_FreeCString(cx, s);
-	jsSourceFile = NULL;
-        js_eval_flag = JS_EVAL_TYPE_GLOBAL;
-	delete_property(cx, *((JSValue*)t->f0->docobj), "currentScript");
+    JS_FreeCString(cx, s);
+    JS_Release(v);
+    jsSourceFile = NULL;
+    js_eval_flag = JS_EVAL_TYPE_GLOBAL;
+    delete_property(cx, *((JSValue*)t->f0->docobj), "currentScript");
 // onload handler? Should this run even if the script fails?
 // Right now it does.
 // The script could be removed, replaced by other nodes by innerHTML.
-	if (t->jslink && t->href && t->href[0] && !isDataURI(t->href)) {
-		run_event(cx, *((JSValue*)t->jv), "onload");
-}
-	debugPrint(5, "< ok");
+    if (t->jslink && t->href && t->href[0] && !isDataURI(t->href)) {
+        run_event(cx, *((JSValue*)t->jv), "onload");
+    }
+    debugPrint(5, "< ok");
 }
 
 // Run some javascript code under the named object, usually window.
