@@ -3000,6 +3000,7 @@ cleaning up when we really want to run all the finalizers */
             const char *error_msg = 0;
             if(e->argc == 1) job_type = "microtask";
             if(e->argc == 2) job_type = "finalizer";
+            if(e->argc == 3) job_type = "promise cleanup";
             if(e->argc == 5) {
                 if(JS_IsUndefined(e->argv[2])) job_type = "promise empty";
                 else {
@@ -3024,7 +3025,7 @@ cleaning up when we really want to run all the finalizers */
                 v = JS_GetPropertyStr(ctx, g, "$pjobs");
                 jj = get_property_number(ctx, v, "length");
 // promise has argc = 5, microtask has argc = 1
-                if(e->argc == 5)
+                if(e->argc > 2)
                     set_array_element_object(ctx, v, jj, e->argv[2]);
                 else if(e->argc)
                     set_array_element_object(ctx, v, jj, e->argv[0]);
@@ -3040,16 +3041,16 @@ cleaning up when we really want to run all the finalizers */
                 JS_Release(g);
             }
             const char *pbool = ""; // promise bool indicator
-// fourth argument to a promise call is bool, don't know what it means.
-            if(e->argc == 5 && JS_IsBool(e->argv[3]))
-                pbool = JS_ToBool(ctx, e->argv[3]) ? "+" : "-";
+// fourth argument to a promise call is bool, believe it is a catch indicator
+            if(e->argc == 5 && JS_IsBool(e->argv[3]) &&
+            JS_ToBool(ctx, e->argv[3])) pbool = " catch";
             if (jj >= 0) {
                 if(error_msg)
-                    debugPrint(3, "exec %s(%s) for context %d job %d%s",
-                    job_type, error_msg, cf->gsn, jj, pbool);
+                    debugPrint(3, "exec %s(%s)%s for context %d job %d",
+                    job_type, error_msg, pbool, cf->gsn, jj);
                 else
-                    debugPrint(3, "exec %s for context %d job %d%s",
-                    job_type, cf->gsn, jj, pbool);
+                    debugPrint(3, "exec %s%s for context %d job %d",
+                    job_type, pbool, cf->gsn, jj);
             } else debugPrint(3, "deleting %s because of freeing context %d", job_type, cf->gsn);
             if(error_msg) JS_ReleaseString(error_msg);
         }
