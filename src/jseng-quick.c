@@ -33,9 +33,13 @@ and the new web page didn't come in.
 The old context was freed and a new one was not created, leaving cx = null.
 The next JS_FreeValue call bounced off a null pointer and blew up.
 Such bugs can be avoided by simply using jsrt all the time.
+In the same way, JS_FreeCString only depends on the runtime, and can be
+macro-ized. But js_free_cstring is not exported,
+so we have to bounce through the master window context.
 *********************************************************************/
 
 #define JS_Release(v) JS_FreeValueRT(jsrt, v)
+#define JS_ReleaseString(s) JS_FreeCString(mwc, s)
 
 const char *jsSourceFile;	// sourcefile providing the javascript
 int jsLineno;			// line number
@@ -131,7 +135,7 @@ static char *get_property_string(JSContext *cx, JSValueConst parent, const char 
 	if (proptype != EJ_PROP_NONE) {
 		s = JS_ToCString(cx, v);
 		s0 = cloneString(s);
-		JS_FreeCString(cx, s);
+		JS_ReleaseString(s);
 		if (!s0)
 			s0 = emptyString;
 	}
@@ -291,7 +295,7 @@ static JSValue nat_set_innerHTML(JSContext * cx, JSValueConst this, int argc, JS
     } else {
         debugPrint(1, "innerHTML finds no tag, cannot parse");
     }
-    JS_FreeCString(cx, h);
+    JS_ReleaseString(h);
     (void) this;
     return JS_UNDEFINED;
 }
@@ -303,7 +307,7 @@ static JSValue nat_set_value(JSContext * cx, JSValueConst this, int argc, JSValu
     if(t) {
         const char *h = JS_ToCString(cx, argv[1]);
         char *k = cloneString(h); // our own copy
-        JS_FreeCString(cx, h);
+        JS_ReleaseString(h);
         debugPrint(4, "value tag %d=%s", t->seqno, k);
         if(t->itype != INP_TA || t->lic < 0)
             prepareForField(k);
@@ -326,7 +330,7 @@ static void set_property_string(JSContext *cx, JSValueConst parent, const char *
         if(stringEqual(dcs, "HTMLInputElement") ||
         stringEqual(dcs, "HTMLTextAreaElement"))
             altname = "val$ue";
-        JS_FreeCString(cx, dcs);
+        JS_ReleaseString(dcs);
         JS_Release(dc);
     }
     if (!value) value = emptyString;
@@ -801,7 +805,7 @@ static char *run_function_onestring1(JSContext *cx, JSValueConst parent, const c
 			const char *s = JS_ToCString(cx, r);
 			if(s) // should always happen, even the empty string
 				result = cloneString(s);
-			JS_FreeCString(cx, s);
+			JS_ReleaseString(s);
 		}
 		JS_Release(r);
 		return result;
@@ -931,7 +935,7 @@ static char *run_script(JSContext *cx, const char *s)
     if (!JS_IsException(r)) {
         s = JS_ToCString(cx, r);
         if(s && *s) result = cloneString(s);
-        JS_FreeCString(cx, s);
+        JS_ReleaseString(s);
     } else processError(cx);
     JS_Release(r);
     return result;
@@ -960,7 +964,7 @@ void jsRunData(const Tag *t, const char *filename, int lineno, bool is_module)
 	s = JS_ToCString(cx, v);
 	if (!s || !*s) {
 		jsSourceFile = 0;
-		JS_FreeCString(cx, s);
+		JS_ReleaseString(s);
 		JS_Release(v);
 		return;
 	}
@@ -979,7 +983,7 @@ void jsRunData(const Tag *t, const char *filename, int lineno, bool is_module)
 			processError(cx);
 		JS_Release(r);
 	}
-    JS_FreeCString(cx, s);
+    JS_ReleaseString(s);
     JS_Release(v);
     jsSourceFile = NULL;
     js_eval_flag = JS_EVAL_TYPE_GLOBAL;
@@ -1123,7 +1127,7 @@ static void uptrace(JSContext * cx, JSValueConst node)
 			nn = JS_ToCString(cx, nnv);
 		if(nn) {
 			strcpy(buf, nn);
-			JS_FreeCString(cx, nn);
+			JS_ReleaseString(nn);
 		} else strcpy(buf, "?");
 		JS_Release(nnv);
 		cnv = JS_GetPropertyStr(cx, node, "class");
@@ -1136,7 +1140,7 @@ static void uptrace(JSContext * cx, JSValueConst node)
 			buf[k] = '.';
 			strncpy(buf + k + 1, cn, l);
 			buf[k + 1 + l] = 0;
-			JS_FreeCString(cx, cn);
+			JS_ReleaseString(cn);
 		}
 		debugPrint(3, "%s", buf);
 		JS_Release(cnv);
@@ -1214,9 +1218,9 @@ static void processError(JSContext * cx)
 		debugPrint(3, "%s: %s", jsSourceFile, msg);
 	if(stack) {
 		debugPrint(3, "%s", stack);
-		JS_FreeCString(cx, stack);
+		JS_ReleaseString(stack);
 	}
-	JS_FreeCString(cx, msg);
+	JS_ReleaseString(msg);
 	JS_Release(sv);
 	JS_Release(exc);
 }
@@ -1447,7 +1451,7 @@ static JSValue nat_new_location(JSContext * cx, JSValueConst this, int argc, JSV
 		nzFree(t);
 	}
 	if(argc >= 1)
-		JS_FreeCString(cx, s);
+		JS_ReleaseString(s);
         (void) this;
 	return JS_UNDEFINED;
 }
@@ -1500,7 +1504,7 @@ static JSValue nat_puts(JSContext * cx, JSValueConst this, int argc, JSValueCons
 		    const char *str = JS_ToCString(cx, argv[0]);
 		            if (str) {
 			printf("%s", str);
-			JS_FreeCString(cx, str);
+			JS_ReleaseString(str);
 		            }
 	        }
 	printf("\n");
@@ -1539,8 +1543,8 @@ static JSValue nat_wlf(JSContext * cx, JSValueConst this, int argc, JSValueConst
 		writeShortCache();
 
 done:
-	JS_FreeCString(cx, s);
-	JS_FreeCString(cx, filename);
+	JS_ReleaseString(s);
+	JS_ReleaseString(filename);
         (void) this;
         (void) argc;
 	return JS_UNDEFINED;
@@ -1555,7 +1559,7 @@ static JSValue nat_media(JSContext * cx, JSValueConst this, int argc, JSValueCon
 		rc = matchMedia(t);
 		nzFree(t);
 	}
-	JS_FreeCString(cx, s);
+	JS_ReleaseString(s);
         (void) this;
         (void) argc;
 	return JS_NewBool(cx, rc);
@@ -1569,7 +1573,7 @@ static JSValue nat_logputs(JSContext * cx, JSValueConst this, int argc, JSValueC
 	JS_ToInt32(cx, &minlev, argv[0]);
 	if (debugLevel >= minlev && s && *s)
 		debugPrint(3, "%s", s);
-	JS_FreeCString(cx, s);
+	JS_ReleaseString(s);
         (void) this;
         (void) argc;
 	return JS_UNDEFINED;
@@ -1612,9 +1616,9 @@ static JSValue nat_prompt(JSContext * cx, JSValueConst this, int argc, JSValueCo
 	}
 	v = JS_NewString(cx, retval);
 	if(argc > 0)
-		JS_FreeCString(cx, msg);
+		JS_ReleaseString(msg);
 	if(argc > 1)
-		JS_FreeCString(cx, answer);
+		JS_ReleaseString(answer);
         (void) this;
 	return v;
 }
@@ -1651,7 +1655,7 @@ static JSValue nat_confirm(JSContext * cx, JSValueConst this, int argc, JSValueC
 	if (c == 'y' || c == 'Y')
 		answer = true;
 	if(argc > 0)
-		JS_FreeCString(cx, msg);
+		JS_ReleaseString(msg);
 	return JS_NewBool(cx, answer);
 }
 
@@ -1665,7 +1669,7 @@ static JSValue nat_rgb(JSContext * cx, JSValueConst this, int argc, JSValueConst
 	answer = color2rgb(word);
 	v = JS_NewString(cx, answer);
 	if(word)
-		JS_FreeCString(cx, word);
+		JS_ReleaseString(word);
         (void) this;
 	return v;
 }
@@ -1852,7 +1856,7 @@ static const char *embedNodeName(JSContext * cx, JSValueConst obj)
 	nodeName = JS_ToCString(cx, v);
 	if(nodeName) {
                 copyString(b, nodeName, MAXTAGNAME);
-		JS_FreeCString(cx, nodeName);
+		JS_ReleaseString(nodeName);
 	}
 	JS_Release(v);
 	caseShift(b, 'l');
@@ -2062,13 +2066,13 @@ static JSValue nat_linkage(JSContext * cx, JSValueConst this, int argc, JSValueC
     jsInterruptCheck(cx);
     const char *typestring = JS_ToCString(cx, argv[0]);
     char type = typestring[0];
-    JS_FreeCString(cx, typestring);
+    JS_ReleaseString(typestring);
     const char *tagname = 0;
     if(type == 'c')
         tagname = JS_ToCString(cx, argv[2]);
     domSetsLinkage(type, argv[1], tagname, argv[3], argv[4]);
     if(tagname)
-        JS_FreeCString(cx, tagname);
+        JS_ReleaseString(tagname);
 (void)this;
     (void)argc;
     return JS_UNDEFINED;
@@ -2111,7 +2115,7 @@ static JSValue nat_characterData(JSContext * cx, JSValueConst this, int argc, JS
         if(datastring[0])
             t->textval = cloneString(datastring);
     }
-    JS_FreeCString(cx, datastring);
+    JS_ReleaseString(datastring);
 (void)this;
     (void)argc;
     return JS_UNDEFINED;
@@ -2203,7 +2207,7 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 		}
 	}
 	if(body)
-		JS_FreeCString(cx, body);
+		JS_ReleaseString(body);
 	JS_Release(r);
 
 	sprintf(fpn, "timer$%d", timer_sn + 1);
@@ -2279,7 +2283,7 @@ static JSValue nat_modtime(JSContext * cx, JSValueConst this, int argc, JSValueC
 	!stat(file, &buf))
 		t = buf.st_mtime;
 	if(argc > 0)
-		JS_FreeCString(cx, file);
+		JS_ReleaseString(file);
         (void) this;
 	return JS_NewInt64(cx, t);
 }
@@ -2307,7 +2311,7 @@ static void dwrite(JSContext * cx, JSValueConst this, int argc, JSValueConst *ar
 		const char *h = JS_ToCString(cx, argv[i]);
 		if(h) {
 			stringAndString(&s, &s_l, h);
-			JS_FreeCString(cx, h);
+			JS_ReleaseString(h);
 		}
 	}
 	if(newline)
@@ -2412,7 +2416,7 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 	if (incoming_method && stringEqualCI(incoming_method, "head"))
 		dohead = true, async = false;
 // don't need method any more
-	JS_FreeCString(cx, incoming_method);
+	JS_ReleaseString(incoming_method);
 
 	if(incoming_payload && *incoming_payload && dopost) {
 	    if(pd == 0) {
@@ -2427,8 +2431,8 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 	} else {
 	a = cloneString(incoming_url);
 	}
-	JS_FreeCString(cx, incoming_payload);
-	JS_FreeCString(cx, incoming_url);
+	JS_ReleaseString(incoming_payload);
+	JS_ReleaseString(incoming_url);
 	incoming_url = a; // now it's our allocated string
 
 	debugPrint(3, "xhr send %s", incoming_url);
@@ -2455,7 +2459,7 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 		t->custom_h = emptyString;
 		if(JS_IsString(argv[2]))
 			t->custom_h = cloneString(incoming_headers);
-		JS_FreeCString(cx, incoming_headers);
+		JS_ReleaseString(incoming_headers);
 		scriptOnTimer(t);
 		pthread_create(&t->loadthread, NULL, httpConnectBack3,
 			       (void *)t);
@@ -2506,7 +2510,7 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 		rc = httpConnect(&g);
 	}
 	outgoing_xhrbody = g.buffer;
-	JS_FreeCString(cx, incoming_headers);
+	JS_ReleaseString(incoming_headers);
 	if (outgoing_xhrheaders == NULL)
 		outgoing_xhrheaders = emptyString;
 	if (outgoing_xhrbody == NULL)
@@ -2572,8 +2576,8 @@ static JSValue nat_resolveURL(JSContext * cx, JSValueConst this, int argc, JSVal
     JSValue u;
     outgoing_url = resolveURL(base, rel);
     if (outgoing_url == NULL) outgoing_url = emptyString;
-    JS_FreeCString(cx, base);
-    JS_FreeCString(cx, rel);
+    JS_ReleaseString(base);
+    JS_ReleaseString(rel);
     u = JS_NewString(cx, outgoing_url);
     nzFree(outgoing_url);
     (void) this;
@@ -2670,11 +2674,11 @@ static JSValue nat_setcook(JSContext * cx, JSValueConst this, int argc, JSValueC
 			JSValue v = JS_GetPropertyStr(cx, *((JSValue*)cf->docobj), "URL");
 			const char *u = JS_ToCString(cx, v);
 			receiveCookie(u, newcook);
-			JS_FreeCString(cx, u);
+			JS_ReleaseString(u);
 			JS_Release(v);
 		}
 	}
-	JS_FreeCString(cx, newcook);
+	JS_ReleaseString(newcook);
 	debugPrint(5, "cook out");
 	return JS_UNDEFINED;
 }
@@ -2692,7 +2696,7 @@ static JSValue nat_css_start(JSContext * cx, JSValueConst this, int argc, JSValu
 	s = JS_ToCString(cx, argv[1]);
 	b = JS_ToBool(cx, argv[2]);
 	cssDocLoad(n, cloneString(s), b);
-	JS_FreeCString(cx, s);
+	JS_ReleaseString(s);
 	return JS_UNDEFINED;
 }
 
@@ -2754,7 +2758,7 @@ static JSValue nat_qsa(JSContext * cx, JSValueConst this, int argc, JSValueConst
 		a = objectize(cx, tlist);
 		nzFree(tlist);
 	}
-	JS_FreeCString(cx, selstring);
+	JS_ReleaseString(selstring);
 	return a;
 }
 
@@ -2772,14 +2776,14 @@ static JSValue nat_qs(JSContext * cx, JSValueConst this, int argc, JSValueConst 
 	if (JS_IsUndefined(start))
 		start = this;
 	if(!rootTag(cx, start, &t)) {
-		JS_FreeCString(cx, selstring);
+		JS_ReleaseString(selstring);
 /* I'm not sure if this ever happens in the wild but I'm assuming the same as
 for a non-match here and returning null as code seems to explicitly check for
 that. */
 		return JS_NULL;
 	}
 	t = querySelector(selstring, t);
-	JS_FreeCString(cx, selstring);
+	JS_ReleaseString(selstring);
 	if(t && t->jslink)
 		return JS_DupValue(cx, *((JSValue*)t->jv));
 	return JS_NULL;
@@ -2796,11 +2800,11 @@ static JSValue nat_qs0(JSContext * cx, JSValueConst this, int argc, JSValueConst
         (void) argc;
 	start = this;
 	if(!rootTag(cx, start, &t)) {
-		JS_FreeCString(cx, selstring);
+		JS_ReleaseString(selstring);
 		return JS_FALSE;
 	}
 	rc = querySelector0(selstring, t);
-	JS_FreeCString(cx, selstring);
+	JS_ReleaseString(selstring);
 	return JS_NewBool(cx, rc);
 }
 
@@ -2826,7 +2830,7 @@ static JSValue nat_cssText(JSContext * cx, JSValueConst this, int argc, JSValueC
 {
 	const char *rulestring = JS_ToCString(cx, argv[0]);
 	cssText(rulestring);
-	JS_FreeCString(cx, rulestring);
+	JS_ReleaseString(rulestring);
         (void) this;
         (void) argc;
 	return JS_UNDEFINED;
@@ -3047,7 +3051,7 @@ cleaning up when we really want to run all the finalizers */
                     debugPrint(3, "exec %s for context %d job %d%s",
                     job_type, cf->gsn, jj, pbool);
             } else debugPrint(3, "deleting %s because of freeing context %d", job_type, cf->gsn);
-            if(error_msg) JS_FreeCString(ctx, error_msg);
+            if(error_msg) JS_ReleaseString(error_msg);
         }
 
         list_del(&e->link);
