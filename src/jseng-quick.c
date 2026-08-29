@@ -461,7 +461,7 @@ static void set_property_string(JSContext *cx, JSValueConst parent, const char *
         JS_Release(dc);
     }
     if (!value) value = emptyString;
-    JS_SetPropertyStr(cx, parent, (altname ? altname : name), JS_NewAtomString(cx, value));
+    JS_SetPropertyStr(cx, parent, (altname ? altname : name), JS_NewString(cx, value));
 }
 
 void set_property_string_t(const Tag *t, const char *name, const char * v)
@@ -488,7 +488,7 @@ static void define_hidden_property_string(JSContext *cx, JSValueConst parent, co
 	if (!value)
 		value = emptyString;
 	JS_DefinePropertyValueStr(cx, parent, name,
-	JS_NewAtomString(cx, value),
+	JS_NewString(cx, value),
 	JS_PROP_WRITABLE|JS_PROP_CONFIGURABLE);
 }
 
@@ -700,7 +700,7 @@ static JSValue instantiate_custom(JSContext *cx, JSValueConst parent,
     JSValue res, l[2];
     JSValue g = *(JSValue*)cf->winobj;
     JSAtom a = JS_NewAtom(cx, "findClass4Tag");
-    l[0] = JS_NewAtomString(cx, classname);
+    l[0] = JS_NewString(cx, classname);
     grab(l[0]);
     l[1] = parent;
     res = JS_Invoke(cx, g, a, 2, l);
@@ -798,6 +798,7 @@ static bool run_function_bool(JSContext *cx, JSValueConst parent, const char *na
 	debugPrint(3, "failure on %s()", name);
 	uptrace(cx, parent);
 	debugPrint(3, "exec complete");
+	JS_Release(r);
 	return false;
 }
 
@@ -899,7 +900,7 @@ static void run_function_onestring(JSContext *cx, JSValueConst parent, const cha
 		JS_Release(v);
 		return;
 	}
-	l[0] = JS_NewAtomString(cx, s);
+	l[0] = JS_NewString(cx, s);
 	grab(l[0]);
 	r = JS_Call(cx, v, parent, 1, l);
 	grab(r);
@@ -936,7 +937,7 @@ static char *run_function_onestring1(JSContext *cx, JSValueConst parent, const c
 		JS_Release(v);
 		return 0;
 	}
-	l[0] = JS_NewAtomString(cx, s);
+	l[0] = JS_NewString(cx, s);
 	grab(l[0]);
 	r = JS_Call(cx, v, parent, 1, l);
 	grab(r);
@@ -985,9 +986,9 @@ static void run_function_twostring(JSContext *cx, JSValueConst parent, const cha
 		JS_Release(v);
 		return;
 	}
-	l[0] = JS_NewAtomString(cx, s1);
+	l[0] = JS_NewString(cx, s1);
 	grab(l[0]);
-	l[1] = JS_NewAtomString(cx, s2);
+	l[1] = JS_NewString(cx, s2);
 	grab(l[1]);
 	r = JS_Call(cx, v, parent, 2, l);
 	grab(r);
@@ -1238,15 +1239,6 @@ bool bubble_event_t(const Tag *t, const char *name)
 	cx = t->f0->cx;
 	e = create_event(cx, *((JSValue*)t->jv), name);
 	rc = run_function_onearg(cx, *((JSValue*)t->jv), "dispatchEvent", e);
-/*********************************************************************
-Why would we need to test whether t is connected to its object?
-We already know it is.
-dispatchEvent could run some javascript on the node connected with t,
-like onclick code, and that in turn could set innerHTML,
-and that in turn could replace t with a new node, thereby disconnecting it.
-Seems contrived, but it actually happens.
-*********************************************************************/
-	if(t->jslink)
 	JS_Release(e);
 	return rc;
 }
@@ -1489,15 +1481,17 @@ static Tag *tagFromObject(JSContext *cx, JSValueConst v)
 static Tag *tagFromObject2(JSValueConst v, const char *tagname)
 {
 	Tag *t;
-// For the future, if the tag is not created, we should release(v),
+// If the tag is not created, we should release(v),
 // since that value will never be taken over by a tag.
-// Well I think the tag is always created.
-	if (!tagname)
+	if (!tagname) {
+fail:
+		JS_Release(v);
 		return 0;
+	}
 	t = newTag(cf, tagname);
 	if (!t) {
 		debugPrint(3, "cannot create tag node %s", tagname);
-		return 0;
+		goto fail;
 	}
 	connectTagObject(t, v);
 /* this node now has a js object, don't decorate it again. */
@@ -1777,7 +1771,7 @@ static JSValue nat_prompt(JSContext * cx, JSValueConst this, int argc, JSValueCo
 		if(!retval)
 			retval = emptyString;
 	}
-	v = JS_NewAtomString(cx, retval);
+	v = JS_NewString(cx, retval);
 	if(argc > 0)
 		JS_FreeCString(cx, msg);
 	if(argc > 1)
@@ -1830,7 +1824,7 @@ static JSValue nat_rgb(JSContext * cx, JSValueConst this, int argc, JSValueConst
 	if (argc > 0)
 		word = JS_ToCString(cx, argv[0]);
 	answer = color2rgb(word);
-	v = JS_NewAtomString(cx, answer);
+	v = JS_NewString(cx, answer);
 	if(word)
 		JS_FreeCString(cx, word);
         (void) this;
@@ -1846,7 +1840,7 @@ static bool jsCheckAndThrow(JSContext * cx)
 // throw an exception here, and return true.
 // That should stop things, unless we're in a try catch block.
 	JSValue e = JS_NewError(cx);
-	JS_SetPropertyStr(cx, e, "name", JS_NewAtomString(cx, "user interrupt"));
+	JS_SetPropertyStr(cx, e, "name", JS_NewString(cx, "user interrupt"));
 // By throwing e, javascript takes it over,
 // it is linked to context, we don't have to free it.
 	JS_Throw(cx, e);
@@ -1907,10 +1901,8 @@ static JSValue getter_cd(JSContext * cx, JSValueConst this, int argc, JSValueCon
 	return JS_DupValue(cx, *((JSValue*)t->f1->docobj));
 fail:
 	ao = get_property_object(cx, *((JSValue*)t->jv), "content$document");
-	if(JS_IsObject(ao)) {
-		release(ao);
+	if(JS_IsObject(ao))
 		return ao;
-}
         (void) argc;
         (void) argv;
 	return JS_NULL;
@@ -1932,10 +1924,8 @@ static JSValue getter_cw(JSContext * cx, JSValueConst this, int argc, JSValueCon
 	return JS_DupValue(cx, *((JSValue*)t->f1->winobj));
 fail:
 	ao = get_property_object(cx, *((JSValue*)t->jv), "content$document");
-	if(JS_IsObject(ao)) {
-		release(ao);
+	if(JS_IsObject(ao))
 		return ao;
-        }
         (void) argc;
         (void) argv;
 	return JS_NULL;
@@ -2297,7 +2287,7 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 	JSValue fo;		// function object
 // fo is handled differently, I don't grab and release as there will
 // be just one at the end, and it will become a timer property.
-	JSValue g;		// global object
+	JSValue g = *(JSValue*)cf->winobj;
 	bool cc_error = false;
 	int32_t n = 0;
 	JSValue r = JS_UNDEFINED;
@@ -2307,7 +2297,6 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 	static char fpn[24]; // fake property name
 	const char *s;
 
-	g = *(JSValue*)cf->winobj;
 	if (argc == 0)
 		return JS_UNDEFINED;
 
@@ -2389,7 +2378,7 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 	to = instantiate(cx, g, fpn, "z$Timer");
 	if (JS_IsException(to)) {
 		processError(cx);
-		JS_FreeValue(cx, fo);
+		JS_Release(fo);
 		JS_Release(to);
 		debugPrint(5, "timer fail");
 		return JS_UNDEFINED;
@@ -2399,7 +2388,7 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 // function is contained in an ontimer handler
 // don't free fo after this line
 	JS_SetPropertyStr(cx, to, "ontimer", fo);
-	JS_SetPropertyStr(cx, to, "backlink", JS_NewAtomString(cx, fpn));
+	JS_SetPropertyStr(cx, to, "backlink", JS_NewString(cx, fpn));
 	JS_SetPropertyStr(cx, to, "tsn", JS_NewInt32(cx, ++timer_sn));
 	domSetsTimeout(n, fname, fpn, isInterval);
 	debugPrint(5, "timer out");
@@ -2637,7 +2626,7 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 		pthread_create(&t->loadthread, NULL, httpConnectBack3,
 			       (void *)t);
 		t->threadcreated = true;
-		return JS_NewAtomString(cx, "async");
+		return JS_NewString(cx, "async");
 	}
 
 	memset(&g, 0, sizeof(g));
@@ -2704,7 +2693,7 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 	nzFree(g.referrer);
 
 	debugPrint(5, "xhr out");
-	u = JS_NewAtomString(cx, s);
+	u = JS_NewString(cx, s);
 	nzFree(s);
 	return u;
 }
@@ -2751,7 +2740,7 @@ static JSValue nat_resolveURL(JSContext * cx, JSValueConst this, int argc, JSVal
     if (outgoing_url == NULL) outgoing_url = emptyString;
     JS_FreeCString(cx, base);
     JS_FreeCString(cx, rel);
-    u = JS_NewAtomString(cx, outgoing_url);
+    u = JS_NewString(cx, outgoing_url);
     nzFree(outgoing_url);
     (void) this;
     (void) argc;
@@ -2832,7 +2821,7 @@ static JSValue nat_getcook(JSContext * cx, JSValueConst this, int argc, JSValueC
         (void) argc;
         (void) argv;
 	startCookie();
-	return JS_NewAtomString(cx, cookieCopy);
+	return JS_NewString(cx, cookieCopy);
 }
 
 static JSValue nat_setcook(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
@@ -3545,8 +3534,8 @@ JSValue mwo; // master window object
 
 	jsSourceFile = 0;
 	JS_DefinePropertyValueStr(mwc, mwo, "share", JS_NewInt32(mwc, 2), JS_PROP_ENUMERABLE);
-	JS_DefinePropertyValueStr(mwc, mwo, "bp_string", JS_NewAtomString(mwc, bp_string + 1), 0);
-	JS_DefinePropertyValueStr(mwc, mwo, "trace_string", JS_NewAtomString(mwc, trace_string + 1), 0);
+	JS_DefinePropertyValueStr(mwc, mwo, "bp_string", JS_NewString(mwc, bp_string + 1), 0);
+	JS_DefinePropertyValueStr(mwc, mwo, "trace_string", JS_NewString(mwc, trace_string + 1), 0);
 
 	JS_FreeValue(mwc, mwo);
 
@@ -4100,7 +4089,7 @@ void set_location_hash(const char *h)
 		return; // js not running
 	cx = cf->cx;
 	g = *(JSValue*)cf->winobj;
-	run_function_onearg(cx, g, "set_location_hash", JS_NewAtomString(cx, h));
+	run_function_onearg(cx, g, "set_location_hash", JS_NewString(cx, h));
 }
 
 const char *jseng_version(void)
