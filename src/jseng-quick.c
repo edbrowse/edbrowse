@@ -2991,10 +2991,26 @@ cleaning up when we really want to run all the finalizers */
             char pending_with_argc[40];
             sprintf(pending_with_argc, "pending job with %d arguments", e->argc);
 // job type is a guess based on our experience with quickjs; it could be wrong
-            char *job_type = (e->argc == 1 ? "microtask" :
-            e->argc == 5 ? "promise" :
-            e->argc == 2 ? "finalizer" :
-            pending_with_argc);
+            char *job_type = pending_with_argc;
+            const char *error_msg = 0;
+            if(e->argc == 1) job_type = "microtask";
+            if(e->argc == 2) job_type = "finalizer";
+            if(e->argc == 5) {
+                if(JS_IsUndefined(e->argv[2])) job_type = "promise empty";
+                else {
+                    job_type = "promise";
+                    if(JS_IsObject(e->argv[4])) {
+                        g = JS_GetGlobalObject(ctx);
+                        v = JS_GetPropertyStr(ctx, g, "Error");
+                        if(JS_IsInstanceOf(ctx, e->argv[4], v)) {
+                            job_type = "promise error";
+                            error_msg = JS_ToCString(ctx, e->argv[4]);
+                        }
+                        JS_Release(v);
+                        JS_Release(g);
+                    }
+                }
+            }
 // $pjobs is pending jobs, push this one onto the array.
 // Nobody ever cleans these up, which is why we only do it at debug 3.
 // But no point pushing pending jobs when we're going to free the context
@@ -3022,9 +3038,15 @@ cleaning up when we really want to run all the finalizers */
 // fourth argument to a promise call is bool, don't know what it means.
             if(e->argc == 5 && JS_IsBool(e->argv[3]))
                 pbool = JS_ToBool(ctx, e->argv[3]) ? "+" : "-";
-            if (jj > -1) debugPrint(3, "exec %s for context %d job %d%s",
-                job_type, cf->gsn, jj, pbool);
-            else debugPrint(3, "deleting %s because of freeing context %d", job_type, cf->gsn);
+            if (jj >= 0) {
+                if(error_msg)
+                    debugPrint(3, "exec %s(%s) for context %d job %d%s",
+                    job_type, error_msg, cf->gsn, jj, pbool);
+                else
+                    debugPrint(3, "exec %s for context %d job %d%s",
+                    job_type, cf->gsn, jj, pbool);
+            } else debugPrint(3, "deleting %s because of freeing context %d", job_type, cf->gsn);
+            if(error_msg) JS_FreeCString(ctx, error_msg);
         }
 
         list_del(&e->link);
