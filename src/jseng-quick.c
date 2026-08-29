@@ -33,133 +33,9 @@ and the new web page didn't come in.
 The old context was freed and a new one was not created, leaving cx = null.
 The next JS_FreeValue call bounced off a null pointer and blew up.
 Such bugs can be avoided by simply using jsrt all the time.
-
-Define LEAK if you want to track down memory leaks relative to the
-quickjs heap.
-Warning, if you turn this feature on it slows things down, a lot!
-Also, I haven't used it in years so not sure if we've kept up with it.
 *********************************************************************/
 
-#ifdef LEAK
-// the quick js pointer
-struct qjp { struct qjp *next; void *ptr; short count; short lineno; };
-typedef struct qjp QJP;
-static QJP *qbase;
-
-static void grab2(JSValueConst v, int lineno)
-{
-	QJP *s, *s2 = 0;
-	void *p;
-	if(!JS_IsObject(v))
-		return;
-	p = JS_VALUE_GET_PTR(v);
-	debugPrint(7, "%p<%d", p, lineno);
-// this isn't efficient at all, but probably won't be in the production system
-	for(s=qbase; s; s=s->next) {
-		if(s->ptr == p && s->lineno == lineno) {
-			++s->count;
-			return;
-		}
-		s2 = s;
-	}
-	s = (QJP*) allocMem(sizeof(QJP));
-	s->count = 1, s->ptr = p, s->next = 0, s->lineno = lineno;
-	if(s2)
-		s2->next = s;
-	else
-		qbase = s;
-}
-
-static void trackPointer(void *p)
-{
-	QJP *s;
-	for(s = qbase; s; s = s->next)
-		if(!p || s->ptr == p) {
-			char mult[8];
-			int z = s->count;
-			char c = (z > 0 ? '<' : '>');
-			if(z < 0)
-				z = -z;
-			mult[0] = 0;
-			if(z > 1)
-				sprintf(mult, "*%d", z);
-			debugPrint(3, "%p%c%d%s", s->ptr, c, s->lineno, mult);
-		}
-}
-
-static void release2(JSValueConst v, int lineno)
-{
-	QJP *s, *s2 = 0, *s3;
-	int n = 0;
-	bool adjusted = false;
-	void *p;
-	if(!JS_IsObject(v))
-		return;
-	p = JS_VALUE_GET_PTR(v);
-	debugPrint(7, "%p>%d", p, lineno);
-	for(s=qbase; s; s=s->next) {
-		if(s->ptr == p && s->lineno == lineno) {
-			--s->count;
-			adjusted = true;
-		}
-		if(p == s->ptr)
-			n += s->count;
-		s2 = s;
-	}
-
-	if(adjusted)
-		goto check_n;
-
-	s = (QJP*) allocMem(sizeof(QJP));
-	s->count = -1, s->ptr = p, s->next = 0, s->lineno = lineno;
-	--n;
-	if(s2)
-		s2->next = s;
-	else
-		qbase = s;
-
-check_n:
-	if(n < 0) {
-		  debugPrint(1, "quick js pointer underflow, edbrowse is probably going to abort.");
-		trackPointer(p);
-	}
-
-if(n)
-		return;
-
-// this release balances the calls to this pointer, clear them out
-	s2 = 0;
-	for(s = qbase; s; s = s3) {
-		s3 = s->next;
-		if(s->ptr == p) {
-			if(s2)
-				s2->next = s3;
-			else
-				qbase = s3;
-			free(s);
-			continue;
-		}
-		s2 = s;
-	}
-}
-
-static void grabover(void)
-{
-	if(qbase) {
-		  debugPrint(1, "quick js pointer overflow, edbrowse is probably going to abort.");
-		trackPointer(0);
-	}
-}
-
-#define grab(v) grab2(v, __LINE__)
-#define release(v) release2(v, __LINE__)
-#define JS_Release(v) release(v),JS_FreeValueRT(jsrt, v)
-#else
-#define grab(v)
-#define release(v)
-#define grabover()
 #define JS_Release(v) JS_FreeValueRT(jsrt, v)
-#endif
 
 const char *jsSourceFile;	// sourcefile providing the javascript
 int jsLineno;			// line number
@@ -233,7 +109,6 @@ static enum ej_proptype typeof_property(JSContext *cx, JSValueConst parent, cons
 {
 	JSValue v = JS_GetPropertyStr(cx, parent, name);
 	enum ej_proptype l = top_proptype(cx, v);
-	grab(v);
 	JS_Release(v);
 	return l;
 }
@@ -253,7 +128,6 @@ static char *get_property_string(JSContext *cx, JSValueConst parent, const char 
 	const char *s;
 	char *s0 = NULL;
 	enum ej_proptype proptype = top_proptype(cx, v);
-	grab(v);
 	if (proptype != EJ_PROP_NONE) {
 		s = JS_ToCString(cx, v);
 		s0 = cloneString(s);
@@ -276,7 +150,6 @@ static bool get_property_bool(JSContext *cx, JSValue parent, const char *name)
 {
 	JSValue v = JS_GetPropertyStr(cx, parent, name);
 	bool b = false;
-	grab(v);
 	if(JS_IsBool(v))
 		b = JS_ToBool(cx, v);
 	if(JS_IsNumber(v)) {
@@ -300,7 +173,6 @@ static int get_property_number(JSContext *cx, JSValueConst parent, const char *n
 {
 	JSValue v = JS_GetPropertyStr(cx, parent, name);
 	int32_t n = -1;
-	grab(v);
 	if(JS_IsNumber(v))
 // This will truncate if the number is floating point, I think
 		JS_ToInt32(cx, &n, v);
@@ -322,7 +194,6 @@ return get_property_number(t->f0->cx, *((JSValue*)t->jv), name);
 static JSValue get_property_object(JSContext *cx, JSValueConst parent, const char *name)
 {
 	JSValue v = JS_GetPropertyStr(cx, parent, name);
-	grab(v);
 	if(JS_IsObject(v))
 		return v;
 	JS_Release(v);
@@ -343,7 +214,6 @@ static JSValue get_array_element_object(JSContext *cx, JSValue parent, int idx)
 {
 	JSAtom a = JS_NewAtomUInt32(cx, idx);
 	JSValue v = JS_GetProperty(cx, parent, a);
-	grab(v);
 	JS_FreeAtom(cx, a);
 	return v;
 }
@@ -452,7 +322,6 @@ static void set_property_string(JSContext *cx, JSValueConst parent, const char *
         // from C, we don't go through the value setter function
         // check for input or textarea
         JSValue dc = JS_GetPropertyStr(cx, parent, "dom$class");
-        grab(dc);
         const char *dcs = JS_ToCString(cx, dc);
         if(stringEqual(dcs, "HTMLInputElement") ||
         stringEqual(dcs, "HTMLTextAreaElement"))
@@ -601,13 +470,11 @@ static JSValue instantiate(JSContext *cx, JSValueConst parent, const char *name,
 	if (!classname) {
 		debugPrint(5, "new Object");
 		o = JS_NewObject(cx);
-		grab(o);
 	} else {
 		debugPrint(5, "new %s", classname);
 		JSValue g= *(JSValue*)cf->winobj;
 		JSValue v, l[1];
 		v = JS_GetPropertyStr(cx, g, classname);
-		grab(v);
 		if(!JS_IsFunction(cx, v)) {
 			debugPrint(3, "no such class %s", classname);
 			JS_Release(v);
@@ -616,7 +483,6 @@ static JSValue instantiate(JSContext *cx, JSValueConst parent, const char *name,
 // l, the array of args, isn't initialized to anything,
 // but we are passing 0 for argc, so it shouldn't even look at l.
 		o = JS_CallConstructor(cx, v, 0, l);
-		grab(o);
 		JS_Release(v);
 		if(JS_IsException(o)) {
 			if (intFlag)
@@ -640,20 +506,17 @@ static JSValue instantiate_array_element(JSContext *cx, JSValueConst parent, int
 	if (!classname) {
 		o = JS_NewObject(cx);
 		debugPrint(5, "new Object for %d", idx);
-		grab(o);
 	} else {
 		debugPrint(5, "new %s for %d", classname, idx);
 		JSValue g = *(JSValue*)cf->winobj;
 		JSValue v, l[1];
 		v = JS_GetPropertyStr(cx, g, classname);
-		grab(v);
 		if(!JS_IsFunction(cx, v)) {
 			debugPrint(3, "no such class %s", classname);
 			JS_Release(v);
 			return JS_UNDEFINED;
 		}
 		o = JS_CallConstructor(cx, v, 0, l);
-		grab(o);
 		JS_Release(v);
 		if(JS_IsException(o)) {
 			if (intFlag)
@@ -701,10 +564,8 @@ static JSValue instantiate_custom(JSContext *cx, JSValueConst parent,
     JSValue g = *(JSValue*)cf->winobj;
     JSAtom a = JS_NewAtom(cx, "findClass4Tag");
     l[0] = JS_NewString(cx, classname);
-    grab(l[0]);
     l[1] = parent;
     res = JS_Invoke(cx, g, a, 2, l);
-    grab(res);
     JS_FreeAtom(cx, a);
     JS_Release(l[0]);
     return res;
@@ -746,7 +607,6 @@ static bool run_function_bool(JSContext *cx, JSValueConst parent, const char *na
     if (stringEqual(name, "ontimer")) {
         dbl = 4;
         v = JS_GetPropertyStr(cx, parent, "tsn");
-        grab(v);
         if(JS_IsNumber(v))
             JS_ToInt32(cx, &seqno, v);
         JS_Release(v);
@@ -760,7 +620,6 @@ static bool run_function_bool(JSContext *cx, JSValueConst parent, const char *na
         dbl = 9;
 
     v = JS_GetPropertyStr(cx, parent, name);
-    grab(v);
 	if(!JS_IsFunction(cx, v)) {
 		debugPrint(3, "no such function %s", name);
 		JS_Release(v);
@@ -776,7 +635,6 @@ static bool run_function_bool(JSContext *cx, JSValueConst parent, const char *na
 	    debugPrint(dbl, "exec %s", name);
 	    r = JS_Call(cx, v, parent, 0, l);
 	}
-	grab(r);
 	JS_Release(v);
 	if(!JS_IsException(r)) {
 		bool rc = false;
@@ -835,7 +693,6 @@ static int run_function_onearg(JSContext *cx, JSValueConst parent, const char *n
 {
 		JSValue v, r, l[1];
 	v = JS_GetPropertyStr(cx, parent, name);
-	grab(v);
 	if(!JS_IsFunction(cx, v)) {
 		debugPrint(3, "no such function %s", name);
 		JS_Release(v);
@@ -843,7 +700,6 @@ static int run_function_onearg(JSContext *cx, JSValueConst parent, const char *n
 	}
 	l[0] = child;
 	r = JS_Call(cx, v, parent, 1, l);
-	grab(r);
 	JS_Release(v);
 	if(!JS_IsException(r)) {
 		int rc = -1;
@@ -894,16 +750,13 @@ static void run_function_onestring(JSContext *cx, JSValueConst parent, const cha
 {
 	JSValue v, r, l[1];
 	v = JS_GetPropertyStr(cx, parent, name);
-	grab(v);
 	if(!JS_IsFunction(cx, v)) {
 		debugPrint(3, "no such function %s", name);
 		JS_Release(v);
 		return;
 	}
 	l[0] = JS_NewString(cx, s);
-	grab(l[0]);
 	r = JS_Call(cx, v, parent, 1, l);
-	grab(r);
 	JS_Release(v);
 	JS_Release(l[0]);
 	if(!JS_IsException(r)) {
@@ -931,16 +784,13 @@ static char *run_function_onestring1(JSContext *cx, JSValueConst parent, const c
 {
 	JSValue v, r, l[1];
 	v = JS_GetPropertyStr(cx, parent, name);
-	grab(v);
 	if(!JS_IsFunction(cx, v)) {
 		debugPrint(3, "no such function %s", name);
 		JS_Release(v);
 		return 0;
 	}
 	l[0] = JS_NewString(cx, s);
-	grab(l[0]);
 	r = JS_Call(cx, v, parent, 1, l);
-	grab(r);
 	JS_Release(v);
 	JS_Release(l[0]);
 	if(!JS_IsException(r)) {
@@ -980,18 +830,14 @@ static void run_function_twostring(JSContext *cx, JSValueConst parent, const cha
 {
 	JSValue v, r, l[2];
 	v = JS_GetPropertyStr(cx, parent, name);
-	grab(v);
 	if(!JS_IsFunction(cx, v)) {
 		debugPrint(3, "no such function %s", name);
 		JS_Release(v);
 		return;
 	}
 	l[0] = JS_NewString(cx, s1);
-	grab(l[0]);
 	l[1] = JS_NewString(cx, s2);
-	grab(l[1]);
 	r = JS_Call(cx, v, parent, 2, l);
-	grab(r);
 	JS_Release(v);
 	JS_Release(l[0]);
 	JS_Release(l[1]);
@@ -1081,7 +927,6 @@ static char *run_script(JSContext *cx, const char *s)
     s3 = (s2 ? s2 : s);
     r = JS_Eval(cx, s3, strlen(s3),
         (jsSourceFile ? jsSourceFile : "internal"), js_eval_flag);
-    grab(r);
     nzFree(s2);
     if (intFlag) i_puts(MSG_Interrupted);
     if (!JS_IsException(r)) {
@@ -1107,7 +952,6 @@ void jsRunData(const Tag *t, const char *filename, int lineno, bool is_module)
 	jsLineno = lineno;
         if (is_module) js_eval_flag = JS_EVAL_TYPE_MODULE;
 	v = JS_GetPropertyStr(cx, *((JSValue*)t->jv), "text");
-	grab(v);
 	if(!JS_IsString(v)) {
 // no data
 		jsSourceFile = 0;
@@ -1130,7 +974,6 @@ void jsRunData(const Tag *t, const char *filename, int lineno, bool is_module)
 	} else {
 		JSValue r = JS_Eval(cx, s, strlen(s),
 		(jsSourceFile ? jsSourceFile : "internal"), js_eval_flag);
-		grab(r);
 		if (intFlag)
 			i_puts(MSG_Interrupted);
 		if(JS_IsException(r))
@@ -1276,7 +1119,6 @@ static void uptrace(JSContext * cx, JSValueConst node)
 		JSValue nnv, cnv;
 		char buf[120];
 		nnv = JS_GetPropertyStr(cx, node, "nodeName");
-		grab(nnv);
 		if(JS_IsString(nnv))
 			nn = JS_ToCString(cx, nnv);
 		if(nn) {
@@ -1285,7 +1127,6 @@ static void uptrace(JSContext * cx, JSValueConst node)
 		} else strcpy(buf, "?");
 		JS_Release(nnv);
 		cnv = JS_GetPropertyStr(cx, node, "class");
-		grab(cnv);
 		if(JS_IsString(cnv)) {
 			cn = JS_ToCString(cx, cnv);
 			int l = strlen(cn);
@@ -1300,7 +1141,6 @@ static void uptrace(JSContext * cx, JSValueConst node)
 		debugPrint(3, "%s", buf);
 		JS_Release(cnv);
 		pn = JS_GetPropertyStr(cx, node, "parentNode");
-		grab(pn);
 		if(!first)
 			JS_Release(node);
 		first = false;
@@ -1418,7 +1258,6 @@ void reconnectTagObject(Tag *t)
 	cdo = JS_DupValue(cf->cx, *((JSValue*)cf->docobj));
 // this duplication represents a regrab on the document object.
 // It will be freed when the frame is freed, and when the document tag is disconnected.
-	grab(cdo);
 	disconnectTagObject(t);
 	connectTagObject(t, cdo);
 }
@@ -2010,7 +1849,6 @@ static const char *embedNodeName(JSContext * cx, JSValueConst obj)
 	*b = 0;
 
 	v = 	JS_GetPropertyStr(cx, obj, "nodeName");
-	grab(v);
 	nodeName = JS_ToCString(cx, v);
 	if(nodeName) {
                 copyString(b, nodeName, MAXTAGNAME);
@@ -2050,7 +1888,6 @@ JSValueConst a_j, JSValueConst b_j)
 			debugPrint(4, "linkage, %s %d created",
 				   p_name, parent->seqno);
 // creating the new tag, with t->jv, represents a regrab
-			grab(p_j);
 			if (parent->action == TAGACT_SCRIPT)
 				parent->scriptgen = 1;
 		}
@@ -2062,7 +1899,6 @@ JSValueConst a_j, JSValueConst b_j)
 	if (!parent)
 		return;
 	if(!(add = tagFromObject(cx, a_j))) {
-		grab(a_j);
 		add = tagFromObject2(JS_DupValue(cx, a_j), a_name);
 	}
 	if(!add)
@@ -2313,7 +2149,6 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 		JSAtom a = JS_NewAtom(cx, "toString");
 		JSValue list[1];
 		r = JS_Invoke(cx, argv[0], a, 0, list);
-		grab(r);
 		JS_FreeAtom(cx, a);
 		body = 0;
 		if(JS_IsString(r))
@@ -2612,7 +2447,6 @@ static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValu
 		t->inxhr = true;
 		t->f0 = cf;
 		connectTagObject(t, JS_DupValue(cx, this));
-		grab(this);
 // This routine will return, and javascript might stop altogether; do we need
 // to protect this object from garbage collection?
 // No - because t->jv will protect it until it runs.
@@ -3292,7 +3126,6 @@ bool my_ExecutePendingMessagePorts(void)
 // grab the message channel registry for this frame
 			g = *(JSValue*)f0->winobj;
 			ra = JS_GetPropertyStr(cx0, g, "mp$registry");
-			grab(ra);
 			if(!JS_IsArray(ra)) {
 // no registry, don't do anything.
 // This should never happen.
@@ -3631,7 +3464,6 @@ static void createJSContext_0(Frame *f)
 // and the document object.
 	f->winobj = allocMem(sizeof(JSValue));
 	*((JSValue*)f->winobj) = g = JS_GetGlobalObject(cx);
-	grab(g);
 // link to the master window
 	JS_DefinePropertyValueStr(cx, g, "mw$", JS_GetGlobalObject(mwc), 0);
 
@@ -3690,7 +3522,6 @@ static void setup_window_2(void)
 	*((JSValue*)cf->docobj) = d;
 // we are responsible for this js value, and will be using it
 // as long as this frame exists.
-	grab(d);
 
 	nav = get_property_object(cx, w, "navigator");
 	if (JS_IsUndefined(nav))
@@ -4015,7 +3846,6 @@ void jsClose(void)
 {
     if(js_running) {
         JS_FreeContext(mwc);
-        grabover();
 // release the timer for pending jobs
         domSetsTimeout(0, "-", 0, false);
 // Clear out any orphan pending jobs, before shutdown.
