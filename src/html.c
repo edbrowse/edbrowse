@@ -2962,8 +2962,9 @@ bool infPush(int tagno, char **post_string)
 		}
 	}
 
-	if (post_string)
-		cw->nextrender = 0;
+    cw->nextrender = 0;
+    cw->rr_throttle = 0;
+  puts("throttle");
 
 	if (itype == INP_BUTTON) {
 		if (post_string) {
