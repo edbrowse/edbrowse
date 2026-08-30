@@ -2964,7 +2964,6 @@ bool infPush(int tagno, char **post_string)
 
     cw->nextrender = 0;
     cw->rr_throttle = 0;
-  puts("throttle");
 
 	if (itype == INP_BUTTON) {
 		if (post_string) {
@@ -4532,10 +4531,8 @@ void showTimers(void)
 
 	currentTime();
 	foreach(t, timerList) {
-		if(t->pending)
-			continue;
-		if(t->f->owner != cw)
-			continue;
+		if(t->pending) continue;
+		if(t->f->owner != cw) continue;
 		printed = true;
 		if(t->isInterval)
 			printf("interval ");
@@ -4544,7 +4541,7 @@ void showTimers(void)
 			   (t->t->action == TAGACT_SCRIPT ? "script" : "xhr"));
 		else
 			printf("timer ");
-		printf("%d cx%d %s ", t->tsn, t->f->gsn, t->backlink);
+		printf("%d cx%d ", t->tsn, t->f->gsn);
 		n = (t->sec - now_sec) * 1000;
 		n += t->ms - now_ms;
 		if(n >= 1000 || n < -1000)

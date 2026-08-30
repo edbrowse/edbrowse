@@ -740,6 +740,9 @@ enum {
 };
 
 // htmlTag.itype, The order of these is important!
+// these types are the same as startwindow.js class HTMLInputElement,
+// and html-tags.c inp_others[], and in the same order.
+// Please keep them all in sync.
 enum {
 	INP_NONE,
 	INP_RESET, INP_BUTTON, INP_IMAGE, INP_SUBMIT,

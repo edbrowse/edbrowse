@@ -2591,6 +2591,17 @@ class HTMLInputElement extends HTMLElement
         tp.select = eb$voidfunction;
     }
 
+// these input types are the same as the enumerables in eb.h,
+// and in the same order. Add to one when you add to the other.
+    static allowableTypes = new Set ([
+        "reset", "button", "image", "submit",
+        "hidden", "text", "file",
+        "radio", "checkbox",
+        "date", "datetime", "datetime-local",
+        "month", "week", "time", "email", "range",
+        "search", "tel", "url", "number", "password",
+    ]);
+
     get checked() { return this.checked$2; }
     set checked(v) {
         if(v !== false) v = true;
@@ -2623,14 +2634,10 @@ class HTMLInputElement extends HTMLElement
         let t = this.getAttribute("type");
         if(!t || typeof t != "string") return "text";
         t = t.toLowerCase();
-        if(t == "submit" || t == "reset" ||
-        t == "image" || t == "button" ||
-        t == "text" || t == "hidden" || t == "file" ||
-        t == "password" || t == "email" || t == "date" ||
-        t == "number" ||
-        t == "checkbox" || t == "radio") return t;
+        if(HTMLInputElement.allowableTypes.has(t)) return t;
         alert3(`unknown input type ${t}`);
-        // there are too many of these; I can't be sure; just return t;
+        // there are too many of these, I can't be sure,
+        // I have to give you the benefit of the doubt, just return t.
         return t;
     }
     set type(v) { this.setAttribute("type", v);
