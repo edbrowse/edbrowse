@@ -4186,8 +4186,8 @@ bad_delete:
 	jt->f = cf;
 	addToListBack(&timerList, jt);
 	seqno = timer_sn;
-	debugPrint(3, "timer %d add to context %d under %s",
-	seqno, (cf ? cf->gsn : -1), backlink);
+	debugPrint(3, "timer %d add to context %d",
+	seqno, (cf ? cf->gsn : -1));
 	jt->tsn = seqno;
 }
 
@@ -4482,8 +4482,8 @@ static void runTimer0(struct jsTimer *jt, const Frame *save_cf)
 skip_execution:
 
 	if (!jt->isInterval || jt->deleted) {
-		debugPrint(3, "timer %d complete in context %d under %s",
-		jt->tsn, (jt->f ? jt->f->gsn : -1), jt->backlink);
+		debugPrint(3, "timer %d complete in context %d",
+		jt->tsn, (jt->f ? jt->f->gsn : -1));
 // at debug 3 or higher, keep these around, in case you have to
 // track down an error.
 		if(debugLevel < 3 && jt->backlink)

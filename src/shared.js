@@ -741,7 +741,7 @@ function getElementById(s) {
         gebi_hash.delete(s);
     }
     // look for nonsense to build up the hash
-    alert3("getElementById triggering id hash build");
+    alert4("getElementById triggering id hash build");
     gebi(this, this, "*@%impossible`[]")
     let ref = gebi_hash.get(s);
     let e;
@@ -1611,7 +1611,8 @@ function runScriptWhenAttached(s) {
         list.splice(0, 0, s);
     for(let c of list) {
         const n = c.eb$step
-        alert3(`script ${c.eb$seqno} attached ${inbrowse?"during":"after"} browse type ${c.type} src ${c.src} length ${c.text.length} step ${n}`);
+        const stepname = ["new", "parsed", "decorated", "loading", "loaded", "ran", "defunct"];
+        alert3(`script ${c.eb$seqno} attached ${inbrowse?"during":"after"} browse, type "${c.type}" <${c.src}> length ${c.text.length} ${stepname[n]}`);
         if(n >= 5) continue; // already run
         if(c.src) continue; // remote script
         c.eb$step = 5
