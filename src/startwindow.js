@@ -2460,6 +2460,7 @@ class HTMLImageElement extends HTMLElement
     set alt(v) { this.setAttribute("alt", v); }
 }
 swdc(HTMLImageElement);
+window.Image = HTMLImageElement; // alias
 
 // <ol>
 class HTMLOListElement extends HTMLElement
@@ -2984,7 +2985,7 @@ class HTMLOptionElement extends HTMLElement
     }
 }
 swdc(HTMLOptionElement);
-window.Option = HTMLOptionElement;
+window.Option = HTMLOptionElement; // alias
 
 // <fieldset>
 class HTMLFieldSetElement extends HTMLElement
