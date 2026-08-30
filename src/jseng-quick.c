@@ -3874,7 +3874,7 @@ void jsClose(void)
     if(js_running) {
         JS_FreeContext(mwc);
 // release the timer for pending jobs
-        domSetsTimeout(0, "-", 0, false);
+        domSetsTimeout(0, "-", "~shutdown~", false);
 // Clear out any orphan pending jobs, before shutdown.
 // We were doing this during debugging but it seems like a bad idea.
 //        my_ExecutePendingJobs(0, false);

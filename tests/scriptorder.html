@@ -105,7 +105,12 @@ prom = Promise.resolve('p');
 prom = prom.then((f)=>{h += f; return 'P'});
 prom.then((f)=>{h += f}).catch(()=> h += "@8");
 
+// 0 is injected into h, for the timer with delay 0
 setTimeout(()=>{h += "0"});
+bad_timer = setTimeout(()=>{h += "@9"}, 100);
+clearTimeout(bad_timer);
+clearTimeout(0);
+// inject t to indicate a proper running timer with a real delay
 setTimeout(()=>{h += " / t"}, 300);
 
 // set a show timer in case that innerHTML script ran later

@@ -4129,29 +4129,36 @@ void domSetsTimeout(int n, const char *jsrc, const char *backlink, bool isInterv
 	if (jsrc[0] == 0)
 		return;		/* nothing to run */
 
-	if (stringEqual(jsrc, "-")) {
-// Delete a timer. Comes from clearTimeout(obj).
-		seqno = n;
-		foreach(jt, timerList) {
-			if (jt->tsn != seqno)
-				continue;
-			debugPrint(3, "timer %d delete from context %d", seqno,
-			jt->f ? jt->f->gsn: -1);
+    if (stringEqual(jsrc, "-")) {
+// Delete a timer. Comes from clearTimeout(timer_id).
+// Sometimes javascript calls clearTimeout(0), thinking it will do no harm.
+// Our timer 0 is special; I have to make sure it is really us deleting it.
+        if(!(seqno = n)) {
+            if(!stringEqual(backlink, "~shutdown~")) goto bad_delete;
+            backlink = 0;
+        }
+
+        foreach(jt, timerList) {
+            if (jt->tsn != seqno) continue;
+            debugPrint(3, "timer %d delete from context %d", seqno,
+            jt->f ? jt->f->gsn: -1);
+            if(jt->t) break;
 // a running timer will often delete itself.
-			if (jt->running) {
-				jt->deleted = true;
-			} else {
-				if (backlink)
-					delete_property_win(jt->f, backlink);
-				delFromList(jt);
-				nzFree(jt->backlink);
-				nzFree(jt);
-			}
-			return;
-		}
-// not found, just return.
-		return;
-	}
+            if (jt->running) {
+                jt->deleted = true;
+            } else {
+                if (backlink)
+                    delete_property_win(jt->f, backlink);
+                delFromList(jt);
+                nzFree(jt->backlink);
+                nzFree(jt);
+            }
+            return;
+        }
+bad_delete:
+        debugPrint(3, "timer %d is not valid", seqno);
+        return;
+    }
 
 // now adding a timer
 	jt = allocZeroMem(sizeof(struct jsTimer));
