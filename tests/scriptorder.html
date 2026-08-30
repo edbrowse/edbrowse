@@ -5,7 +5,7 @@
 <p id=show>start</p>
 <p>The slashes delimit sections.</p>
 <ol>
-<li>Produced directly by the inline script.
+<li>Produced directly by the inline scripts.
 <li>Microtasks or other pending jobs produced by the inline scripts.
 This includes timers with a delay of 0 milliseconds.
 <li>The deferred scripts, and any onload functions associated therewith.
@@ -13,7 +13,13 @@ This includes timers with a delay of 0 milliseconds.
 <li>A timer, half a second after the document is completely rendered.
 </ol>
 <div id="hs"></div>
+
 <script id=last src=scriptord1.js defer onload="h += 'y'"></script>
+<script defer>
+// but you can't defer an inline script, so this runs now.
+h += 'A';
+</script>
+
 <script>
 // Test the order in which scrips run.
 // This proves script execution is reentrant.
@@ -121,7 +127,7 @@ if(this != window) h += "@6";
 // but it fetches asynchronously in chrome, so I can't guarantee when it will happen.
 // I'll just make sure it happened by now.
 if(!on_css_load) h += '@3';
-const correct = "abcefgh / ospSP0 / izxyw / jkl2m / t";
+const correct = "aAbcefgh / ospSP0 / izxyw / jkl2m / t";
 if(h == correct) show.innerHTML = `ok<br>${correct}`;
 else show.innerHTML = `ok|bad order  ${h}<br>should be ${correct}`}, 600)
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
