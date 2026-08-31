@@ -2210,43 +2210,44 @@ bool infReplace(int tagno, char *newtext, bool notify)
 		return true;
 	}
 
-	if(itype == INP_TEXT) {
-		connectDatalist(t);
-		if (t->ninp) { // the suggested select
+    if(itype == INP_TEXT) {
+        connectDatalist(t);
+        if (t->ninp) { // the suggested select
 // this is a strange puppy.
 // ` to override
-			if(newtext[0] == '`') {
-				++newtext, --newlen;
-			} else {
-				const Tag *options = tagList[t->ninp];
-				if (!locateOptions(options, newtext, 0, 0, false))
-					return false;
-				locateOptions(options, newtext, &display, 0, false);
-				newtext = display;
-				newlen = strlen(newtext);
-			}
-		}
+            if(newtext[0] == '`') {
+                ++newtext, --newlen;
+            } else {
+                Tag *options = tagList[t->ninp];
+                options->multiple = t->multiple;
+                if (!locateOptions(options, newtext, 0, 0, false))
+                    return false;
+                locateOptions(options, newtext, &display, 0, false);
+                newtext = display;
+                newlen = strlen(newtext);
+            }
+        }
 
-		if (t->lic && (int)utf8length(newtext) > t->lic) {
-			setError(MSG_InputLong, t->lic);
-			goto fail;
-		}
+        if (t->lic && (int)utf8length(newtext) > t->lic) {
+            setError(MSG_InputLong, t->lic);
+            goto fail;
+        }
 
-		if (itype_minor == INP_NUMBER && (*newtext && stringIsNum(newtext) < 0)) {
-			setError(MSG_NumberExpected);
-			goto fail;
-		}
+        if (itype_minor == INP_NUMBER && (*newtext && stringIsNum(newtext) < 0)) {
+            setError(MSG_NumberExpected);
+            goto fail;
+        }
 
-		if (itype_minor == INP_EMAIL && *newtext && ((!t->multiple && !isEmailAddress(newtext)) || (t->multiple && !isEmailAddressList(newtext)))) {
-			setError(MSG_EmailInput);
-			goto fail;
-		}
+        if (itype_minor == INP_EMAIL && *newtext && ((!t->multiple && !isEmailAddress(newtext)) || (t->multiple && !isEmailAddressList(newtext)))) {
+            setError(MSG_EmailInput);
+            goto fail;
+        }
 
-		if (itype_minor == INP_URL && (*newtext && !isURL(newtext))) {
-			setError(MSG_UrlInput);
-			goto fail;
-		}
-	}
+        if (itype_minor == INP_URL && (*newtext && !isURL(newtext))) {
+            setError(MSG_UrlInput);
+            goto fail;
+        }
+    }
 
     if (itype == INP_RADIO && form && t->name && *newtext == '+') {
         // clear the other radio button
