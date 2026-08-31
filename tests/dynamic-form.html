@@ -292,6 +292,8 @@ if(!so[3].selected) msg += "|la didn't select";
 so[3].selected = false;
 if(so[3].selected) msg += "|la didn't unselect";
 if(so[1].value != "MEM" || so[1].label != "Memphis") msg += "|Memphis option";
+so[1].remove(); // standard Element.remove function, there is no datalist add or remove
+if(so.length != 5) msg += `|dl remove option length ${so.length}`;
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

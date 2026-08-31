@@ -1905,13 +1905,11 @@ function cloneNodeHelper(root, deep, into)
         }
 
         if (node1.nodeType == 1) {
-            if (
-                node1.dom$class == "HTMLFormElement" ||
-                node1.dom$class == "HTMLFieldSetElement"
-            ) formReindex(node2);
-
-            if (node1.dom$class == "HTMLTableElement") tableReindex(node2);
-            if (node1.dom$class == "HTMLSelectElement") selectReindex(node2);
+            if (node1.nodeName == "FORM" ||
+            node1.nodeName == "FIELDSET"             ) formReindex(node2);
+            if (node1.nodeName == "TABLE") tableReindex(node2);
+            if (node1.nodeName == "SELECT") selectReindex(node2);
+            if (node1.nodeName == "DATALIST") datalistReindex(node2);
         }
 
         if (debug) alert3("}");
@@ -3363,7 +3361,6 @@ Some may be in optgroups, not direct children of select.
 
 function selectReindex(t)
 {
-    // do not replace the array with a new one, this is suppose to be a live array
     const o = t.options;
     const a = t.selectedOptions;
     o.length = 0; a.length = 0;
@@ -3380,18 +3377,38 @@ function selectReindex(t)
 function selectReindex2(t) {
     while(t) {
         if(t.nodeType != 1) break; // stop at document
-        if(t.dom$class == "HTMLSelectElement") {
+        if(t.nodeName == "SELECT") {
             selectReindex(t);
             return;
         }
-        if(t.dom$class == "HTMLFormElement") return;
+        if(t.nodeName == "FORM") return;
+        t = t.parentNode;
+    }
+}
+
+function datalistReindex(t)
+{
+    const o = t.options;
+    o.length = 0;
+    for(const c of gebtn(t, "option", false, false))
+        o.push(c);
+}
+
+function datalistReindex2(t) {
+    while(t) {
+        if(t.nodeType != 1) break; // stop at document
+        if(t.nodeName == "DATALIST") {
+            datalistReindex(t);
+            return;
+        }
+        if(t.nodeName == "FORM") return;
         t = t.parentNode;
     }
 }
 
 function checkUpward(t)
 {
-    let tabledone = false, formdone = false, selectdone = false;
+    let tabledone = false, formdone = false, selectdone = false, datalistdone = false;
     while(t) {
         markNodeCollections(t);
         if(t.nodeType != 1) break; // stop at document
@@ -3407,6 +3424,7 @@ function checkUpward(t)
         // fieldset can be inside a form, so don't set formdone just because we saw fieldset.
         if(!formdone && inclass == "HTMLFieldSetElement") formReindex(t);
         if(!selectdone && inclass == "HTMLSelectElement") { selectReindex(t); selectdone = true; }
+        if(!datalistdone && inclass == "HTMLDataListElement") { datalistReindex(t); datalistdone = true; }
         t = t.parentNode;
     }
 }
