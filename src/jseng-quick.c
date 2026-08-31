@@ -3696,9 +3696,10 @@ bool has_property_win(const Frame *f, const char *name)
 
 void establish_js_option(Tag *t, Tag *sel, Tag *og)
 {
+    bool is_dl = (sel->action == TAGACT_DATAL);
     JSContext *cx = cf->cx; // context
     JSValue oo;		// option object
-    JSValue selobj; // select object
+    JSValue selobj; // select object or datalist object
     if(!sel->jslink) return;
     selobj = *((JSValue*)sel->jv);
     oo = instantiate(cx, selobj, 0, "HTMLOptionElement");
@@ -3709,7 +3710,7 @@ void establish_js_option(Tag *t, Tag *sel, Tag *og)
     // we don't need the side effects, this is from html and we build as we go.
     set_property_bool(cx, oo, "selected$2", t->checked);
     set_property_bool(cx, oo, "defaultSelected", t->checked);
-    if (t->checked && !sel->multiple)
+    if (t->checked && !is_dl && !sel->multiple)
         set_property_number(cx, selobj, "selectedIndex", t->lic);
     run_function_onearg_t((og ? og : sel), "option_from_html", t);
 }

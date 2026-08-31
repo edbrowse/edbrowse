@@ -2908,16 +2908,18 @@ class HTMLSelectElement extends HTMLElement
         o.parentNode = this;
         let og = null; // option group
         let select = this;
-        if(select.dom$class == "HTMLOptGroupElement") {
+        if(select.nodeName == "OPTGROUP") {
             og = select;
             while(select = select.parentNode) {
                 if(select.nodeType != 1) return; // should never happen
-                if(select.dom$class == "HTMLSelectElement") break;
+                if(select.nodeName == "SELECT") break;
+                if(select.nodeName == "DATALIST") break;
             }
             if(!select) return;
         }
+        const is_dl = (select.nodeName == "DATALIST");
         select.options.push(o);
-        if(o.selected) select.selectedOptions.push(o);
+        if(o.selected && !is_dl) select.selectedOptions.push(o);
         o.form = select.form;
         mutFixup(this, 0, o, null);
     }
@@ -2928,6 +2930,10 @@ swdc(HTMLSelectElement);
 class HTMLDataListElement extends HTMLElement
 {
     constructor() { super(); this.options = []; }
+    static {
+        const tp = this.prototype;
+        tp.option_from_html = HTMLSelectElement.prototype.option_from_html;
+    }
     get multiple() { return this.hasAttribute("multiple"); }
     set multiple(v) { if(v === false) this.removeAttribute("multiple"); else this.setAttribute("multiple", ""); }
 }
@@ -2974,9 +2980,11 @@ class HTMLOptionElement extends HTMLElement
         // This is like checking a radio button, although simpler,
         // because this time we have an options array to key on.
         // We need to find the containing select, or we can't get started.
+        // If we are in a datalist, then set and return.
         let sel = this.parentNode;
         while(sel) {
             if(sel.nodeType != 1) { this.selected$2 = v; return; }
+            if(sel.nodeName == "DATALIST") { this.selected$2 = v; return; }
             if(sel.nodeName == "SELECT") break;
             sel = sel.parentNode;
         }

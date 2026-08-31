@@ -32,7 +32,21 @@ Fruit: <select name=fruit multiple=elephant>
     </div>
 </form>
 <pre id="log"></pre>
-<div></div>
+
+<form action=http://www.eklhad.net/cgi-bin/echo method="get">
+Airport: <input type=text name=to list=airports>
+Departure time: <input type="datetime-local" name="totime" step="3600">
+ <datalist id="airports">
+ <option value="ATL" label="Atlanta">
+ <option value="MEM" label="Memphis">
+ <option value="LHR" label="London Heathrow">
+ <option value="LAX" label="Los Angeles">
+ <option value="FRA" label="Frankfurt">
+<option value="VIE" label="Vienna International">Wien</option>
+ </datalist>
+<br>
+<input type="submit" value="Continue">
+</form>
 
 <script>
 try {
@@ -264,6 +278,18 @@ if(!usp.has("fruit")) msg += "|usp has no fruit";
 if(usp.has("vegetable")) msg += "|usp has vegetable";
 v = ""; for(let c of usp.keys()) v += ':' + c;
 if(v != ":me:yy:fruit:fruit") msg += `|usp bad keys ${v}`;
+
+// the bizarre datalist
+dl = b.querySelector("datalist");
+if(dl.nodeName != "DATALIST") msg += "|node not datalist";
+so = dl.options;
+delete sso; // theree is no selectedOptions here
+if(so.length != 6) msg += `|dl option length ${so.length}`;
+if(so[0].selected) msg += "| atl preselected";
+so[3].selected = true;
+if(!so[3].selected) msg += "|la didn't select";
+so[3].selected = false;
+if(so[3].selected) msg += "|la didn't unselect";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
