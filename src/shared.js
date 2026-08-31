@@ -3374,36 +3374,12 @@ function selectReindex(t)
     }
 }
 
-function selectReindex2(t) {
-    while(t) {
-        if(t.nodeType != 1) break; // stop at document
-        if(t.nodeName == "SELECT") {
-            selectReindex(t);
-            return;
-        }
-        if(t.nodeName == "FORM") return;
-        t = t.parentNode;
-    }
-}
-
 function datalistReindex(t)
 {
     const o = t.options;
     o.length = 0;
     for(const c of gebtn(t, "option", false, false))
         o.push(c);
-}
-
-function datalistReindex2(t) {
-    while(t) {
-        if(t.nodeType != 1) break; // stop at document
-        if(t.nodeName == "DATALIST") {
-            datalistReindex(t);
-            return;
-        }
-        if(t.nodeName == "FORM") return;
-        t = t.parentNode;
-    }
 }
 
 function checkUpward(t)
