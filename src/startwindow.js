@@ -2964,6 +2964,15 @@ class HTMLOptionElement extends HTMLElement
     get disabled() { return this.hasAttribute("disabled"); }
     set disabled(v) { if(v === false) this.removeAttribute("disabled"); else this.setAttribute("disabled", ""); }
 
+    get label()
+    {
+        let t = this.getAttribute("label");
+        if(t === null) t = "" // id was never defined
+        if(t === undefined) t = "";
+        return typeof t == "string" ? t : t.toString();
+    }
+    set label(v) { this.setAttribute("label", v)}
+
     static {
         const tp = this.prototype;
         tp.nodeName = tp.tagName = "OPTION";

@@ -286,10 +286,12 @@ so = dl.options;
 delete sso; // theree is no selectedOptions here
 if(so.length != 6) msg += `|dl option length ${so.length}`;
 if(so[0].selected) msg += "| atl preselected";
+// I don't think selected has any meaning here
 so[3].selected = true;
 if(!so[3].selected) msg += "|la didn't select";
 so[3].selected = false;
 if(so[3].selected) msg += "|la didn't unselect";
+if(so[1].value != "MEM" || so[1].label != "Memphis") msg += "|Memphis option";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
