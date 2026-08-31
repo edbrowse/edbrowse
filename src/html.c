@@ -848,32 +848,32 @@ as described earlier.
 
 void loadScriptData(Tag *t)
 {
-	bool is_js = (t->action == TAGACT_SCRIPT);
-	const char *sourcefile = "generated";
-	char *sourcetext = 0;
-	const char *filepart;
-	char *b;
-	int blen, n;
-	Frame *f = t->f0;
-	const char *altsource, *realsource;
-	bool from_data = false;
-	bool jsbg = down_jsbg;
-	struct i_get g;
+    const char *sourcefile = "generated";
+    char *sourcetext = 0;
+    const char *filepart;
+    char *b;
+    int blen, n;
+    Frame *f = t->f0;
+    const char *altsource, *realsource;
+    bool is_js = (t->action == TAGACT_SCRIPT);
+    bool from_data = false;
+    bool jsbg = down_jsbg;
+    struct i_get g;
 
+// I don't believe we load or run scripts under xml.
+// If we load them, but don't run them, then this has to change somewhat.
+// step = 5 means the script loaded and ran.
     if(f->xmlMode) {
-        // I don't believe we load or run scripts under xml.
-        // If we load them, but don't run them, then this has to change somewhat.
-        // step = 5 means the script loaded and ran.
         t->step = 5;
         return;
     }
 
 // If this tag is under <template>, and we clone it again and again,
 // we could be asked to prepare it again and again.
-	if((n = get_property_number_t(t, "eb$step")) > 0) {
-		t->step = n;
-		return;
-	}
+    if((n = get_property_number_t(t, "eb$step")) > 0) {
+        t->step = n;
+        return;
+    }
 
 	if (intFlag) goto fail;
 
@@ -909,7 +909,7 @@ void loadScriptData(Tag *t)
 		}
 	}
 
-	if (t->href) {		/* fetch the javascript page */
+	if (t->href) { // fetch the javascript page
 		altsource = realsource = 0;
 		if(is_js) {
 			if (!javaOK(t->href))
@@ -1238,18 +1238,12 @@ static void dw_flush(Tag *t)
             strstr(keep, "<body>")+6);
         cf->dw_clobber = true;
     } else {
-        int start = cw->numTags, j;
-        Tag *u;
         stringAndString(&keep, &keep_l, "</body>");
         if(t) t = t->parent;
         // if t is null, then put these nodes under <body>
         // t might have removed itself from the tree, no parent,
         // or we might be writing outside the context of a script.
         runGeneratedHtml(t ? t : cf->bodytag, keep);
-        for(j = start; j < cw->numTags; ++j) {
-            u = tagList[j];
-            if (u->jslink) loadScriptData(u);
-        }
     }
     nzFree(keep);
 }
