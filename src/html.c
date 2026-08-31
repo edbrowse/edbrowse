@@ -1874,7 +1874,7 @@ void infShow(int tagno, const char *search)
     Tag *t = tagList[tagno], *v, **w;
     const char *s;
     int cnt = 0;
-    bool show = false;
+    bool show = false, gathered = false;
 
 	connectDatalist(t);
 
@@ -1885,7 +1885,7 @@ void infShow(int tagno, const char *search)
 	if (t->multiple)
 		eb_printf(" multiple");
 	if (t->itype == INP_SELECT) {
-	    gatherOptions(t);
+	    gatherOptions(t), gathered = true;
 	for (w = optArray; (v = *w); ++w) {
 	        if(inputHidden(v)) break;
 	    }
@@ -1930,42 +1930,47 @@ void infShow(int tagno, const char *search)
 	else if (t->itype != INP_SELECT)
 		return;
 
-// display the options in a pick list
-// If a search string is given, display the options containing that string.
-	for (w = optArray; (v = *w); ++w) {
-	    Tag *x, *og = 0; // option group
-	    if(v->parent && v->parent->action == TAGACT_OPTG)
-	        og = v->parent;
-	    if(og) {
-	        for(x = og->firstchild; x != v; x = x->sibling)
-	            if(x->action == TAGACT_OPTION) break;
-	        if(x == v) { // first option in the group
-	            const char *l1 = attribVal(og, "label");
-	            const char *l2 = get_js_attribute(og, "label");
-	            const char *l3 = "option group";
-	            if(l1) l3 = l1;
-	            if(l2) l3 = l2;
-	            eb_printf("%s {", l3);
-	            if(inputDisabled(og)) eb_printf(" 🛑");
-	            eb_printf("\n");
-	            cnzFree(l2);
- 	        }
-	    }
-	    ++cnt;
-	    if(inputHidden(v)) goto closegroup;
-	    if (*search && !strcasestr(v->textval, search)) goto closegroup;
-	    show = true;
-	    eb_printf("%s%3d %s", (og ? "  " : ""), cnt, v->textval);
-	    if(inputDisabled(v)) eb_printf(" 🛑");
-	    eb_printf("\n");
+/* display the options in a pick list.
+If a search string is given, display the options containing that string.
+99.7% of the time we've already called gatherOptions(),
+but there is a path where we haven't. input text and connected to datalist.
+So if we haven't done it before, do it now. */
+    if(!gathered) gatherOptions(t);
+    for (w = optArray; (v = *w); ++w) {
+        Tag *x, *og = 0; // option group
+        if(v->parent && v->parent->action == TAGACT_OPTG)
+            og = v->parent;
+        if(og) {
+            for(x = og->firstchild; x != v; x = x->sibling)
+                if(x->action == TAGACT_OPTION) break;
+            if(x == v) { // first option in the group
+                const char *l1 = attribVal(og, "label");
+                const char *l2 = get_js_attribute(og, "label");
+                const char *l3 = "option group";
+                if(l1) l3 = l1;
+                if(l2) l3 = l2;
+                eb_printf("%s {", l3);
+                if(inputDisabled(og)) eb_printf(" 🛑");
+                eb_printf("\n");
+                cnzFree(l2);
+             }
+        }
+        ++cnt;
+        if(inputHidden(v)) goto closegroup;
+        if (*search && !strcasestr(v->textval, search)) goto closegroup;
+        show = true;
+        eb_printf("%s%3d %s", (og ? "  " : ""), cnt, v->textval);
+        if(inputDisabled(v)) eb_printf(" 🛑");
+        eb_printf("\n");
 closegroup:
-	    if(og) {
-	        for(x = v->sibling; x; x = x->sibling)
-	            if(x->action == TAGACT_OPTION) break;
-	        if(!x) // last option in the group
-	            eb_printf("}\n");
-	    }
-	}
+        if(og) {
+            for(x = v->sibling; x; x = x->sibling)
+                if(x->action == TAGACT_OPTION) break;
+            if(!x) // last option in the group
+                eb_printf("}\n");
+        }
+    }
+
 	if (!show) {
 	    if (!*search)
 	        i_puts(MSG_NoOptions);
