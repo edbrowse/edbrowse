@@ -300,6 +300,13 @@ o.label = "Toronto";
 dl.insertBefore(o, so[1]);
 if(so.length != 6) msg += `|dl after option length ${so.length}`;
 if(so[1].value != "YYZ" || so[1].label != "Toronto") msg += "|Toronto option";
+// we cloned the select list, let's clone the data list
+dl2 = dl.cloneNode(true);
+if(dl2.nodeName != "DATALIST") msg += "|node not datalist";
+so = dl2.options;
+if(so.length != 6) msg += `|dl2 option length ${so.length}`;
+if(so[0].selected) msg += "| clone atl preselected";
+if(so[1].value != "YYZ" || so[1].label != "Toronto") msg += "|clone Toronto option";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
