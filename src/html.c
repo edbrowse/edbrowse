@@ -986,6 +986,15 @@ void loadScriptData(Tag *t)
 					jsbg = false;
 			}
 
+/* Set step to 3 right now, before we spin off a background thread to download.
+Trying to head off a race condition where we might loop around
+and do it again, though I don't know if that's even possible.
+This will remain at 3, background loading,
+or upgrade to 4, loaded here in the foreground,
+or to 6, failed. */
+			t->step = 3;
+			set_property_number_t(t, "eb$step", 3);
+
 			if (jsbg && !demin && !uvw
 			    && !pthread_create(&t->loadthread, NULL,
 					       httpConnectBack2, (void *)t)) {
@@ -995,7 +1004,6 @@ void loadScriptData(Tag *t)
 				filepart = getFileURL(sourcefile, true);
 				t->js_file = cloneString(filepart);
 // stop here and wait for the child process to download
-				t->step = 3;
 				return;
 			}
 
@@ -1062,7 +1070,8 @@ success:
 	return;
 
 fail:
-	t->step = 6;
+    t->step = 6;
+    set_property_number_t(t, "eb$step", 6);
 }
 
 // Like the above, but for link tags. Make sure they are all loaded.
