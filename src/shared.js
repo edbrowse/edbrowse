@@ -313,187 +313,6 @@ set c[i] = object, etc, again mostly not handled here.
 named elements but that won't fly so use symbols. This also allows debugging by
 using the global symbol registry. */
 
-function collectionSymbol(s)
-{
-    return Symbol.for(`eb$collection$${s}`);
-}
-;( () => {
-    const by_id = collectionSymbol("by_id");
-    const by_name = collectionSymbol("by_name");
-    const by_index = collectionSymbol("by_index");
-    const tracker = collectionSymbol("tracker");
-    const callback = collectionSymbol("callback");
-    const changes = collectionSymbol("changes");
-    const owner = collectionSymbol("owner");
-    const window = collectionSymbol("window");
-    const named_items = collectionSymbol("named_items");
-    const ignore = collectionSymbol("ignore");
-    const handleChanges = collectionSymbol("handleChanges");
-    /* not sure if it would be noticeably more efficient to handle the named
-    items in the derived classes but this is easier */
-
-    globalThis.Eb$CollectionHelper = class {
-        /*
-        - node - the node which owns this collection
-        - cb - callback which takes owner as a parameter used to rebuild
-          the collection. Note that we pass owner as a parameter so the
-          collection callback can avoid creating a reference cyle (owner is
-          stored as a weakref which is dereferenced on calling).
-        - named - should we enable id and name based indexing?
-        */
-        constructor(node, cb, named)
-        {
-            const w = my$win();
-            // play safe with the weak ref to make sure it's in the right context
-            this[owner] = new w.WeakRef(node);
-            this[named_items] = !!named;
-            if (this[named_items]) {
-                this[by_id] = new w.Map;
-                this[by_name] = new w.Map;
-            }
-            this[by_index] = new w.Array;
-            this[tracker] = new w.FinalizationRegistry((c) => c[changes] = true);
-            this[tracker].register(node, this);
-            this[callback] = cb;
-            this[window] = w;
-            // We need to rebuild initially but only on first lookup
-            this[ignore] = false;
-            this[changes] = true;
-        }
-
-        // Possibly could be more efficient by not rebuilding from scratch
-        [handleChanges]()
-        {
-            if (this[ignore] || !this[changes]) return;
-            /* I can't think of a case where the following logic could retrigger a
-            rebuild, but I'll clear the flag early in case */
-            this[changes] = false;
-            this[by_index].length = 0;
-            if (this[named_items]) {
-                this[by_id].clear();
-                this[by_name].clear();
-            }
-            if (!this[owner]) return;
-            const o = this[owner].deref();
-            if (!o) {
-                this[owner] = null;
-                return; // everything's gone
-            }
-            for (const element of this[callback](o)) {
-                const ref = new this[window].WeakRef(element);
-                this[by_index].push(ref);
-                this[tracker].register(element, this);
-                if (!this[named_items]) continue;
-                const id = element.id;
-                if (typeof id == "string" && id) this[by_id].set(id, ref);
-                const name = element.getAttribute("name");
-                if (typeof name == "string" && name)
-                    this[by_name].set(name, ref);
-            }
-        }
-
-        item(i)
-        {
-            // Don't allow item to be used to call methods on our array
-            if (Number(i) != i) return null;
-            this[handleChanges]();
-            const ref = this[by_index][i];
-            if (ref) {
-                const element = ref.deref()
-                if (!element) {
-                    this[by_index].splice(i, 1);
-                    return this.item(i);
-                }
-                return element;
-            }
-            return null;
-        }
-
-        namedItem(n)
-        {
-            if (!this[named_items]) return;
-            this[handleChanges]();
-            for (const m of [this[by_id], this[by_name]]) {
-                const ref = m.get(n);
-                if (ref) {
-                    const element = ref.deref();
-                    if (!element) m.delete(n);
-                    else return element;
-                }
-            }
-            return null;
-        }
-
-        get length()
-        {
-            this[handleChanges]();
-            return this[by_index].length;
-        }
-
-        /* Altering collections during iteration is not good practice but is
-        mentioned in the spec. As such we need to make sure we handle changes
-        including emptying the entire collection during the process. */
-
-        *[Symbol.iterator]()
-        {
-            for (let i = 0; i < this.length; ++i) {
-                const element = this.item(i);
-                if (!element) break;
-                yield element;
-            }
-        }
-    }
-})();
-
-globalThis.Eb$HTMLCollectionHelper = class  extends Eb$CollectionHelper {
-    constructor(node, cb) { super(node, cb, true); }
-    toString() { return "[object HTMLCollection]"; }
-}
-
-// Some node lists are live, most aren't so ignore changes by default
-globalThis.Eb$NodeListHelper = class extends Eb$CollectionHelper {
-    constructor(node, cb, ignore=true)
-    {
-        /* If we're ignoring changes we want to hang on to refs as otherwise
-        the Nodelist can't be static as nodes will disappear */
-        if (ignore) {
-            const refs = cb(node);
-            cb = () => refs; // Hold a ref to the nodes in the callback
-        }
-        super(node, cb, false);
-        if (ignore) {
-            this[collectionSymbol("handleChanges")](); // load everything now
-            this[collectionSymbol("ignore")] = true;
-        }
-    }
-    toString() { return "[object NodeList]"; }
-    // Can't just use forEach because we want to handle references
-    forEach(callback, thisarg)
-    {
-        let cb, idx = 0;
-        if (thisarg) cb = (e, i) => callback.call(thisarg, e, i, this);
-        else cb = (e, i) => callback(e, i, this);
-        for (const e of this) cb(e,idx++);
-    }
-
-    *entries()
-    {
-        let idx = 0;
-        for (const e of this) yield [idx++, e];
-    }
-
-    *keys()
-    {
-        let idx = 0;
-        for (const _ of this) yield idx++;
-    }
-
-    *values()
-    {
-        for (const e of this) yield e;
-    }
-}
-
 /* Cache live collections to mitigate overhead
 Collections are held in the cache under either of two conditions:
 - They are still referenced somewhere
@@ -604,6 +423,7 @@ class Eb$GetElementsCache
     }
 }
 
+this.collectionSymbol = (s) => Symbol.for(`eb$collection$${s}`);
 function markNodeCollections(n)
 {
     const cache = n.getElements$$cache;
@@ -6299,8 +6119,7 @@ Promise, Array, Uint8Array, Error, String, URL, URLSearchParams,
 Intl_dt, Intl_num,
 Blob, FormData,
 Request, Response,
-Headers, UnsupportedError, Eb$HTMLCollectionHelper, Eb$NodeListHelper,
-Eb$CollectionHelper]) {
+Headers, UnsupportedError]) {
     Object.freeze(k);
     Object.freeze(k.prototype);
 }
