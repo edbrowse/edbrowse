@@ -2839,12 +2839,12 @@ class HTMLSelectElement extends HTMLElement
             return Node.prototype.appendChild.call(this, c);
         if(c.defaultSelected) c.selected$2 = true;
         // add first, then select, so the setter can deselect the others.
-        const was_selected = c.selected;
+        const was_selected = c.selected$2;
         c.selected$2 = false;
         // this append will perform the reindex, and rebuild options and selectedOptions
         Node.prototype.appendChild.call(this, c);
         // now select this one, possibly unselecting the others.
-        c.selected = was_selected;
+        if(was_selected) c.selected = true;
         return c;
     }
 
