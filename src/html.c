@@ -3768,26 +3768,7 @@ static void silent(int msg, ...)
     (void) msg;
 }
 
-// Is there an active tag below?
-static bool activeBelow(Tag *t)
-{
-	bool rc;
-	int action = t->action;
-	if (action == TAGACT_INPUT || action == TAGACT_SELECT ||
-	    action == TAGACT_A || action == TAGACT_AREA ||
-	((action == TAGACT_SPAN || action == TAGACT_DIV) && t->onclick))
-		return true;
-	t = t->firstchild;
-	while (t) {
-		rc = activeBelow(t);
-		if (rc)
-			return rc;
-		t = t->sibling;
-	}
-	return false;
-}
-
-static int hovcount, invcount, injcount, rrcount;
+static int invcount, injcount, rrcount;
 
 /* Rerender the buffer and notify of any lines that have changed */
 int rr_interval = 20;
@@ -3819,7 +3800,7 @@ void rerender(int rr_command)
 	}
 	if(cw->rr_throttle > rr_interval) cw->rr_throttle = rr_interval;
 // nextrender is stamped at the end, when we know how long this took.
-	hovcount = invcount = injcount = rrcount = 0;
+	invcount = injcount = rrcount = 0;
 
 // not sure if we have to do this here
 	rebuildSelectors();
@@ -3844,8 +3825,6 @@ void rerender(int rr_command)
 	if (rr_command > 0 && debugLevel >= 3) {
 		char buf[120];
 		buf[0] = 0;
-		if (hovcount)
-			sprintf(buf, "%d nodes under hover", hovcount);
 		if (invcount) {
 			if (buf[0])
 				strcat(buf, ", ");
@@ -5222,7 +5201,7 @@ nocolorend:
 
 	if (opentag) {
 // what is the visibility now?
-		uchar v_now = 2;
+		bool inv_now = false;
 		if(allowJS && t->jslink) {
 			t->disval = 0;
 // lots of text nodes, and they don't carry visibility information
@@ -5232,13 +5211,6 @@ nocolorend:
 			if(t->disval)
 				debugPrint(4, "tag %s.%d visibility %d",
 				t->info->name, t->seqno, t->disval);
-// If things appear upon hover, they do this sometimes if your mouse
-// is anywhere in that section, so maybe we should see them.
-// Also if color is transparent then it surely changes to a color
-// if the mouse is somewhere or on some circumstance,
-// so just bring this to light as well.
-			if(t->disval != DIS_INVISIBLE)
-				t->disval = DIS_COLOR;
 		} else {
 // allow html to hide sections, even if js is not running.
 			t->disval = 0;
@@ -5247,32 +5219,10 @@ nocolorend:
 				t->disval = DIS_INVISIBLE;
 		}
 		if (t->disval == DIS_INVISIBLE)
-			v_now = DIS_INVISIBLE;
-		if (t->disval == DIS_HOVER)
-			v_now = DIS_COLOR;
-		if (t->action == TAGACT_TEXT && v_now == DIS_HOVER) {
-			Tag *y = t;
-			while (y && y->f0 == cf) {
-				uchar dv = y->disval;
-				if (dv == DIS_TRANSPARENT)
-					v_now = DIS_INVISIBLE;
-				if (dv == DIS_HOVERCOLOR)
-					v_now = DIS_COLOR;
-				if (dv >= DIS_COLOR)
-					break;
-				y = y->parent;
-			}
-		}
+			inv_now = true;
 // gather some stats
-		if (v_now == DIS_INVISIBLE)
-			++invcount;
-		if (v_now == DIS_COLOR)
-			++hovcount;
-		if (v_now == DIS_INVISIBLE && !showall) {
-			inv2 = t;
-			return;
-		}
-		if (!showall && v_now == DIS_COLOR && !activeBelow(t)) {
+		if (inv_now) ++invcount;
+		if (inv_now && !showall) {
 			inv2 = t;
 			return;
 		}

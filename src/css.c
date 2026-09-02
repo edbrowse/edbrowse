@@ -3595,7 +3595,7 @@ static char *attrify(const Tag *r, char *line)
 		*t2++ = 0;
 		stringAndBytes(&s, &sl, t, t1 - t);
 		t1 += 5;
-		v = get_property_string_t(r, t1);
+		v = get_js_attrib(r, t1);
 		if (v) {
 			stringAndString(&s, &sl, v);
 			nzFree(v);
@@ -3638,7 +3638,7 @@ static void do_rules(const Tag *t, struct rule *r0, int highspec)
 	struct rule *r, *r1;
 	char *s, *s_attr;
 	int sl;
-	const Tag *tn = 0; // the text node that holds before or after text
+	Tag *tn = 0; // the text node that holds before or after text
 	char *a;
 	int spec;
 
@@ -3692,7 +3692,7 @@ the before after rules straight up.
 		if(matchtype == 1)
 			tn = t->firstchild;
 		if(matchtype == 2) {
-			const Tag *u = t->firstchild;
+			Tag *u = t->firstchild;
 			while(u->sibling) u = u->sibling;
 			tn = u;
 		}
@@ -3785,7 +3785,8 @@ so this might be wrong but it gets around that test.
 	nzFree(s);
 	s = s_attr;
 	set_property_string_t(tn, "data$2", s);
-	nzFree(s);
+	nzFree(tn->textval);
+	tn->textval = s;
 	set_property_bool_t(tn, "inj$css", true);
 }
 

@@ -2469,34 +2469,30 @@ s.textDecorationThickness =  h[3];
 }
 Object.freeze(cssShort)
 
-// see the DIS_ values in eb.h
+// this function has been adjusted to return DIS_INVISIBLE or DIS_COLOR,
+// because that is the only thing html.c cares about.
 function eb$visible(t) {
-var c, rc = 0;
-var s1; // original style object
-var s2; // computed style object
-var w = my$win();
-if(!t) return 0;
-if(t.hidden || t.ariaHidden) return 1;
-if(w.rr$start) {
-cssGather(false, w);
-delete w.rr$start;
-}
-s1 = t.style$2 ? t.style$2 : {};
-s2 = computeStyleInline(t);
-if(s1.hasOwnProperty("display")) s2.display = s1.display;
-if(s1.hasOwnProperty("visibility")) s2.visibility = s1.visibility;
-if(s1.hasOwnProperty("color")) s2.color = s1.color;
-if(s2.display == "none" || s2.visibility == "hidden") {
-rc = 1;
-// It is hidden, does it come to light on hover?
-if(s1.hov$vis) rc = 2;
-return rc;
-}
-if((c = s2.color) && c != "inherit") {
-rc = (c == "transparent" ? 4 : 3);
-if(rc == 4 && s1.hov$col) rc = 5;
-}
-return rc;
+    var rc = 3;
+    var s1; // original style object
+    var s2; // computed style object
+    var w = my$win();
+    if(!t) return rc;
+    if(t.hidden || t.ariaHidden) return 1;
+    if(w.rr$start) {
+        cssGather(false, w);
+        delete w.rr$start;
+    }
+    s1 = t.style$2 ? t.style$2 : {};
+    s2 = computeStyleInline(t);
+    if(s1.hasOwnProperty("display")) s2.display = s1.display;
+    if(s1.hasOwnProperty("visibility")) s2.visibility = s1.visibility;
+    if(s1.hasOwnProperty("color")) s2.color = s1.color;
+    if(s2.display == "none" || s2.visibility == "hidden") {
+        rc = 1;
+        // It is hidden, does it come to light on hover?
+        if(s1.hov$vis) rc = 3;
+    }
+    return rc;
 }
 
 // This is not comprehensive, but covers most cases,
