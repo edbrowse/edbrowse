@@ -8617,7 +8617,6 @@ if(step$l>=1)alert('a__394(' + showarglist(arguments) + ')');
 		}
 	};
 }
-bp@(jqe)
 jQuery.each( [
 	"tabIndex",
 	"readOnly",
