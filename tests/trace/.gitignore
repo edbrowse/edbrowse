@@ -1,4 +1,3 @@
-alpine-trace-batch.js
-sample-trace-batch.js
-trace-alpine-chrome
-trace-alpine-edbrowse
+*-trace-batch.js
+trace-*-chrome
+trace-*-edbrowse

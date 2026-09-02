@@ -1,0 +1,59 @@
+#!/bin/sh
+
+: "
+This is a nontrivial example of tracing.
+This is the jquery library, version 3.5.1.
+The html wrapper simply calls the library; it does not exercise it.
+It might be good to add some calls to $ and watch it in action.
+"
+
+cd "$(dirname "$0")"
+program=../../src/edbrowse
+
+which=e
+if [ $# != 0 ]
+then
+which="$1"
+fi
+if [ "$which" != c -a "$which" != e ]
+then
+echo "usage run-trace-jq [c|e]"
+exit 1
+fi
+
+if [ $which = c ]
+then
+# run on chrome
+edbrowse jq-start.html <<!
+<chromethis
+1
+ib2
+e2
+,s;file://`pwd`/jq-start.html;jq-start.html;
+,s;`pwd`/jq-start.html;/;
+w trace-jq-chrome
+qt
+!
+
+exit 0
+fi
+
+# now it's edbrowse; run and compare to chrome
+$program -c "" jq-start.html <<!
+b
+1X
+ib2
+e2
+w trace-jq-edbrowse
+qt
+!
+
+if cmp trace-jq-chrome trace-jq-edbrowse
+then
+echo ok
+rm trace-jq-edbrowse
+exit 0
+fi
+
+#  cmp already printed the message.
+exit 1

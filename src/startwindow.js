@@ -2873,8 +2873,6 @@ class HTMLSelectElement extends HTMLElement
         // with a corresponding tag in C.
         domLinkage('c', o, "option");
         const n = this.options.length;
-        // first option to a pick-one list is automatically selected
-        if(!n && !this.multiple) o.selected$2 = true;
         if(typeof idx != "number" || idx < 0 || idx > n) idx = n;
         if(idx == n) {
             this.appendChild(o);
@@ -2889,14 +2887,9 @@ class HTMLSelectElement extends HTMLElement
     {
         const n = this.options.length;
         if(typeof idx == "number" && idx >= 0 && idx < n) {
-            // if removing the only selected option, revert to the first one.
-            const only = !this.multiple && this.options[idx].selected;
             this.removeChild(this.options[idx]);
-            if(only && n > 1) this.options[0].selected = true;
         }
     }
-
-    selectReindexThis() { selectReindex(this); }
 
 // A helper function for <option> coming from html.
 // This is called from C as we parse the html and build the tree.

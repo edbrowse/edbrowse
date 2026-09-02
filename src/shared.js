@@ -3192,6 +3192,9 @@ function selectReindex(t)
         }
         o.push(c);
     }
+// if not multiple, and nothing selected, the first option must be selected.
+    if(!t.multiple && a.length == 0 && o.length > 0)
+        o[0].selected$2 = true, a.push(o[0]), t.selectedIndex = 0;
 }
 
 function datalistReindex(t)
