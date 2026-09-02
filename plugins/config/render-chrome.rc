@@ -3,6 +3,11 @@
 # chrmrndr is our special protocol to invoke the headless browser.
 # This assumes you have installed selenium.    apt install python3-selenium
 
+# If a script on the page calls alert(), or prompt() or some other interactive
+# function, headless chrome will blow up.
+# This is understandable; it is headless, and can't perform those functions.
+# The traceback will include the message: "Mypy not smart enough".
+
 plugin {
     type = */*
     desc = Render page with Chrome
