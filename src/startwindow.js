@@ -251,7 +251,7 @@ Error.prototype.NAMESPACE_ERR = 1;
 
 // link functions in the shared window to this window
 for(let f of ["UnsupportedError",
-"eb$visible", "alert3", "alert4",
+"eb$invisible", "alert3", "alert4",
 "dumptree", "uptrace", "by_esn", "showscripts", "searchscripts",
 "showframes", "snapshot", "aloop",
 "set_location_hash", "NodeFilter", "tableReindex", "formReindex", "selectReindex",

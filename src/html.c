@@ -5194,42 +5194,42 @@ nocolorend:
 	if (!opentag && ti->bits & TAG_NOSLASH)
 		return;
 
-// We will call eb$visible to derive visibility, that in turn invokes css,
+// We will call eb$invisible to derive visibility, that in turn invokes css,
 // that in turn requires us to be in the frame of the tags we are looking at.
 // render(), which calls this, restores cf.
 	cf = t->f0;
 
-	if (opentag) {
+    if (opentag) {
 // what is the visibility now?
-		bool inv_now = false;
-		if(allowJS && t->jslink) {
+        bool inv_now = false;
+        if(allowJS && t->jslink) {
 // lots of text nodes, and they don't carry visibility information
-			if(action != TAGACT_TEXT)
-				    inv_now = (run_function_onearg_win(cf, "eb$visible", t) == 1);
-			if(inv_now)
-				debugPrint(4, "tag %s.%d shows invisible",
-				t->info->name, t->seqno);
-		} else {
+            if(action != TAGACT_TEXT)
+                    inv_now = run_function_onearg_win(cf, "eb$invisible", t);
+        } else {
 // allow html to hide sections, even if js is not running.
-			if(((a = attribVal(t, "hidden")) && !stringEqual(a, "false")) ||
-			((a = attribVal(t, "aria-hidden")) && !stringEqual(a, "false")))
-				inv_now = true;
-		}
+            if(((a = attribVal(t, "hidden")) && !stringEqual(a, "false")) ||
+            ((a = attribVal(t, "aria-hidden")) && !stringEqual(a, "false")))
+                inv_now = true;
+        }
+        if(inv_now)
+            debugPrint(4, "tag %s.%d shows invisible",
+            t->info->name, t->seqno);
 // gather some stats
-		if (inv_now) ++invcount;
-		if (inv_now && !showall) {
-			inv2 = t;
-			return;
-		}
-		if (action == TAGACT_TEXT && t->jslink &&
-		    get_property_bool_t(t, "inj$css")) {
-			++injcount;
-			if (!showall) {
-				inv2 = t;
-				return;
-			}
-		}
-	}
+        if (inv_now) ++invcount;
+        if (inv_now && !showall) {
+            inv2 = t;
+            return;
+        }
+        if (action == TAGACT_TEXT && t->jslink &&
+            get_property_bool_t(t, "inj$css")) {
+            ++injcount;
+            if (!showall) {
+                inv2 = t;
+                return;
+            }
+        }
+    }
 
 	retainTag = true;
 	if (invisible)

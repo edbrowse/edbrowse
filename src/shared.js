@@ -1895,7 +1895,7 @@ Object.defineProperty(generalbar, "visible", {value:true})
 
 function cssGather(pageload, newwin) {
 var w = my$win();
-if(!pageload && newwin && newwin.eb$visible) w = newwin;
+if(!pageload && newwin && newwin.eb$invisible) w = newwin;
 var d =w.document;
 var css_all = "";
 w.cssSource = [];
@@ -2469,14 +2469,14 @@ s.textDecorationThickness =  h[3];
 }
 Object.freeze(cssShort)
 
-// this function has been adjusted to return DIS_INVISIBLE or DIS_COLOR,
-// because that is the only thing html.c cares about.
-function eb$visible(t) {
-    var rc = 3;
+// Return true if this tag is invisible. Actually we return 0 or 1,
+// because run_function_onearg_win returns an integer.
+function eb$invisible(t) {
+    var rc = 0; // normal tag, please display
     var s1; // original style object
     var s2; // computed style object
     var w = my$win();
-    if(!t) return rc;
+    if(!t || !w) return rc;
     if(t.hidden || t.ariaHidden) return 1;
     if(w.rr$start) {
         cssGather(false, w);
@@ -2490,7 +2490,7 @@ function eb$visible(t) {
     if(s2.display == "none" || s2.visibility == "hidden") {
         rc = 1;
         // It is hidden, does it come to light on hover?
-        if(s1.hov$vis) rc = 3;
+        if(s1.hov$vis) rc = 0;
     }
     return rc;
 }
