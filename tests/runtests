@@ -10,6 +10,29 @@ cd "$(dirname "$0")"
 program=../src/edbrowse
 outfile=/tmp/runtests.out
 
+# Some tests require the internet, tapping into edbrowse.org.
+# Use -l for the local tests only.
+# Use -t to run the trace test, which does not require the internet,
+# but assumes you have set things up in advance with chrome.
+
+local=n
+dotrace=n
+if [ $# != 0 -a "$1" = -l ]
+then
+local=y
+shift
+fi
+if [ $# != 0 -a "$1" = -t ]
+then
+dotrace=y
+shift
+fi
+if [ $# != 0 ]
+then
+echo "usage: runtests [-l] [-t]"
+exit 2
+fi
+
 # Some of these tests aren't complete until timers run.
 # Use the tmwait command to wait for the timers.
 # If there are no timers, tmwait returns immediately.
@@ -19,7 +42,13 @@ outfile=/tmp/runtests.out
 # and is more interactive.
 
 status=0
-for t in collection.html dynamic-form.html fragment.html frames.html getelem.html multiline-attribute.html mutation.html queryselector.html script-adds-nodes.html scriptorder.html style-shorthand.html table.html unbalanced-attribute.html xhr.html
+list="collection.html dynamic-form.html fragment.html getelem.html multiline-attribute.html mutation.html queryselector.html script-adds-nodes.html scriptorder.html style-shorthand.html table.html unbalanced-attribute.html"
+if [ $local = n ]
+then
+list="$list frames.html xhr.html"
+fi
+
+for t in $list
 do
 $program -c "" $t >$outfile <<!
 b
@@ -67,6 +96,9 @@ rm $outfile
 
 # acid3 is third party, and doesn't follow our format.
 # The pass fail message is on line 3, not line 1.
+# This taps into acid3.org, I believe, so requires the internet.
+if [ local = n ]
+then
 t=acid3
 $program -c "" $t >$outfile <<!
 b
@@ -81,11 +113,11 @@ if [ "$result" != 69/69 ]; then
 echo "$t failed $result"
 status=1
 fi
+fi
 
 # the apline trace test is also nonstandard
 # not everyone has the chrome plugin on their system
-# use t to include the trace test
-if [ $# != 0 -a "$1" = t ]
+if [ $dotrace = y ]
 then
 if ./trace/run-trace-alpine >/dev/null 2>&1
 then
