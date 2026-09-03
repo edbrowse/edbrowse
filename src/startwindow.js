@@ -4407,6 +4407,121 @@ swdc(Validity);
     const named_items = collectionSymbol("named_items");
     const ignore = collectionSymbol("ignore");
     const handleChanges = collectionSymbol("handleChanges");
+
+    class IndexedStorage
+    {
+        indexed = [];
+
+        item(i)
+        {
+            // Don't allow item to be used to call methods on our array
+            if (Number(i) != i) return null;
+            const ret = this.indexed[i];
+            // The values in these collections or lists are truthy
+            return (ret) ? ret : null;
+        }
+
+        get length() { return this.indexed.length; }
+
+        clear() { this.indexed.length = 0; }
+
+        push(...args) { return this.indexed.push(...args); }
+
+        // returns the index of the inserted item
+        insert(value, existing)
+        {
+            const idx = (existing) ? this.indexed.indexOf(existing) : 0;
+            if (idx < 0)
+                throw new Error("Attempt to insert before a non-existent value");
+            this.indexed.splice(idx, 0, value);
+            return idx;
+        }
+
+        remove(value)
+        {
+            const idx = this.indexed.indexOf(value);
+            if (idx < 0) return;
+            this.indexed.splice(idx, 1);
+        }
+
+        // Allow extending to weakref handling by overriding item() and length
+        *[Symbol.iterator]()
+        {
+            for (let i = 0; i < this.length; ++i) {
+                const element = this.item(i);
+                if (!element) break;
+                yield element;
+            }
+        }
+    }
+
+    // I don't think there's any of these type objects which are name only
+    class NamedStorage extends IndexedStorage
+    {
+        static by_id = 0;
+        static by_name = 1;
+        // No need to construct the array on each namedItem call
+        maps = [new Map, new Map];
+        constructor() { super(); }
+
+        namedItem(n)
+        {
+            for (m of this.maps) {
+                const ret = this.mapGet(m,n);
+                if(ret) return ret;
+            }
+            return null;
+        }
+
+        push(...args)
+        {
+            const old_length = this.length;
+            const new_length = super.push(...args);
+            for (i = old_length; i < new_length; ++i) {
+                const element = this.indexed[i];
+                this.nameAdd(element, element);
+            }
+            return new_length;
+        }
+
+        insert(value, existing)
+        {
+            const idx = super.insert(value, existing);
+            const element = this.indexed[idx];
+            this.nameAdd(element, element);
+            return idx;
+        }
+
+        remove(element)
+        {
+            super.remove(element);
+            this.nameDelete(element);
+        }
+
+        // allow overriding to handle weakrefs
+        mapGet(m, n) { return m.get(n); }
+
+        nameAdd(element, value)
+        {
+            const id = element.id;
+            if (typeof id == "string" && id)
+                this.maps[NamedStorage.by_id].set(id, value);
+            const name = element.getAttribute("name");
+            if (typeof name == "string" && name)
+                this.maps[NamedStorage.by_name].set(name, value);
+        }
+
+        nameDelete(element)
+        {
+            const id = element.id;
+            if (typeof id == "string" && id)
+                this.maps[NamedStorage.by_id].delete(id);
+            const name = element.getAttribute("name");
+            if (typeof name == "string" && name)
+                this.maps[NamedStorage.by_name].delete(name);
+        }
+    }
+
     /* not sure if it would be noticeably more efficient to handle the named
     items in the derived classes but this is easier */
 
