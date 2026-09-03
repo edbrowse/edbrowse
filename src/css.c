@@ -3595,7 +3595,7 @@ static char *attrify(const Tag *r, char *line)
 		*t2++ = 0;
 		stringAndBytes(&s, &sl, t, t1 - t);
 		t1 += 5;
-		v = get_js_attrib(r, t1);
+		v = get_js_attribute(r, t1);
 		if (v) {
 			stringAndString(&s, &sl, v);
 			nzFree(v);

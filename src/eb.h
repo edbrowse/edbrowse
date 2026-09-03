@@ -608,13 +608,13 @@ struct htmlTag {
 	struct htmlTag *controller;
 	pthread_t loadthread;
 	long hcode;
-	uchar step; // prerender, decorate, load script, runscript
-	uchar scriptgen; // script generated, not from source
+	uchar step:4; // prerender, decorate, load script, runscript
+	uchar scriptgen:4; // script generated, not from source
 // the slash member was for the tag coresponding to <foo/>, the closing tag,
 // but we don't do that any more, just one tag for <foo> in the tree.
 // Except ... <pre> and </pre> need separate tags.
 	bool slash:1;
-	bool loadsuccess;
+	bool loadsuccess:1;
 	bool textin:1; // <a> some text </a>
 	bool deleted:1; // deleted from the current buffer
 	bool dead:1; // removed by garbage collection
@@ -656,13 +656,7 @@ struct htmlTag {
 	char subsup;		/* span turned into sup or sub */
 	uchar itype;		// input type =
 	uchar itype_minor;
-#define DIS_INVISIBLE 1
-#define DIS_HOVER 2
-#define DIS_COLOR 3
-#define DIS_TRANSPARENT 4
-#define DIS_HOVERCOLOR 5
-	uchar disval; // displayable value for the node
-	int ninp;		/* number of nonhidden inputs */
+	short ninp;		/* number of nonhidden inputs */
 
 /*********************************************************************
 Comments on nodeName, that is, the name of the html tag,

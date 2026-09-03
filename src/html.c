@@ -5203,23 +5203,18 @@ nocolorend:
 // what is the visibility now?
 		bool inv_now = false;
 		if(allowJS && t->jslink) {
-			t->disval = 0;
 // lots of text nodes, and they don't carry visibility information
 			if(action != TAGACT_TEXT)
-				t->disval =
-				    run_function_onearg_win(cf, "eb$visible", t);
-			if(t->disval)
-				debugPrint(4, "tag %s.%d visibility %d",
-				t->info->name, t->seqno, t->disval);
+				    inv_now = (run_function_onearg_win(cf, "eb$visible", t) == 1);
+			if(inv_now)
+				debugPrint(4, "tag %s.%d shows invisible",
+				t->info->name, t->seqno);
 		} else {
 // allow html to hide sections, even if js is not running.
-			t->disval = 0;
 			if(((a = attribVal(t, "hidden")) && !stringEqual(a, "false")) ||
 			((a = attribVal(t, "aria-hidden")) && !stringEqual(a, "false")))
-				t->disval = DIS_INVISIBLE;
+				inv_now = true;
 		}
-		if (t->disval == DIS_INVISIBLE)
-			inv_now = true;
 // gather some stats
 		if (inv_now) ++invcount;
 		if (inv_now && !showall) {
