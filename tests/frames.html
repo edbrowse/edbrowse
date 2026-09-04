@@ -105,29 +105,10 @@ show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 
 /*********************************************************************
-I'll include the two frames that are referenced by this html,
-the two frames on edbrowse.org, the two frames you need to put on your website
-if you want to reproduce this test yourself.
-I had to muck with the closing script tags of course,
-or they would close this script.
+The two frames on edbrowse.org, or the two frames you need to put on your website,
+if you want to reproduce this test yourself, are in the website directory.
 In the edbrowse test, the second script appears on the page.
 The first frame appears if you expand it.
 I'm not sure why the difference.
-
-<head></head><body>
-<script>zz = 789`/script>
-<h1>Simple Frame</h1>
-<p>
-Saturday, in the park.
-I think it was the fourth of July.
-</p></body>
-
-<head></head><body>
-<script>zz = 987`/script>
-<h1>Second Frame</h1>
-<p>
-Does anybody really know what time it is?
-Does anybody really care?
-</p></body>
 *********************************************************************/
 </script></body>

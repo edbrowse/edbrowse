@@ -1,0 +1,16 @@
+<head><title>wag</title>
+<script>var message = "<P>spaced out <A href=http://www.space.com>here</a></p>"; </script>
+</head>
+<body>
+<div id=space></div>
+<script>
+document.getElementById("space").innerHTML = message;
+alert("script in frame");
+setTimeout(function(){
+addEventListener("message", function(e) { alert(e.name + " " + e.data + " " + my$win().eb$ctx)}, true);
+top.mcp.port2.addEventListener("message", function(e) { alert(e.data + " " + my$win().eb$ctx)});
+}, 5000);
+</script>
+<iframe src=http://www.eklhad.net/rubik/enumerat.html></iframe>
+Replace this frame with <a href='javascript:document.location="http://www.scrapsayings.com/say-alpha-muns.htm"'>The Munsters</a>
+</body>

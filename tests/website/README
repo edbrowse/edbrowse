@@ -1,0 +1,11 @@
+This directory contains files that must exist on a web server,
+for some of the tests to run.
+We can't test xhr, for example, without the internet.
+I tried using xhr to fetch local files, but chrome does not permit it,
+due to cross-origin considerations.
+For now these files are hosted on edbrowse.org,
+and the various urls point to edbrowse.org.
+jsfrm.html is used by jsrt, but only if you expand the frame.
+
+The files in acid3 are required by the acid3 test,
+and are hosted on acid3.acidtests.org.
