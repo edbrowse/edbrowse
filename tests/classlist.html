@@ -56,9 +56,10 @@ d1.classList.value = "  eta   theta "
 if(d1.classList.length != 2 || d1.classList.value != "  eta   theta ")
 msg += `|bad value setter ${d1.classList.value}`
 
-// add with no arguments must not create the attribute
 d2.classList.add()
-if(d2.hasAttribute("class")) msg += "|empty add created the attribute"
+if(!d2.hasAttribute("class")) msg += "|empty add didn't create the attribute"
+if(d2.className != "") msg += "|empty add didn't make empty className"
+if(d2.classList.length != 0) msg += "|d2 classList length nonzero";
 
 // the empty token, and a token holding a space, are errors
 for(const f of [() => d1.classList.add(""), () => d1.classList.remove(""),

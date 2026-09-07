@@ -828,7 +828,6 @@ class DOMTokenList
     flush$2(a)
     {
         this.mirror$2(a);
-        if(!a.length && this.node$2.getAttribute(this.attr$2) === null) return;
         this.node$2.setAttribute(this.attr$2, a.join(' '));
     }
 
