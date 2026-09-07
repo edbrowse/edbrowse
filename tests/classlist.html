@@ -1,0 +1,79 @@
+<body>
+<p id=show>start</p>
+<div id=d1 class="alpha beta alpha">one</div>
+<div id=d2>two</div>
+<script>
+try {
+show = document.getElementById("show")
+msg = "ok";
+d1 = document.getElementById("d1"); d2 = document.getElementById("d2");
+
+// classList is a DOMTokenList, it is not an array
+if(typeof DOMTokenList != "function") msg += "|no DOMTokenList"
+if(!(d1.classList instanceof DOMTokenList)) msg += "|classList wrong class"
+if(d1.classList.dom$class != "DOMTokenList") msg += "|bad dom$class"
+if(Object.prototype.toString.call(d1.classList) != "[object DOMTokenList]")
+msg += "|bad toStringTag"
+if(Array.isArray(d1.classList)) msg += "|classList is still an array"
+
+// duplicates fold together, and no class attribute means no tokens
+if(d1.classList.length != 2) msg += `|bad length ${d1.classList.length}`
+if(d2.classList.length != 0) msg += `|empty class has length ${d2.classList.length}`
+if(d1.classList.value != "alpha beta") msg += `|bad value ${d1.classList.value}`
+if(String(d1.classList) != "alpha beta") msg += "|bad stringifier"
+if(d1.classList[0] != "alpha" || d1.classList[1] != "beta") msg += "|bad index access"
+if(d1.classList.item(1) != "beta" || d1.classList.item(9) !== null) msg += "|bad item"
+if([...d1.classList].join("-") != "alpha-beta") msg += "|bad iterator"
+if(Object.keys(d1.classList).join() != "0,1") msg += "|bad own keys"
+let seen = ""; d1.classList.forEach((t,i) => seen += i + t);
+if(seen != "0alpha1beta") msg += `|bad forEach ${seen}`
+if([...d1.classList.keys()].join() != "0,1") msg += "|bad keys"
+if([...d1.classList.values()].join() != "alpha,beta") msg += "|bad values"
+if([...d1.classList.entries()].map(e=>e.join(":")).join() != "0:alpha,1:beta")
+msg += "|bad entries"
+
+// the mutators write back through the class attribute
+d1.classList.add("gamma", "beta")
+if(d1.className != "alpha beta gamma") msg += `|bad add ${d1.className}`
+d1.classList.remove("beta")
+if(d1.className != "alpha gamma") msg += `|bad remove ${d1.className}`
+if(d1.classList.replace("alpha", "delta") !== true) msg += "|replace return"
+if(d1.className != "delta gamma") msg += `|bad replace ${d1.className}`
+if(d1.classList.replace("nope", "x") !== false) msg += "|replace found nothing"
+if(d1.classList.toggle("gamma") !== false || d1.className != "delta")
+msg += `|bad toggle off ${d1.className}`
+if(d1.classList.toggle("gamma") !== true || d1.className != "delta gamma")
+msg += `|bad toggle on ${d1.className}`
+if(d1.classList.toggle("gamma", true) !== true || d1.className != "delta gamma")
+msg += "|bad forced toggle"
+if(d1.classList.toggle("delta", false) !== false || d1.className != "gamma")
+msg += `|bad forced untoggle ${d1.className}`
+d1.classList.value = "  eta   theta "
+if(d1.classList.length != 2 || d1.classList.value != "eta theta")
+msg += `|bad value setter ${d1.classList.value}`
+
+// add with no arguments must not create the attribute
+d2.classList.add()
+if(d2.hasAttribute("class")) msg += "|empty add created the attribute"
+
+// the empty token, and a token holding a space, are errors
+for(const f of [() => d1.classList.add(""), () => d1.classList.remove(""),
+() => d1.classList.toggle(""), () => d1.classList.add("a b")]) {
+let threw = false;
+try { f() } catch(e) { threw = true }
+if(!threw) msg += "|bad token did not throw"
+}
+
+// class has no supported tokens, so supports throws, as chrome does
+let sthrew = false;
+try { d1.classList.supports("eta") } catch(e) { sthrew = true }
+if(!sthrew) msg += "|supports did not throw"
+
+// and the class attribute still drives getElementsByClassName
+d1.className = "shoe";
+if(document.getElementsByClassName("shoe").length != 1) msg += "|gebcn broken"
+
+show.innerHTML = msg;
+} catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
+</script>
+</body>

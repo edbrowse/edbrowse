@@ -4265,6 +4265,13 @@ proxy = http|https hr.mycompany.com DIRECT
 proxy = http|https|ftp * proxy.mycompany.com
 
 <p>
+If no proxy line matches the url at hand, edbrowse defers to the environment
+variables http_proxy, https_proxy, all_proxy and no_proxy,
+just as curl and other command line tools do.
+DIRECT overrides those variables and forces a direct connection.
+Bear in mind that all_proxy applies to mail as well as web traffic.
+
+<p>
 As shown in this example, different protocols can be separated by pipes.
 Beware, placing a * in the protocol field embraces all protocols, including ftp, pop3, and smtp.
 Mail will attempt to pass through this proxy, just like web traffic.

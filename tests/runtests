@@ -42,7 +42,7 @@ fi
 # and is more interactive.
 
 status=0
-list="collection.html dynamic-form.html fragment.html getelem.html multiline-attribute.html mutation.html queryselector.html script-adds-nodes.html scriptorder.html style-shorthand.html table.html unbalanced-attribute.html"
+list="classlist.html collection.html dynamic-form.html fragment.html getelem.html multiline-attribute.html mutation.html queryselector.html script-adds-nodes.html scriptorder.html style-shorthand.html table.html unbalanced-attribute.html"
 if [ $local = n ]
 then
 list="$list frames.html xhr.html"
@@ -97,7 +97,7 @@ rm $outfile
 # acid3 is third party, and doesn't follow our format.
 # The pass fail message is on line 3, not line 1.
 # This taps into acid3.org, I believe, so requires the internet.
-if [ local = n ]
+if [ $local = n ]
 then
 t=acid3
 $program -c "" $t >$outfile <<!

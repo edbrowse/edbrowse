@@ -754,6 +754,14 @@ bool parseRefresh(char *ref, int *delay_p)
 		*delay_p = delay;
 		return true;
 	}
+/* A delay and no url means reload this page after delay seconds.
+ * That is legal html, not garbled. We just don't refresh ourselves,
+ * the same way we don't follow a refresh back to the current url. */
+	if (isdigitByte(*ref) && !*u) {
+		debugPrint(3, "refresh self after %d seconds, ignored", delay);
+		*delay_p = 0;
+		return false;
+	}
 	i_printf(MSG_GarbledRefresh, ref);
 	*delay_p = 0;
 	return false;
@@ -3049,10 +3057,16 @@ CURLcode setCurlURL(CURL * h, const char *url)
 	unsigned long verify = mustVerifyHost(url);
 	const char *proxy = findProxyForURL(url);
 	const char *agent = findAgentForURL(url);
+/* A null proxy leaves CURLOPT_PROXY at its default, and curl consults
+ * http_proxy, https_proxy, all_proxy and no_proxy in the environment,
+ * as curl the program does. The empty string, which is what the direct
+ * keyword gives us, tells curl to use no proxy at all, overriding
+ * those variables. We must set it either way, because handles are
+ * reused across urls, and null is what resets a previous proxy. */
 	if (!proxy)
-		proxy = "";
+		debugPrint(4, "proxy from the environment, if set");
 	else
-		debugPrint(4, "proxy %s", proxy);
+		debugPrint(4, "proxy %s", *proxy ? proxy : "direct");
 	curl_easy_setopt(h, CURLOPT_PROXY, proxy);
 	if (agent) {
 		debugPrint(4, "agent %s", agent);

@@ -3276,6 +3276,20 @@ According to the rfc standards. So LC_TIME needs to be C.
 	for(s = eb_language; *s; ++s)
 		if(*s == '_') *s = '-';
 
+/*********************************************************************
+C and POSIX are not languages, they are the absence of a locale,
+and neither is a valid language tag. A tag begins with two letters,
+so anything else is not a language either.
+Stay with English, as we do when LANG is not set at all.
+Remember eb_language is also navigator.language, not just the
+Accept-Language header, so we can't leave junk in it.
+*********************************************************************/
+	if (!isalphaByte(eb_language[0]) || !isalphaByte(eb_language[1])
+	    || stringEqual(eb_language, "posix")) {
+		strcpy(eb_language, "en");
+		return;
+	}
+
 	if (!strncmp(eb_language, "en", 2))
 		return;		// english is already default
 

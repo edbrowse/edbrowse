@@ -323,8 +323,10 @@ to mediate your request.
 This is the C version, using entries in .ebrc.
 There is a javascript version of the same name, that we will support later.
 This is a beginning, and it can be used even when javascript is disabled.
-A return of null means DIRECT, and this is the default
-if we don't match any of the proxy entries.
+A return of the empty string is DIRECT, no proxy at all, as spelled by
+the keyword direct in the config file.
+A return of null means no proxy entry speaks to this url, whereupon the
+caller leaves the matter to http_proxy etc. in the environment.
 *********************************************************************/
 
 const char *findProxyForURL(const char *url)
@@ -334,8 +336,8 @@ const char *findProxyForURL(const char *url)
 	char prot[MAXPROTLEN], host[MAXHOSTLEN];
 
 	if (!getProtHostURL(url, prot, host)) {
-// this should never happen
-		return 0;
+// this should never happen; go direct rather than guess
+		return emptyString;
 	}
 
 /* first match wins */
@@ -365,7 +367,7 @@ const char *findProxyForURL(const char *url)
 
 domain:
 		if (!px->domain || patternMatchURL(url, px->domain))
-			return px->host;
+			return px->host ? px->host : emptyString;
 	}
 
 	return 0;

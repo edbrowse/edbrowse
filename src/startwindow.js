@@ -763,6 +763,160 @@ this.standard_event_classes = ["Element", "Document"];
 this.standard_hashchange_classes = ["HTMLBodyElement", "SVGElement"];
 
 
+/*********************************************************************
+DOMTokenList, the class behind element.classList.
+It is not a snapshot. Every method rereads the class attribute, and
+every change is written back through setAttribute, so the collections
+are marked out of date and the observers fire, just as they did when
+classList was an array with a few methods bolted onto it.
+The tokens are also mirrored onto 0, 1, 2 ... as own properties, so
+list[0] and Object.keys(list) and [...list] work without a proxy.
+classList hands back a new DOMTokenList each time, which is how those
+mirrored properties stay honest. That means el.classList is not
+el.classList, whereas chrome returns the same object every time.
+*********************************************************************/
+
+class DOMTokenList
+{
+// attr is a parameter so relList or sandbox could share this class later
+    constructor(node, attr = "class")
+    {
+        odp(this, "node$2", {value: node});
+        odp(this, "attr$2", {value: attr});
+        odp(this, "count$2", {value: 0, writable: true});
+        this.mirror$2(this.tokens$2());
+    }
+
+// an ordered set, no empty strings and no duplicates
+    static parse$2(v)
+    {
+        const a = [];
+        if(v == null) return a;
+        for(const t of (v + "").split(/\s+/))
+            if(t && !a.includes(t)) a.push(t);
+        return a;
+    }
+
+    static check$2(t)
+    {
+        if(t === undefined || t === "")
+            throw new DOMException("the token must not be empty",
+            "SyntaxError");
+        t += "";
+        if(/\s/.test(t))
+            throw new DOMException("the token " + t + " contains whitespace",
+            "InvalidCharacterError");
+        return t;
+    }
+
+    tokens$2()
+    {
+        return DOMTokenList.parse$2(this.node$2.getAttribute(this.attr$2));
+    }
+
+// keep 0, 1, 2 ... in step with the tokens
+    mirror$2(a)
+    {
+        for(let i = a.length; i < this.count$2; ++i) delete this[i];
+        for(let i = 0; i < a.length; ++i)
+            odp(this, i, {value: a[i], enumerable: true, configurable: true});
+        this.count$2 = a.length;
+        return a;
+    }
+
+// don't create the attribute just to write nothing into it
+    flush$2(a)
+    {
+        this.mirror$2(a);
+        if(!a.length && this.node$2.getAttribute(this.attr$2) === null) return;
+        this.node$2.setAttribute(this.attr$2, a.join(' '));
+    }
+
+    get length() { return this.mirror$2(this.tokens$2()).length; }
+    get value() { return this.tokens$2().join(' '); }
+    set value(v)
+    {
+        this.node$2.setAttribute(this.attr$2, v);
+        this.mirror$2(this.tokens$2());
+    }
+    toString() { return this.value; }
+
+    item(i)
+    {
+        const a = this.mirror$2(this.tokens$2());
+        i = Math.trunc(+i) || 0;
+        return (i >= 0 && i < a.length) ? a[i] : null;
+    }
+
+    contains(t) { return this.tokens$2().includes(t + ""); }
+
+    add(...args)
+    {
+        const a = this.tokens$2();
+        for(const t0 of args) {
+            const t = DOMTokenList.check$2(t0);
+            if(!a.includes(t)) a.push(t);
+        }
+        this.flush$2(a);
+    }
+
+    remove(...args)
+    {
+        const a = this.tokens$2();
+        for(const t0 of args) {
+            const j = a.indexOf(DOMTokenList.check$2(t0));
+            if(j >= 0) a.splice(j, 1);
+        }
+        this.flush$2(a);
+    }
+
+    replace(o, n)
+    {
+        o = DOMTokenList.check$2(o);
+        n = DOMTokenList.check$2(n);
+        const a = this.tokens$2();
+        const j = a.indexOf(o);
+        if(j < 0) return false;
+        if(o != n && a.includes(n)) a.splice(j, 1); else a[j] = n;
+        this.flush$2(a);
+        return true;
+    }
+
+    toggle(t, force)
+    {
+        t = DOMTokenList.check$2(t);
+        const has = this.tokens$2().includes(t);
+        if(arguments.length > 1) {
+            if(force && !has) this.add(t);
+            if(!force && has) this.remove(t);
+            return !!force;
+        }
+        if(has) { this.remove(t); return false; }
+        this.add(t);
+        return true;
+    }
+
+// class has no supported tokens, and chrome throws rather than say false
+    supports(t) { throw new TypeError(this.attr$2 + " has no supported tokens"); }
+
+    forEach(cb, thisarg)
+    {
+        const a = this.mirror$2(this.tokens$2());
+        for(let i = 0; i < a.length; ++i) cb.call(thisarg, a[i], i, this);
+    }
+
+    *keys() { for(let i = 0; i < this.tokens$2().length; ++i) yield i; }
+    *values() { yield* this.tokens$2(); }
+    *entries()
+    {
+        const a = this.tokens$2();
+        for(let i = 0; i < a.length; ++i) yield [i, a[i]];
+    }
+    [Symbol.iterator]() { return this.values(); }
+}
+swdc(DOMTokenList);
+
+
 class Element extends Node
 {
     constructor() { super(); }
@@ -1470,78 +1624,10 @@ Here is the way. */
     }
     set className(h) { this.setAttribute("class", h); }
 
-// helper functions that support Element.classList
+// cl$present tells gebcn() in shared.js that this node has a classList
     static { this.prototype.cl$present = true; }
 
-    static classListRemove()
-    {
-        for(let i=0; i<arguments.length; ++i) {
-            for(let j=0; j<this.length; ++j) {
-                if(arguments[i] != this[j]) continue;
-                this.splice(j, 1);
-                --j;
-            }
-        }
-        this.node.setAttribute("class", this.join(' '));
-    }
-
-    static classListAdd()
-    {
-        for(let i=0; i<arguments.length; ++i) {
-            let j;
-            for(j=0; j<this.length; ++j)
-                if(arguments[i] == this[j]) break;
-            if(j == this.length) this.push(arguments[i]);
-        }
-        this.node.setAttribute("class", this.join(' '));
-    }
-
-    static classListReplace(o, n)
-    {
-        if(!o) return;
-        if(!n) { this.remove(o); return; }
-        for(let j=0; j<this.length; ++j)
-            if(o == this[j]) { this[j] = n; break; }
-        this.node.setAttribute("class", this.join(' '));
-    }
-
-    static classListContains(t)
-    {
-        if(!t) return false;
-        for(let j=0; j<this.length; ++j)
-            if(t == this[j]) return true;
-        return false;
-    }
-
-    static classListToggle(t, force)
-    {
-        if(!t) return false;
-        if(arguments.length > 1) {
-            if(force) this.add(t); else this.remove(t);
-            return force;
-        }
-        if(this.contains(t)) { this.remove(t); return false; }
-        this.add(t); return true;
-    }
-
-    static classMake(node)
-    {
-        let c = node.getAttribute("class");
-        if(!c) c = "";
-        // turn string into array
-        let a = c.trim().split(/\s+/);
-        // remember the node you came from
-        a.node = node;
-        // attach helper functions
-        a.remove = Element.classListRemove;
-        a.add = Element.classListAdd;
-        a.replace = Element.classListReplace;
-        a.contains = Element.classListContains;
-        a.toggle = Element.classListToggle;
-        return a;
-    }
-
-    get classList() { return Element.classMake(this); }
+    get classList() { return new DOMTokenList(this); }
 
 // this is recursive
     static htmlString(t)
