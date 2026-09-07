@@ -79,7 +79,7 @@ QUICKJS_LDFLAGS = $(quickjs_libs) -ldl
 ifeq ($(shell uname),Linux)
 	QUICKJS_LDFLAGS += -latomic
 endif
-LDFLAGS += $(dependency_libs) $(QUICKJS_LDFLAGS) -lpthread -lm $(STRIP)
+LDFLAGS += $(dependency_libs) $(QUICKJS_LDFLAGS) -lborogove -lpthread -lm $(STRIP)
 
 #  ESQL C load flags
 #ESQLDFLAGS = $(STRIP) -Xlinker -rpath -Xlinker $(INFORMIXDIR)/lib:$(INFORMIXDIR)/lib/esql

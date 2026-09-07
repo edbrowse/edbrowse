@@ -1245,7 +1245,7 @@ void addToMap(int nlines, int destl)
 		i_printfExit(MSG_LineLimit);
 
 // browse has no undo command
-	if (!(cw->browseMode | cw->dirMode | cw->ircoMode | cw->imapMode1 | cw->imapMode2))
+	if (!(cw->browseMode | cw->dirMode | cw->ircoMode | cw->xmppoMode | cw->imapMode1 | cw->imapMode2))
 		undoPush();
 
 /* move the labels */
@@ -1254,7 +1254,7 @@ void addToMap(int nlines, int destl)
 			*label += nlines;
 	}
 	cw->dol += nlines;
-	if(!cw->ircoMode)
+	if(!cw->ircoMode && !cw->xmppoMode)
 		cw->dot = destl + nlines;
 	else if(!cw->dot) cw->dot = 1;
 
@@ -1275,7 +1275,7 @@ void addToMap(int nlines, int destl)
 	cw->map = newmap;
 	nzFree0(newpiece);
 
-	if(cw->ircoMode1) {
+	if(cw->ircoMode1 || cw->xmppoMode) {
 // capture the time stamp of the added lines in irc mode.
 // This isn't very space efficient, but an irc buffer isn't going to get very large.
 		int i;
@@ -1296,7 +1296,7 @@ void addToMap(int nlines, int destl)
 		}
 // the added lines
 		for(i = 1; i <= nlines; ++i)
-			newmap[destl + i].text = cw->ircoMode ? (uchar*)cloneString(timestring) : (uchar*)emptyString;
+			newmap[destl + i].text = cw->ircoMode || cw->xmppoMode ? (uchar*)cloneString(timestring) : (uchar*)emptyString;
 // put on the last piece
 		if (destl < svdol) {
 // Stuff is not going in at the end, means this is not the first irc,
@@ -1532,7 +1532,7 @@ void delText(int start, int end)
 	int *label = NULL;
 
 // browse / sql / irc has no undo command.
-	if (cw->browseMode | cw->sqlMode | cw->ircoMode | cw->imapMode1 | cw->imapMode2) {
+	if (cw->browseMode | cw->sqlMode | cw->ircoMode | cw->imapMode1 | cw->imapMode2 | cw->xmppoMode) {
 		for (ln = start; ln <= end; ++ln)
 			nzFree(cw->map[ln].text);
 	} else {
@@ -1545,7 +1545,7 @@ void delText(int start, int end)
 	memmove(cw->map + start, cw->map + end + 1,
 		(cw->dol - end + 1) * LMSIZE);
 
-	if ((cw->dirMode | cw->ircoMode1 | cw->imapMode1 | cw->imapMode2) && cw->r_map) {
+	if ((cw->dirMode | cw->ircoMode1 | cw->imapMode1 | cw->imapMode2 | cw->xmppoMode) && cw->r_map) {
 // if you are looking at directories with ls-s or some such,
 // we have to delete the corresponding stat information.
 		for (ln = start; ln <= end; ++ln)
@@ -1582,7 +1582,7 @@ void delText(int start, int end)
 	if (!cw->dol) {
 		free(cw->map);
 		cw->map = 0;
-		if ((cw->dirMode | cw->ircoMode1 | cw->imapMode1 | cw->imapMode2) && cw->r_map) {
+		if ((cw->dirMode | cw->ircoMode1 | cw->imapMode1 | cw->imapMode2 | cw-> xmppoMode) && cw->r_map) {
 			free(cw->r_map);
 			cw->r_map = 0;
 		}
@@ -6597,6 +6597,17 @@ et_go:
 		return rc;
 	}
 
+	if(!strncmp(line, "xmpp", 4) && (isspaceByte(line[4]) || line[4] == 0)) {
+		cmd = 'e';
+		char *p = cloneString(line);
+		rc = xmppSetup(p);
+		nzFree(p);
+		if(rc && cw->xmppoMode) {
+			cw->changeMode = false;
+		}
+		return rc;
+	}
+
 	if(!strncmp(line, "imap", 4) && (isspaceByte(line[4]) || line[4] == 0)) {
 		cmd = 'e';
 		if(!cxQuit(context, 0)) return false;
@@ -8132,6 +8143,21 @@ doquit:
 				goto fail;
 			}
 			if(!ircWrite()) goto fail;
+			delText(startRange, endRange);
+			cw->changeMode = cw->undoable = false;
+			goto success;
+		}
+
+		if(!first && cw->xmppiMode) {
+			if(!startRange) {
+				setError(MSG_AtLine0);
+				goto fail;
+			}
+			if(startRange != 1 || endRange != cw->dol || globalMode) {
+				setError(MSG_IrcEntire); // TODO
+				goto fail;
+			}
+			if(!xmppWrite()) goto fail;
 			delText(startRange, endRange);
 			cw->changeMode = cw->undoable = false;
 			goto success;
