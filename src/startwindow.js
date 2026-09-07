@@ -1626,7 +1626,11 @@ Here is the way. */
 // cl$present tells gebcn() in shared.js that this node has a classList
     static { this.prototype.cl$present = true; }
 
-    get classList() { return new DOMTokenList(this); }
+    get classList() {
+        if(!this.classList$2)
+            this.classList$2 = new DOMTokenList(this);
+        return this.classList$2;
+    }
 
 // this is recursive
     static htmlString(t)

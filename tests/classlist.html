@@ -8,62 +8,64 @@ show = document.getElementById("show")
 msg = "ok";
 isedbrowse = navigator.userAgent.substr(0, 8) == "edbrowse";
 d1 = document.getElementById("d1"); d2 = document.getElementById("d2");
+cl1 = d1.classList; cl2 = d2.classList;
 
 // classList is a DOMTokenList, it is not an array
 if(typeof DOMTokenList != "function") msg += "|no DOMTokenList"
-if(!(d1.classList instanceof DOMTokenList)) msg += "|classList wrong class"
-if(isedbrowse && d1.classList.dom$class != "DOMTokenList") msg += "|bad dom$class"
-if(Object.prototype.toString.call(d1.classList) != "[object DOMTokenList]")
+if(cl1 != d1.classList) msg += "|classList created a new instance";
+if(!(cl1 instanceof DOMTokenList)) msg += "|classList wrong class"
+if(isedbrowse && cl1.dom$class != "DOMTokenList") msg += "|bad dom$class"
+if(Object.prototype.toString.call(cl1) != "[object DOMTokenList]")
 msg += "|bad toStringTag"
-if(Array.isArray(d1.classList)) msg += "|classList is still an array"
+if(Array.isArray(cl1)) msg += "|classList is still an array"
 
 if(d1.getAttribute("class") != "alpha beta alpha") msg += `|bad class ${d1.getAttribute("class")}`;
-if(d1.className != "alpha beta alpha") msg += `|bad class ${d1.className}`;
+if(d1.className != "alpha beta alpha") msg += `|bad classname ${d1.className}`;
 
 // duplicates fold together, and no class attribute means no tokens
-if(d1.classList.length != 2) msg += `|bad length ${d1.classList.length}`
-if(d2.classList.length != 0) msg += `|empty class has length ${d2.classList.length}`
-if(d1.classList.value != "alpha beta alpha") msg += `|bad value ${d1.classList.value}`
-if(String(d1.classList) != "alpha beta alpha") msg += "|bad stringifier"
-if(d1.classList[0] != "alpha" || d1.classList[1] != "beta") msg += "|bad index access"
-if(d1.classList.item(1) != "beta" || d1.classList.item(9) !== null) msg += "|bad item"
-if([...d1.classList].join("-") != "alpha-beta") msg += "|bad iterator"
-if(Object.keys(d1.classList).join() != "0,1") msg += "|bad own keys"
-let seen = ""; d1.classList.forEach((t,i) => seen += i + t);
+if(cl1.length != 2) msg += `|bad length ${cl1.length}`
+if(cl2.length != 0) msg += `|empty class has length ${cl2.length}`
+if(cl1.value != "alpha beta alpha") msg += `|bad value ${cl1.value}`
+if(String(cl1) != "alpha beta alpha") msg += "|bad stringifier"
+if(cl1[0] != "alpha" || cl1[1] != "beta") msg += "|bad index access"
+if(cl1.item(1) != "beta" || cl1.item(9) !== null) msg += "|bad item"
+if([...cl1].join("-") != "alpha-beta") msg += "|bad iterator"
+if(Object.keys(cl1).join() != "0,1") msg += "|bad own keys"
+let seen = ""; cl1.forEach((t,i) => seen += i + t);
 if(seen != "0alpha1beta") msg += `|bad forEach ${seen}`
-if([...d1.classList.keys()].join() != "0,1") msg += "|bad keys"
-if([...d1.classList.values()].join() != "alpha,beta") msg += "|bad values"
-if([...d1.classList.entries()].map(e=>e.join(":")).join() != "0:alpha,1:beta")
+if([...cl1.keys()].join() != "0,1") msg += "|bad keys"
+if([...cl1.values()].join() != "alpha,beta") msg += "|bad values"
+if([...cl1.entries()].map(e=>e.join(":")).join() != "0:alpha,1:beta")
 msg += "|bad entries"
 
 // the mutators write back through the class attribute
-d1.classList.add("gamma", "beta")
+cl1.add("gamma", "beta")
 if(d1.className != "alpha beta gamma") msg += `|bad add ${d1.className}`
-d1.classList.remove("beta")
+cl1.remove("beta")
 if(d1.className != "alpha gamma") msg += `|bad remove ${d1.className}`
-if(d1.classList.replace("alpha", "delta") !== true) msg += "|replace return"
+if(cl1.replace("alpha", "delta") !== true) msg += "|replace return"
 if(d1.className != "delta gamma") msg += `|bad replace ${d1.className}`
-if(d1.classList.replace("nope", "x") !== false) msg += "|replace found nothing"
-if(d1.classList.toggle("gamma") !== false || d1.className != "delta")
+if(cl1.replace("nope", "x") !== false) msg += "|replace found nothing"
+if(cl1.toggle("gamma") !== false || d1.className != "delta")
 msg += `|bad toggle off ${d1.className}`
-if(d1.classList.toggle("gamma") !== true || d1.className != "delta gamma")
+if(cl1.toggle("gamma") !== true || d1.className != "delta gamma")
 msg += `|bad toggle on ${d1.className}`
-if(d1.classList.toggle("gamma", true) !== true || d1.className != "delta gamma")
+if(cl1.toggle("gamma", true) !== true || d1.className != "delta gamma")
 msg += "|bad forced toggle"
-if(d1.classList.toggle("delta", false) !== false || d1.className != "gamma")
+if(cl1.toggle("delta", false) !== false || d1.className != "gamma")
 msg += `|bad forced untoggle ${d1.className}`
-d1.classList.value = "  eta   theta "
-if(d1.classList.length != 2 || d1.classList.value != "  eta   theta ")
-msg += `|bad value setter ${d1.classList.value}`
+cl1.value = "  eta   theta "
+if(cl1.length != 2 || cl1.value != "  eta   theta ")
+msg += `|bad value setter ${cl1.value}`
 
-d2.classList.add()
+cl2.add()
 if(!d2.hasAttribute("class")) msg += "|empty add didn't create the attribute"
 if(d2.className != "") msg += "|empty add didn't make empty className"
-if(d2.classList.length != 0) msg += "|d2 classList length nonzero";
+if(cl2.length != 0) msg += "|d2 classList length nonzero";
 
 // the empty token, and a token holding a space, are errors
-for(const f of [() => d1.classList.add(""), () => d1.classList.remove(""),
-() => d1.classList.toggle(""), () => d1.classList.add("a b")]) {
+for(const f of [() => cl1.add(""), () => cl1.remove(""),
+() => cl1.toggle(""), () => cl1.add("a b")]) {
 let threw = false;
 try { f() } catch(e) { threw = true }
 if(!threw) msg += "|bad token did not throw"
@@ -71,7 +73,7 @@ if(!threw) msg += "|bad token did not throw"
 
 // class has no supported tokens, so supports throws, as chrome does
 let sthrew = false;
-try { d1.classList.supports("eta") } catch(e) { sthrew = true }
+try { cl1.supports("eta") } catch(e) { sthrew = true }
 if(!sthrew) msg += "|supports did not throw"
 
 // and the class attribute still drives getElementsByClassName
