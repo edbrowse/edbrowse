@@ -6,21 +6,25 @@
 try {
 show = document.getElementById("show")
 msg = "ok";
+isedbrowse = navigator.userAgent.substr(0, 8) == "edbrowse";
 d1 = document.getElementById("d1"); d2 = document.getElementById("d2");
 
 // classList is a DOMTokenList, it is not an array
 if(typeof DOMTokenList != "function") msg += "|no DOMTokenList"
 if(!(d1.classList instanceof DOMTokenList)) msg += "|classList wrong class"
-if(d1.classList.dom$class != "DOMTokenList") msg += "|bad dom$class"
+if(isedbrowse && d1.classList.dom$class != "DOMTokenList") msg += "|bad dom$class"
 if(Object.prototype.toString.call(d1.classList) != "[object DOMTokenList]")
 msg += "|bad toStringTag"
 if(Array.isArray(d1.classList)) msg += "|classList is still an array"
 
+if(d1.getAttribute("class") != "alpha beta alpha") msg += `|bad class ${d1.getAttribute("class")}`;
+if(d1.className != "alpha beta alpha") msg += `|bad class ${d1.className}`;
+
 // duplicates fold together, and no class attribute means no tokens
 if(d1.classList.length != 2) msg += `|bad length ${d1.classList.length}`
 if(d2.classList.length != 0) msg += `|empty class has length ${d2.classList.length}`
-if(d1.classList.value != "alpha beta") msg += `|bad value ${d1.classList.value}`
-if(String(d1.classList) != "alpha beta") msg += "|bad stringifier"
+if(d1.classList.value != "alpha beta alpha") msg += `|bad value ${d1.classList.value}`
+if(String(d1.classList) != "alpha beta alpha") msg += "|bad stringifier"
 if(d1.classList[0] != "alpha" || d1.classList[1] != "beta") msg += "|bad index access"
 if(d1.classList.item(1) != "beta" || d1.classList.item(9) !== null) msg += "|bad item"
 if([...d1.classList].join("-") != "alpha-beta") msg += "|bad iterator"
@@ -49,7 +53,7 @@ msg += "|bad forced toggle"
 if(d1.classList.toggle("delta", false) !== false || d1.className != "gamma")
 msg += `|bad forced untoggle ${d1.className}`
 d1.classList.value = "  eta   theta "
-if(d1.classList.length != 2 || d1.classList.value != "eta theta")
+if(d1.classList.length != 2 || d1.classList.value != "  eta   theta ")
 msg += `|bad value setter ${d1.classList.value}`
 
 // add with no arguments must not create the attribute

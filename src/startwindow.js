@@ -833,7 +833,7 @@ class DOMTokenList
     }
 
     get length() { return this.mirror$2(this.tokens$2()).length; }
-    get value() { return this.tokens$2().join(' '); }
+    get value() { return this.node$2.getAttribute(this.attr$2); }
     set value(v)
     {
         this.node$2.setAttribute(this.attr$2, v);
