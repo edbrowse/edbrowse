@@ -4454,10 +4454,10 @@ swdc(Validity);
 
         item(i)
         {
-            // Don't allow item to be used to call methods on our array
-            if (Number(i) != i) return null;
             this.handleChanges();
-            const ref = this.by_index[i];
+            i = Number(i);
+            if (isNaN(i)) return null;
+            const ref = this.by_index.at(i);
             if (ref) {
                 const element = ref.deref()
                 if (!element) {
@@ -4605,7 +4605,12 @@ swdc(Validity);
 
     // Have to do all of these to go up the chain of methods
     for (const c of [
-        ListCollectionHelper, NamedCollectionHelper, HTMLCollection, NodeList
+        ListCollection,
+        NamedCollection,
+        ListCollectionHelper,
+        NamedCollectionHelper,
+        HTMLCollection,
+        NodeList
     ]) scts(c);
 
     /* The other half of the HTMLCollection mechanism as promised. Note that we
@@ -4627,8 +4632,8 @@ swdc(Validity);
                     let res;
                     /* Apparently numeric looking properties are actually passed
                     as strings so we have to check if the property converts to a
-                    number in a way that passes the loose equality test */
-                    if (Number(property) == property)
+                    number in a way that round-trips */
+                    if (Math.trunc(property).toString() === property)
                         res = target.item(property);
                     else
                         res = target.namedItem(property);
