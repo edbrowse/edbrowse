@@ -79,6 +79,8 @@ if(!sthrew) msg += "|supports did not throw"
 // and the class attribute still drives getElementsByClassName
 d1.className = "shoe";
 if(document.getElementsByClassName("shoe").length != 1) msg += "|gebcn broken"
+// and it drives classList
+if(cl1.length != 1 || cl1[0] != "shoe") msg += "|change of class didn't change list";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

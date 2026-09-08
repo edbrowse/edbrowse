@@ -1628,7 +1628,7 @@ Here is the way. */
 
     get classList() {
         if(!this.classList$2)
-            this.classList$2 = new DOMTokenList(this);
+            odp(this, "classList$2", {value: new DOMTokenList(this)});
         return this.classList$2;
     }
 
