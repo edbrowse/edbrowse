@@ -5516,3 +5516,18 @@ if (!window.DOMException) {
     "sdp", "sdpc", "swdc", "swde"];
     for (let k of names_to_delete) delete window[k]
 })();
+
+/* Remember the reserved classes, objects, functions, etc in window,
+so we don't overwrite them with <div id=HTMLElement>.
+This approach also brings in our names, like eb$ctx, and mw$,
+but that's probably a good thing.
+natok() generates an array, which is ok, we could do array.includes(),
+but a hash is more efficient.
+My natok function doesn't find getters. So onload onclick etc won't be here.
+and they should; we don't want to displace with <div id=onload>
+So fold in the standard events. */
+odp(window, "reserved$words", {value: {}});
+natok(window).forEach(k=>reserved$words[k] = true);
+standard_events.forEach(k=>reserved$words[k] = true);
+reserved$words["onhashchange"] = true;
+
