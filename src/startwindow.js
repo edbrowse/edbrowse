@@ -187,27 +187,11 @@ class Eb$IterableWeakMap {
     }
 }
 
-
-/* Modern version to establish a dom object. Second parameter allows us
-to make it readonly, but I don't think we can ever do that.
-I ran this through chrome and it came out true.
-<body><p id=show>start</p> <script>
-    show = document.getElementById("show")
-    HTMLHRElement = f = function() {  show.innerHTML = "my own hr";}
-    show.innerHTML = (f == HTMLHRElement);
-</script>
-If we can replace a standard dom class, then I imagine we can replace anything! */
-this.swdc = function (c, changeable=true)
+// Set up classes and their methods to convert to strings correctly.
+this.scts = function(c)
 {
-    const v = c.name;
-    odp(c.prototype, "dom$class", {value: v});
-    // Makes sure toString returns [object dom$class] in modern es6
-    odp(c.prototype, Symbol.toStringTag, {value: v});
-    /* if we don't set the property then the class can be referenced from
-        within this window but isn't a property of the window
-    */
-    c.toString = () => `function ${c.name}() { [native code] }`
-    odp(window, c.name, {value:c, writable:changeable, configurable:changeable});
+    // [Object c.name] as type in modern es6
+    odp(c.prototype, Symbol.toStringTag, {value: c.name});
 
 /*********************************************************************
 In other browsers, native methods return a string with the function name
@@ -237,6 +221,26 @@ that is to say, it's already a native function.
         p[f].toString = ()=>
         `function ${f}() { [native code] }`;
     }
+    c.toString = () => `function ${c.name}() { [native code] }`
+}
+
+/* Modern version to establish a dom object. Second parameter allows us
+to make it readonly, but I don't think we can ever do that.
+I ran this through chrome and it came out true.
+<body><p id=show>start</p> <script>
+    show = document.getElementById("show")
+    HTMLHRElement = f = function() {  show.innerHTML = "my own hr";}
+    show.innerHTML = (f == HTMLHRElement);
+</script>
+If we can replace a standard dom class, then I imagine we can replace anything! */
+this.swdc = function (c, changeable=true)
+{
+    odp(c.prototype, "dom$class", {value: c.name});
+   /* if we don't set the property then the class can be referenced from
+        within this window but isn't a property of the window
+    */
+    odp(window, c.name, {value:c, writable:changeable, configurable:changeable});
+    scts(c);
 }
 
 this.swde = function (cls, exp, changeable=true)
@@ -4549,14 +4553,13 @@ swdc(Validity);
         namedItem(i) { return this[collection].namedItem(i); }
     }
 
-    class HTMLCollectionHelper extends NamedCollectionHelper
+    class HTMLCollection extends NamedCollectionHelper
     {
         constructor(...args) { super(...args); }
     }
 
-
     // Some node lists are live, most aren't so ignore changes by default
-    class NodeListHelper extends ListCollectionHelper
+    class NodeList extends ListCollectionHelper
     {
         constructor(node, cb, ignore=true)
         {
@@ -4600,10 +4603,17 @@ swdc(Validity);
         }
     }
 
+    // Have to do all of these to go up the chain of methods
+    for (const c of [
+        ListCollectionHelper, NamedCollectionHelper, HTMLCollection, NodeList
+    ]) scts(c);
+
     /* The other half of the HTMLCollection mechanism as promised. Note that we
     proxy the class here rather than a constructed object so we can proxy the
-    constructor as well as everything else. */
-    swp("HTMLCollection", new Proxy(HTMLCollectionHelper, {
+    constructor as well as everything else.
+
+    I hope no one changes these but allow them to do so if they wish. */
+    swpc("HTMLCollection", new Proxy(HTMLCollection, {
         construct(target, args, new_target)
         {
             // We want to return a proxied version of the created object for our magic getter
@@ -4629,7 +4639,7 @@ swdc(Validity);
         }
     }));
 
-    swp("NodeList", new Proxy(NodeListHelper, {
+    swpc("NodeList", new Proxy(NodeList, {
         construct(target, args, new_target)
         {
             return new Proxy(Reflect.construct(target, args, new_target), {
