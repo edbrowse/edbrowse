@@ -157,7 +157,7 @@ if(names.length != 1 || names[0] != "href") msg += "|bad a2 attribute names"
 
 // when id and index overlap
 d = document.createElement("div");
-d.innerHTML = '<p id=baby n=0>Initial text</p><p id="1" n=1>some text</p><p id="0" n=2>Some more text</p><p id="17">last text</p><p id="023" n=23></p>';
+d.innerHTML = '<p id=baby n=0>Initial text</p><p id="1" n=1>some text</p><p id="0" n=2>Some more text</p><p id="17">last text</p><p id="023" n=23></p><p id="-5" n=31></p>';
 para = d.getElementsByTagName("p");
 if(para.baby.getAttribute("n") != 0) msg += "|baby doesn't have n = 0";
 if(para.baby != para[0]) msg += "|baby not index 0";
@@ -167,7 +167,8 @@ if(para[01].getAttribute("n") != 1) msg += "|paragraph 01 doesn't have n 1";
 if(para[2].getAttribute("n") != 2) msg += "|paragraph 2 doesn't have n 2";
 if(para[17]) msg += "|para 17 found";
 if(para['17']) msg += "|para '17' found";
-// next two don't work in edbrowse yet
+// negative number is not treated as index
+if(para[-5].getAttribute("n") != 31) msg += "|para -5 not found";
 if(!para["023"]) msg += "|didn't find paragraph by id 023";
 if(para.item(0.375) != para.baby) msg += "|item index didn't truncate from float to int";
 if(para.item('0') != para.baby) msg += "|item index didn't change from string to int";

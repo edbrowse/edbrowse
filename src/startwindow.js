@@ -3058,7 +3058,7 @@ class HTMLOptionElement extends HTMLElement
     get label()
     {
         let t = this.getAttribute("label");
-        if(t === null) t = "" // id was never defined
+        if(t === null) t = "" // label was never defined
         if(t === undefined) t = "";
         return typeof t == "string" ? t : t.toString();
     }
@@ -5553,9 +5553,8 @@ This approach also brings in our names, like eb$ctx, and mw$,
 but that's probably a good thing.
 natok() generates an array, which is ok, we could do array.includes(),
 but a hash is more efficient.
-My natok function doesn't find getters. So onload onclick etc won't be here.
-and they should; we don't want to displace with <div id=onload>
-So fold in the standard events. */
+natok(window) doesn't find onload etc, because they are on Window.prototype.
+We don't want to displace <div id=onload> so fold in the standard events. */
 odp(window, "reserved$words", {value: {}});
 natok(window).forEach(k=>reserved$words[k] = true);
 standard_events.forEach(k=>reserved$words[k] = true);
