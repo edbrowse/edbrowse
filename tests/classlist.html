@@ -84,6 +84,10 @@ d1.className = "shoe";
 if(document.getElementsByClassName("shoe").length != 1) msg += "|gebcn broken"
 // and it drives classList
 if(cl1[0] != "shoe") msg += "|change of class didn't change list";
+if(cl1["0"] != "shoe") msg += "|failed to access by '0'";
+if(cl1.item(0.375) != "shoe") msg += "|item index didn't truncate from float to int";
+if(cl1.item('0') != "shoe") msg += "|item index didn't change from string to int";
+if(cl1[0.375]) msg += "|unexpected direct access via a real number";
 if(cl1.length != 1) msg += "|change of class didn't change length";
 if(!cl1.contains("shoe")) msg += "|list doesn't contain shoe";
 
