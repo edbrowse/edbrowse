@@ -2568,30 +2568,20 @@ is compared against all the ancestors. Ugh.
 
 static bool languageSpecial(Tag *t, const char *lang)
 {
-	char *v;
-	bool valloc;
-	int rc, l = strlen(lang);
+    char *v;
+    int rc, l = strlen(lang);
 
 top:
-	v = 0;
-	valloc = false;
-	if (bulkmatch)
-		v = (char *)attribVal(t, "lang");
-	else {
-		v = get_js_attribute(t, "lang");
-		valloc = true;
-	}
-	if (!v)
-		goto up;
-
-	rc = (strncmp(v, lang, l) || !(v[l] == 0 || v[l] == '-'));
-	if (valloc) nzFree(v);
-	return !rc;
+    v = get_js_attribute(t, "lang");
+if (!v) goto up;
+    rc = (strncmp(v, lang, l) || !(v[l] == 0 || v[l] == '-'));
+    nzFree(v);
+    return !rc;
 
 up:
-	if ((t = t->parent) && t->action != TAGACT_DOC)
-		goto top;
-	return false;
+    if ((t = t->parent) && t->action != TAGACT_DOC)
+        goto top;
+    return false;
 }
 
 /*********************************************************************
@@ -2611,7 +2601,7 @@ static struct sibnode *sibs;
 
 static int spread(Tag *t)
 {
-	int ns = 0;		// number of siblings
+	int ns = 0; // number of siblings
 	int i, ntype, me_index = -1;
 			Tag *tp, *u;
 
@@ -2624,7 +2614,7 @@ static int spread(Tag *t)
 					me_index = ns;
 				++ns;
 			}
-			if (me_index < 0)	// should never happen
+			if (me_index < 0) // should never happen
 				return 0;
 			sibs = allocMem(sizeof(struct sibnode) * ns);
 			for (i = 0, (u = tp->firstchild); i < ns; ++i, u = u->sibling) {
@@ -2691,7 +2681,7 @@ static int spreadType(int ns)
 // Like spread but for children, not siblings. Still I use the sibs array.
 static int spreadKids(Tag *t)
 {
-	int ns = 0;		// number of children
+	int ns = 0; // number of children
 	Tag *u;
 	int i, ntype;
 
@@ -2759,9 +2749,6 @@ static bool inputLike(Tag *t, int flavor)
 /*********************************************************************
 Match a node against an atomic selector.
 One of t or obj should be nonzero. It's more efficient with t.
-If bulkmatch is true, then the document has loaded and no js has run.
-If t->class is not set, there's no point dipping into js
-to see if it has been set dynamically by a script.
 This is only called from qsaMatchChain, as part of a chain of atomic selectors.
 That chain is considered, or not considered, based on before after hover
 criteria in qsa2() and qsaMatchGroup(), so we need not test for those here.
@@ -2774,8 +2761,7 @@ static bool upDisabled(const Tag *t)
 	bool rc;
 	if(action == TAGACT_TEMPLATE || action == TAGACT_HTML || action == TAGACT_FRAME)
 		return false;
-	if (bulkmatch) rc = t->disabled;
-	else rc = get_property_bool_t(t, "disabled");
+	rc = get_property_bool_t(t, "disabled");
 	if(rc) return true;
 // option doesn't inherit disabled from above
 	if(action == TAGACT_OPTION) return false;
@@ -2785,304 +2771,294 @@ static bool upDisabled(const Tag *t)
 
 static bool qsaMatch(Tag *t, const struct asel *a)
 {
-	bool rc = false;
-	struct mod *mod;
+    bool rc = false;
+    struct mod *mod;
 
 if(!t) {
-		debugPrint(3, "t is null in qsaMatch()");
-		return false;
-	}
+        debugPrint(3, "t is null in qsaMatch()");
+        return false;
+    }
 
-	if (a->tag) {
-		const char *nn = t->nodeNameU;
-		if (!nn)	// should never happen
-			return false;
-		rc = stringEqual(nn, a->tag);
-		if (!rc)
-			return false;
-	}
+    if (a->tag) {
+        const char *nn = t->nodeNameU;
+        if (!nn) // should never happen
+            return false;
+        rc = stringEqual(nn, a->tag);
+        if (!rc) return false;
+    }
 
 // now step through the modifyers
-	for (mod = a->modifiers; mod; mod = mod->next) {
-		char *p = mod->part;
-		bool negate = mod->negate;
-		char c = p[0];
-		int i, ntype, ns;
+    for (mod = a->modifiers; mod; mod = mod->next) {
+        char *p = mod->part;
+        bool negate = mod->negate;
+        char c = p[0];
+        int i, ntype, ns;
 
-		if (!c)		// empty modifier
-			continue;
+        if (!c) // empty modifier
+            continue;
 
-		if (negate) {
-			if (mod->notchain) {
-				if (qsaMatchChain(t, mod->notchain))
-					return false;
+        if (negate) {
+            if (mod->notchain) {
+                if (qsaMatchChain(t, mod->notchain))
+                    return false;
 // the notchain fails, which is what we want, so on we go.
-				continue;
-			}
+                continue;
+            }
 // empty not()
-			continue;
-		}
+            continue;
+        }
 
-		if (mod->isclass
-		    && (bulkmatch || (gcsmatch && a->combin == ','))) {
-			char *v = t->class;
-			char *u = p + 8;
-			int l = strlen(u);
-			char *q;
-			if (!v)
-				v = emptyString;
-			while ((q = strstr(v, u))) {
-				v += l;
-				if (q > t->class && !isspaceByte(q[-1]))
-					continue;
-				if (q[l] && !isspaceByte(q[l]))
-					continue;
-				goto next_mod;
-			}
-			return false;
-		}
+// not sure we can do this t->class check reliably.
+// An inline script could set or change the class.
+        if (mod->isclass
+            && (bulkmatch || (gcsmatch && a->combin == ','))) {
+            char *v = t->class;
+            char *u = p + 8;
+            int l = strlen(u);
+            char *q;
+            if (!v)
+                v = emptyString;
+            while ((q = strstr(v, u))) {
+                v += l;
+                if (q > t->class && !isspaceByte(q[-1]))
+                    continue;
+                if (q[l] && !isspaceByte(q[l]))
+                    continue;
+                goto next_mod;
+            }
+            return false;
+        }
 
-		if (mod->isid
-		    && (bulkmatch || (gcsmatch && a->combin == ','))) {
-			char *v = t->id;
-			if (!v)
-				v = emptyString;
-			if (stringEqual(v, p + 4))
-				goto next_mod;
-			return false;
-		}
+// not sure we can do this t->id check reliably.
+// An inline script could set or change the id.
+        if (mod->isid
+            && (bulkmatch || (gcsmatch && a->combin == ','))) {
+            char *v = t->id;
+            if (!v)
+                v = emptyString;
+            if (stringEqual(v, p + 4))
+                goto next_mod;
+            return false;
+        }
 
 // for bulkmatch we use the attributes on t,
-// not js, t is faster.
+// not js, C is faster.
+// Except we can't, because scripts can run inline even as the page is loading,
+// and change the attributes. So just dip into js and be done with it.
 
-		if (c == '[') {
-			bool valloc = false;
-			int l = 0;
-			char cutc = 0;
-			char *value = 0, *v, *v0, *q;
-			char *cut = strchr(p, '=');
-			if (cut) {
-				value = cut + 1;
-				l = strlen(value);
-				if (strchr("|~^$*", cut[-1]))
-					--cut;
-				cutc = *cut;
-				*cut = 0;	// I'll put it back
-			}
-			v = 0;
-			if (bulkmatch)
-				v = (char *)attribVal(t, p + 1);
-			else {
-					v = get_js_attribute(t, p + 1);
-				valloc = true;
-			}
-			if (cut)
-				*cut = cutc;
-			if (!v)
-				return false;
-			if (!cutc) {
-				if (valloc) nzFree(v);
-				goto next_mod;
-			}
-			if (cutc == '=') {	// easy case
-				rc = (stringEqual(v, value));
-				if (valloc) nzFree(v);
-				if (rc)
-					goto next_mod;
-				return false;
-			}
-			if (cutc == '|') {
-				rc = (!strncmp(v, value, l)
-				      && (v[l] == 0 || v[l] == '-'));
-				if (valloc) nzFree(v);
-				if (rc)
-					goto next_mod;
-				return false;
-			}
+        if (c == '[') {
+            int l = 0;
+            char cutc = 0;
+            char *value = 0, *v, *v0, *q;
+            char *cut = strchr(p, '=');
+            if (cut) {
+                value = cut + 1;
+                l = strlen(value);
+                if (strchr("|~^$*", cut[-1]))
+                    --cut;
+                cutc = *cut;
+                *cut = 0; // I'll put it back
+            }
+            v = get_js_attribute(t, p + 1);
+            if (cut) *cut = cutc;
+            if (!v) return false;
+            if (!cutc) {
+                nzFree(v);
+                goto next_mod;
+            }
+            if (cutc == '=') { // easy case
+                rc = (stringEqual(v, value));
+                nzFree(v);
+                if (rc) goto next_mod;
+                return false;
+            }
+            if (cutc == '|') {
+                rc = (!strncmp(v, value, l)
+                      && (v[l] == 0 || v[l] == '-'));
+                nzFree(v);
+                if (rc) goto next_mod;
+                return false;
+            }
 // Nothing should be selected when empty strings follow ^= or $= or *=
-			if(!l) {
-				if (valloc) nzFree(v);
-				return false;
-			}
-			if (cutc == '^') {
-				rc = !strncmp(v, value, l);
-				if (valloc) nzFree(v);
-				if (rc)
-					goto next_mod;
-				return false;
-			}
-			if (cutc == '$') {
-				int l1 = strlen(v);
-				int l2 = strlen(value);
-				rc = false;
-				if (l1 >= l2)
-					rc = !strncmp(v + l1 - l2, value, l);
-				if (valloc) nzFree(v);
-				if (rc)
-					goto next_mod;
-				return false;
-			}
-			if (cutc == '*') {
-				rc = (! !strstr(v, value));
-				if (valloc) nzFree(v);
-				if (rc)
-					goto next_mod;
-				return false;
-			}
+            if(!l) {
+                nzFree(v);
+                return false;
+            }
+            if (cutc == '^') {
+                rc = !strncmp(v, value, l);
+                nzFree(v);
+                if (rc) goto next_mod;
+                return false;
+            }
+            if (cutc == '$') {
+                int l1 = strlen(v);
+                int l2 = strlen(value);
+                rc = false;
+                if (l1 >= l2)
+                    rc = !strncmp(v + l1 - l2, value, l);
+                nzFree(v);
+                if (rc) goto next_mod;
+                return false;
+            }
+            if (cutc == '*') {
+                rc = (! !strstr(v, value));
+                nzFree(v);
+                if (rc) goto next_mod;
+                return false;
+            }
 // now value is a word inside v
-			v0 = v;
-			while ((q = strstr(v, value))) {
-				v += l;
-				if (q > v0 && !isspaceByte(q[-1]))
-					continue;
-				if (q[l] && !isspaceByte(q[l]))
-					continue;
-				if (valloc) nzFree(v0);
-				goto next_mod;
-			}
-			if (valloc) nzFree(v0);
-			return false;
-		}
+            v0 = v;
+            while ((q = strstr(v, value))) {
+                v += l;
+                if (q > v0 && !isspaceByte(q[-1]))
+                    continue;
+                if (q[l] && !isspaceByte(q[l]))
+                    continue;
+                nzFree(v0);
+                goto next_mod;
+            }
+            nzFree(v0);
+            return false;
+        }
 // At this point c should be a colon.
-		if (c != ':')
-			return false;
+        if (c != ':') return false;
 
-		if (stringEqual(p, ":link") || stringEqual(p, ":hover") ||
-		    stringEqual(p, ":before") || stringEqual(p, ":after"))
-			continue;
+        if (stringEqual(p, ":link") || stringEqual(p, ":hover") ||
+            stringEqual(p, ":before") || stringEqual(p, ":after"))
+            continue;
 
-		if (!strncmp(p, ":lang(", 6)) {
-			if (languageSpecial(t, p + 6))
-				goto next_mod;
-			return false;
-		}
+        if (!strncmp(p, ":lang(", 6)) {
+            if (languageSpecial(t, p + 6))
+                goto next_mod;
+            return false;
+        }
 
-		if (!strncmp(p, ":nth-child(", 11) ||
-		    !strncmp(p, ":nth-last-child(", 16) ||
-		    !strncmp(p, ":nth-of-type(", 13) ||
-		    !strncmp(p, ":nth-last-of-type(", 18)) {
-			int coef = 0, constant, d;
-			bool n_present = false, d_present = false, last =
-			    false, oftype = false;
-			char *s;
+        if (!strncmp(p, ":nth-child(", 11) ||
+            !strncmp(p, ":nth-last-child(", 16) ||
+            !strncmp(p, ":nth-of-type(", 13) ||
+            !strncmp(p, ":nth-last-of-type(", 18)) {
+            int coef = 0, constant, d;
+            bool n_present = false, d_present = false, last =
+                false, oftype = false;
+            char *s;
 
-			if (p[5] == 'l')
-				last = true;
-			if (strstr(p, "of-type"))
-				oftype = true;
-			p = strchr(p, '(') + 1;
-			if (stringEqual(p, "even"))
-				p = "2n";
-			if (stringEqual(p, "odd"))
-				p = "2n+1";
+            if (p[5] == 'l')
+                last = true;
+            if (strstr(p, "of-type"))
+                oftype = true;
+            p = strchr(p, '(') + 1;
+            if (stringEqual(p, "even"))
+                p = "2n";
+            if (stringEqual(p, "odd"))
+                p = "2n+1";
 
 // parse the formula
-			s = p;
-			if (*s == '-')
-				++s;
-			if (!*s)
-				goto nth_bad;
-			if (isdigitByte(*s))
-				d = strtol(s, &s, 10), d_present = true;
-			if (!*s) {
-				constant = (*p == '-' ? -d : d);
-				goto nth_good;
-			}
-			if (*s != 'n')
-				goto nth_bad;
-			n_present = true;
-			if (d_present)
-				coef = (*p == '-' ? -d : d);
-			else
-				coef = (*p == '-' ? -1 : 1);
-			++s;
-			constant = 0;
-			if (!*s)
-				goto nth_good;
-			if (*s != '+' && *s != '-')
-				goto nth_bad;
-			if (*s == '+')
-				++s;
-			constant = 1;
-			if (*s == '-')
-				constant = -1, ++s;
-			if (!isdigitByte(*s))
-				goto nth_bad;
-			d = strtol(s, &s, 10);
-			if (*s)
-				goto nth_bad;
-			constant *= d;
+            s = p;
+            if (*s == '-')
+                ++s;
+            if (!*s)
+                goto nth_bad;
+            if (isdigitByte(*s))
+                d = strtol(s, &s, 10), d_present = true;
+            if (!*s) {
+                constant = (*p == '-' ? -d : d);
+                goto nth_good;
+            }
+            if (*s != 'n')
+                goto nth_bad;
+            n_present = true;
+            if (d_present)
+                coef = (*p == '-' ? -d : d);
+            else
+                coef = (*p == '-' ? -1 : 1);
+            ++s;
+            constant = 0;
+            if (!*s)
+                goto nth_good;
+            if (*s != '+' && *s != '-')
+                goto nth_bad;
+            if (*s == '+')
+                ++s;
+            constant = 1;
+            if (*s == '-')
+                constant = -1, ++s;
+            if (!isdigitByte(*s))
+                goto nth_bad;
+            d = strtol(s, &s, 10);
+            if (*s)
+                goto nth_bad;
+            constant *= d;
 
 nth_good:
 // prevent divide by 0   :nth_child(0n+3)
-			if (n_present && coef == 0)
-				n_present = false;
+            if (n_present && coef == 0)
+                n_present = false;
 
-			ns = spread(t);
-			ns = spreadElem(ns);
-			if (oftype)
-				ns = spreadType(ns);
-			if (!ns)
-				return false;
+            ns = spread(t);
+            ns = spreadElem(ns);
+            if (oftype)
+                ns = spreadType(ns);
+            if (!ns)
+                return false;
 // find myself
-			for (i = 0; i < ns; ++i)
-				if (sibs[i].myself)
-					break;
-			rc = false;
-			if (i < ns) {
-				if (last)
-					i = (ns - 1) - i;
-				++i;	// numbers start at 1
-				if (n_present) {
-					i -= constant;
-					if (i % coef)
-						rc = false;
-					else
-						rc = (i / coef) >= 0;
-				} else {
-					rc = (i == constant);
-				}
-			}
-			free(sibs);
-			return rc;
+            for (i = 0; i < ns; ++i)
+                if (sibs[i].myself)
+                    break;
+            rc = false;
+            if (i < ns) {
+                if (last)
+                    i = (ns - 1) - i;
+                ++i; // numbers start at 1
+                if (n_present) {
+                    i -= constant;
+                    if (i % coef)
+                        rc = false;
+                    else
+                        rc = (i / coef) >= 0;
+                } else {
+                    rc = (i == constant);
+                }
+            }
+            free(sibs);
+            return rc;
 
 nth_bad:
-			debugPrint(3,
-				   "unrecognized nth_child(%s), treating as false",
-				   p);
-			return false;
-		}
+            debugPrint(3,
+                   "unrecognized nth_child(%s), treating as false",
+                   p);
+            return false;
+        }
 
-		if (stringEqual(p, ":first-child") ||
-		    stringEqual(p, ":last-child") ||
-		    stringEqual(p, ":only-child") ||
-		    stringEqual(p, ":first-of-type") ||
-		    stringEqual(p, ":last-of-type") ||
-		    stringEqual(p, ":only-of-type")) {
-			ns = spread(t);
-			ns = spreadElem(ns);
-			if (strstr(p, "of-type"))
-				ns = spreadType(ns);
-			if (!ns)
-				return false;
-			if (p[1] == 'f')
-				rc = sibs[0].myself;
-			if (p[1] == 'l')
-				rc = sibs[ns - 1].myself;
-			if (p[1] == 'o')
-				rc = (ns == 1 && sibs[0].myself);
-			free(sibs);
-			if (rc)
-				goto next_mod;
-			return false;
-		}
+        if (stringEqual(p, ":first-child") ||
+            stringEqual(p, ":last-child") ||
+            stringEqual(p, ":only-child") ||
+            stringEqual(p, ":first-of-type") ||
+            stringEqual(p, ":last-of-type") ||
+            stringEqual(p, ":only-of-type")) {
+            ns = spread(t);
+            ns = spreadElem(ns);
+            if (strstr(p, "of-type"))
+                ns = spreadType(ns);
+            if (!ns)
+                return false;
+            if (p[1] == 'f')
+                rc = sibs[0].myself;
+            if (p[1] == 'l')
+                rc = sibs[ns - 1].myself;
+            if (p[1] == 'o')
+                rc = (ns == 1 && sibs[0].myself);
+            free(sibs);
+            if (rc)
+                goto next_mod;
+            return false;
+        }
 
 // : first is on the first page, : last is on the last page.
 // edbrowse doesn't lead to a printout, so I think it's safer to say no here.
-		if (stringEqual(p, ":first") || stringEqual(p, ":last"))
-			return false;
+        if (stringEqual(p, ":first") || stringEqual(p, ":last"))
+            return false;
 
-		if (stringEqual(p, ":root") || stringEqual(p, ":scope")) {
+        if (stringEqual(p, ":root") || stringEqual(p, ":scope")) {
 /*********************************************************************
 You know what's missing from :root? The stand alone selector :root,
 which some say should match the current node.
@@ -3094,94 +3070,94 @@ Should I make an exception for :root? If so, how best to implement it?
 Meantime, this code manages :root up the chain, as in :root>div,
 all the div sections just below the current node.
 *********************************************************************/
-			if (!rootnode) {
-				if (t->action == TAGACT_HTML)
-					goto next_mod;
-				return false;
-			}
-			if (t == rootnode)
-				goto next_mod;
-			return false;
-		}
+            if (!rootnode) {
+                if (t->action == TAGACT_HTML)
+                    goto next_mod;
+                return false;
+            }
+            if (t == rootnode)
+                goto next_mod;
+            return false;
+        }
 
-		if (stringEqual(p, ":empty")) {
-			ns = spreadKids(t);
-			rc = true;	// empty
-			for (i = 0; i < ns; ++i) {
-				Tag *u;
-				ntype = sibs[i].nodeType;
-				if (ntype == 8)	// comment
-					continue;
-				if (ntype != 3) {	// not text node
-					rc = false;
-					break;
-				}
+        if (stringEqual(p, ":empty")) {
+            ns = spreadKids(t);
+            rc = true; // empty
+            for (i = 0; i < ns; ++i) {
+                Tag *u;
+                ntype = sibs[i].nodeType;
+                if (ntype == 8) // comment
+                    continue;
+                if (ntype != 3) { // not text node
+                    rc = false;
+                    break;
+                }
 // text node has to be empty.
-				u = sibs[i].t;
-				if (u->textval && *u->textval) {
-					rc = false;
-					break;
-				}
-			}
-			nzFree(sibs);
-			if (rc)
-				goto next_mod;
-			return false;
-		}
+                u = sibs[i].t;
+                if (u->textval && *u->textval) {
+                    rc = false;
+                    break;
+                }
+            }
+            nzFree(sibs);
+            if (rc)
+                goto next_mod;
+            return false;
+        }
 
-		if (stringEqual(p, ":enabled") || stringEqual(p, ":disabled")) {
-			rc = false;
-			if (inputLike(t, 0)) {
-				rc = upDisabled(t);
-				if (p[1] == 'e')
-					rc ^= 1;
-			}
-			if (rc)
-				goto next_mod;
-			return false;
-		}
+        if (stringEqual(p, ":enabled") || stringEqual(p, ":disabled")) {
+            rc = false;
+            if (inputLike(t, 0)) {
+                rc = upDisabled(t);
+                if (p[1] == 'e')
+                    rc ^= 1;
+            }
+            if (rc)
+                goto next_mod;
+            return false;
+        }
 
-		if (stringEqual(p, ":read-only")
-		|| stringEqual(p, ":read-write")) {
-		    if (!inputLike(t, 2)) {
-		        rc = true;
-		    } else if (bulkmatch) {
-		        // disabled implies readonly
-		        rc = (t->rdonly | t-> disabled);
-		    } else rc = (get_property_bool_t(t, "readOnly") ||
-		        get_property_bool_t(t, "disabled"));
-		    if (p[6] == 'w') rc ^= 1;
-		    if (rc) goto next_mod;
-		    return false;
-		}
+        if (stringEqual(p, ":read-only")
+        || stringEqual(p, ":read-write")) {
+            if (!inputLike(t, 2)) {
+                rc = true;
+            } else if (bulkmatch) {
+                // disabled implies readonly
+                rc = (t->rdonly | t-> disabled);
+            } else rc = (get_property_bool_t(t, "readOnly") ||
+                get_property_bool_t(t, "disabled"));
+            if (p[6] == 'w') rc ^= 1;
+            if (rc) goto next_mod;
+            return false;
+        }
 
-		if (stringEqual(p, ":required")) {
-		    if (bulkmatch) {
-		        rc = t->required;
-		    } else rc = get_property_bool_t(t, "required");
-		    if (rc) goto next_mod;
-		    return false;
-		}
+        if (stringEqual(p, ":required")) {
+            if (bulkmatch) {
+                rc = t->required;
+            } else rc = get_property_bool_t(t, "required");
+            if (rc) goto next_mod;
+            return false;
+        }
 
-		if (stringEqual(p, ":checked")) {
-			rc = false;
-			if (inputLike(t, 1)) {
-				if (bulkmatch)
-					rc = t->checked;
-				else
-					rc = get_property_bool_t(t, "checked") || get_property_bool_t(t, "selected");
-			}
-			if (rc)
-				goto next_mod;
-			return false;
-		}
+        if (stringEqual(p, ":checked")) {
+            rc = false;
+            if (inputLike(t, 1)) {
+                if (bulkmatch)
+                    rc = t->checked;
+                else
+                    rc = get_property_bool_t(t, "checked") || get_property_bool_t(t, "selected");
+            }
+            if (rc)
+                goto next_mod;
+            return false;
+        }
 
-		return false;	// unrecognized
+        return false; // unrecognized
 
-next_mod:	;
-	}
+next_mod: ;
+    }
 
-	return true;		// all modifiers pass
+    return true; // all modifiers pass
 }
 
 /*********************************************************************
