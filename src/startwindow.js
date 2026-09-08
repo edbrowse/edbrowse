@@ -4407,7 +4407,8 @@ swdc(Validity);
     const named_items = collectionSymbol("named_items");
     const ignore = collectionSymbol("ignore");
     const handleChanges = collectionSymbol("handleChanges");
-
+    const add = collectionSymbol("add");
+    const clear = collectionSymbol("clear");
     class IndexedStorage
     {
         indexed = [];
@@ -4522,37 +4523,34 @@ swdc(Validity);
         }
     }
 
-    /* not sure if it would be noticeably more efficient to handle the named
-    items in the derived classes but this is easier */
-
-    class Eb$CollectionHelper
+    class ListCollectionHelper
     {
+        [by_index] = [];
+        [tracker] = new FinalizationRegistry((c) => c[changes] = true);
         /*
         - node - the node which owns this collection
         - cb - callback which takes owner as a parameter used to rebuild
           the collection. Note that we pass owner as a parameter so the
           collection callback can avoid creating a reference cyle (owner is
           stored as a weakref which is dereferenced on calling).
-        - named - should we enable id and name based indexing?
         */
-        constructor(node, cb, named)
+        constructor(node, cb)
         {
-            const w = my$win();
-            // play safe with the weak ref to make sure it's in the right context
-            this[owner] = new w.WeakRef(node);
-            this[named_items] = !!named;
-            if (this[named_items]) {
-                this[by_id] = new w.Map;
-                this[by_name] = new w.Map;
-            }
-            this[by_index] = new w.Array;
-            this[tracker] = new w.FinalizationRegistry((c) => c[changes] = true);
+            this[owner] = new WeakRef(node);
             this[tracker].register(node, this);
             this[callback] = cb;
-            this[window] = w;
             // We need to rebuild initially but only on first lookup
             this[ignore] = false;
             this[changes] = true;
+        }
+
+        [clear]() { this[by_index].length = 0; }
+
+        [add](element)
+        {
+            const ref = new WeakRef(element);
+            this[by_index].push(ref);
+            return ref;
         }
 
         // Possibly could be more efficient by not rebuilding from scratch
@@ -4562,28 +4560,15 @@ swdc(Validity);
             /* I can't think of a case where the following logic could retrigger a
             rebuild, but I'll clear the flag early in case */
             this[changes] = false;
-            this[by_index].length = 0;
-            if (this[named_items]) {
-                this[by_id].clear();
-                this[by_name].clear();
-            }
+            this[clear]();
+
             if (!this[owner]) return;
             const o = this[owner].deref();
             if (!o) {
                 this[owner] = null;
                 return; // everything's gone
             }
-            for (const element of this[callback](o)) {
-                const ref = new this[window].WeakRef(element);
-                this[by_index].push(ref);
-                this[tracker].register(element, this);
-                if (!this[named_items]) continue;
-                const id = element.id;
-                if (typeof id == "string" && id) this[by_id].set(id, ref);
-                const name = element.getAttribute("name");
-                if (typeof name == "string" && name)
-                    this[by_name].set(name, ref);
-            }
+            for (const element of this[callback](o)) this[add](element);
         }
 
         item(i)
@@ -4599,21 +4584,6 @@ swdc(Validity);
                     return this.item(i);
                 }
                 return element;
-            }
-            return null;
-        }
-
-        namedItem(n)
-        {
-            if (!this[named_items]) return;
-            this[handleChanges]();
-            for (const m of [this[by_id], this[by_name]]) {
-                const ref = m.get(n);
-                if (ref) {
-                    const element = ref.deref();
-                    if (!element) m.delete(n);
-                    else return element;
-                }
             }
             return null;
         }
@@ -4638,14 +4608,53 @@ swdc(Validity);
         }
     }
 
-    class Eb$HTMLCollectionHelper extends Eb$CollectionHelper
+    class NamedCollectionHelper extends ListCollectionHelper
     {
-        constructor(node, cb) { super(node, cb, true); }
+        [by_id] = new Map;
+        [by_name] = new Map;
+
+        constructor(node, cb) { super(node, cb); }
+
+        [clear]()
+        {
+            super[clear]();
+            this[by_id].clear();
+            this[by_name].clear();
+        }
+
+        [add](element)
+        {
+            const ref = super[add](element);
+            const id = element.id;
+            if (typeof id == "string" && id) this[by_id].set(id, ref);
+            const name = element.getAttribute("name");
+            if (typeof name == "string" && name) this[by_name].set(name, ref);
+            return ref;
+        }
+
+        namedItem(n)
+        {
+            this[handleChanges]();
+            for (const m of [this[by_id], this[by_name]]) {
+                const ref = m.get(n);
+                if (ref) {
+                    const element = ref.deref();
+                    if (!element) m.delete(n);
+                    else return element;
+                }
+            }
+            return null;
+        }
+    }
+
+    class HTMLCollectionHelper extends NamedCollectionHelper
+    {
+        constructor(node, cb) { super(node, cb); }
         toString() { return "[object HTMLCollection]"; }
     }
 
     // Some node lists are live, most aren't so ignore changes by default
-    class Eb$NodeListHelper extends Eb$CollectionHelper
+    class NodeListHelper extends ListCollectionHelper
     {
         constructor(node, cb, ignore=true)
         {
@@ -4655,7 +4664,7 @@ swdc(Validity);
                 const refs = cb(node);
                 cb = () => refs; // Hold a ref to the nodes in the callback
             }
-            super(node, cb, false);
+            super(node, cb);
             if (ignore) {
                 this[collectionSymbol("handleChanges")](); // load everything now
                 this[collectionSymbol("ignore")] = true;
@@ -4692,7 +4701,7 @@ swdc(Validity);
     /* The other half of the HTMLCollection mechanism as promised. Note that we
     proxy the class here rather than a constructed object so we can proxy the
     constructor as well as everything else. */
-    swp("HTMLCollection", new Proxy(Eb$HTMLCollectionHelper, {
+    swp("HTMLCollection", new Proxy(HTMLCollectionHelper, {
         construct(target, args, new_target)
         {
             // We want to return a proxied version of the created object for our magic getter
@@ -4718,7 +4727,7 @@ swdc(Validity);
         }
     }));
 
-    swp("NodeList", new Proxy(Eb$NodeListHelper, {
+    swp("NodeList", new Proxy(NodeListHelper, {
         construct(target, args, new_target)
         {
             return new Proxy(Reflect.construct(target, args, new_target), {
@@ -4732,8 +4741,6 @@ swdc(Validity);
         }
     }));
 })();
-
-
 
 // Not quite right, still missing, at a minimum, whenDefined and upgrade
 class CustomElementRegistry
