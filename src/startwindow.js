@@ -4396,24 +4396,14 @@ cause <input> starts out empty.
 }
 swdc(Validity);
 ;( () => {
-    const by_id = collectionSymbol("by_id");
-    const by_name = collectionSymbol("by_name");
-    const by_index = collectionSymbol("by_index");
-    const tracker = collectionSymbol("tracker");
-    const callback = collectionSymbol("callback");
     const changes = collectionSymbol("changes");
-    const owner = collectionSymbol("owner");
-    const window = collectionSymbol("window");
-    const named_items = collectionSymbol("named_items");
     const ignore = collectionSymbol("ignore");
-    const handleChanges = collectionSymbol("handleChanges");
-    const add = collectionSymbol("add");
-    const clear = collectionSymbol("clear");
+    const collection = collectionSymbol("collection");
 
-    class ListCollectionHelper
+    class ListCollection
     {
-        [by_index] = [];
-        [tracker] = new FinalizationRegistry((c) => c[changes] = true);
+        by_index = [];
+        tracker = new FinalizationRegistry((c) => c[changes] = true);
         /*
         - node - the node which owns this collection
         - cb - callback which takes owner as a parameter used to rebuild
@@ -4423,51 +4413,51 @@ swdc(Validity);
         */
         constructor(node, cb)
         {
-            this[owner] = new WeakRef(node);
-            this[tracker].register(node, this);
-            this[callback] = cb;
+            this.owner = new WeakRef(node);
+            this.tracker.register(node, this);
+            this.callback = cb;
             // We need to rebuild initially but only on first lookup
-            this[ignore] = false;
-            this[changes] = true;
+            this.ignore = false;
+            this.changes = true;
         }
 
-        [clear]() { this[by_index].length = 0; }
+        clear() { this.by_index.length = 0; }
 
-        [add](element)
+        add(element)
         {
             const ref = new WeakRef(element);
-            this[by_index].push(ref);
+            this.by_index.push(ref);
             return ref;
         }
 
         // Possibly could be more efficient by not rebuilding from scratch
-        [handleChanges]()
+        handleChanges()
         {
-            if (this[ignore] || !this[changes]) return;
+            if (this.ignore || !this.changes) return;
             /* I can't think of a case where the following logic could retrigger a
             rebuild, but I'll clear the flag early in case */
-            this[changes] = false;
-            this[clear]();
+            this.changes = false;
+            this.clear();
 
-            if (!this[owner]) return;
-            const o = this[owner].deref();
+            if (!this.owner) return;
+            const o = this.owner.deref();
             if (!o) {
-                this[owner] = null;
+                this.owner = null;
                 return; // everything's gone
             }
-            for (const element of this[callback](o)) this[add](element);
+            for (const element of this.callback(o)) this.add(element);
         }
 
         item(i)
         {
             // Don't allow item to be used to call methods on our array
             if (Number(i) != i) return null;
-            this[handleChanges]();
-            const ref = this[by_index][i];
+            this.handleChanges();
+            const ref = this.by_index[i];
             if (ref) {
                 const element = ref.deref()
                 if (!element) {
-                    this[by_index].splice(i, 1);
+                    this.by_index.splice(i, 1);
                     return this.item(i);
                 }
                 return element;
@@ -4477,8 +4467,8 @@ swdc(Validity);
 
         get length()
         {
-            this[handleChanges]();
-            return this[by_index].length;
+            this.handleChanges();
+            return this.by_index.length;
         }
 
         /* Altering collections during iteration is not good practice but is
@@ -4495,34 +4485,34 @@ swdc(Validity);
         }
     }
 
-    class NamedCollectionHelper extends ListCollectionHelper
+    class NamedCollection extends ListCollection
     {
-        [by_id] = new Map;
-        [by_name] = new Map;
+        by_id = new Map;
+        by_name = new Map;
 
         constructor(node, cb) { super(node, cb); }
 
-        [clear]()
+        clear()
         {
-            super[clear]();
-            this[by_id].clear();
-            this[by_name].clear();
+            super.clear();
+            this.by_id.clear();
+            this.by_name.clear();
         }
 
-        [add](element)
+        add(element)
         {
-            const ref = super[add](element);
+            const ref = super.add(element);
             const id = element.id;
-            if (typeof id == "string" && id) this[by_id].set(id, ref);
+            if (typeof id == "string" && id) this.by_id.set(id, ref);
             const name = element.getAttribute("name");
-            if (typeof name == "string" && name) this[by_name].set(name, ref);
+            if (typeof name == "string" && name) this.by_name.set(name, ref);
             return ref;
         }
 
         namedItem(n)
         {
-            this[handleChanges]();
-            for (const m of [this[by_id], this[by_name]]) {
+            this.handleChanges();
+            for (const m of [this.by_id, this.by_name]) {
                 const ref = m.get(n);
                 if (ref) {
                     const element = ref.deref();
@@ -4534,11 +4524,36 @@ swdc(Validity);
         }
     }
 
+    class ListCollectionHelper
+    {
+        static collection$type = ListCollection;
+
+        constructor(node, cb)
+        {
+            this[collection] = new this.constructor.collection$type(node, cb);
+        }
+
+        set [changes](value) { this[collection].changes = value; }
+
+        get length() { return this[collection].length; }
+
+        item(i) { return this[collection].item(i); }
+
+        *[Symbol.iterator]() { for (const v of this[collection]) yield v; }
+    }
+
+    class NamedCollectionHelper extends ListCollectionHelper
+    {
+        static collection$type = NamedCollection;
+        constructor(node, cb) { super(node, cb); }
+        namedItem(i) { return this[collection].namedItem(i); }
+    }
+
     class HTMLCollectionHelper extends NamedCollectionHelper
     {
-        constructor(node, cb) { super(node, cb); }
-        toString() { return "[object HTMLCollection]"; }
+        constructor(...args) { super(...args); }
     }
+
 
     // Some node lists are live, most aren't so ignore changes by default
     class NodeListHelper extends ListCollectionHelper
@@ -4553,11 +4568,11 @@ swdc(Validity);
             }
             super(node, cb);
             if (ignore) {
-                this[collectionSymbol("handleChanges")](); // load everything now
-                this[collectionSymbol("ignore")] = true;
+                this[collection].handleChanges();
+                this[collection].ignore = true;
             }
         }
-        toString() { return "[object NodeList]"; }
+
         // Can't just use forEach because we want to handle references
         forEach(callback, thisarg)
         {
