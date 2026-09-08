@@ -14,6 +14,8 @@ cl1 = d1.classList; cl2 = d2.classList;
 if(typeof DOMTokenList != "function") msg += "|no DOMTokenList"
 if(cl1 != d1.classList) msg += "|classList created a new instance";
 if(!(cl1 instanceof DOMTokenList)) msg += "|classList wrong class"
+// classList object creats even if no class.
+if(!(cl2 instanceof DOMTokenList)) msg += "|classList 2 wrong class"
 if(isedbrowse && cl1.dom$class != "DOMTokenList") msg += "|bad dom$class"
 if(Object.prototype.toString.call(cl1) != "[object DOMTokenList]")
 msg += "|bad toStringTag"
@@ -58,6 +60,7 @@ cl1.value = "  eta   theta "
 if(cl1.length != 2 || cl1.value != "  eta   theta ")
 msg += `|bad value setter ${cl1.value}`
 
+if(cl2.value !== "") msg += `|missing class shows list value ${cl2.value}`;
 cl2.add()
 if(!d2.hasAttribute("class")) msg += "|empty add didn't create the attribute"
 if(d2.className != "") msg += "|empty add didn't make empty className"
@@ -80,7 +83,25 @@ if(!sthrew) msg += "|supports did not throw"
 d1.className = "shoe";
 if(document.getElementsByClassName("shoe").length != 1) msg += "|gebcn broken"
 // and it drives classList
-if(cl1.length != 1 || cl1[0] != "shoe") msg += "|change of class didn't change list";
+if(cl1[0] != "shoe") msg += "|change of class didn't change list";
+if(cl1.length != 1) msg += "|change of class didn't change length";
+if(!cl1.contains("shoe")) msg += "|list doesn't contain shoe";
+
+d1.removeAttributeNode(d1.getAttributeNode("class"));
+if(d1.hasAttribute("class")) msg += "|class didn't go away";
+if(d1.className !== "") msg += "|className didn't become empty";
+if(cl1 != d1.classList) msg += "|new classList after removeAttribute";
+// try index before we call any instance methods
+if(cl1[0] !== undefined) msg += `|shoe didn't go away ${cl1[0]}`;
+if(cl1.item(0) !== null) msg += "|item 1 didn't go away";
+if(cl1.value !== "") msg += "|list value didn't become empty";
+if(cl1.length != 0) msg += "|length didn't go away";
+if(cl1.keys.length != 0) msg += "|keys didn't go away";
+if(!cl1.toggle("sock")) msg += "|sock didn't turn on";
+if(d1.className != "sock") msg += "|className not sock";
+cl1.add("sock");
+if(d1.className != "sock") msg += "|className not sock after sock";
+if(cl1.length != 1) msg += "|multiple socks";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

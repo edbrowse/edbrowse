@@ -771,9 +771,10 @@ are marked out of date and the observers fire, just as they did when
 classList was an array with a few methods bolted onto it.
 The tokens are also mirrored onto 0, 1, 2 ... as own properties, so
 list[0] and Object.keys(list) and [...list] work without a proxy.
-classList hands back a new DOMTokenList each time, which is how those
-mirrored properties stay honest. That means el.classList is not
-el.classList, whereas chrome returns the same object every time.
+All this works for insstance methods, but not for direct index.
+Thus setAttribute of class and removeAttribute of class
+call mirror$2(), so that direct indexing works,
+even if we don't go through an instance method.
 *********************************************************************/
 
 class DOMTokenList
@@ -819,7 +820,7 @@ class DOMTokenList
     {
         for(let i = a.length; i < this.count$2; ++i) delete this[i];
         for(let i = 0; i < a.length; ++i)
-            odp(this, i, {value: a[i], enumerable: true, configurable: true});
+            odp(this, i, {value: a[i], enumerable: true, configurable: true, writable: true});
         this.count$2 = a.length;
         return a;
     }
@@ -827,24 +828,26 @@ class DOMTokenList
 // don't create the attribute just to write nothing into it
     flush$2(a)
     {
-        this.mirror$2(a);
+        // setAttribute calls mirror$2, we don't have to do it here
         this.node$2.setAttribute(this.attr$2, a.join(' '));
     }
 
-    get length() { return this.mirror$2(this.tokens$2()).length; }
-    get value() { return this.node$2.getAttribute(this.attr$2); }
+    get length() { return this.count$2; }
+    get value() {
+        // acts like className
+        const v =  this.node$2.getAttribute(this.attr$2);
+        return v === null ? "" : v;
+    }
     set value(v)
     {
         this.node$2.setAttribute(this.attr$2, v);
-        this.mirror$2(this.tokens$2());
     }
     toString() { return this.value; }
 
     item(i)
     {
-        const a = this.mirror$2(this.tokens$2());
         i = Math.trunc(+i) || 0;
-        return (i >= 0 && i < a.length) ? a[i] : null;
+        return (i >= 0 && i < this.count$2) ? this[i] : null;
     }
 
     contains(t) { return this.tokens$2().includes(t + ""); }
@@ -900,11 +903,10 @@ class DOMTokenList
 
     forEach(cb, thisarg)
     {
-        const a = this.mirror$2(this.tokens$2());
-        for(let i = 0; i < a.length; ++i) cb.call(thisarg, a[i], i, this);
+        for(let i = 0; i < this.count$2; ++i) cb.call(thisarg, this[i], i, this);
     }
 
-    *keys() { for(let i = 0; i < this.tokens$2().length; ++i) yield i; }
+    *keys() { for(let i = 0; i < this.count$2; ++i) yield i; }
     *values() { yield* this.tokens$2(); }
     *entries()
     {
@@ -1076,7 +1078,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
 
     hasAttribute(name) { return this.getAttribute(name) !== null; }
 
-    getAttributeNames(name)
+    getAttributeNames()
     {
         const a = [];
         if(!this.attributes$2) return a;
@@ -1132,6 +1134,8 @@ We set up for HR.onsubmit, for example; other browsers might not. */
             this.form && this.form.dom$class == "HTMLFormElement")
                 formReindex(this.form);
         }
+        if(name === "class")
+            this.classList.mirror$2(this.classList.tokens$2());
         // names that spill down into the actual property
         if(Element.spilldown(this, name)) this[name] = v;
             // href$2 is not enumerable. cloneNode still works because it finds
@@ -1215,6 +1219,8 @@ We set up for HR.onsubmit, for example; other browsers might not. */
         if(name == "name" &&
         this.form && this.form.dom$class == "HTMLFormElement")
             formReindex(this.form);
+        if(name === "class")
+            this.classList.mirror$2(this.classList.tokens$2());
         mutFixup(this, 1, name, a.value);
     }
 
