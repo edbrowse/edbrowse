@@ -840,7 +840,6 @@ class DOMTokenList
         return a;
     }
 
-// don't create the attribute just to write nothing into it
     flush$2(a)
     {
         // setAttribute calls mirror$2, we don't have to do it here
@@ -932,6 +931,100 @@ class DOMTokenList
 }
 swdc(DOMTokenList);
 
+class Attr
+{
+    constructor()
+    {
+        this.ownerDocument = document; this.name = "";
+    }
+    isId() { return this.name === "id"; }
+// This is not use by cloneNode - that calls setAttribute to copy the Attrs.
+    cloneNode()
+    {
+        let w = window;
+        // if part of an html element, use its context
+        if(this.ownerDocument && this.ownerDocument.defaultView)
+            w = this.ownerDocument.defaultView;
+        const a = new w.Attr;
+        a.name = this.name, a.value = this.value;
+        return a
+    }
+}
+swdc(Attr);
+
+// change to NamedNodeMap when ready to use
+class NamedNodeZap
+{
+    constructor() { this.length = 0; }
+
+    static reserved(n)
+    {
+        if(NamedNodeZap.prototype.hasOwnProperty(n)) return true;
+        if(/^[1-9][0-9]*$/.test(n)) return true;
+        if(n === "length") return true;
+        return false;
+    }
+
+    item(i)
+    {
+        i = Math.trunc(+i) || 0;
+        return (i >= 0 && i < this.length) ? this[i] : null;
+    }
+
+    getNamedItem(n)
+    {
+        if(typeof n != "string") n = n.toString();
+        if(!NamedNodeZap.reserved(n)) {
+            return this[n] ? this[n] : null;
+        }
+        // a reserved word, like length; have to search
+        for(let i = 0; i < this.length; ++i)
+            if(this[i].name == n) return this[i];
+        return null;
+    }
+
+    setNamedItem(a)
+    {
+        const n = a.name;
+        const r = NamedNodeZap.reserved(n);
+        // have to replace with this attr, which means we have to know
+        // the index, which means we have to search no matter what.
+        for(let i = 0; i < this.length; ++i)
+            if(this[i].name == n) {
+                const v = this[i];
+                this[i] = a;
+                if(!r) this[n] = a;
+                return v;
+            }
+        // not found
+        this[this.length] = a;
+        if(!r) this[n] = a;
+        ++this.length;
+        return null;
+    }
+
+    removeNamedItem(n)
+    {
+        let found = false;
+        let v = null;
+        if(typeof n != "string") n = n.toString();
+        for(let i = 0; i < this.length; ++i) {
+            if(this[i].name == n)
+                found = true, v = this[i];
+            if(found && i < this.length - 1) this[i] = this[i+1];
+        }
+        if(!found) {
+            // spec says to throw a not found exception here
+            return null;
+        }
+        delete this[--this.length];
+        if(!NamedNodeZap.reserved(n)) delete this[n];
+        return v;
+    }
+
+        // NS versions of the last three functions are not yet implemented.
+}
+swdc(NamedNodeZap);
 
 class Element extends Node
 {
@@ -4355,29 +4448,6 @@ this.xmlp = XMLHttpRequest.prototype;
     xmlp.send = mw$.xml.send;
     xmlp.parseResponse = mw$.xml.parse;
 delete this.xmlp;
-
-class Attr
-{
-    constructor()
-    {
-        this.ownerDocument = document; this.name = "";
-    }
-    isId() { return this.name === "id"; }
-
-// This is not use by cloneNode - that calls setAttribute to copy the Attrs.
-    cloneNode()
-    {
-        let w = window;
-        // if part of an html element, use its context
-        if(this.ownerDocument && this.ownerDocument.defaultView)
-            w = this.ownerDocument.defaultView;
-        const a = new w.Attr;
-        a.name = this.name, a.value = this.value;
-        return a
-    }
-
-}
-swdc(Attr);
 
 class Validity
 {
