@@ -2087,14 +2087,6 @@ class Document extends Node
         // the id$hash is suppose to make getElementById more efficient.
         // I don't know if it's worth the complexity it introduces.
         odp(this, "id$hash", {value: new Map});
-        odp(this, "id$registry", {
-            value: new FinalizationRegistry(
-                (i) => {
-                    alert3(`GC triggers delete of element with id ${i} from id hash`);
-                    this.id$hash.delete(i);
-                }
-            )
-        });
         this.readyState$2 = "interactive";
     }
 
