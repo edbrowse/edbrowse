@@ -547,8 +547,8 @@ function getElementById(s) {
     }
     // this is the document object here
     const w = this.defaultView;
-    // I don't think this can happen
-    if (this === w.document) {
+    // a fragment has no defaultView
+    if (w && this === w.document) {
         // check window first
         let val = w[s];
         if (val && val instanceof w.Element && val.id === s) return val;

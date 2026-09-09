@@ -234,6 +234,13 @@ if(doc.getElementById("zebra").nodeName != "SPAN") msg += "|zebra not found in d
 // b.appendChild(doc);
 // but chrome doesn't allow it. doc is an isolated thing.
 
+frag = document.createDocumentFragment();
+if(frag.getElementById("show")) msg += "|ById isn't restricted to its fragment";
+frag.appendChild(span);
+if(window.zebra) msg += "|zebra found in window";
+if(frag.getElementById("zebra").nodeName != "SPAN") msg += "|zebra not found in fragment";
+// can't append fragment into the tree, that appends all its children instead
+
 show.innerHTML = msg;
 } catch(e) { broken = true; show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 }

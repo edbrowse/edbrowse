@@ -2396,6 +2396,7 @@ class DocumentFragment extends HTMLElement
         const tp = this.prototype;
         tp.nodeType = 11;
         tp.nodeName = tp.tagName = "#document-fragment";
+        tp.getElementById = mw$.getElementById
     }
 }
 swdc(DocumentFragment);
