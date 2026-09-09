@@ -174,7 +174,7 @@ if(para.item('0') != para.baby) msg += "|item index didn't change from string to
 if(para[0.375]) msg += "|unexpected direct access via a real number";
 
 // test id spullup to window
-// we already have window.sho, without calling getElementById.
+// we already have window.show, without calling getElementById.
 // If we don't then this script won't work.
 if(window.q0 != img[0]) msg += "|id=q0 not linked";
 if(window.baby) msg += "|id=baby disconnected but linked";
@@ -210,6 +210,19 @@ if(window[0].getAttribute("n") != 2) msg += "|window[0] not present";
 d.remove();
 if(window.baby) msg += "|baby didn't go away after removeChild";
 if(window[0]) msg += "|[0] didn't go away after removeChild";
+
+// test getElementById
+if(document.getElementById("junk") !== null) msg += "|ById didn't return null";
+if(document.getElementById("show") !== show) msg += "|ById didn't return show tag";
+span = document.createElement("span");
+span.id = "show";
+b.insertBefore(span, show);
+// span is now first in tree order
+if(document.getElementById("show").nodeName != "SPAN") msg += "|ById didn't find show span";
+span.remove();
+if(document.getElementById("show").nodeName != "P") msg += "|ById didn't find show paragraph";
+b.id = "atob"; // reserved name
+if(document.getElementById("atob").nodeName != "BODY") msg += "|ById didn't find atob";
 
 show.innerHTML = msg;
 } catch(e) { broken = true; show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
