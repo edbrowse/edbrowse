@@ -4411,7 +4411,7 @@ cause <input> starts out empty.
 }
 swdc(Validity);
 ;( () => {
-    const changes = collectionSymbol("changes");
+    const markChanges = collectionSymbol("markChanges");
     const ignore = collectionSymbol("ignore");
     const collection = collectionSymbol("collection");
 
@@ -4423,13 +4423,14 @@ swdc(Validity);
         - node - the node which owns this collection
         - cb - callback which takes owner as a parameter used to rebuild
           the collection. */
-        constructor(node, cb)
+        constructor(node, cb, filter = () => true)
         {
             this.owner = node;
             this.callback = cb;
+            this.filter = filter;
             // We need to rebuild initially but only on first lookup
             this.ignore = false;
-            this.changes = true;
+            this.changed = true;
         }
 
         clear() { this.by_index.length = 0; }
@@ -4439,13 +4440,29 @@ swdc(Validity);
             this.by_index.push(element);
         }
 
+        markChanges(values)
+        {
+            if (this.ignore) return;
+            // When we pass values this should probably go but for now this
+            // allows us to increment in the right direction
+            if (!values) {
+                this.changed = true;
+                return;
+            }
+            for (const v of values)
+                if (this.filter(v)) {
+                    this.changed = true;
+                    break;
+                }
+        }
+
         // Possibly could be more efficient by not rebuilding from scratch
         handleChanges()
         {
-            if (this.ignore || !this.changes) return;
+            if (this.ignore || !this.changed) return;
             /* I can't think of a case where the following logic could retrigger a
             rebuild, but I'll clear the flag early in case */
-            this.changes = false;
+            this.changed = false;
             this.clear();
 
             for (const element of this.callback(this.owner)) this.add(element);
@@ -4525,7 +4542,7 @@ swdc(Validity);
             this[collection] = new this.constructor.collection$type(node, cb);
         }
 
-        set [changes](value) { this[collection].changes = value; }
+        [markChanges](values) { this[collection].markChanges(values) }
 
         get length() { return this[collection].length; }
 

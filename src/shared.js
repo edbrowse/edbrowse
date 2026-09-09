@@ -429,7 +429,7 @@ function markNodeCollections(n)
     const cache = n.getElements$$cache;
     if (!cache) return; // nothing here
     for (const c of cache.collections())
-        c[collectionSymbol("changes")] = true;
+        c[collectionSymbol("markChanges")]();
 }
 
 function markUpwardCollections(t)
