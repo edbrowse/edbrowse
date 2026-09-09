@@ -1394,6 +1394,16 @@ function spillup_id(w, tag, name, set)
     if(c == tag) delete w[name];
 }
 
+// unlink ids from window when a subtree is removed
+function unlinkIds(w, top)
+{
+    let list = gebtn(top, "*", true, false);
+    list.splice(0, 0, top);
+    for(let c of list)
+        if(c.nodeType == 1 && c.id)
+            spillup_id(w, c, c.id, false);
+}
+
 function frames$rebuild(w) {
 var i, f, l, f2, l2;
 // unlink the name references

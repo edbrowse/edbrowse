@@ -261,7 +261,7 @@ for(let f of ["UnsupportedError",
 "set_location_hash", "NodeFilter", "tableReindex", "formReindex", "selectReindex",
 "markAllCollections", "markUpwardCollections",
 "mutFixup", "makeSheets", "gebtn",
-"isRooted", "spillup_id",
+"isRooted", "spillup_id", "unlinkIds",
 "ownerIdsScripts", "simpleHtmlEscape", "appendFragment",
 "appendFragment$nm", "insertFragment", "insertFragment$nm", "checkUpward", "collectionSymbol"])
     swp(f, mw$[f]);
@@ -630,10 +630,12 @@ class Node extends EventTarget
         for (let i = 0; i < l; ++i)
             if (c == cn[i]) { mark = i; break; }
         if (mark < 0) return null;
+        const w = isRooted(c);
         cn.splice(mark, 1);
         c.parentNode = null;
         domLinkage('r', this, "", c);
         if (c.nodeType != 3) {
+            if(w) unlinkIds(w, c);
             checkUpward(this);
         }
         // passing an integer as third argument is a special case, only from here.
@@ -651,9 +653,13 @@ class Node extends EventTarget
         for (let i = 0; i < l; ++i)
             if (c == cn[i]) { mark = i; break; }
         if (mark < 0) return null;
+        const w = isRooted(c);
         cn.splice(mark, 1);
         c.parentNode = null;
         domLinkage('r', this, "", c);
+        if (c.nodeType != 3) {
+            if(w) unlinkIds(w, c);
+        }
         return c;
     }
 

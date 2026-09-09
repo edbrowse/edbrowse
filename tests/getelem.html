@@ -208,7 +208,8 @@ b.appendChild(d);
 if(window.baby != para.baby) msg += "|baby not present after appendChild";
 if(window[0].getAttribute("n") != 2) msg += "|window[0] not present";
 d.remove();
-// this not yet implemented
+if(window.baby) msg += "|baby didn't go away after removeChild";
+if(window[0]) msg += "|[0] didn't go away after removeChild";
 
 show.innerHTML = msg;
 } catch(e) { broken = true; show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
