@@ -1453,20 +1453,22 @@ r += postcomma ? postcomma : ';'
 return r
 }
 
-function runScriptWhenAttached(s) {
+function ownerIdsScripts(s) {
     const w = isRooted(s); // the rooting window
     if(!w) return;
     const d = w.document;
 
-    // Before we look for scripts to run, we might need to change
-    // the owner document of everything newly attached. It doesn't happen often,
-    // but can, when a node is created in another frame, then attached in this one.
-    // Well if it ever happens, we have to handle it.
+    // We might need to change the owner document of everything newly attached.
+    // It doesn't happen often, but can,
+    // when a node is created in another frame, then attached in this one.
+    // And also, link the ids into the window.
     let list = gebtn(s, "*", true, false);
     // our getElements functions never include the top node,
     // but in this case we might want to.
     list.splice(0, 0, s);
     for(let c of list) {
+        if(c.nodeType == 1 && c.id)
+            spillup_id(w, c, c.id, true);
         if(c.ownerDocument == d) continue; // high runner case
         c.ownerDocument = d;
         if(c.attributes$2)
@@ -6156,7 +6158,7 @@ for(let k of [
 getElementsByTagName, getElementsByClassName, getElementsByName, getElementById,
 dispatchEvent, addEventListener, removeEventListener,
 NodeFilter,createNodeIterator,createTreeWalker,
-runScriptWhenAttached, connectedCallbackCheck,
+ownerIdsScripts, connectedCallbackCheck,
 getComputedStyle,
 URL, TextEncoder, TextDecoder])
     Object.defineProperty(k, "toString",{value:wrapString});

@@ -262,7 +262,7 @@ for(let f of ["UnsupportedError",
 "markAllCollections", "markUpwardCollections",
 "mutFixup", "makeSheets", "gebtn",
 "isRooted", "spillup_id",
-"runScriptWhenAttached", "simpleHtmlEscape", "appendFragment",
+"ownerIdsScripts", "simpleHtmlEscape", "appendFragment",
 "appendFragment$nm", "insertFragment", "insertFragment$nm", "checkUpward", "collectionSymbol"])
     swp(f, mw$[f]);
 for(let f of ["close"])
@@ -394,7 +394,7 @@ class Node extends EventTarget
         // and we might need to do that if one frame inserts,
         // via innerHTML, nodes into another frame.
         // Very rare, but it's possible.
-        runScriptWhenAttached(this);
+        ownerIdsScripts(this);
 
         // c2 is the old nodes, for the observers.
         mutFixup(this, 0, c1, c2);
@@ -537,7 +537,7 @@ class Node extends EventTarget
         // a text node won't change the structure of the form, or the html collection
         if(c.nodeType != 3) {
             checkUpward(this);
-            runScriptWhenAttached(c);
+            ownerIdsScripts(c);
         }
         // a text node can have an observer - for CharacterData
         mutFixup(this, 0, c, null);
@@ -552,7 +552,7 @@ class Node extends EventTarget
         if(c.parentNode) c.parentNode.removeChild$nm(c);
         this.appendChild2(c);
         if(c.nodeType != 3)
-            runScriptWhenAttached(c);
+            ownerIdsScripts(c);
         return c;
     }
 
@@ -594,7 +594,7 @@ class Node extends EventTarget
         domLinkage('b', this, "", c, t); // update the tree in C
         if (c.nodeType != 3) {
             checkUpward(this);
-            runScriptWhenAttached(c);
+            ownerIdsScripts(c);
         }
         mutFixup(this, 0, c, null);
         return c;
@@ -617,7 +617,7 @@ class Node extends EventTarget
         c.parentNode = this;
         domLinkage('b', this, "", c, t); // update the tree in C
         if (c.nodeType != 3)
-            runScriptWhenAttached(c);
+            ownerIdsScripts(c);
         return c;
     }
 
