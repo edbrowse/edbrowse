@@ -263,7 +263,7 @@ for(let f of ["UnsupportedError",
 "mutFixup", "makeSheets", "gebtn",
 "isRooted", "spillup_id", "unlinkIds",
 "ownerIdsScripts", "simpleHtmlEscape", "appendFragment",
-"appendFragment$nm", "insertFragment", "insertFragment$nm", "checkUpward", "collectionSymbol", "idHash"])
+"appendFragment$nm", "insertFragment", "insertFragment$nm", "checkUpward", "collectionSymbol"])
     swp(f, mw$[f]);
 for(let f of ["close"])
     swpv(f, mw$[f]);
@@ -1151,10 +1151,6 @@ We set up for HR.onsubmit, for example; other browsers might not. */
                 spillup_id(w, this, oldv, false);
                 spillup_id(w, this, v, true);
             }
-            else {
-                idHash(this.ownerDocument, this, oldv, false);
-                idHash(this.ownerDocument, this, v, true);
-            }
         }
         if(name === "class")
             this.classList.mirror$2(this.classList.tokens$2());
@@ -1244,7 +1240,6 @@ We set up for HR.onsubmit, for example; other browsers might not. */
         if(name === "id") {
             const w = isRooted(this);
             if(w) spillup_id(w, this, a.value, false);
-            else idHash(this.ownerDocument, this, a.value, false);
         }
         if(name === "class")
             this.classList.mirror$2(this.classList.tokens$2());
@@ -2089,11 +2084,6 @@ class Document extends Node
     constructor()
     {
         super();
-        // the id$hash is a fallback for when we can't spill up ids to window
-        // or when that mechanism doesn't quite work (e.g. user overwrites the
-        // variable). I'm not sure how much we care but this is a simpler
-        // version than it used to be.
-        odp(this, "id$hash", {value: new Map});
         this.readyState$2 = "interactive";
     }
 

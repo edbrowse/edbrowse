@@ -540,14 +540,6 @@ a = a.concat(gebn(c, s, false));
 }
 return a;
 }
-function idHash(doc, tag, name, set)
-{
-    if (!doc) return;
-    if (!tag) doc.id$hash.clear(); // avoid an expensive tree walk
-    if (set && !doc.id$hash.has(name)) doc.id$hash.set(name, tag);
-    else doc.id$hash.delete(name);
-}
-
 function getElementById(s) {
     if(!s) { // missing or null argument
         alert3("getElementById(type " + typeof s + ")");
@@ -555,44 +547,25 @@ function getElementById(s) {
     }
     // this is the document object here
     const w = this.defaultView;
-    const found = (e) => e instanceof w.Element && e.id == s;
-    window_check: {
-        // I don't think this can happen
-        if (this !== w.document) break window_check;
+    // I don't think this can happen
+    if (this === w.document) {
         // check window first
         let val = w[s];
-        if(!val) break window_check;
-        // We'll want to change this when we use html collections
-        if (Array.isArray(val)) {
-            // If not all elements of this array apply, leave alone
-            if (val.some((e) => !found(e))) break window_check;
-            return val[0];
-        }
-        if (found(val)) return val;
+        if (val && val instanceof w.Element && val.id === s) return val;
     }
 
-    const gebi_hash = this.id$hash;
-    // We may have hashed this id but couldn't spillup
-    const val = gebi_hash.get(s);
-    if (val) {
-        if (found(val)) return val;
-        else gebi_hash.delete(s);
-    }
-    return gebi(this, this, s);
+    return gebi(this, s);
 }
 
-function gebi(d, top, s) {
-    if (top.id) {
-        const gebi_hash = d.id$hash;
-        gebi_hash.set(top.id, top);
-        if (top.id == s) return top;
-    }
+function gebi(top, s)
+{
+    if (top.id == s) return top;
     if (top.childNodes) {
         // don't descend into another frame.
         // The frame has no children through childNodes, so we don't really need this line.
         if (top.is$frame) return null;
-for(let c of top.childNodes) {
-            let res = gebi(d, c, s);
+        for(const c of top.childNodes) {
+            let res = gebi(c, s);
             if (res) return res;
         }
     }
@@ -1355,9 +1328,8 @@ function isRooted(t) {
 // <div id=fred> spills up to a window.fred link.
 function spillup_id(w, tag, name, set)
 {
-    if(typeof name != "string") return;
-    idHash(w.document, tag, name, set);
-    if(w.reserved$words[name]) return;
+    if (typeof name != "string") return;
+    if (w.reserved$words[name]) return;
     let c = w[name];
 
     // they could say var fred = 7; we have to leave that alone
@@ -1410,16 +1382,8 @@ function unlinkIds(w, top)
 {
     let list = gebtn(top, "*", true, false);
     list.splice(0, 0, top);
-    for(const c of list) {
-        if(c.id && c.nodeType == 1 && w) spillup_id(w, c, c.id, false);
-        // If we have no window, just blast the id hash
-        else if (!w) {
-            if (c.ownerDocument) {
-                idHash(c.ownerDocument);
-                return;
-            }
-        }
-    }
+    for (const c of list)
+        if (c.id && c.nodeType == 1 && w) spillup_id(w, c, c.id, false);
 }
 
 function frames$rebuild(w) {
