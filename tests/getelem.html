@@ -224,6 +224,16 @@ if(document.getElementById("show").nodeName != "P") msg += "|ById didn't find sh
 b.id = "atob"; // reserved name
 if(document.getElementById("atob").nodeName != "BODY") msg += "|ById didn't find atob";
 
+doc = document.implementation.createHTMLDocument();
+if(doc.getElementById("show")) msg += "|ById isn't restricted to its document";
+span.id = "zebra";
+doc.body.appendChild(span);
+if(window.zebra) msg += "|zebra found in window";
+if(doc.getElementById("zebra").nodeName != "SPAN") msg += "|zebra not found in doc";
+// I might have tested linking doc into the tree,
+// b.appendChild(doc);
+// but chrome doesn't allow it. doc is an isolated thing.
+
 show.innerHTML = msg;
 } catch(e) { broken = true; show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 }
