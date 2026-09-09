@@ -151,7 +151,7 @@ r2.cells[2].textContent = "margrock";
 if(r2.cells.length != 3) msg += "|anne cells not length 3";
 if(r2.textContent != "annepmargrock") msg += "|wrong margrock text";
 
-tab1 = tab; // remember it for jdb
+table1 = tab; // remember it for jdb
 
 // on to the second html table.
 tab = document.getElementById("tab2");
@@ -182,7 +182,7 @@ if(hrow.textContent != "barneylrubble") msg += "|2 wrong td text content";
 hrow = tab.tFoot.rows[0];
 if(hrow != tab.rows[5]) msg += "|2 rockhead row not last in table";
 if(hrow.cells[2].firstChild.data != "rockhead") msg += "|2 couldn't find rockhead";
-tab2 = tab;
+table2 = tab;
 tab.remove(); // don't need to see it on screen.
 
 // what if we insert into an empty table?
@@ -214,26 +214,26 @@ tab.deleteRow(1);
 if(body1.rows.length != 1 || r1 != body1.rows[0]) msg += "|body should have only r1";
 if(r3 != tab.rows[1] || r3.rowIndex != 1) msg += "|r3 didn't slide back to position 1";
 
-tab3 = tab2.cloneNode(true);
-tb = tab3.tBodies;
+table3 = table2.cloneNode(true);
+tb = table3.tBodies;
 if(tb.length != 2) msg += `|wrong clone body count ${tb.length}`;
-if(tab3.tHead.rows.length != 1) msg += "|no clone head row";
+if(table3.tHead.rows.length != 1) msg += "|no clone head row";
 if(tb[0].rows.length != 2 || tb[1].rows.length != 2) msg += "|clone row count not 2+2";
-if(tab3.rows.length != 6) msg += `|clone total row count ${tab.rows.length}`;
-if(tab3.tFoot.rows.length != 1) msg += "|no clone rows in footer";
+if(table3.rows.length != 6) msg += `|clone total row count ${tab.rows.length}`;
+if(table3.tFoot.rows.length != 1) msg += "|no clone rows in footer";
 // not skipping past caption this time - but skipping past thead
-body1 = tab3.firstElementChild.nextElementSibling;
-if(body1 != tab3.tBodies[0]) msg += "|clone body not first tBodies";
-body2 = tab3.tBodies[1];
-h1 = tab3.tHead;
-if(tab3.createTHead() != h1) msg += "|clone didn't get same head back";
-hrow = tab3.tHead.rows[0]; // proper head row
-if(hrow != tab3.rows[0]) msg += "|clone head row not first in table";
+body1 = table3.firstElementChild.nextElementSibling;
+if(body1 != table3.tBodies[0]) msg += "|clone body not first tBodies";
+body2 = table3.tBodies[1];
+h1 = table3.tHead;
+if(table3.createTHead() != h1) msg += "|clone didn't get same head back";
+hrow = table3.tHead.rows[0]; // proper head row
+if(hrow != table3.rows[0]) msg += "|clone head row not first in table";
 if(hrow.cells.length != 3) msg += "|clone top row not 3 cells";
 if(hrow.cells[0].nodeName != "TH") msg += "|clone top row not TH";
 if(hrow.textContent != "firstmiddlelast") msg += "|clone wrong th text content";
 hrow = body2.firstElementChild; // the barney row
-if(hrow != tab3.rows[3]) msg += "|clone barney row not fourth in table";
+if(hrow != table3.rows[3]) msg += "|clone barney row not fourth in table";
 if(hrow != body2.rows[0]) msg += "|clone barney row not first in body2";
 if(hrow.cells.length != 3) msg += "|clone barney row not 3 cells";
 if(hrow.cells[0].nodeName != "TD") msg += "|clone barney row not TD";
