@@ -224,6 +224,14 @@ that is to say, it's already a native function.
     c.toString = () => `function ${c.name}() { [native code] }`
 }
 
+this.swc = function (c, changeable)
+{
+   /* if we don't set the property then the class can be referenced from
+        within this window but isn't a property of the window
+    */
+    odp(window, c.name, {value:c, writable:changeable, configurable:changeable});
+    scts(c);
+}
 /* Modern version to establish a dom object. Second parameter allows us
 to make it readonly, but I don't think we can ever do that.
 I ran this through chrome and it came out true.
@@ -236,11 +244,7 @@ If we can replace a standard dom class, then I imagine we can replace anything! 
 this.swdc = function (c, changeable=true)
 {
     odp(c.prototype, "dom$class", {value: c.name});
-   /* if we don't set the property then the class can be referenced from
-        within this window but isn't a property of the window
-    */
-    odp(window, c.name, {value:c, writable:changeable, configurable:changeable});
-    scts(c);
+    swc(c, changeable);
 }
 
 this.swde = function (cls, exp, changeable=true)
@@ -5299,96 +5303,112 @@ swpc("last$css_all", "")
 swpc("cssSource", [])
 sdp("xmlVersion", 0)
 
-swp("MutationObserver", function(f) {
-    // We need to know what window we're in to queue the callback microtask
-    this.observed$window = my$win();
-    if (typeof f !== "function") throw new TypeError("not a function");
-    this.callback = f;
-    this.active = false;
-    this.targets = new Eb$IterableWeakMap;
-    this.async = true; // run as microtask by default
-    this.notification$queue = [];
-})
-swpp("MutationObserver", null)
-MutationObserver.prototype.disconnect = function() {
-    const ts = this.targets.size;
-    const nl = this.notification$queue.length;
-    alert3(`MutationObserver disconnecting from ${ts} targets with ${nl} unprocessed records`);
-    this.notification$queue.length =  0;
-    this.active = false;
-    for (const t of this.targets.keys()) {
-        alert4(`MutationObserver disconnecting ${t.dom$class} tag ${t.eb$seqno}`);
-        // Clear the strong reference in case the observer is being dropped
-        t.eb$observers.delete(this);
-        // Clear the weak reference in case the observer is being reused
-        this.targets.delete(t);
-    }
-}
-MutationObserver.prototype.observe = function(target, cfg) {
-    /* Not sure if this ever happens in the wild but protect against someone
-        accidentally externally altering the config for an observed target as
-        the config is passed in by reference.
-    */
-    const cfg_copy = structuredClone(cfg);
-    if (!this.observe$target(target, cfg_copy)) return; // unobservable
-    if(cfg_copy.subtree)
-        this.observe$subtree(target, cfg_copy);
-}
-MutationObserver.prototype.observe$target = function (target, cfg, dbg=alert3) {
-    // May have other valid targets so don't disconnect
-    if(typeof cfg != "object" || !(target instanceof Node))
-        throw new TypeError("invalid argument types");
-    // Are there other unobservable elements?
-    if (target.nodeName && target.nodeName == "TEMPLATE") {
-        dbg(`not observing ${target.dom$class} tag ${target.eb$seqno} config ${JSON.stringify(cfg)}`)
-        return false;
-    }
-    dbg(`observing ${target.dom$class} tag ${target.eb$seqno} config ${JSON.stringify(cfg)}`)
-    this.targets.set(target, cfg);
-    this.active = true;
-    if (!target.eb$observers) {
-        dbg("Attaching first observer");
-        Object.defineProperty(target, "eb$observers", {value: new Set});
-    }
-    target.eb$observers.add(this);
-    return true;
-}
-MutationObserver.prototype.observe$subtree = function(target, cfg) {
-    /* If we're observing subtrees then we need to directly observe those
-        targets as well as the idea is that if a subtree is moved we keep
-        observing that. We will fix appended children in mutFixup. This also
-        means that, if the surrounding scripting doesn't care about this
-        observer (i.e. doesn't hold any other strong references) and all its
-        targets go away then it'll be cleaned up also. This is per spec, avoids
-        a memory leak and makes the mutFixup code much simpler when it comes
-        to handling advanced observer use-cases.
-    */
-    if (target.is$frame) return;
-    let a = target.childNodes.slice();
-    let i = 0;
-    let n;
-    while (i < a.length) {
-        n = a[i++];
-        if (!this.targets.has(n))
-            if (!this.observe$target(n, cfg, alert4)) continue;
-        if (n.is$frame) continue;
-        if (n.childNodes) a.push(...n.childNodes);
-    }
-}
-MutationObserver.prototype.takeRecords = function() {
-    // Shallow clone as the records must refer to the DOM and are otherwise safe
-    const ret = this.notification$queue.slice();
-    /* Drop our copy of the records as we've processed them now and don't want
-        to be impacted by external changes. */
-    this.notification$queue.length = 0;
-    return ret;
-}
+class MutationObserver
+{
+    observed$window = my$win();
+    active = false;
+    targets = new Eb$IterableWeakMap;
+    notification$queue = [];
 
-swp("MutationRecord", function(){})
-swpp("MutationRecord", null)
-MutationRecord.prototype.oldValue = null;
-MutationRecord.prototype.nextSibling = null;
-MutationRecord.prototype.previousSibling = null;
+    constructor(f)
+    {
+        if (typeof f !== "function") throw new TypeError("not a function");
+        this.callback = f;
+    }
+
+    disconnect()
+    {
+        const ts = this.targets.size;
+        const nl = this.notification$queue.length;
+        alert3(`MutationObserver disconnecting from ${ts} targets with ${nl} unprocessed records`);
+        this.notification$queue.length =  0;
+        this.active = false;
+        for (const t of this.targets.keys()) {
+            alert4(`MutationObserver disconnecting ${t.dom$class} tag ${t.eb$seqno}`);
+            // Clear the strong reference in case the observer is being dropped
+            t.eb$observers.delete(this);
+            // Clear the weak reference in case the observer is being reused
+            this.targets.delete(t);
+        }
+    }
+
+    observe(target, cfg)
+    {
+        /* Not sure if this ever happens in the wild but protect against someone
+            accidentally externally altering the config for an observed target as
+            the config is passed in by reference.
+        */
+        const cfg_copy = structuredClone(cfg);
+        if (!this.observe$target(target, cfg_copy)) return; // unobservable
+        if (cfg_copy.subtree)
+            this.observe$subtree(target, cfg_copy);
+    }
+
+    observe$target(target, cfg, dbg=alert3)
+    {
+        // May have other valid targets so don't disconnect
+        if (typeof cfg != "object" || !(target instanceof Node))
+            throw new TypeError("invalid argument types");
+        // Are there other unobservable elements?
+        if (target.nodeName && target.nodeName == "TEMPLATE") {
+            dbg(`not observing ${target.dom$class} tag ${target.eb$seqno} config ${JSON.stringify(cfg)}`)
+            return false;
+        }
+        dbg(`observing ${target.dom$class} tag ${target.eb$seqno} config ${JSON.stringify(cfg)}`)
+        this.targets.set(target, cfg);
+        this.active = true;
+        if (!target.eb$observers) {
+            dbg("Attaching first observer");
+            Object.defineProperty(target, "eb$observers", {value: new Set});
+        }
+        target.eb$observers.add(this);
+        return true;
+    }
+
+    observe$subtree(target, cfg)
+    {
+        /* If we're observing subtrees then we need to directly observe those
+            targets as well as the idea is that if a subtree is moved we keep
+            observing that. We will fix appended children in mutFixup. This also
+            means that, if the surrounding scripting doesn't care about this
+            observer (i.e. doesn't hold any other strong references) and all its
+            targets go away then it'll be cleaned up also. This is per spec, avoids
+            a memory leak and makes the mutFixup code much simpler when it comes
+            to handling advanced observer use-cases.
+        */
+        if (target.is$frame) return;
+        let a = target.childNodes.slice();
+        let i = 0;
+        let n;
+        while (i < a.length) {
+            n = a[i++];
+            if (!this.targets.has(n))
+                if (!this.observe$target(n, cfg, alert4)) continue;
+            if (n.is$frame) continue;
+            if (n.childNodes) a.push(...n.childNodes);
+        }
+    }
+
+    takeRecords()
+    {
+        // Shallow clone as the records must refer to the DOM and are otherwise safe
+        const ret = this.notification$queue.slice();
+        /* Drop our copy of the records as we've processed them now and don't want
+            to be impacted by external changes. */
+        this.notification$queue.length = 0;
+        return ret;
+    }
+}
+swc(MutationObserver);
+
+class MutationRecord
+{
+    oldValue = null;
+    nextSibling = null;
+    previousSibling = null;
+}
+swc(MutationRecord);
+
 swpv("crypto", {})
 crypto.getRandomValues = function(a) {
 if(typeof a != "object") return NULL;

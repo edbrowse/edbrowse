@@ -1190,13 +1190,6 @@ function mutFixup(b, flavor, y, z) {
             alert3("mutFixup: callback already queued");
             continue;
         }
-        if(!o.async) {
-            // Only for our internal use in implementing live collections.
-            alert3(`mutFixup: synchronously processing ${nl+1} records`);
-            o.callback.call(o, o.takeRecords(), o);
-            continue;
-        }
-        // the default behavior, call microtask and do it asynchronously
         o.observed$window.queueMicrotask(
             () => {
                 o.callback$queued = false;
