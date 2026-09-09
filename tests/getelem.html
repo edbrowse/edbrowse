@@ -223,6 +223,9 @@ span.remove();
 if(document.getElementById("show").nodeName != "P") msg += "|ById didn't find show paragraph";
 b.id = "atob"; // reserved name
 if(document.getElementById("atob").nodeName != "BODY") msg += "|ById didn't find atob";
+if(typeof window.atob != "function") msg += "|atob was displaced";
+b.removeAttribute("id");
+if(typeof window.atob != "function") msg += "|atob was removed";
 
 doc = document.implementation.createHTMLDocument();
 if(doc.getElementById("show")) msg += "|ById isn't restricted to its document";
