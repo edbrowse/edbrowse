@@ -193,6 +193,16 @@ if(window.wilma != b) msg += "|id=wilma not linked";
 b.removeAttribute("id");
 if(window.wilma) msg += "|wilma remains";
 
+taken = 7;
+b.id = "taken";
+if(taken != 7) msg += "|id=taken displaces 7";
+taken = {foo:77};
+b.id = "taken";
+if(taken.foo != 77) msg += "|id=taken displaces object";
+delete taken; // now it should work
+b.id = "taken";
+if(taken != b) msg += "|id=taken didn't link";
+
 // test bringing nodes in and out of the tree with ids on them.
 // not yet implemented
 

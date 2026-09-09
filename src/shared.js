@@ -1357,9 +1357,9 @@ function spillup_id(w, tag, name, set)
             if(c.length == 0) return;
             // if anything in the array isn't Element, leave it alone
             for(const d of c)
-                if(typeof d != "object" || ! d instanceof w.Element) return;
+                if(typeof d != "object" || !( d instanceof w.Element)) return;
         } else {
-        if(!c instanceof w.Element) return;
+        if(!(c instanceof w.Element)) return;
         }
     }
     // at this point c is undefined or it is a tag or many tags
