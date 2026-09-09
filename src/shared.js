@@ -540,6 +540,13 @@ a = a.concat(gebn(c, s, false));
 }
 return a;
 }
+function idHash(doc, tag, name, set)
+{
+    if (!doc) return;
+    if (!tag) doc.id$hash.clear(); // avoid an expensive tree walk
+    if (set && !doc.id$hash.has(name)) doc.id$hash.set(name, tag);
+    else doc.id$hash.delete(name);
+}
 
 function getElementById(s) {
     if(!s) { // missing or null argument
@@ -1349,6 +1356,7 @@ function isRooted(t) {
 function spillup_id(w, tag, name, set)
 {
     if(typeof name != "string") return;
+    idHash(w.document, tag, name, set);
     if(w.reserved$words[name]) return;
     let c = w[name];
 
@@ -1402,11 +1410,16 @@ function unlinkIds(w, top)
 {
     let list = gebtn(top, "*", true, false);
     list.splice(0, 0, top);
-    for(const c of list)
-        if(c.id) {
-            if (c.nodeType == 1 && w) spillup_id(w, c, c.id, false);
-            if (c.ownerDocument) c.ownerDocument.id$hash.delete(c.id);
+    for(const c of list) {
+        if(c.id && c.nodeType == 1 && w) spillup_id(w, c, c.id, false);
+        // If we have no window, just blast the id hash
+        else if (!w) {
+            if (c.ownerDocument) {
+                idHash(c.ownerDocument);
+                return;
+            }
         }
+    }
 }
 
 function frames$rebuild(w) {

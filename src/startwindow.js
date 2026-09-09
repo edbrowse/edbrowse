@@ -263,7 +263,7 @@ for(let f of ["UnsupportedError",
 "mutFixup", "makeSheets", "gebtn",
 "isRooted", "spillup_id", "unlinkIds",
 "ownerIdsScripts", "simpleHtmlEscape", "appendFragment",
-"appendFragment$nm", "insertFragment", "insertFragment$nm", "checkUpward", "collectionSymbol"])
+"appendFragment$nm", "insertFragment", "insertFragment$nm", "checkUpward", "collectionSymbol", "idHash"])
     swp(f, mw$[f]);
 for(let f of ["close"])
     swpv(f, mw$[f]);
@@ -1151,6 +1151,10 @@ We set up for HR.onsubmit, for example; other browsers might not. */
                 spillup_id(w, this, oldv, false);
                 spillup_id(w, this, v, true);
             }
+            else {
+                idHash(this.ownerDocument, this, oldv, false);
+                idHash(this.ownerDocument, this, v, true);
+            }
         }
         if(name === "class")
             this.classList.mirror$2(this.classList.tokens$2());
@@ -1240,6 +1244,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
         if(name === "id") {
             const w = isRooted(this);
             if(w) spillup_id(w, this, a.value, false);
+            else idHash(this.ownerDocument, this, a.value, false);
         }
         if(name === "class")
             this.classList.mirror$2(this.classList.tokens$2());
