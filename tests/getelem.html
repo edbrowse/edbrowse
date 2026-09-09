@@ -10,7 +10,6 @@
 // just march on after a javascript error.
 broken = false;
 try {
-show = document.getElementById("show")
 b = document.body
 img = document.images; // an HTMLCollection
 li = document.links; // a bizarre HTMLCollection
@@ -173,6 +172,29 @@ if(!para["023"]) msg += "|didn't find paragraph by id 023";
 if(para.item(0.375) != para.baby) msg += "|item index didn't truncate from float to int";
 if(para.item('0') != para.baby) msg += "|item index didn't change from string to int";
 if(para[0.375]) msg += "|unexpected direct access via a real number";
+
+// test id spullup to window
+// we already have window.sho, without calling getElementById.
+// If we don't then this script won't work.
+if(window.q0 != img[0]) msg += "|id=q0 not linked";
+if(window.baby) msg += "|id=baby disconnected but linked";
+b.id = "fred";
+if(window.fred != b) msg += "|id=fred not linked";
+b.id = "fred";
+if(window.fred != b) msg += "|id=fred second not linked";
+// multiple tags with the same id; this never happens in the wild
+b.id = "q0";
+if(window.fred) msg += "|fred hangs on";
+if(window.q0.length != 2) msg += "|id=q0.length not 2";
+// order is not guaranteed so we can't really test for that
+b.id = "wilma";
+if(window.q0 != img[0]) msg += "|id=q0 not left after wilma";
+if(window.wilma != b) msg += "|id=wilma not linked";
+b.removeAttribute("id");
+if(window.wilma) msg += "|wilma remains";
+
+// test bringing nodes in and out of the tree with ids on them.
+// not yet implemented
 
 show.innerHTML = msg;
 } catch(e) { broken = true; show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

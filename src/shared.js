@@ -1333,13 +1333,65 @@ function insertFragment$nm(p,  frag, l) {
 // if t is linkd into the tree, return the containing window
 // This is similar to though not identical to the C version in html.c
 function isRooted(t) {
-while(t) {
-if(t.nodeName == "HTML") return t.eb$win;
-// don't break out of a template
-if(t.dom$class == "HTMLTemplateElement") return undefined;
-t = t.parentNode;
+    while(t) {
+        if(t.nodeName == "HTML") return t.eb$win;
+        // don't continue upward past a template
+        if(t.nodeName == "TEMPLATE") return undefined;
+        t = t.parentNode;
+    }
+    return undefined;
 }
-return undefined;
+
+// <div id=fred> spills up to a window.fred link.
+function spillup_id(w, tag, name, set)
+{
+    if(typeof name != "string") return;
+    if(w.reserved$words[name]) return;
+    let c = w[name];
+
+    // they could say var fred = 7; we have to leave that alone
+    if(c !== undefined) {
+        if(c === null) return;
+        if(typeof c != "object") return;
+        if(Array.isArray(c)) {
+            if(c.length == 0) return;
+            // if anything in the array isn't Element, leave it alone
+            for(const d of c)
+                if(typeof d != "object" || ! d instanceof w.Element) return;
+        } else {
+        if(!c instanceof w.Element) return;
+        }
+    }
+    // at this point c is undefined or it is a tag or many tags
+
+    if(set) {
+        if(!c) { // the easy case and the high runner case
+            w[name] = tag;
+            return;
+        }
+        // id is suppose to be unique. If it's not, chrome puts them in
+        // an HTMLCollection. I'm using an array for now.
+        if(Array.isArray(c)) {
+            if(!c.includes(tag)) c.push(tag);
+            return;
+        }
+        if(c != tag) w[name] = [c, tag];
+        return;
+    }
+
+    // set is false; we are deleting this id,
+    // or perhaps removing this node from the tree. Same effect.
+    if(!c) return; // it wasn't there
+    if(Array.isArray(c)) {
+        let i;
+        for(i = 0; i < c.length; ++i)
+            if(c[i] === tag) break;
+        if(i == c.length) return; // it wasn't there.
+        c.splice(i, 1);
+        if(c.length == 1) w[name] = c[0];
+        return;
+    }
+    if(c == tag) delete w[name];
 }
 
 function frames$rebuild(w) {

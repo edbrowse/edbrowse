@@ -261,6 +261,7 @@ for(let f of ["UnsupportedError",
 "set_location_hash", "NodeFilter", "tableReindex", "formReindex", "selectReindex",
 "markAllCollections", "markUpwardCollections",
 "mutFixup", "makeSheets", "gebtn",
+"isRooted", "spillup_id",
 "runScriptWhenAttached", "simpleHtmlEscape", "appendFragment",
 "appendFragment$nm", "insertFragment", "insertFragment$nm", "checkUpward", "collectionSymbol"])
     swp(f, mw$[f]);
@@ -1133,10 +1134,17 @@ We set up for HR.onsubmit, for example; other browsers might not. */
         // all collections as out of date after the parse is finished.
         if(!eb$push$attributes) {
             if(name == "id" || name == "class" || name == "name")
-                markUpwardCollections(this)
+                markUpwardCollections(this);
             if(name == "name" &&
             this.form && this.form.dom$class == "HTMLFormElement")
                 formReindex(this.form);
+        }
+        if(name === "id") {
+            const w = isRooted(this);
+            if(w) {
+                spillup_id(w, this, oldv, false);
+                spillup_id(w, this, v, true);
+            }
         }
         if(name === "class")
             this.classList.mirror$2(this.classList.tokens$2());
@@ -1223,6 +1231,10 @@ We set up for HR.onsubmit, for example; other browsers might not. */
         if(name == "name" &&
         this.form && this.form.dom$class == "HTMLFormElement")
             formReindex(this.form);
+        if(name === "id") {
+            const w = isRooted(this);
+            if(w) spillup_id(w, this, a.value, false);
+        }
         if(name === "class")
             this.classList.mirror$2(this.classList.tokens$2());
         mutFixup(this, 1, name, a.value);
