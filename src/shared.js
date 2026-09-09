@@ -547,34 +547,35 @@ function getElementById(s) {
         return null;
     }
     // this is the document object here
-    const gebi_hash = this.id$hash;
-    // efficiency, see if we have hashed this id
-    const r = gebi_hash.get(s);
-    if(r) {
-        // Does it still exist?
-        let t = r.deref();
-        if (t) {
-            // is it still rooted?
-            for(let u = t.parentNode; u; u = u.parentNode)
-                if(u == this) return t;
+    const w = this.defaultView;
+    const found = (e) => e instanceof w.Element && e.id == s && this.contains(e);
+    window_check: {
+        // check window first
+        let val = w[s];
+        if(!val) break window_check;
+        // We'll want to change this when we use html collections
+        if (Array.isArray(val)) {
+            // If not all elements of this array apply, leave alone
+            if (val.some((e) => !found(e))) break window_check;
+            return val[0];
         }
-        gebi_hash.delete(s);
+        if (found(val)) return val;
     }
-    // look for nonsense to build up the hash
-    alert4("getElementById triggering id hash build");
-    gebi(this, this, "*@%impossible`[]")
-    let ref = gebi_hash.get(s);
-    let e;
-    if(ref) e = ref.deref();
-    return e ? e : null;
+
+    const gebi_hash = this.id$hash;
+    // We may have hashed this id but couldn't spillup
+    const val = gebi_hash.get(s);
+    if (val) {
+        if (found(val)) return val;
+        else gebi_hash.delete(s);
+    }
+    return gebi(this, this, s);
 }
 
 function gebi(d, top, s) {
     if (top.id) {
         const gebi_hash = d.id$hash;
-        const gebi_registry = d.id$registry;
-        gebi_hash.set(top.id, new (my$win()).WeakRef(top));
-        gebi_registry.register(top, top.id);
+        gebi_hash.set(top.id, top);
         if (top.id == s) return top;
     }
     if (top.childNodes) {
