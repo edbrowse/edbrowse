@@ -4651,8 +4651,9 @@ swdc(Validity);
                     /* Apparently numeric looking properties are actually passed
                     as strings so we have to check if the property converts to a
                     number in a way that round-trips */
-                    if (Math.trunc(property).toString() === property)
-                        res = target.item(property);
+                    const idx = Math.trunc(property); // automatically converts to number
+                    if (!isNaN(idx) && idx >=0 && idx.toString() === property)
+                        res = target.item(idx);
                     else
                         res = target.namedItem(property);
 
