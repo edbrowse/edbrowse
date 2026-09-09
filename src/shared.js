@@ -548,8 +548,10 @@ function getElementById(s) {
     }
     // this is the document object here
     const w = this.defaultView;
-    const found = (e) => e instanceof w.Element && e.id == s && this.contains(e);
+    const found = (e) => e instanceof w.Element && e.id == s;
     window_check: {
+        // I don't think this can happen
+        if (this !== w.document) break window_check;
         // check window first
         let val = w[s];
         if(!val) break window_check;
@@ -1395,14 +1397,16 @@ function spillup_id(w, tag, name, set)
     if(c == tag) delete w[name];
 }
 
-// unlink ids from window when a subtree is removed
+// unlink ids from window and the id hash when a subtree is removed
 function unlinkIds(w, top)
 {
     let list = gebtn(top, "*", true, false);
     list.splice(0, 0, top);
-    for(let c of list)
-        if(c.nodeType == 1 && c.id)
-            spillup_id(w, c, c.id, false);
+    for(const c of list)
+        if(c.id) {
+            if (c.nodeType == 1 && w) spillup_id(w, c, c.id, false);
+            if (c.ownerDocument) c.ownerDocument.id$hash.delete(c.id);
+        }
 }
 
 function frames$rebuild(w) {

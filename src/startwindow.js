@@ -635,7 +635,7 @@ class Node extends EventTarget
         c.parentNode = null;
         domLinkage('r', this, "", c);
         if (c.nodeType != 3) {
-            if(w) unlinkIds(w, c);
+            unlinkIds(w, c);
             checkUpward(this);
         }
         // passing an integer as third argument is a special case, only from here.
@@ -658,7 +658,7 @@ class Node extends EventTarget
         c.parentNode = null;
         domLinkage('r', this, "", c);
         if (c.nodeType != 3) {
-            if(w) unlinkIds(w, c);
+            unlinkIds(w, c);
         }
         return c;
     }
@@ -2084,8 +2084,10 @@ class Document extends Node
     constructor()
     {
         super();
-        // the id$hash is suppose to make getElementById more efficient.
-        // I don't know if it's worth the complexity it introduces.
+        // the id$hash is a fallback for when we can't spill up ids to window
+        // or when that mechanism doesn't quite work (e.g. user overwrites the
+        // variable). I'm not sure how much we care but this is a simpler
+        // version than it used to be.
         odp(this, "id$hash", {value: new Map});
         this.readyState$2 = "interactive";
     }
