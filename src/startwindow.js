@@ -4425,18 +4425,14 @@ swdc(Validity);
     class ListCollection
     {
         by_index = [];
-        tracker = new FinalizationRegistry((c) => c[changes] = true);
+
         /*
         - node - the node which owns this collection
         - cb - callback which takes owner as a parameter used to rebuild
-          the collection. Note that we pass owner as a parameter so the
-          collection callback can avoid creating a reference cyle (owner is
-          stored as a weakref which is dereferenced on calling).
-        */
+          the collection. */
         constructor(node, cb)
         {
-            this.owner = new WeakRef(node);
-            this.tracker.register(node, this);
+            this.owner = node;
             this.callback = cb;
             // We need to rebuild initially but only on first lookup
             this.ignore = false;
@@ -4447,9 +4443,7 @@ swdc(Validity);
 
         add(element)
         {
-            const ref = new WeakRef(element);
-            this.by_index.push(ref);
-            return ref;
+            this.by_index.push(element);
         }
 
         // Possibly could be more efficient by not rebuilding from scratch
@@ -4461,13 +4455,7 @@ swdc(Validity);
             this.changes = false;
             this.clear();
 
-            if (!this.owner) return;
-            const o = this.owner.deref();
-            if (!o) {
-                this.owner = null;
-                return; // everything's gone
-            }
-            for (const element of this.callback(o)) this.add(element);
+            for (const element of this.callback(this.owner)) this.add(element);
         }
 
         item(i)
@@ -4475,16 +4463,9 @@ swdc(Validity);
             this.handleChanges();
             i = Number(i);
             if (isNaN(i)) return null;
-            const ref = this.by_index.at(i);
-            if (ref) {
-                const element = ref.deref()
-                if (!element) {
-                    this.by_index.splice(i, 1);
-                    return this.item(i);
-                }
-                return element;
-            }
-            return null;
+            const element = this.by_index.at(i);
+            if (!element) return null;
+            return element;
         }
 
         get length()
@@ -4523,25 +4504,21 @@ swdc(Validity);
 
         add(element)
         {
-            const ref = super.add(element);
+            super.add(element);
             const id = element.id;
-            if (typeof id == "string" && id) this.by_id.set(id, ref);
+            if (typeof id == "string" && id) this.by_id.set(id, element);
             const name = element.getAttribute("name");
-            if (typeof name == "string" && name) this.by_name.set(name, ref);
-            return ref;
+            if (typeof name == "string" && name) this.by_name.set(name, element);
         }
 
         namedItem(n)
         {
             this.handleChanges();
             for (const m of [this.by_id, this.by_name]) {
-                const ref = m.get(n);
-                if (ref) {
-                    const element = ref.deref();
-                    if (!element) m.delete(n);
-                    else return element;
-                }
+                const element = m.get(n);
+                if (element) return element;
             }
+
             return null;
         }
     }
@@ -4581,12 +4558,6 @@ swdc(Validity);
     {
         constructor(node, cb, ignore=true)
         {
-            /* If we're ignoring changes we want to hang on to refs as otherwise
-            the Nodelist can't be static as nodes will disappear */
-            if (ignore) {
-                const refs = cb(node);
-                cb = () => refs; // Hold a ref to the nodes in the callback
-            }
             super(node, cb);
             if (ignore) {
                 this[collection].handleChanges();
@@ -4594,7 +4565,8 @@ swdc(Validity);
             }
         }
 
-        // Can't just use forEach because we want to handle references
+        /* We need to handle changes during iteration so we can't just use the
+        array methods */
         forEach(callback, thisarg)
         {
             let cb, idx = 0;
