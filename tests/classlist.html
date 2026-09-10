@@ -1,4 +1,4 @@
-<body>
+<head></head><body>
 <p id=show>start</p>
 <div id=d1 class="alpha beta alpha">one</div>
 <div id=d2>two</div>
@@ -108,6 +108,64 @@ if(d1.className != "sock") msg += "|className not sock";
 cl1.add("sock");
 if(d1.className != "sock") msg += "|className not sock after sock";
 if(cl1.length != 1) msg += "|multiple socks";
+
+// namedNodeMap. Some of this is tested intrinsically when we access Attributes.
+// In fact chrome won't let me create the map on its own.
+if(isedbrowse) m = new NamedNodeZap;
+else mdiv = document.createElement("div"), m = mdiv.attributes;
+function make_attr(n, v) {
+let a;
+if(isedbrowse) {
+a = new Attr;
+a.name = n, a.value = v;
+} else {
+// chrome won't let me new Attr, just like I can't new NamedNodeMap
+show.setAttribute(n, v);
+a = show.getAttributeNode(n);
+show.removeAttribute(n);
+}
+return a;
+}
+
+// first three are reserved words that shouldn't create links
+a0 = make_attr("length", 39);
+a1 = make_attr("3", "yamaha");
+a2 = make_attr("item", "flop");
+// then a couple that should create links
+a3 = make_attr("j", true);
+a4 = make_attr("K@", "garage");
+if(m.setNamedItem(a0) !== null) msg += "|setNamedItem not null";
+m.setNamedItem(a1);
+m.setNamedItem(a2);
+m.setNamedItem(a3);
+m.setNamedItem(a4);
+if(m.j != a3) msg += "|no j link";
+if(m["K@"] != a4) msg += "|no K@ link";
+if(m[" k"]) msg += "|unexpected k link";
+if(typeof m.item != "function") msg += "|m.item not function";
+if(m.length != 5) msg += "|m wrong length";
+if(m[2] != a2 || m[4] != a4) msg += "|m bad indexing";
+if(m.item("2") != a2 || m.item(4) != a4) msg += "|m bad item indexing";
+if(m.item(1.632) != a1) msg += "|m bad truncating";
+if(m.item("blah") != a0) msg += "|m nonsense string index";
+if(m.item(atob) != a0) msg += "|m function index";
+if(m[3] != a3) msg += "|wrong m[3]";
+a00 = make_attr("length", 399);
+a01 = m.setNamedItem(a00);
+if(a01 != a0) msg += "|replace didn't return old attr";
+if(m[0].value != 399) msg += "|replace didn't produce 399";
+if(m[3].value !== "true") msg += "|m[3].value didn't convert true to string";
+a01 = m.removeNamedItem("length");
+if(a01 != a00) msg += "|removed item wrong attr";
+if(m.length != 4) msg += "| length not 4 after remove";
+if(m.getNamedItem("j") != a3) msg += "|couldn't get j after remove";
+if(m.getNamedItem("K@") != a4) msg += "|couldn't get  K@ after remove";
+if(m.getNamedItem("nothing") !== null) msg += "|nothing didn't return null";
+if(m[0] != a1) msg += "|items didn't shift after length removed";
+m.removeNamedItem("j");
+if(m.j) msg += "|m.j still defined";
+if(!m["K@"]) msg += "|m.K@ not defined after j remove";
+if(m.length != 3) msg += "|length not 3 after j removed";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
