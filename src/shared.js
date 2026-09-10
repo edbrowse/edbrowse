@@ -2525,7 +2525,6 @@ function eb$invisible(t) {
     s2 = computeStyleInline(t);
     if(s1.hasOwnProperty("display")) s2.display = s1.display;
     if(s1.hasOwnProperty("visibility")) s2.visibility = s1.visibility;
-    if(s1.hasOwnProperty("color")) s2.color = s1.color;
     if(s2.display == "none" || s2.visibility == "hidden") {
         rc = 1;
         // It is hidden, does it come to light on hover?

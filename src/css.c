@@ -647,7 +647,7 @@ const char * const allowableStyleElements[] = {
 0};
 
 static const char * const displayableStyleElements[] = {
-"display", "visibility", "color",
+"display", "visibility",
 "content", // for before and after modifiers
 0};
 
