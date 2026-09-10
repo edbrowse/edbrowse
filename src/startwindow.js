@@ -4438,7 +4438,7 @@ swdc(Validity);
 
     class ListCollection
     {
-        by_index = [];
+        storage = [];
 
         /*
         - node - the node which owns this collection
@@ -4455,12 +4455,8 @@ swdc(Validity);
             this.markChanges();
         }
 
-        clear() { this.by_index.length = 0; }
-
-        add(element)
-        {
-            this.by_index.push(element);
-        }
+        // no one can have a ref to our backing storage
+        clear() { this.storage = []; }
 
         markChanges(values)
         {
@@ -4485,26 +4481,26 @@ swdc(Validity);
             rebuild, but I'll clear the flag early in case */
             this.changed = false;
             this.clear();
-
-            for (const element of this.callback(this.owner)) this.add(element);
+            this.push(...this.callback(this.owner));
         }
 
         item(i)
         {
             this.handleChanges();
             // elements are truthy so this works
-            return this.by_index.at(i) || null;
+            return this.storage.at(i) || null;
         }
 
         get length()
         {
             this.handleChanges();
-            return this.by_index.length;
+            return this.storage.length;
         }
 
         /* Altering collections during iteration is not good practice but is
         mentioned in the spec. As such we need to make sure we handle changes
-        including emptying the entire collection during the process. */
+        including emptying the entire collection during the process.
+        */
 
         *[Symbol.iterator]()
         {
@@ -4517,80 +4513,96 @@ swdc(Validity);
 
         insert(value, existing)
         {
-            const idx = (existing) ? this.by_index.indexOf(existing) : 0;
+            const idx = (existing) ? this.storage.indexOf(existing) : 0;
             if (idx < 0)
                 throw new Error("Attempt to insert before a non-existent value");
-            this.by_index.splice(idx, 0, value);
+            this.storage.splice(idx, 0, value);
         }
 
         remove(value)
         {
             const idx = this.by_index.indexOf(value);
             if (idx < 0) return;
-            this.by_index.splice(idx, 1);
+            this.storage.splice(idx, 1);
         }
 
-        push(...args) { this.by_index.push(...args); }
+        push(...args) { this.storage.push(...args); }
+        /* We need to handle changes during iteration so we can't just use the
+        array methods */
+        forEach(callback, thisarg)
+        {
+            let idx = 0;
+            if (!thisarg) thisarg = this;
+            for (const e of this) callback.call(thisarg, e, idx++, this);
+        }
+
+        *entries()
+        {
+            let idx = 0;
+            for (const e of this) yield [idx++, e];
+        }
+
+        *keys()
+        {
+            let idx = 0;
+            for (const _ of this) yield idx++;
+        }
+
+        *values() { yield* this; }
     }
 
     class NamedCollection extends ListCollection
     {
-        by_id = new Map;
-        by_name = new Map;
+        static names = ["id", "name"];
+        static getters = [
+            (e) => e.id,
+            (e) => e.getAttribute("name")
+        ];
 
         constructor(node, cb) { super(node, cb); }
-
-        clear()
+        // Can't have a collision with existing properties because the names
+        // get a prefix unconditionally added
+        handleNames(set, ...args)
         {
-            super.clear();
-            this.by_id.clear();
-            this.by_name.clear();
-        }
-
-        add(element)
-        {
-            super.add(element);
-            this.namedAdd(element);
-        }
-
-        namedAdd(element)
-        {
-            const id = element.id;
-            if (typeof id == "string" && id) this.by_id.set(id, element);
-            const name = element.getAttribute("name");
-            if (typeof name == "string" && name) this.by_name.set(name, element);
+            const getters = this.constructor.getters;
+            const names = this.constructor.names;
+            for (const arg of args)
+                for (let i = 0; i < names.length; ++i) {
+                    const v = getters[i](arg);
+                    if (typeof v === "string" && v) {
+                        const prop = `${names[i]}$${v}`;
+                        if (set) this.storage[prop] = arg;
+                        else delete this.storage[prop];
+                    }
+                }
         }
 
         namedItem(n)
         {
             this.handleChanges();
-            for (const m of [this.by_id, this.by_name]) {
-                const element = m.get(n);
-                if (element) return element;
+            for (const name of this.constructor.names) {
+                const v = this.storage[`${name}$${n}`];
+                if (v) return v;
             }
-
             return null;
         }
 
         insert(value, existing)
         {
             super.insert(value, existing);
-            this.nameAdd(value);
+            this.handleNames(true, value);
         }
 
         remove(value)
         {
             super.remove(value);
-            const id = element.id;
-            if (typeof id == "string" && id) this.by_id.delete(id)
-            const name = element.getAttribute("name");
-            if (typeof name == "string" && name) this.by_name.delete(name);
+            this.handleNames(false, value);
         }
 
         push(...args)
         {
             super.push(...args);
-            for (const arg of args) this.namedAdd(arg);
+            this.handleNames(true, ...args);
         }
     }
 
@@ -4625,34 +4637,16 @@ swdc(Validity);
 
     class NodeList extends ListCollectionHelper
     {
+        forEach(...args) { this[collection].forEach(...args); }
+        static {
+            for (const f of ['entries', 'keys', 'values'])
+                this.prototype[f] = function *()
+                {
+                    yield* this[collection][f](); 
+                };
+        }
+
         constructor(node, cb) { super(node, cb); }
-
-        /* We need to handle changes during iteration so we can't just use the
-        array methods */
-        forEach(callback, thisarg)
-        {
-            let cb, idx = 0;
-            if (thisarg) cb = (e, i) => callback.call(thisarg, e, i, this);
-            else cb = (e, i) => callback(e, i, this);
-            for (const e of this) cb(e,idx++);
-        }
-
-        *entries()
-        {
-            let idx = 0;
-            for (const e of this) yield [idx++, e];
-        }
-
-        *keys()
-        {
-            let idx = 0;
-            for (const _ of this) yield idx++;
-        }
-
-        *values()
-        {
-            for (const e of this) yield e;
-        }
     }
 
     // Have to do all of these to go up the chain of methods
