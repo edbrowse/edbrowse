@@ -4490,7 +4490,6 @@ cause <input> starts out empty.
 swdc(Validity);
 ;( () => {
     const markChanges = collectionSymbol("markChanges");
-    const ignore = collectionSymbol("ignore");
     const collection = collectionSymbol("collection");
 
     class ListCollection
@@ -4500,15 +4499,16 @@ swdc(Validity);
         /*
         - node - the node which owns this collection
         - cb - callback which takes owner as a parameter used to rebuild
-          the collection. */
+          the collection.
+        - filter - a callback used to check if we care about the changes
+          */
         constructor(node, cb, filter = () => true)
         {
             this.owner = node;
             this.callback = cb;
             this.filter = filter;
             // We need to rebuild initially but only on first lookup
-            this.ignore = false;
-            this.changed = true;
+            this.markChanges();
         }
 
         clear() { this.by_index.length = 0; }
@@ -4520,9 +4520,8 @@ swdc(Validity);
 
         markChanges(values)
         {
-            if (this.ignore) return;
-            // When we pass values this should probably go but for now this
-            // allows us to increment in the right direction
+            // No values, assume changed
+            if (!this.owner) return; // not live
             if (!values) {
                 this.changed = true;
                 return;
@@ -4537,7 +4536,7 @@ swdc(Validity);
         // Possibly could be more efficient by not rebuilding from scratch
         handleChanges()
         {
-            if (this.ignore || !this.changed) return;
+            if (!(this.owner && this.changed)) return;
             /* I can't think of a case where the following logic could retrigger a
             rebuild, but I'll clear the flag early in case */
             this.changed = false;
@@ -4549,11 +4548,8 @@ swdc(Validity);
         item(i)
         {
             this.handleChanges();
-            i = Number(i);
-            if (isNaN(i)) return null;
-            const element = this.by_index.at(i);
-            if (!element) return null;
-            return element;
+            // elements are truthy so this works
+            return this.by_index.at(i) || null;
         }
 
         get length()
@@ -4574,6 +4570,23 @@ swdc(Validity);
                 yield element;
             }
         }
+
+        insert(value, existing)
+        {
+            const idx = (existing) ? this.by_index.indexOf(existing) : 0;
+            if (idx < 0)
+                throw new Error("Attempt to insert before a non-existent value");
+            this.by_index.splice(idx, 0, value);
+        }
+
+        remove(value)
+        {
+            const idx = this.by_index.indexOf(value);
+            if (idx < 0) return;
+            this.by_index.splice(idx, 1);
+        }
+
+        push(...args) { this.by_index.push(...args); }
     }
 
     class NamedCollection extends ListCollection
@@ -4593,6 +4606,11 @@ swdc(Validity);
         add(element)
         {
             super.add(element);
+            this.namedAdd(element);
+        }
+
+        namedAdd(element)
+        {
             const id = element.id;
             if (typeof id == "string" && id) this.by_id.set(id, element);
             const name = element.getAttribute("name");
@@ -4609,8 +4627,31 @@ swdc(Validity);
 
             return null;
         }
+
+        insert(value, existing)
+        {
+            super.insert(value, existing);
+            this.nameAdd(value);
+        }
+
+        remove(value)
+        {
+            super.remove(value);
+            const id = element.id;
+            if (typeof id == "string" && id) this.by_id.delete(id)
+            const name = element.getAttribute("name");
+            if (typeof name == "string" && name) this.by_name.delete(name);
+        }
+
+        push(...args)
+        {
+            super.push(...args);
+            for (const arg of args) this.namedAdd(arg);
+        }
     }
 
+    // Here because HTMLCollection doesn't have a forEach or other methods
+    // apparently so avoid confusing gatekeeping code
     class ListCollectionHelper
     {
         static collection$type = ListCollection;
@@ -4629,29 +4670,18 @@ swdc(Validity);
         *[Symbol.iterator]() { for (const v of this[collection]) yield v; }
     }
 
-    class NamedCollectionHelper extends ListCollectionHelper
+    // The actual classes we want
+    class HTMLCollection extends ListCollectionHelper
     {
         static collection$type = NamedCollection;
         constructor(node, cb) { super(node, cb); }
+
         namedItem(i) { return this[collection].namedItem(i); }
     }
 
-    class HTMLCollection extends NamedCollectionHelper
-    {
-        constructor(...args) { super(...args); }
-    }
-
-    // Some node lists are live, most aren't so ignore changes by default
     class NodeList extends ListCollectionHelper
     {
-        constructor(node, cb, ignore=true)
-        {
-            super(node, cb);
-            if (ignore) {
-                this[collection].handleChanges();
-                this[collection].ignore = true;
-            }
-        }
+        constructor(node, cb) { super(node, cb); }
 
         /* We need to handle changes during iteration so we can't just use the
         array methods */
@@ -4686,7 +4716,6 @@ swdc(Validity);
         ListCollection,
         NamedCollection,
         ListCollectionHelper,
-        NamedCollectionHelper,
         HTMLCollection,
         NodeList
     ]) scts(c);
@@ -4730,6 +4759,7 @@ swdc(Validity);
                 get(target, property, receiver)
                 {
                     if (property in target || typeof property == "symbol") return Reflect.get(target, property, receiver);
+                    if (Number(property).toString() !== property) return;
                     let res = target.item(property);
                     return (res === null) ? undefined : res;
                 },
