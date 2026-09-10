@@ -30,6 +30,7 @@ if(cl1.value != "alpha beta alpha") msg += `|bad value ${cl1.value}`
 if(String(cl1) != "alpha beta alpha") msg += "|bad stringifier"
 if(cl1[0] != "alpha" || cl1[1] != "beta") msg += "|bad index access"
 if(cl1.item(1) != "beta" || cl1.item(9) !== null) msg += "|bad item"
+if(cl1.item("1") != "beta" || cl1.item(9) !== null) msg += "|bad item"
 if([...cl1].join("-") != "alpha-beta") msg += "|bad iterator"
 if(Object.keys(cl1).join() != "0,1") msg += "|bad own keys"
 let seen = ""; cl1.forEach((t,i) => seen += i + t);
@@ -86,6 +87,8 @@ if(cl1[0] != "shoe") msg += "|change of class didn't change list";
 if(cl1["0"] != "shoe") msg += "|failed to access by '0'";
 if(cl1.item(0.375) != "shoe") msg += "|item index didn't truncate from float to int";
 if(cl1.item('0') != "shoe") msg += "|item index didn't change from string to int";
+if(cl1.item('blah') != "shoe") msg += "|item index of nonsense string";
+if(cl1.item(atob) != "shoe") msg += "|item index of function";
 if(cl1[0.375]) msg += "|unexpected direct access via a real number";
 if(cl1.length != 1) msg += "|change of class didn't change length";
 if(!cl1.contains("shoe")) msg += "|list doesn't contain shoe";

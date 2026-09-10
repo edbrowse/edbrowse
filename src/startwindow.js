@@ -860,7 +860,10 @@ class DOMTokenList
 
     item(i)
     {
-        i = Math.trunc(+i) || 0;
+        if(i === "0") i = 0;
+        if(typeof i == "string" && /^[1-9][0-9]*$/.test(i)) i = parseInt(i, 10);
+        if(typeof i != "number") i = 0;
+        i = Math.trunc(i);
         return (i >= 0 && i < this.count$2) ? this[i] : null;
     }
 
@@ -962,12 +965,16 @@ class NamedNodeZap
         if(NamedNodeZap.prototype.hasOwnProperty(n)) return true;
         if(/^[1-9][0-9]*$/.test(n)) return true;
         if(n === "length") return true;
+        if(n === "0") return true;
         return false;
     }
 
     item(i)
     {
-        i = Math.trunc(+i) || 0;
+        if(i === "0") i = 0;
+        if(typeof i == "string" && /^[1-9][0-9]*$/.test(i)) i = parseInt(i, 10);
+        if(typeof i != "number") i = 0;
+        i = Math.trunc(i);
         return (i >= 0 && i < this.length) ? this[i] : null;
     }
 
