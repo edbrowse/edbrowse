@@ -332,6 +332,7 @@ I hope I never do, because there is no other way.
 *********************************************************************/
 
 Object.setPrototypeOf(window, Window.prototype);
+window.toString = ()=>"[object Window]";
 
 class Node extends EventTarget
 {

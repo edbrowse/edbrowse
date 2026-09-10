@@ -14,6 +14,8 @@ try {
 msg = "ok"
 b = document.body
 
+if(window != "[object Window]") msg += `| wrong window.toString ${window}`;
+
 frag = document.createDocumentFragment()
 if(frag.ownerDocument != document) msg += "|frag bad owner"
 frag.appendChild(document.createElement("hr"))
