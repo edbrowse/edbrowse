@@ -4537,7 +4537,6 @@ swdc(Validity);
         forEach(callback, thisarg)
         {
             let idx = 0;
-            if (!thisarg) thisarg = this;
             for (const e of this) callback.call(thisarg, e, idx++, this);
         }
 
