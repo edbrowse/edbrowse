@@ -4606,9 +4606,8 @@ swdc(Validity);
         }
     }
 
-    // Here because HTMLCollection doesn't have a forEach or other methods
-    // apparently so avoid confusing gatekeeping code
-    class ListCollectionHelper
+    // The actual classes we want
+    class NodeList
     {
         static collection$type = ListCollection;
 
@@ -4624,40 +4623,38 @@ swdc(Validity);
         item(i) { return this[collection].item(i); }
 
         *[Symbol.iterator]() { for (const v of this[collection]) yield v; }
-    }
 
-    // The actual classes we want
-    class HTMLCollection extends ListCollectionHelper
-    {
-        static collection$type = NamedCollection;
-        constructor(node, cb) { super(node, cb); }
-
-        namedItem(i) { return this[collection].namedItem(i); }
-    }
-
-    class NodeList extends ListCollectionHelper
-    {
         forEach(...args) { this[collection].forEach(...args); }
+
         static {
-            for (const f of ['entries', 'keys', 'values'])
+            for (const f of ['entries', 'keys', 'values']) {
                 this.prototype[f] = function *()
                 {
                     yield* this[collection][f](); 
                 };
+            }
         }
-
-        constructor(node, cb) { super(node, cb); }
     }
+    scts(NodeList);
 
-    // Have to do all of these to go up the chain of methods
-    for (const c of [
-        ListCollection,
-        NamedCollection,
-        ListCollectionHelper,
-        HTMLCollection,
-        NodeList
-    ]) scts(c);
+    class HTMLCollection extends NodeList
+    {
+        static collection$type = NamedCollection;
+        constructor(...args) { super(...args); }
 
+        namedItem(i) { return this[collection].namedItem(i); }
+
+        // Avoid confusing gatekeeping code with non-standard methods
+        static {
+            [
+                'forEach',
+                'entries',
+                'keys',
+                'values'
+            ].forEach((f) => delete this.prototype[f]);
+        }
+    }
+    scts(HTMLCollection);
     /* The other half of the HTMLCollection mechanism as promised. Note that we
     proxy the class here rather than a constructed object so we can proxy the
     constructor as well as everything else.
