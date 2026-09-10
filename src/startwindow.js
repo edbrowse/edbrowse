@@ -71,7 +71,7 @@ if(!window.mw$) {
     this.mw$.structuredClone = () => {};
     this.mw$.attr = {};
     this.mw$.setupClasses = () => {};
-    this.mw$.collectionSymbol = () => {};
+    this.mw$.collection = () => {};
     this.Window = function(){}
     this.CSSStyleDeclaration = function(){}
 }
@@ -267,7 +267,7 @@ for(let f of ["UnsupportedError",
 "mutFixup", "makeSheets", "gebtn",
 "isRooted", "spillup_id", "unlinkIds",
 "ownerIdsScripts", "simpleHtmlEscape", "appendFragment",
-"appendFragment$nm", "insertFragment", "insertFragment$nm", "checkUpward", "collectionSymbol"])
+"appendFragment$nm", "insertFragment", "insertFragment$nm", "checkUpward", "collection"])
     swp(f, mw$[f]);
 for(let f of ["close"])
     swpv(f, mw$[f]);
@@ -450,12 +450,14 @@ class Node extends EventTarget
         }
     }
 
-    querySelectorAll(c,s)
+    querySelectorAll(c, s)
     {
-            return new NodeList(this, (n) => querySelectorAll.call(n,c,s));
+        const nl = new NodeList;
+        collection(nl).push(...querySelectorAll.call(this, c, s));
+        return nl;
     }
 
-    // basic append, without C side efffects.
+    // basic append, without C side effects.
     // This is called from C as we build the tree from html.
     // Thus building the tree is already happening in C;
     // it shouldn't happen twice.
@@ -4433,8 +4435,7 @@ cause <input> starts out empty.
 }
 swdc(Validity);
 ;( () => {
-    const markChanges = collectionSymbol("markChanges");
-    const collection = collectionSymbol("collection");
+    const collection = Symbol("collection");
 
     class ListCollection
     {
@@ -4610,13 +4611,11 @@ swdc(Validity);
     class NodeList
     {
         static collection$type = ListCollection;
-
+        static collection(obj) { return obj[collection]; }
         constructor(node, cb)
         {
             this[collection] = new this.constructor.collection$type(node, cb);
         }
-
-        [markChanges](values) { this[collection].markChanges(values) }
 
         get length() { return this[collection].length; }
 

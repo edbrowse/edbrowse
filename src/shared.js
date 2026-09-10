@@ -423,13 +423,14 @@ class Eb$GetElementsCache
     }
 }
 
-this.collectionSymbol = (s) => Symbol.for(`eb$collection$${s}`);
+// saves typing
+this.collection = (c) => c.constructor.collection(c);
 function markNodeCollections(n)
 {
     const cache = n.getElements$$cache;
     if (!cache) return; // nothing here
     for (const c of cache.collections())
-        c[collectionSymbol("markChanges")]();
+        collection(c).markChanges();
 }
 
 function markUpwardCollections(t)
