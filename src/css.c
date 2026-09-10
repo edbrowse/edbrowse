@@ -2808,44 +2808,6 @@ if(!t) {
             continue;
         }
 
-// not sure we can do this t->class check reliably.
-// An inline script could set or change the class.
-        if (mod->isclass
-            && (bulkmatch || (gcsmatch && a->combin == ','))) {
-            char *v = t->class;
-            char *u = p + 8;
-            int l = strlen(u);
-            char *q;
-            if (!v)
-                v = emptyString;
-            while ((q = strstr(v, u))) {
-                v += l;
-                if (q > t->class && !isspaceByte(q[-1]))
-                    continue;
-                if (q[l] && !isspaceByte(q[l]))
-                    continue;
-                goto next_mod;
-            }
-            return false;
-        }
-
-// not sure we can do this t->id check reliably.
-// An inline script could set or change the id.
-        if (mod->isid
-            && (bulkmatch || (gcsmatch && a->combin == ','))) {
-            char *v = t->id;
-            if (!v)
-                v = emptyString;
-            if (stringEqual(v, p + 4))
-                goto next_mod;
-            return false;
-        }
-
-// for bulkmatch we use the attributes on t,
-// not js, C is faster.
-// Except we can't, because scripts can run inline even as the page is loading,
-// and change the attributes. So just dip into js and be done with it.
-
         if (c == '[') {
             int l = 0;
             char cutc = 0;
