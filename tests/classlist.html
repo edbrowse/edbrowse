@@ -166,6 +166,7 @@ m.removeNamedItem("j");
 if(m.j) msg += "|m.j still defined";
 if(!m["K@"]) msg += "|m.K@ not defined after j remove";
 if(m.length != 3) msg += "|length not 3 after j removed";
+if(m[3] || m[4]) msg += "|didn't remove indexes 3 and 4";
 a00 = make_attr("empty");
 a01 = make_attr("null", null);
 a02 = make_attr("atob", atob);
