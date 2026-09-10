@@ -1352,6 +1352,14 @@ function spillup_id(w, tag, name, set)
             return;
         }
         if (c != tag) {
+/* here we have another tag with the same id, or so it appears.
+This is very unlikely. People don't do this.
+We're told not to do it in the documentation.
+If it really is another tag with the same id, we create a collection,
+there is a procedure for that, but more likely it's a direct assignment.
+Somebody set this variable by hand and it just happens to be an Element.
+Here's some extra insurance. */
+            if(c.id != name) return;
             const col = new w.HTMLCollection;
             collection(col).push(c, tag);
             w[name] = col;
