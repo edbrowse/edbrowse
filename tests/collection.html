@@ -35,6 +35,9 @@ b.appendChild(q3);
 // this q1 should not displace existing q1, because id has precedence over name
 if(i.q1 != qi) msg += "|name q1 displaced id q1";
 if(i.item(2) != q2) msg += "|item index mismatch";
+if(i.item("2") != q2) msg += "|string int convert";
+if(i.item("blah") != q0) msg += "|nonsense string";
+if(i.item(atob) != q0) msg += "|function as index";
 if(i.item(7) !== null) msg += "|item should be null";
 if(i[7] !== undefined) msg += "|item should be undefined";
 if(i.namedItem("q1") != qi) msg += `|named item ${i.namedItem("q1")}`
