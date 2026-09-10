@@ -4491,8 +4491,9 @@ swdc(Validity);
         item(i)
         {
             this.handleChanges();
+            i = itemArgToIndex(i);
             // elements are truthy so this works
-            return this.storage.at(i) || null;
+            return (i >= 0 && this.storage[i]) || null;
         }
 
         get length()
@@ -4683,7 +4684,7 @@ swdc(Validity);
                     else
                         res = target.namedItem(property);
 
-                    return (res === null) ? undefined : res;
+                    return res || undefined;
                 },
             })
         }
@@ -4698,7 +4699,7 @@ swdc(Validity);
                     if (property in target || typeof property == "symbol") return Reflect.get(target, property, receiver);
                     if (Number(property).toString() !== property) return;
                     let res = target.item(property);
-                    return (res === null) ? undefined : res;
+                    return res || undefined;
                 },
             })
         }
