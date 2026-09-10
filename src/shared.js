@@ -1324,54 +1324,52 @@ function spillup_id(w, tag, name, set)
 {
     if (typeof name != "string") return;
     if (w.reserved$words[name]) return;
-    let c = w[name];
+    const c = w[name];
 
     // they could say var fred = 7; we have to leave that alone
-    if(c !== undefined) {
-        if(c === null) return;
-        if(typeof c != "object") return;
-        if(Array.isArray(c)) {
-            if(c.length == 0) return;
-            // if anything in the array isn't Element, leave it alone
-            for(const d of c)
-                if(typeof d != "object" || !( d instanceof w.Element)) return;
-        } else {
-        if(!(c instanceof w.Element)) return;
+    if (!c && c !== undefined) return; // something falsey (0, null, "" etc)
+    if (c) {
+        if (c instanceof w.HTMLCollection) {
+            if (!c.length) return;
+            // if anything in the collection isn't Element, leave it alone
+            for (const d of c)
+                if (!(d instanceof w.Element)) return;
         }
-    }
-    // at this point c is undefined or it is a tag or many tags
 
-    if(set) {
-        if(!c) { // the easy case and the high runner case
+        else if (!(c instanceof w.Element)) return;
+    }
+
+    // at this point c is undefined or it is a tag or many tags
+    if (set) {
+        if (!c) { // the easy case and the high runner case
             w[name] = tag;
             return;
         }
         // id is suppose to be unique. If it's not, chrome puts them in
-        // an HTMLCollection. I'm using an array for now.
-        if(Array.isArray(c)) {
-            if(!c.includes(tag)) c.push(tag);
+        // an HTMLCollection.
+        if (c instanceof w.HTMLCollection) {
+            if (!collection(c).includes(tag)) collection(c).push(tag);
             return;
         }
-        if(c != tag) w[name] = [c, tag];
+        if (c != tag) {
+            const col = new w.HTMLCollection;
+            collection(col).push(c, tag);
+            w[name] = col;
+        }
         return;
     }
-
     // set is false; we are deleting this id,
     // or perhaps removing this node from the tree. Same effect.
-    if(!c) return; // it wasn't there
-    if(Array.isArray(c)) {
-        let i;
-        for(i = 0; i < c.length; ++i)
-            if(c[i] === tag) break;
-        if(i == c.length) return; // it wasn't there.
-        c.splice(i, 1);
-        if(c.length == 1) w[name] = c[0];
+    if (!c) return; // it wasn't there
+    if (c instanceof w.HTMLCollection) {
+        collection(c).remove(tag);
+        if (c.length == 1) w[name] = c[0];
         return;
     }
-    if(c == tag) delete w[name];
+    if (c == tag) delete w[name];
 }
 
-// unlink ids from window and the id hash when a subtree is removed
+// unlink ids from window when a subtree is removed
 function unlinkIds(w, top)
 {
     let list = gebtn(top, "*", true, false);
