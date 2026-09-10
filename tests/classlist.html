@@ -166,6 +166,15 @@ m.removeNamedItem("j");
 if(m.j) msg += "|m.j still defined";
 if(!m["K@"]) msg += "|m.K@ not defined after j remove";
 if(m.length != 3) msg += "|length not 3 after j removed";
+a00 = make_attr("empty");
+a01 = make_attr("null", null);
+a02 = make_attr("atob", atob);
+m.setNamedItem(a00);
+m.setNamedItem(a01);
+m.setNamedItem(a02);
+if(m.empty.value !== "undefined") msg += "|missing value isn't undefined";
+if(m.null.value !== "null") msg += "|null value isn't null";
+if(m.atob.value.substr(0, 13) !== "function atob") msg += "|atob value isn't function atob";
 if(show.attributes != "[object NamedNodeMap]") msg += "|NamedNodeMap doesn't stringify properly";
 
 show.innerHTML = msg;

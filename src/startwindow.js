@@ -993,8 +993,11 @@ class NamedNodeMap
     {
         const n = a.name;
         const r = NamedNodeMap.reserved(n);
-        if(a.value == undefined) a.value = "";
-        if(typeof a.value != "string") a.value = a.value.toString();
+        if(a.value === undefined) a.value = "undefined";
+        if(a.value === null) a.value = "null";
+        // force a conversion to string, even for 7 or true,
+        // that may not have a toString method
+        a.value += "";
         // have to replace with this attr, which means we have to know
         // the index, which means we have to search no matter what.
         for(let i = 0; i < this.length; ++i)
