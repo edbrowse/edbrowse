@@ -166,6 +166,7 @@ m.removeNamedItem("j");
 if(m.j) msg += "|m.j still defined";
 if(!m["K@"]) msg += "|m.K@ not defined after j remove";
 if(m.length != 3) msg += "|length not 3 after j removed";
+if(show.attributes != "[object NamedNodeMap]") msg += "|NamedNodeMap doesn't stringify properly";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
