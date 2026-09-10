@@ -783,13 +783,16 @@ this.standard_hashchange_classes = ["HTMLBodyElement", "SVGElement"];
 // helper function to derive an index from an item argument.
 // Return -1 if a valid index cannot be derived.
 // However, by testing, all sorts of nonsense arguments revert to 0.
+// second argument is limit on i, and it is optional.
 function itemArgToIndex(i, limit)
 {
     if(i === "0") i = 0;
     if(typeof i == "string" && /^[1-9][0-9]*$/.test(i)) i = parseInt(i, 10);
     if(typeof i != "number") i = 0;
     i = Math.trunc(i);
-    return (i >= 0 && i < limit) ? i : -1;
+    if(i < 0) return -1;
+    if(typeof limit == "number" && i >= limit) return -1;
+    return i;
 }
 
 /*********************************************************************
@@ -3430,7 +3433,7 @@ class CSSStyleDeclaration extends HTMLElement
 
     item(n)
     {
-        if(typeof n !== "number") return "";
+        n = itemArgToIndex(n);
         let cnt = 0;
         for(let i in this) {
             if (!this.hasOwnProperty(i)) continue;

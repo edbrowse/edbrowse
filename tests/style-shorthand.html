@@ -28,20 +28,25 @@ font-family:  monospace
 "></div> 
 <script> 
 try {
-show = document.getElementById("show")
 let h = "";
 for (let i = 1; i <= 2; i++) {
 const id = "div" + i;
 const myDiv = document.getElementById(id); 
 const divStyle = myDiv.style; 
+window.ds = divStyle;
 const len = divStyle.length;
 h += `${id}:${len}|`
 for (let i = 0; i < len; i++)
 h += divStyle.item(i) + "|";
 }
+
 const correct = "div1:34|padding-top|padding-right|padding-bottom|padding-left|scroll-padding-top|scroll-padding-right|scroll-padding-bottom|scroll-padding-left|border-top-color|border-right-color|border-bottom-color|border-left-color|border-top-left-radius|border-top-right-radius|border-bottom-right-radius|border-bottom-left-radius|border-top-style|border-right-style|border-bottom-style|border-left-style|border-top-width|border-right-width|border-bottom-width|border-left-width|scroll-margin-top|scroll-margin-right|scroll-margin-bottom|scroll-margin-left|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|div2:27|padding-top|padding-right|padding-bottom|padding-left|border-top-width|border-right-width|border-bottom-width|border-left-width|border-top-style|border-right-style|border-bottom-style|border-left-style|border-top-color|border-right-color|border-bottom-color|border-left-color|border-image-source|border-image-slice|border-image-width|border-image-outset|border-image-repeat|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|";
-if(h == correct) show.innerHTML = "ok";
-else show.innerHTML = "mismatch";
+let msg;
+if(ds.item(1.3) != ds.item(1) || ds.item("blah") != ds.item(0) || ds.item(atob) != ds.item(0) || ds.item("7") != ds.item(7))
+msg = "bad style.item conversions";
+else if(h == correct) msg = "ok"
+else msg = "mismatch";
+show.innerHTML = msg;
 document.getElementById("items").innerHTML = h.replace(/\|/g, "<br>");
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>
