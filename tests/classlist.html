@@ -111,7 +111,7 @@ if(cl1.length != 1) msg += "|multiple socks";
 
 // namedNodeMap. Some of this is tested intrinsically when we access Attributes.
 // In fact chrome won't let me create the map on its own.
-if(isedbrowse) m = new NamedNodeZap;
+if(isedbrowse) m = new NamedNodeMap;
 else mdiv = document.createElement("div"), m = mdiv.attributes;
 function make_attr(n, v) {
 let a;

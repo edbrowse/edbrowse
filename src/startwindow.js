@@ -955,14 +955,13 @@ class Attr
 }
 swdc(Attr);
 
-// change to NamedNodeMap when ready to use
-class NamedNodeZap
+class NamedNodeMap
 {
     constructor() { this.length = 0; }
 
     static reserved(n)
     {
-        if(NamedNodeZap.prototype.hasOwnProperty(n)) return true;
+        if(NamedNodeMap.prototype.hasOwnProperty(n)) return true;
         if(/^[1-9][0-9]*$/.test(n)) return true;
         if(n === "length") return true;
         if(n === "0") return true;
@@ -981,7 +980,7 @@ class NamedNodeZap
     getNamedItem(n)
     {
         if(typeof n != "string") n = n.toString();
-        if(!NamedNodeZap.reserved(n)) {
+        if(!NamedNodeMap.reserved(n)) {
             return this[n] ? this[n] : null;
         }
         // a reserved word, like length; have to search
@@ -993,7 +992,7 @@ class NamedNodeZap
     setNamedItem(a)
     {
         const n = a.name;
-        const r = NamedNodeZap.reserved(n);
+        const r = NamedNodeMap.reserved(n);
         if(a.value == undefined) a.value = "";
         if(typeof a.value != "string") a.value = a.value.toString();
         // have to replace with this attr, which means we have to know
@@ -1027,13 +1026,13 @@ class NamedNodeZap
             return null;
         }
         delete this[--this.length];
-        if(!NamedNodeZap.reserved(n)) delete this[n];
+        if(!NamedNodeMap.reserved(n)) delete this[n];
         return v;
     }
 
         // NS versions of the last three functions are not yet implemented.
 }
-swdc(NamedNodeZap);
+swdc(NamedNodeMap);
 
 class Element extends Node
 {
@@ -1174,23 +1173,12 @@ We set up for HR.onsubmit, for example; other browsers might not. */
 
     getAttribute(name)
         {
-        let a;
         if(!(this.eb$xml || this instanceof SVGElement))
             name = name.toLowerCase();
         if(!this.attributes$2) return null;
-        if(name === "length") {
-            a = null;
-            for(let i=0; i<this.attributes.length; ++i)
-                if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
-        } else a = this.attributes[name]
-        if(!a) return null;
-        let v = a.value;
-        let t = typeof v;
-        if(t == "undefined" || v == null) return null;
-        // I stringify URL objects, should we do that to other objects?
-        if(t == 'object' && (v.dom$class == "URL" || v instanceof URL)) return v.toString();
-        // number, boolean, object; it goes back as it was put in.
-        return v;
+        let a = this.attributes.getNamedItem(name);
+        // value should be stringified when it went into the setAttribute system
+        return a ? a.value : null;
     }
 
     hasAttribute(name) { return this.getAttribute(name) !== null; }
@@ -1214,33 +1202,19 @@ We set up for HR.onsubmit, for example; other browsers might not. */
 
     setAttribute(name, v)
     {
-        let a;
         if(!Element.attrNameValid(name)) return;
         if(!(this.eb$xml || this instanceof SVGElement)) name = name.toLowerCase();
         // special code for style
-        if(name == "style" && this.style && this.style.dom$class == "CSSStyleDeclaration") {
+        if(name == "style" && this.style && this.style.dom$class == "CSSStyleDeclaration")
             this.style.cssText = v;
-        }
         if(Element.attrNameImplicit(this, name)) return;
-        let oldv = null;
-        if(name === "length") {
-            a = null
-            for(let i=0; i<this.attributes.length; ++i)
-                if(this.attributes[i].name == name) { a = this.attributes[i]; break; }
-        } else a = this.attributes[name]
-        if(!a) {
-            a = new Attr();
-            a.name = name;
-            this.attributes.push(a);
-            if(name !== "length") this.attributes[name] = a;
-        } else {
-            oldv = a.value;
-        }
-        a.value = v;
+        const a = new Attr;
+        a.name = name, a.value = v;
         a.ownerDocument = this.ownerDocument;
-        if(name.substr(0,5) == "data-") {
+        let old = this.attributes.setNamedItem(a);
+        if(old) old = old.value;
+        if(name.substr(0,5) == "data-")
             this.dataset[dataCamel(name)] = v;
-        }
         // side effects of id, name, class
         // no need for collection side effects if parsing - we will be marking
         // all collections as out of date after the parse is finished.
@@ -1254,7 +1228,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
         if(name === "id") {
             const w = isRooted(this);
             if(w) {
-                spillup_id(w, this, oldv, false);
+                spillup_id(w, this, old, false);
                 spillup_id(w, this, v, true);
             }
         }
@@ -1293,7 +1267,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
         so we only need see the attachment. On the other hand, if a
         running script calls setAttribute, then we want to observe the change. */
         if(!eb$push$attributes)
-            mutFixup(this, 1, name, oldv);
+            mutFixup(this, 1, name, old);
     }
 
     setAttributeNS(space, name, v)
@@ -1321,23 +1295,8 @@ We set up for HR.onsubmit, for example; other browsers might not. */
         if(Element.spilldown(this, name)) this[name] = "";
         if(Element.spilldownResolve(this, name)) delete this[name];
         if(Element.spilldownResolveURL(this, name)) delete this[name];
-        let a = null, i, found = false;
-        if(name === "length") {
-            for(i=0; i<this.attributes.length; ++i)
-                if(this.attributes[i].name == name) {
-                    a = this.attributes[i];
-                    break;
-                }
-        } else a = this.attributes[name];
-        if(!a) return;
-        // Have to roll our own splice.
-        for(i=0; i<this.attributes.length-1; ++i) {
-            if(!found && this.attributes[i] == a) found = true;
-            if(found) this.attributes[i] = this.attributes[i+1];
-        }
-        this.attributes.length = i;
-        delete this.attributes[i];
-        if(name !== "length") delete this.attributes[name]
+        let old = this.attributes$2.removeNamedItem(name);
+        if(!old) return; // wasn't there
         if(name == "id" || name == "name" || name == "class")
             markUpwardCollections(this);
         if(name == "name" &&
@@ -1345,11 +1304,11 @@ We set up for HR.onsubmit, for example; other browsers might not. */
             formReindex(this.form);
         if(name === "id") {
             const w = isRooted(this);
-            if(w) spillup_id(w, this, a.value, false);
+            if(w) spillup_id(w, this, old.value, false);
         }
         if(name === "class")
             this.classList.mirror$2(this.classList.tokens$2());
-        mutFixup(this, 1, name, a.value);
+        mutFixup(this, 1, name, old.value);
     }
 
     removeAttributeNS(space, name)
@@ -1363,15 +1322,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
     {
         if(!this.attributes$2) return null;
         if(!(this.eb$xml || this instanceof SVGElement)) name = name.toLowerCase();
-        let a = null;
-        if(name === "length") {
-            for(let i=0; i<this.attributes.length; ++i)
-                if(this.attributes[i].name == name) {
-                    a = this.attributes[i];
-                    break;
-                }
-        } else a = this.attributes[name];
-        return a ? a : null;
+        return this.attributes$2.getNamedItem(name);
     }
 
     // b replaces a if a is present
@@ -1379,21 +1330,12 @@ We set up for HR.onsubmit, for example; other browsers might not. */
     {
         if(typeof b != "object" || typeof b.name != "string")
             return null;
-        let     a = null, name = b.name;
-        if(name === "length") {
-            for(let i=0; i<this.attributes.length; ++i)
-                if(this.attributes[i].name == name) {
-                    a = this.attributes[i];
-                    break;
-                }
-        } else a = this.attributes[name];
-        if(!a) a = null;
-        else this.removeAttribute(name);
-        this.attributes.push(b);
-        if(name !== "length") this.attributes[name] = b;
-        // there are a lot of side effects I don't want to repeat here,
-        // like dataset and mutFixup and so on, so just invoke:
-        this.setAttribute(name, b.value)
+        const name = b.name;
+        // setNamedItem would do all the work for us, but we wouldn't
+        // get all the side effects, like id and classList and mutfixup
+        let a = this.attributes.getNamedItem(name);
+        if(a) this.removeAttribute(name);
+        this.setAttribute(name, b.value);
         return a
     }
 
@@ -1401,17 +1343,8 @@ We set up for HR.onsubmit, for example; other browsers might not. */
     {
         if(typeof b != "object" || typeof b.name != "string")
             return null;
-        let     name = b.name;
-        if(name === "length") {
-            let i;
-            for(i=0; i<this.attributes.length; ++i)
-                if(this.attributes[i] == b) break;
-            if(i == this.attributes.length) return null;
-        } else {
-            if(this.attributes[name] != b) return null;
-        }
-        this.removeAttribute(b.name)
-        return b
+        this.removeAttribute(b.name);
+        return b;
     }
 
 // the all important id property
@@ -5199,16 +5132,6 @@ swpv("postMessage", function (message,target_origin, transfer) {
 })
 swp("onmessage$$running", mw$.onmessage$$running)
 
-// this is sort of an array and sort of not.
-// For one thing, you can call setAttribute("length", "snork"), so I can't use length.
-swp("NamedNodeMap", function() { this.length = 0})
-swpp("NamedNodeMap", null)
-NamedNodeMap.prototype.push = function(s) { this[this.length++] = s; }
-NamedNodeMap.prototype.item = function(n) { return this[n]; }
-NamedNodeMap.prototype.getNamedItem = function(name) { return this[name.toLowerCase()]; }
-NamedNodeMap.prototype.setNamedItem = function(name, v) { this.owner.setAttribute(name, v);}
-NamedNodeMap.prototype.removeNamedItem = function(name) { this.owner.removeAttribute(name);}
-
 swp("MediaQueryList", function() {
     this.matches = false;
     this.media = "";
@@ -5342,7 +5265,6 @@ swpc("$jt$sn", 0)
 
 // Local storage, this is per window.
 // Then there's sessionStorage, and honestly I don't understand the difference.
-// This is NamedNodeMap, to take advantage of preexisting methods.
 swp("localStorage", {})
 swp("sessionStorage", {})
 ; (function() {
@@ -5351,7 +5273,7 @@ for(let cn of cnlist) {
 odp( cn, "attributes", { get: function(){ if(!this.attributes$2) {
 Object.defineProperty(this, "attributes$2", {value:new NamedNodeMap})
 this.attributes$2.owner = this
-this.attributes$2.ownerDocument = my$doc()
+this.attributes$2.ownerDocument = document
 }
 return this.attributes$2}})
 // tell me we don't have to do NS versions of all these.
