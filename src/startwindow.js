@@ -777,6 +777,17 @@ this.        standard_events = ["onload", "onunload", "onclick", "onchange", "on
 this.standard_event_classes = ["Element", "Document"];
 this.standard_hashchange_classes = ["HTMLBodyElement", "SVGElement"];
 
+// helper function to derive an index from an item argument.
+// Return -1 if a valid index cannot be derived.
+// However, by testing, all sorts of nonsense arguments revert to 0.
+function itemArgToIndex(i, limit)
+{
+    if(i === "0") i = 0;
+    if(typeof i == "string" && /^[1-9][0-9]*$/.test(i)) i = parseInt(i, 10);
+    if(typeof i != "number") i = 0;
+    i = Math.trunc(i);
+    return (i >= 0 && i < limit) ? i : -1;
+}
 
 /*********************************************************************
 DOMTokenList, the class behind element.classList.
@@ -860,11 +871,8 @@ class DOMTokenList
 
     item(i)
     {
-        if(i === "0") i = 0;
-        if(typeof i == "string" && /^[1-9][0-9]*$/.test(i)) i = parseInt(i, 10);
-        if(typeof i != "number") i = 0;
-        i = Math.trunc(i);
-        return (i >= 0 && i < this.count$2) ? this[i] : null;
+        i = itemArgToIndex(i, this.count$2);
+        return i >= 0 ? this[i] : null;
     }
 
     contains(t) { return this.tokens$2().includes(t + ""); }
@@ -970,11 +978,8 @@ class NamedNodeMap
 
     item(i)
     {
-        if(i === "0") i = 0;
-        if(typeof i == "string" && /^[1-9][0-9]*$/.test(i)) i = parseInt(i, 10);
-        if(typeof i != "number") i = 0;
-        i = Math.trunc(i);
-        return (i >= 0 && i < this.length) ? this[i] : null;
+        i = itemArgToIndex(i, this.length);
+        return i >= 0 ? this[i] : null;
     }
 
     getNamedItem(n)
