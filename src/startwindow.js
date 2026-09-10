@@ -4461,7 +4461,7 @@ swdc(Validity);
 
         // no one can have a ref to our backing storage
         clear() { this.storage = []; }
-
+        includes(value) { return this.storage.includes(value); }
         markChanges(values)
         {
             // No values, assume changed
@@ -4525,7 +4525,7 @@ swdc(Validity);
 
         remove(value)
         {
-            const idx = this.by_index.indexOf(value);
+            const idx = this.storage.indexOf(value);
             if (idx < 0) return;
             this.storage.splice(idx, 1);
         }
