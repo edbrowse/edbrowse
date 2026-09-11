@@ -8,3 +8,25 @@ font-family: Arial;
 font-size: 120%;
 }
 
+h1 {
+text-align: center;
+font-size: 3.0em;
+color: royalblue;
+}
+
+h2 {
+text-align: center;
+font-size: 2.0em;
+color: purple;
+}
+
+p.cen {
+text-align: center;
+font-size: 1.5em;
+}
+
+hr {
+border: 3px solid black;
+}
+
+

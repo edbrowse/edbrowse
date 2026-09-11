@@ -1,10 +1,10 @@
 <head><script> on_css_load = false; </script>
 <title>Order of CSS properties</title>
 <meta charset="UTF-8">
-<LINK href="sample.css" rel=stylesheet type=text/css onload="on_css_load = true">
 <style>
 body { padding-top: 5px; }
 </style>
+<link href="sample.css" rel=stylesheet type=text/css onload="on_css_load = true">
 </head>
 <body>
 <p id=show>start</p>
@@ -33,6 +33,7 @@ try {
 msg = "ok";
 h = "";
 b = document.body;
+isedbrowse = navigator.userAgent.substr(0, 8) == "edbrowse";
 
 for (let i = 1; i <= 2; i++) {
 const id = "div" + i;
@@ -56,6 +57,10 @@ if(b.style.color !== "") msg += `|bad sync default color ${b.style.color}`;
 if(div1.style.paddingTop !== "10px") msg += `|bad html set padding ${b.style.paddingTop}`;
 b.style.display = "block";
 if(b.style.display !== "block") msg += `|bad direct set display ${b.style.display}`;
+// css files loaded asynchronously in chrome, so the style sheets won't be here yet
+if(!isedbrowse)
+if(document.styleSheets.length != 2) msg += `|bad sync styleSheets count ${document.styleSheets.length}`;
+
 s1 = getComputedStyle(b);
 // we already saw the <style> tag so this should work synchronously
 if(s1.paddingTop !== "5px") msg += `|bad s1 padding ${s1.paddingTop}`;
@@ -67,7 +72,17 @@ if(s1.display !== "block") msg += `|bad s1 display ${s1.display}`;
 // css always loads asynchronously, we have no choice about that.
 // So to test anything from sample.css requires a short timeout.
 setTimeout(()=>{
+try {
 if(!on_css_load) msg += "|css didn't load";
+if(document.styleSheets.length != 2) msg += `| bad style sheets length ${document.styleSheets.length}`;
+sr1 = document.styleSheets[0].cssRules;
+if(sr1.length != 1) msg += `|first sheet has ${sr1.length} rules`;
+// edbrowse doesn't always have the same whitespace as chrome
+if(!sr1[0].cssText.match(/^body { *padding-top: *5px; *}$/)) msg += `|bad div rule ${sr1[0].cssText}`;
+/* can't access second sheet unless everything is on a website of the same domain
+sr2 = document.styleSheets[1].cssRules;
+if(sr2.length != 5) msg += `|second sheet has ${sr2.length} rules`;
+*/
 if(b.style.paddingTop !== "") msg += `|bad timeout padding ${b.style.paddingTop}`;
 if(b.style.color !== "") msg += `|bad timeout color ${b.style.color}`;
 if(b.style.display !== "block") msg += `|bad timeout display ${b.style.display}`;
@@ -77,7 +92,9 @@ if(s2.paddingTop !== "5px") msg += `|bad s2 padding ${s2.paddingTop}`;
 // this one from css doesn't work in chrome, don't know why
 // if(s2.color !== "rgb(255,0,0)") msg += `|bad s2 color ${s2.color}`;
 show.innerHTML = msg;
+} catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 }, 300);
+
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>
 </body>
