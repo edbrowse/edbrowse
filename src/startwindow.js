@@ -5875,7 +5875,7 @@ swp("eb$qs$start", function() {
     // html parsed, rebuild the HTMLCollections under document
     markAllCollections();
     // now gather the css rules for inject before after
-    mw$.cssGather(true);
+    mw$.cssGather();
     mw$.frames$rebuild(window);
 })
 swp("frames$rebuild", function() {mw$.frames$rebuild(window);})

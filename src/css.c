@@ -1206,8 +1206,7 @@ extract:
 			a[l] = 0;
 			return a;
 		}
-		if (which == '0')
-			goto extract;
+		if (which == '0') goto extract;
 	}
 // we shouldn't be here
 	return emptyString;
@@ -2441,58 +2440,53 @@ Frame *frameFromWindow(int gsn)
 // The selection string (start) must be allocated - css will use it in place,
 // separating it into all its descriptors.
 // cssFree() will free it.
-void cssDocLoad(int frameNumber, char *start, bool pageload)
+void cssDocLoad(int frameNumber, char *start)
 {
-	Frame *save_cf = cf;
-	struct cssmaster *cm;
-	bool recompile = false;
-	Frame *new_f = frameFromWindow(frameNumber);
+    Frame *save_cf = cf;
+    struct cssmaster *cm;
+    Frame *new_f = frameFromWindow(frameNumber);
 // no clue what to do if new_f is null, should never happen
-	if(new_f) cf = new_f;
-	cm = cf->cssmaster;
-	if (!cm) {
-		cf->cssmaster = cm = allocZeroMem(sizeof(struct cssmaster));
-		readShortCache(cm);
-	}
+    if(new_f) cf = new_f;
+    cm = cf->cssmaster;
+    if (!cm) {
+        cf->cssmaster = cm = allocZeroMem(sizeof(struct cssmaster));
+        readShortCache(cm);
+    }
 // This could be run again and again, if the style nodes change.
-	if (cm->descriptors) {
-		debugPrint(3, "free and recompile css descriptors");
-		cssPiecesFree(cm->descriptors);
-		recompile = true;
-	}
-	if(pageload)
-		loadstring = initString(&loadstring_l);
-	cm->descriptors = cssPieces(start);
-	if(pageload) {
-		run_function_onestring_win(cf, "makeSheets", loadstring);
-		nzFree0(loadstring);
-	}
-	if (recompile)
-		debugPrint(3, "css complete");
-	if (!cm->descriptors)
-		goto done;
-	if (debugCSS) {
-		FILE *f = fopen(cssDebugFile, "ae");
-		if (f) {
-			fprintf(f, "%s end\n", errorMessage[CSS_ERROR_DELIM]);
-			fclose(f);
-		}
-	}
+    if (cm->descriptors) {
+        debugPrint(3, "free css descriptors");
+        cssPiecesFree(cm->descriptors);
+    }
+    debugPrint(3, "compile css descriptors");
+    loadstring = initString(&loadstring_l);
+    cm->descriptors = cssPieces(start);
+    run_function_onestring_win(cf, "makeSheets", loadstring);
+    nzFree0(loadstring);
+    debugPrint(3, "css complete");
+    if (!cm->descriptors) goto done;
 
-	if (!pageload)
-		goto done;
+    if (debugCSS) {
+        FILE *f = fopen(cssDebugFile, "ae");
+        if (f) {
+            fprintf(f, "%s end\n", errorMessage[CSS_ERROR_DELIM]);
+            fclose(f);
+        }
+    }
 
-	cssStats();
+    cssStats();
 
-	build_doclist(0);
-	hashBuild();
-	hashPrint();
-	cssEverybody();
-	hashFree();
-	nzFree(doclist);
+    // rescan, looking for before after text.
+    // This use to do a lot more, when I didn't know what I was doing,
+    // now it's just :before :after and I'm not sure it's even worth it.
+    build_doclist(0);
+    hashBuild();
+    hashPrint();
+    cssEverybody();
+    hashFree();
+    nzFree(doclist);
 
 done:
-	cf = save_cf;
+    cf = save_cf;
 }
 
 static void chainFree(struct asel *asel)
@@ -2994,8 +2988,7 @@ if(!t) {
             continue;
 
         if (!strncmp(p, ":lang(", 6)) {
-            if (languageSpecial(t, p + 6))
-                goto next_mod;
+            if (languageSpecial(t, p + 6)) goto next_mod;
             return false;
         }
 
@@ -3022,16 +3015,14 @@ if(!t) {
             s = p;
             if (*s == '-')
                 ++s;
-            if (!*s)
-                goto nth_bad;
+            if (!*s) goto nth_bad;
             if (isdigitByte(*s))
                 d = strtol(s, &s, 10), d_present = true;
             if (!*s) {
                 constant = (*p == '-' ? -d : d);
                 goto nth_good;
             }
-            if (*s != 'n')
-                goto nth_bad;
+            if (*s != 'n') goto nth_bad;
             n_present = true;
             if (d_present)
                 coef = (*p == '-' ? -d : d);
@@ -3039,20 +3030,14 @@ if(!t) {
                 coef = (*p == '-' ? -1 : 1);
             ++s;
             constant = 0;
-            if (!*s)
-                goto nth_good;
-            if (*s != '+' && *s != '-')
-                goto nth_bad;
-            if (*s == '+')
-                ++s;
+            if (!*s) goto nth_good;
+            if (*s != '+' && *s != '-') goto nth_bad;
+            if (*s == '+') ++s;
             constant = 1;
-            if (*s == '-')
-                constant = -1, ++s;
-            if (!isdigitByte(*s))
-                goto nth_bad;
+            if (*s == '-') constant = -1, ++s;
+            if (!isdigitByte(*s)) goto nth_bad;
             d = strtol(s, &s, 10);
-            if (*s)
-                goto nth_bad;
+            if (*s) goto nth_bad;
             constant *= d;
 
 nth_good:
@@ -3114,8 +3099,7 @@ nth_bad:
             if (p[1] == 'o')
                 rc = (ns == 1 && sibs[0].myself);
             free(sibs);
-            if (rc)
-                goto next_mod;
+            if (rc) goto next_mod;
             return false;
         }
 
@@ -3137,12 +3121,10 @@ Meantime, this code manages :root up the chain, as in :root>div,
 all the div sections just below the current node.
 *********************************************************************/
             if (!rootnode) {
-                if (t->action == TAGACT_HTML)
-                    goto next_mod;
+                if (t->action == TAGACT_HTML) goto next_mod;
                 return false;
             }
-            if (t == rootnode)
-                goto next_mod;
+            if (t == rootnode) goto next_mod;
             return false;
         }
 
@@ -3166,8 +3148,7 @@ all the div sections just below the current node.
                 }
             }
             nzFree(sibs);
-            if (rc)
-                goto next_mod;
+            if (rc) goto next_mod;
             return false;
         }
 
@@ -3178,8 +3159,7 @@ all the div sections just below the current node.
                 if (p[1] == 'e')
                     rc ^= 1;
             }
-            if (rc)
-                goto next_mod;
+            if (rc) goto next_mod;
             return false;
         }
 
@@ -3187,9 +3167,6 @@ all the div sections just below the current node.
         || stringEqual(p, ":read-write")) {
             if (!inputLike(t, 2)) {
                 rc = true;
-            } else if (bulkmatch) {
-                // disabled implies readonly
-                rc = (t->rdonly | t-> disabled);
             } else rc = (get_property_bool_t(t, "readOnly") ||
                 get_property_bool_t(t, "disabled"));
             if (p[6] == 'w') rc ^= 1;
@@ -3198,23 +3175,16 @@ all the div sections just below the current node.
         }
 
         if (stringEqual(p, ":required")) {
-            if (bulkmatch) {
-                rc = t->required;
-            } else rc = get_property_bool_t(t, "required");
+            rc = get_property_bool_t(t, "required");
             if (rc) goto next_mod;
             return false;
         }
 
         if (stringEqual(p, ":checked")) {
             rc = false;
-            if (inputLike(t, 1)) {
-                if (bulkmatch)
-                    rc = t->checked;
-                else
-                    rc = get_property_bool_t(t, "checked") || get_property_bool_t(t, "selected");
-            }
-            if (rc)
-                goto next_mod;
+            if (inputLike(t, 1))
+                rc = get_property_bool_t(t, "checked") || get_property_bool_t(t, "selected");
+            if (rc) goto next_mod;
             return false;
         }
 
@@ -3341,8 +3311,7 @@ static bool qsaMatchGroup(Tag *t, struct desc *d)
 // has to match the pseudoelement
 		if (sel->hover)
 			continue;
-		if (sel->after | sel->before && matchtype == 0)
-			continue;
+		if (sel->after | sel->before && matchtype == 0) continue;
 		if((matchtype == 1 && !sel->before) || (matchtype == 2 && !sel->after))
 			continue;
 		if (qsaMatchChain(t, sel->chain)) {
@@ -3721,8 +3690,7 @@ the before after rules straight up.
 		if (s && stringInList(ok2inject, s) >= 0)
 			forbidden = false;
 		nzFree(s);
-		if (forbidden)
-			return;
+		if (forbidden) return;
 	}
 
 	if(t) {
@@ -3885,8 +3853,7 @@ void cssApply(int frameNumber, Tag *t, int pe)
 // I think the root is document, not the current node, but that is not clear.
 	rootnode = 0;
 	cm = cf->cssmaster;
-	if (!cm)
-		goto done;
+	if (!cm) goto done;
 
 	if(pe >= 10) pe -= 10, visibility_only = true;
 

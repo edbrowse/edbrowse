@@ -2690,13 +2690,11 @@ static JSValue nat_css_start(JSContext * cx, JSValueConst this, int argc, JSValu
 // then free it later.
 	int32_t n;
 	const char *s;
-	int b;
         (void) this;
         (void) argc;
 	JS_ToInt32(cx, &n, argv[0]);
 	s = JS_ToCString(cx, argv[1]);
-	b = JS_ToBool(cx, argv[2]);
-	cssDocLoad(n, cloneString(s), b);
+	cssDocLoad(n, cloneString(s));
 	JS_ReleaseString(s);
 	return JS_UNDEFINED;
 }
@@ -3244,7 +3242,7 @@ static const struct native_descriptor native_list[] = {
     {"eb$newLocation",  nat_new_location, 1, JS_PROP_ENUMERABLE},
     {"domLinkage",  nat_linkage, 5, 0},
     {"characterDataC",  nat_characterData, 2, 0},
-    {"cssDocLoad",  nat_css_start, 3, 0},
+    {"cssDocLoad",  nat_css_start, 2, 0},
     {"eb$cssText",  nat_cssText, 1, 0},
     {"cssApply",  nat_cssApply, 3, 0},
     {"eb$formSubmit",  nat_formSubmit, 0, 0},

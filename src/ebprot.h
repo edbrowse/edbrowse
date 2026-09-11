@@ -471,7 +471,7 @@ void ircReadlineRelease(void);
 void writeShortCache(void);
 bool matchMedia(char *t);
 Frame *frameFromWindow(int gsn);
-void cssDocLoad(int frameNumber, char *s, bool pageload);
+void cssDocLoad(int frameNumber, char *s);
 void cssFree(Frame *f);
 Tag **querySelectorAll(const char *selstring, Tag *top);
 Tag *querySelector(const char *selstring, Tag *top);

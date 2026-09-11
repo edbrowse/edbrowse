@@ -1943,9 +1943,9 @@ function structuredClone(obj, options)
 this.generalbar = {}
 Object.defineProperty(generalbar, "visible", {value:true})
 
-function cssGather(pageload, newwin) {
+function cssGather(newwin) {
 var w = my$win();
-if(!pageload && newwin && newwin.eb$invisible) w = newwin;
+if(newwin && newwin.eb$invisible) w = newwin;
 var d =w.document;
 var css_all = "";
 w.cssSource = [];
@@ -1973,13 +1973,13 @@ css_all += t.css$data;
 }
 
 // If the css didn't change, then no need to rebuild the selectors
-if(!pageload && css_all == w.last$css_all)
+if(css_all == w.last$css_all)
 return;
 
 w.last$css_all = css_all;
 Object.defineProperty(w, "last$css", {enumerable:false});
 w.css$ver++;
-cssDocLoad(w.eb$ctx, css_all, pageload);
+cssDocLoad(w.eb$ctx, css_all);
 }
 
 function makeSheets(all) {
@@ -2073,7 +2073,7 @@ for speed and optimization, is lost if the version changes.
 Remember that "this" is the window object.
 *********************************************************************/
 
-cssGather(false, this);
+cssGather(this);
 
 this.soj$ = s;
 cssApply(this.eb$ctx, e, pe);
@@ -2533,7 +2533,7 @@ function eb$invisible(t) {
     if(!t || !w) return rc;
     if(t.hidden || t.ariaHidden) return 1;
     if(w.rr$start) {
-        cssGather(false, w);
+        cssGather(w);
         delete w.rr$start;
     }
     s1 = t.style$2 ? t.style$2 : {};
