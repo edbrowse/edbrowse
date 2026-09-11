@@ -2093,10 +2093,13 @@ s[k] = e.style[k];
 
 // Browsers turn colors into rgb. I think that's confusing,
 // but if they do it then I guess we should too.
-for(var k in s)
+for(let k in s) {
 if(s.hasOwnProperty(k) &&
 (k == "color" || k.match(/Color$/)))
 s[k] = color2rgb(s[k]);
+}
+for(let k of ["paddingTop", "paddingLeft", "paddingRight", "paddingBottom"])
+if(!s[k]) s[k] = "0px";
 
 return s;
 }

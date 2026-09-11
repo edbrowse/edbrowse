@@ -1,8 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<head><script> on_css_load = false; </script>
 <title>Order of CSS properties</title>
 <meta charset="UTF-8">
+<LINK href="sample.css" rel=stylesheet type=text/css onload="on_css_load = true">
+<style>
+body { padding-top: 5px; }
+</style>
 </head>
 <body>
 <p id=show>start</p>
@@ -28,7 +30,10 @@ font-family:  monospace
 "></div> 
 <script> 
 try {
-let h = "";
+msg = "ok";
+h = "";
+b = document.body;
+
 for (let i = 1; i <= 2; i++) {
 const id = "div" + i;
 const myDiv = document.getElementById(id); 
@@ -40,14 +45,39 @@ for (let i = 0; i < len; i++)
 h += divStyle.item(i) + "|";
 }
 
-const correct = "div1:34|padding-top|padding-right|padding-bottom|padding-left|scroll-padding-top|scroll-padding-right|scroll-padding-bottom|scroll-padding-left|border-top-color|border-right-color|border-bottom-color|border-left-color|border-top-left-radius|border-top-right-radius|border-bottom-right-radius|border-bottom-left-radius|border-top-style|border-right-style|border-bottom-style|border-left-style|border-top-width|border-right-width|border-bottom-width|border-left-width|scroll-margin-top|scroll-margin-right|scroll-margin-bottom|scroll-margin-left|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|div2:27|padding-top|padding-right|padding-bottom|padding-left|border-top-width|border-right-width|border-bottom-width|border-left-width|border-top-style|border-right-style|border-bottom-style|border-left-style|border-top-color|border-right-color|border-bottom-color|border-left-color|border-image-source|border-image-slice|border-image-width|border-image-outset|border-image-repeat|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|";
-let msg;
-if(ds.item(1.3) != ds.item(1) || ds.item("blah") != ds.item(0) || ds.item(atob) != ds.item(0) || ds.item("7") != ds.item(7))
-msg = "bad style.item conversions";
-else if(h == correct) msg = "ok"
-else msg = "mismatch";
-show.innerHTML = msg;
 document.getElementById("items").innerHTML = h.replace(/\|/g, "<br>");
+
+const correct = "div1:34|padding-top|padding-right|padding-bottom|padding-left|scroll-padding-top|scroll-padding-right|scroll-padding-bottom|scroll-padding-left|border-top-color|border-right-color|border-bottom-color|border-left-color|border-top-left-radius|border-top-right-radius|border-bottom-right-radius|border-bottom-left-radius|border-top-style|border-right-style|border-bottom-style|border-left-style|border-top-width|border-right-width|border-bottom-width|border-left-width|scroll-margin-top|scroll-margin-right|scroll-margin-bottom|scroll-margin-left|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|div2:27|padding-top|padding-right|padding-bottom|padding-left|border-top-width|border-right-width|border-bottom-width|border-left-width|border-top-style|border-right-style|border-bottom-style|border-left-style|border-top-color|border-right-color|border-bottom-color|border-left-color|border-image-source|border-image-slice|border-image-width|border-image-outset|border-image-repeat|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|";
+if(h != correct) msg += "|mismatch shorthand properties";
+if(ds.item(1.3) != ds.item(1) || ds.item("blah") != ds.item(0) || ds.item(atob) != ds.item(0) || ds.item("7") != ds.item(7)) msg += "|bad style.item conversions";
+if(b.style.paddingTop !== "") msg += `|bad sync default padding ${b.style.paddingTop}`;
+if(b.style.display !== "") msg += `|bad sync default display ${b.style.display}`;
+if(b.style.color !== "") msg += `|bad sync default color ${b.style.color}`;
+if(div1.style.paddingTop !== "10px") msg += `|bad html set padding ${b.style.paddingTop}`;
+b.style.display = "block";
+if(b.style.display !== "block") msg += `|bad direct set display ${b.style.display}`;
+s1 = getComputedStyle(b);
+// we already saw the <style> tag so this should work synchronously
+if(s1.paddingTop !== "5px") msg += `|bad s1 padding ${s1.paddingTop}`;
+if(s1.paddingRight !== "0px") msg += `|bad s1 padding right ${s1.paddingRight}`;
+if(s1.display !== "block") msg += `|bad s1 display ${s1.display}`;
+// if(s1.color !== "rgb(0,0,0)") msg += `|bad s1 color ${s1.color}`;
+// if(s1.backgroundColor !== "rgb(0,0,0)") msg += `|bad s1 backgroundColor ${s1.backgroundColor}`;
+
+// css always loads asynchronously, we have no choice about that.
+// So to test anything from sample.css requires a short timeout.
+setTimeout(()=>{
+if(!on_css_load) msg += "|css didn't load";
+if(b.style.paddingTop !== "") msg += `|bad timeout padding ${b.style.paddingTop}`;
+if(b.style.color !== "") msg += `|bad timeout color ${b.style.color}`;
+if(b.style.display !== "block") msg += `|bad timeout display ${b.style.display}`;
+if(div1.style.paddingTop !== "10px") msg += `|bad timeout padding ${b.style.paddingTop}`;
+s2 = getComputedStyle(b);
+if(s2.paddingTop !== "5px") msg += `|bad s2 padding ${s2.paddingTop}`;
+// this one from css doesn't work in chrome, don't know why
+// if(s2.color !== "rgb(255,0,0)") msg += `|bad s2 color ${s2.color}`;
+show.innerHTML = msg;
+}, 300);
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>
 </body>
