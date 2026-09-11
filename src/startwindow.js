@@ -224,7 +224,7 @@ that is to say, it's already a native function.
     c.toString = () => `function ${c.name}() { [native code] }`
 }
 
-this.swc = function (c, changeable)
+this.swc = function (c, changeable = true)
 {
    /* if we don't set the property then the class can be referenced from
         within this window but isn't a property of the window
