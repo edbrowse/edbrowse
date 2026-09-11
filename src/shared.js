@@ -2100,6 +2100,7 @@ s[k] = color2rgb(s[k]);
 }
 for(let k of ["paddingTop", "paddingLeft", "paddingRight", "paddingBottom"])
 if(!s[k]) s[k] = "0px";
+if(!s["textTransform"]) s["textTransform"] = "none"; // acid test 46
 
 return s;
 }
