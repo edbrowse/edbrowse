@@ -286,6 +286,277 @@ window.top = eb$top();
 window.parent = window.eb$parent();
 odp(window, "frameElement", {get: eb$frameElement,enumerable:true});
 
+/* Our possibly live collections implementation, put here to allow use in
+Node below. I could have put it just above Node but this makes the class relationships between the DOM components clearer.
+*/
+;( () => {
+    const collection = Symbol("collection");
+
+    class ListCollection
+    {
+        storage = [];
+
+        /*
+        - node - the node which owns this collection
+        - cb - callback which takes owner as a parameter used to rebuild
+          the collection.
+        - filter - a callback used to check if we care about the changes
+          */
+        constructor(node, cb, filter = () => true)
+        {
+            this.owner = node;
+            this.callback = cb;
+            this.filter = filter;
+            // We need to rebuild initially but only on first lookup
+            this.markChanges();
+        }
+
+        // no one can have a ref to our backing storage
+        clear() { this.storage = []; }
+        includes(value) { return this.storage.includes(value); }
+        markChanges(values)
+        {
+            // No values, assume changed
+            if (!this.owner) return; // not live
+            if (!values) {
+                this.changed = true;
+                return;
+            }
+            for (const v of values)
+                if (this.filter(v)) {
+                    this.changed = true;
+                    break;
+                }
+        }
+
+        // Possibly could be more efficient by not rebuilding from scratch
+        handleChanges()
+        {
+            if (!(this.owner && this.changed)) return;
+            /* I can't think of a case where the following logic could retrigger a
+            rebuild, but I'll clear the flag early in case */
+            this.changed = false;
+            this.clear();
+            this.push(...this.callback(this.owner));
+        }
+
+        item(i)
+        {
+            this.handleChanges();
+            i = itemArgToIndex(i);
+            // elements are truthy so this works
+            return (i >= 0 && this.storage[i]) || null;
+        }
+
+        get length()
+        {
+            this.handleChanges();
+            return this.storage.length;
+        }
+
+        /* Altering collections during iteration is not good practice but is
+        mentioned in the spec. As such we need to make sure we handle changes
+        including emptying the entire collection during the process.
+        */
+
+        *[Symbol.iterator]()
+        {
+            for (let i = 0; i < this.length; ++i) {
+                const element = this.item(i);
+                if (!element) break;
+                yield element;
+            }
+        }
+
+        insert(value, existing)
+        {
+            const idx = (existing) ? this.storage.indexOf(existing) : 0;
+            if (idx < 0)
+                throw new Error("Attempt to insert before a non-existent value");
+            this.storage.splice(idx, 0, value);
+        }
+
+        remove(value)
+        {
+            const idx = this.storage.indexOf(value);
+            if (idx < 0) return;
+            this.storage.splice(idx, 1);
+        }
+
+        push(...args) { this.storage.push(...args); }
+        /* We need to handle changes during iteration so we can't just use the
+        array methods */
+        forEach(callback, thisarg)
+        {
+            let idx = 0;
+            for (const e of this) callback.call(thisarg, e, idx++, this);
+        }
+
+        *entries()
+        {
+            let idx = 0;
+            for (const e of this) yield [idx++, e];
+        }
+
+        *keys()
+        {
+            let idx = 0;
+            for (const _ of this) yield idx++;
+        }
+
+        *values() { yield* this; }
+    }
+
+    class NamedCollection extends ListCollection
+    {
+        static names = ["id", "name"];
+        static getters = [
+            (e) => e.id,
+            (e) => e.getAttribute("name")
+        ];
+
+        constructor(node, cb) { super(node, cb); }
+        // Can't have a collision with existing properties because the names
+        // get a prefix unconditionally added
+        handleNames(set, ...args)
+        {
+            const getters = this.constructor.getters;
+            const names = this.constructor.names;
+            for (const arg of args)
+                for (let i = 0; i < names.length; ++i) {
+                    const v = getters[i](arg);
+                    if (typeof v === "string" && v) {
+                        const prop = `${names[i]}$${v}`;
+                        if (set) this.storage[prop] = arg;
+                        else delete this.storage[prop];
+                    }
+                }
+        }
+
+        namedItem(n)
+        {
+            this.handleChanges();
+            for (const name of this.constructor.names) {
+                const v = this.storage[`${name}$${n}`];
+                if (v) return v;
+            }
+            return null;
+        }
+
+        insert(value, existing)
+        {
+            super.insert(value, existing);
+            this.handleNames(true, value);
+        }
+
+        remove(value)
+        {
+            super.remove(value);
+            this.handleNames(false, value);
+        }
+
+        push(...args)
+        {
+            super.push(...args);
+            this.handleNames(true, ...args);
+        }
+    }
+
+    // The actual classes we want
+    class NodeList
+    {
+        static collection$type = ListCollection;
+        static collection(obj) { return obj[collection]; }
+        constructor(node, cb)
+        {
+            this[collection] = new this.constructor.collection$type(node, cb);
+        }
+
+        get length() { return this[collection].length; }
+
+        item(i) { return this[collection].item(i); }
+
+        *[Symbol.iterator]() { for (const v of this[collection]) yield v; }
+
+        forEach(...args) { this[collection].forEach(...args); }
+
+        static {
+            for (const f of ['entries', 'keys', 'values']) {
+                this.prototype[f] = function *()
+                {
+                    yield* this[collection][f](); 
+                };
+            }
+        }
+    }
+    scts(NodeList);
+
+    class HTMLCollection extends NodeList
+    {
+        static collection$type = NamedCollection;
+        constructor(...args) { super(...args); }
+
+        namedItem(i) { return this[collection].namedItem(i); }
+
+        // Avoid confusing gatekeeping code with non-standard methods
+        static {
+            [
+                'forEach',
+                'entries',
+                'keys',
+                'values'
+            ].forEach((f) => delete this.prototype[f]);
+        }
+    }
+    scts(HTMLCollection);
+    /* The other half of the HTMLCollection mechanism as promised. Note that we
+    proxy the class here rather than a constructed object so we can proxy the
+    constructor as well as everything else.
+
+    I hope no one changes these but allow them to do so if they wish. */
+    swpc("HTMLCollection", new Proxy(HTMLCollection, {
+        construct(target, args, new_target)
+        {
+            // We want to return a proxied version of the created object for our magic getter
+            return new Proxy(Reflect.construct(target, args, new_target), {
+                /* Trap all get calls, if it's a string use namedItem if a number I assume
+                an index so item. Check the instance first in all cases. */
+                get(target, property, receiver)
+                {
+                    if (property in target || typeof property == "symbol") return Reflect.get(target, property, receiver);
+
+                    let res;
+                    /* Apparently numeric looking properties are actually passed
+                    as strings so we have to check if the property converts to a
+                    number in a way that round-trips */
+                    const idx = Math.trunc(property); // automatically converts to number
+                    if (!isNaN(idx) && idx >=0 && idx.toString() === property)
+                        res = target.item(idx);
+                    else
+                        res = target.namedItem(property);
+
+                    return res || undefined;
+                },
+            })
+        }
+    }));
+
+    swpc("NodeList", new Proxy(NodeList, {
+        construct(target, args, new_target)
+        {
+            return new Proxy(Reflect.construct(target, args, new_target), {
+                get(target, property, receiver)
+                {
+                    if (property in target || typeof property == "symbol") return Reflect.get(target, property, receiver);
+                    if (Number(property).toString() !== property) return;
+                    let res = target.item(property);
+                    return res || undefined;
+                },
+            })
+        }
+    }));
+})();
+
 class EventTarget
 {
     // in a static initialisation block this is the constructor
@@ -4415,273 +4686,6 @@ cause <input> starts out empty.
     }
 }
 swdc(Validity);
-;( () => {
-    const collection = Symbol("collection");
-
-    class ListCollection
-    {
-        storage = [];
-
-        /*
-        - node - the node which owns this collection
-        - cb - callback which takes owner as a parameter used to rebuild
-          the collection.
-        - filter - a callback used to check if we care about the changes
-          */
-        constructor(node, cb, filter = () => true)
-        {
-            this.owner = node;
-            this.callback = cb;
-            this.filter = filter;
-            // We need to rebuild initially but only on first lookup
-            this.markChanges();
-        }
-
-        // no one can have a ref to our backing storage
-        clear() { this.storage = []; }
-        includes(value) { return this.storage.includes(value); }
-        markChanges(values)
-        {
-            // No values, assume changed
-            if (!this.owner) return; // not live
-            if (!values) {
-                this.changed = true;
-                return;
-            }
-            for (const v of values)
-                if (this.filter(v)) {
-                    this.changed = true;
-                    break;
-                }
-        }
-
-        // Possibly could be more efficient by not rebuilding from scratch
-        handleChanges()
-        {
-            if (!(this.owner && this.changed)) return;
-            /* I can't think of a case where the following logic could retrigger a
-            rebuild, but I'll clear the flag early in case */
-            this.changed = false;
-            this.clear();
-            this.push(...this.callback(this.owner));
-        }
-
-        item(i)
-        {
-            this.handleChanges();
-            i = itemArgToIndex(i);
-            // elements are truthy so this works
-            return (i >= 0 && this.storage[i]) || null;
-        }
-
-        get length()
-        {
-            this.handleChanges();
-            return this.storage.length;
-        }
-
-        /* Altering collections during iteration is not good practice but is
-        mentioned in the spec. As such we need to make sure we handle changes
-        including emptying the entire collection during the process.
-        */
-
-        *[Symbol.iterator]()
-        {
-            for (let i = 0; i < this.length; ++i) {
-                const element = this.item(i);
-                if (!element) break;
-                yield element;
-            }
-        }
-
-        insert(value, existing)
-        {
-            const idx = (existing) ? this.storage.indexOf(existing) : 0;
-            if (idx < 0)
-                throw new Error("Attempt to insert before a non-existent value");
-            this.storage.splice(idx, 0, value);
-        }
-
-        remove(value)
-        {
-            const idx = this.storage.indexOf(value);
-            if (idx < 0) return;
-            this.storage.splice(idx, 1);
-        }
-
-        push(...args) { this.storage.push(...args); }
-        /* We need to handle changes during iteration so we can't just use the
-        array methods */
-        forEach(callback, thisarg)
-        {
-            let idx = 0;
-            for (const e of this) callback.call(thisarg, e, idx++, this);
-        }
-
-        *entries()
-        {
-            let idx = 0;
-            for (const e of this) yield [idx++, e];
-        }
-
-        *keys()
-        {
-            let idx = 0;
-            for (const _ of this) yield idx++;
-        }
-
-        *values() { yield* this; }
-    }
-
-    class NamedCollection extends ListCollection
-    {
-        static names = ["id", "name"];
-        static getters = [
-            (e) => e.id,
-            (e) => e.getAttribute("name")
-        ];
-
-        constructor(node, cb) { super(node, cb); }
-        // Can't have a collision with existing properties because the names
-        // get a prefix unconditionally added
-        handleNames(set, ...args)
-        {
-            const getters = this.constructor.getters;
-            const names = this.constructor.names;
-            for (const arg of args)
-                for (let i = 0; i < names.length; ++i) {
-                    const v = getters[i](arg);
-                    if (typeof v === "string" && v) {
-                        const prop = `${names[i]}$${v}`;
-                        if (set) this.storage[prop] = arg;
-                        else delete this.storage[prop];
-                    }
-                }
-        }
-
-        namedItem(n)
-        {
-            this.handleChanges();
-            for (const name of this.constructor.names) {
-                const v = this.storage[`${name}$${n}`];
-                if (v) return v;
-            }
-            return null;
-        }
-
-        insert(value, existing)
-        {
-            super.insert(value, existing);
-            this.handleNames(true, value);
-        }
-
-        remove(value)
-        {
-            super.remove(value);
-            this.handleNames(false, value);
-        }
-
-        push(...args)
-        {
-            super.push(...args);
-            this.handleNames(true, ...args);
-        }
-    }
-
-    // The actual classes we want
-    class NodeList
-    {
-        static collection$type = ListCollection;
-        static collection(obj) { return obj[collection]; }
-        constructor(node, cb)
-        {
-            this[collection] = new this.constructor.collection$type(node, cb);
-        }
-
-        get length() { return this[collection].length; }
-
-        item(i) { return this[collection].item(i); }
-
-        *[Symbol.iterator]() { for (const v of this[collection]) yield v; }
-
-        forEach(...args) { this[collection].forEach(...args); }
-
-        static {
-            for (const f of ['entries', 'keys', 'values']) {
-                this.prototype[f] = function *()
-                {
-                    yield* this[collection][f](); 
-                };
-            }
-        }
-    }
-    scts(NodeList);
-
-    class HTMLCollection extends NodeList
-    {
-        static collection$type = NamedCollection;
-        constructor(...args) { super(...args); }
-
-        namedItem(i) { return this[collection].namedItem(i); }
-
-        // Avoid confusing gatekeeping code with non-standard methods
-        static {
-            [
-                'forEach',
-                'entries',
-                'keys',
-                'values'
-            ].forEach((f) => delete this.prototype[f]);
-        }
-    }
-    scts(HTMLCollection);
-    /* The other half of the HTMLCollection mechanism as promised. Note that we
-    proxy the class here rather than a constructed object so we can proxy the
-    constructor as well as everything else.
-
-    I hope no one changes these but allow them to do so if they wish. */
-    swpc("HTMLCollection", new Proxy(HTMLCollection, {
-        construct(target, args, new_target)
-        {
-            // We want to return a proxied version of the created object for our magic getter
-            return new Proxy(Reflect.construct(target, args, new_target), {
-                /* Trap all get calls, if it's a string use namedItem if a number I assume
-                an index so item. Check the instance first in all cases. */
-                get(target, property, receiver)
-                {
-                    if (property in target || typeof property == "symbol") return Reflect.get(target, property, receiver);
-
-                    let res;
-                    /* Apparently numeric looking properties are actually passed
-                    as strings so we have to check if the property converts to a
-                    number in a way that round-trips */
-                    const idx = Math.trunc(property); // automatically converts to number
-                    if (!isNaN(idx) && idx >=0 && idx.toString() === property)
-                        res = target.item(idx);
-                    else
-                        res = target.namedItem(property);
-
-                    return res || undefined;
-                },
-            })
-        }
-    }));
-
-    swpc("NodeList", new Proxy(NodeList, {
-        construct(target, args, new_target)
-        {
-            return new Proxy(Reflect.construct(target, args, new_target), {
-                get(target, property, receiver)
-                {
-                    if (property in target || typeof property == "symbol") return Reflect.get(target, property, receiver);
-                    if (Number(property).toString() !== property) return;
-                    let res = target.item(property);
-                    return res || undefined;
-                },
-            })
-        }
-    }));
-})();
 
 // Not quite right, still missing, at a minimum, whenDefined and upgrade
 class CustomElementRegistry
