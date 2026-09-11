@@ -464,7 +464,9 @@ Node below. I could have put it just above Node but this makes the class relatio
         static collection(obj) { return obj[collection]; }
         constructor(node, cb)
         {
-            this[collection] = new this.constructor.collection$type(node, cb);
+            odp(this, collection, {
+                value: new this.constructor.collection$type(node, cb)
+            });
         }
 
         get length() { return this[collection].length; }
