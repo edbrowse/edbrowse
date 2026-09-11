@@ -2796,7 +2796,7 @@ const char *color2rgb(const char *word)
 		if(!isalphaByte(*s)) return word; // not actually a word
 	for(c = colorlist; c->name; ++c) {
 		if(strcmp(word, c->name)) continue;
-		sprintf(rgb_string, "rgb(%d,%d,%d)", c->r, c->g, c->b);
+		sprintf(rgb_string, "rgb(%d, %d, %d)", c->r, c->g, c->b);
 		return rgb_string;
 	}
 	return word;

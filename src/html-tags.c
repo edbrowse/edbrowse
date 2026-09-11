@@ -4675,8 +4675,8 @@ Needless to say that's not good!
             } else {
             // in case the script calls getComputedStyle
             loadFinishCSS();
-            // in case it accesses document.links etc
-            run_function_bool_win(cf, "markAllCollections");
+            // in case it accesses document.links or document.styleSheets
+            run_function_bool_win(cf, "eb$qs$start");
             char *up1 = upSnap(t);
             runScriptNow(cf, t);
             char *up2 = upSnap(t);

@@ -29,11 +29,11 @@ background: bbb;
 font-family:  monospace
 "></div> 
 <script> 
-/* Warning - this runs fine in edbrowse, locally, but in chrome
+/* Warning! This runs fine in edbrowse, locally, but in chrome
 we get a security blowup when accessing the rules for the css file.
-This file and sample.css have to be on a website, and accessed by:
+This file and sample.css both have to be on a website, and accessed by:
 http://www.edbrowse.org/style-shorthand.html
-so the domains match and chrome is happy. */
+then the domains match and chrome is happy. */
 
 try {
 msg = "ok";
@@ -57,30 +57,15 @@ document.getElementById("items").innerHTML = h.replace(/\|/g, "<br>");
 const correct = "div1:34|padding-top|padding-right|padding-bottom|padding-left|scroll-padding-top|scroll-padding-right|scroll-padding-bottom|scroll-padding-left|border-top-color|border-right-color|border-bottom-color|border-left-color|border-top-left-radius|border-top-right-radius|border-bottom-right-radius|border-bottom-left-radius|border-top-style|border-right-style|border-bottom-style|border-left-style|border-top-width|border-right-width|border-bottom-width|border-left-width|scroll-margin-top|scroll-margin-right|scroll-margin-bottom|scroll-margin-left|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|div2:27|padding-top|padding-right|padding-bottom|padding-left|border-top-width|border-right-width|border-bottom-width|border-left-width|border-top-style|border-right-style|border-bottom-style|border-left-style|border-top-color|border-right-color|border-bottom-color|border-left-color|border-image-source|border-image-slice|border-image-width|border-image-outset|border-image-repeat|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|";
 if(h != correct) msg += "|mismatch shorthand properties";
 if(ds.item(1.3) != ds.item(1) || ds.item("blah") != ds.item(0) || ds.item(atob) != ds.item(0) || ds.item("7") != ds.item(7)) msg += "|bad style.item conversions";
+
 if(b.style.paddingTop !== "") msg += `|bad sync default padding ${b.style.paddingTop}`;
 if(b.style.display !== "") msg += `|bad sync default display ${b.style.display}`;
 if(b.style.color !== "") msg += `|bad sync default color ${b.style.color}`;
 if(div1.style.paddingTop !== "10px") msg += `|bad html set padding ${b.style.paddingTop}`;
 b.style.display = "block";
 if(b.style.display !== "block") msg += `|bad direct set display ${b.style.display}`;
-// css files loaded asynchronously in chrome, so the style sheets won't be here yet
-if(!isedbrowse)
+
 if(document.styleSheets.length != 2) msg += `|bad sync styleSheets count ${document.styleSheets.length}`;
-
-s1 = getComputedStyle(b);
-// we already saw the <style> tag so this should work synchronously
-if(s1.paddingTop !== "5px") msg += `|bad s1 padding ${s1.paddingTop}`;
-if(s1.paddingRight !== "0px") msg += `|bad s1 padding right ${s1.paddingRight}`;
-if(s1.display !== "block") msg += `|bad s1 display ${s1.display}`;
-// if(s1.color !== "rgb(0,0,0)") msg += `|bad s1 color ${s1.color}`;
-// if(s1.backgroundColor !== "rgb(0,0,0)") msg += `|bad s1 backgroundColor ${s1.backgroundColor}`;
-
-// css always loads asynchronously, we have no choice about that.
-// So to test anything from sample.css requires a short timeout.
-setTimeout(()=>{
-try {
-if(!on_css_load) msg += "|css didn't load";
-if(document.styleSheets.length != 2) msg += `| bad style sheets length ${document.styleSheets.length}`;
 sr1 = document.styleSheets[0].cssRules;
 if(sr1.length != 1) msg += `|first sheet has ${sr1.length} rules`;
 // edbrowse doesn't always have the same whitespace as chrome
@@ -88,18 +73,19 @@ if(!sr1[0].cssText.match(/^body { *padding-top: *5px; *}$/)) msg += `|bad div ru
 sr2 = document.styleSheets[1].cssRules;
 if(sr2.length != 5) msg += `|second sheet has ${sr2.length} rules`;
 if(sr2[1].cssText.substr(0, 4) != "h1 {" || sr2[2].cssText.substr(0, 4) != "h2 {") msg += "|css rules 1 and 2 don't look like h1 h2";
-if(b.style.paddingTop !== "") msg += `|bad timeout padding ${b.style.paddingTop}`;
-if(b.style.color !== "") msg += `|bad timeout color ${b.style.color}`;
-if(b.style.display !== "block") msg += `|bad timeout display ${b.style.display}`;
-if(div1.style.paddingTop !== "10px") msg += `|bad timeout padding ${b.style.paddingTop}`;
-s2 = getComputedStyle(b);
-if(s2.paddingTop !== "5px") msg += `|bad s2 padding ${s2.paddingTop}`;
-// this one from css doesn't work in chrome, don't know why
-// if(s2.color !== "rgb(255,0,0)") msg += `|bad s2 color ${s2.color}`;
-show.innerHTML = msg;
-} catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
-}, 300);
 
+s1 = getComputedStyle(b);
+// 5px comes from our style tag
+if(s1.paddingTop !== "5px") msg += `|bad s1 padding ${s1.paddingTop}`;
+// default "" becomes default 0px via getComputedStyle
+if(s1.paddingRight !== "0px") msg += `|bad s1 padding right ${s1.paddingRight}`;
+// our direct assignment carries through to s1
+if(s1.display !== "block") msg += `|bad s1 display ${s1.display}`;
+// color red comes from the css file
+ if(s1.color !== "rgb(255, 0, 0)") msg += `|bad s1 color ${s1.color}`;
+if(s1.backgroundColor !== "rgb(128, 128, 128)") msg += `|bad s1 backgroundColor ${s1.backgroundColor}`;
+
+show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>
 </body>
