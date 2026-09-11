@@ -793,21 +793,9 @@ static void uncomment(char *s)
 		if (c == '@' && !strncmp(s, "@ebdelim", 8))
 			delimmode = 1;
 
-// look for C style comment
-		if (c != '/')
-			goto copy;
-		if (s[1] == '/') {
-			for (n = 2; s[n]; ++n)
-				if (s[n] == '\n')
-					break;
-			if (s[n]) {
-				s += n + 1;
-				continue;
-			}
-			debugPrint(3, "unterminated comment %s", cut20(s));
-			goto abandon;
-		}
-		if (s[1] == '*') {
+// look for C style comment.
+// only /* ... */ style,  not the kind of comment you're reading now.
+		if (c == '/' && s[1] == '*') {
 			for (n = 2; s[n]; ++n)
 				if (s[n] == '*' && s[n + 1] == '/')
 					break;

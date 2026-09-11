@@ -29,6 +29,12 @@ background: bbb;
 font-family:  monospace
 "></div> 
 <script> 
+/* Warning - this runs fine in edbrowse, locally, but in chrome
+we get a security blowup when accessing the rules for the css file.
+This file and sample.css have to be on a website, and accessed by:
+http://www.edbrowse.org/style-shorthand.html
+so the domains match and chrome is happy. */
+
 try {
 msg = "ok";
 h = "";
@@ -79,10 +85,9 @@ sr1 = document.styleSheets[0].cssRules;
 if(sr1.length != 1) msg += `|first sheet has ${sr1.length} rules`;
 // edbrowse doesn't always have the same whitespace as chrome
 if(!sr1[0].cssText.match(/^body { *padding-top: *5px; *}$/)) msg += `|bad div rule ${sr1[0].cssText}`;
-/* can't access second sheet unless everything is on a website of the same domain
 sr2 = document.styleSheets[1].cssRules;
 if(sr2.length != 5) msg += `|second sheet has ${sr2.length} rules`;
-*/
+if(sr2[1].cssText.substr(0, 4) != "h1 {" || sr2[2].cssText.substr(0, 4) != "h2 {") msg += "|css rules 1 and 2 don't look like h1 h2";
 if(b.style.paddingTop !== "") msg += `|bad timeout padding ${b.style.paddingTop}`;
 if(b.style.color !== "") msg += `|bad timeout color ${b.style.color}`;
 if(b.style.display !== "block") msg += `|bad timeout display ${b.style.display}`;
