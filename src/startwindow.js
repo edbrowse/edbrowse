@@ -4983,19 +4983,6 @@ alert3(e.stack);
 // promise.catch(), which the web page may be expecting.
 return promiseCatchFunctionNative(e);
 })
-
-String.prototype.at = function(n) {
-if(typeof n != "number") return undefined;
-var l = this.length;
-if(n >= 0) {
-if(n >= l) return undefined;
-return this.charAt(n);
-}
-n = -n;
-if(n > l) return undefined;
-return this.charAt(l-n);
-}
-
 /*********************************************************************
 This is a special routine for textarea.innerHTML = "some html text";
 I assume, with very little data to go on, that the html is rendered
