@@ -1100,6 +1100,7 @@ void loadFinishCSS(void)
 		}
 		set_property_string_t(t, "css$data", t->value);
 		nzFree0(t->value);
+		t->lic = 1; // can run the onload function now
 		t->step = 4;	// loaded
 		set_property_number_t(t, "eb$step", 4);
 	}
@@ -1463,6 +1464,7 @@ passes:
 		t = tagList[j];
 		if(t->action != TAGACT_LINK) continue;
 		if(t->lic == 1 && t->jslink && !t->dead &&
+		t->step >= 4 &&
 		save_cf == t->f0) {
 			cf = save_cf;
 			run_event_t(t, "onload");
