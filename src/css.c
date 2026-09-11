@@ -1071,6 +1071,8 @@ static void cssModify(struct asel *a, const char *m1, const char *m2);
 static void chainFree(struct asel *asel);
 static bool onematch, topmatch, skiproot, gcsmatch, bulkmatch;
 static char matchtype;		// 0 plain 1 before 2 after
+static bool match_ba; // only calculate the before after string
+static char *match_ba_string;
 static bool matchhover;		// match on :hover selectors.
 static bool visibility_only = false;
 static Tag *rootnode;
@@ -3653,6 +3655,7 @@ static void do_rules(const Tag *t, struct rule *r0, int highspec)
 	char *a;
 	int spec;
 
+    match_ba_string = 0;
 /*********************************************************************
 before and after can't act on a select node,as that is an array,
 the way I have implemented it, so sneaking in a text node
@@ -3693,7 +3696,7 @@ the before after rules straight up.
 		if (forbidden) return;
 	}
 
-	if(t) {
+	if(t && !match_ba) {
 		static const char commands[] = "-\0b\0a";
 		run_function_onestring_t(t, "injectSetup", commands + 2*matchtype);
 		if(matchtype && !t->firstchild)
@@ -3708,7 +3711,7 @@ the before after rules straight up.
 		}
 	}
 
-	if(!has_property_win(cf, "soj$")) {
+	if(!has_property_win(cf, "soj$") && !match_ba) {
 		if(t)
 			debugPrint(3, "no master style object for tag %d %s", t->seqno, t->info->name);
 		else
@@ -3738,15 +3741,13 @@ the before after rules straight up.
 		}
 // special code for before after content
 		if (matchtype && t && stringEqual(r->atname, "content")) {
-			if (stringEqual(r->atval, "none"))
-				continue;
-			if (sl)
-				stringAndChar(&s, &sl, ' ');
+			if (stringEqual(r->atval, "none")) continue;
+			if (sl) stringAndChar(&s, &sl, ' ');
 			stringAndString(&s, &sl, r->atval);
 			continue;
 		}
 
-		if(bulkmatch) continue;
+		if(bulkmatch || match_ba) continue;
 		if(visibility_only && !r->visrel) continue;
 
 /*********************************************************************
@@ -3775,14 +3776,11 @@ so this might be wrong but it gets around that test.
 		free(a);
 	}
 
-	if(t)
-		delete_property_win(cf, "soj$");
-	if (!sl) {
-		nzFree(s);
-		return;
-	}
+    if(t)
+        delete_property_win(cf, "soj$");
 
-// At this point matchtype is nonzero.
+    if (!sl) return;
+// At this point matchtype is nonzero and we have before after text
 // put a space between the injected text and the original text
 	stringAndChar(&s, &sl, ' ');
 	if (matchtype == 2) {
@@ -3794,21 +3792,12 @@ so this might be wrong but it gets around that test.
 	s_attr = attrify(t, s);
 	nzFree(s);
 	s = s_attr;
+	if(match_ba) { match_ba_string = s; return; }
 	set_property_string_t(tn, "data$2", s);
 	nzFree(tn->textval);
 	tn->textval = s;
 	set_property_bool_t(tn, "inj$css", true);
 }
-
-/*********************************************************************
-This is the native function for getComputedStyle().
-If you call frames[i].getComputedStyle(), it is important
-that we apply the css for that frame, not the frame we are currently in.
-For that reason, the first argument is "this", which I assume is a global
-window object. I march down the frames and find it, and that is the root for
-the css rules. If there's ever a document.head.getComputedStyle or some such,
-where "this" is not the window object, then we have to make some changes.
-*********************************************************************/
 
 // Is name one of the whitespace separated words in the node's class?
 // This is the test that qsaMatch() makes for a class modifier.
@@ -3841,43 +3830,85 @@ static bool cssKeyMatch(const struct desc *d, const Tag *t)
 	return true;
 }
 
+/*********************************************************************
+This is the native function for getComputedStyle().
+If you call frames[i].getComputedStyle(), it is important
+that we apply the css for that frame, not the frame we are currently in.
+For that reason, the first argument is "this", which I assume is a global
+window object. I march down the frames and find it, and that is the root for
+the css rules. If there's ever a document.head.getComputedStyle or some such,
+where "this" is not the window object, then we have to make some changes.
+*********************************************************************/
+
 void cssApply(int frameNumber, Tag *t, int pe)
 {
-	Frame *save_cf = cf;
-	struct cssmaster *cm;
-	struct desc *d;
-	Frame *new_f = frameFromWindow(frameNumber);
+    Frame *save_cf = cf;
+    struct cssmaster *cm;
+    struct desc *d;
+    Frame *new_f = frameFromWindow(frameNumber);
 // no clue what to do if new_f is null, should never happen
-	if(new_f) cf = new_f;
+    if(new_f) cf = new_f;
 
 // I think the root is document, not the current node, but that is not clear.
-	rootnode = 0;
-	cm = cf->cssmaster;
-	if (!cm) goto done;
+    rootnode = 0;
+    cm = cf->cssmaster;
+    if (!cm) goto done;
 
-	if(pe >= 10) pe -= 10, visibility_only = true;
+    if(pe >= 10) pe -= 10, visibility_only = true;
 
 // it's a getComputedStyle match
-	gcsmatch = true, matchtype = pe;
+    gcsmatch = true, matchtype = pe;
 // defer to the js here;
 // then I don't have to get these attributes on every css rule.
-	nzFree(t->class);
-	t->class = get_js_attribute(t, "class");
-	nzFree(t->id);
-	t->id = get_js_attribute(t, "id");
+    nzFree(t->class);
+    t->class = get_js_attribute(t, "class");
+    nzFree(t->id);
+    t->id = get_js_attribute(t, "id");
 
-	for (d = cm->descriptors; d; d = d->next) {
-		if(d->error) continue;
-		if(!d->prop_ok) continue;
-		if(visibility_only && !d->visrel) continue;
-		if(!cssKeyMatch(d, t)) continue;
-		if (qsaMatchGroup(t, d))
-			do_rules(0, d->rules, d->highspec);
-	}
+    for (d = cm->descriptors; d; d = d->next) {
+        if(d->error) continue;
+        if(!d->prop_ok) continue;
+        if(visibility_only && !d->visrel) continue;
+        if(!cssKeyMatch(d, t)) continue;
+        if (qsaMatchGroup(t, d))
+            do_rules(0, d->rules, d->highspec);
+    }
 
 done:
-	cf = save_cf;
-	gcsmatch = false, matchtype = 0, visibility_only = false;
+    cf = save_cf;
+    gcsmatch = false, matchtype = 0, visibility_only = false;
+}
+
+// Get the string that css injects before or after this tag.
+// If I return a string here, you're responsible for it.
+char *cssBeforeAfter(Tag *t, int p)
+{
+    struct cssmaster *cm = cf->cssmaster;
+    if (!cm) return 0;
+    struct desc *d;
+    char *hold_string = 0;
+    rootnode = 0;
+    visibility_only = gcsmatch = match_ba = true;
+    matchtype = p;
+// defer to the js here.
+    nzFree(t->class);
+    t->class = get_js_attribute(t, "class");
+    nzFree(t->id);
+    t->id = get_js_attribute(t, "id");
+    for (d = cm->descriptors; d; d = d->next) {
+        if(d->error) continue;
+        if(!d->prop_ok) continue;
+        if(visibility_only && !d->visrel) continue;
+        if(!cssKeyMatch(d, t)) continue;
+        if (qsaMatchGroup(t, d)) {
+            do_rules(0, d->rules, d->highspec);
+            if(match_ba_string)
+                nzFree(hold_string), hold_string = match_ba_string;
+        }
+    }
+    gcsmatch = match_ba = visibility_only = false;
+    matchtype = 0;
+    return hold_string;
 }
 
 void cssText(const char *rulestring)
