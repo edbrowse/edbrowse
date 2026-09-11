@@ -5290,10 +5290,6 @@ this.removeItem(this.attributes[l-1].name);
 }
 })()
 
-// we seem to be missing Array.item
-Array.prototype.item = function(x) { return this[x] };
-odp(Array.prototype, "item", { enumerable: false});
-
 // On the first call this setter just creates the url, the location of the
 // current web page, But on the next call it has the side effect of replacing
 // the web page with the new url.
