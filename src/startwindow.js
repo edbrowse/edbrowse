@@ -301,7 +301,7 @@ Node below. I could have put it just above Node but this makes the class relatio
         - cb - callback which takes owner as a parameter used to rebuild
           the collection.
         - filter - a callback used to check if we care about the changes
-          */
+        */
         constructor(node, cb, filter = () => true)
         {
             this.owner = node;
@@ -358,7 +358,6 @@ Node below. I could have put it just above Node but this makes the class relatio
         mentioned in the spec. As such we need to make sure we handle changes
         including emptying the entire collection during the process.
         */
-
         *[Symbol.iterator]()
         {
             for (let i = 0; i < this.length; ++i) {
@@ -371,19 +370,20 @@ Node below. I could have put it just above Node but this makes the class relatio
         insert(value, existing)
         {
             const idx = (existing) ? this.storage.indexOf(existing) : 0;
-            if (idx < 0)
-                throw new Error("Attempt to insert before a non-existent value");
+            if (idx < 0) return null;
             this.storage.splice(idx, 0, value);
+            return value;
         }
 
         remove(value)
         {
             const idx = this.storage.indexOf(value);
-            if (idx < 0) return;
-            this.storage.splice(idx, 1);
+            if (idx >= 0)
+                this.storage.splice(idx, 1);
+            return idx;
         }
 
-        push(...args) { this.storage.push(...args); }
+        push(...args) { return this.storage.push(...args); }
         /* We need to handle changes during iteration so we can't just use the
         array methods */
         forEach(callback, thisarg)
@@ -422,7 +422,8 @@ Node below. I could have put it just above Node but this makes the class relatio
         {
             const getters = this.constructor.getters;
             const names = this.constructor.names;
-            for (const arg of args)
+            for (const arg of args) {
+                if (!arg) continue; // anything we insert will be truthy
                 for (let i = 0; i < names.length; ++i) {
                     const v = getters[i](arg);
                     if (typeof v === "string" && v) {
@@ -431,6 +432,9 @@ Node below. I could have put it just above Node but this makes the class relatio
                         else delete this.storage[prop];
                     }
                 }
+            }
+
+            return args;
         }
 
         namedItem(n)
@@ -445,21 +449,12 @@ Node below. I could have put it just above Node but this makes the class relatio
 
         insert(value, existing)
         {
-            super.insert(value, existing);
-            this.handleNames(true, value);
+            return this.handleNames(true, super.insert(value, existing))[0];
         }
 
-        remove(value)
-        {
-            super.remove(value);
-            this.handleNames(false, value);
-        }
+        remove(value) { return super.remove(this.handleNames(false, value)[0]); }
 
-        push(...args)
-        {
-            super.push(...args);
-            this.handleNames(true, ...args);
-        }
+        push(...args) { return super.push(...this.handleNames(true, ...args)); }
     }
 
     // The actual classes we want
