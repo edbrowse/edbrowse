@@ -340,7 +340,7 @@ class Node extends EventTarget
     {
         super();
         // childNodes should be readonly; it is a live node list.
-        Object.defineProperty(this, "childNodes", {value: []})
+        Object.defineProperty(this, "childNodes", {value: new NodeList})
         Object.defineProperty(this, "parentNode", {value: null, writable: true, configurable:true})
     }
 
@@ -387,7 +387,7 @@ class Node extends EventTarget
         for(let i = 0; i < c1.length; ++i)
             c2[i] = c1[i], c2[i].parentNode = null;
 
-        c1.length = 0;
+        collection(c1).clear();
         // native function to parse the new html
         set_innerHTML(this, h);
         // Change live arrays, like getElementsByTagName,
@@ -402,7 +402,8 @@ class Node extends EventTarget
         ownerIdsScripts(this);
 
         // c2 is the old nodes, for the observers.
-        mutFixup(this, 0, c1, c2);
+        // Avoid a special case in mutFixup for NodeList
+        mutFixup(this, 0, Array.from(c1), c2);
     }
 
     static {
@@ -465,14 +466,14 @@ class Node extends EventTarget
     // can run even as the html tree is being built.  Ugh!
     appendChild1(c)
     {
-        this.childNodes.push(c);
+        collection(this.childNodes).push(c);
         c.parentNode = this;
         mutFixup(this, 0, c, null);
     }
 
     appendChild2(c)
     {
-        this.childNodes.push(c);
+        collection(this.childNodes).push(c);
         c.parentNode = this;
         domLinkage('a', this, "", c); // C linkage
     }
@@ -481,7 +482,7 @@ class Node extends EventTarget
     // Called from within innerHTML.
     appendChild3(c)
     {
-        this.childNodes.push(c);
+        collection(this.childNodes).push(c);
         c.parentNode = this;
     }
 
@@ -590,13 +591,7 @@ class Node extends EventTarget
         Node.isabove(c, this);
         if(c.nodeType == 11) return insertFragment(this, c, t);
         if(c.parentNode) c.parentNode.removeChild(c);
-        const cn = this.childNodes;
-        const l = cn.length;
-        let mark = -1;
-        for(let i = 0; i < l; ++i)
-            if(t == cn[i]) mark = i;
-        if(mark < 0) return null;
-        cn.splice(mark, 0, c);
+        collection(this.childNodes).insert(c, t);
         c.parentNode = this;
         domLinkage('b', this, "", c, t); // update the tree in C
         if (c.nodeType != 3) {
@@ -614,13 +609,7 @@ class Node extends EventTarget
         Node.isabove(c, this);
         if (c.nodeType == 11) return insertFragment$nm(this, c, t);
         if (c.parentNode) c.parentNode.removeChild$nm(c);
-        const cn = this.childNodes;
-        const l = cn.length;
-        let mark = -1;
-        for(let i = 0; i < l; ++i)
-            if (t == cn[i]) mark = i;
-        if (mark < 0) return null;
-        cn.splice(mark, 0, c);
+        collection(this.childNodes).insert(c, t);
         c.parentNode = this;
         domLinkage('b', this, "", c, t); // update the tree in C
         if (c.nodeType != 3)
@@ -631,14 +620,8 @@ class Node extends EventTarget
     removeChild(c)
     {
         if (!c) return null;
-        const cn = this.childNodes;
-        const l = cn.length;
-        let mark = -1;
-        for (let i = 0; i < l; ++i)
-            if (c == cn[i]) { mark = i; break; }
-        if (mark < 0) return null;
         const w = isRooted(c);
-        cn.splice(mark, 1);
+        const mark = collection(this.childNodes).remove(c);
         c.parentNode = null;
         domLinkage('r', this, "", c);
         if (c.nodeType != 3) {
@@ -654,14 +637,8 @@ class Node extends EventTarget
     removeChild$nm(c)
     {
         if(!c) return null;
-        const cn = this.childNodes;
-        const l = cn.length;
-        let mark = -1;
-        for (let i = 0; i < l; ++i)
-            if (c == cn[i]) { mark = i; break; }
-        if (mark < 0) return null;
         const w = isRooted(c);
-        cn.splice(mark, 1);
+        collection(this.childNodes).remove(c);
         c.parentNode = null;
         domLinkage('r', this, "", c);
         if (c.nodeType != 3) {
@@ -1530,7 +1507,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
                 mutFixup(c, 0, 0, deletions);
                 continue;
             }
-        c.remove();
+            c.remove();
             this.appendChild$nm(c);
             additions.push(c);
         }
@@ -1585,7 +1562,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
                 mutFixup(c, 0, 0, deletions);
                 continue;
             }
-        c.remove();
+            c.remove();
             p.insertBefore$nm(c, this);
             additions.push(c);
         }
@@ -1614,7 +1591,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
                 mutFixup(c, 0, 0, deletions);
                 continue;
             }
-        c.remove();
+            c.remove();
             p.insertBefore$nm(c, n);
             additions.push(c);
         }
@@ -1643,7 +1620,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
                 mutFixup(c, 0, 0, deletions);
                 continue;
             }
-        c.remove();
+            c.remove();
             p.insertBefore$nm(c, n);
             additions.push(c);
         }
@@ -2274,7 +2251,7 @@ all those classes will exist. */
                 "removeAttribute"])
                     c[f] = Element.prototype[f];
                 // It's not a Node, so we don't have childNodes yet.
-                odp(this, "childNodes", {value: []})
+                odp(this, "childNodes", {value: new NodeList})
                 odp(this, "parentNode", {value: null, writable: true, configurable:true})
             }
             odp(c, "nodeName", {value:s,writable:true,configurable:true});
@@ -2781,7 +2758,7 @@ class HTMLInputElement extends HTMLElement
         // which is not guaranteed
         if(this.parentNode && (e = this.parentNode.childNodes)) {
             for(let i=0; i<e.length; ++i)
-                if(e[i].nodeName == "INPUT" && e[i].type == "radio" && 
+                if(e[i].nodeName == "INPUT" && e[i].type == "radio" &&
                 e[i].name == nn &&e[i] != this)
                     e[i].checked$2 = false;
             return;
@@ -2852,7 +2829,7 @@ if this is a radio button. */
         } else // try it another way
         if(this.parentNode && (e = this.parentNode.childNodes)) {
             for(let i=0; i<e.length; ++i)
-                if(e[i].nodeName == "INPUT" && e[i].type == t && 
+                if(e[i].nodeName == "INPUT" && e[i].type == t &&
                 e[i].name == nn &&e[i] != this) e[i].checked$2 = false;
         }
     }
@@ -3056,7 +3033,7 @@ class HTMLSelectElement extends HTMLElement
 // It can be called from select or optgroup.
     option_from_html(o)
     {
-        this.childNodes.push(o);
+        collection(this.childNodes).push(o);
         o.parentNode = this;
         let og = null; // option group
         let select = this;
@@ -3341,7 +3318,8 @@ class HTMLStyleElement extends HTMLElement
 {
     constructor() { super(); }
     get css$data() { // edbrowse feature
-        let s = ""; for(let c of this.childNodes)
+        let s = "";
+        for(let c of this.childNodes)
             if(c.nodeType == 3) s += c.data;
         return s;
     }
@@ -5424,7 +5402,7 @@ class MutationObserver
             to handling advanced observer use-cases.
         */
         if (target.is$frame) return;
-        let a = target.childNodes.slice();
+        let a = Array.from(target.childNodes);
         let i = 0;
         let n;
         while (i < a.length) {

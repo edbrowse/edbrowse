@@ -1123,7 +1123,11 @@ function mutFixup(b, flavor, y, z) {
     // and the thing added or removed is a frame or an array or it has frames below.
     if(flavor == 0 && (w2 = isRooted(b))) {
         const j = typeof y == "object" ? y : z;
-        if(Array.isArray(j) || j.is$frame || (j.childNodes&&gebtn(j, "iframe", true, false).length))
+        if(
+            Array.isArray(j) ||
+            j.is$frame ||
+            (j.childNodes && gebtn(j, "iframe", true, false).length)
+        )
             frames$rebuild(w2);
     }
     /* Observers only look downward through the tree and we know that we will
@@ -1548,9 +1552,9 @@ function cloneNodeHelper(root, deep, into)
             w = node1.ownerDocument.defaultView
         const d = w.document
 
-        // WARNING: don't use instanceof Array here.
-        // Array is a different class in another frame.
-        if (Array.isArray(node1.childNodes))
+        // WARNING: don't use instanceof NodeList here.
+        // It's a different class in another frame.
+        if (node1.childNodes && node1.childNodes.length)
             kids = node1.childNodes;
 
         // We should always be cloning a node.
@@ -1789,7 +1793,7 @@ function cloneNodeHelper(root, deep, into)
         let p = "";
         while (t != cloneRoot1) {
             const up = t.parentNode;
-            if (!up || up.nodeType == 9 || !up.childNodes) return "";
+            if (!up || up.nodeType == 9 || !(up.childNodes && up.childNodes.length)) return "";
             let i;
             for(i=0; i<up.childNodes.length; ++i)
                 if(up.childNodes[i] == t) break;
