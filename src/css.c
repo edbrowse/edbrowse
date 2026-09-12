@@ -1069,7 +1069,8 @@ static void chainFree(struct asel *asel);
 static bool onematch, topmatch, skiproot, gcsmatch;
 static char matchtype;		// 0 plain 1 before 2 after
 static char *match_ba_string;
-static bool matchhover;		// match on :hover selectors.
+static bool match_disp_inv, match_vis_inv;
+static int match_ba_spec, match_disp_spec, match_vis_spec;
 static bool visibility_only = false;
 static Tag *rootnode;
 static Tag **doclist;
@@ -3429,8 +3430,7 @@ static Tag **qsa2(struct desc *d, const char *selstring)
 		    (sel->after && matchtype != 2) ||
 		    (!(sel->before | sel->after) && matchtype))
 			continue;
-		if (sel->hover ^ matchhover)
-			continue;
+		if (sel->hover) continue;
 		a2 = qsa1(sel, selstring);
 		if (a) {
 			a_new = qsaMerge(a, a2);
@@ -3618,33 +3618,33 @@ This feature might go away some day. It isn't very important.
 static void do_rules(const Tag *t, struct rule *r0, int highspec)
 {
 	struct rule *r, *r1;
-	char *s, *s_attr;
-	int sl;
+	char *s;
 	char *a;
 	int spec;
-
-    match_ba_string = 0;
 
 	if(!t && !has_property_win(cf, "soj$")) {
 		debugPrint(3, "no master style object for tag nil");
 		return;
 	}
 
-	s = initString(&sl);
 	for (r = r0; r; r = r->next) {
 		if(!r->prop_ok) continue;
-		if (matchhover) continue;
+		if(visibility_only && !r->visrel) continue;
 
 // special code for before after content
-		if (matchtype && t && stringEqual(r->atname, "content")) {
+		if (matchtype && t && stringEqual(r->atname, "content") &&
+		highspec >= match_ba_spec) {
 			if (stringEqual(r->atval, "none")) continue;
-			if (sl) stringAndChar(&s, &sl, ' ');
-			stringAndString(&s, &sl, r->atval);
+			nzFree(match_ba_string);
+			asprintf(&s, (matchtype == 1 ? "%s " : " %s"), r->atval);
+// turn attr(foo) into node[foo]
+			match_ba_string = attrify(t, s);
+			nzFree(s);
+			match_ba_spec = highspec;
 			continue;
 		}
 
 		if(t) continue;
-		if(visibility_only && !r->visrel) continue;
 
 /*********************************************************************
 don't repeat an attribute. Hardly ever happens except for acid test 0.
@@ -3671,22 +3671,6 @@ so this might be wrong but it gets around that test.
 		set_gcs_number(a, highspec);
 		free(a);
 	}
-
-    if (!sl) return;
-// At this point matchtype is nonzero and we have before after text
-// put a space between the injected text and the original text
-	stringAndChar(&s, &sl, ' ');
-	if (matchtype == 2) {
-// oops, space belongs on the other side
-		memmove(s + 1, s, sl - 1);
-		s[0] = ' ';
-	}
-// turn attr(foo) into node[foo]
-    s_attr = attrify(t, s);
-    nzFree(s);
-    s = s_attr;
-    if(t) match_ba_string = s;
-    else nzFree(s);
 }
 
 // Is name one of the whitespace separated words in the node's class?
@@ -3776,10 +3760,11 @@ char *cssBeforeAfter(Tag *t, int p)
     struct cssmaster *cm = cf->cssmaster;
     if (!cm) return 0;
     struct desc *d;
-    char *hold_string = 0;
     rootnode = 0;
     visibility_only = gcsmatch = true;
     matchtype = p;
+    match_ba_string = 0;
+    match_ba_spec = 0;
 // defer to the js here.
     nzFree(t->class);
     t->class = get_js_attribute(t, "class");
@@ -3790,15 +3775,38 @@ char *cssBeforeAfter(Tag *t, int p)
         if(!d->prop_ok) continue;
         if(visibility_only && !d->visrel) continue;
         if(!cssKeyMatch(d, t)) continue;
-        if (qsaMatchGroup(t, d)) {
+        if (qsaMatchGroup(t, d))
             do_rules(t, d->rules, d->highspec);
-            if(match_ba_string)
-                nzFree(hold_string), hold_string = match_ba_string;
-        }
     }
     gcsmatch = visibility_only = false;
     matchtype = 0;
-    return hold_string;
+    return match_ba_string;
+}
+
+bool cssInvisible(Tag *t)
+{
+    struct cssmaster *cm = cf->cssmaster;
+    if (!cm) return 0;
+    struct desc *d;
+    rootnode = 0;
+    visibility_only = gcsmatch = true;
+    matchtype = 0;
+    match_disp_inv = match_vis_inv = false;
+    match_disp_spec = match_vis_spec = 0;
+    nzFree(t->class);
+    t->class = get_js_attribute(t, "class");
+    nzFree(t->id);
+    t->id = get_js_attribute(t, "id");
+    for (d = cm->descriptors; d; d = d->next) {
+        if(d->error) continue;
+        if(!d->prop_ok) continue;
+        if(visibility_only && !d->visrel) continue;
+        if(!cssKeyMatch(d, t)) continue;
+        if (qsaMatchGroup(t, d))
+            do_rules(t, d->rules, d->highspec);
+    }
+    gcsmatch = visibility_only = false;
+    return match_disp_inv | match_vis_inv;
 }
 
 void cssText(const char *rulestring)
