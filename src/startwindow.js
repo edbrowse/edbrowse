@@ -2048,33 +2048,6 @@ Here is the way. */
         tp.scrollIntoView = eb$voidfunction;
     }
 
-// This is a manufactured method for css purposes,
-// to inject words or marks before or after a tag, marks that you don't see
-// unless you type showall, marks that nobody probably cares about anyways,
-// but I read about it in the spec and tried to make it happen.
-    injectSetup(which)
-    {
-        let z = this;
-        switch(which) {
-        case 'a':
-            if(!this.inj$after) {
-                z = this.appendChild(document.createTextNode())
-                odp(z, "inj$css", {value:true})
-                odp(this, "inj$after", {value:true})
-            } else z = this.lastChild;
-            break;
-        case 'b':
-            if(!this.inj$before) {
-                z = this.prepend$child(document.createTextNode())
-                odp(z, "inj$css", {value:true})
-                odp(this, "inj$before", {value:true})
-            } else z = this.firstChild;
-            break;
-        }
-        // establish the style object for the calling function in css.c
-        window.soj$ = z.style;
-    }
-
 }
 swdc(Element);
 
@@ -5877,6 +5850,9 @@ swp("eb$qs$start", function() {
     // now gather the css rules for inject before after
     mw$.cssGather();
     mw$.frames$rebuild(window);
+})
+swp("cssGather0", function() {
+    mw$.cssGather(window);
 })
 swp("frames$rebuild", function() {mw$.frames$rebuild(window);})
 

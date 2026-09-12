@@ -6052,8 +6052,7 @@ char *render(void)
 	Frame *f, *save_cf = cf;
 	rowspan();
 	for (f = &cw->f0; f; f = f->next)
-		if (f->cx)
-			set_property_bool_win(f, "rr$start", true);
+		run_function_bool_win(f, "cssGather0");
 	ns = initString(&ns_l);
 	invisible = false;
 	inv2 = NULL;

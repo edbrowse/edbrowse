@@ -1945,7 +1945,7 @@ Object.defineProperty(generalbar, "visible", {value:true})
 
 function cssGather(newwin) {
 var w = my$win();
-if(newwin && newwin.eb$invisible) w = newwin;
+if(newwin && newwin.eb$ctx) w = newwin;
 var d =w.document;
 var css_all = "";
 w.cssSource = [];
@@ -2529,13 +2529,7 @@ function eb$invisible(t) {
     var rc = 0; // normal tag, please display
     var s1; // original style object
     var s2; // computed style object
-    var w = my$win();
-    if(!t || !w) return rc;
     if(t.hidden || t.ariaHidden) return 1;
-    if(w.rr$start) {
-        cssGather(w);
-        delete w.rr$start;
-    }
     s1 = t.style$2 ? t.style$2 : {};
     s2 = computeStyleInline(t);
     if(s1.hasOwnProperty("display")) s2.display = s1.display;
