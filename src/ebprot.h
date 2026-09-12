@@ -476,7 +476,6 @@ void cssFree(Frame *f);
 Tag **querySelectorAll(const char *selstring, Tag *top);
 Tag *querySelector(const char *selstring, Tag *top);
 bool querySelector0(const char *selstring, Tag *top);
-bool ok2inject(const char *node);
 void cssApply(int frameNumber, Tag *t, int pe);
 char *cssBeforeAfter(Tag *t, int p);
 void cssText(const char *rulestring);

@@ -3598,21 +3598,6 @@ static char *attrify(const Tag *r, char *line)
 	return s;
 }
 
-// :before and :after only make sense for certain nodes.
-bool ok2inject(const char *node)
-{
-    static const char *const yes[] = {
-        "A", "ADDRESS", "Q", "BLOCKQUOTE", "BODY", 
-        "CAPTION", "CITE",
-        "DIV", "FOOTER", "H1", "H2", "H3", "H4", "H5", "H",
-        "HEADER", "LABEL", "LI", "MENU",
-        "P", "SPAN", "TD", "TH", "XMP",
-        "LISTING", "STRONG", "EM", "S", "STRIKE", "I", "U", "B",
-    0};
-    if(!node) return false;
-    return stringInList(yes, node) >= 0;
-}
-
 /*********************************************************************
 do_rules is called from 3 different places, under 3 very different contexts.
 1. getComputedStyle(node), creates a new style object s,
@@ -3639,12 +3624,6 @@ static void do_rules(const Tag *t, struct rule *r0, int highspec)
 	int spec;
 
     match_ba_string = 0;
-	if (matchtype && t) {
-		s = get_property_string_t(t, "nodeName");
-		bool yes = ok2inject(s);
-		nzFree(s);
-		if (!yes) return;
-	}
 
 	if(!t && !has_property_win(cf, "soj$")) {
 		debugPrint(3, "no master style object for tag nil");

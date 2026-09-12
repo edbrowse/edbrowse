@@ -5008,6 +5008,21 @@ static int ahref_under(const Tag *t)
 	return 0;
 }
 
+// :before and :after only make sense for certain nodes.
+static bool ok2inject(const char *node)
+{
+    static const char *const yes[] = {
+        "A", "ADDRESS", "Q", "BLOCKQUOTE", "BODY", 
+        "CAPTION", "CITE",
+        "DIV", "FOOTER", "H1", "H2", "H3", "H4", "H5", "H",
+        "HEADER", "LABEL", "LI", "MENU",
+        "P", "SPAN", "TD", "TH", "XMP",
+        "LISTING", "STRONG", "EM", "S", "STRIKE", "I", "U", "B",
+    0};
+    if(!node) return false;
+    return stringInList(yes, node) >= 0;
+}
+
 static void emphasize(Tag *t, bool opentag, const char *a)
 {
     Tag *w;
