@@ -580,7 +580,6 @@ document.dispatchEvent(e);
 // In fact the before after inject is the only reason to run or even have the
 // eb$qs$start machinery, which is complicated, and we don't even see these
 // before after unless we set showall+, so one wonders if it's even worth it.
-// if(document.getElementsByClassName("inject")[0].firstChild.data != "My ") fail(173);
 let dbs = document.body.style; // shorthand
 if(dbs.hasOwnProperty("animation")) fail(176);
 if(document.styleSheets[0].cssRules[0].cssText.substr(0,4) != "body") fail(180);

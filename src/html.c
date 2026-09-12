@@ -5158,6 +5158,13 @@ li_hide:
 		return;
 	}
 
+    if(showall && !opentag && ok2inject(t->nodeNameU)) {
+        if ((al = cssBeforeAfter(t, 2))) {
+            stringAndString(&ns, &ns_l, al);
+            nzFree(al);
+        }
+    }
+
 	endcolor = false;
 	if (doColors && !opentag && t->iscolor) {
 		char *u0, *u1, *u3;
@@ -5602,7 +5609,14 @@ past_cell_paragraph:
 // tags with id= have to be part of the screen, so you can jump to them.
 		if (t->id && opentag)
 			tagInStream(tagno);
-		break;
+
+        if(showall && opentag && ok2inject(t->nodeNameU)) {
+            if ((al = cssBeforeAfter(t, 1))) {
+                stringAndString(&ns, &ns_l, al);
+                nzFree(al);
+            }
+        }
+        break;
 
 	case TAGACT_PRE:
 		if (!retainTag)

@@ -1049,9 +1049,6 @@ struct hashhead {
 	Tag *t;
 };
 
-static struct hashhead *hashtags, *hashids, *hashclasses;
-static int hashtags_n, hashids_n, hashclasses_n;
-
 struct shortcache {
 	struct shortcache *next;
 	char *url;
@@ -1079,11 +1076,6 @@ static Tag *rootnode;
 static Tag **doclist;
 static int doclist_a, doclist_n;
 static void build_doclist(Tag *top);
-static void hashBuild(void);
-static void hashFree(void);
-static void hashPrint(void);
-static Tag **bestListAtomic(struct asel *a);
-static void cssEverybody(void);
 
 static char *fromShortCache(const char *url)
 {
@@ -2454,7 +2446,6 @@ void cssDocLoad(int frameNumber, char *start)
         cf->cssmaster = cm = allocZeroMem(sizeof(struct cssmaster));
         readShortCache(cm);
     }
-// This could be run again and again, if the style nodes change.
     if (cm->descriptors) {
         debugPrint(3, "free css descriptors");
         cssPiecesFree(cm->descriptors);
@@ -2476,16 +2467,6 @@ void cssDocLoad(int frameNumber, char *start)
     }
 
     cssStats();
-
-    // rescan, looking for before after text.
-    // This use to do a lot more, when I didn't know what I was doing,
-    // now it's just :before :after and I'm not sure it's even worth it.
-    build_doclist(0);
-    hashBuild();
-    hashPrint();
-    cssEverybody();
-    hashFree();
-    nzFree(doclist);
 
 done:
     cf = save_cf;
@@ -3345,7 +3326,7 @@ static Tag **qsa1(const struct sel *sel, const char *selstring)
 	Tag *t;
 	Tag **a, **list;
 
-	list = bestListAtomic(sel->chain);
+	list = doclist;
 	if (!onematch && list) {
 // allocate room for all, in case they all match.
 		for (n = 0; list[n]; ++n) ;
@@ -3618,6 +3599,21 @@ static char *attrify(const Tag *r, char *line)
 	return s;
 }
 
+// :before and :after only make sense for certain nodes.
+bool ok2inject(const char *node)
+{
+    static const char *const yes[] = {
+        "A", "ADDRESS", "Q", "BLOCKQUOTE", "BODY", 
+        "CAPTION", "CITE",
+        "DIV", "FOOTER", "H1", "H2", "H3", "H4", "H5", "H",
+        "HEADER", "LABEL", "LI", "MENU",
+        "P", "SPAN", "TD", "TH", "XMP",
+        "LISTING", "STRONG", "EM", "S", "STRIKE", "I", "U", "B",
+    0};
+    if(!node) return false;
+    return stringInList(yes, node) >= 0;
+}
+
 /*********************************************************************
 do_rules is called from 3 different places, under 3 very different contexts.
 1. getComputedStyle(node), creates a new style object s,
@@ -3656,44 +3652,11 @@ static void do_rules(const Tag *t, struct rule *r0, int highspec)
 	int spec;
 
     match_ba_string = 0;
-/*********************************************************************
-before and after can't act on a select node,as that is an array,
-the way I have implemented it, so sneaking in a text node
-is sometimes treated as an option, and that is a disaster!
-Corner case? Not really, because some people write *:before, hitting every node.
-And if you do it twice the second call could add a text node
-to the text node you just added in the first call, and so on,
-so we don't want to apply before or after to text nodes.
-Or options, or html (screwing up the head body structure),
-or iframe (which should only have document below);
-in fact it's easier to list the tags that allow it, in the array ok2inject.
-input is problematic. With showall on, the injected text can get
-entrained in the actual text, and sent to the server on submit,
-which is not what the server expects.
-The contents of a button is not sent to the server,
-so in theory that might be ok, but <extra clik for more details> might be confusing.
-And if it was input type=button we'd leave it off, so to be consistent,
- button is not on our ok list.
-If t is 0 we are in getComputedStyle and then we want to see
-the before after rules straight up.
-*********************************************************************/
-
 	if (matchtype && t) {
-		bool forbidden = true;
-		static const char *const ok2inject[] = {
-			"A", "ADDRESS", "Q", "BLOCKQUOTE", "BODY", 
-			"CAPTION", "CITE",
-			"DIV", "FOOTER", "H1", "H2", "H3", "H4", "H5", "H6",
-			"HEADER", "LABEL", "LI", "MENU",
-			"P", "SPAN", "TD", "TH", "XMP",
-			"LISTING", "STRONG", "EM", "S", "STRIKE", "I", "U", "B",
-			0
-		};
 		s = get_property_string_t(t, "nodeName");
-		if (s && stringInList(ok2inject, s) >= 0)
-			forbidden = false;
+		bool yes = ok2inject(s);
 		nzFree(s);
-		if (forbidden) return;
+		if (!yes) return;
 	}
 
 	if(t && !match_ba) {
@@ -3901,7 +3864,7 @@ char *cssBeforeAfter(Tag *t, int p)
         if(visibility_only && !d->visrel) continue;
         if(!cssKeyMatch(d, t)) continue;
         if (qsaMatchGroup(t, d)) {
-            do_rules(0, d->rules, d->highspec);
+            do_rules(t, d->rules, d->highspec);
             if(match_ba_string)
                 nzFree(hold_string), hold_string = match_ba_string;
         }
@@ -3947,318 +3910,3 @@ void cssText(const char *rulestring)
 	cssPiecesFree(d0);
 }
 
-static int key_cmp(const void *s, const void *t)
-{
-// there shouldn't be any null or empty keys here.
-	return strcmp(((struct hashhead *)s)->key, ((struct hashhead *)t)->key);
-}
-
-// First two parameters are pass by address, so we can pass them back.
-// Third is true if keys are allocated.
-// Empty list is possible, corner case.
-static void hashSortCrunch(struct hashhead **hp, int *np, bool keyalloc)
-{
-	struct hashhead *h = *hp;
-	int n = *np;
-	struct hashhead *mark = 0, *v;
-	int i, j = 0, distinct = 0;
-
-	qsort(h, n, sizeof(struct hashhead), key_cmp);
-
-// /bin/uniq -c
-	for (i = 0; i < n; ++i) {
-		v = h + i;
-		if (!mark)
-			mark = v, v->n = 1, distinct = 1;
-		else if (stringEqual(mark->key, v->key))
-			++(mark->n), v->n = 0;
-		else
-			mark = v, v->n = 1, ++distinct;
-	}
-
-// now crunch
-	mark = 0;
-	for (i = 0; i < n; ++i) {
-		v = h + i;
-		if (!v->n) {	// same key
-			mark->body[j++] = v->t;
-			if (keyalloc)
-				nzFree(v->key);
-			continue;
-		}
-// it's a new key
-		if (!mark)
-			mark = h;
-		else
-			mark->body[j] = 0, ++mark;
-		if (mark < v)
-			(*mark) = (*v);
-		mark->body = allocMem((mark->n + 1) * sizeof(Tag *));
-		mark->body[0] = mark->t;
-		mark->t = 0;
-		j = 1;
-	}
-
-	if (mark) {
-		mark->body[j] = 0;
-		++mark;
-		if (mark - h != distinct)
-			printf("css hash mismatch %zu versus %d\n",
-			       mark - h, distinct);
-		distinct = mark - h;
-	}
-// make sure there's something, even if distinct = 0
-	h = reallocMem(h, (distinct + 1) * sizeof(struct hashhead));
-	*hp = h, *np = distinct;
-}
-
-static void hashBuild(void)
-{
-	Tag *t;
-	int i, j, a;
-	struct hashhead *h;
-	static const char ws[] = " \t\r\n\f";	// white space
-	char *classcopy, *s, *u;
-
-	build_doclist(0);
-
-// tags first, every node should have a tag.
-	h = allocZeroMem(doclist_n * sizeof(struct hashhead));
-	for (i = j = 0; i < doclist_n; ++i) {
-		t = doclist[i];
-		if (!(t->nodeName && t->nodeName[0]))
-			continue;
-		h[j].key = t->nodeNameU;
-		h[j].t = t;
-		++j;
-	}
-	hashSortCrunch(&h, &j, false);
-	hashtags = h, hashtags_n = j;
-
-// a lot of nodes won't have id, so this alloc is overkill, but oh well.
-	h = allocZeroMem(doclist_n * sizeof(struct hashhead));
-	for (i = j = 0; i < doclist_n; ++i) {
-		t = doclist[i];
-		if (!(t->id && t->id[0]))
-			continue;
-		h[j].key = t->id;
-		h[j].t = t;
-		++j;
-	}
-	hashSortCrunch(&h, &j, false);
-	hashids = h, hashids_n = j;
-
-/*********************************************************************
-Last one is class but it's tricky.
-If class is "foo bar", t must be hashed under foo and under bar.
-A combinatorial explosion is possible here.
-If class is "a b c d e" then we should hash under: "a" "b" "c" "d" "e"
-"a b" "b c" "c d" "d e" "a b c" "b c d" "c d e"
-"a b c d" "b c d e" and "a b c d e".
-I'm not going to worry about that.
-Just the indifidual words and the whole thing.
-*********************************************************************/
-
-	a = 500;
-	h = allocMem(a * sizeof(struct hashhead));
-	for (i = j = 0; i < doclist_n; ++i) {
-		t = doclist[i];
-		if (!(t->class && t->class[0]))
-			continue;
-		if (j == a) {
-			a += 500;
-			h = reallocMem(h, a * sizeof(struct hashhead));
-		}
-		classcopy = cloneString(t->class);
-		h[j].key = classcopy;
-		h[j].t = t;
-		++j;
-
-		if (!strpbrk(t->class, ws))
-			continue;	// no spaces
-
-		classcopy = cloneString(t->class);
-		s = classcopy;
-		while (isspaceByte(*s))
-			++s;
-		while (*s) {
-			char cutc = 0;	// cut character
-			u = strpbrk(s, ws);
-			if (u)
-				cutc = *u, *u = 0;
-// s is the individual word
-			if (j == a) {
-				a += 500;
-				h = reallocMem(h, a * sizeof(struct hashhead));
-			}
-			h[j].key = cloneString(s);
-			h[j].t = t;
-			++j;
-			if (!cutc)
-				break;
-			s = u + 1;
-			while (isspaceByte(*s))
-				++s;
-		}
-
-		nzFree(classcopy);
-	}
-	hashSortCrunch(&h, &j, true);
-	hashclasses = h, hashclasses_n = j;
-}
-
-static void hashFree(void)
-{
-	struct hashhead *h;
-	int i;
-	for (i = 0; i < hashtags_n; ++i) {
-		h = hashtags + i;
-		free(h->body);
-	}
-	free(hashtags);
-	hashtags = 0, hashtags_n = 0;
-	for (i = 0; i < hashids_n; ++i) {
-		h = hashids + i;
-		free(h->body);
-	}
-	free(hashids);
-	hashids = 0, hashids_n = 0;
-	for (i = 0; i < hashclasses_n; ++i) {
-		h = hashclasses + i;
-		free(h->body);
-		free(h->key);
-	}
-	free(hashclasses);
-	hashclasses = 0, hashclasses_n = 0;
-	nzFree(doclist);
-	doclist = 0, doclist_n = 0;
-}
-
-static void hashPrint(void)
-{
-	FILE *f;
-	struct hashhead *h;
-	int i;
-	if (!debugCSS)
-		return;
-	f = fopen(cssDebugFile, "ae");
-	if (!f)
-		return;
-	fprintf(f, "nodes %d\n", doclist_n);
-	fprintf(f, "tags:\n");
-	for (i = 0; i < hashtags_n; ++i) {
-		h = hashtags + i;
-		fprintf(f, "%s %d\n", h->key, h->n);
-	}
-	fprintf(f, "ids:\n");
-	for (i = 0; i < hashids_n; ++i) {
-		h = hashids + i;
-		fprintf(f, "%s %d\n", h->key, h->n);
-	}
-	fprintf(f, "classes:\n");
-	for (i = 0; i < hashclasses_n; ++i) {
-		h = hashclasses + i;
-		fprintf(f, "%s %d\n", h->key, h->n);
-	}
-	fprintf(f, "nodes end\n");
-	fclose(f);
-}
-
-// use binary search to find the key in a hashlist
-static struct hashhead *findKey(struct hashhead *list, int n, const char *key)
-{
-	struct hashhead *h;
-	int rc, i, l = -1, r = n;
-	while (r - l > 1) {
-		i = (l + r) / 2;
-		h = list + i;
-		rc = strcmp(h->key, key);
-		if (!rc)
-			return h;
-		if (rc > 0)
-			r = i;
-		else
-			l = i;
-	}
-	return 0;		// not found
-}
-
-// Return the best list to scan for a given atomic selector.
-// This could be no list at all, if the selector includes .foo,
-// and there is no node of class foo.
-// Or it could be doclist if there is no tag and no class or id modifiers.
-static Tag **bestListAtomic(struct asel *a)
-{
-	struct mod *mod;
-	struct hashhead *h, *best_h = NULL;
-	int n, best_n = 0;
-
-	if (!bulkmatch)
-		return doclist;
-
-	if (a->tag) {
-		h = findKey(hashtags, hashtags_n, a->tag);
-		if (!h)
-			return 0;
-		best_n = h->n, best_h = h;
-	}
-
-	for (mod = a->modifiers; mod; mod = mod->next) {
-		if (mod->negate)
-			continue;
-		if (mod->isid) {
-			h = findKey(hashids, hashids_n, mod->part + 4);
-			if (!h)
-				return 0;
-			n = h->n;
-			if (!best_n || n < best_n)
-				best_n = n, best_h = h;
-		}
-		if (mod->isclass) {
-			h = findKey(hashclasses, hashclasses_n, mod->part + 8);
-			if (!h)
-				return 0;
-			n = h->n;
-			if (!best_n || n < best_n)
-				best_n = n, best_h = h;
-		}
-	}
-
-	return (best_n ? best_h->body : doclist);
-}
-
-// Cross all selectors and all nodes at document load time.
-// Assumes the hash tables have been built.
-static void cssEverybody(void)
-{
-	struct cssmaster *cm = cf->cssmaster;
-	struct desc *d0 = cm->descriptors, *d;
-	Tag **a, **u;
-	Tag *t;
-	int l;
-
-	bulkmatch = true;
-	skiproot = false;
-	rootnode = 0;
-
-	for (l = 0; l < 6; ++l) {
-		matchhover = (l >= 3);
-		matchtype = l % 3;
-		for (d = d0; d; d = d->next) {
-			if (d->error || !d->prop_ok || !d->visrel)
-				continue;
-			a = qsa2(d, NULL);
-			if (!a)
-				continue;
-			for (u = a; (t = *u); ++u) {
-				if (!t->jslink)
-					continue;
-				do_rules(t, d->rules, t->highspec);
-			}
-			nzFree(a);
-		}
-	}
-	bulkmatch = false;
-	matchtype = 0;
-	matchhover = false;
-}

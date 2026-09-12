@@ -58,9 +58,10 @@ const correct = "div1:34|padding-top|padding-right|padding-bottom|padding-left|s
 if(h != correct) msg += "|mismatch shorthand properties";
 if(ds.item(1.3) != ds.item(1) || ds.item("blah") != ds.item(0) || ds.item(atob) != ds.item(0) || ds.item("7") != ds.item(7)) msg += "|bad style.item conversions";
 
-if(b.style.paddingTop !== "") msg += `|bad sync default padding ${b.style.paddingTop}`;
-if(b.style.display !== "") msg += `|bad sync default display ${b.style.display}`;
-if(b.style.color !== "") msg += `|bad sync default color ${b.style.color}`;
+if(b.style.paddingTop !== "") msg += `|bad default padding ${b.style.paddingTop}`;
+if(b.style.display !== "") msg += `|bad default display ${b.style.display}`;
+if(b.style.color !== "") msg += `|bad default color ${b.style.color}`;
+if(b.style.fontSize !== "") msg += `|bad default fontSize ${b.style.fontSize}`;
 if(div1.style.paddingTop !== "10px") msg += `|bad html set padding ${b.style.paddingTop}`;
 b.style.display = "block";
 if(b.style.display !== "block") msg += `|bad direct set display ${b.style.display}`;
@@ -84,6 +85,7 @@ if(s1.display !== "block") msg += `|bad s1 display ${s1.display}`;
 // color red comes from the css file
  if(s1.color !== "rgb(255, 0, 0)") msg += `|bad s1 color ${s1.color}`;
 if(s1.backgroundColor !== "rgb(128, 128, 128)") msg += `|bad s1 backgroundColor ${s1.backgroundColor}`;
+ if(s1.fontSize !== "20px") msg += `|bad s1 fontSize ${s1.fontSize}`;
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
