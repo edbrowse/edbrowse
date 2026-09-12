@@ -1469,11 +1469,8 @@ It is possible for cf->winobj to be null - though I ran for years
 without running into this corner case. Browse a page with no js.
 Then turn on js and expand a frame.
 The entire page is rendered in context 1, but there is no js there.
-Within the frame, js is active, so we use css and other things to see if
-various tags are visible. This calls eb$invisible, which calls my$win().
-The same thing happens outside the frame, but there is no js window.
-That's a null pointer.
-Not sure what to do here, so just return null.
+Within the frame, js is active,
+but outside of that frame, the window object could be null.
 *********************************************************************/
 	if(!cf->winobj) return JS_NULL;
         (void) this;
@@ -3773,6 +3770,28 @@ if(extra == 4)
         }
     }
     connectTagObject(t, io);
+}
+
+int directInvisible(Tag *t)
+{
+    JSContext *cx = t->f0->cx;
+    JSValue style = get_property_object(cx, *((JSValue*)t->jv), "style");
+    int n = -1; // not determined
+    char *v = get_property_string(cx, style, "display");
+    if(v && *v) {
+        n = stringEqual(v, "none");
+        nzFree(v);
+        goto done;
+    }
+    v = get_property_string(cx, style, "visibility");
+    if(v && *v) {
+        n = stringEqual(v, "hidden");
+        nzFree(v);
+        goto done;
+    }
+done:
+    JS_Release(style);
+    return n;
 }
 
 static void rebuildSelector(Tag *sel, JSValue oa, int len2)

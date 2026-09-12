@@ -5202,7 +5202,7 @@ nocolorend:
 	if (!opentag && ti->bits & TAG_NOSLASH)
 		return;
 
-// We will call eb$invisible to derive visibility, that in turn invokes css,
+// We will call cssInvisible to derive visibility, that in turn invokes css,
 // that in turn requires us to be in the frame of the tags we are looking at.
 // render(), which calls this, restores cf.
 	cf = t->f0;
@@ -5213,7 +5213,7 @@ nocolorend:
         if(allowJS && t->jslink) {
 // lots of text nodes, and they don't carry visibility information
             if(action != TAGACT_TEXT)
-                    inv_now = run_function_onearg_win(cf, "eb$invisible", t);
+                    inv_now = cssInvisible(t);
         } else {
 // allow html to hide sections, even if js is not running.
             if(((a = attribVal(t, "hidden")) && !stringEqual(a, "false")) ||

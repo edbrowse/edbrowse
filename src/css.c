@@ -3599,7 +3599,7 @@ static char *attrify(const Tag *r, char *line)
 }
 
 /*********************************************************************
-do_rules is called from 3 different places, under 3 very different contexts.
+do_rules is called from 3 different places, under 3 different contexts.
 1. getComputedStyle(node), creates a new style object s,
 loops through all the css descriptors, matches them against node,
 and then applies the rules to s. s is accessed internally through window.soj$,
@@ -3611,8 +3611,11 @@ window.soj$ is the style object for internal use.
 3. cssBeforeAfter. See if css is injecting any text.
 This is for showalll+ only.
 We only check the descriptors that are visibility relevant,
-because they might contain content.
+those that might contain content.
 This feature might go away some day. It isn't very important.
+4. cssInvisible. See if any css rules set display = none.
+If the tag parameter t is nonzero, rules are not applied.
+We are in cases 3 or 4, and are scanning through the rules to get information.
 *********************************************************************/
 
 static void do_rules(const Tag *t, struct rule *r0, int highspec)
@@ -3632,17 +3635,31 @@ static void do_rules(const Tag *t, struct rule *r0, int highspec)
 		if(visibility_only && !r->visrel) continue;
 
 // special code for before after content
-		if (matchtype && t && stringEqual(r->atname, "content") &&
-		highspec >= match_ba_spec) {
-			if (stringEqual(r->atval, "none")) continue;
-			nzFree(match_ba_string);
-			asprintf(&s, (matchtype == 1 ? "%s " : " %s"), r->atval);
+        if (matchtype && t && stringEqual(r->atname, "content") &&
+        highspec >= match_ba_spec) {
+            if (stringEqual(r->atval, "none")) continue;
+            nzFree(match_ba_string);
+            asprintf(&s, (matchtype == 1 ? "%s " : " %s"), r->atval);
 // turn attr(foo) into node[foo]
-			match_ba_string = attrify(t, s);
-			nzFree(s);
-			match_ba_spec = highspec;
-			continue;
-		}
+            match_ba_string = attrify(t, s);
+            nzFree(s);
+            match_ba_spec = highspec;
+            continue;
+        }
+
+// special code for invisibiility
+        if (!matchtype && t && stringEqual(r->atname, "display") &&
+        highspec >= match_disp_spec) {
+            match_disp_inv = stringEqual(r->atval, "none");
+            match_disp_spec = highspec;
+            continue;
+        }
+        if (!matchtype && t && stringEqual(r->atname, "visibility") &&
+        highspec >= match_vis_spec) {
+            match_vis_inv = stringEqual(r->atval, "hidden");
+            match_vis_spec = highspec;
+            continue;
+        }
 
 		if(t) continue;
 
@@ -3788,6 +3805,10 @@ bool cssInvisible(Tag *t)
     struct cssmaster *cm = cf->cssmaster;
     if (!cm) return 0;
     struct desc *d;
+    if(get_property_bool_t(t, "hidden")) return true;
+    if(get_property_bool_t(t, "ariaHidden")) return true;
+    int n = directInvisible(t);
+    if(n >= 0) return n;
     rootnode = 0;
     visibility_only = gcsmatch = true;
     matchtype = 0;

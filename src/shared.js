@@ -2105,33 +2105,6 @@ if(!s["textTransform"]) s["textTransform"] = "none"; // acid test 46
 return s;
 }
 
-// A different version, focus is only on visibility.
-// Thus we pass 10 as the third parameter to cssapply().
-function computeStyleInline(e) {
-var w = my$win();
-/*********************************************************************
-This is called for every node on the page, every time we render, and all the
-caller wants back is display, visibility and color.
-A CSSStyleDeclaration is a whole dom element - it descends from HTMLElement -
-so constructing one runs four constructors and hangs a childNodes array and
-several defined properties off it, none of which we are going to look at.
-Take the prototype and skip the constructors.  The default properties, the
-shorthand setters and dom$class all live on the prototype, so what comes back
-still behaves like a style object, both here and to the css code in C that
-writes into it through window.soj$.
-*********************************************************************/
-var s = Object.create(w.CSSStyleDeclaration.prototype);
-// don't put a style under a style.
-// There are probably other nodes I should skip too.
-if(e.nodeType != 1 ||
-e.dom$class == "CSSStyleDeclaration" || e.dom$class == "HTMLStyleElement") return s;
-// apply all the css rules
-w.soj$ = s;
-cssApply(w.eb$ctx, e, 10);
-delete w.soj$;
-return s;
-}
-
 /*********************************************************************
 There are a lot of css shorthand properties.
 Example: set margin to 10px and you are really setting
@@ -2522,21 +2495,6 @@ s.textDecorationThickness =  h[3];
 
 }
 Object.freeze(cssShort)
-
-// Return true if this tag is invisible. Actually we return 0 or 1,
-// because run_function_onearg_win returns an integer.
-function eb$invisible(t) {
-    var rc = 0; // normal tag, please display
-    var s1; // original style object
-    var s2; // computed style object
-    if(t.hidden || t.ariaHidden) return 1;
-    s1 = t.style$2 ? t.style$2 : {};
-    s2 = computeStyleInline(t);
-    if(s1.hasOwnProperty("display")) s2.display = s1.display;
-    if(s1.hasOwnProperty("visibility")) s2.visibility = s1.visibility;
-    if(s2.display == "none" || s2.visibility == "hidden") rc = 1;
-    return rc;
-}
 
 // This is not comprehensive, but covers most cases,
 // and does what chrome does.
