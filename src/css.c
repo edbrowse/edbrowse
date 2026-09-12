@@ -1066,9 +1066,8 @@ static void cssAtomic(struct asel *a);
 static void cssParseLeft(struct desc *d);
 static void cssModify(struct asel *a, const char *m1, const char *m2);
 static void chainFree(struct asel *asel);
-static bool onematch, topmatch, skiproot, gcsmatch, bulkmatch;
+static bool onematch, topmatch, skiproot, gcsmatch;
 static char matchtype;		// 0 plain 1 before 2 after
-static bool match_ba; // only calculate the before after string
 static char *match_ba_string;
 static bool matchhover;		// match on :hover selectors.
 static bool visibility_only = false;
@@ -3624,22 +3623,11 @@ engine portable.
 2. The cssText setter on a style object.
 There are no selectors here, just rules, as supplied by the calling function.
 window.soj$ is the style object for internal use.
-3. Apply all css descriptors to all nodes at javascript startup.
-This is done by cssEverybody().
-It is indicated by bulkmatch = true.
-t indicates the node being examined.
-3a. matchtype is 0 for the plain selectors.
-style will be set to node.style by the injectSetup function.
-3b. matchtype is 1 for the before selectors.
-3c. matchtype is 2 for the after selectors.
-Then repeat 3a 3b 3c with matchhover = true.
-This is done only to see if the node becomes visible on hover.
-Only looking for display=something or visibility=visible.
-Set a flag if that is found.
-To reiterate, t is not null, indicating the node, from cssEverybody.
-We derive the style object from the node.
-If matchtype is nonzero then we are looking at t.Text.style,
-for the before or after text. For matchtype == 0 we access t.style.
+3. cssBeforeAfter. See if css is injecting any text.
+This is for showalll+ only.
+We only check the descriptors that are visibility relevant,
+because they might contain content.
+This feature might go away some day. It isn't very important.
 *********************************************************************/
 
 static void do_rules(const Tag *t, struct rule *r0, int highspec)
@@ -3647,7 +3635,6 @@ static void do_rules(const Tag *t, struct rule *r0, int highspec)
 	struct rule *r, *r1;
 	char *s, *s_attr;
 	int sl;
-	Tag *tn = 0; // the text node that holds before or after text
 	char *a;
 	int spec;
 
@@ -3659,49 +3646,16 @@ static void do_rules(const Tag *t, struct rule *r0, int highspec)
 		if (!yes) return;
 	}
 
-	if(t && !match_ba) {
-		static const char commands[] = "-\0b\0a";
-		run_function_onestring_t(t, "injectSetup", commands + 2*matchtype);
-		if(matchtype && !t->firstchild)
-			return; // should never happen
-// this is temporary
-		if(matchtype == 1)
-			tn = t->firstchild;
-		if(matchtype == 2) {
-			Tag *u = t->firstchild;
-			while(u->sibling) u = u->sibling;
-			tn = u;
-		}
-	}
-
-	if(!has_property_win(cf, "soj$") && !match_ba) {
-		if(t)
-			debugPrint(3, "no master style object for tag %d %s", t->seqno, t->info->name);
-		else
-			debugPrint(3, "no master style object for tag nil");
+	if(!t && !has_property_win(cf, "soj$")) {
+		debugPrint(3, "no master style object for tag nil");
 		return;
 	}
 
 	s = initString(&sl);
 	for (r = r0; r; r = r->next) {
 		if(!r->prop_ok) continue;
+		if (matchhover) continue;
 
-// hover only looks for display visible
-		if (matchhover) {
-			if ((stringEqual(r->atname, "display") &&
-			     strlen(r->atval) && !stringEqual(r->atval, "none"))
-			    ||
-			    (stringEqual(r->atname, "visibility") &&
-			     strlen(r->atval)
-			     && !stringEqual(r->atval, "hidden")))
-				set_gcs_bool("hov$vis", true);
-// what about color anything other than transparent?
-// If invisible because color = transparent, then color = red unhides it.
-			if (stringEqual(r->atname, "color") && strlen(r->atval)
-			    && !stringEqual(r->atval, "transparent"))
-				set_gcs_bool("hov$col", true);
-			continue;
-		}
 // special code for before after content
 		if (matchtype && t && stringEqual(r->atname, "content")) {
 			if (stringEqual(r->atval, "none")) continue;
@@ -3710,7 +3664,7 @@ static void do_rules(const Tag *t, struct rule *r0, int highspec)
 			continue;
 		}
 
-		if(bulkmatch || match_ba) continue;
+		if(t) continue;
 		if(visibility_only && !r->visrel) continue;
 
 /*********************************************************************
@@ -3739,9 +3693,6 @@ so this might be wrong but it gets around that test.
 		free(a);
 	}
 
-    if(t)
-        delete_property_win(cf, "soj$");
-
     if (!sl) return;
 // At this point matchtype is nonzero and we have before after text
 // put a space between the injected text and the original text
@@ -3752,14 +3703,11 @@ so this might be wrong but it gets around that test.
 		s[0] = ' ';
 	}
 // turn attr(foo) into node[foo]
-	s_attr = attrify(t, s);
-	nzFree(s);
-	s = s_attr;
-	if(match_ba) { match_ba_string = s; return; }
-	set_property_string_t(tn, "data$2", s);
-	nzFree(tn->textval);
-	tn->textval = s;
-	set_property_bool_t(tn, "inj$css", true);
+    s_attr = attrify(t, s);
+    nzFree(s);
+    s = s_attr;
+    if(t) match_ba_string = s;
+    else nzFree(s);
 }
 
 // Is name one of the whitespace separated words in the node's class?
@@ -3851,7 +3799,7 @@ char *cssBeforeAfter(Tag *t, int p)
     struct desc *d;
     char *hold_string = 0;
     rootnode = 0;
-    visibility_only = gcsmatch = match_ba = true;
+    visibility_only = gcsmatch = true;
     matchtype = p;
 // defer to the js here.
     nzFree(t->class);
@@ -3869,7 +3817,7 @@ char *cssBeforeAfter(Tag *t, int p)
                 nzFree(hold_string), hold_string = match_ba_string;
         }
     }
-    gcsmatch = match_ba = visibility_only = false;
+    gcsmatch = visibility_only = false;
     matchtype = 0;
     return hold_string;
 }

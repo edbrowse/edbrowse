@@ -3770,7 +3770,7 @@ static void silent(int msg, ...)
     (void) msg;
 }
 
-static int invcount, injcount, rrcount;
+static int invcount, rrcount;
 
 /* Rerender the buffer and notify of any lines that have changed */
 int rr_interval = 20;
@@ -3802,7 +3802,7 @@ void rerender(int rr_command)
 	}
 	if(cw->rr_throttle > rr_interval) cw->rr_throttle = rr_interval;
 // nextrender is stamped at the end, when we know how long this took.
-	invcount = injcount = rrcount = 0;
+	invcount = rrcount = 0;
 
 // not sure if we have to do this here
 	rebuildSelectors();
@@ -3824,24 +3824,8 @@ void rerender(int rr_command)
 	nzFree(a);
 	debugPrint(4, "%d nodes rendered", rrcount);
 
-	if (rr_command > 0 && debugLevel >= 3) {
-		char buf[120];
-		buf[0] = 0;
-		if (invcount) {
-			if (buf[0])
-				strcat(buf, ", ");
-			sprintf(buf + strlen(buf),
-				"%d nodes invisible", invcount);
-		}
-		if (injcount) {
-			if (buf[0])
-				strcat(buf, ", ");
-			sprintf(buf + strlen(buf), "%d nodes injected by css",
-				injcount);
-		}
-		if (buf[0])
-			debugPrint(3, "%s", buf);
-	}
+    if (rr_command > 0 && invcount)
+        debugPrint(3, "%d nodes invisible", invcount);
 
 // the high runner case, most of the time nothing changes,
 // and we can check that efficiently with strcmp
@@ -5229,14 +5213,6 @@ nocolorend:
         if (inv_now && !showall) {
             inv2 = t;
             return;
-        }
-        if (action == TAGACT_TEXT && t->jslink &&
-            get_property_bool_t(t, "inj$css")) {
-            ++injcount;
-            if (!showall) {
-                inv2 = t;
-                return;
-            }
         }
     }
 
