@@ -64,8 +64,8 @@ static const char *const errorMessage[] = {
 static int errorBuckets[CSS_ERROR_LAST];
 static int loadcount;
 
-// This list is (sadly) replicated in startwindow.js
-// but this one includes the shorthand properties, like margin.
+// A native method pushes this list to the js world, so we don't hvae
+// to copy it, as it is rather long.
 const char * const allowableStyleElements[] = {
   "accentColor",
   "additiveSymbols",

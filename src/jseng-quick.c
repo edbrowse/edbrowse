@@ -1436,6 +1436,20 @@ static JSValue nat_ok(JSContext * cx, JSValueConst this, int argc, JSValueConst 
     return keys;
 }
 
+static JSValue nat_allow_css(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
+{
+    JSValue keys = JS_NewArray(cx);
+    int i;
+    const char *p;
+    for(i=0; (p = allowableStyleElements[i]); ++i) {
+        JSAtom a = JS_NewAtomUInt32(cx, i);
+        JS_SetProperty(cx, keys, a, JS_NewString(cx, p));
+        JS_FreeAtom(cx, a);
+    }
+    (void) this;
+    return keys;
+}
+
 static JSValue nat_new_location(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
 	const char *s = emptyString;
@@ -3216,7 +3230,8 @@ struct native_descriptor {
 };
 
 static const struct native_descriptor native_list[] = {
-    {"natok",  nat_ok, 1, JS_PROP_ENUMERABLE},
+    {"natok",  nat_ok, 1, 0},
+    {"cssAllowable",  nat_allow_css, 0, 0},
     {"my$win",  nat_mywin, 0, 0},
     {"my$doc",  nat_mydoc, 0, 0},
     {"eb$getcook",  nat_getcook, 0, 0},
