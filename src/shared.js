@@ -2133,7 +2133,7 @@ return s;
 }
 
 /*********************************************************************
-There are a lot of css shorthand propertie.
+There are a lot of css shorthand properties.
 Example: set margin to 10px and you are really setting
 marginTop = marginRight = marginBottom = marginLeft = 10px.
 You can set them individually of course, but this is a shorthand.

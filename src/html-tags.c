@@ -141,7 +141,7 @@ static const struct tagInfo availableTags[] = {
 	{"th", "a table heading", TAGACT_TD, 0, 1},
 	{"thead", "a table head", TAGACT_THEAD, 0, 1},
 	{"time", "the title", TAGACT_TIME, 0, 0},
-	{"title", "the title", TAGACT_TITLE, 0, 0},
+	{"title", "the title", TAGACT_TITLE, 0, 2},
 	{"tr", "a table row", TAGACT_TR, 5, 1},
 	{"tt", "teletype", TAGACT_NOP, 0, 0},
 	{"u", "underlined text", TAGACT_U, 0, 0},

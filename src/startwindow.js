@@ -3640,7 +3640,8 @@ class CSSStyleDeclaration extends HTMLElement
         return this.sheet$2;
     }
 
-    // acid test 45 says float magically turns into cssFloat
+    // acid test 45 says float turns into cssFloat, and back again.
+    // Mozart would call it the magic float.
     set float(v) { this.cssFloat = v; }
 
     get length()
