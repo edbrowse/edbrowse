@@ -2447,10 +2447,10 @@ void cssDocLoad(int frameNumber, char *start)
         readShortCache(cm);
     }
     if (cm->descriptors) {
-        debugPrint(3, "free css descriptors");
+        debugPrint(3, "free css descriptors context %d", cf->gsn);
         cssPiecesFree(cm->descriptors);
     }
-    debugPrint(3, "compile css descriptors");
+    debugPrint(3, "compile css descriptors context %d", cf->gsn);
     loadstring = initString(&loadstring_l);
     cm->descriptors = cssPieces(start);
     run_function_onestring_win(cf, "makeSheets", loadstring);

@@ -598,13 +598,6 @@ static bool run_function_bool(JSContext *cx, JSValueConst parent, const char *na
 	int dbl = 3;		// debug level to print debug messages
 	int32_t seqno = -1;
 		JSValue v, r, l[1];
-	if(cx != cf->cx) {
-		JSValue g = JS_GetGlobalObject(cx);
-		int jj = get_property_number(cx, g, "eb$ctx");
-		JS_Release(g);
-		debugPrint(3, "running function %s in context %d but current context is %d", name, jj, cf->gsn);
-// run it anyways and hope we know what we're doing
-	}
 
     // don't print timer in and out unless debug >= 4
     if (stringEqual(name, "ontimer")) {
@@ -615,12 +608,21 @@ static bool run_function_bool(JSContext *cx, JSValueConst parent, const char *na
         JS_Release(v);
     }
     // other functions we might not want to see at debug 3
-    if (stringEqual(name, "connectedCallbackStart") ||
-    stringEqual(name, "markAllCollections") ||
-    stringEqual(name, "frames$rebuild"))
+    static const char * const db4list[] = {
+      "connectedCallbackStart", "markAllCollections", "cssGather0",
+      "eb$qs$start", "frames$rebuild", 0};
+    if(stringInList(db4list, name) >= 0)
         dbl = 4;
     if(stringEqual(name, "onmessage$$running"))
         dbl = 9;
+
+    if(cx != cf->cx) {
+        JSValue g = JS_GetGlobalObject(cx);
+        int jj = get_property_number(cx, g, "eb$ctx");
+        JS_Release(g);
+        debugPrint(dbl, "running function %s in context %d but current context is %d", name, jj, cf->gsn);
+        // run it anyways and hope we know what we're doing
+    }
 
     v = JS_GetPropertyStr(cx, parent, name);
 	if(!JS_IsFunction(cx, v)) {
