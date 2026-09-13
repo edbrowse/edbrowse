@@ -2028,13 +2028,13 @@ break;
 
 // e is the node and pe is the pseudoelement
 function getComputedStyle(e,pe) {
-var s, w = my$win();
+    let s, w = my$win();
 
-if(typeof pe != "string") pe = 0;
-else if(pe.match(/^\s*$/)) pe = 0;
-else if(pe.match(/:before$/)) pe = 1;
-else if(pe.match(/:after$/)) pe = 2;
-else { alert3("getComputedStyle pseudoelement " + pe + " is invalid"); pe = 0; }
+    if(typeof pe != "string") pe = 0;
+    else if(pe.match(/^\s*$/)) pe = 0;
+    else if(pe.match(/:before$/)) pe = 1;
+    else if(pe.match(/:after$/)) pe = 2;
+    else { alert3("getComputedStyle pseudoelement " + pe + " is invalid"); pe = 0; }
 
 /*********************************************************************
 Some sites call getComputedStyle on the same node over and over again.
@@ -2048,8 +2048,8 @@ We're not sharing DOM classes yet, so hark back to the calling window
 to create the Style element.
 *********************************************************************/
 
-s = new w.CSSStyleDeclaration;
-s.element = e;
+    s = new w.CSSStyleDeclaration;
+    s.element = e;
 
 /*********************************************************************
 What if js has added or removed style objects from the tree?
@@ -2073,49 +2073,83 @@ for speed and optimization, is lost if the version changes.
 Remember that "this" is the window object.
 *********************************************************************/
 
-cssGather(this);
+    cssGather(this);
 
-this.soj$ = s;
-cssApply(this.eb$ctx, e, pe);
-delete this.soj$;
+    this.soj$ = s;
+    cssApply(this.eb$ctx, e, pe);
+    delete this.soj$;
 
 // If js sets a style property, or if it is set by style= in the html tag,
 // it carries across, and in fact it takes precedence.
 
-if(e.style$2) {
-for(var k in e.style) {
-if(!e.style.hasOwnProperty(k)) continue;
-if(typeof e.style[k] == 'object') continue;
-// Ok carry this one across.
-s[k] = e.style[k];
-}
-}
+    if(e.style$2) {
+        for(var k in e.style) {
+            if(!e.style.hasOwnProperty(k)) continue;
+            if(typeof e.style[k] == 'object') continue;
+            // Ok carry this one across.
+            s[k] = e.style[k];
+        }
+    }
 
 // Browsers turn colors into rgb. I think that's confusing,
 // but if they do it then I guess we should too.
-for(let k in s) {
-if(s.hasOwnProperty(k) &&
-(k == "color" || k.match(/Color$/)))
-s[k] = color2rgb(s[k]);
-}
-for(let k of ["paddingTop", "paddingLeft", "paddingRight", "paddingBottom"])
-if(!s[k]) s[k] = "0px";
+    for(let k in s) {
+        if(s.hasOwnProperty(k) &&
+        (k == "color" || k.match(/Color$/)))
+            s[k] = color2rgb(s[k]);
+    }
+    for(let k of [
+      "baselineShift",
+      "borderBlockEndWidth", "borderBlockStartWidth", "borderBlockWidth",
+      "borderBottomLeftRadius", "borderBottomRightRadius",
+      "borderBottomWidth", "borderEndEndRadius", "borderEndStartRadius",
+      "borderInlineEndWidth", "borderInlineStartWidth", "borderInlineWidth",
+      "borderLeftWidth", "borderRightWidth", "borderSpacing",
+      "borderStartEndRadius", "borderStartStartRadius",
+      "borderTopLeftRadius", "borderTopRightRadius",
+      "borderTopWidth",
+      "columnRuleWidth", "cx", "cy",
+      "minBlockSize", "minHeight", "minInlineSize", "minWidth",
+      "offsetDistance", "outlineOffset", "outlineWidth", "overflowClipMargin",
+      "paddingBlock", "paddingBlockEnd", "paddingBlockStart",
+      "paddingBottom", "paddingInline", "paddingInlineEnd", "paddingInlineStart",
+      "paddingLeft", "paddingRight", "paddingTop",
+      "r",
+      "scrollMarginBlock", "scrollMarginBlockEnd", "scrollMarginBlockStart",
+      "scrollMarginBottom",
+      "scrollMarginInline", "scrollMarginInlineEnd", "scrollMarginInlineStart",
+      "scrollMarginLeft", "scrollMarginRight", "scrollMarginTop",
+      "shapeMargin", "strokeDashoffset",
+      "textIndent",
+      "webkitBorderAfterWidth", "webkitBorderBeforeWidth",
+      "webkitBorderBottomLeftRadius", "webkitBorderBottomRightRadius",
+      "webkitBorderEndWidth", "webkitBorderHorizontalSpacing",
+      "webkitBorderRadius", "webkitBorderStartWidth",
+      "webkitBorderTopLeftRadius", "webkitBorderTopRightRadius",
+      "webkitBorderVerticalSpacing", "webkitColumnRuleWidth",
+      "webkitMinLogicalHeight", "webkitMinLogicalWidth",
+      "webkitPaddingAfter", "webkitPaddingBefore",
+      "webkitPaddingEnd", "webkitPaddingStart",
+      "webkitShapeMargin", "webkitTextStrokeWidth",
+      "wordSpacing", "x", "y",
+    ])
+        if(!s[k]) s[k] = "0px";
 
 // This is the only style conversion that acid3 tests for, but I'm sure there
 // are dozens, maybe hundreds. I'll take them as they come.
-if(!s.textTransform) s.textTransform = "none"; // acid test 46
+    if(!s.textTransform) s.textTransform = "none"; // acid test 46
 
-if(!s.boxSizing) s.boxSizing = "content-box";
-if(!s.textAlign) s.textAlign = "start";
-if(!s.verticalAlign) s.verticalAlign = "baseline";
+    if(!s.boxSizing) s.boxSizing = "content-box";
+    if(!s.textAlign) s.textAlign = "start";
+    if(!s.verticalAlign) s.verticalAlign = "baseline";
 
-if(s.fontSize) {
-// many conversions are possible here
-if(/^\d+%$/.test(s.fontSize))
-s.fontSize = Math.trunc(s.fontSize.substr(0, s.fontSize.length-1) * 16 / 100) + "px";
-}
+    if(s.fontSize) {
+        // many conversions are possible here
+        if(/^\d+%$/.test(s.fontSize))
+            s.fontSize = Math.trunc(s.fontSize.substr(0, s.fontSize.length-1) * 16 / 100) + "px";
+    }
 
-return s;
+    return s;
 }
 
 /*********************************************************************
