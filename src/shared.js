@@ -2263,6 +2263,45 @@ Remember that "this" is the window object.
     ])
         if(!s[k]) s[k] = "auto";
 
+    for(let k of [
+      "alignContent", "alignItems",
+      "animationDirection", "animationRange",
+      "animationRangeEnd", "animationRangeStart",
+      "backgroundBlendMode",
+      "colorScheme", "columnGap", "containerType",
+      "content",
+      "fontFeatureSettings",
+      "fontLanguageOverride",
+      "fontPalette", "fontStyle",
+      "fontVariant", "fontVariantAlternates",
+      "fontVariantCaps", "fontVariantEastAsian",
+      "fontVariantEmoji", "fontVariantLigatures",
+      "fontVariantNumeric", "fontVariantPosition",
+      "fontVariationSettings",
+      "gap",
+      "gridColumnGap", "gridGap", "gridRowGap",
+      "initialLetter",
+      "interestDelay", "interestDelayEnd", "interestDelayStart",
+      "justifyContent", "justifyItems",
+      "letterSpacing", "lineHeight",
+      "mathShift", "mathStyle", "mixBlendMode",
+      "offsetPosition", "overflowWrap",
+      "paintOrder", "placeContent", "placeItems",
+      "positionTryOrder",
+      "readingFlow", "rowGap",
+      "scrollSnapStop", "speak",
+      "textBox", "textSpacingTrim",
+      "timelineTriggerActivationRange", "timelineTriggerActivationRangeEnd",
+      "timelineTriggerActivationRangeStart", "transitionBehavior",
+      "unicodeBidi", "viewTransitionGroup",
+      "webkitAlignContent", "webkitAlignItems",
+      "webkitAnimationDirection", "webkitBoxDirection",
+      "webkitColumnGap", "webkitFontFeatureSettings",
+      "webkitJustifyContent", "whiteSpace",
+      "wordBreak", "wordWrap",
+    ])
+        if(!s[k]) s[k] = "normal";
+
     if(!s.boxSizing) s.boxSizing = "content-box";
     if(!s.textAlign) s.textAlign = "start";
     if(!s.verticalAlign) s.verticalAlign = "baseline";

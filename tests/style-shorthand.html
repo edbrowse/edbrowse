@@ -96,6 +96,7 @@ if(s1.backgroundColor !== "rgb(128, 128, 128)") msg += `|bad s1 backgroundColor 
  if(s1.fontSize !== "20px") msg += `|bad s1 fontSize ${s1.fontSize}`;
 if(s1.textAlign != "start") msg += `|bad align ${s1.textAlign}`;
 if(s1.verticalAlign != "baseline") msg += `|bad valign ${s1.verticalAlign}`;
+if(s1.zIndex != "auto") msg += `|bad zIndex ${s1.zIndex}`;
 
 sh1 = getComputedStyle(h1);
 if(!isedbrowse) {
