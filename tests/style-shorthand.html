@@ -12,6 +12,7 @@ p.before { font-family: helvetica; text-align: center; }
 <body>
 <p id=show>start</p>
 <p id=items></p>
+<h1 id=h1> heading </h1>
 <div id="div1"    style="padding: 10px;
 scroll-padding: 0 5px;
 border-color: red;
@@ -96,10 +97,21 @@ if(s1.backgroundColor !== "rgb(128, 128, 128)") msg += `|bad s1 backgroundColor 
 if(s1.textAlign != "start") msg += `|bad align ${s1.textAlign}`;
 if(s1.verticalAlign != "baseline") msg += `|bad valign ${s1.verticalAlign}`;
 
+sh1 = getComputedStyle(h1);
+if(!isedbrowse) {
+// we don't do all the up-the-chain calculations yet.
+// 3.0em means 3 times what you already have, and body has set it at 125%.
+// so body set size at 20px, and h1 should be 60px.  Maybe some day.
+if(sh1.fontSize != "60px") msg += `|sh1 size ${sh1.fontSize}`;
+}
+if(sh1.color != "rgb(65, 105, 225)") msg += `|sh1 color ${sh1.color}`;
+
 s2 = getComputedStyle(before);
 if(s2.fontFamily != "helvetica") msg += `|fontFamily ${s2.fontFamily} on standard style`;
 if(s2.boxSizing != "content-box") msg += `|boxSizing ${s2.boxSizing} on standard style`;
 if(s2.textAlign != "center") msg += `|textAlign ${s2.textAlign} on standard style`;
+if(s2.verticalAlign != "baseline") msg += `|verticalAlign ${s2.verticalAlign} on standard style`;
+
 s3 = getComputedStyle(before, ":before");
 if(s3.boxSizing != "border-box") msg += "|boxSizing not found on before style";
 if(s3.fontFamily != "helvetica") msg += `|fontFamily ${s3.fontFamily} on before style`;
