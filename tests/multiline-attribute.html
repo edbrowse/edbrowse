@@ -13,14 +13,15 @@ suffix" data-dog-food=chow data-fly=leash>visible</div>
 <wow></wow>
 <script>
 try {
-show = document.getElementById("show")
 msg = "ok";
 b = document.body;
 isedbrowse = navigator.userAgent.substr(0, 8) == "edbrowse";
 head = document.head;
 title = head.querySelector("title");
+if(title != "[object HTMLTitleElement]") msg += "|bad title object";
 if(title.text != "multiline ½ z") msg += `|bad title ${title.text}`;
 meta = head.querySelector("meta");
+if(meta != "[object HTMLMetaElement]") msg += "|bad meta object";
 if(meta.httpEquiv != "yahoo") msg += `|bad equiv ${meta.httpEquiv}`;
 if(meta.content != "inside") msg += `|bad meta content ${meta.content}`;
 base = head.querySelector("base");
@@ -47,7 +48,6 @@ if(cmt.data !== "northeast") msg += "|cdata not northeast";
 }
 
 let expected = "prefix >\n<html>\n<body>raw source</body>\n</html>\nsuffix"
-let sample = document.getElementById("sample")
 if(sample.getAttribute("data-html") != expected) msg += `|bad data ${sample.getAttribute("data-html")}`;
 if(sample.dataset.html != expected) msg += "| sample html not found in dataset";
 if(sample.textContent != "visible") msg += `|bad content ${sample.textContent}`;
