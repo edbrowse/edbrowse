@@ -3743,23 +3743,18 @@ swdc(CSSStyleDeclaration);
         // margin implies top right bottom left
         // How many of these are there that I don't know about?
         // Not clear how this meshes with my $$scy specificity system.
-// padding handled separately, as an experiment.
-// If it goes well we need to do the same for the others.
     const expand_list = [
-      "margin", "scrollMargin", /* "padding", */ "scrollPadding",
+      "margin", "scrollMargin", "padding", "scrollPadding",
       "borderRadius", "border",
       "borderWidth", "borderColor", "borderStyle", "borderImage",
       "background", "font", "inset", "textDecoration"
     ];
     for (let k of expand_list) {
         odp(csdp, k, {
-            set: function(h) { mw$.cssShort[`${k}Short`](this, h); }
+            get: function() { return mw$.cssShort[`${k}Get`](this, h); },
+            set: function(h) { mw$.cssShort[`${k}Set`](this, h); }
         })
     }
-    odp(csdp, "padding", {
-        get: function(h) { return mw$.cssShort[`paddingShortGet`](this); },
-        set: function(h) { mw$.cssShort[`paddingShort`](this, h); }
-    })
 
     // These are default properties of a style declaration.
     // These should be writable, so that the corresponding properties
@@ -3769,7 +3764,6 @@ swdc(CSSStyleDeclaration);
     for (let k of cssAllowable()) {
         // we can't tromp on top of a setter that we just set above.
         if(expand_list.includes(k)) continue;
-        if(k == "padding") continue;
         // nor can we quash the magic float
         if(k == "float") continue;
         odp(csdp, k, {value: "", writable: true});

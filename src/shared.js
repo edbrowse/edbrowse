@@ -2343,7 +2343,11 @@ There are a lot of these and they don't all work the same way.
 
 this.cssShort = {
 
-marginShort: function(s, h) {
+marginGet: function(s) {
+    return `${s.marginTop} ${s.marginRight} ${s.marginBottom} ${s.marginLeft}`;
+},
+
+marginSet: function(s, h) {
 // don't want to blow up if it's not a string
 if(h === null || h === undefined) return;
 // this should already be a string, but...
@@ -2377,7 +2381,11 @@ return;
 }
 },
 
-scrollMarginShort: function(s, h) {
+scrollMarginGet: function(s) {
+    return `${s.scrollMarginTop} ${s.scrollMarginRight} ${s.scrollMarginBottom} ${s.scrollMarginLeft}`;
+},
+
+scrollMarginSet: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2409,11 +2417,11 @@ return;
 }
 },
 
-paddingShortGet: function(s) {
+paddingGet: function(s) {
     return `${s.paddingTop} ${s.paddingRight} ${s.paddingBottom} ${s.paddingLeft}`;
 },
 
-paddingShort: function(s, h) {
+paddingSet: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2445,7 +2453,11 @@ return;
 }
 },
 
-scrollPaddingShort: function(s, h) {
+scrollPaddingGet: function(s) {
+    return `${s.scrollPaddingTop} ${s.scrollPaddingRight} ${s.scrollPaddingBottom} ${s.scrollPaddingLeft}`;
+},
+
+scrollPaddingSet: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2477,7 +2489,11 @@ return;
 }
 },
 
-borderRadiusShort: function(s, h) {
+borderRadiusGet: function(s) {
+    return `${s.borderTopLeftRadius} ${s.borderTopRightRadius} ${s.borderBottomRightRadius} ${s.borderBottomLeftRadius}`;
+},
+
+borderRadiusSet: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2508,7 +2524,11 @@ return;
 }
 },
 
-borderWidthShort: function(s, h) {
+borderWidthGet: function(s) {
+    return `${s.borderTopWidth} ${s.borderRightWidth} ${s.borderBottomWidth} ${s.borderLeftWidth}`;
+},
+
+borderWidthSet: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2540,7 +2560,11 @@ return;
 }
 },
 
-borderColorShort: function(s, h) {
+borderColorGet: function(s) {
+    return `${s.borderTopColor} ${s.borderRightColor} ${s.borderBottomColor} ${s.borderLeftColor}`;
+},
+
+borderColorSet: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2572,7 +2596,11 @@ return;
 }
 },
 
-borderStyleShort: function(s, h) {
+borderStyleGet: function(s) {
+    return `${s.borderTopStyle} ${s.borderRightStyle} ${s.borderBottomStyle} ${s.borderLeftStyle}`;
+},
+
+borderStyleSet: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2604,7 +2632,11 @@ return;
 }
 },
 
-backgroundShort: function(s, h) {
+backgroundGet: function(s) {
+    return `${s.backgroundcolor} ${s.backgroundImage} ${s.backgroundRepeat} ${s.backgroundPosition}`;
+},
+
+backgroundSet: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2623,7 +2655,11 @@ if(l >= 4)
 s.backgroundPosition = h[3];
 },
 
-fontShort: function(s, h) {
+fontGet: function(s) {
+    return `${s.fontStyle} ${s.fontWeight} ${s.fontSize}/${s.lineHeight} ${s.fontFamily} ${s.fontVariant} ${s.fontSizeAdjust} ${s.fontStretch}`
+},
+
+fontSet: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2656,7 +2692,11 @@ if(l >= 7)
 s.fontStretch = h[6];
 },
 
-borderShort: function(s, h) {
+borderGet: function(s) {
+return `${s.borderWidth} ${s.borderStyle} ${s.borderColor} ${s.borderImage}`
+},
+
+borderSet: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2666,7 +2706,11 @@ s.borderColor =  h[2] ? h[2] : "";
 s.borderImage =  h[3] ? h[3] : "";
 },
 
-borderImageShort: function(s, h) {
+borderImageGet: function(s) {
+    return `${s.borderImageSource} ${s.borderImageSlice} ${s.borderImageWidth} ${s.borderImageOutset} ${s.borderImageRepeat}`
+},
+
+borderImageSet: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2677,7 +2721,11 @@ s.borderImageOutset =  h[3] ? h[3] : "";
 s.borderImageRepeat =  h[4] ? h[4] : "";
 },
 
-insetShort: function(s, h) {
+insetGet: function(s) {
+    return `${s.top} ${s.right} ${s.bottom} ${s.left}`;
+},
+
+insetSet: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
@@ -2706,7 +2754,11 @@ return;
 }
 },
 
-textDecorationShort: function(s, h) {
+textDecorationGet: function(s) {
+    return `${s.textDecorationLine} ${s.textDecorationColor} ${s.textDecorationStyle} ${s.textDecorationThickness}`
+},
+
+textDecorationSet: function(s, h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
