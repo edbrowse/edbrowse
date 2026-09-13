@@ -2091,6 +2091,10 @@ Remember that "this" is the window object.
         }
     }
 
+// This is the only style conversion that acid3 tests for, but I'm sure there
+// are dozens, or hundreds, of others. I'll take them as they come.
+    if(!s.textTransform) s.textTransform = "none"; // acid test 46
+
 // Browsers turn colors into rgb. I think that's confusing,
 // but if they do it then I guess we should too.
     for(let k in s) {
@@ -2098,6 +2102,7 @@ Remember that "this" is the window object.
         (k == "color" || k.match(/Color$/)))
             s[k] = color2rgb(s[k]);
     }
+
     for(let k of [
       "baselineShift",
       "borderBlockEndWidth", "borderBlockStartWidth", "borderBlockWidth",
@@ -2135,9 +2140,64 @@ Remember that "this" is the window object.
     ])
         if(!s[k]) s[k] = "0px";
 
-// This is the only style conversion that acid3 tests for, but I'm sure there
-// are dozens, maybe hundreds. I'll take them as they come.
-    if(!s.textTransform) s.textTransform = "none"; // acid test 46
+    for(let k of [
+      "accentColor", "alignSelf", "alignmentBaseline",
+      "animationTimeline", "aspectRatio",
+      "backgroundSize", "baselineSource", "bottom",
+      "breakAfter", "breakBefore", "breakInside", "bufferedRendering",
+      "caretAnimation", "caretShape", "clip", "colorRendering",
+      "columnCount", "columnHeight", "columnWidth", "columnWrap", "columns",
+      "cursor", "dominantBaseline", "flexBasis",
+      "fontKerning", "fontOpticalSizing", "fontSynthesisSmallCaps",
+      "fontSynthesisStyle", "fontSynthesisWeight",
+      "forcedColorAdjust",
+      "gridArea", "gridAutoColumns", "gridAutoRows",
+      "gridColumn", "gridColumnEnd", "gridColumnStart",
+      "gridRow", "gridRowEnd", "gridRowStart",
+      "hyphenateCharacter", "hyphenateLimitChars",
+      "imageRendering",
+      "insetBlock", "insetBlockEnd", "insetBlockStart",
+      "insetInline", "insetInlineEnd", "insetInlineStart",
+      "interactivity", "isolation",
+      "justifySelf", "left", "lineBreak",
+      "maskSize", "offsetAnchor", "overflowAnchor",
+      "overscrollBehavior", "overscrollBehaviorBlock", "overscrollBehaviorInline",
+      "overscrollBehaviorX", "overscrollBehaviorY",
+      "page", "pageBreakAfter", "pageBreakBefore", "pageBreakInside",
+      "placeSelf", "pointerEvents",
+      "quotes", "right", "rx", "ry",
+      "scrollBehavior", "scrollPaddingBlock",
+      "scrollPaddingBlockEnd", "scrollPaddingBlockStart",
+      "scrollPaddingBottom", "scrollPaddingInline",
+      "scrollPaddingInlineEnd", "scrollPaddingInlineStart",
+      "scrollPaddingLeft", "scrollPaddingRight",
+      "scrollPaddingTop",
+      "scrollbarColor", "scrollbarGutter", "scrollbarWidth",
+      "shapeRendering",
+      "tableLayout",
+      "textAlignLast",
+      "textBoxEdge",
+      "textDecorationSkipInk", "textDecorationThickness",
+      "textJustify",
+      "textRendering", "textSizeAdjust",
+      "textUnderlineOffset", "textUnderlinePosition",
+      "textWrapStyle",
+      "timelineTriggerActiveRange", "timelineTriggerActiveRangeEnd",
+      "timelineTriggerActiveRangeStart", "timelineTriggerSource",
+      "top", "touchAction",
+      "userSelect", "viewTimelineInset",
+      "webkitAlignSelf", "webkitBackgroundSize",
+      "webkitColumnBreakAfter", "webkitColumnBreakBefore",
+      "webkitColumnBreakInside", "webkitColumnCount",
+      "webkitColumnWidth", "webkitColumns",
+      "webkitFlexBasis", "webkitFontSmoothing",
+      "webkitHyphenateCharacter", "webkitLineBreak",
+      "webkitLocale", "webkitMaskBoxImageWidth",
+      "webkitMaskSize", "webkitTextSizeAdjust",
+      "webkitUserDrag", "webkitUserSelect",
+      "willChange", "zIndex",
+    ])
+        if(!s[k]) s[k] = "auto";
 
     if(!s.boxSizing) s.boxSizing = "content-box";
     if(!s.textAlign) s.textAlign = "start";
