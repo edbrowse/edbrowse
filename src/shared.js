@@ -2302,6 +2302,24 @@ Remember that "this" is the window object.
     ])
         if(!s[k]) s[k] = "normal";
 
+// black black black is the color of my true love's hair
+    for(let k of [
+      "borderBlockColor", "borderBlockEndColor", "borderBlockStartColor",
+      "borderBottomColor",
+      "borderInlineColor", "borderInlineEndColor", "borderInlineStartColor",
+      "borderLeftColor", "borderRightColor", "borderTopColor",
+      "caretColor", "color", "columnRuleColor",
+      "fill", "floodColor",
+      "outlineColor", "stopColor",
+      "textDecorationColor", "textEmphasisColor",
+      "webkitBorderAfterColor", "webkitBorderBeforeColor",
+      "webkitBorderEndColor", "webkitBorderStartColor",
+      "webkitColumnRuleColor",
+      "webkitTextEmphasisColor", "webkitTextFillColor",
+      "webkitTextStrokeColor",
+    ])
+        if(!s[k]) s[k] = "rgb(0, 0, 0)";
+
     if(!s.boxSizing) s.boxSizing = "content-box";
     if(!s.textAlign) s.textAlign = "start";
     if(!s.verticalAlign) s.verticalAlign = "baseline";
@@ -2389,6 +2407,10 @@ s.scrollMarginBottom = h[2];
 s.scrollMarginLeft = h[3];
 return;
 }
+},
+
+paddingShortGet: function(s) {
+    return `${s.paddingTop} ${s.paddingRight} ${s.paddingBottom} ${s.paddingLeft}`;
 },
 
 paddingShort: function(s, h) {

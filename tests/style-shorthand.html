@@ -2,7 +2,7 @@
 <title>Order of CSS properties</title>
 <meta charset="UTF-8">
 <style>
-body { padding-top: 5px; }
+body { padding-top: 5px; padding-left: 12px; }
 p.before:before { box-sizing: border-box}
 p.before:after { vertical-align: top}
 p.before { font-family: helvetica; text-align: center; }
@@ -78,16 +78,25 @@ if(document.styleSheets.length != 2) msg += `|bad sync styleSheets count ${docum
 sr1 = document.styleSheets[0].cssRules;
 if(sr1.length != 4) msg += `|first sheet has ${sr1.length} rules`;
 // edbrowse doesn't always have the same whitespace as chrome
-if(!sr1[0].cssText.match(/^body { *padding-top: *5px; *}$/)) msg += `|bad div rule ${sr1[0].cssText}`;
+if(!sr1[0].cssText.match(/^body { *padding-top: *5px; *padding-left: *12px; *}$/)) msg += `|bad div rule ${sr1[0].cssText}`;
 sr2 = document.styleSheets[1].cssRules;
 if(sr2.length != 5) msg += `|second sheet has ${sr2.length} rules`;
 if(sr2[1].cssText.substr(0, 4) != "h1 {" || sr2[2].cssText.substr(0, 4) != "h2 {") msg += "|css rules 1 and 2 don't look like h1 h2";
 
 s1 = getComputedStyle(b);
 // 5px comes from our style tag
-if(s1.paddingTop !== "5px") msg += `|bad s1 padding ${s1.paddingTop}`;
+if(s1.paddingTop !== "5px") msg += `|bad s1 paddingTop ${s1.paddingTop}`;
 // default "" becomes default 0px via getComputedStyle
 if(s1.paddingRight !== "0px") msg += `|bad s1 padding right ${s1.paddingRight}`;
+/* put a composite back together.
+If I didn't specify padding-left in the style at the top of this page,
+if paddingLeft and paddingRight were left alone at their default,
+they would be equal, and chrome uses the shorthand 5px 0px 0px,
+understanding that the second 0px for the right is copied to 0px on the left.
+edbrowse doesn't do that and I don't know if it ever will.
+So tweak the test a little and force crome to spit out all 4 numbers.
+edbrowse also spits out all 4 numbers, and they agree. */
+if(s1.padding !== "5px 0px 0px 12px") msg += `|bad s1 padding composite ${s1.padding}`;
 // our direct assignment carries through to s1
 if(s1.display !== "block") msg += `|bad s1 display ${s1.display}`;
 // color red comes from the css file
