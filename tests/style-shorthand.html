@@ -3,6 +3,9 @@
 <meta charset="UTF-8">
 <style>
 body { padding-top: 5px; }
+p.before:before { box-sizing: border-box}
+p.before:after { vertical-align: top}
+p.before { font-family: helvetica; text-align: center; }
 </style>
 <link href="sample.css" rel=stylesheet type=text/css onload="on_css_load = true">
 </head>
@@ -28,6 +31,8 @@ background-color: #ccaa11;
 background: bbb;
 font-family:  monospace
 "></div> 
+<p class=before id=before></p>
+
 <script> 
 /* Warning! This runs fine in edbrowse, locally, but in chrome
 we get a security blowup when accessing the rules for the css file.
@@ -70,7 +75,7 @@ if(b.style.display !== "block") msg += `|bad direct set display ${b.style.displa
 
 if(document.styleSheets.length != 2) msg += `|bad sync styleSheets count ${document.styleSheets.length}`;
 sr1 = document.styleSheets[0].cssRules;
-if(sr1.length != 1) msg += `|first sheet has ${sr1.length} rules`;
+if(sr1.length != 4) msg += `|first sheet has ${sr1.length} rules`;
 // edbrowse doesn't always have the same whitespace as chrome
 if(!sr1[0].cssText.match(/^body { *padding-top: *5px; *}$/)) msg += `|bad div rule ${sr1[0].cssText}`;
 sr2 = document.styleSheets[1].cssRules;
@@ -88,6 +93,23 @@ if(s1.display !== "block") msg += `|bad s1 display ${s1.display}`;
  if(s1.color !== "rgb(255, 0, 0)") msg += `|bad s1 color ${s1.color}`;
 if(s1.backgroundColor !== "rgb(128, 128, 128)") msg += `|bad s1 backgroundColor ${s1.backgroundColor}`;
  if(s1.fontSize !== "20px") msg += `|bad s1 fontSize ${s1.fontSize}`;
+if(s1.textAlign != "start") msg += `|bad align ${s1.textAlign}`;
+if(s1.verticalAlign != "baseline") msg += `|bad valign ${s1.verticalAlign}`;
+
+s2 = getComputedStyle(before);
+if(s2.fontFamily != "helvetica") msg += `|fontFamily ${s2.fontFamily} on standard style`;
+if(s2.boxSizing != "content-box") msg += `|boxSizing ${s2.boxSizing} on standard style`;
+if(s2.textAlign != "center") msg += `|textAlign ${s2.textAlign} on standard style`;
+s3 = getComputedStyle(before, ":before");
+if(s3.boxSizing != "border-box") msg += "|boxSizing not found on before style";
+if(s3.fontFamily != "helvetica") msg += `|fontFamily ${s3.fontFamily} on before style`;
+if(s3.textAlign != "center") msg += `|textAlign ${s3.textAlign} on before style`;
+
+s4 = getComputedStyle(before, ":after");
+if(s4.boxSizing != "content-box") msg += "|boxSizing not correct on after style";
+if(s4.fontFamily != "helvetica") msg += `|fontFamily ${s4.fontFamily} on after style`;
+if(s4.textAlign != "center") msg += `|textAlign ${s4.textAlign} on after style`;
+if(s4.verticalAlign != "top") msg += `|verticalAlign ${s4.verticalAlign} on after style`;
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

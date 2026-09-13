@@ -2100,7 +2100,20 @@ s[k] = color2rgb(s[k]);
 }
 for(let k of ["paddingTop", "paddingLeft", "paddingRight", "paddingBottom"])
 if(!s[k]) s[k] = "0px";
-if(!s["textTransform"]) s["textTransform"] = "none"; // acid test 46
+
+// This is the only style conversion that acid3 tests for, but I'm sure there
+// are dozens, maybe hundreds. I'll take them as they come.
+if(!s.textTransform) s.textTransform = "none"; // acid test 46
+
+if(!s.boxSizing) s.boxSizing = "content-box";
+if(!s.textAlign) s.textAlign = "start";
+if(!s.verticalAlign) s.verticalAlign = "baseline";
+
+if(s.fontSize) {
+// many conversions are possible here
+if(/^\d+%$/.test(s.fontSize))
+s.fontSize = Math.trunc(s.fontSize.substr(0, s.fontSize.length-1) * 16 / 100) + "px";
+}
 
 return s;
 }

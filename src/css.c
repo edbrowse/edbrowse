@@ -3295,7 +3295,7 @@ static bool qsaMatchGroup(Tag *t, struct desc *d)
 		if (sel->hover)
 			continue;
 		if (sel->after | sel->before && matchtype == 0) continue;
-		if((matchtype == 1 && !sel->before) || (matchtype == 2 && !sel->after))
+		if((matchtype == 1 && sel->after) || (matchtype == 2 && sel->before))
 			continue;
 		if (qsaMatchChain(t, sel->chain)) {
 // debug getComputedStyle, which can also be a directed debug
@@ -3665,15 +3665,15 @@ static void do_rules(const Tag *t, struct rule *r0, int highspec)
 
 /*********************************************************************
 don't repeat an attribute. Hardly ever happens except for acid test 0.
-I keep the first one - though it's possible I should keep the last one,
-but in acid test 0 the second value is bogus, which I don't test for,
-so this might be wrong but it gets around that test.
+I keep the last one - though it's possible I should keep the first one,
+but in acid test 0 the second value is bogus, so I can't tell.
+I don't test for valid values on every css property,
+so by keeping the first one, I get around that test.
 *********************************************************************/
 		for (r1 = r0; r1 != r; r1 = r1->next)
 			if (stringEqual(r1->atname, r->atname))
 				break;
-		if (r1 != r)
-			continue;
+		if (r1 != r) continue;
 
 // Don't write if the specificity is less
 		a = allocMem(strlen(r->atname) + 6);
