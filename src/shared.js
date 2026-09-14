@@ -2159,8 +2159,16 @@ Remember that "this" is the window object.
     ])
         if(!s[k]) s[k] = "none";
 
+    for(let k of [
+      "backfaceVisibility", "contentVisibility",
+      "overflow", "overflowBlock", "overflowInline",
+      "overflowX", "overflowY",
+      "visibility", "webkitBackfaceVisibility",
+    ])
+        if(!s[k]) s[k] = "visible";
+
 if(s.color) s.color = color2rgb(s.color);
-if(s.backgroundColor) s.backgroundColor = backgroundColor2rgb(s.backgroundColor);
+if(s.backgroundColor) s.backgroundColor = color2rgb(s.backgroundColor);
 else s.backgroundColor = "rgba(0, 0, 0, 0";
 
     for(let k of [
