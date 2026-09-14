@@ -2187,10 +2187,6 @@ Remember that "this" is the window object.
     ])
         if(!s[k]) s[k] = "round";
 
-if(s.color) s.color = color2rgb(s.color);
-if(s.backgroundColor) s.backgroundColor = color2rgb(s.backgroundColor);
-else s.backgroundColor = "rgba(0, 0, 0, 0";
-
     for(let k of [
       "baselineShift",
       "borderBlockEndWidth", "borderBlockStartWidth", "borderBlockWidth",
@@ -2341,8 +2337,20 @@ else s.backgroundColor = "rgba(0, 0, 0, 0";
       "webkitColumnRuleColor",
       "webkitTextEmphasisColor", "webkitTextFillColor",
       "webkitTextStrokeColor",
-    ])
-        if(!s[k]) s[k] = "rgb(0, 0, 0)";
+    ]) {
+        if(!s[k]) {
+// revert to the color of this tag, but if no color is directly assigned
+// we should go up the chain and see if a higher tag has k, or color, assigned.
+// It is derived, like fontSize is derived, but we don't do that yet.
+// Just look for color on this tag, and that's all.
+            s[k] = s.color;
+        }
+        if(s[k]) s[k] = color2rgb(s[k]);
+        else s[k] = "rgb(0, 0, 0)";
+    }
+
+if(s.backgroundColor) s.backgroundColor = color2rgb(s.backgroundColor);
+else s.backgroundColor = "rgba(0, 0, 0, 0";
 
     if(!s.boxSizing) s.boxSizing = "content-box";
     if(!s.textAlign) s.textAlign = "start";

@@ -99,7 +99,7 @@ if(s1.padding !== "5px 0px 0px 12px") msg += `|bad s1 padding composite ${s1.pad
 // I have since written the aroundGet functions, which do the same thing
 // as chrome; let's test it out with all default values the same.
 if(s1.borderRadius != "0px") msg += `|bad composite borderRadius ${s1.borderRadius}`;
-if(s1.borderInline != "0px none rgb(0, 0, 0)") msg += `|bad composite borderInline ${s1.borderInline}`;
+if(s1.borderInline != "0px none rgb(255, 0, 0)") msg += `|bad composite borderInline ${s1.borderInline}`;
 // our direct assignment carries through to s1
 if(s1.display !== "block") msg += `|bad s1 display ${s1.display}`;
 // color red comes from the css file
