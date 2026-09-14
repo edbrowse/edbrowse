@@ -93,10 +93,12 @@ If I didn't specify padding-left in the style at the top of this page,
 if paddingLeft and paddingRight were left alone at their default,
 they would be equal, and chrome uses the shorthand 5px 0px 0px,
 understanding that the second 0px for the right is copied to 0px on the left.
-edbrowse doesn't do that and I don't know if it ever will.
 So tweak the test a little and force crome to spit out all 4 numbers.
 edbrowse also spits out all 4 numbers, and they agree. */
 if(s1.padding !== "5px 0px 0px 12px") msg += `|bad s1 padding composite ${s1.padding}`;
+// I have since written the aroundGet functions, which do the same thing
+// as chrome; let's test it out with all default values the same.
+if(s1.borderRadius != "0px") msg += `|bad composite borderRadius ${s1.borderRadius}`;
 // our direct assignment carries through to s1
 if(s1.display !== "block") msg += `|bad s1 display ${s1.display}`;
 // color red comes from the css file

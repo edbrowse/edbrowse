@@ -2343,294 +2343,120 @@ There are a lot of these and they don't all work the same way.
 
 this.cssShort = {
 
-marginGet: function(s) {
-    return `${s.marginTop} ${s.marginRight} ${s.marginBottom} ${s.marginLeft}`;
+aroundGet0: (a, b, c, d) => {
+    if(b != d) return `${a} ${b} ${c} ${d}`;
+    if(a != c) return `${a} ${b} ${c}`;
+    return a == b ? a : `${a} ${b}`;
 },
 
-marginSet: function(s, h) {
-// don't want to blow up if it's not a string
-if(h === null || h === undefined) return;
-// this should already be a string, but...
-if(typeof h !== "string") h = String(h)
-h = h.split(/\s+/);
-const l = h.length;
-if(l == 1) {
-s.marginLeft = s.marginBottom = s.marginRight = s.marginTop = h[0];
-return;
-}
-if(l == 2) {
-s.marginTop = h[0];
-s.marginRight = h[1];
-s.marginBottom = h[0];
-s.marginLeft = h[1];
-return;
-}
-if(l == 3) {
-s.marginTop = h[0];
-s.marginRight = h[1];
-s.marginBottom = h[2];
-s.marginLeft = h[1];
-return;
-}
-if(l >= 4) {
-s.marginTop = h[0];
-s.marginRight = h[1];
-s.marginBottom = h[2];
-s.marginLeft = h[3];
-return;
-}
+aroundGet1: (s, pre, post) => {
+    const a = s[pre + "Top" + post];
+    const b = s[pre + "Right" + post];
+    const c = s[pre + "Bottom" + post];
+    const d = s[pre + "Left" + post];
+    return cssShort.aroundGet0(a, b, c, d);
 },
 
-scrollMarginGet: function(s) {
-    return `${s.scrollMarginTop} ${s.scrollMarginRight} ${s.scrollMarginBottom} ${s.scrollMarginLeft}`;
+aroundGet2: (s, pre, post) => {
+    const a = s[pre + "TopLeft" + post];
+    const b = s[pre + "TopRight" + post];
+    const c = s[pre + "BottomRight" + post];
+    const d = s[pre + "BottomLeft" + post];
+    return cssShort.aroundGet0(a, b, c, d);
 },
 
-scrollMarginSet: function(s, h) {
-if(h === null || h === undefined) return;
-if(typeof h !== "string") h = String(h)
-h = h.split(/\s+/);
-const l = h.length;
-if(l == 1) {
-s.scrollMarginLeft = s.scrollMarginBottom = s.scrollMarginRight = s.scrollMarginTop = h[0];
-return;
-}
-if(l == 2) {
-s.scrollMarginTop = h[0];
-s.scrollMarginRight = h[1];
-s.scrollMarginBottom = h[0];
-s.scrollMarginLeft = h[1];
-return;
-}
-if(l == 3) {
-s.scrollMarginTop = h[0];
-s.scrollMarginRight = h[1];
-s.scrollMarginBottom = h[2];
-s.scrollMarginLeft = h[1];
-return;
-}
-if(l >= 4) {
-s.scrollMarginTop = h[0];
-s.scrollMarginRight = h[1];
-s.scrollMarginBottom = h[2];
-s.scrollMarginLeft = h[3];
-return;
-}
+aroundSet1: (s, pre, post, h) => {
+    if(typeof h != "string") h = "";
+    h = h.trim();
+    if(h === "") {
+        delete s[pre + "Top" + post];
+        delete s[pre + "Right" + post];
+        delete s[pre + "Bottom" + post];
+        delete s[pre + "Left" + post];
+        return;
+    }
+    h = h.split(/\s+/);
+    const l = h.length;
+    if(l == 1) {
+// = is right precedence, so this assigns properties right to left, which is
+// the order we want, as per tests/style-shorthand.html.
+        s[pre + "Left" + post] = s[pre + "Bottom" + post] = s[pre + "Right" + post] = s[pre + "Top" + post] = h[0];
+    } else if(l == 2) {
+        s[pre + "Top" + post] = h[0];
+        s[pre + "Right" + post] = h[1];
+        s[pre + "Bottom" + post] = h[0];
+        s[pre + "Left" + post] = h[1];
+    } else if(l == 3) {
+        s[pre + "Top" + post] = h[0];
+        s[pre + "Right" + post] = h[1];
+        s[pre + "Bottom" + post] = h[2];
+        s[pre + "Left" + post] = h[1];
+    } else {
+        s[pre + "Top" + post] = h[0];
+        s[pre + "Right" + post] = h[1];
+        s[pre + "Bottom" + post] = h[2];
+        s[pre + "Left" + post] = h[3];
+    }
 },
 
-paddingGet: function(s) {
-    return `${s.paddingTop} ${s.paddingRight} ${s.paddingBottom} ${s.paddingLeft}`;
+aroundSet2: (s, pre, post, h) => {
+    if(typeof h != "string") h = "";
+    h = h.trim();
+    if(h === "") {
+        delete s[pre + "TopLeft" + post];
+        delete s[pre + "TopRight" + post];
+        delete s[pre + "BottomRight" + post];
+        delete s[pre + "BottomLeft" + post];
+        return;
+    }
+    h = h.split(/\s+/);
+    const l = h.length;
+    if(l == 1) {
+// = is right precedence, so this assigns properties right to left, which is
+// the order we want, as per tests/style-shorthand.html.
+        s[pre + "BottomLeft" + post] = s[pre + "BottomRight" + post] = s[pre + "TopRight" + post] = s[pre + "TopLeft" + post] = h[0];
+    } else if(l == 2) {
+        s[pre + "TopLeft" + post] = h[0];
+        s[pre + "TopRight" + post] = h[1];
+        s[pre + "BottomRight" + post] = h[0];
+        s[pre + "BottomLeft" + post] = h[1];
+    } else if(l == 3) {
+        s[pre + "TopLeft" + post] = h[0];
+        s[pre + "TopRight" + post] = h[1];
+        s[pre + "BottomRight" + post] = h[2];
+        s[pre + "BottomLeft" + post] = h[1];
+    } else {
+        s[pre + "TopLeft" + post] = h[0];
+        s[pre + "TopRight" + post] = h[1];
+        s[pre + "BottomRight" + post] = h[2];
+        s[pre + "BottomLeft" + post] = h[3];
+    }
 },
 
-paddingSet: function(s, h) {
-if(h === null || h === undefined) return;
-if(typeof h !== "string") h = String(h)
-h = h.split(/\s+/);
-const l = h.length;
-if(l == 1) {
-s.paddingLeft = s.paddingBottom = s.paddingRight = s.paddingTop = h[0];
-return;
-}
-if(l == 2) {
-s.paddingTop = h[0];
-s.paddingRight = h[1];
-s.paddingBottom = h[0];
-s.paddingLeft = h[1];
-return;
-}
-if(l == 3) {
-s.paddingTop = h[0];
-s.paddingRight = h[1];
-s.paddingBottom = h[2];
-s.paddingLeft = h[1];
-return;
-}
-if(l >= 4) {
-s.paddingTop = h[0];
-s.paddingRight = h[1];
-s.paddingBottom = h[2];
-s.paddingLeft = h[3];
-return;
-}
-},
+// don't use arrow functions, these become getters and setters
+marginGet: function(s) { return cssShort.aroundGet1(s, "margin", ""); },
+marginSet: function(s, h) { cssShort.aroundSet1(s, "margin", "", h); },
 
-scrollPaddingGet: function(s) {
-    return `${s.scrollPaddingTop} ${s.scrollPaddingRight} ${s.scrollPaddingBottom} ${s.scrollPaddingLeft}`;
-},
+scrollMarginGet: function(s) { return cssShort.aroundGet1(s, "scrollMargin", ""); },
+scrollMarginSet: function(s, h) { cssShort.aroundSet1(s, "scrollMargin", "", h); },
 
-scrollPaddingSet: function(s, h) {
-if(h === null || h === undefined) return;
-if(typeof h !== "string") h = String(h)
-h = h.split(/\s+/);
-const l = h.length;
-if(l == 1) {
-s.scrollPaddingLeft = s.scrollPaddingBottom = s.scrollPaddingRight = s.scrollPaddingTop = h[0];
-return;
-}
-if(l == 2) {
-s.scrollPaddingTop = h[0];
-s.scrollPaddingRight = h[1];
-s.scrollPaddingBottom = h[0];
-s.scrollPaddingLeft = h[1];
-return;
-}
-if(l == 3) {
-s.scrollPaddingTop = h[0];
-s.scrollPaddingRight = h[1];
-s.scrollPaddingBottom = h[2];
-s.scrollPaddingLeft = h[1];
-return;
-}
-if(l >= 4) {
-s.scrollPaddingTop = h[0];
-s.scrollPaddingRight = h[1];
-s.scrollPaddingBottom = h[2];
-s.scrollPaddingLeft = h[3];
-return;
-}
-},
+paddingGet: function(s) { return cssShort.aroundGet1(s, "padding", ""); },
+paddingSet: function(s, h) { cssShort.aroundSet1(s, "padding", "", h); },
 
-borderRadiusGet: function(s) {
-    return `${s.borderTopLeftRadius} ${s.borderTopRightRadius} ${s.borderBottomRightRadius} ${s.borderBottomLeftRadius}`;
-},
+scrollPaddingGet: function(s) { return cssShort.aroundGet1(s, "scrollPadding", ""); },
+scrollPaddingSet: function(s, h) { cssShort.aroundSet1(s, "scrollPadding", "", h); },
 
-borderRadiusSet: function(s, h) {
-if(h === null || h === undefined) return;
-if(typeof h !== "string") h = String(h)
-h = h.split(/\s+/);
-const l = h.length;
-if(l == 1) {
-s.borderBottomLeftRadius = s.borderBottomRightRadius = s.borderTopRightRadius = s.borderTopLeftRadius = h[0];
-return;
-}
-if(l == 2) {
-s.borderTopLeftRadius = h[0];
-s.borderTopRightRadius = h[1];
-s.borderBottomRightRadius = h[0];
-s.borderBottomLeftRadius = h[1];
-return;
-}
-if(l == 3) {
-s.borderTopLeftRadius = h[0];
-s.borderBottomLeftRadius = s.borderTopRightRadius = h[1];
-s.borderBottomRightRadius = h[2];
-return;
-}
-if(l >= 4) {
-s.borderTopLeftRadius = h[0];
-s.borderTopRightRadius = h[1];
-s.borderBottomRightRadius = h[2];
-s.borderBottomLeftRadius = h[3];
-return;
-}
-},
+borderRadiusGet: function(s) { return cssShort.aroundGet2(s, "border", "Radius"); },
+borderRadiusSet: function(s, h) { cssShort.aroundSet2(s, "border", "Radius", h); },
 
-borderWidthGet: function(s) {
-    return `${s.borderTopWidth} ${s.borderRightWidth} ${s.borderBottomWidth} ${s.borderLeftWidth}`;
-},
+borderWidthGet: function(s) { return cssShort.aroundGet1(s, "border", "Width"); },
+borderWidthSet: function(s, h) { cssShort.aroundSet1(s, "border", "Width", h); },
 
-borderWidthSet: function(s, h) {
-if(h === null || h === undefined) return;
-if(typeof h !== "string") h = String(h)
-h = h.split(/\s+/);
-const l = h.length;
-if(l == 1) {
-s.borderLeftWidth = s.borderBottomWidth = s.borderRightWidth = s.borderTopWidth = h[0];
-return;
-}
-if(l == 2) {
-s.borderTopWidth = h[0];
-s.borderRightWidth = h[1];
-s.borderBottomWidth = h[0];
-s.borderLeftWidth = h[1];
-return;
-}
-if(l == 3) {
-s.borderTopWidth = h[0];
-s.borderRightWidth = h[1];
-s.borderBottomWidth = h[2];
-s.borderLeftWidth = h[1];
-return;
-}
-if(l >= 4) {
-s.borderTopWidth = h[0];
-s.borderRightWidth = h[1];
-s.borderBottomWidth = h[2];
-s.borderLeftWidth = h[3];
-return;
-}
-},
+borderColorGet: function(s) { return cssShort.aroundGet1(s, "border", "Color"); },
+borderColorSet: function(s, h) { cssShort.aroundSet1(s, "border", "Color", h); },
 
-borderColorGet: function(s) {
-    return `${s.borderTopColor} ${s.borderRightColor} ${s.borderBottomColor} ${s.borderLeftColor}`;
-},
-
-borderColorSet: function(s, h) {
-if(h === null || h === undefined) return;
-if(typeof h !== "string") h = String(h)
-h = h.split(/\s+/);
-const l = h.length;
-if(l == 1) {
-s.borderLeftColor = s.borderBottomColor = s.borderRightColor = s.borderTopColor = h[0];
-return;
-}
-if(l == 2) {
-s.borderTopColor = h[0];
-s.borderRightColor = h[1];
-s.borderBottomColor = h[0];
-s.borderLeftColor = h[1];
-return;
-}
-if(l == 3) {
-s.borderTopColor = h[0];
-s.borderRightColor = h[1];
-s.borderBottomColor = h[2];
-s.borderLeftColor = h[1];
-return;
-}
-if(l >= 4) {
-s.borderTopColor = h[0];
-s.borderRightColor = h[1];
-s.borderBottomColor = h[2];
-s.borderLeftColor = h[3];
-return;
-}
-},
-
-borderStyleGet: function(s) {
-    return `${s.borderTopStyle} ${s.borderRightStyle} ${s.borderBottomStyle} ${s.borderLeftStyle}`;
-},
-
-borderStyleSet: function(s, h) {
-if(h === null || h === undefined) return;
-if(typeof h !== "string") h = String(h)
-h = h.split(/\s+/);
-const l = h.length;
-if(l == 1) {
-s.borderLeftStyle = s.borderBottomStyle = s.borderRightStyle = s.borderTopStyle = h[0];
-return;
-}
-if(l == 2) {
-s.borderTopStyle = h[0];
-s.borderRightStyle = h[1];
-s.borderBottomStyle = h[0];
-s.borderLeftStyle = h[1];
-return;
-}
-if(l == 3) {
-s.borderTopStyle = h[0];
-s.borderRightStyle = h[1];
-s.borderBottomStyle = h[2];
-s.borderLeftStyle = h[1];
-return;
-}
-if(l >= 4) {
-s.borderTopStyle = h[0];
-s.borderRightStyle = h[1];
-s.borderBottomStyle = h[2];
-s.borderLeftStyle = h[3];
-return;
-}
-},
+borderStyleGet: function(s) { return cssShort.aroundGet1(s, "border", "Style"); },
+borderStyleSet: function(s, h) { cssShort.aroundSet1(s, "border", "Style", h); },
 
 backgroundGet: function(s) {
     return `${s.backgroundcolor} ${s.backgroundImage} ${s.backgroundRepeat} ${s.backgroundPosition}`;
@@ -2721,8 +2547,9 @@ s.borderImageOutset =  h[3] ? h[3] : "";
 s.borderImageRepeat =  h[4] ? h[4] : "";
 },
 
+// top right bottom left are lower case here, can't use Around1
 insetGet: function(s) {
-    return `${s.top} ${s.right} ${s.bottom} ${s.left}`;
+    return cssShort.around0(s.top, s.right, s.bottom, s.left);
 },
 
 insetSet: function(s, h) {
