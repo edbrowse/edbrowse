@@ -109,6 +109,8 @@ if(s1.backgroundColor !== "rgb(128, 128, 128)") msg += `|bad s1 backgroundColor 
 if(s1.textAlign != "start") msg += `|bad align ${s1.textAlign}`;
 if(s1.verticalAlign != "baseline") msg += `|bad valign ${s1.verticalAlign}`;
 if(s1.zIndex != "auto") msg += `|bad zIndex ${s1.zIndex}`;
+// invalid properties don't push through from css either.
+if(s1.nonsense) msg += "|got nonsense from css";
 
 sh1 = getComputedStyle(h1);
 if(!isedbrowse) {
