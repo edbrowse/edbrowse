@@ -2159,13 +2159,9 @@ Remember that "this" is the window object.
     ])
         if(!s[k]) s[k] = "none";
 
-// Browsers turn colors into rgb. I think that's confusing,
-// but if they do it then I guess we should too.
-    for(let k in s) {
-        if(s.hasOwnProperty(k) &&
-        (k == "color" || k.match(/Color$/)))
-            s[k] = color2rgb(s[k]);
-    }
+if(s.color) s.color = color2rgb(s.color);
+if(s.backgroundColor) s.backgroundColor = backgroundColor2rgb(s.backgroundColor);
+else s.backgroundColor = "rgba(0, 0, 0, 0";
 
     for(let k of [
       "baselineShift",
