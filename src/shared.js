@@ -2365,14 +2365,14 @@ aroundGet2: (s, pre, post) => {
     return cssShort.aroundGet0(a, b, c, d);
 },
 
-aroundSet1: (s, pre, post, h) => {
+aroundSet0: (s, p1, p2, p3, p4, h) => {
     if(typeof h != "string") h = "";
     h = h.trim();
     if(h === "") {
-        delete s[pre + "Top" + post];
-        delete s[pre + "Right" + post];
-        delete s[pre + "Bottom" + post];
-        delete s[pre + "Left" + post];
+        delete s[p1];
+        delete s[p2];
+        delete s[p3];
+        delete s[p4];
         return;
     }
     h = h.split(/\s+/);
@@ -2380,81 +2380,47 @@ aroundSet1: (s, pre, post, h) => {
     if(l == 1) {
 // = is right precedence, so this assigns properties right to left, which is
 // the order we want, as per tests/style-shorthand.html.
-        s[pre + "Left" + post] = s[pre + "Bottom" + post] = s[pre + "Right" + post] = s[pre + "Top" + post] = h[0];
+        s[p4] = s[p3] = s[p2] = s[p1] = h[0];
     } else if(l == 2) {
-        s[pre + "Top" + post] = h[0];
-        s[pre + "Right" + post] = h[1];
-        s[pre + "Bottom" + post] = h[0];
-        s[pre + "Left" + post] = h[1];
+        s[p1] = h[0];
+        s[p2] = h[1];
+        s[p3] = h[0];
+        s[p4] = h[1];
     } else if(l == 3) {
-        s[pre + "Top" + post] = h[0];
-        s[pre + "Right" + post] = h[1];
-        s[pre + "Bottom" + post] = h[2];
-        s[pre + "Left" + post] = h[1];
+        s[p1] = h[0];
+        s[p2] = h[1];
+        s[p3] = h[2];
+        s[p4] = h[1];
     } else {
-        s[pre + "Top" + post] = h[0];
-        s[pre + "Right" + post] = h[1];
-        s[pre + "Bottom" + post] = h[2];
-        s[pre + "Left" + post] = h[3];
+        s[p1] = h[0];
+        s[p2] = h[1];
+        s[p3] = h[2];
+        s[p4] = h[3];
     }
+},
+
+aroundSet1: (s, pre, post, h) => {
+    cssShort.aroundSet0(s, pre+"Top"+post, pre+"Right"+post, pre+"Bottom"+post, pre+"Left"+post, h);
 },
 
 aroundSet2: (s, pre, post, h) => {
-    if(typeof h != "string") h = "";
-    h = h.trim();
-    if(h === "") {
-        delete s[pre + "TopLeft" + post];
-        delete s[pre + "TopRight" + post];
-        delete s[pre + "BottomRight" + post];
-        delete s[pre + "BottomLeft" + post];
-        return;
-    }
-    h = h.split(/\s+/);
-    const l = h.length;
-    if(l == 1) {
-// = is right precedence, so this assigns properties right to left, which is
-// the order we want, as per tests/style-shorthand.html.
-        s[pre + "BottomLeft" + post] = s[pre + "BottomRight" + post] = s[pre + "TopRight" + post] = s[pre + "TopLeft" + post] = h[0];
-    } else if(l == 2) {
-        s[pre + "TopLeft" + post] = h[0];
-        s[pre + "TopRight" + post] = h[1];
-        s[pre + "BottomRight" + post] = h[0];
-        s[pre + "BottomLeft" + post] = h[1];
-    } else if(l == 3) {
-        s[pre + "TopLeft" + post] = h[0];
-        s[pre + "TopRight" + post] = h[1];
-        s[pre + "BottomRight" + post] = h[2];
-        s[pre + "BottomLeft" + post] = h[1];
-    } else {
-        s[pre + "TopLeft" + post] = h[0];
-        s[pre + "TopRight" + post] = h[1];
-        s[pre + "BottomRight" + post] = h[2];
-        s[pre + "BottomLeft" + post] = h[3];
-    }
+    cssShort.aroundSet0(s, pre+"TopLeft"+post, pre+"TopRight"+post, pre+"BottomRight"+post, pre+"BottomLeft"+post, h);
 },
 
-// don't use arrow functions, these become getters and setters
 marginGet: function(s) { return cssShort.aroundGet1(s, "margin", ""); },
 marginSet: function(s, h) { cssShort.aroundSet1(s, "margin", "", h); },
-
 scrollMarginGet: function(s) { return cssShort.aroundGet1(s, "scrollMargin", ""); },
 scrollMarginSet: function(s, h) { cssShort.aroundSet1(s, "scrollMargin", "", h); },
-
 paddingGet: function(s) { return cssShort.aroundGet1(s, "padding", ""); },
 paddingSet: function(s, h) { cssShort.aroundSet1(s, "padding", "", h); },
-
 scrollPaddingGet: function(s) { return cssShort.aroundGet1(s, "scrollPadding", ""); },
 scrollPaddingSet: function(s, h) { cssShort.aroundSet1(s, "scrollPadding", "", h); },
-
 borderRadiusGet: function(s) { return cssShort.aroundGet2(s, "border", "Radius"); },
 borderRadiusSet: function(s, h) { cssShort.aroundSet2(s, "border", "Radius", h); },
-
 borderWidthGet: function(s) { return cssShort.aroundGet1(s, "border", "Width"); },
 borderWidthSet: function(s, h) { cssShort.aroundSet1(s, "border", "Width", h); },
-
 borderColorGet: function(s) { return cssShort.aroundGet1(s, "border", "Color"); },
 borderColorSet: function(s, h) { cssShort.aroundSet1(s, "border", "Color", h); },
-
 borderStyleGet: function(s) { return cssShort.aroundGet1(s, "border", "Style"); },
 borderStyleSet: function(s, h) { cssShort.aroundSet1(s, "border", "Style", h); },
 
@@ -2603,6 +2569,25 @@ s.textDecorationStyle =  h[2];
 if(l >= 4)
 s.textDecorationThickness =  h[3];
 },
+
+// width style color
+wscGet(s, pre) => {
+    const a = s[pre + "Width"];
+    const b = s[pre + "Style"];
+    const c = s[pre + "Color"];
+    return `${a} ${b} ${c}`;
+},
+
+wscSet(s, pre, h) => {
+    if(typeof h != "string") h = "";
+    h = h.trim().split(/\s+/);
+    s[pre + "Width"] = h[0] ? h[0] : "";
+    s[pre + "Style"] = h[1] ? h[1] : "";
+    s[pre + "Color"] =  h[2] ? h[2] : "";
+},
+
+borderInlineGet: function(s) { return cssShort.wscGet(s, "borderInline"); },
+borderInlineSet: function(s, h) { cssShort.wscSet(s, "borderInline", h); },
 
 }
 Object.freeze(cssShort)

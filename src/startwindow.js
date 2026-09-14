@@ -3747,7 +3747,8 @@ swdc(CSSStyleDeclaration);
       "margin", "scrollMargin", "padding", "scrollPadding",
       "borderRadius", "border",
       "borderWidth", "borderColor", "borderStyle", "borderImage",
-      "background", "font", "inset", "textDecoration"
+      "background", "font", "inset", "textDecoration",
+     "borderInline",
     ];
     for (let k of expand_list) {
         odp(csdp, k, {
