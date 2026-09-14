@@ -2167,6 +2167,26 @@ Remember that "this" is the window object.
     ])
         if(!s[k]) s[k] = "visible";
 
+    for(let k of [
+      "display", "scrollTimelineAxis", "viewTimelineAxis",
+    ])
+        if(!s[k]) s[k] = "block";
+
+    for(let k of [
+      "cornerBlockEndShape", "cornerBlockStartShape",
+      "cornerBottomLeftShape", "cornerBottomRightShape",
+      "cornerBottomShape",
+      "cornerEndEndShape", "cornerEndStartShape",
+      "cornerInlineEndShape", "cornerInlineStartShape",
+      "cornerLeftShape",
+      "cornerRightShape",
+      "cornerShape",
+      "cornerStartEndShape", "cornerStartStartShape",
+      "cornerTopLeftShape", "cornerTopRightShape",
+      "cornerTopShape",
+    ])
+        if(!s[k]) s[k] = "round";
+
 if(s.color) s.color = color2rgb(s.color);
 if(s.backgroundColor) s.backgroundColor = color2rgb(s.backgroundColor);
 else s.backgroundColor = "rgba(0, 0, 0, 0";
