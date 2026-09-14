@@ -1042,6 +1042,34 @@ function itemArgToIndex(i, limit)
 }
 
 /*********************************************************************
+Is a name reserved by a class? Would it be wrong to displace this name?
+This comes up in NamedNodeMap, CSSStyleDeclaration, and probably other classes.
+If a css rule says body { 3:hello; } we don't want to set style[3] = "hello",
+because 3 is reserved for the indexing system.
+style[3] should be the fourth property that we sete.
+If we want to setAttribute("3", "hello"), which uses NamedNodeMap underneath,
+we don't want to set map[3] = "hello". It too needs the indexing system.
+So integers are never allowed, but neither are the names of instance methods.
+body { set-property: hello; }
+If we follow that rule and displace the setProperty
+style instance method it would be a bad day.
+This routine checks for these things.
+c is class and n is name.
+*********************************************************************/
+function nameReservedByClass(c, n)
+{
+    if(c.prototype.hasOwnProperty(n)) return true;
+// "023" is not reserved, and can be used as a link; "23" is reserved.
+// See the 023 test in getelem.html
+    if(/^[1-9][0-9]*$/.test(n)) return true;
+    if(n === "0") return true;
+// length isn't on the property, it's on the actual object, but always
+// seems to be reserved.
+    if(n === "length") return true;
+    return false;
+}
+
+/*********************************************************************
 DOMTokenList, the class behind element.classList.
 It is not a snapshot. Every method rereads the class attribute, and
 every change is written back through setAttribute, so the collections
@@ -1219,15 +1247,6 @@ class NamedNodeMap
 {
     constructor() { this.length = 0; }
 
-    static reserved(n)
-    {
-        if(NamedNodeMap.prototype.hasOwnProperty(n)) return true;
-        if(/^[1-9][0-9]*$/.test(n)) return true;
-        if(n === "length") return true;
-        if(n === "0") return true;
-        return false;
-    }
-
     item(i)
     {
         i = itemArgToIndex(i, this.length);
@@ -1237,7 +1256,7 @@ class NamedNodeMap
     getNamedItem(n)
     {
         if(typeof n != "string") n = n.toString();
-        if(!NamedNodeMap.reserved(n)) {
+        if(!nameReservedByClass(NamedNodeMap, n)) {
             return this[n] ? this[n] : null;
         }
         // a reserved word, like length; have to search
@@ -1249,7 +1268,7 @@ class NamedNodeMap
     setNamedItem(a)
     {
         const n = a.name;
-        const r = NamedNodeMap.reserved(n);
+        const r = nameReservedByClass(NamedNodeMap, n);
         if(a.value === undefined) a.value = "undefined";
         if(a.value === null) a.value = "null";
         // force a conversion to string, even for 7 or true,
@@ -1286,7 +1305,7 @@ class NamedNodeMap
             return null;
         }
         delete this[--this.length];
-        if(!NamedNodeMap.reserved(n)) delete this[n];
+        if(!nameReservedByClass(NamedNodeMap, n)) delete this[n];
         return v;
     }
 
