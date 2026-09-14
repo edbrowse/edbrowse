@@ -3748,11 +3748,15 @@ swdc(CSSStyleDeclaration);
       "borderRadius", "border",
       "borderWidth", "borderColor", "borderStyle", "borderImage",
       "background", "font", "inset", "textDecoration",
-     "borderInline",
+      "borderInline", "borderInlineStart", "borderInlineEnd",
+      "borderBlock", "borderBlockStart", "borderBlockEnd",
+      "borderTop", "borderRight", "borderBottom", "borderLeft",
+      "webkitBorderBefore", "webkitBorderAfter",
+      "webkitBorderStart", "webkitBorderEnd",
     ];
     for (let k of expand_list) {
         odp(csdp, k, {
-            get: function() { return mw$.cssShort[`${k}Get`](this, h); },
+            get: function() { return mw$.cssShort[`${k}Get`](this); },
             set: function(h) { mw$.cssShort[`${k}Set`](this, h); }
         })
     }

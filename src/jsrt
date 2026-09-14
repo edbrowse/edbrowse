@@ -734,8 +734,8 @@ if(document.querySelector(".filbert #pecan").nodeName != "TR")
 fail(170);
 if(document.body.querySelector("text + #bird").nodeName != "INPUT")
 fail(171);
-dbs.cssText = "border-block-start:ger' a'ld";
-if(dbs.borderBlockStart != "ger ald")
+dbs.cssText = "border-block-start-style:ger' a'ld";
+if(dbs.borderBlockStartStyle != "ger ald")
 fail(172);
 
 //url with two args
