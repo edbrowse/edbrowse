@@ -157,7 +157,11 @@ if(!isedbrowse) {
 // so body set size at 20px, and h1 should be 60px.  Maybe some day.
 if(sh1.fontSize != "60px") msg += `|sh1 size ${sh1.fontSize}`;
 }
-if(sh1.color != "rgb(65, 105, 225)") msg += `|sh1 color ${sh1.color}`;
+if(sh1.color != "rgb(65, 105, 225)") msg += `|sh1 royalblue ${sh1.color}`;
+// direct set overrides anything set by css
+h1.style.color = "blue";
+sh1 = getComputedStyle(h1);
+if(sh1.color != "rgb(0, 0, 255)") msg += `|sh1 blue ${sh1.color}`;
 
 s2 = getComputedStyle(before);
 if(s2.fontFamily != "helvetica") msg += `|fontFamily ${s2.fontFamily} on standard style`;
