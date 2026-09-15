@@ -106,6 +106,17 @@ s0.scrollMarginTop = "9px";
 if(s0.scrollMarginTop != "9px") msg += "|scrollMarginTop not 9px";
 if(s0.length != 5 || s0.item(4) != "scroll-margin-top") msg += `|scrollMarginTop didn't append, length ${s0.length}`;
 if(s0[2] != "padding-bottom" || s0[4] != "scroll-margin-top") msg += `|fail direct index on s0 ${s0[2]} ${s0[4]}`;
+s0.removeProperty("padding-bottom");
+// make sure things shifted down
+if(s0.length != 4) msg += `|length didn't decrement ${s0.length}`;
+if(s0[4] !== undefined) msg += "|index 4 didn't go away";
+if(s0.cssText != "padding-top: 6px; padding-right: 7px; padding-left: 7px; scroll-margin-top: 9px;") msg += `|bad cssText after remove ${s0.cssText}`;
+// put bottom back in - in the wrong order now
+s0.setProperty("padding-bottom", "14px");
+if(s0.length != 5 ||  s0[4] != "padding-bottom") msg += "|bottom didn't append";
+if(s0.padding != "6px 7px 14px") msg += `|padding shorthand after bottom ${s0.padding}`;
+if(s0.getPropertyValue("padding-bottom") != "14px") msg += `|bad get property ${s0.getPropertyValue("padding-bottom")}`;
+if(s0.getPropertyValue("scroll-margin-left") !== "") msg += `|getProperty of missing ${s0.getPropertyValue("scroll-margin-left")}`;
 
 s1 = getComputedStyle(b);
 // 5px comes from our style tag

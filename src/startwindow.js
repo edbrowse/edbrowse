@@ -3703,15 +3703,7 @@ will ever do that! Use removeProperty like you're suppose to. */
         return n >= 0 ? this[n] : null;
     }
 
-    getPropertyValue(p)
-    {
-        p = camelCase(p);
-        const p2 = p + "$2";
-        if(this[p2] === undefined) this[p] = "";
-        return this[p2];
-    }
-
-    getProperty(p) { return this[camelCase(p)]; }
+    getPropertyValue(p) { return this[camelCase(p)]; }
 
     setProperty(p, v, prv)
     {
@@ -3737,7 +3729,7 @@ will ever do that! Use removeProperty like you're suppose to. */
         const p1 = camelCase(p);
         const p2 = p1 + "$2";
         if(this[p2] === undefined) return; // not there
-        delete this[p1];
+        delete this[p2];
         delete this[p1+"$$scy"];
         delete this[p1+"$$pri"];
         // have to find it in the array and roll our own splice
