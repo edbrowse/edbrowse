@@ -4,6 +4,30 @@ Here are some changes introduced by recent versions of edbrowse.
 
 Add a test that uses edbrowse tracing, along with comments to describe the process.
 
+Reverse the css shorthand, so that setting margin sets its four
+constituents, and getting margin puts those four pieces back into one string.
+
+Move the node invisible test into C, which makes rendering faster.
+
+Move the node css injection test into C, which makes rendering faster.
+Also, we can get rid of a truckload of confusing code in css,
+that tried to anticipate these injections, it's much easier to determine
+them at render time.
+
+Make NamedNodeMap a proper class with the correct methods,
+and use it in the attribute system.
+
+make NodeList a proper class and wrap it around childNodes.
+
+Make DOMTokenList a proper class and use it in the classList system.
+
+Move most of the DOM classes from shared.js into startwindow.js,
+so that users can muck with those classes and their prototypes if they
+feel they must. Modernize the classses along the way.
+
+Create many self-contained tests in the tests directory, and a runscript
+to run them.
+
 3.8.18
 
 The if (input field) command to bring a textarea inline.
