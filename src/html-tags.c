@@ -992,24 +992,23 @@ But then I get this from usps.gov:
 <table role="presentation" width="100%"         style="padding-bottom: 30px; max-width: 820px!important;>
 Unbalanced quotes, bad html, somehow tidy knows what to do with it.
 I haven't given the tidy team enough credit.
-So my compromise is to remember the first literal > seen inside the current
-quoted string, and fall back to it only if that quote never closes.
-u is therefore reset whenever a quote opens or closes; it is a rescue point
-for a runaway attribute, not a running memory of the whole tag.
+So my compromise is to remember the first literal > seen inside quotes,
+and fall back to it only if the document ends in quotes or without an unquoted >
+u is a rescue point for a runaway attribute
+or improper quotes in a tag.
 A newline is valid inside a quoted attribute, and srcdoc-like attributes can
-carry an entire html document, so a newline can no longer end the tag.
-Then this was found in the wild.
+carry an entire html document, so a newline does not end the tag.
+Aside from all that, this was found in the wild.
 <a nofollow=<"" href="https://foo.bar.com">hello</a>
 I watch for =< and let < slide past in this case.
 I think < should completely disappear in this case, but I don't know
 and so that is not implemented.
 *********************************************************************/
 
-		for(gt = t, qc = 0; *gt; ++gt) {
+		for(gt = t, qc = 0, u = 0; *gt; ++gt) {
 			if(qc) {
 				if(qc == *gt) {
 					qc = 0; // unquote
-					u = 0;
 					continue;
 				}
 				if(*gt == '>' && !u) u = gt;
@@ -1017,15 +1016,22 @@ and so that is not implemented.
 			}
 			if(*gt == '<' && gt > t && gt[-1] == '=') continue;
 			if(*gt == '<' || *gt == '>') break;
-			if(*gt == '"' || *gt == '\'') qc = *gt, u = 0;
+			if(*gt == '"' || *gt == '\'') qc = *gt;
 		}
-		if(!*gt && qc && u)
-			gt = u;
 
-		if(!*gt) {
-			printf("open tag %s, html parsing stops here\n", tagname);
-			goto stop;
-		}
+        if(!*gt && qc && u) {
+                if(debugScanner)
+                    scannerError1("fallback to > inside quotes line %d", ln);
+                else
+                    debugPrint(3, "fallback to > inside quotes for tag %s line %d", tagname, ln);
+            gt = u;
+   }
+
+        if(!*gt) {
+            printf("open tag %s, html parsing stops here\n", tagname);
+            goto stop;
+        }
+
 // adjust line number for this tag
 		for(u = lt; u < gt; ++u)
 			if(*u == '\n') ++ln;
