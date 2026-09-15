@@ -28,6 +28,9 @@ feel they must. Modernize the classses along the way.
 Create many self-contained tests in the tests directory, and a runscript
 to run them.
 
+Implement assigned css properties in an array like structure.
+Implement getPropertyValue, setProperty, removeProperty.
+
 3.8.18
 
 The if (input field) command to bring a textarea inline.

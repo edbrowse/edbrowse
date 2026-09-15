@@ -3700,27 +3700,32 @@ will ever do that! Use removeProperty like you're suppose to. */
     item(n)
     {
         n = itemArgToIndex(n, this.length);
-        return n >= 0 ? this[n] : null;
+        return n >= 0 ? this[n] : "";
     }
 
-    getPropertyValue(p) { return this[camelCase(p)]; }
+    getPropertyValue(p) {
+        p = camelCase(p);
+        if(!mw$.css.validHash[p]) return "";
+        // getter should convert this to "" if not defined
+        return this[p];
+    }
 
     setProperty(p, v, prv)
     {
         p = camelCase(p);
+        if(!mw$.css.validHash[p]) return;
         this[p] = v; // with all its side effects
         if(typeof prv == "string") prv = prv.toLowerCase();
         const pri = p + "$pri";
         odp(this, pri, {
             value: (prv === "important"),
-            writable: true,
-            configurable: true
-        })
+            writable: true, configurable: true});
     }
 
     getPropertyPriority(p)
     {
         p = camelCase(p);
+        if(!mw$.css.validHash[p]) return "";
         const pri = p + "$pri";
         return this[pri] ? "important" : "";
     }
@@ -3728,6 +3733,7 @@ will ever do that! Use removeProperty like you're suppose to. */
     removeProperty(p)
     {
         const p1 = camelCase(p);
+        if(!mw$.css.validHash[p1]) return;
         const p2 = p1 + "$2";
         if(this[p2] === undefined) return; // not there
         delete this[p2];

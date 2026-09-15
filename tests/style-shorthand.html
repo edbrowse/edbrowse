@@ -117,6 +117,9 @@ if(s0.length != 5 ||  s0[4] != "padding-bottom") msg += "|bottom didn't append";
 if(s0.padding != "6px 7px 14px") msg += `|padding shorthand after bottom ${s0.padding}`;
 if(s0.getPropertyValue("padding-bottom") != "14px") msg += `|bad get property ${s0.getPropertyValue("padding-bottom")}`;
 if(s0.getPropertyValue("scroll-margin-left") !== "") msg += `|getProperty of missing ${s0.getPropertyValue("scroll-margin-left")}`;
+// out of bounds
+if(s0.item(17) !== "") msg += "|item 17 not empty string";
+if(s0.getPropertyValue("cat") !== "") msg += "|cat not empty string";
 
 s1 = getComputedStyle(b);
 // 5px comes from our style tag
