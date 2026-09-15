@@ -1524,6 +1524,10 @@ function connectedCallbackCheck(t)
     }
 }
 
+function camelCase(t) {
+    return t.replace(/-./g, function(f){return f[1].toUpperCase()});
+}
+
     /*********************************************************************
     cloneNode creates a copy of the node and its children recursively.
     The argument 'deep' refers to whether or not the clone will recurs.
@@ -1753,8 +1757,7 @@ function cloneNodeHelper(root, deep, into)
             for (let l = 0; l < node1.style.length; ++l) {
                 let p = node1.style[l]; // name of property
                 if (debug) alert3("copy stattr " + p);
-// oops, camelCase is over in startwindow
-                p = p.replace(/-./g, function(f){return f[1].toUpperCase()});
+                p = camelCase(p);
                 node2.style$2[p] = node1.style$2[p];
             }
         }
@@ -2080,11 +2083,9 @@ Remember that "this" is the window object.
 // it carries across, and in fact it takes precedence.
 
     if(e.style$2) {
-        for(var k in e.style) {
-            if(!e.style.hasOwnProperty(k)) continue;
-            if(typeof e.style[k] == 'object') continue;
-            // Ok carry this one across.
-            s[k] = e.style[k];
+        for(let k = 0; k < e.style.length; ++k) {
+            const p = camelCase(e.style[k]);
+            s[p] = e.style[p];
         }
     }
 
