@@ -100,7 +100,18 @@ s0.padding = "6px 7px";
 if(s0.length != 4) msg += `|padding length ${s0.length}`;
 if(s0.paddingTop != "6px") msg += `|bad setter paddingTop ${s0.paddingTop}`;
 if(s0.paddingRight != "7px") msg += `|bad setter paddingRight ${s0.paddingRight}`;
-if(s0.item(3) != "padding-left") msg += `|bad index 3 ${s0.item(3)}`;
+if(s0.item(3) != "padding-left") msg += `|bad item 3 ${s0.item(3)}`;
+// directly set a simple property, not a composite
+s0.scrollMarginTop = "9px";
+if(s0.scrollMarginTop != "9px") msg += "|scrollMarginTop not 9px";
+if(s0.length != 5 || s0.item(4) != "scroll-margin-top") msg += `|scrollMarginTop didn't append, length ${s0.length}`;
+if(!isedbrowse) {
+// A design can be utterly wrong and stil get most of the answers right.
+// Direct indexing doesn't work. The indexes need to be set and maintained,
+// much like NamedNodeMap - using a getter and setter on every css property,
+// not just the composites.
+if(s0[2] != "padding-bottom" || s0[4] != "scroll-margin-top") msg += `|fail direct index on s0 ${s0[2]} ${s0[4]}`;
+}
 
 s1 = getComputedStyle(b);
 // 5px comes from our style tag
