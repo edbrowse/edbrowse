@@ -1241,10 +1241,18 @@ static void dw_flush(Tag *t)
     } else {
         stringAndString(&keep, &keep_l, "</body>");
         if(t) t = t->parent;
-        // if t is null, then put these nodes under <body>
-        // t might have removed itself from the tree, no parent,
-        // or we might be writing outside the context of a script.
-        runGeneratedHtml(t ? t : cf->bodytag, keep);
+/* If t is null, then put these nodes under <body>. t might have removed itself
+from the tree, thus no parent,
+or we might be writing outside the context of a script, perhaps an onload handler.
+But what if there's no body either. <head><script>...</script></head>
+Use the head tag, although it's nonstandard
+to have certain nodes in the head section.
+If that causes trouble we may have to postpone the dw flush until body appears
+or come up with another strategy. */
+        if(!t) t = cf->bodytag;
+        if(!t) t = cf->headtag;
+        if(!t) printf("lost document.write %s\n", keep);
+        else runGeneratedHtml(t, keep);
     }
     nzFree(keep);
 }
