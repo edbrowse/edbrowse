@@ -3709,6 +3709,7 @@ will ever do that! Use removeProperty like you're suppose to. */
     {
         p = camelCase(p);
         this[p] = v; // with all its side effects
+        if(typeof prv == "string") prv = prv.toLowerCase();
         const pri = p + "$pri";
         odp(this, pri, {
             value: (prv === "important"),
