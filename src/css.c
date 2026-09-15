@@ -64,7 +64,8 @@ static const char *const errorMessage[] = {
 static int errorBuckets[CSS_ERROR_LAST];
 static int loadcount;
 
-// A native method pushes this list to the js world, so we don't hvae
+// This list gathered from chrome.
+// A native method pushes this list to the js world, so we don't have
 // to copy it, as it is rather long.
 const char * const allowableStyleElements[] = {
   "accentColor",
@@ -760,13 +761,14 @@ const char * const allowableStyleElements[] = {
   "y",
   "zIndex",
   "zoom",
-};
+0};
 
 // the above is sorted; use binary search
 static bool validStyleElement(const char *s)
 {
     if(!s) return false;
     int i, l = -1, r = sizeof(allowableStyleElements) / sizeof(const char *), rc;
+    --r; // the last 0 doesn't count
     while(r - l > 1) {
         i = (l + r) / 2;
         rc = strcmp(allowableStyleElements[i], s);
