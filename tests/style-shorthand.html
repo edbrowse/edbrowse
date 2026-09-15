@@ -90,6 +90,18 @@ sr2 = document.styleSheets[1].cssRules;
 if(sr2.length != 5) msg += `|second sheet has ${sr2.length} rules`;
 if(sr2[1].cssText.substr(0, 4) != "h1 {" || sr2[2].cssText.substr(0, 4) != "h2 {") msg += "|css rules 1 and 2 don't look like h1 h2";
 
+p0 = document.createElement("p");
+s0 = p0.style;
+if(s0.length) msg += "|s0 has initial length";
+// we already confirmed a getter rebuilds padding from its parts,
+// make sure a setter splits padding into its parts, and not the
+// intelligence of an instance method like cssText or setAttribute.
+s0.padding = "6px 7px";
+if(s0.length != 4) msg += `|padding length ${s0.length}`;
+if(s0.paddingTop != "6px") msg += `|bad setter paddingTop ${s0.paddingTop}`;
+if(s0.paddingRight != "7px") msg += `|bad setter paddingRight ${s0.paddingRight}`;
+if(s0.item(3) != "padding-left") msg += `|bad index 3 ${s0.item(3)}`;
+
 s1 = getComputedStyle(b);
 // 5px comes from our style tag
 if(s1.paddingTop !== "5px") msg += `|bad s1 paddingTop ${s1.paddingTop}`;
