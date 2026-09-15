@@ -238,6 +238,7 @@ const char * const allowableStyleElements[] = {
   "counterIncrement",
   "counterReset",
   "counterSet",
+  "cssFloat",
   "cursor",
   "cx",
   "cy",
@@ -759,8 +760,21 @@ const char * const allowableStyleElements[] = {
   "y",
   "zIndex",
   "zoom",
-  "cssFloat",
-0};
+};
+
+// the above is sorted; use binary search
+static bool validStyleElement(const char *s)
+{
+    if(!s) return false;
+    int i, l = -1, r = sizeof(allowableStyleElements) / sizeof(const char *), rc;
+    while(r - l > 1) {
+        i = (l + r) / 2;
+        rc = strcmp(allowableStyleElements[i], s);
+        if(!rc) return true;
+        if(rc < 0)l = i; else r = i;
+    }
+    return false;
+}
 
 static const char * const displayableStyleElements[] = {
 "display", "visibility",
@@ -1950,8 +1964,7 @@ lastrule:
 			a[t - r1] = 0;
 			camelCase(a);
 			rule->atname = a;
-			rule->prop_ok =
-			(stringInList(allowableStyleElements, a) >= 0);
+			rule->prop_ok = validStyleElement(a);
 			if(!rule->prop_ok)
 				debugPrint(4, "invalid css property %s", a);
 			d->prop_ok |= rule->prop_ok;
