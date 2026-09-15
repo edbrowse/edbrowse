@@ -67,6 +67,9 @@ if(!window.mw$) {
     this.mw$.addEventListener = () => undefined;
     this.mw$.removeEventListener = () => undefined;
     this.mw$.xml = {};
+    this.mw$.css = {};
+    this.mw$.css.validList = ["marginTop"];
+    this.mw$.css.validHash = {};
     this.mw$.getElementsByTagName = () => [];
     this.mw$.getComputedStyle = () => {};
     this.mw$.structuredClone = () => {};
@@ -3760,7 +3763,6 @@ swdc(CSSStyleDeclaration);
     const csdp = CSSStyleDeclaration.prototype;
         // when one property is shorthand for several others.
         // margin implies top right bottom left
-        // How many of these are there that I don't know about?
         // Not clear how this meshes with my $$scy specificity system.
     const expand_list = [
       "margin", "scrollMargin", "padding", "scrollPadding",
@@ -3773,19 +3775,21 @@ swdc(CSSStyleDeclaration);
       "webkitBorderBefore", "webkitBorderAfter",
       "webkitBorderStart", "webkitBorderEnd",
     ];
+// In qjs -C mode, these getters setters just aren't there.
+if(mw$.share) {
     for (let k of expand_list) {
         odp(csdp, k, {
-            get: function() { return mw$.cssShort[`${k}Get`](this); },
-            set: function(h) { mw$.cssShort[`${k}Set`](this, h); }
+            get: mw$.css[`${k}Get`],             set: mw$.css[`${k}Set`]
         })
     }
+}
 
     // These are default properties of a style declaration.
     // These should be writable, so that the corresponding properties
 // of the instantiated object are writable.
 // Remember that readonly cascades downstream from the prototype property.
 // This list gathered from chrome.
-    for (let k of cssAllowable()) {
+    for (let k of mw$.css.validList) {
         // we can't tromp on top of a setter that we just set above.
         if(expand_list.includes(k)) continue;
         // nor can we quash the magic float

@@ -3349,6 +3349,11 @@ JSValue mwo; // master window object
 
     native_setup(mwc, mwo);
 
+	jsSourceFile = 0;
+	JS_DefinePropertyValueStr(mwc, mwo, "share", JS_NewInt32(mwc, 2), JS_PROP_ENUMERABLE);
+	JS_DefinePropertyValueStr(mwc, mwo, "bp_string", JS_NewString(mwc, bp_string + 1), 0);
+	JS_DefinePropertyValueStr(mwc, mwo, "trace_string", JS_NewString(mwc, trace_string + 1), 0);
+
 	// load and execute the shared window
 	jsSourceFile = "shared.js";
 	jsLineno = 1;
@@ -3404,11 +3409,6 @@ JSValue mwo; // master window object
 	if(JS_IsException(r))
 		processError(mwc);
 	JS_Release(r);
-
-	jsSourceFile = 0;
-	JS_DefinePropertyValueStr(mwc, mwo, "share", JS_NewInt32(mwc, 2), JS_PROP_ENUMERABLE);
-	JS_DefinePropertyValueStr(mwc, mwo, "bp_string", JS_NewString(mwc, bp_string + 1), 0);
-	JS_DefinePropertyValueStr(mwc, mwo, "trace_string", JS_NewString(mwc, trace_string + 1), 0);
 
 	JS_Release(mwo);
 

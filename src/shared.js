@@ -2373,7 +2373,11 @@ You can set them individually of course, but this is a shorthand.
 There are a lot of these and they don't all work the same way.
 *********************************************************************/
 
-this.cssShort = {
+this.css = {
+
+// valid css properties, in an array and in a hash for rapid validation
+validList: (share == 2 ? cssAllowable() : ["marginTop"]),
+validHash: {},
 
 aroundGet0: (a, b, c, d) => {
     if(b != d) return `${a} ${b} ${c} ${d}`;
@@ -2386,7 +2390,7 @@ aroundGet1: (s, pre, post) => {
     const b = s[pre + "Right" + post];
     const c = s[pre + "Bottom" + post];
     const d = s[pre + "Left" + post];
-    return cssShort.aroundGet0(a, b, c, d);
+    return css.aroundGet0(a, b, c, d);
 },
 
 aroundGet2: (s, pre, post) => {
@@ -2394,7 +2398,7 @@ aroundGet2: (s, pre, post) => {
     const b = s[pre + "TopRight" + post];
     const c = s[pre + "BottomRight" + post];
     const d = s[pre + "BottomLeft" + post];
-    return cssShort.aroundGet0(a, b, c, d);
+    return css.aroundGet0(a, b, c, d);
 },
 
 aroundSet0: (s, p1, p2, p3, p4, h) => {
@@ -2432,174 +2436,175 @@ aroundSet0: (s, p1, p2, p3, p4, h) => {
 },
 
 aroundSet1: (s, pre, post, h) => {
-    cssShort.aroundSet0(s, pre+"Top"+post, pre+"Right"+post, pre+"Bottom"+post, pre+"Left"+post, h);
+    css.aroundSet0(s, pre+"Top"+post, pre+"Right"+post, pre+"Bottom"+post, pre+"Left"+post, h);
 },
 
 aroundSet2: (s, pre, post, h) => {
-    cssShort.aroundSet0(s, pre+"TopLeft"+post, pre+"TopRight"+post, pre+"BottomRight"+post, pre+"BottomLeft"+post, h);
+    css.aroundSet0(s, pre+"TopLeft"+post, pre+"TopRight"+post, pre+"BottomRight"+post, pre+"BottomLeft"+post, h);
 },
 
-marginGet: function(s) { return cssShort.aroundGet1(s, "margin", ""); },
-marginSet: function(s, h) { cssShort.aroundSet1(s, "margin", "", h); },
-scrollMarginGet: function(s) { return cssShort.aroundGet1(s, "scrollMargin", ""); },
-scrollMarginSet: function(s, h) { cssShort.aroundSet1(s, "scrollMargin", "", h); },
-paddingGet: function(s) { return cssShort.aroundGet1(s, "padding", ""); },
-paddingSet: function(s, h) { cssShort.aroundSet1(s, "padding", "", h); },
-scrollPaddingGet: function(s) { return cssShort.aroundGet1(s, "scrollPadding", ""); },
-scrollPaddingSet: function(s, h) { cssShort.aroundSet1(s, "scrollPadding", "", h); },
-borderRadiusGet: function(s) { return cssShort.aroundGet2(s, "border", "Radius"); },
-borderRadiusSet: function(s, h) { cssShort.aroundSet2(s, "border", "Radius", h); },
-borderWidthGet: function(s) { return cssShort.aroundGet1(s, "border", "Width"); },
-borderWidthSet: function(s, h) { cssShort.aroundSet1(s, "border", "Width", h); },
-borderColorGet: function(s) { return cssShort.aroundGet1(s, "border", "Color"); },
-borderColorSet: function(s, h) { cssShort.aroundSet1(s, "border", "Color", h); },
-borderStyleGet: function(s) { return cssShort.aroundGet1(s, "border", "Style"); },
-borderStyleSet: function(s, h) { cssShort.aroundSet1(s, "border", "Style", h); },
+// don't use arrow functions, these are getters and setters
+marginGet: function() { return css.aroundGet1(this, "margin", ""); },
+marginSet: function(h) { css.aroundSet1(this, "margin", "", h); },
+scrollMarginGet: function() { return css.aroundGet1(this, "scrollMargin", ""); },
+scrollMarginSet: function(h) { css.aroundSet1(this, "scrollMargin", "", h); },
+paddingGet: function() { return css.aroundGet1(this, "padding", ""); },
+paddingSet: function(h) { css.aroundSet1(this, "padding", "", h); },
+scrollPaddingGet: function() { return css.aroundGet1(this, "scrollPadding", ""); },
+scrollPaddingSet: function(h) { css.aroundSet1(this, "scrollPadding", "", h); },
+borderRadiusGet: function() { return css.aroundGet2(this, "border", "Radius"); },
+borderRadiusSet: function(h) { css.aroundSet2(this, "border", "Radius", h); },
+borderWidthGet: function() { return css.aroundGet1(this, "border", "Width"); },
+borderWidthSet: function(h) { css.aroundSet1(this, "border", "Width", h); },
+borderColorGet: function() { return css.aroundGet1(this, "border", "Color"); },
+borderColorSet: function(h) { css.aroundSet1(this, "border", "Color", h); },
+borderStyleGet: function() { return css.aroundGet1(this, "border", "Style"); },
+borderStyleSet: function(h) { css.aroundSet1(this, "border", "Style", h); },
 
-backgroundGet: function(s) {
-    return `${s.backgroundcolor} ${s.backgroundImage} ${s.backgroundRepeat} ${s.backgroundPosition}`;
+backgroundGet: function() {
+    return `${this.backgroundcolor} ${this.backgroundImage} ${this.backgroundRepeat} ${this.backgroundPosition}`;
 },
 
-backgroundSet: function(s, h) {
+backgroundSet: function(h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
 const l = h.length;
-delete s.backgroundColor;
-delete s.backgroundImage;
-delete s.backgroundRepeat;
-delete s.backgroundPosition;
+delete this.backgroundColor;
+delete this.backgroundImage;
+delete this.backgroundRepeat;
+delete this.backgroundPosition;
 if(l >= 1)
-s.backgroundColor = h[0];
+this.backgroundColor = h[0];
 if(l >= 2)
-s.backgroundImage = h[1];
+this.backgroundImage = h[1];
 if(l >= 3)
-s.backgroundRepeat = h[2];
+this.backgroundRepeat = h[2];
 if(l >= 4)
-s.backgroundPosition = h[3];
+this.backgroundPosition = h[3];
 },
 
-fontGet: function(s) {
-    return `${s.fontStyle} ${s.fontWeight} ${s.fontSize}/${s.lineHeight} ${s.fontFamily} ${s.fontVariant} ${s.fontSizeAdjust} ${s.fontStretch}`
+fontGet: function() {
+    return `${this.fontStyle} ${this.fontWeight} ${this.fontSize}/${this.lineHeight} ${this.fontFamily} ${this.fontVariant} ${this.fontSizeAdjust} ${this.fontStretch}`
 },
 
-fontSet: function(s, h) {
+fontSet: function(h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
 const l = h.length;
-delete s.fontStyle;
-delete s.fontWeight;
-delete s.fontSize;
-delete s.lineHeight;
-delete s.fontFamily;
-delete s.fontVariant;
-delete s.fontSizeAdjust;
-delete s.fontStretch;
+delete this.fontStyle;
+delete this.fontWeight;
+delete this.fontSize;
+delete this.lineHeight;
+delete this.fontFamily;
+delete this.fontVariant;
+delete this.fontSizeAdjust;
+delete this.fontStretch;
 if(l >= 1)
-s.fontStyle = h[0];
+this.fontStyle = h[0];
 if(l >= 2)
-s.fontWeight = h[1];
+this.fontWeight = h[1];
 if(l >= 3) {
 let parts = h[2].split('/');
-s.fontSize = parts[0];
+this.fontSize = parts[0];
 if(parts.length >= 2)
-s.lineHeight = parts[1];
+this.lineHeight = parts[1];
 }
 if(l >= 4)
-s.fontFamily = h[3];
+this.fontFamily = h[3];
 if(l >= 5)
-s.fontVariant = h[4];
+this.fontVariant = h[4];
 if(l >= 6)
-s.fontSizeAdjust = h[5];
+this.fontSizeAdjust = h[5];
 if(l >= 7)
-s.fontStretch = h[6];
+this.fontStretch = h[6];
 },
 
-borderGet: function(s) {
-return `${s.borderWidth} ${s.borderStyle} ${s.borderColor} ${s.borderImage}`
+borderGet: function() {
+return `${this.borderWidth} ${this.borderStyle} ${this.borderColor} ${this.borderImage}`
 },
 
-borderSet: function(s, h) {
+borderSet: function(h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
-s.borderWidth = h[0] ? h[0] : "";
-s.borderStyle = h[1] ? h[1] : "";
-s.borderColor =  h[2] ? h[2] : "";
-s.borderImage =  h[3] ? h[3] : "";
+this.borderWidth = h[0] ? h[0] : "";
+this.borderStyle = h[1] ? h[1] : "";
+this.borderColor =  h[2] ? h[2] : "";
+this.borderImage =  h[3] ? h[3] : "";
 },
 
-borderImageGet: function(s) {
-    return `${s.borderImageSource} ${s.borderImageSlice} ${s.borderImageWidth} ${s.borderImageOutset} ${s.borderImageRepeat}`
+borderImageGet: function() {
+    return `${this.borderImageSource} ${this.borderImageSlice} ${this.borderImageWidth} ${this.borderImageOutset} ${this.borderImageRepeat}`
 },
 
-borderImageSet: function(s, h) {
+borderImageSet: function(h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
-s.borderImageSource = h[0] ? h[0] : "";
-s.borderImageSlice = h[1] ? h[1] : "";
-s.borderImageWidth =  h[2] ? h[2] : "";
-s.borderImageOutset =  h[3] ? h[3] : "";
-s.borderImageRepeat =  h[4] ? h[4] : "";
+this.borderImageSource = h[0] ? h[0] : "";
+this.borderImageSlice = h[1] ? h[1] : "";
+this.borderImageWidth =  h[2] ? h[2] : "";
+this.borderImageOutset =  h[3] ? h[3] : "";
+this.borderImageRepeat =  h[4] ? h[4] : "";
 },
 
 // top right bottom left are lower case here, can't use Around1
-insetGet: function(s) {
-    return cssShort.around0(s.top, s.right, s.bottom, s.left);
+insetGet: function() {
+    return css.around0(this.top, this.right, this.bottom, this.left);
 },
 
-insetSet: function(s, h) {
+insetSet: function(h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
 const l = h.length;
 if(l == 1) {
-s.left = s.bottom = s.right = s.top = h[0];
+this.left = this.bottom = this.right = this.top = h[0];
 return;
 }
 if(l == 2) {
-s.top = s.bottom = h[0];
-s.left = s.right = h[1];
+this.top = this.bottom = h[0];
+this.left = this.right = h[1];
 return;
 }
 if(l == 3) {
-s.top = h[0];
-s.left = s.right = h[1];
-s.bottom = h[2];
+this.top = h[0];
+this.left = this.right = h[1];
+this.bottom = h[2];
 return;
 }
 if(l >= 4) {
-s.top = h[0];
-s.right = h[1];
-s.bottom = h[2];
-s.left = h[3];
+this.top = h[0];
+this.right = h[1];
+this.bottom = h[2];
+this.left = h[3];
 return;
 }
 },
 
-textDecorationGet: function(s) {
-    return `${s.textDecorationLine} ${s.textDecorationColor} ${s.textDecorationStyle} ${s.textDecorationThickness}`
+textDecorationGet: function() {
+    return `${this.textDecorationLine} ${this.textDecorationColor} ${this.textDecorationStyle} ${this.textDecorationThickness}`
 },
 
-textDecorationSet: function(s, h) {
+textDecorationSet: function(h) {
 if(h === null || h === undefined) return;
 if(typeof h !== "string") h = String(h)
 h = h.split(/\s+/);
 const l = h.length;
-delete s.textDecorationLine;
-delete s.textDecorationColor;
-delete s.textDecorationStyle;
-delete s.textDecorationThickness;
+delete this.textDecorationLine;
+delete this.textDecorationColor;
+delete this.textDecorationStyle;
+delete this.textDecorationThickness;
 if(l >= 1)
-s.textDecorationLine = h[0];
+this.textDecorationLine = h[0];
 if(l >= 2)
-s.textDecorationColor = h[1];
+this.textDecorationColor = h[1];
 if(l >= 3)
-s.textDecorationStyle =  h[2];
+this.textDecorationStyle =  h[2];
 if(l >= 4)
-s.textDecorationThickness =  h[3];
+this.textDecorationThickness =  h[3];
 },
 
 // width style color
@@ -2618,37 +2623,39 @@ wscSet(s, pre, h) => {
     s[pre + "Color"] =  h[2] ? h[2] : "";
 },
 
-borderInlineGet: function(s) { return cssShort.wscGet(s, "borderInline"); },
-borderInlineSet: function(s, h) { cssShort.wscSet(s, "borderInline", h); },
-borderInlineStartGet: function(s) { return cssShort.wscGet(s, "borderInlineStart"); },
-borderInlineStartSet: function(s, h) { cssShort.wscSet(s, "borderInlineStart", h); },
-borderInlineEndGet: function(s) { return cssShort.wscGet(s, "borderInlineEnd"); },
-borderInlineEndSet: function(s, h) { cssShort.wscSet(s, "borderInlineEnd", h); },
-borderBlockGet: function(s) { return cssShort.wscGet(s, "borderBlock"); },
-borderBlockSet: function(s, h) { cssShort.wscSet(s, "borderBlock", h); },
-borderBlockStartGet: function(s) { return cssShort.wscGet(s, "borderBlockStart"); },
-borderBlockStartSet: function(s, h) { cssShort.wscSet(s, "borderBlockStart", h); },
-borderBlockEndGet: function(s) { return cssShort.wscGet(s, "borderBlockEnd"); },
-borderBlockEndSet: function(s, h) { cssShort.wscSet(s, "borderBlockEnd", h); },
-borderTopGet: function(s) { return cssShort.wscGet(s, "borderTop"); },
-borderTopSet: function(s, h) { cssShort.wscSet(s, "borderTop", h); },
-borderRightGet: function(s) { return cssShort.wscGet(s, "borderRight"); },
-borderRightSet: function(s, h) { cssShort.wscSet(s, "borderRight", h); },
-borderBottomGet: function(s) { return cssShort.wscGet(s, "borderBottom"); },
-borderBottomSet: function(s, h) { cssShort.wscSet(s, "borderBottom", h); },
-borderLeftGet: function(s) { return cssShort.wscGet(s, "borderLeft"); },
-borderLeftSet: function(s, h) { cssShort.wscSet(s, "borderLeft", h); },
-webkitBorderBeforeGet: function(s) { return cssShort.wscGet(s, "webkitBorderBefore"); },
-webkitBorderBeforeSet: function(s, h) { cssShort.wscSet(s, "webkitBorderBefore", h); },
-webkitBorderAfterGet: function(s) { return cssShort.wscGet(s, "webkitBorderAfter"); },
-webkitBorderAfterSet: function(s, h) { cssShort.wscSet(s, "webkitBorderAfter", h); },
-webkitBorderStartGet: function(s) { return cssShort.wscGet(s, "webkitBorderStart"); },
-webkitBorderStartSet: function(s, h) { cssShort.wscSet(s, "webkitBorderStart", h); },
-webkitBorderEndGet: function(s) { return cssShort.wscGet(s, "webkitBorderEnd"); },
-webkitBorderEndSet: function(s, h) { cssShort.wscSet(s, "webkitBorderEnd", h); },
+borderInlineGet: function() { return css.wscGet(this, "borderInline"); },
+borderInlineSet: function(h) { css.wscSet(this, "borderInline", h); },
+borderInlineStartGet: function() { return css.wscGet(this, "borderInlineStart"); },
+borderInlineStartSet: function(h) { css.wscSet(this, "borderInlineStart", h); },
+borderInlineEndGet: function() { return css.wscGet(this, "borderInlineEnd"); },
+borderInlineEndSet: function(h) { css.wscSet(this, "borderInlineEnd", h); },
+borderBlockGet: function() { return css.wscGet(this, "borderBlock"); },
+borderBlockSet: function(h) { css.wscSet(this, "borderBlock", h); },
+borderBlockStartGet: function() { return css.wscGet(this, "borderBlockStart"); },
+borderBlockStartSet: function(h) { css.wscSet(this, "borderBlockStart", h); },
+borderBlockEndGet: function() { return css.wscGet(this, "borderBlockEnd"); },
+borderBlockEndSet: function(h) { css.wscSet(this, "borderBlockEnd", h); },
+borderTopGet: function() { return css.wscGet(this, "borderTop"); },
+borderTopSet: function(h) { css.wscSet(this, "borderTop", h); },
+borderRightGet: function() { return css.wscGet(this, "borderRight"); },
+borderRightSet: function(h) { css.wscSet(this, "borderRight", h); },
+borderBottomGet: function() { return css.wscGet(this, "borderBottom"); },
+borderBottomSet: function(h) { css.wscSet(this, "borderBottom", h); },
+borderLeftGet: function() { return css.wscGet(this, "borderLeft"); },
+borderLeftSet: function(h) { css.wscSet(this, "borderLeft", h); },
+webkitBorderBeforeGet: function() { return css.wscGet(this, "webkitBorderBefore"); },
+webkitBorderBeforeSet: function(h) { css.wscSet(this, "webkitBorderBefore", h); },
+webkitBorderAfterGet: function() { return css.wscGet(this, "webkitBorderAfter"); },
+webkitBorderAfterSet: function(h) { css.wscSet(this, "webkitBorderAfter", h); },
+webkitBorderStartGet: function() { return css.wscGet(this, "webkitBorderStart"); },
+webkitBorderStartSet: function(h) { css.wscSet(this, "webkitBorderStart", h); },
+webkitBorderEndGet: function() { return css.wscGet(this, "webkitBorderEnd"); },
+webkitBorderEndSet: function(h) { css.wscSet(this, "webkitBorderEnd", h); },
 
 }
-Object.freeze(cssShort)
+Object.freeze(css)
+
+css.validList.forEach(k=>css.validHash[k] = true);
 
 // This is not comprehensive, but covers most cases,
 // and does what chrome does.
