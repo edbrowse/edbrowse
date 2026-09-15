@@ -1750,15 +1750,12 @@ function cloneNodeHelper(root, deep, into)
             // referencing it will create it
             node2.style;
             node2.style.element = node2;
-            for (const l in node1.style$2){
-                if (!node1.style$2.hasOwnProperty(l)) continue;
-                if (
-                    typeof node1.style$2[l] === 'string' ||
-                    typeof node1.style$2[l] === 'number'
-                ) {
-                    if (debug) alert3("copy stattr " + l);
-                    node2.style$2[l] = node1.style$2[l];
-                }
+            for (let l = 0; l < node1.style.length; ++l) {
+                let p = node1.style[l]; // name of property
+                if (debug) alert3("copy stattr " + p);
+// oops, camelCase is over in startwindow
+                p = p.replace(/-./g, function(f){return f[1].toUpperCase()});
+                node2.style$2[p] = node1.style$2[p];
             }
         }
 

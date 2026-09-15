@@ -105,13 +105,7 @@ if(s0.item(3) != "padding-left") msg += `|bad item 3 ${s0.item(3)}`;
 s0.scrollMarginTop = "9px";
 if(s0.scrollMarginTop != "9px") msg += "|scrollMarginTop not 9px";
 if(s0.length != 5 || s0.item(4) != "scroll-margin-top") msg += `|scrollMarginTop didn't append, length ${s0.length}`;
-if(!isedbrowse) {
-// A design can be utterly wrong and stil get most of the answers right.
-// Direct indexing doesn't work. The indexes need to be set and maintained,
-// much like NamedNodeMap - using a getter and setter on every css property,
-// not just the composites.
 if(s0[2] != "padding-bottom" || s0[4] != "scroll-margin-top") msg += `|fail direct index on s0 ${s0[2]} ${s0[4]}`;
-}
 
 s1 = getComputedStyle(b);
 // 5px comes from our style tag

@@ -3653,6 +3653,7 @@ class CSSStyleDeclaration extends HTMLElement
         super();
         odp(this, "style$2", {value:this});
         odp(this, "element", {value:null, writable:true});
+        odp(this, "length", {value:0, writable:true});
     }
 
     toString() { return "style object" };
@@ -3667,42 +3668,55 @@ class CSSStyleDeclaration extends HTMLElement
     // Mozart would call it the magic float.
     set float(v) { this.cssFloat = v; }
 
-    get length()
-    {
-        let cnt = 0;
-        for(let i in this) if(this.hasOwnProperty(i)) ++cnt;
-        return cnt;
+/* intelligent get and set. This is used for every css property that is
+not composite. p is the property and p$2 is its shadow.
+The user will never know about p$2.
+The setter has the intelligence to assign an index to the property,
+link that property through the index, and increment the length.
+This follows the pattern of NamedNodeMap, although there are no
+intermediate Attr objects here.
+No need to validate p here, we wouldn't even be here if p wasn't valid.
+p is known to be one of the properties in mw$.css.validList.
+If you delete the property directly, everything is screwed up,
+but that's the same as NamedNodeMap or DOMTokenList, so hopefully nobody
+will ever do that! Use removeProperty like you're suppose to. */
+
+    intelligentGet(p) {
+        const p2 = p + "$2";
+        return this[p2] ? this[p2] : "";
+    }
+
+    intelligentSet(p, h) {
+        const p2 = p + "$2";
+        if(this[p2] !== undefined) { // already there
+            this[p2] = h;
+            return;
+        }
+        // don't want these to be enumerable, nobody should see them.
+        odp(this, p2, {value: h, writable: true, configurable: true});
+            this[this.length++] = uncamelCase(p);
     }
 
     item(n)
     {
-        n = itemArgToIndex(n);
-        let cnt = 0;
-        for(let i in this) {
-            if (!this.hasOwnProperty(i)) continue;
-            if (cnt == n) return uncamelCase(i);
-            ++cnt;
-        }
-        return ""
+        n = itemArgToIndex(n, this.length);
+        return n >= 0 ? this[n] : null;
     }
 
     getPropertyValue(p)
     {
         p = camelCase(p);
-        if (this[p] == undefined) this[p] = "";
-        return this[p];
+        const p2 = p + "$2";
+        if(this[p2] === undefined) this[p] = "";
+        return this[p2];
     }
 
-    getProperty(p)
-    {
-        p = camelCase(p);
-        return this[p] ? this[p] : "";
-    }
+    getProperty(p) { return this[camelCase(p)]; }
 
     setProperty(p, v, prv)
     {
         p = camelCase(p);
-        this[p] = v;
+        this[p] = v; // with all its side effects
         const pri = p + "$pri";
         odp(this, pri, {
             value: (prv === "important"),
@@ -3720,30 +3734,40 @@ class CSSStyleDeclaration extends HTMLElement
 
     removeProperty(p)
     {
-        p = camelCase(p);
-        delete this[p]
-        delete this[p+"$$scy"]
-        delete this[p+"$$pri"]
+        const p1 = camelCase(p);
+        const p2 = p1 + "$2";
+        if(this[p2] === undefined) return; // not there
+        delete this[p1];
+        delete this[p1+"$$scy"];
+        delete this[p1+"$$pri"];
+        // have to find it in the array and roll our own splice
+        let found = false, i;
+        for(i = 0; i < this.length; ++i) {
+            if(this[i] == p) found = true;
+            if(found && i < this.length - 1) this[i] = this[i+1];
+        }
+        if(found) // should always be found
+            delete this[--this.length];
     }
 
     get cssText()
     {
         let s = "";
-        for (let k in this) {
-            if (!this.hasOwnProperty(k)) continue;
-            let l = this[k];
+        for (let k = 0; k < this.length; ++k) {
+            let p = this[k];
+            let l = this[camelCase(p)];
             // weirdness from acid 45
-            if (k === "cssFloat") k = "float";
+            if (p === "css-float") p = "float";
             if (l.match(/[ \t;"'{}]/)) {
                 if (!l.match(/"/)) l = '"' + l + '"';
                 else if (!l.match(/'/)) l = "'" + l + "'";
                 else {
-                    alert3(`cssText unrepresentable ${k}: ${l}`);
+                    alert3(`cssText unrepresentable ${p}: ${l}`);
                     l = "none";
                 }
             }
             if (s.length) s += ' ';
-            s = s + k + ': ' + l + ';';
+            s = s + p + ': ' + l + ';';
         }
         return s;
     }
@@ -3784,17 +3808,15 @@ if(mw$.share) {
     }
 }
 
-    // These are default properties of a style declaration.
-    // These should be writable, so that the corresponding properties
-// of the instantiated object are writable.
-// Remember that readonly cascades downstream from the prototype property.
-// This list gathered from chrome.
+// Create hundreds of geters and setters, one for each css property.
+// It's only done on class prototype, not on each style element on each node.
     for (let k of mw$.css.validList) {
         // we can't tromp on top of a setter that we just set above.
         if(expand_list.includes(k)) continue;
         // nor can we quash the magic float
         if(k == "float") continue;
-        odp(csdp, k, {value: "", writable: true});
+        odp(csdp, k, {get: function() { return this.intelligentGet(`${k}`)},
+        set: function(h) { this.intelligentSet(`${k}`, h)}});
     }
 
     odp(csdp, "parentRule", {value: null, writeable: true});
