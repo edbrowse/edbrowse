@@ -7,7 +7,7 @@ p.before:after { vertical-align: top}
 p.before { font-family: helvetica; text-align: center; }
 </style>
 <link href="sample.css" rel=stylesheet type=text/css onload="on_css_load = true">
-<style> body { padding-left: 13px; } </style>
+<style> body { padding-left: 13px; } p { border-top-left-radius: 6px; } </style>
 </head>
 <body>
 <p id=show>start</p>
@@ -141,7 +141,7 @@ The last one wins, which you might expect.
 Delete the last style tag, so that sample.css is last, and it wins at 11px.
 All other things being equal, the style tags and css files have equal weight.
 Things are rarely equal, there are specificity considerations,
-which I haven't written any tests for yet. */
+and I'm just starting to write tests for those. */
 if(s1.padding !== "5px 0px 0px 13px") msg += `|bad s1 padding composite ${s1.padding}`;
 // The aroundGet functions rebuild the composite, with the same logic as chrome.
 // let's test it out with all default values the same.
@@ -178,6 +178,14 @@ if(s2.fontFamily != "helvetica") msg += `|fontFamily ${s2.fontFamily} on standar
 if(s2.boxSizing != "content-box") msg += `|boxSizing ${s2.boxSizing} on standard style`;
 if(s2.textAlign != "center") msg += `|textAlign ${s2.textAlign} on standard style`;
 if(s2.verticalAlign != "baseline") msg += `|verticalAlign ${s2.verticalAlign} on standard style`;
+if(s2.borderTopLeftRadius != "6px") msg += `|bad p radius ${s2.borderTopLeftRadius}`;
+// add cen to the class. We then see the 4px rule first, then the 6px rule,
+// but the 4px rule has higher specificity, and should win.
+// Even though the 6px rule comes after.
+// p and matching class is stronger than p alone.
+before.classList.add("cen");
+s2 = getComputedStyle(before);
+if(s2.borderTopLeftRadius != "4px") msg += `|bad p.cen radius ${s2.borderTopLeftRadius}`;
 
 s3 = getComputedStyle(before, ":before");
 if(s3.boxSizing != "border-box") msg += "|boxSizing not found on before style";

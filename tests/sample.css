@@ -27,6 +27,7 @@ color: purple;
 p.cen {
 text-align: center;
 font-size: 1.5em;
+border-top-left-radius: 4px;
 }
 
 hr {
