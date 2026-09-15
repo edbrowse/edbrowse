@@ -1274,7 +1274,7 @@ copy:
 }
 
 // This is a crude measure of specificity, contained in a 5 digit number.
-static int specificity(const struct sel *sel, bool underat, bool fromstyle)
+static int specificity(const struct sel *sel, bool underat)
 {
 	const struct asel *a = sel->chain;
 	const struct mod *mod;
@@ -1311,7 +1311,6 @@ static int specificity(const struct sel *sel, bool underat, bool fromstyle)
 // @ media tag has more specificity; I have no idea how much more.
     if (underat) n += 10;
 // <style> is higher than rules from a css file.
-    if (fromstyle) n += 20;
  return n;
 }
 
@@ -1861,13 +1860,11 @@ copy:		++s;
 	}
 
     int nest = 0;
-bool save_fromstyle = false;
 
 	for (d = d1; d; d = d->next) {
 		bool across = true;
 		uchar ec = CSS_ERROR_NONE;
 		if(d->error == CSS_ERROR_DELIM) {
-		    if(d->which == '0') save_fromstyle = d->fromstyle;
 		    if(d->which == '1') ++nest;
 		    if(d->which == '2') --nest;
 		}
@@ -1876,8 +1873,7 @@ bool save_fromstyle = false;
 		for (sel = d->selectors; sel; sel = sel->next) {
 		    if (!sel->error) {
 		        // as good a time as any to compute specificity
-		        sel->spec = specificity(sel, d->underat,
-		            nest ? false : save_fromstyle);
+		        sel->spec = specificity(sel, d->underat);
 		        across = false;
 		        continue;
 		    }

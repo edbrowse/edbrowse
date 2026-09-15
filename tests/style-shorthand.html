@@ -7,6 +7,7 @@ p.before:after { vertical-align: top}
 p.before { font-family: helvetica; text-align: center; }
 </style>
 <link href="sample.css" rel=stylesheet type=text/css onload="on_css_load = true">
+<style> body { padding-left: 13px; } </style>
 </head>
 <body>
 <p id=show>start</p>
@@ -78,10 +79,10 @@ if(b.style.display !== "") msg += `|bad default display ${b.style.display}`;
 if(b.style.color !== "") msg += `|bad default color ${b.style.color}`;
 if(b.style.fontSize !== "") msg += `|bad default fontSize ${b.style.fontSize}`;
 if(div1.style.paddingTop !== "10px") msg += `|bad html set padding ${b.style.paddingTop}`;
-b.style.display = "block";
-if(b.style.display !== "block") msg += `|bad direct set display ${b.style.display}`;
+b.style.display = "inline";
+if(b.style.display !== "inline") msg += `|bad direct set display ${b.style.display}`;
 
-if(document.styleSheets.length != 2) msg += `|bad sync styleSheets count ${document.styleSheets.length}`;
+if(document.styleSheets.length != 3) msg += `|bad styleSheets count ${document.styleSheets.length}`;
 sr1 = document.styleSheets[0].cssRules;
 if(sr1.length != 4) msg += `|first sheet has ${sr1.length} rules`;
 // edbrowse doesn't always have the same whitespace as chrome
@@ -126,20 +127,29 @@ s1 = getComputedStyle(b);
 if(s1.paddingTop !== "5px") msg += `|bad s1 paddingTop ${s1.paddingTop}`;
 // default "" becomes default 0px via getComputedStyle
 if(s1.paddingRight !== "0px") msg += `|bad s1 padding right ${s1.paddingRight}`;
-/* put a composite back together.
-If I didn't specify padding-left in the style at the top of this page,
+/* put a padding composite back together.
+If I didn't specify padding-left in the styles at the top of this page,
 if paddingLeft and paddingRight were left alone at their default,
 they would be equal, and chrome uses the shorthand 5px 0px 0px,
 understanding that the second 0px for the right is copied to 0px on the left.
-So tweak the test a little and force crome to spit out all 4 numbers.
-edbrowse also spits out all 4 numbers, and they agree. */
-if(s1.padding !== "5px 0px 0px 12px") msg += `|bad s1 padding composite ${s1.padding}`;
-// I have since written the aroundGet functions, which do the same thing
-// as chrome; let's test it out with all default values the same.
+But paddingLeft is specified, so chrome spits out all four numbers,
+as does edbrowse, and they agree.
+Part of this test is who wins? paddingLeft is specified in style, then in
+sample.css, then in style again, all three having the same specificity.
+A simple match on tag body, with no other modifiers.
+The last one wins, which you might expect.
+Delete the last style tag, so that sample.css is last, and it wins at 11px.
+All other things being equal, the style tags and css files have equal weight.
+Things are rarely equal, there are specificity considerations,
+which I haven't written any tests for yet. */
+if(s1.padding !== "5px 0px 0px 13px") msg += `|bad s1 padding composite ${s1.padding}`;
+// The aroundGet functions rebuild the composite, with the same logic as chrome.
+// let's test it out with all default values the same.
 if(s1.borderRadius != "0px") msg += `|bad composite borderRadius ${s1.borderRadius}`;
+// red bleeds through from body.color on this one, otherwise default is black.
 if(s1.borderInline != "0px none rgb(255, 0, 0)") msg += `|bad composite borderInline ${s1.borderInline}`;
 // our direct assignment carries through to s1
-if(s1.display !== "block") msg += `|bad s1 display ${s1.display}`;
+if(s1.display !== "inline") msg += `|bad s1 display ${s1.display}`;
 // color red comes from the css file
  if(s1.color !== "rgb(255, 0, 0)") msg += `|bad s1 color ${s1.color}`;
 if(s1.backgroundColor !== "rgb(128, 128, 128)") msg += `|bad s1 backgroundColor ${s1.backgroundColor}`;
