@@ -2627,7 +2627,8 @@ wscSet(s, pre, h) => {
     h = h.trim().split(/\s+/);
     s[pre + "Width"] = h[0] ? h[0] : "";
     s[pre + "Style"] = h[1] ? h[1] : "";
-    s[pre + "Color"] =  h[2] ? h[2] : "";
+// rgb has spaces in it and will be separated out; put it back togetyher
+    s[pre + "Color"] =  h[2] ? h.slice(2).join(' ') : "";
 },
 
 borderInlineGet: function() { return css.wscGet(this, "borderInline"); },

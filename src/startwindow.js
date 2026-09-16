@@ -1514,7 +1514,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
                 spillup_id(w, this, v, true);
             }
         }
-        if(name === "class")
+        if(name === "class" && this.classList$2)
             this.classList.mirror$2(this.classList.tokens$2());
         // names that spill down into the actual property
         if(Element.spilldown(this, name)) this[name] = v;
@@ -1588,7 +1588,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
             const w = isRooted(this);
             if(w) spillup_id(w, this, old.value, false);
         }
-        if(name === "class")
+        if(name === "class" && this.classList$2)
             this.classList.mirror$2(this.classList.tokens$2());
         mutFixup(this, 1, name, old.value);
     }

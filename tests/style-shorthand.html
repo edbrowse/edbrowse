@@ -121,6 +121,8 @@ if(s0.getPropertyValue("scroll-margin-left") !== "") msg += `|getProperty of mis
 // out of bounds
 if(s0.item(17) !== "") msg += "|item 17 not empty string";
 if(s0.getPropertyValue("cat") !== "") msg += "|cat not empty string";
+s0.borderInline = "17px none rgb(60, 70, 80)";
+if(s0.borderInlineWidth != "17px" || s0.borderInlineColor != "rgb(60, 70, 80)") msg += "|wrong borderInline";
 
 s1 = getComputedStyle(b);
 // 5px comes from our style tag

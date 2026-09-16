@@ -24,7 +24,6 @@ h += 'A';
 // Test the order in which scrips run.
 // This proves script execution is reentrant.
 try {
-show = document.getElementById("show")
 b = document.body;
 s = document.createElement("script")
 s.text = "h += 'b'"
