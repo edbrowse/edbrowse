@@ -176,6 +176,14 @@ node42.firstChild.data = "yesterday";
 node17 = makeNode(17);
 node17.outerHTML = "<span>you can</span> go <span>your own way</span>";
 
+// changes in a shadow root should not trigger the observers,
+// no new mutation records from this stuff.
+sr6 = node6.attachShadow({mode:"open"});
+sr6p = document.createElement("p");
+sr6.appendChild(sr6p);
+sr6p.textContent = "I'm in shadow";
+sr6p.setAttribute("pumpkin", "orange");
+
 /* log is still empty, because these observers run asynchronously.
 change it to middle so we know we got this far.
 The timer will fire in half a second and overwrite it.
