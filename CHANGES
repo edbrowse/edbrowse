@@ -2,6 +2,11 @@ Here are some changes introduced by recent versions of edbrowse.
 
 3.8.19
 
+<div id=xyz> creates a link window.xyz to the div element,
+iff that element is linked into the tree, and the id is not a reserved word,
+and that name isn't being used as a variable for some other purpose.
+Use this feature for getElementById, it satisfies it 99.5% of the time.
+
 Add a test that uses edbrowse tracing, along with comments to describe the process.
 
 Reverse the css shorthand, so that setting margin sets its four

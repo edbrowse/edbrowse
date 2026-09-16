@@ -2223,6 +2223,15 @@ Remember that "this" is the window object.
         if(!s[k]) s[k] = "0px";
 
     for(let k of [
+      "marginBlock", "marginBlockEnd", "marginBlockStart",
+      "marginInline", "marginInlineEnd", "marginInlineStart",
+      "marginTop", "marginRight", "marginBottom", "marginLeft",
+      "webkitMarginAfter", "webkitMarginBefore",
+      "webkitMarginEnd", "webkitMarginStart",
+    ])
+        if(!s[k]) s[k] = "8px";
+
+    for(let k of [
       "accentColor", "alignSelf", "alignmentBaseline",
       "animationTimeline", "aspectRatio",
       "backgroundSize", "baselineSource", "bottom",
