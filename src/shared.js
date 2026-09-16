@@ -2028,7 +2028,8 @@ break;
 
 // e is the node and pe is the pseudoelement
 function getComputedStyle(e,pe) {
-    let s, w = my$win();
+    let s, w = isRooted(e);
+    if(!w) return new (my$win().CSSStyleDeclaration);
 
     if(typeof pe != "string") pe = 0;
     else if(pe.match(/^\s*$/)) pe = 0;
