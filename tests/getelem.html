@@ -241,8 +241,11 @@ frag = document.createDocumentFragment();
 if(frag.getElementById("show")) msg += "|ById isn't restricted to its fragment";
 frag.appendChild(span);
 if(window.zebra) msg += "|zebra found in window";
+if(frag.zebra) msg += "|zebra found in frag";
 if(frag.getElementById("zebra").nodeName != "SPAN") msg += "|zebra not found in fragment";
 // can't append fragment into the tree, that appends all its children instead
+frag.removeChild(span);
+if(frag.getElementById("zebra")) msg += "|zebra persists in fragment";
 
 show.innerHTML = msg;
 } catch(e) { broken = true; show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
