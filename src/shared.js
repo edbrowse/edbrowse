@@ -1461,20 +1461,24 @@ return r
 }
 
 function ownerIdsScripts(s) {
-    const w = isRooted(s); // the rooting window
-    if(!w) return;
-    const d = w.document;
+    const w2 = isRooted2(s); // the rooting window through shadowNode
+    if(!w2) return;
+    const d = w2.document;
+    // 99.9% of the time this is redundent, but it's not far up the chain.
+    const w = isRooted(s); // the rooting window direct
 
-    // We might need to change the owner document of everything newly attached.
-    // It doesn't happen often, but can,
-    // when a node is created in another frame, then attached in this one.
-    // And also, link the ids into the window.
+/* We might need to change the owner document of everything newly attached.
+It doesn't happen often, but can,
+when a node is created in another frame, then attached in this one.
+And also, link the ids into the window.
+ids definitely require direct rootin.
+I don't know if owner changes over for indirect rooting. Probably. */
     let list = gebtn(s, "*", true, false);
     // our getElements functions never include the top node,
     // but in this case we might want to.
     list.splice(0, 0, s);
     for(let c of list) {
-        if(c.nodeType == 1 && c.id)
+        if(c.nodeType == 1 && c.id && w)
             spillup_id(w, c, c.id, true);
         if(c.ownerDocument == d) continue; // high runner case
         c.ownerDocument = d;
@@ -1486,9 +1490,14 @@ function ownerIdsScripts(s) {
     const inbrowse = (d.readyState != "complete");
     const save_current = d.currentScript;
 
-    // ok, now look for scripts.
+/* ok, now look for scripts.
+They run even if linked in under a shadowroot which is then linked to the tree.
+But I don't check the converse. This gebtn doesn't descend through
+a shadowroot to look for scripts below,
+so if this node is just linked in, I won't find those scripts.
+Need to implement gebtn("script+") for the extended search. */
     list = gebtn(s, "script", true, false);
-    if(s.dom$class == "HTMLScriptElement") 
+    if(s.nodeName == "SCRIPT") 
         list.splice(0, 0, s);
     for(let c of list) {
         const n = c.eb$step
@@ -1506,9 +1515,9 @@ function ownerIdsScripts(s) {
         try {
             if(c.text.match(/(bp|trace)@\(/)) {
                 // Oops, have to expand for tracing
-                w.eval(c.text.replace(/(,?) *(trace|bp)@\((\w+)\) *([,;]?)/g, traceBreakReplace))
+                w2.eval(c.text.replace(/(,?) *(trace|bp)@\((\w+)\) *([,;]?)/g, traceBreakReplace))
             } else {
-                w.eval(c.text)
+                w2.eval(c.text)
             }
         } catch(e) {
             alert3(e);

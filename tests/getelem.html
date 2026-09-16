@@ -264,8 +264,10 @@ if(sr.getElementById("zebra").nodeName != "SPAN") msg += "|zebra not found in sh
 sr.removeChild(span);
 if(sr.getElementById("zebra")) msg += "|zebra persists in shadow";
 srs = document.createElement("script");
-srs.text = "msg += '|script ran under shadow'";
+srs.text = "ran = true";
+ran = false;
 sr.appendChild(srs);
+if(!ran) msg += "|script didn't run when linked into shadow";
 
 show.innerHTML = msg;
 } catch(e) { broken = true; show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
