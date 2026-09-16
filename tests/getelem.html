@@ -250,14 +250,22 @@ if(frag.getElementById("zebra")) msg += "|zebra persists in fragment";
 sr = q1.attachShadow({ mode: "open" });
 if(sr.parentNode !== null) msg += "|shadow root has parent";
 if(q1.firstChild) msg += "|h1 element has children";
+if(q1.getRootNode() != document) msg += "|bad q1 root node";
+if(sr.getRootNode() != sr) msg += "|bad sr root node";
 if(q1.shadowRoot != sr) msg += "|bad q1.shadowRoot";
 if(sr.getElementById("show")) msg += "|ById isn't restricted to shadow";
 sr.appendChild(span);
+if(span.getRootNode() != sr) msg += "|bad span root node";
+if(span.getRootNode({composed:false}) != sr) msg += "|bad span !composed root node";
+if(span.getRootNode({composed:true}) != document) msg += "|bad span composed root node";
 if(window.zebra) msg += "|zebra found in window after shadow";
 if(sr.zebra) msg += "|zebra found in shadow";
 if(sr.getElementById("zebra").nodeName != "SPAN") msg += "|zebra not found in shadow";
 sr.removeChild(span);
 if(sr.getElementById("zebra")) msg += "|zebra persists in shadow";
+srs = document.createElement("script");
+srs.text = "msg += '|script ran under shadow'";
+sr.appendChild(srs);
 
 show.innerHTML = msg;
 } catch(e) { broken = true; show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

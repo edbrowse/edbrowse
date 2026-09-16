@@ -1323,6 +1323,17 @@ function isRooted(t) {
     return undefined;
 }
 
+// like the above but step through shadowNode
+function isRooted2(t) {
+    while(t) {
+        if(t.nodeName == "HTML") return t.eb$win;
+        // don't continue upward past a template
+        if(t.nodeName == "TEMPLATE") return undefined;
+        t = t.eb$shadowNode ? t.eb$shadowNode : t.parentNode;
+    }
+    return undefined;
+}
+
 // <div id=fred> spills up to a window.fred link.
 function spillup_id(w, tag, name, set)
 {
