@@ -231,7 +231,7 @@ doc = document.implementation.createHTMLDocument();
 if(doc.getElementById("show")) msg += "|ById isn't restricted to its document";
 span.id = "zebra";
 doc.body.appendChild(span);
-if(window.zebra) msg += "|zebra found in window";
+if(window.zebra) msg += "|zebra found in window after fragment";
 if(doc.getElementById("zebra").nodeName != "SPAN") msg += "|zebra not found in doc";
 // I might have tested linking doc into the tree,
 // b.appendChild(doc);
@@ -246,6 +246,18 @@ if(frag.getElementById("zebra").nodeName != "SPAN") msg += "|zebra not found in 
 // can't append fragment into the tree, that appends all its children instead
 frag.removeChild(span);
 if(frag.getElementById("zebra")) msg += "|zebra persists in fragment";
+
+sr = q1.attachShadow({ mode: "open" });
+if(sr.parentNode !== null) msg += "|shadow root has parent";
+if(q1.firstChild) msg += "|h1 element has children";
+if(q1.shadowRoot != sr) msg += "|bad q1.shadowRoot";
+if(sr.getElementById("show")) msg += "|ById isn't restricted to shadow";
+sr.appendChild(span);
+if(window.zebra) msg += "|zebra found in window after shadow";
+if(sr.zebra) msg += "|zebra found in shadow";
+if(sr.getElementById("zebra").nodeName != "SPAN") msg += "|zebra not found in shadow";
+sr.removeChild(span);
+if(sr.getElementById("zebra")) msg += "|zebra persists in shadow";
 
 show.innerHTML = msg;
 } catch(e) { broken = true; show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

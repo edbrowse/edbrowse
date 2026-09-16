@@ -231,14 +231,12 @@ pinfo2.setAttribute("data-text", "freezer");
 pinfo2.style.display = "none"; // don't need to see the second one
 pinfo1.parentNode.append(pinfo2);
 function customTest2() {
-const sr = pinfo1.firstChild; // should be shado root
+const sr = pinfo1.shadowRoot;
 if(sr.nodeName != "SHADOWROOT") fail(304);
-if(pinfo1.shadowRoot != sr) fail(305);
 // remember we put that leading space in front
 if(sr.lastChild.lastChild.lastChild.data.substring(1,10) != "Bolognese") fail(306);
 if(sr.querySelector("img").src.indexOf("/v194513") < 0) fail(307);
-if(pinfo2.firstChild.nodeName != "SHADOWROOT") fail(308);
-if(pinfo2.querySelector("img").src.indexOf("default.png") < 0) fail(309);
+if(pinfo2.shadowRoot.querySelector("img").src.indexOf("default.png") < 0) fail(309);
 }
 setTimeout(customTest2, 600);
 } catch(e) {

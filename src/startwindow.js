@@ -240,7 +240,6 @@ this.swc = function (c, changeable = true)
 to make it readonly, but I don't think we can ever do that.
 I ran this through chrome and it came out true.
 <body><p id=show>start</p> <script>
-    show = document.getElementById("show")
     HTMLHRElement = f = function() {  show.innerHTML = "my own hr";}
     show.innerHTML = (f == HTMLHRElement);
 </script>
@@ -1012,7 +1011,11 @@ getRootNode(o)
     while(t) {
         t1 = t;
         if(t.nodeName == "#document") return t;
-        if(!composed && t.nodeName == "SHADOWROOT") return t;
+        if(t.nodeName == "SHADOWROOT") {
+            if(!composed) return t;
+            t = t.eb$shadowNode;
+            continue;
+        }
         t = t.parentNode;
     }
     return t1;
@@ -2023,7 +2026,7 @@ Here is the way. */
 
     get shadowRoot()
     {
-        let r = this.firstChild;
+        let r = this.eb$shadowRoot;
         if(r && r.nodeName == "SHADOWROOT" && r.mode == "open") return r;
         return null;
     }
@@ -2040,7 +2043,8 @@ Here is the way. */
         nn == "SHADOWROOT") // no shadow root within a shadow root
             return null;
         let r = document.createElement("ShadowRoot");
-        this.appendChild(r);
+        odp(this, "eb$shadowRoot", {value:r});
+        odp(r, "eb$shadowNode", {value:this});
         r.mode = "open";
         r.delegatesFocus = false;
         r.slotAssignment = "";
@@ -3632,6 +3636,10 @@ swdc(HTMLObjectElement);
 class ShadowRoot extends HTMLElement
 {
     constructor() { super(); }
+    static {
+        const tp = this.prototype;
+        tp.getElementById = mw$.getElementById
+    }
 }
 swdc(ShadowRoot);
 
