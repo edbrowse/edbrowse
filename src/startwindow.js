@@ -3789,7 +3789,7 @@ swdc(CSSStyleDeclaration);
         // Not clear how this meshes with my $$scy specificity system.
     const expand_list = [
       "margin", "scrollMargin", "padding", "scrollPadding",
-      "borderRadius", "border",
+      "borderRadius", "webkitBorderRadius", "border",
       "borderWidth", "borderColor", "borderStyle", "borderImage",
       "background", "font", "inset", "textDecoration",
       "borderInline", "borderInlineStart", "borderInlineEnd",
