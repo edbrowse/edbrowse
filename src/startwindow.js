@@ -4002,9 +4002,8 @@ class HTMLCanvasElement extends HTMLElement
         }
     }
 
-    get toDataURL()
+    toDataURL(type)
     {
-        if(this.height === 0  || this.width === 0) return "data:,";
         // this is just a stub
         return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAADElEQVQImWNgoBMAAABpAAFEI8ARAAAAAElFTkSuQmCC";
     }
