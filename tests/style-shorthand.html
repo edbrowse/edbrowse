@@ -195,6 +195,7 @@ if(s2.borderTopLeftRadius != "6px") msg += `|bad p radius ${s2.borderTopLeftRadi
 before.classList.add("cen");
 s2 = getComputedStyle(before);
 if(s2.borderTopLeftRadius != "4px") msg += `|bad p.cen radius ${s2.borderTopLeftRadius}`;
+before.classList.remove("cen");
 
 s3 = getComputedStyle(before, ":before");
 if(s3.boxSizing != "border-box") msg += "|boxSizing not found on before style";
@@ -215,7 +216,15 @@ rootp = document.createElement("p");
 root.appendChild(rootp);
 // this shouldn't affect paragraphs outside the shadow root
 s5 = getComputedStyle(before);
-if(s5.borderStyle != "none") msg += `|wrong borderStyle ${s5.borderStyle}`;
+if(s5.borderStyle != "none") msg += `|wrong s5 borderStyle ${s5.borderStyle}`;
+if(s5.borderTopLeftRadius != "6px") msg += `|bad s5 top left radius ${s5.borderTopLeftRadius}`;
+s6 = getComputedStyle(rootp);
+if(!isedbrowse) {
+// here is the stuff that isn't implemented yet.
+// Use the shadowroot styles, and that means border style should be solid.
+if(s6.borderStyle != "solid") msg += `|wrong s6 borderStyle ${s6.borderStyle}`;
+if(s6.borderTopLeftRadius != "0px") msg += `|bad s6 top left radius ${s6.borderTopLeftRadius}`;
+}
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
