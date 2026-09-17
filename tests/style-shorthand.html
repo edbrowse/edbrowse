@@ -17,16 +17,16 @@ p.before { font-family: helvetica; text-align: center; }
 </div>
 <div id="div1"    style="padding: 10px;
 scroll-padding: 0 5px;
-border-color: red;
 border-radius: 0 5px;
-border-style: solid;
-border-width: 0 5px;
 scroll-margin: 0 5px;
 margin: 0 10px;
 background-color: #ccaa11;
 font-family:  monospace
 "></div> 
 <div id="div2"    style=" padding: 10px;
+/* this is a cascading composite.
+border spins off borderWidth borderStyle borderColor,
+then each of those spins off top right bottom left */
 border: 5px solid red;
 margin: 0 10px;
 my-invalid-property: telephone;
@@ -63,7 +63,7 @@ h += divStyle.item(i) + "|";
 
 document.getElementById("items").innerHTML = h.replace(/\|/g, "<br>");
 
-const correct = "div1:34|padding-top|padding-right|padding-bottom|padding-left|scroll-padding-top|scroll-padding-right|scroll-padding-bottom|scroll-padding-left|border-top-color|border-right-color|border-bottom-color|border-left-color|border-top-left-radius|border-top-right-radius|border-bottom-right-radius|border-bottom-left-radius|border-top-style|border-right-style|border-bottom-style|border-left-style|border-top-width|border-right-width|border-bottom-width|border-left-width|scroll-margin-top|scroll-margin-right|scroll-margin-bottom|scroll-margin-left|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|div2:27|padding-top|padding-right|padding-bottom|padding-left|border-top-width|border-right-width|border-bottom-width|border-left-width|border-top-style|border-right-style|border-bottom-style|border-left-style|border-top-color|border-right-color|border-bottom-color|border-left-color|border-image-source|border-image-slice|border-image-width|border-image-outset|border-image-repeat|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|";
+const correct = "div1:22|padding-top|padding-right|padding-bottom|padding-left|scroll-padding-top|scroll-padding-right|scroll-padding-bottom|scroll-padding-left|border-top-left-radius|border-top-right-radius|border-bottom-right-radius|border-bottom-left-radius|scroll-margin-top|scroll-margin-right|scroll-margin-bottom|scroll-margin-left|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|div2:27|padding-top|padding-right|padding-bottom|padding-left|border-top-width|border-right-width|border-bottom-width|border-left-width|border-top-style|border-right-style|border-bottom-style|border-left-style|border-top-color|border-right-color|border-bottom-color|border-left-color|border-image-source|border-image-slice|border-image-width|border-image-outset|border-image-repeat|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|";
 if(h != correct) msg += "|mismatch shorthand properties";
 if(ds.item(1.3) != ds.item(1) || ds.item("blah") != ds.item(0) || ds.item(atob) != ds.item(0) || ds.item("7") != ds.item(7)) msg += "|bad style.item conversions";
 // make sure it'snot really there
@@ -223,7 +223,20 @@ if(!isedbrowse) {
 // here is the stuff that isn't implemented yet.
 // Use the shadowroot styles, and that means border style should be solid.
 if(s6.borderStyle != "solid") msg += `|wrong s6 borderStyle ${s6.borderStyle}`;
+/* top left radius is set by a p rule, but that's part of window,
+not part of this shadow root. We don't see that rule.
+Nor was that rule appliec to a node up the chain, even if radius inherits,
+and I don't know if it does.
+We are left with the default radius of 0. */
 if(s6.borderTopLeftRadius != "0px") msg += `|bad s6 top left radius ${s6.borderTopLeftRadius}`;
+/* there is no color rule that applies here, but we inherit color up the chain,
+and color was set in body, by a rule in window, so we should inherit red.
+The correct, and only possible algorithm, is to getComputed Style on each node
+up the chain, and let some of the properties trickel down.
+It seems like a lot of calculation, and yet a modern browser does all that,
+for every node, all the time, as it is displaying the page,
+and any changes to the page, on screen. */
+if(s6.color != "rgb(255, 0, 0)") msg += `|shadow color not red ${s6.color}`;
 }
 
 show.innerHTML = msg;
