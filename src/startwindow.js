@@ -681,7 +681,6 @@ class Node extends EventTarget
         const tp = this.prototype;
         tp.inner$HTML = "";
         tp.getElementsByTagName = mw$.getElementsByTagName;
-        tp.getElementsByName = mw$.getElementsByName;
         tp.getElementsByClassName = mw$.getElementsByClassName;
         tp.querySelector = querySelector
 // values for nodeType
@@ -2396,6 +2395,7 @@ class Document extends Node
         tp.defaultView = window;
         tp.visibilityState = "visible"
         tp.getElementById = mw$.getElementById
+        tp.getElementsByName = mw$.getElementsByName;
     }
 
     get documentElement()

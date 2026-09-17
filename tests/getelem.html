@@ -259,15 +259,34 @@ if(span.getRootNode() != sr) msg += "|bad span root node";
 if(span.getRootNode({composed:false}) != sr) msg += "|bad span !composed root node";
 if(span.getRootNode({composed:true}) != document) msg += "|bad span composed root node";
 if(window.zebra) msg += "|zebra found in window after shadow";
+if(document.getElementById("zebra")) msg += "|zebra found from the top";
 if(sr.zebra) msg += "|zebra found in shadow";
 if(sr.getElementById("zebra").nodeName != "SPAN") msg += "|zebra not found in shadow";
+if(b.getElementsByTagName("span").length != 3) msg += `|tag span found under shadow ${b.getElementsByTagName("span").length}`;
+span.className = "wild";
+if(b.getElementsByClassName("wild").length != 0) msg += `|class wild found under shadow ${b.getElementsByTagName("span").length}`;
 sr.removeChild(span);
 if(sr.getElementById("zebra")) msg += "|zebra persists in shadow";
+dl = document.createElement("dl");
+dl.id = "odd";
+dl.setAttribute("name", "odd");
+dl.setAttribute("class", "odd");
+q1.appendChild(dl);
+if(window.odd != dl || document.getElementById("odd") != dl || b.getElementsByTagName("dl")[0] != dl || b.getElementsByClassName("odd")[0] != dl || document.getElementsByName("odd")[0] != dl) msg += "|dl under q1 not found";
+
+// when do scripts run?
 srs = document.createElement("script");
 srs.text = "ran = true";
 ran = false;
 sr.appendChild(srs);
 if(!ran) msg += "|script didn't run when linked into shadow";
+srs.remove();
+q1.remove();
+srs = document.createElement("script");
+srs.text = "ran = true";
+ran = false;
+sr.appendChild(srs);
+if(ran) msg += "|script ran even though q1 is unlinked";
 
 show.innerHTML = msg;
 } catch(e) { broken = true; show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
