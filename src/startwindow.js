@@ -3635,7 +3635,7 @@ swdc(HTMLObjectElement);
 
 class ShadowRoot extends HTMLElement
 {
-    constructor() { super(); }
+    constructor() { super(); this.styleSheets = []; }
     static {
         const tp = this.prototype;
         tp.getElementById = mw$.getElementById
@@ -4895,7 +4895,6 @@ sdp("links", document.getElementsByTagName("a|area"))
 sdp("forms", document.getElementsByTagName("form"))
 sdp("scripts", document.getElementsByTagName("script"))
 sdp("images", document.getElementsByTagName("img"))
-// styleSheets is a placeholder for now; I don't know what to do with it.
 sdp("styleSheets", [])
 
 swpc("frames$2", []);

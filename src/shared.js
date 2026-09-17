@@ -1967,42 +1967,41 @@ this.generalbar = {}
 Object.defineProperty(generalbar, "visible", {value:true})
 
 function cssGather(newwin) {
-var w = my$win();
-if(newwin && newwin.eb$ctx) w = newwin;
-var d =w.document;
-var css_all = "";
-w.cssSource = [];
-var a, i, t;
+    let w = my$win();
+    if(typeof newwin == "object" && newwin.nodeName) w = newwin;
+    const d =w.nodeName == "WINDOW" ? w.document : w;
+    let css_all = "";
+    w.cssSource = [];
+    let a, i, t;
 
-a = d.querySelectorAll("link,style");
-for(i=0; i<a.length; ++i) {
-t = a[i];
-if(t.dom$class == "HTMLLinkElement") {
-if(t.css$data && (
-t.type && t.type.toLowerCase() == "text/css" ||
-t.rel && t.rel.toLowerCase() == "stylesheet")) {
-w.cssSource.push({data: t.css$data, src:t.href, fromstyle:false});
-css_all += "@ebdelim0" + t.href + "-{}\n";
-css_all += t.css$data;
-}
-}
-if(t.dom$class == "HTMLStyleElement") {
-if(t.css$data) {
-w.cssSource.push({data: t.css$data, src:w.eb$base, fromstyle:true});
-css_all += "@ebdelim0" + w.eb$base + "+{}\n";
-css_all += t.css$data;
-}
-}
-}
+    a = d.querySelectorAll("link,style");
+    for(i=0; i<a.length; ++i) {
+        t = a[i];
+        if(t.nodeName == "LINK") {
+            if(t.css$data && (
+            t.type && t.type.toLowerCase() == "text/css" ||
+            t.rel && t.rel.toLowerCase() == "stylesheet")) {
+                w.cssSource.push({data: t.css$data, src:t.href, fromstyle:false});
+                css_all += "@ebdelim0" + t.href + "-{}\n";
+                css_all += t.css$data;
+            }
+        }
+        if(t.nodeName == "STYLE") {
+            if(t.css$data) {
+                w.cssSource.push({data: t.css$data, src:w.eb$base, fromstyle:true});
+                css_all += "@ebdelim0" + w.eb$base + "+{}\n";
+                css_all += t.css$data;
+            }
+        }
+    }
 
 // If the css didn't change, then no need to rebuild the selectors
-if(css_all == w.last$css_all)
-return;
-
-w.last$css_all = css_all;
-Object.defineProperty(w, "last$css", {enumerable:false});
-w.css$ver++;
-cssDocLoad(w.eb$ctx, css_all);
+    if(css_all == w.last$css_all) return;
+    w.last$css_all = css_all;
+    Object.defineProperty(w, "last$css", {enumerable:false});
+    w.css$ver++;
+// passing eb$ctx doesn't work here if w is shadowroot.
+    cssDocLoad(w.eb$ctx, css_all);
 }
 
 function makeSheets(all) {
