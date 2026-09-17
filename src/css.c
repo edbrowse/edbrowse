@@ -2442,26 +2442,44 @@ Frame *frameFromWindow(int gsn)
 	return 0;
 }
 
-// The selection string (start) must be allocated - css will use it in place,
-// separating it into all its descriptors.
-// cssFree() will free it.
-void cssDocLoad(int frameNumber, char *start)
+/* The selection string (start) must be allocated - css will use it in place,
+separating it into all its descriptors.
+cssFree() will free it when done.
+If n is positive it is the number of the frame, or context.
+This is the css for the window.
+If n is negative it is minus the tag number.
+The tag is shadowroot, with its own private css. */
+void cssDocLoad(int n, char *start)
 {
     Frame *save_cf = cf;
+    Tag *t = 0;
+    Frame *f;
     struct cssmaster *cm;
-    Frame *new_f = frameFromWindow(frameNumber);
-// no clue what to do if new_f is null, should never happen
-    if(new_f) cf = new_f;
-    cm = cf->cssmaster;
+    if(n > 0) {
+        f = frameFromWindow(n);
+    } else {
+        t = tagList[-n];
+        f = t->f0;
+    }
+    // f should always be valid.
+    if(f) cf = f;
+    cm = t ? t->cssmaster : cf->cssmaster;
     if (!cm) {
-        cf->cssmaster = cm = allocZeroMem(sizeof(struct cssmaster));
+        cm = allocZeroMem(sizeof(struct cssmaster));
         readShortCache(cm);
+        if(t) t->cssmaster = cm; else cf->cssmaster = cm;
     }
     if (cm->descriptors) {
-        debugPrint(3, "free css descriptors context %d", cf->gsn);
+        if(t)
+            debugPrint(3, "free css descriptors tag %d", -n);
+        else
+            debugPrint(3, "free css descriptors context %d", cf->gsn);
         cssPiecesFree(cm->descriptors);
     }
-    debugPrint(3, "compile css descriptors context %d", cf->gsn);
+    if(t)
+        debugPrint(3, "compile css descriptors tag %d", -n);
+    else
+        debugPrint(3, "compile css descriptors context %d", cf->gsn);
     loadstring = initString(&loadstring_l);
     cm->descriptors = cssPieces(start);
     run_function_onestring_win(cf, "makeSheets", loadstring);
@@ -2470,10 +2488,10 @@ void cssDocLoad(int frameNumber, char *start)
     if (!cm->descriptors) goto done;
 
     if (debugCSS) {
-        FILE *f = fopen(cssDebugFile, "ae");
-        if (f) {
-            fprintf(f, "%s end\n", errorMessage[CSS_ERROR_DELIM]);
-            fclose(f);
+        FILE *outf = fopen(cssDebugFile, "ae");
+        if (outf) {
+            fprintf(outf, "%s end\n", errorMessage[CSS_ERROR_DELIM]);
+            fclose(outf);
         }
     }
 
