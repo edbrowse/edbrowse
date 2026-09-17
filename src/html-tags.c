@@ -121,6 +121,7 @@ static const struct tagInfo availableTags[] = {
 	{"script", "a script", TAGACT_SCRIPT, 0, 3},
 	{"section", "an html section", TAGACT_HE, 10, 1},
 	{"select", "an option list", TAGACT_SELECT, 0, 0},
+	{"shadowroot", "a shadow root", TAGACT_NOP, 0, 0},
 	{"source", "source of audio or video", TAGACT_SOURCE, 0, 4},
 	{"span", "an html span", TAGACT_SPAN, 0, 1},
 	{"stop", "an svg stop", TAGACT_STOP, 0, 0},
@@ -3790,6 +3791,12 @@ static void traverseNode(Tag *t, struct parseContext *pc)
 // open tag <foo>
     (*f) (t, true, pc);
 
+    if(pc->shadow && (u = shadowRoot(t))) {
+        traverseNode(u, pc);
+        (*f) (t, false, pc);
+        return;
+    }
+
     for (child = t->firstchild; child; child = child->sibling) {
 /*********************************************************************
 This will take some splaining. Suppose the html looks like:
@@ -3808,16 +3815,7 @@ So we have to pretend like this is the end of the tree, like we haven't
 gone any farther, like we haven't yet placed paragraph3.
 Cut off the rest of the nodes, then put them back
 after the script has run. It's a wild ride.
-
-<body><p>first paragraph
-<script>
-var p = document.createElement("p");
-p.appendChild(document.createTextNode("second paragraph"));
-document.body.appendChild(p);
-</script>
-<p>third paragraph
-</body>
-
+Test with script-adds-nodes.html
 We do this pointer magic only in the decorate phase,
 e.g. no need to do this when rendering the page for display.
 The liftup variable determines that.
@@ -4537,6 +4535,7 @@ currentAudio = NULL;
 	currentStyle = NULL;
 	nzFree0(radioCheck);
 	pc.liftup = false;
+	pc.shadow = false;
 	pc.callback = prerenderNode;
 
 	debugPrint(4, "prerender starts at %d", start);
@@ -5128,6 +5127,7 @@ void decorate(int start, Tag *above)
 	pc.currentOG = 0;
 	pc.innerParent = above;
 	pc.liftup = ! cf->xmlMode;
+	pc.shadow = false;
 
 	debugPrint(4, "decorate starts at %d", start);
 	traverseAll(start, &pc);

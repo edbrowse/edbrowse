@@ -6082,6 +6082,7 @@ char *render(void)
 	currentForm = currentA = NULL;
 	struct parseContext pc;
 	pc.liftup = false;
+	pc.shadow = true;
 	pc.callback = renderNode;
 	traverseAll(0, &pc);
 	cf = save_cf;

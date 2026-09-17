@@ -3845,6 +3845,26 @@ void rebuildSelectors(void)
 	}
 }
 
+// see if we have a shadow root
+Tag *shadowRoot(const Tag *t)
+{
+    JSContext *cx = cf->cx;
+    if(!cx || !t->jslink) return 0;
+    JSValue sr = get_property_object(cx, *((JSValue*)t->jv), "eb$shadowRoot");
+    if(JS_IsUndefined(sr)) return 0;
+    Tag *t2 = tagFromObject(cx, sr);
+    JS_Release(sr);
+/* when a tag is created by javascript, and created in C, it is marked deleted.
+It should not be displayed by default.
+When that tag is linked into another tag above, the delete flag is cleared.
+If the parent tag is displayed then this one should be to.
+But the shadow root is never linked into the tree,
+it never has a parent, and yet it should be displayed.
+Clear the delete flag to turn it on. */
+    if(t2) t2->deleted = false;
+    return t2;
+}
+
 // Some primitives needed by css.c. These bounce through window.soj$
 static const char soj[] = "soj$";
 static void sofail(void) { debugPrint(3, "no style object"); }

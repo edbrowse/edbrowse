@@ -543,6 +543,7 @@ void establish_js_textnode(Tag *t);
 void domLink(Tag *t, const char *classname, const Tag *owntag, int extra);
 int directInvisible(Tag *t);
 void rebuildSelectors(void);
+Tag *shadowRoot(const Tag *t);
 int get_gcs_number(const char *name);
 void set_gcs_number(const char *name, int n);
 void set_gcs_bool(const char *name, bool v);
