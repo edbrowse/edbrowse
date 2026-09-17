@@ -35,6 +35,7 @@ background: bbb;
 font-family:  monospace
 "></div> 
 <p class=before id=before></p>
+<div id=shadowhost></div>
 
 <script> 
 /* Warning! This runs fine in edbrowse, locally, but in chrome
@@ -205,6 +206,16 @@ if(s4.boxSizing != "content-box") msg += "|boxSizing not correct on after style"
 if(s4.fontFamily != "helvetica") msg += `|fontFamily ${s4.fontFamily} on after style`;
 if(s4.textAlign != "center") msg += `|textAlign ${s4.textAlign} on after style`;
 if(s4.verticalAlign != "top") msg += `|verticalAlign ${s4.verticalAlign} on after style`;
+
+root = shadowhost.attachShadow({mode:"open"});
+    rootstyle = document.createElement("style");
+rootstyle.textContent = "p {        border: 1px solid black;}"
+root.appendChild(rootstyle);
+rootp = document.createElement("p");
+root.appendChild(rootp);
+// this shouldn't affect paragraphs outside the shadow root
+s5 = getComputedStyle(before);
+if(s5.borderStyle != "none") msg += `|wrong borderStyle ${s5.borderStyle}`;
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

@@ -177,18 +177,6 @@ class PopupInfo extends HTMLElement {
     img.alt = "popimage";
     icon.appendChild(img);
     // Create some CSS to apply to the shadow dom
-    const style = document.createElement("style");
-    style.textContent = `
-      .info {
-        color: green;
-        border: 1px solid black;
-        padding: 10px;
-        background: white;
-        border-radius: 10px;
-      }
-    `;
-    // Attach the created elements to the shadow dom
-    shadow.appendChild(style);
     shadow.appendChild(wrapper);
     wrapper.appendChild(icon);
     wrapper.appendChild(info);
