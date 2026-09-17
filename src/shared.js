@@ -487,36 +487,40 @@ function getElementsByTagName(s)
 }
 
 function gebtn(top, s, first, all) {
-let a = [];
-// The result should be all nodes, no texts, no comments.
-// And I don't believe we should descend into a document or document fragment,
-// although that is not clear. Of course the top node
-// can be document, we call document.getElementsByTagName all the time.
-// That said, sometimes I want all the nodes, for internal use.
-if(!first && !all && top.nodeType != 1) return a;
-const nn = top.nodeName ? top.nodeName.toLowerCase() : "";
-if(!first && (s === '*' || nn === s))
-a.push(top);
+    let a = [];
+    // + means we descend into shadow root
+    const shadow = s.substr(-1) === '+';
+    const s0 = shadow ? s.substr(0, s.length - 1): s;
+/* The result should be all nodes, no texts, no comments.
+And I don't believe we should descend into a document or document fragment,
+although that is not clear. Of course the top node
+can be document, we call document.getElementsByTagName all the time.
+That said, sometimes I want all the nodes, for internal use. */
+    if(!first && !all && top.nodeType != 1) return a;
+    const nn = top.nodeName ? top.nodeName.toLowerCase() : "";
+    if(!first && (s0 === '*' || nn === s0))
+        a.push(top);
 // special code for document.links
-if(s === "a|area" &&
-(nn == "a" || nn == "area") &&
-top.href)
-a.push(top);
-if(s === "field|set" &&
-(nn == "input" || nn == "select" || nn == "textarea" || nn == "button"))
-a.push(top);
-if(s === "form|set" &&
-(nn == "input" || nn == "select" || nn == "textarea" || nn == "button" || nn == "fieldset"))
-a.push(top);
-if(top.childNodes) {
-// don't descend into another frame.
-// The frame has no children through childNodes, so we don't really need this part.
-// Nor should we dip into a template.
-if(!top.is$frame && nn != "template")
-for(let c of top.childNodes)
-a = a.concat(gebtn(c, s, false, all));
-}
-return a;
+    if(s0 === "a|area" &&
+    (nn == "a" || nn == "area") && top.href)
+        a.push(top);
+    if(s0 === "field|set" &&
+    (nn == "input" || nn == "select" || nn == "textarea" || nn == "button"))
+        a.push(top);
+    if(s0 === "form|set" &&
+    (nn == "input" || nn == "select" || nn == "textarea" || nn == "button" || nn == "fieldset"))
+        a.push(top);
+    if(top.childNodes) {
+        // don't descend into another frame.
+        // The frame has no children through childNodes, so we don't really need this part.
+        // Nor should we dip into a template.
+        if(!top.is$frame && nn != "template")
+            for(let c of top.childNodes)
+                a = a.concat(gebtn(c, s, false, all));
+    }
+    if(shadow && top.eb$shadowRoot)
+        a = a.concat(gebtn(top.eb$shadowRoot, s, false, all));
+    return a;
 }
 
 function getElementsByName(s)
@@ -1492,11 +1496,10 @@ I don't know if owner changes over for indirect rooting. Probably. */
 
 /* ok, now look for scripts.
 They run even if linked in under a shadowroot which is then linked to the tree.
-But I don't check the converse. This gebtn doesn't descend through
-a shadowroot to look for scripts below,
-so if this node is just linked in, I won't find those scripts.
-Need to implement gebtn("script+") for the extended search. */
-    list = gebtn(s, "script", true, false);
+I also check for the converse, linking a node into the tree that
+has below it a shadowRoot that has below it a script.
+That is what script+ is for, and so far the only place we use + */
+    list = gebtn(s, "script+", true, false);
     if(s.nodeName == "SCRIPT") 
         list.splice(0, 0, s);
     for(let c of list) {

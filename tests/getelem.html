@@ -287,6 +287,12 @@ srs.text = "ran = true";
 ran = false;
 sr.appendChild(srs);
 if(ran) msg += "|script ran even though q1 is unlinked";
+b.appendChild(q1);
+if(!ran) msg += "|script didn't run after q1 relink";
+ran = 0;
+q1.remove();
+b.appendChild(q1);
+if(ran) msg += "script reran after relink";
 
 show.innerHTML = msg;
 } catch(e) { broken = true; show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
