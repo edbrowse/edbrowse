@@ -693,9 +693,10 @@ We need to review all this some day.
 
 	char *nodeName, *nodeNameU;
 	char *name, *id, *class, *value, *href;
-	const char *rvalue; /* for reset */
+	const char *rvalue; /* remember this for reset */
 	char *custom_h; // http headers for a frame or xhr tag
 	char *innerHTML; /* the html string under this tag */
+	void *cssmaster;
 	int inner;		/* for inner html */
 	int highspec; // specificity of a selector that matches this node
 };

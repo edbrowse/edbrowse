@@ -719,6 +719,7 @@ static void freeTag(Tag *t)
 	nzFree(t->js_file);
 	nzFree(t->innerHTML);
 	nzFree(t->custom_h);
+    if(t->cssmaster) cssTagFree(t);
 
 	a = (char **)t->attributes;
 	if (a) {

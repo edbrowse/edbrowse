@@ -2535,22 +2535,36 @@ static void cssPiecesFree(struct desc *d)
 	}
 }
 
-void cssFree(Frame *f)
+void cssFrameFree(Frame *f)
 {
-	struct shortcache *c;
-	struct cssmaster *cm = f->cssmaster;
-	if (!cm)
-		return;
-	if (cm->descriptors)
-		cssPiecesFree(cm->descriptors);
-	while ((c = cm->cache)) {
-		cm->cache = c->next;
-		nzFree(c->url);
-		nzFree(c->data);
-		free(c);
-	}
-	free(cm);
-	f->cssmaster = 0;
+    struct shortcache *c;
+    struct cssmaster *cm = f->cssmaster;
+    if (!cm) return;
+    if (cm->descriptors) cssPiecesFree(cm->descriptors);
+    while ((c = cm->cache)) {
+        cm->cache = c->next;
+        nzFree(c->url);
+        nzFree(c->data);
+        free(c);
+    }
+    free(cm);
+    f->cssmaster = 0;
+}
+
+void cssTagFree(Tag *t)
+{
+    struct shortcache *c;
+    struct cssmaster *cm = t->cssmaster;
+    if (!cm) return;
+    if (cm->descriptors) cssPiecesFree(cm->descriptors);
+    while ((c = cm->cache)) {
+        cm->cache = c->next;
+        nzFree(c->url);
+        nzFree(c->data);
+        free(c);
+    }
+    free(cm);
+    t->cssmaster = 0;
 }
 
 // for debugging

@@ -3674,7 +3674,7 @@ someone's placed a finalisation registry on the global object but I'm not sure w
 /* No need to clean pending jobs again; if there's some path where pending jobs
 are created by the above gc run they'll go away at some point */
     debugPrint(3, "complete js context cleanup for %d", f->gsn);
-    cssFree(f);
+    cssFrameFree(f);
     free(f->winobj);
     free(f->docobj);
     f->winobj = f->docobj = f->cx = 0;
