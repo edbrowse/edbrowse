@@ -1966,42 +1966,37 @@ function structuredClone(obj, options)
 this.generalbar = {}
 Object.defineProperty(generalbar, "visible", {value:true})
 
-function cssGather(newwin) {
-    let w = my$win();
-    if(typeof newwin == "object" && newwin.nodeName) w = newwin;
-    const d =w.nodeName == "WINDOW" ? w.document : w;
+function cssGather(base) {
+    const shadow = (base.nodeName != "WINDOW");
+    const thisfile = (shadow ? my$win() : base).eb$base;
     let css_all = "";
-    w.cssSource = [];
-    let a, i, t;
-
-    a = d.querySelectorAll("link,style");
-    for(i=0; i<a.length; ++i) {
-        t = a[i];
+    base.cssSource = [];
+    const a = (shadow ? base : base.document).querySelectorAll("link,style");
+    for(let i=0; i<a.length; ++i) {
+        const t = a[i];
         if(t.nodeName == "LINK") {
             if(t.css$data && (
             t.type && t.type.toLowerCase() == "text/css" ||
             t.rel && t.rel.toLowerCase() == "stylesheet")) {
-                w.cssSource.push({data: t.css$data, src:t.href, fromstyle:false});
+                base.cssSource.push({data: t.css$data, src:t.href, fromstyle:false});
                 css_all += "@ebdelim0" + t.href + "-{}\n";
                 css_all += t.css$data;
             }
         }
         if(t.nodeName == "STYLE") {
             if(t.css$data) {
-                w.cssSource.push({data: t.css$data, src:w.eb$base, fromstyle:true});
-                css_all += "@ebdelim0" + w.eb$base + "+{}\n";
+                base.cssSource.push({data: t.css$data, src:thisfile, fromstyle:true});
+                css_all += "@ebdelim0" + thisfile + "+{}\n";
                 css_all += t.css$data;
             }
         }
     }
 
 // If the css didn't change, then no need to rebuild the selectors
-    if(css_all == w.last$css_all) return;
-    w.last$css_all = css_all;
-    Object.defineProperty(w, "last$css", {enumerable:false});
-    w.css$ver++;
-// passing eb$ctx doesn't work here if w is shadowroot.
-    cssDocLoad(w.eb$ctx, css_all);
+    if(css_all == base.last$css_all) return;
+    base.last$css_all = css_all;
+    Object.defineProperty(base, "last$css", {enumerable:false});
+    cssDocLoad((shadow ? -base.eb$seqno : base.eb$ctx), css_all);
 }
 
 function makeSheets(all) {
@@ -2089,10 +2084,9 @@ in that there was no node and no class before, and that induces a call
 to getComputedStyle, and that fetches the file, again.
 The imported css file could be fetched 100 times just to load the page.
 I get around this by the shortcache feature in css.c.
-If the css has changed in any way, I recompile the descriptors
-and increment the css version, stored in css$ver;
+If the css has changed in any way, I recompile the descriptors.
 Any information we might have saved about nodes and descriptors,
-for speed and optimization, is lost if the version changes.
+such as keys for the selectors, must be recalculated.
 Remember that "this" is the window object.
 *********************************************************************/
 

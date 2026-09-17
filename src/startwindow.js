@@ -5230,7 +5230,7 @@ swp("eb$qs$start", function() {
     // html parsed, rebuild the HTMLCollections under document
     markAllCollections();
     // now gather the css rules for inject before after
-    mw$.cssGather();
+    mw$.cssGather(window);
     mw$.frames$rebuild(window);
 })
 swp("cssGather0", function() {
@@ -5245,10 +5245,6 @@ XMLSerializer.prototype.serializeToString = function(root) {
 alert3("trying to use XMLSerializer");
 return "<div>XMLSerializer not yet implemented</div>"; }
 
-swpc("css$ver", 0)
-swpc("css_all", "")
-swpc("last$css_all", "")
-swpc("cssSource", [])
 sdp("xmlVersion", 0)
 
 class MutationObserver
