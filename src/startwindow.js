@@ -3640,6 +3640,9 @@ class ShadowRoot extends HTMLElement
         const tp = this.prototype;
         tp.getElementById = mw$.getElementById
     }
+
+    // to build css structures within the shadowRoot
+    cssGather1() { mw$.cssGather(this); }
 }
 swdc(ShadowRoot);
 

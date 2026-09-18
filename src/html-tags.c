@@ -121,7 +121,7 @@ static const struct tagInfo availableTags[] = {
 	{"script", "a script", TAGACT_SCRIPT, 0, 3},
 	{"section", "an html section", TAGACT_HE, 10, 1},
 	{"select", "an option list", TAGACT_SELECT, 0, 0},
-	{"shadowroot", "a shadow root", TAGACT_NOP, 0, 0},
+	{"shadowroot", "a shadow root", TAGACT_SHADOW, 0, 0},
 	{"source", "source of audio or video", TAGACT_SOURCE, 0, 4},
 	{"span", "an html span", TAGACT_SPAN, 0, 1},
 	{"stop", "an svg stop", TAGACT_STOP, 0, 0},

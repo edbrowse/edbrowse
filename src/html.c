@@ -6072,10 +6072,24 @@ check_id:
 // This returns an allocated string.
 char *render(void)
 {
-	Frame *f, *save_cf = cf;
-	rowspan();
-	for (f = &cw->f0; f; f = f->next)
-		run_function_bool_win(f, "cssGather0");
+    Frame *f, *save_cf = cf;
+    int i;
+    Tag *t;
+    rowspan();
+    for (f = &cw->f0; f; f = f->next)
+        run_function_bool_win(f, "cssGather0");
+// Recalculate every shadowRoot, even if it's not linked into the tree.
+// They have very few css rules, and it's easier to just do it
+// than to figure out if we should do it.
+    for(i = 0; i < cw->numTags; ++i) {
+        t = tagList[i];
+        if(t->action != TAGACT_SHADOW) continue;
+        if(t->dead) continue;
+// don't test for t->deleted, shadowRoot is always deleted at the start,
+// then is undeleted as part of the render process.
+        run_function_bool_t(t, "cssGather1");
+    }
+
 	ns = initString(&ns_l);
 	invisible = false;
 	inv2 = NULL;
