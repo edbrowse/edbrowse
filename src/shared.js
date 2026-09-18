@@ -2045,9 +2045,6 @@ break;
 
 // e is the node and pe is the pseudoelement
 function getComputedStyle(e,pe) {
-    let s, w = isRooted(e);
-    if(!w) return new (my$win().CSSStyleDeclaration);
-
     if(typeof pe != "string") pe = 0;
     else if(pe.match(/^\s*$/)) pe = 0;
     else if(pe.match(/:before$/)) pe = 1;
@@ -2056,48 +2053,67 @@ function getComputedStyle(e,pe) {
 
 /*********************************************************************
 Some sites call getComputedStyle on the same node over and over again.
-http://songmeanings.com/songs/view/3530822107858535238/
 Can we remember the previous call and just return the same style object?
 Can we know that nothing has changed in between the two calls?
-I can track when the tree changes, and even the class,
+I can track when the tree changes, and even the node classes and ids,
 but what about individual attributes?
 I haven't found a way to do this without breaking acid test 33 and others.
-We're not sharing DOM classes yet, so hark back to the calling window
-to create the Style element.
+The answer is, no, there is no practical way to do that.
+Any attribute on any node anywhere in the tree can change which selectors
+match this particular node, or even the nodes up the line.
+So we have to grunt along and perform the calculations every time.
+One thing we can do is confirm that the css selectors and rules haven't changed.
+If those haven't changed then we don't have to rebuild the css structures again.
+That test is coming up below, but first, let's see if we
+are even rooted. If not, then there's nothing to do.
+I could call isRooted2(), and that would give me the answer,
+but I need the chain of nodes up to the top,
+so I may as well recreate that logic here.
 *********************************************************************/
 
-    s = new w.CSSStyleDeclaration;
+    let w = null, base = null, t = e, chain = [];
+    while(t) {
+        if(t.nodeType != 1) break;
+        if(t.nodeName == "TEMPLATE") break;
+        chain.splice(0, 0, t);
+        if(t.nodeName == "HTML") { w = t.eb$win; break; }
+        if(t.eb$shadowNode)
+            t = base = t.eb$shadowNode;
+        else t = t.parentNode;
+    }
+
+    if(!w) return new (this.CSSStyleDeclaration); // not rooted
+    if(!base) base = w;
+
+    let     s = new w.CSSStyleDeclaration;
     s.element = e;
 
 /*********************************************************************
 What if js has added or removed style objects from the tree?
 Maybe the selectors and rules are different from when they were first compiled.
 Does this ever happen? It does in acid test 33.
-Does it ever happen in the real world? I don't know.
-If not, this is a big waste of time and resources.
-How big? Well not too bad I guess.
-Strings are parsed in C, which is pretty fast,
-but it really falls flat when the css has @import which pulls in another
+Does it happen in the real world? Probably.
+This recheck falls flat when the css has @import which pulls in another
 css file, and now we have to fetch that file on every call to getComputedStyle.
-Nodes are created, and technically their class changed,
-in that there was no node and no class before, and that induces a call
-to getComputedStyle, and that fetches the file, again.
 The imported css file could be fetched 100 times just to load the page.
-I get around this by the shortcache feature in css.c.
+I get around this by the shortcache feature in css.c. I remember
+the imported css file and don't fetch it again, not even a head request.
 If the css has changed in any way, I recompile the descriptors.
 Any information we might have saved about nodes and descriptors,
 such as keys for the selectors, must be recalculated.
 Remember that "this" is the window object.
 *********************************************************************/
 
-    cssGather(this);
+    cssGather(base);
 
     this.soj$ = s;
-    cssApply(this.eb$ctx, e, pe);
+// cssApply not yet configured to handle a shadowRoot tag
+    cssApply(w.eb$ctx, e, pe);
     delete this.soj$;
 
 // If js sets a style property, or if it is set by style= in the html tag,
-// it carries across, and in fact it takes precedence.
+// that carries across, and in fact it takes precedence.
+// These should all be singleton properties, not composites.
 
     if(e.style$2) {
         for(let k = 0; k < e.style.length; ++k) {
@@ -2106,9 +2122,8 @@ Remember that "this" is the window object.
         }
     }
 
-// textTransform is the only style conversion that acid3 tests for,
-// in acid test 46, but I'm sure there
-// are dozens, or hundreds, of others. I'll take them as they come.
+// textTransform is the only default style conversion that acid3 tests for,
+// in acid test 46, but there are hundreds of them.
 
     for(let k of [
       "anchorName", "anchorScope",
