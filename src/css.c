@@ -3813,11 +3813,23 @@ done:
     gcsmatch = false, matchtype = 0, visibility_only = false;
 }
 
+// go up the chain and see if we are inside a shadowRoot
+static struct cssmaster *findLocalCSS(const Tag *t)
+{
+    while(t) {
+        if(t->action == TAGACT_SHADOW) return t->cssmaster;
+        if(t->action == TAGACT_HTML) break;
+        t = t->parent;
+    }
+    return 0;
+}
+
 // Get the string that css injects before or after this tag.
 // If I return a string here, you're responsible for it.
 char *cssBeforeAfter(Tag *t, int p)
 {
-    struct cssmaster *cm = cf->cssmaster;
+    struct cssmaster *cm = findLocalCSS(t);
+    if(!cm) cm = cf->cssmaster;
     if (!cm) return 0;
     struct desc *d;
     rootnode = 0;
@@ -3845,13 +3857,14 @@ char *cssBeforeAfter(Tag *t, int p)
 
 bool cssInvisible(Tag *t)
 {
-    struct cssmaster *cm = cf->cssmaster;
-    if (!cm) return 0;
-    struct desc *d;
     if(get_property_bool_t(t, "hidden")) return true;
     if(get_property_bool_t(t, "ariaHidden")) return true;
     int n = directInvisible(t);
     if(n >= 0) return n;
+    struct cssmaster *cm = findLocalCSS(t);
+    if(!cm) cm = cf->cssmaster;
+    if (!cm) return 0;
+    struct desc *d;
     rootnode = 0;
     visibility_only = gcsmatch = true;
     matchtype = 0;
