@@ -210,7 +210,7 @@ if(s4.verticalAlign != "top") msg += `|verticalAlign ${s4.verticalAlign} on afte
 
 root = shadowhost.attachShadow({mode:"open"});
     rootstyle = document.createElement("style");
-rootstyle.textContent = "p {        border: 1px solid black;}"
+rootstyle.textContent = "p {border: 1px solid black;}"
 root.appendChild(rootstyle);
 rootp = document.createElement("p");
 root.appendChild(rootp);
@@ -238,6 +238,11 @@ and any changes to the page, on screen.
 We don't do that yet. */
 if(s6.color != "rgb(255, 0, 0)") msg += `|shadow color not red ${s6.color}`;
 }
+/* calling getComputedStyle forced a recalculation of the css,
+so now styleSheets should be right.
+edbrowse should recalculate it as soon as rootstyle is appended. */
+if(root.styleSheets.length != 1) msg += `|shadow styleSheets length ${root.styleSheets.length}`;
+if(root.styleSheets[0].cssRules[0].cssText.substr(0, 3) != "p {") msg += `|first root tule ${root.styleSheets[0].cssRules[0].cssText}`;
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

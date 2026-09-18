@@ -2470,19 +2470,16 @@ void cssDocLoad(int n, char *start)
         if(t) t->cssmaster = cm; else cf->cssmaster = cm;
     }
     if (cm->descriptors) {
-        if(t)
-            debugPrint(3, "free css descriptors tag %d", -n);
-        else
-            debugPrint(3, "free css descriptors context %d", cf->gsn);
+        if(t) debugPrint(3, "free css descriptors tag %d", -n);
+        else debugPrint(3, "free css descriptors context %d", cf->gsn);
         cssPiecesFree(cm->descriptors);
     }
-    if(t)
-        debugPrint(3, "compile css descriptors tag %d", -n);
-    else
-        debugPrint(3, "compile css descriptors context %d", cf->gsn);
+    if(t) debugPrint(3, "compile css descriptors tag %d", -n);
+    else debugPrint(3, "compile css descriptors context %d", cf->gsn);
     loadstring = initString(&loadstring_l);
     cm->descriptors = cssPieces(start);
-    run_function_onestring_win(cf, "makeSheets", loadstring);
+    if(t) run_function_onestring_t(t, "makeSheets1", loadstring);
+    else run_function_onestring_win(cf, "makeSheets0", loadstring);
     nzFree0(loadstring);
     debugPrint(3, "css complete");
     if (!cm->descriptors) goto done;

@@ -267,7 +267,7 @@ for(let f of ["UnsupportedError",
 "showframes", "snapshot", "aloop",
 "set_location_hash", "NodeFilter", "tableReindex", "formReindex", "selectReindex",
 "markAllCollections", "markUpwardCollections",
-"mutFixup", "makeSheets", "gebtn",
+"mutFixup", "gebtn",
 "isRooted", "spillup_id", "unlinkIds",
 "ownerIdsScripts", "simpleHtmlEscape", "appendFragment",
 "appendFragment$nm", "insertFragment", "insertFragment$nm", "checkUpward", "collection"])
@@ -3648,6 +3648,7 @@ class ShadowRoot extends HTMLElement
 
     // to build css structures within the shadowRoot
     cssGather1() { mw$.cssGather(this); }
+    makeSheets1(all) { mw$.makeSheets(this, all); }
 }
 swdc(ShadowRoot);
 
@@ -5243,6 +5244,9 @@ swp("eb$qs$start", function() {
 })
 swp("cssGather0", function() {
     mw$.cssGather(window);
+})
+swp("makeSheets0", function(all) {
+    mw$.makeSheets(window, all);
 })
 swp("frames$rebuild", function() {mw$.frames$rebuild(window);})
 
