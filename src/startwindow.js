@@ -2041,6 +2041,11 @@ Here is the way. */
         nn == "TABLE" || nn == "TH" || nn == "TD" || nn == "TR" || nn == "FORM" || nn == "INPUT" ||
         nn == "SHADOWROOT") // no shadow root within a shadow root
             return null;
+        if(this.shadowRoot) {
+            alert3(`duplicate shadowRoot on tag ${this.eb$seqno}`);
+            // chrome throws an exception here. We will too,
+            // though perhaps a different kind, as shadowRoot is not writable.
+        }
         let r = document.createElement("ShadowRoot");
         odp(this, "eb$shadowRoot", {value:r});
         odp(r, "eb$shadowNode", {value:this});

@@ -2071,19 +2071,19 @@ but I need the chain of nodes up to the top,
 so I may as well recreate that logic here.
 *********************************************************************/
 
-    let w = null, base = null, t = e, chain = [];
+    let w = null, shadow = null, t = e, chain = [];
     while(t) {
         if(t.nodeType != 1) break;
         if(t.nodeName == "TEMPLATE") break;
         chain.splice(0, 0, t);
         if(t.nodeName == "HTML") { w = t.eb$win; break; }
-        if(t.eb$shadowNode)
-            t = base = t.eb$shadowNode;
-        else t = t.parentNode;
+        if(t.eb$shadowNode) {
+            if(!shadow) shadow = t;
+            t = t.eb$shadowNode;
+        } else t = t.parentNode;
     }
 
     if(!w) return new (this.CSSStyleDeclaration); // not rooted
-    if(!base) base = w;
 
     let     s = new w.CSSStyleDeclaration;
     s.element = e;
@@ -2104,11 +2104,10 @@ such as keys for the selectors, must be recalculated.
 Remember that "this" is the window object.
 *********************************************************************/
 
-    cssGather(base);
+    cssGather(shadow ? shadow : w);
 
     this.soj$ = s;
-// cssApply not yet configured to handle a shadowRoot tag
-    cssApply(w.eb$ctx, e, pe);
+    cssApply(shadow ? -shadow.eb$seqno : w.eb$ctx, e, pe);
     delete this.soj$;
 
 // If js sets a style property, or if it is set by style= in the html tag,

@@ -219,8 +219,6 @@ s5 = getComputedStyle(before);
 if(s5.borderStyle != "none") msg += `|wrong s5 borderStyle ${s5.borderStyle}`;
 if(s5.borderTopLeftRadius != "6px") msg += `|bad s5 top left radius ${s5.borderTopLeftRadius}`;
 s6 = getComputedStyle(rootp);
-if(!isedbrowse) {
-// here is the stuff that isn't implemented yet.
 // Use the shadowroot styles, and that means border style should be solid.
 if(s6.borderStyle != "solid") msg += `|wrong s6 borderStyle ${s6.borderStyle}`;
 /* top left radius is set by a p rule, but that's part of window,
@@ -229,13 +227,15 @@ Nor was that rule appliec to a node up the chain, even if radius inherits,
 and I don't know if it does.
 We are left with the default radius of 0. */
 if(s6.borderTopLeftRadius != "0px") msg += `|bad s6 top left radius ${s6.borderTopLeftRadius}`;
+if(!isedbrowse) {
 /* there is no color rule that applies here, but we inherit color up the chain,
 and color was set in body, by a rule in window, so we should inherit red.
 The correct, and only possible algorithm, is to getComputed Style on each node
 up the chain, and let some of the properties trickel down.
 It seems like a lot of calculation, and yet a modern browser does all that,
 for every node, all the time, as it is displaying the page,
-and any changes to the page, on screen. */
+and any changes to the page, on screen.
+We don't do that yet. */
 if(s6.color != "rgb(255, 0, 0)") msg += `|shadow color not red ${s6.color}`;
 }
 

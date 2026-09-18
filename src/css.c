@@ -3766,31 +3766,33 @@ static bool cssKeyMatch(const struct desc *d, const Tag *t)
 
 /*********************************************************************
 This is the native function for getComputedStyle().
-If you call frames[i].getComputedStyle(), it is important
-that we apply the css for that frame, not the frame we are currently in.
-For that reason, the first argument is "this", which I assume is a global
-window object. I march down the frames and find it, and that is the root for
-the css rules. If there's ever a document.head.getComputedStyle or some such,
-where "this" is not the window object, then we have to make some changes.
+If n is positive it is the number of the frame, or context.
+This is the css for the window.
+If n is negative it is minus the tag number.
+The tag is shadowroot, with its own private css.
 *********************************************************************/
 
-void cssApply(int frameNumber, Tag *t, int pe)
+void cssApply(int n, Tag *t, int pe)
 {
     Frame *save_cf = cf;
     struct cssmaster *cm;
     struct desc *d;
-    Frame *new_f = frameFromWindow(frameNumber);
-// no clue what to do if new_f is null, should never happen
-    if(new_f) cf = new_f;
+    Frame *f;
+    Tag *shadow = 0;
+    if(n > 0) {
+        f = frameFromWindow(n);
+    } else {
+        shadow = tagList[-n];
+        f = shadow->f0;
+    }
+    // f should always be valid.
+    if(f) cf = f;
 
 // I think the root is document, not the current node, but that is not clear.
     rootnode = 0;
-    cm = cf->cssmaster;
+    if(shadow) cm = shadow->cssmaster; else cm = f->cssmaster;
     if (!cm) goto done;
 
-    if(pe >= 10) pe -= 10, visibility_only = true;
-
-// it's a getComputedStyle match
     gcsmatch = true, matchtype = pe;
 // defer to the js here;
 // then I don't have to get these attributes on every css rule.
@@ -3802,7 +3804,6 @@ void cssApply(int frameNumber, Tag *t, int pe)
     for (d = cm->descriptors; d; d = d->next) {
         if(d->error) continue;
         if(!d->prop_ok) continue;
-        if(visibility_only && !d->visrel) continue;
         if(!cssKeyMatch(d, t)) continue;
         if (qsaMatchGroup(t, d))
             do_rules(0, d->rules, d->highspec);
@@ -3810,7 +3811,7 @@ void cssApply(int frameNumber, Tag *t, int pe)
 
 done:
     cf = save_cf;
-    gcsmatch = false, matchtype = 0, visibility_only = false;
+    gcsmatch = false, matchtype = 0;
 }
 
 // go up the chain and see if we are inside a shadowRoot
