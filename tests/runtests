@@ -42,7 +42,7 @@ fi
 # and is more interactive.
 
 status=0
-list="classlist.html collection.html dynamic-form.html fragment.html getelem.html multiline-attribute.html mutation.html queryselector.html script-adds-nodes.html scriptorder.html style-shorthand.html table.html unbalanced-attribute.html"
+list="classlist.html collection.html custom.html dynamic-form.html fragment.html getelem.html multiline-attribute.html mutation.html queryselector.html script-adds-nodes.html scriptorder.html style-shorthand.html table.html unbalanced-attribute.html"
 if [ $local = n ]
 then
 list="$list frames.html xhr.html"

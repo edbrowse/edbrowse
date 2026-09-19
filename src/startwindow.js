@@ -4683,16 +4683,13 @@ class CustomElementRegistry
         return o ? o.construct : undefined;
     }
 
-    has(name)
+    getName(c)
     {
-        if(typeof name != "string") throw new DOMException("name is not a string");
-        return this.map.has(name);
-    }
-
-    getName(name)
-    {
-        if(typeof name != "string") throw new DOMException("name is not a string");
-        return this.map.has(name) ? name : null;
+        // Just look through all the elements. This is not called often,
+        // and there are rarely more than a few custom elements.
+        for(let e of this.map)
+            if(e[1].construct == c) return e[0];
+        return null;
     }
 }
 // create the global custom element registry for the page.

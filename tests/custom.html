@@ -1,0 +1,64 @@
+<head></head><body>
+<p id=show>start</p>
+<script>
+// Test custom elements and custom events
+try {
+msg = "ok";
+isedbrowse = navigator.userAgent.substr(0, 8) == "edbrowse";
+
+ce = customElements; // shorthand
+function customTest1() {
+// create a new tag see if it calls the constructor.
+class jk_construct extends HTMLElement {
+constructor() {
+super();
+ this.found = 4321
+}
+}
+jk_construct.prototype.more = 5432;
+ce.define("j-k", jk_construct);
+let c = document.createElement("j-k");
+if(c.found != 4321) msg += `|c.found ${c.found}`;
+if(c.more != 5432) msg += `|c.more ${c.more}`;
+if(ce.get("j-k") != jk_construct || ce.getName(jk_construct) != "j-k") msg += "|didn't find name j-k";
+if(ce.get("l-m") || ce.getName(atob) != null) msg += "|found l-m";
+}
+customTest1();
+
+// Here is a popup info class that will be linked to <popup-info>
+class PopupInfo extends HTMLElement {
+  constructor() { super(); }
+  connectedCallback() {
+    const shadow = this.attachShadow({ mode: "open" });
+    const wrapper = document.createElement("span");
+    const icon = document.createElement("span");
+    const info = document.createElement("span");
+    info.setAttribute("class", "info");
+    // Take attribute content and put it inside the info span
+    const text = this.getAttribute("data-text");
+    info.textContent = ' ' + text;
+    // Insert icon
+    let imgUrl;
+    if (this.hasAttribute("img")) {
+      imgUrl = this.getAttribute("img");
+    } else {
+      imgUrl = "img/default.png";
+    }
+    const img = document.createElement("img");
+    img.src = imgUrl;
+// put an alt on it just so it shows up
+    img.alt = "popimage";
+    icon.appendChild(img);
+    shadow.appendChild(wrapper);
+    wrapper.appendChild(icon);
+    wrapper.appendChild(info);
+  }
+}
+
+// and now get ready for the popup-info tag, which is coming up.
+ce.define("popup-info", PopupInfo);
+
+show.innerHTML = msg;
+} catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
+</script>
+</body>
