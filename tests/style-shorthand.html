@@ -23,7 +23,7 @@ margin: 0 10px;
 background-color: #ccaa11;
 font-family:  monospace
 "></div> 
-<div id="div2"    style=" padding: 10px;
+<div id="div2"    style="
 /* this is a cascading composite.
 border spins off borderWidth borderStyle borderColor,
 then each of those spins off top right bottom left */
@@ -63,7 +63,7 @@ h += divStyle.item(i) + "|";
 
 document.getElementById("items").innerHTML = h.replace(/\|/g, "<br>");
 
-const correct = "div1:22|padding-top|padding-right|padding-bottom|padding-left|scroll-padding-top|scroll-padding-right|scroll-padding-bottom|scroll-padding-left|border-top-left-radius|border-top-right-radius|border-bottom-right-radius|border-bottom-left-radius|scroll-margin-top|scroll-margin-right|scroll-margin-bottom|scroll-margin-left|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|div2:27|padding-top|padding-right|padding-bottom|padding-left|border-top-width|border-right-width|border-bottom-width|border-left-width|border-top-style|border-right-style|border-bottom-style|border-left-style|border-top-color|border-right-color|border-bottom-color|border-left-color|border-image-source|border-image-slice|border-image-width|border-image-outset|border-image-repeat|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|";
+const correct = "div1:22|padding-top|padding-right|padding-bottom|padding-left|scroll-padding-top|scroll-padding-right|scroll-padding-bottom|scroll-padding-left|border-top-left-radius|border-top-right-radius|border-bottom-right-radius|border-bottom-left-radius|scroll-margin-top|scroll-margin-right|scroll-margin-bottom|scroll-margin-left|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|div2:23|border-top-width|border-right-width|border-bottom-width|border-left-width|border-top-style|border-right-style|border-bottom-style|border-left-style|border-top-color|border-right-color|border-bottom-color|border-left-color|border-image-source|border-image-slice|border-image-width|border-image-outset|border-image-repeat|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|";
 if(h != correct) msg += "|mismatch shorthand properties";
 if(ds.item(1.3) != ds.item(1) || ds.item("blah") != ds.item(0) || ds.item(atob) != ds.item(0) || ds.item("7") != ds.item(7)) msg += "|bad style.item conversions";
 // make sure it'snot really there
@@ -170,12 +170,10 @@ if(s1.zIndex != "auto") msg += `|bad zIndex ${s1.zIndex}`;
 if(s1.nonsense) msg += "|got nonsense from css";
 
 sh1 = getComputedStyle(h1);
-if(!isedbrowse) {
-// we don't do all the up-the-chain calculations yet.
+// here is an up the chain calculation.
 // 3.0em means 3 times what you already have, and body has set it at 125%.
-// so body set size at 20px, and h1 should be 60px.  Maybe some day.
+// so body set size at 20px, and h1 should be 60px.
 if(sh1.fontSize != "60px") msg += `|sh1 size ${sh1.fontSize}`;
-}
 if(sh1.color != "rgb(65, 105, 225)") msg += `|sh1 royalblue ${sh1.color}`;
 // direct set overrides anything set by css
 h1.style.color = "blue";
@@ -227,20 +225,19 @@ Nor was that rule appliec to a node up the chain, even if radius inherits,
 and I don't know if it does.
 We are left with the default radius of 0. */
 if(s6.borderTopLeftRadius != "0px") msg += `|bad s6 top left radius ${s6.borderTopLeftRadius}`;
-if(!isedbrowse) {
 /* there is no color rule that applies here, but we inherit color up the chain,
 and color was set in body, by a rule in window, so we should inherit red.
-The correct, and only possible algorithm, is to getComputed Style on each node
-up the chain, and let some of the properties trickel down.
+The correct and only possible algorithm, is to getComputed Style on each node
+travelling down the chain, like capturing an event,
+and inherit properties along the way.
 It seems like a lot of calculation, and yet a modern browser does all that,
 for every node, all the time, as it is displaying the page,
-and any changes to the page, on screen.
-We don't do that yet. */
+and any changes to the page, on screen. */
 if(s6.color != "rgb(255, 0, 0)") msg += `|shadow color not red ${s6.color}`;
-}
 /* calling getComputedStyle forced a recalculation of the css,
 so now styleSheets should be right.
-edbrowse should recalculate it as soon as rootstyle is appended. */
+edbrowse should recalculate it as soon as rootstyle is appended.
+I haven't written a test for that yet, because I know we won't pass it. */
 if(root.styleSheets.length != 1) msg += `|shadow styleSheets length ${root.styleSheets.length}`;
 if(root.styleSheets[0].cssRules[0].cssText.substr(0, 3) != "p {") msg += `|first root tule ${root.styleSheets[0].cssRules[0].cssText}`;
 

@@ -94,7 +94,7 @@ return r;
 
 function by_esn(n) {
 if(typeof n != "number") { alert("numeric argument expected"); return; }
-var a = gebtn(my$doc(), "*", true, true)
+let a = gebtn(my$doc(), "*", true, true)
 for(var i = 0; i < a.length; ++i)
 if(a[i].eb$seqno === n) return a[i];
 return null;
@@ -143,7 +143,7 @@ w.$ss = slist;
 function showframes() {
 var i, s, m;
 var w = my$win(), d = my$doc();
-var slist = gebtn(d, "iframe", true, true);
+let slist = gebtn(d, "iframe", true, true);
 for(i=0; i<slist.length; ++i) {
 s = slist[i];
 m = i + ": cx" + (s.eb$expf ? s.contentWindow.eb$ctx : "?") + " " + s.src;
@@ -500,16 +500,21 @@ That said, sometimes I want all the nodes, for internal use. */
     const nn = top.nodeName ? top.nodeName.toLowerCase() : "";
     if(!first && (s0 === '*' || nn === s0))
         a.push(top);
-// special code for document.links
-    if(s0 === "a|area" &&
-    (nn == "a" || nn == "area") && top.href)
-        a.push(top);
-    if(s0 === "field|set" &&
-    (nn == "input" || nn == "select" || nn == "textarea" || nn == "button"))
-        a.push(top);
-    if(s0 === "form|set" &&
-    (nn == "input" || nn == "select" || nn == "textarea" || nn == "button" || nn == "fieldset"))
-        a.push(top);
+// special code for sets of tags
+    if(s0.indexOf('|') > 0) {
+        if(s0 === "a|area" &&
+        (nn == "a" || nn == "area") && top.href)
+            a.push(top);
+        if(s0 === "field|set" &&
+        (nn == "input" || nn == "select" || nn == "textarea" || nn == "button"))
+            a.push(top);
+        if(s0 === "form|set" &&
+        (nn == "input" || nn == "select" || nn == "textarea" || nn == "button" || nn == "fieldset"))
+            a.push(top);
+        if(s0 === "link|style" &&
+        (nn == "link" || nn == "style"))
+            a.push(top);
+    }
     if(top.childNodes) {
         // don't descend into another frame.
         // The frame has no children through childNodes, so we don't really need this part.
@@ -1971,9 +1976,8 @@ function cssGather(base) {
     const thisfile = (shadow ? my$win() : base).eb$base;
     let css_all = "";
     base.cssSource = [];
-    const a = (shadow ? base : base.document).querySelectorAll("link,style");
-    for(let i=0; i<a.length; ++i) {
-        const t = a[i];
+    const a = gebtn((shadow ? base : base.document.documentElement), "link|style", true, false);
+    for(const t of a) {
         if(t.nodeName == "LINK") {
             if(t.css$data && (
             t.type && t.type.toLowerCase() == "text/css" ||
@@ -2055,45 +2059,38 @@ function getComputedStyle(e,pe) {
 Some sites call getComputedStyle on the same node over and over again.
 Can we remember the previous call and just return the same style object?
 Can we know that nothing has changed in between the two calls?
-I can track when the tree changes, and even the node classes and ids,
-but what about individual attributes?
-I haven't found a way to do this without breaking acid test 33 and others.
+I can track when the tree changes, and even the class and id attributes,
+but what about other attributes?
 The answer is, no, there is no practical way to do that.
 Any attribute on any node anywhere in the tree can change which selectors
 match this particular node, or even the nodes up the line.
 So we have to grunt along and perform the calculations every time.
 One thing we can do is confirm that the css selectors and rules haven't changed.
-If those haven't changed then we don't have to rebuild the css structures again.
+If those haven't changed then we don't have to rebuild the css C structures again.
 That test is coming up below, but first, let's see if we
 are even rooted. If not, then there's nothing to do.
 I could call isRooted2(), and that would give me the answer,
 but I need the chain of nodes up to the top,
-so I may as well recreate that logic here.
+so I may as well replicate that logic here.
 *********************************************************************/
 
-    let w = null, shadow = null, t = e, chain = [];
+    let w = null, t = e, chain = [];
     while(t) {
         if(t.nodeType != 1) break;
         if(t.nodeName == "TEMPLATE") break;
         chain.splice(0, 0, t);
         if(t.nodeName == "HTML") { w = t.eb$win; break; }
-        if(t.eb$shadowNode) {
-            if(!shadow) shadow = t;
-            t = t.eb$shadowNode;
-        } else t = t.parentNode;
+        t = t.eb$shadowNode ? t.eb$shadowNode : t.parentNode;
     }
 
     if(!w) return new (this.CSSStyleDeclaration); // not rooted
-
-    let     s = new w.CSSStyleDeclaration;
-    s.element = e;
 
 /*********************************************************************
 What if js has added or removed style objects from the tree?
 Maybe the selectors and rules are different from when they were first compiled.
 Does this ever happen? It does in acid test 33.
 Does it happen in the real world? Probably.
-This recheck falls flat when the css has @import which pulls in another
+This recheck is awkward when the css has @import which pulls in another
 css file, and now we have to fetch that file on every call to getComputedStyle.
 The imported css file could be fetched 100 times just to load the page.
 I get around this by the shortcache feature in css.c. I remember
@@ -2101,28 +2098,88 @@ the imported css file and don't fetch it again, not even a head request.
 If the css has changed in any way, I recompile the descriptors.
 Any information we might have saved about nodes and descriptors,
 such as keys for the selectors, must be recalculated.
-Remember that "this" is the window object.
 *********************************************************************/
 
-    cssGather(shadow ? shadow : w);
+    cssGather(w);
 
-    this.soj$ = s;
-    cssApply(shadow ? -shadow.eb$seqno : w.eb$ctx, e, pe);
-    delete this.soj$;
+/*********************************************************************
+The style of a node inherits from the nodes above. The only algorithm
+That works is computing the style of each node, from document down to e.
+If this reminds you of the capture phase of dispatchEvent, well, it should.
+This is computationally intensive. I hope it isn't done very often.
+The variable "above" is the style from above, from which we inherit.
+It starts out null at the top.
+I assume almost every property inherits.
+Most things inherit directly, copy from above, unless the
+property is set here.
+At least one property is cumulative, fontSize.
+If body is 15px, and div is 2em, and p below div is 2em,
+them p is 60px. Such properties are rare, I hope.
+When cascading downward, I look at the side properties, that end in $2.
+No need to vector through all those getters and setters.
+I query the properties extant in above, rather than all 700 properties.
+Even if there are 2,000 css rules, they typically set just a few properties
+on any given node. It's faster to look at those.
+They aren't enumerable, so I have to use natok() to find them.
+*********************************************************************/
+
+    let above = null, shadow = null, s;
+    for(t of chain) {
+        const bottom = (t == e);
+        if(bottom) {
+            s = new w.CSSStyleDeclaration;
+            s.element = e;
+        } else s = w.Object.create(w.CSSStyleDeclaration.prototype);
+        if(t.eb$shadowNode) { // new shadow root
+            shadow = t;
+            cssGather(t);
+        }
+
+        this.soj$ = s;
+        cssApply(shadow ? -shadow.eb$seqno : w.eb$ctx, t, pe);
+        delete this.soj$;
 
 // If js sets a style property, or if it is set by style= in the html tag,
 // that carries across, and in fact it takes precedence.
 // These should all be singleton properties, not composites.
 
-    if(e.style$2) {
-        for(let k = 0; k < e.style.length; ++k) {
-            const p = camelCase(e.style[k]);
-            s[p] = e.style[p];
+        if(bottom && e.style$2) {
+            for(let k = 0; k < e.style.length; ++k) {
+                const p = camelCase(e.style[k]);
+                s[p] = e.style[p];
+            }
         }
+
+        if(above) { // inherit from above
+            for(const p of natok(above)) {
+                if(p.substr(-2) != "$2") continue;
+                const p2 = p.substr(p, p.length - 2);
+                // make sure we aren't snookered by foo$2
+                if(!css.validHash[p2]) continue;
+                if(s[p]) continue; // set in the current node
+                s[p] = above[p]; // inherit
+            }
+        }
+
+        if(s.fontSize) {
+            let ppc = 16; // previous pixel count
+            const pfs = above ?above.fontSize : ""; // previous font size
+            if(/^\d+px$/.test(pfs))
+                ppc = parseInt(pfs, 10);
+// many conversions are possible here
+            if(/^\d+%$/.test(s.fontSize))
+                s.fontSize = Math.trunc(parseInt(s.fontSize, 10) * ppc / 100) + "px";
+            else if(/^[0-9.]+em$/.test(s.fontSize))
+                s.fontSize = Math.trunc(parseFloat(s.fontSize) * ppc) + "px";
+        }
+
+        above = s;
     }
 
-// textTransform is the only default style conversion that acid3 tests for,
-// in acid test 46, but there are hundreds of them.
+/* textTransform is the only default style conversion that acid3 tests for,
+in acid test 46, but there are hundreds of them. They apply only
+in the bottom node, the node that was passed to getComputedStyle.
+We have fallen out of the loop, so s is now the style for the bottom node. */
 
     for(let k of [
       "anchorName", "anchorScope",
@@ -2376,13 +2433,7 @@ Remember that "this" is the window object.
       "webkitTextEmphasisColor", "webkitTextFillColor",
       "webkitTextStrokeColor",
     ]) {
-        if(!s[k]) {
-// revert to the color of this tag, but if no color is directly assigned
-// we should go up the chain and see if a higher tag has k, or color, assigned.
-// It is derived, like fontSize is derived, but we don't do that yet.
-// Just look for color on this tag, and that's all.
-            s[k] = s.color;
-        }
+        if(!s[k])  s[k] = s.color;
         if(s[k]) s[k] = color2rgb(s[k]);
         else s[k] = "rgb(0, 0, 0)";
     }
@@ -2393,12 +2444,6 @@ else s.backgroundColor = "rgba(0, 0, 0, 0";
     if(!s.boxSizing) s.boxSizing = "content-box";
     if(!s.textAlign) s.textAlign = "start";
     if(!s.verticalAlign) s.verticalAlign = "baseline";
-
-    if(s.fontSize) {
-        // many conversions are possible here
-        if(/^\d+%$/.test(s.fontSize))
-            s.fontSize = Math.trunc(s.fontSize.substr(0, s.fontSize.length-1) * 16 / 100) + "px";
-    }
 
     return s;
 }

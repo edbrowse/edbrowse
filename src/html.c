@@ -6076,8 +6076,10 @@ char *render(void)
     int i;
     Tag *t;
     rowspan();
-    for (f = &cw->f0; f; f = f->next)
+    for (f = &cw->f0; f; f = f->next) {
+        if(f->xmlMode) continue; // this happens in jsrt
         run_function_bool_win(f, "cssGather0");
+    }
 // Recalculate every shadowRoot, even if it's not linked into the tree.
 // They have very few css rules, and it's easier to just do it
 // than to figure out if we should do it.
