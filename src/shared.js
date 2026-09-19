@@ -2379,6 +2379,20 @@ We have fallen out of the loop, so s is now the style for the bottom node. */
         if(!s[k]) s[k] = "auto";
 
     for(let k of [
+      "animationDelay", "animationDuration",
+      "transitionDelay", "transitionDuration",
+      "webkitAnimationDelay", "webkitAnimationDuration",
+      "webkitTransitionDelay", "webkitTransitionDuration",
+    ])
+        if(!s[k]) s[k] = "0s";
+
+    for(let k of [
+      "backgroundPositionX", "backgroundPositionY",
+      "webkitMaskPositionX", "webkitMaskPositionY",
+    ])
+        if(!s[k]) s[k] = "0%";
+
+    for(let k of [
       "alignContent", "alignItems",
       "animationDirection", "animationRange",
       "animationRangeEnd", "animationRangeStart",
