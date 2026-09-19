@@ -2444,6 +2444,9 @@ else s.backgroundColor = "rgba(0, 0, 0, 0";
     if(!s.boxSizing) s.boxSizing = "content-box";
     if(!s.textAlign) s.textAlign = "start";
     if(!s.verticalAlign) s.verticalAlign = "baseline";
+// this one is quoted because it has spaces, but rgb(0, 0, 0) has spaces
+// and is not quoted, so I don't understand the inconsistency.
+    if(!s.fontFamily) s.fontFamily = '"Times New Roman"';
 
     return s;
 }
@@ -2526,6 +2529,29 @@ aroundSet2: (s, pre, post, h) => {
     css.aroundSet0(s, pre+"TopLeft"+post, pre+"TopRight"+post, pre+"BottomRight"+post, pre+"BottomLeft"+post, h);
 },
 
+splitWithQuotes: (h) => {
+    const t = typeof h;
+    if(t == "number") h = h + '';
+    else if(t != "string") return [];
+    h = h.trim();
+    if(h == "") return [];
+    const a = h.split(/\s+/);
+    if(h.indexOf('"') < 0) return a; // high runner case
+    if(a.length == 0) return a;
+// step through and watch for "
+    let j = 0, k, l;
+    while(j < a.length) {
+        if(a[j].substr(0, 1) != '"') { ++j; continue; }
+        for(k = j+1; k < a.length; ++k)
+            if(a[k].indexOf('"') >= 0) break;
+        if(k == a.length) { ++j; continue; } // should never happen
+        let s = a.slice(j, k+1).join(' ');
+        a.splice(j, k+1-j, s);
+        ++j;
+    }
+    return a;
+},
+
 // don't use arrow functions, these are getters and setters
 marginGet: function() { return css.aroundGet1(this, "margin", ""); },
 marginSet: function(h) { css.aroundSet1(this, "margin", "", h); },
@@ -2551,10 +2577,8 @@ backgroundGet: function() {
 },
 
 backgroundSet: function(h) {
-if(h === null || h === undefined) return;
-if(typeof h !== "string") h = String(h)
-h = h.split(/\s+/);
-const l = h.length;
+    h = css.splitWithQuotes(h);
+    const l = h.length;
 delete this.backgroundColor;
 delete this.backgroundImage;
 delete this.backgroundRepeat;
@@ -2569,15 +2593,11 @@ if(l >= 4)
 this.backgroundPosition = h[3];
 },
 
-fontGet: function() {
-    return `${this.fontStyle} ${this.fontWeight} ${this.fontSize}/${this.lineHeight} ${this.fontFamily} ${this.fontVariant} ${this.fontSizeAdjust} ${this.fontStretch}`
-},
+fontGet: function() { return this.fontSize + ' ' + this.fontFamily; },
 
 fontSet: function(h) {
-if(h === null || h === undefined) return;
-if(typeof h !== "string") h = String(h)
-h = h.split(/\s+/);
-const l = h.length;
+    h = css.splitWithQuotes(h);
+    const l = h.length;
 delete this.fontStyle;
 delete this.fontWeight;
 delete this.fontSize;
@@ -2611,9 +2631,7 @@ return `${this.borderWidth} ${this.borderStyle} ${this.borderColor} ${this.borde
 },
 
 borderSet: function(h) {
-if(h === null || h === undefined) return;
-if(typeof h !== "string") h = String(h)
-h = h.split(/\s+/);
+    h = css.splitWithQuotes(h);
 this.borderWidth = h[0] ? h[0] : "";
 this.borderStyle = h[1] ? h[1] : "";
 this.borderColor =  h[2] ? h[2] : "";
@@ -2625,9 +2643,7 @@ borderImageGet: function() {
 },
 
 borderImageSet: function(h) {
-if(h === null || h === undefined) return;
-if(typeof h !== "string") h = String(h)
-h = h.split(/\s+/);
+    h = css.splitWithQuotes(h);
 this.borderImageSource = h[0] ? h[0] : "";
 this.borderImageSlice = h[1] ? h[1] : "";
 this.borderImageWidth =  h[2] ? h[2] : "";
@@ -2641,10 +2657,8 @@ insetGet: function() {
 },
 
 insetSet: function(h) {
-if(h === null || h === undefined) return;
-if(typeof h !== "string") h = String(h)
-h = h.split(/\s+/);
-const l = h.length;
+    h = css.splitWithQuotes(h);
+    const l = h.length;
 if(l == 1) {
 this.left = this.bottom = this.right = this.top = h[0];
 return;
@@ -2674,10 +2688,8 @@ textDecorationGet: function() {
 },
 
 textDecorationSet: function(h) {
-if(h === null || h === undefined) return;
-if(typeof h !== "string") h = String(h)
-h = h.split(/\s+/);
-const l = h.length;
+    h = css.splitWithQuotes(h);
+    const l = h.length;
 delete this.textDecorationLine;
 delete this.textDecorationColor;
 delete this.textDecorationStyle;
@@ -2701,11 +2713,10 @@ wscGet(s, pre) => {
 },
 
 wscSet(s, pre, h) => {
-    if(typeof h != "string") h = "";
-    h = h.trim().split(/\s+/);
+    h = css.splitWithQuotes(h);
     s[pre + "Width"] = h[0] ? h[0] : "";
     s[pre + "Style"] = h[1] ? h[1] : "";
-// rgb has spaces in it and will be separated out; put it back togetyher
+// rgb has spaces in it and will be separated out; put it back together
     s[pre + "Color"] =  h[2] ? h.slice(2).join(' ') : "";
 },
 
