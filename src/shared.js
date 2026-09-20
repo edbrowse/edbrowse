@@ -1782,8 +1782,7 @@ function cloneNodeHelper(root, deep, into)
             // referencing it will create it
             node2.style;
             node2.style.element = node2;
-            for (let l = 0; l < node1.style.length; ++l) {
-                let p = node1.style[l]; // name of property
+            for (let p of node1.style) {
                 if (debug) alert3("copy stattr " + p);
                 p = camelCase(p);
                 node2.style$2[p] = node1.style$2[p];
@@ -2144,8 +2143,8 @@ They aren't enumerable, so I have to use natok() to find them.
 // These should all be singleton properties, not composites.
 
         if(bottom && e.style$2) {
-            for(let k = 0; k < e.style.length; ++k) {
-                const p = camelCase(e.style[k]);
+            for(let p of e.style) {
+                p = camelCase(p);
                 s[p] = e.style[p];
             }
         }

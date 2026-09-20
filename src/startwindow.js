@@ -3682,6 +3682,11 @@ class CSSStyleDeclaration extends HTMLElement
         odp(this, "length", {value:0, writable:true});
     }
 
+    *[Symbol.iterator]() {
+        for(let i = 0; i < this.length; ++i)
+            yield this[i];
+    }
+
     toString() { return "style object" };
 
     // sheet on demand
