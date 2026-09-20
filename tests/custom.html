@@ -60,9 +60,17 @@ class PopupInfo extends HTMLElement {
 
 // first popup tag already exists but should be unknown
 if(!(info1 instanceof HTMLElement)) msg += "|info1 not html element";
-
-// and now get ready for the popup-info tag, which is coming up.
+if(info1.nodeName != "POPUP-INFO" || info1.tagName != info1.nodeName) msg += `|info1 pre nodeName ${info1.nodeName}`;
 ce.define("popup-info", PopupInfo);
+// that tag synchronously becomes an instance of PopupInfo.
+if(!(info1 instanceof PopupInfo)) msg += "|info1 not PopupInfo";
+if(info1.nodeName != "POPUP-INFO" || info1.tagName != info1.nodeName) msg += `|info1 post nodeName ${info1.nodeName}`;
+if(info1.attributes.length != 3) msg += `|info1 carried ${info1.attributes.length} attributes across`;
+if(info1.dataset.text.substr(0, 5) != "Bolog") msg += `|bad info1.dataset.text ${info1.dataset.text}`;
+// preserve the children, even though they will not be seen when shadowRoot appears
+if(info1.textContent != "unseen") msg += `|info1 content ${info1.textContent}`;
+// callback function has not run yet because it is asynchronous
+if(!info1.shadowRoot) msg += "|shadowRoot not created";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

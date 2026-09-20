@@ -1252,6 +1252,13 @@ class NamedNodeMap
 {
     constructor() { this.length = 0; }
 
+// Chrome says NamedNodeMap is iterable. I wrote this
+// based on other code I saw and it works, but I don't understand it.
+    *[Symbol.iterator]() {
+        for(let i = 0; i < this.length; ++i)
+            yield this[i];
+    }
+
     item(i)
     {
         i = itemArgToIndex(i, this.length);
@@ -2527,6 +2534,8 @@ all those classes will exist. */
                 odp(this, "childNodes", {value: new NodeList})
                 odp(this, "parentNode", {value: null, writable: true, configurable:true})
             }
+// custom elements like regular elements are upper case
+            s = s.toUpperCase();
             odp(c, "nodeName", {value:s,writable:true,configurable:true});
             odp(c, "tagName", {value:s,writable:true,configurable:true});
             odp(c, "connectedCallback$pending", {value:!!c.connectedCallback, writable:true})
@@ -4650,26 +4659,24 @@ class CustomElementRegistry
         // check to see if we already have tags of this nature.
         // If so replace them
         let cnt = 0;
+        const name2 = name.toUpperCase();
         for (const t of gebtn(document, "*", true, false)) {
-            if(t.tagName != name) continue;
+            if(t.tagName != name2) continue;
             // be sure to use createElement, so we get a tag in the C world
             const replacement = document.createElement(name);
             let child;
             while (child = t.firstChild)
                 replacement.appendChild(child);
-
             t.replaceWith(replacement);
             if (t.attributes$2)
                 for (const attr of t.attributes)
                     replacement.setAttribute(attr.name, attr.value);
-
-            replacement.connectedCallback$pending = true;
+            if(replacement.connectedCallback)
+                replacement.connectedCallback();
+            replacement.connectedCallback$pending = false;
             ++cnt;
         }
-        if (cnt)
-            alert3(
-                `${cnt} ${name} tags already exist; these have been customized retroactively`
-            );
+        if (cnt) alert3(`${cnt} ${name} tags already exist; these have been customized retroactively`);
     }
 
     get(name)
