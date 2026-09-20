@@ -209,6 +209,8 @@ root = shadowhost.attachShadow({mode:"open"});
     rootstyle = document.createElement("style");
 rootstyle.textContent = "p {border: 1px solid black;}"
 root.appendChild(rootstyle);
+if(root.styleSheets.length != 1) msg += `|shadow styleSheets length ${root.styleSheets.length}`;
+if(root.styleSheets[0].cssRules[0].cssText.substr(0, 3) != "p {") msg += `|first root tule ${root.styleSheets[0].cssRules[0].cssText}`;
 rootp = document.createElement("p");
 root.appendChild(rootp);
 rootp.textContent = "inside shadow";
@@ -239,12 +241,6 @@ It seems like a lot of calculation, and yet a modern browser does all that,
 for every node, all the time, as it is displaying the page,
 and any changes to the page, on screen. */
 if(s6.color != "rgb(255, 0, 0)") msg += `|shadow color not red ${s6.color}`;
-/* calling getComputedStyle forced a recalculation of the css,
-so now styleSheets should be right.
-edbrowse should recalculate it as soon as rootstyle is appended.
-I haven't written a test for that yet, because I know we won't pass it. */
-if(root.styleSheets.length != 1) msg += `|shadow styleSheets length ${root.styleSheets.length}`;
-if(root.styleSheets[0].cssRules[0].cssText.substr(0, 3) != "p {") msg += `|first root tule ${root.styleSheets[0].cssRules[0].cssText}`;
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

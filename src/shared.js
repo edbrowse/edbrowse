@@ -3482,12 +3482,25 @@ function datalistReindex(t)
 
 function checkUpward(t)
 {
-    let tabledone = false, formdone = false, selectdone = false, datalistdone = false;
+    let tabledone = false, formdone = false, selectdone = false, datalistdone = false, styledone = true;
+/* If we are adding a style node, we should recalculate the css rules
+and the style sheets that hold those rules.
+Some websites have thousands of css rules, so it's not trivial.
+I'll only do this if a style node is being added.
+If it was removed before we got here, this test won't elucidate that.
+Also, if the contents of a style node changes, to contain different rules,
+I won't see that either.
+Well the high runner case by far is adding a style node.
+We don't usually take them away or change them.
+And even if I miss it on this go round, I recalculate the css and the
+style sheets whenever you call getComputedStyle(). */
+    if(gebtn(t, "link|style", false, false).length)
+        styledone = false;
     while(t) {
         markNodeCollections(t);
         if(t.nodeType != 1) break; // stop at document
         const inclass = t.dom$class;
-        // we should never break out of a template
+        // we should never push up through a template
         if(inclass == "HTMLTemplateElement") break;
         // tables do nest, often, so stop at the first table
         if(!tabledone && inclass == "HTMLTableElement") { tableReindex(t); tabledone = true; }
@@ -3499,6 +3512,8 @@ function checkUpward(t)
         if(!formdone && inclass == "HTMLFieldSetElement") formReindex(t);
         if(!selectdone && inclass == "HTMLSelectElement") { selectReindex(t); selectdone = true; }
         if(!datalistdone && inclass == "HTMLDataListElement") { datalistReindex(t); datalistdone = true; }
+        if(!styledone && inclass == "ShadowRoot") { cssGather(t); styledone = true; }
+        if(!styledone && inclass == "HTMLHtmlElement" && t.eb$win) { cssGather(t.eb$win); styledone = true; }
         t = t.parentNode;
     }
 }
