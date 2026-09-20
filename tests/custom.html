@@ -38,6 +38,7 @@ class PopupInfo extends HTMLElement {
 
 try {
 msg = "ok";
+b = document.body;
 isedbrowse = navigator.userAgent.substr(0, 8) == "edbrowse";
 
 ce = customElements; // shorthand
@@ -88,13 +89,41 @@ if(info2.shadowRoot.lastChild.lastChild.lastChild.data != " freezer") msg += "|f
 </script>
 
 <p><popup-info id=info3 data-text="microwave oven">unseen</popup-info></p>
+<div id=dh></div>
 
 <script>
 if(!broken) {
+class Simple extends HTMLElement {
+constructor() { super(); }
+connectedCallback() { ++ran; }
+disconnectedCallback() { ++unran; }
+}
+
 try {
 if(!(info3 instanceof PopupInfo)) mst += "|info3 not PopupInfo";
 if(!info3.shadowRoot) msg += "|info3 no shadowRoot";
 if(info3.shadowRoot.lastChild.lastChild.lastChild.data != " microwave oven") msg += "|microwave oven not present";
+
+ce.define("sim-ple", Simple);
+
+// connect and disconnect
+ran = unran = 0;
+dh.innerHTML = "<sim-ple></sim-ple>";
+dhs = dh.firstChild;
+if(!(dhs instanceof Simple)) msg += "|dhs not Simple";
+if(ran != 1) msg += `|ran not 1 ${ran}`;
+dhs.remove();
+if(unran != 1) msg += `|unran not 1 ${unran}`;
+dh.appendChild(dhs);
+if(ran != 2) msg += `|ran not 2 ${ran}`;
+dhs.remove();
+if(unran != 2) msg += `|unran not 2 ${unran}`;
+dj = document.createElement("div");
+dj.innerHTML = "<sim-ple></sim-ple>";
+if(ran != 2) msg += `|ran not 2 after isolated html ${ran}`;
+b.appendChild(dj);
+b.removeChild(dj);
+if(ran != 3 || unran != 3) msg += "|ran and unran not 3";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>"); broken = true; }

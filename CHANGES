@@ -36,6 +36,10 @@ to run them.
 Implement assigned css properties in an array like structure.
 Implement getPropertyValue, setProperty, removeProperty.
 
+shadowroot, and styles wholly contained within a shadowRoot.
+
+custom element connectedCallback and disconnectedCallback functions.
+
 3.8.18
 
 The if (input field) command to bring a textarea inline.
