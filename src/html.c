@@ -1360,7 +1360,6 @@ I will disconnect here, and also check for inxhr in runOnload().
 }
 
 static void runOnload(void);
-static void runConnectedCallback(void);
 static int runTimersNow(void);
 void runScriptsPending(bool startbrowse)
 {
@@ -1502,14 +1501,10 @@ passes:
     if(startbrowse) {
         cf = save_cf;
         runOnload();
-        runConnectedCallback();
         startbrowse = false, change = true;
     }
 
-    if (change) {
-    runConnectedCallback();
-        goto top;
-    }
+    if(change) goto top;
 
     // there is no other return but here; so this is where we restore cf
     cf = save_cf;
@@ -4015,14 +4010,6 @@ static void runOnload(void)
     if (t->onunload)
         unloadHyperlink("document.body.onunload", "Body");
     run_event_win(cf, "load");
-}
-
-static void runConnectedCallback(void)
-{
-    Frame *save_cf = cf;
-    for(cf = &cw->f0; cf; cf = cf->next)
-        run_function_bool_win(cf, "connectedCallbackStart");
-    cf = save_cf;
 }
 
 // In one place, tack on the $$Aarray to turn onfoo into onfoo$$array

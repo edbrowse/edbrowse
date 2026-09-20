@@ -5,6 +5,7 @@ img="http://www.eklhad.net/dolls/v194513.jpg">unseen</popup-info></p>
 
 <script>
 // Test custom elements and custom events
+broken = false;
 try {
 msg = "ok";
 isedbrowse = navigator.userAgent.substr(0, 8) == "edbrowse";
@@ -69,10 +70,19 @@ if(info1.attributes.length != 3) msg += `|info1 carried ${info1.attributes.lengt
 if(info1.dataset.text.substr(0, 5) != "Bolog") msg += `|bad info1.dataset.text ${info1.dataset.text}`;
 // preserve the children, even though they will not be seen when shadowRoot appears
 if(info1.textContent != "unseen") msg += `|info1 content ${info1.textContent}`;
-// callback function has not run yet because it is asynchronous
 if(!info1.shadowRoot) msg += "|shadowRoot not created";
 
+// spin up a new custom element and link into the tree
+info2 = document.createElement("popup-info");
+if(!(info2 instanceof PopupInfo)) msg += "|info2 not PopupInfo";
+if(info2.nodeName != "POPUP-INFO") msg += `|info2 nodeName ${info2.nodeName}`;
+info2.setAttribute("data-text", "freezer");
+if(info2.shadowRoot) msg += "|info2 shadowRoot too early";
+info2.style.display = "none"; // don't need to see the second one
+info1.parentNode.append(info2);
+if(!info2.shadowRoot) msg += "|info2 shadowRoot not created";
+
 show.innerHTML = msg;
-} catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
+} catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>"); broken = true; }
 </script>
 </body>

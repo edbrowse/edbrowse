@@ -269,7 +269,7 @@ for(let f of ["UnsupportedError",
 "markAllCollections", "markUpwardCollections",
 "mutFixup", "gebtn",
 "isRooted", "spillup_id", "unlinkIds",
-"ownerIdsScripts", "simpleHtmlEscape", "appendFragment",
+"checkDownward", "simpleHtmlEscape", "appendFragment",
 "appendFragment$nm", "insertFragment", "insertFragment$nm", "checkUpward", "collection"])
     swp(f, mw$[f]);
 for(let f of ["close"])
@@ -279,7 +279,6 @@ for(let f of ["scroll", "scrollTo", "scrollBy", "scrollByLines", "scrollByPages"
 swpv("blur", ()=>(document.activeElement = null))
 swpv("focus", ()=>(document.activeElement = document.body))
 swpv("self", window)
-swp("connectedCallbackStart", () => mw$.connectedCallbackCheck(my$doc()));
 this.print = ()=>  alert("javascript is trying to print this document")
 this.stop = ()=>  alert("javascript is trying to stop the browse process")
 swpc("getComputedStyle", mw$.getComputedStyle.bind(window))
@@ -670,7 +669,7 @@ class Node extends EventTarget
         // and we might need to do that if one frame inserts,
         // via innerHTML, nodes into another frame.
         // Very rare, but it's possible.
-        ownerIdsScripts(this);
+        checkDownward(this);
 
         // c2 is the old nodes, for the observers.
         // Avoid a special case in mutFixup for NodeList
@@ -815,7 +814,7 @@ class Node extends EventTarget
         // a text node won't change the structure of the form, or the html collection
         if(c.nodeType != 3) {
             checkUpward(this);
-            ownerIdsScripts(c);
+            checkDownward(c);
         }
         // a text node can have an observer - for CharacterData
         mutFixup(this, 0, c, null);
@@ -830,7 +829,7 @@ class Node extends EventTarget
         if(c.parentNode) c.parentNode.removeChild$nm(c);
         this.appendChild2(c);
         if(c.nodeType != 3)
-            ownerIdsScripts(c);
+            checkDownward(c);
         return c;
     }
 
@@ -866,7 +865,7 @@ class Node extends EventTarget
         domLinkage('b', this, "", c, t); // update the tree in C
         if (c.nodeType != 3) {
             checkUpward(this);
-            ownerIdsScripts(c);
+            checkDownward(c);
         }
         mutFixup(this, 0, c, null);
         return c;
@@ -883,7 +882,7 @@ class Node extends EventTarget
         c.parentNode = this;
         domLinkage('b', this, "", c, t); // update the tree in C
         if (c.nodeType != 3)
-            ownerIdsScripts(c);
+            checkDownward(c);
         return c;
     }
 
@@ -2538,7 +2537,8 @@ all those classes will exist. */
             s = s.toUpperCase();
             odp(c, "nodeName", {value:s,writable:true,configurable:true});
             odp(c, "tagName", {value:s,writable:true,configurable:true});
-            odp(c, "connectedCallback$pending", {value:!!c.connectedCallback, writable:true})
+            odp(c, "connectedCallback$pending", {value:!!c.connectedCallback, writable:true});
+            odp(c, "disconnectedCallback$pending", {value:false, writable: true});
             domLinkage('c', c, t);
             return c;
         } // end of custom element
@@ -4672,13 +4672,11 @@ class CustomElementRegistry
             let child;
             while (child = t.firstChild)
                 replacement.appendChild(child);
-            t.replaceWith(replacement);
             if (t.attributes$2)
                 for (const attr of t.attributes)
                     replacement.setAttribute(attr.name, attr.value);
-            if(replacement.connectedCallback)
-                replacement.connectedCallback();
-            replacement.connectedCallback$pending = false;
+// this line links replacement into the tree and triggers connectedCallback()
+            t.replaceWith(replacement);
             ++cnt;
         }
         if (cnt) alert3(`${cnt} ${name} tags already exist; these have been customized retroactively`);
@@ -4734,6 +4732,7 @@ swp("findClass4Tag", function(tagname, above) {
         return new HTMLElement;
     }
     Object.defineProperty(f2, "connectedCallback$pending", {value:!!f2.connectedCallback, writable:true})
+    Object.defineProperty(f2, "disconnectedCallback$pending", {value:false, writable:true})
     return f2;
 });
 

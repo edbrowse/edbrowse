@@ -1469,7 +1469,7 @@ r += postcomma ? postcomma : ';'
 return r
 }
 
-function ownerIdsScripts(s) {
+function checkDownward(s) {
     const w2 = isRooted2(s); // the rooting window through shadowNode
     if(!w2) return;
     const d = w2.document;
@@ -1482,13 +1482,15 @@ when a node is created in another frame, then attached in this one.
 And also, link the ids into the window.
 ids definitely require direct rootin.
 I don't know if owner changes over for indirect rooting. Probably. */
-    let list = gebtn(s, "*", true, false);
-    // our getElements functions never include the top node,
-    // but in this case we might want to.
-    list.splice(0, 0, s);
+    let list = gebtn(s, "*", false, false);
     for(let c of list) {
         if(c.nodeType == 1 && c.id && w)
             spillup_id(w, c, c.id, true);
+        if(c.connectedCallback$pending && c.connectedCallback) {
+            c.connectedCallback();
+            c.connectedCallback$pending = false;
+            c.disconnectedCallback$pending = true;
+        }
         if(c.ownerDocument == d) continue; // high runner case
         c.ownerDocument = d;
         if(c.attributes$2)
@@ -6376,7 +6378,7 @@ for(let k of [
 getElementsByTagName, getElementsByClassName, getElementsByName, getElementById,
 dispatchEvent, addEventListener, removeEventListener,
 NodeFilter,createNodeIterator,createTreeWalker,
-ownerIdsScripts, connectedCallbackCheck,
+checkDownward, connectedCallbackCheck,
 getComputedStyle,
 URL, TextEncoder, TextDecoder])
     Object.defineProperty(k, "toString",{value:wrapString});

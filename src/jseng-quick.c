@@ -609,7 +609,7 @@ static bool run_function_bool(JSContext *cx, JSValueConst parent, const char *na
     }
     // other functions we might not want to see at debug 3
     static const char * const db4list[] = {
-      "connectedCallbackStart", "markAllCollections", "cssGather0",
+      "markAllCollections", "cssGather0",
       "eb$qs$start", "frames$rebuild", 0};
     if(stringInList(db4list, name) >= 0)
         dbl = 4;
