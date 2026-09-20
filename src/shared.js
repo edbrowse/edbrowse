@@ -1404,10 +1404,15 @@ Here's some extra insurance. */
 // unlink ids from window when a subtree is removed
 function unlinkIds(w, top)
 {
-    let list = gebtn(top, "*", true, false);
-    list.splice(0, 0, top);
-    for (const c of list)
+    let list = gebtn(top, "*", false, false);
+    for (const c of list) {
         if (c.id && c.nodeType == 1 && w) spillup_id(w, c, c.id, false);
+        if(c.disconnectedCallback$pending && c.disconnectedCallback) {
+            c.disconnectedCallback();
+            c.disconnectedCallback$pending = false;
+            c.connectedCallback$pending = true;
+        }
+    }
 }
 
 function frames$rebuild(w) {

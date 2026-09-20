@@ -81,6 +81,8 @@ if(info2.shadowRoot) msg += "|info2 shadowRoot too early";
 info2.style.display = "none"; // don't need to see the second one
 info1.parentNode.append(info2);
 if(!info2.shadowRoot) msg += "|info2 shadowRoot not created";
+// remember we put in an extra space
+if(info2.shadowRoot.lastChild.lastChild.lastChild.data != " freezer") msg += "|freezer not present";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>"); broken = true; }
