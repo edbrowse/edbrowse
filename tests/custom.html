@@ -125,6 +125,15 @@ b.appendChild(dj);
 b.removeChild(dj);
 if(ran != 3 || unran != 3) msg += "|ran and unran not 3";
 
+// events, capture, target, bubble, are well tested elsewhere.
+// We'll just make a CustomEvent here.
+b.addEventListener("snork", e => h += 'b'+e.eventPhase);
+dh.addEventListener("snork", e => h += 'd'+e.eventPhase);
+event = new CustomEvent("snork", {bubbles:true});
+h = "";
+dh.dispatchEvent(event);
+if(h != "d2b3") msg += `|event trail ${h}`;
+
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>"); broken = true; }
 }
