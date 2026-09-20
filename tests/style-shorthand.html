@@ -32,10 +32,9 @@ margin: 0 10px;
 my-invalid-property: telephone;
 background-color: #ccaa11;
 background: bbb;
-font-family:  monospace
 "></div> 
 <p class=before id=before></p>
-<div id=shadowhost></div>
+<div id=shadowhost>preshadow</div>
 
 <script> 
 /* Warning! This runs fine in edbrowse, locally, but in chrome
@@ -63,7 +62,7 @@ h += divStyle.item(i) + "|";
 
 document.getElementById("items").innerHTML = h.replace(/\|/g, "<br>");
 
-const correct = "div1:22|padding-top|padding-right|padding-bottom|padding-left|scroll-padding-top|scroll-padding-right|scroll-padding-bottom|scroll-padding-left|border-top-left-radius|border-top-right-radius|border-bottom-right-radius|border-bottom-left-radius|scroll-margin-top|scroll-margin-right|scroll-margin-bottom|scroll-margin-left|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|div2:23|border-top-width|border-right-width|border-bottom-width|border-left-width|border-top-style|border-right-style|border-bottom-style|border-left-style|border-top-color|border-right-color|border-bottom-color|border-left-color|border-image-source|border-image-slice|border-image-width|border-image-outset|border-image-repeat|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|";
+const correct = "div1:22|padding-top|padding-right|padding-bottom|padding-left|scroll-padding-top|scroll-padding-right|scroll-padding-bottom|scroll-padding-left|border-top-left-radius|border-top-right-radius|border-bottom-right-radius|border-bottom-left-radius|scroll-margin-top|scroll-margin-right|scroll-margin-bottom|scroll-margin-left|margin-top|margin-right|margin-bottom|margin-left|background-color|font-family|div2:22|border-top-width|border-right-width|border-bottom-width|border-left-width|border-top-style|border-right-style|border-bottom-style|border-left-style|border-top-color|border-right-color|border-bottom-color|border-left-color|border-image-source|border-image-slice|border-image-width|border-image-outset|border-image-repeat|margin-top|margin-right|margin-bottom|margin-left|background-color|";
 if(h != correct) msg += "|mismatch shorthand properties";
 if(ds.item(1.3) != ds.item(1) || ds.item("blah") != ds.item(0) || ds.item(atob) != ds.item(0) || ds.item("7") != ds.item(7)) msg += "|bad style.item conversions";
 // make sure it'snot really there
@@ -212,7 +211,13 @@ rootstyle.textContent = "p {border: 1px solid black;}"
 root.appendChild(rootstyle);
 rootp = document.createElement("p");
 root.appendChild(rootp);
-// this shouldn't affect paragraphs outside the shadow root
+rootp.textContent = "inside shadow";
+// you see inside shadow on the screen, which is not part of the tree,
+// which is in the shadow root - but textContent returns what is in the tree,
+// what is not in the shadow root, what is not seen.
+// It's wildly inconsistent.
+if(shadowhost.textContent != "preshadow") msg += `|bad shadowhost content ${shadowhost.textContent}`;
+// rootstyle shouldn't affect paragraphs outside the shadow root
 s5 = getComputedStyle(before);
 if(s5.borderStyle != "none") msg += `|wrong s5 borderStyle ${s5.borderStyle}`;
 if(s5.borderTopLeftRadius != "6px") msg += `|bad s5 top left radius ${s5.borderTopLeftRadius}`;

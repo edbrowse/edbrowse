@@ -1,5 +1,8 @@
 <head></head><body>
 <p id=show>start</p>
+<p><popup-info id=info1 data-text="Bolognese are folk art sculptures made from Chinese coins."
+img="http://www.eklhad.net/dolls/v194513.jpg">unseen</popup-info></p>
+
 <script>
 // Test custom elements and custom events
 try {
@@ -54,6 +57,9 @@ class PopupInfo extends HTMLElement {
     wrapper.appendChild(info);
   }
 }
+
+// first popup tag already exists but should be unknown
+if(!(info1 instanceof HTMLElement)) msg += "|info1 not html element";
 
 // and now get ready for the popup-info tag, which is coming up.
 ce.define("popup-info", PopupInfo);
