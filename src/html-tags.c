@@ -5090,11 +5090,20 @@ So it's much more efficient to go straight to the underlying data$2.
 	}
 
 /* set innerHTML from the source html, if this tag supports it */
-	if (ti->bits & TAG_INNERHTML)
-		establish_inner(t, t->innerHTML, 0, false);
+    if (ti->bits & TAG_INNERHTML)
+        establish_inner(t, t->innerHTML, 0, false);
 
 // If the tag has foo=bar as an attribute, pass this forward to javascript.
-	pushAttributes(t);
+    pushAttributes(t);
+
+// is this a custom element with a callback function?
+    if((!pc->innerParent || isRooted(pc->innerParent)) &&
+    get_property_bool_t(t, "connectedCallback$pending")) {
+        run_function_bool_t(t, "connectedCallback");
+        set_property_bool_t(t, "connectedCallback$pending", false);
+        set_property_bool_t(t, "disconnectedCallback$pending", true);
+    }
+
 }
 
 static void pushAttributes(const Tag *t)

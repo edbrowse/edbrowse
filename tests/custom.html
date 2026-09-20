@@ -6,29 +6,6 @@ img="http://www.eklhad.net/dolls/v194513.jpg">unseen</popup-info></p>
 <script>
 // Test custom elements and custom events
 broken = false;
-try {
-msg = "ok";
-isedbrowse = navigator.userAgent.substr(0, 8) == "edbrowse";
-
-ce = customElements; // shorthand
-function customTest1() {
-// create a new tag see if it calls the constructor.
-class jk_construct extends HTMLElement {
-constructor() {
-super();
- this.found = 4321
-}
-}
-jk_construct.prototype.more = 5432;
-ce.define("j-k", jk_construct);
-let c = document.createElement("j-k");
-if(c.found != 4321) msg += `|c.found ${c.found}`;
-if(c.more != 5432) msg += `|c.more ${c.more}`;
-if(ce.get("j-k") != jk_construct || ce.getName(jk_construct) != "j-k") msg += "|didn't find name j-k";
-if(ce.get("l-m") || ce.getName(atob) != null) msg += "|found l-m";
-}
-customTest1();
-
 // Here is a popup info class that will be linked to <popup-info>
 class PopupInfo extends HTMLElement {
   constructor() { super(); }
@@ -59,6 +36,29 @@ class PopupInfo extends HTMLElement {
   }
 }
 
+try {
+msg = "ok";
+isedbrowse = navigator.userAgent.substr(0, 8) == "edbrowse";
+
+ce = customElements; // shorthand
+function customTest1() {
+// create a new tag see if it calls the constructor.
+class jk_construct extends HTMLElement {
+constructor() {
+super();
+ this.found = 4321
+}
+}
+jk_construct.prototype.more = 5432;
+ce.define("j-k", jk_construct);
+let c = document.createElement("j-k");
+if(c.found != 4321) msg += `|c.found ${c.found}`;
+if(c.more != 5432) msg += `|c.more ${c.more}`;
+if(ce.get("j-k") != jk_construct || ce.getName(jk_construct) != "j-k") msg += "|didn't find name j-k";
+if(ce.get("l-m") || ce.getName(atob) != null) msg += "|found l-m";
+}
+customTest1();
+
 // first popup tag already exists but should be unknown
 if(!(info1 instanceof HTMLElement)) msg += "|info1 not html element";
 if(info1.nodeName != "POPUP-INFO" || info1.tagName != info1.nodeName) msg += `|info1 pre nodeName ${info1.nodeName}`;
@@ -84,7 +84,20 @@ if(!info2.shadowRoot) msg += "|info2 shadowRoot not created";
 // remember we put in an extra space
 if(info2.shadowRoot.lastChild.lastChild.lastChild.data != " freezer") msg += "|freezer not present";
 
+} catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>"); broken = true; }
+</script>
+
+<p><popup-info id=info3 data-text="microwave oven">unseen</popup-info></p>
+
+<script>
+if(!broken) {
+try {
+if(!(info3 instanceof PopupInfo)) mst += "|info3 not PopupInfo";
+if(!info3.shadowRoot) msg += "|info3 no shadowRoot";
+if(info3.shadowRoot.lastChild.lastChild.lastChild.data != " microwave oven") msg += "|microwave oven not present";
+
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>"); broken = true; }
+}
 </script>
 </body>
