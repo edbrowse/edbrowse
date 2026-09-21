@@ -2620,14 +2620,10 @@ backgroundSet: function(h) {
         this.backgroundColor = this.backgroundImage = this.backgroundRepeat = this.backgroundPosition = "";
         return;
     }
-if(l >= 1)
-this.backgroundColor = h[0];
-if(l >= 2)
-this.backgroundImage = h[1];
-if(l >= 3)
-this.backgroundRepeat = h[2];
-if(l >= 4)
-this.backgroundPosition = h[3];
+    this.backgroundColor = h[0] ? h[0] : "white";
+    if(l > 1) this.backgroundImage = h[1] ? h[1] : "none";
+    if(l > 2) this.backgroundRepeat = h[2] ? h[2] : "repeat";
+    if(l > 3) this.backgroundPosition = h[3] ? h[3] : "0% 0%";
 },
 
 fontGet: function() { return this.fontSize + ' ' + this.fontFamily; },
@@ -2640,24 +2636,17 @@ fontSet: function(h) {
 s.fontStyle =  s.fontWeight =  s.fontSize =  s.lineHeight =  s.fontFamily =  s.fontVariant =  s.fontSizeAdjust =  s.fontStretch = "";
         return;
     }
-if(l >= 1)
-this.fontStyle = h[0];
-if(l >= 2)
-this.fontWeight = h[1];
-if(l >= 3) {
-let parts = h[2].split('/');
-this.fontSize = parts[0];
-if(parts.length >= 2)
-this.lineHeight = parts[1];
-}
-if(l >= 4)
-this.fontFamily = h[3];
-if(l >= 5)
-this.fontVariant = h[4];
-if(l >= 6)
-this.fontSizeAdjust = h[5];
-if(l >= 7)
-this.fontStretch = h[6];
+    this.fontStyle = h[0];
+    this.fontWeight = h[1] ? h[1] : "x";
+    if(l >= 3) {
+        let parts = h[2].split('/');
+        this.fontSize = parts[0];
+        if(parts.length >= 2) this.lineHeight = parts[1];
+    }
+    this.fontFamily = h[3] ? h[3] : '"Times New Roman"';
+    this.fontVariant = h[4] ? h[4] : "normal";
+    this.fontSizeAdjust = h[5] ? h[5] : "none";
+    this.fontStretch = h[6] ? h[6] : "100%";
 },
 
 borderGet: function() {
@@ -2706,28 +2695,28 @@ insetSet: function(h) {
     h = css.splitWithQuotes(h);
     if(h == null) return;
     const l = h.length;
-if(l == 1) {
-this.left = this.bottom = this.right = this.top = h[0];
-return;
-}
-if(l == 2) {
-this.top = this.bottom = h[0];
-this.left = this.right = h[1];
-return;
-}
-if(l == 3) {
-this.top = h[0];
-this.left = this.right = h[1];
-this.bottom = h[2];
-return;
-}
-if(l >= 4) {
-this.top = h[0];
-this.right = h[1];
-this.bottom = h[2];
-this.left = h[3];
-return;
-}
+    if(l == 1) {
+        this.left = this.bottom = this.right = this.top = h[0];
+        return;
+    }
+    if(l == 2) {
+        this.top = this.bottom = h[0];
+        this.left = this.right = h[1];
+        return;
+    }
+    if(l == 3) {
+        this.top = h[0];
+        this.left = this.right = h[1];
+        this.bottom = h[2];
+        return;
+    }
+    if(l >= 4) {
+        this.top = h[0];
+        this.right = h[1];
+        this.bottom = h[2];
+        this.left = h[3];
+        return;
+    }
 },
 
 textDecorationGet: function() {
@@ -2742,14 +2731,10 @@ textDecorationSet: function(h) {
         s.textDecorationLine = s.textDecorationColor = s.textDecorationStyle = s.textDecorationThickness = "";
         return;
     }
-if(l >= 1)
-this.textDecorationLine = h[0];
-if(l >= 2)
-this.textDecorationColor = h[1];
-if(l >= 3)
-this.textDecorationStyle =  h[2];
-if(l >= 4)
-this.textDecorationThickness =  h[3];
+    this.textDecorationLine = h[0];
+    this.textDecorationColor = h[1] ? h[1] : "black";
+    this.textDecorationStyle =  h[2] ? h[2] : "solid";
+    this.textDecorationThickness =  h[3] ? h[3] : "auto";
 },
 
 // width style color
@@ -2763,9 +2748,13 @@ wscGet(s, pre) => {
 wscSet(s, pre, h) => {
     h = css.splitWithQuotes(h);
     if(h == null) return;
-    s[pre + "Width"] = h[0] ? h[0] : "";
-    s[pre + "Style"] = h[1] ? h[1] : "";
-    s[pre + "Color"] =  h[2] ? h[2] : "";
+    if(h.length == 0) {
+        s[pre + "Width"] = s[pre + "Style"] = s[pre + "Color"] = "";
+        return;
+    }
+    s[pre + "Width"] = h[0];
+    s[pre + "Style"] = h[1] ? h[1] : "none";
+    s[pre + "Color"] =  h[2] ? h[2] : "black";
 },
 
 borderInlineGet: function() { return css.wscGet(this, "borderInline"); },
@@ -2811,8 +2800,7 @@ seSet(s, pre, post, h) => {
     if(h == null) return;
     const l = h.length;
     if(!l) {
-        s.removeProperty(uncamelCase(p1));
-        s.removeProperty(uncamelCase(p2));
+        s[p1] = s[p2] = "";
     } else if(l == 1) {
         s[p2] = s[p1] = h[0];
     } else {
