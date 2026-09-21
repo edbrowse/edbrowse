@@ -3206,7 +3206,7 @@ class HTMLTextAreaElement extends HTMLElement
     get value() { return this.val$ue ? this.val$ue : ""; }
     set value(h) { if(h) { this.val$ue = h; set_value(this, h); } }
     get innerText() { return this.value }
-    set innerText(v) { this.value = t }
+    set innerText(v) { this.value = v }
     get type() { return "textarea"}
     get placeholder()
     {
