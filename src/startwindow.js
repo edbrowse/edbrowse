@@ -191,6 +191,8 @@ class Eb$IterableWeakMap {
     }
 }
 
+this.sfts = (f, n) =>
+    f.toString = () => `function ${f.name || n}() { [native code] }`;
 // Set up classes and their methods to convert to strings correctly.
 this.scts = function(c)
 {
@@ -222,10 +224,11 @@ that is to say, it's already a native function.
         if(desc.get || desc.set) continue;
         if(typeof p[f] != "function") continue;
         if(p[f].toString().indexOf("[native code]") > 0) continue;
-        p[f].toString = ()=>
-        `function ${f}() { [native code] }`;
+        // Sometimes if properties are assigned dynamically then the .name
+        // property isn't defined
+        sfts(p[f], f);
     }
-    c.toString = () => `function ${c.name}() { [native code] }`
+    sfts(c);
 }
 
 this.swc = function (c, changeable = true)
@@ -4597,29 +4600,233 @@ class XMLHttpRequest extends EventTarget
 
     }
 
+    // open the request
+    open(method, url, async, user, password)
+    {
+        if (user || password) alert3("xml user and password ignored");
+        this.readyState$2 = 1;
+        this.async = (async === false)? false: true;
+        this.method = method || "GET";
+        alert3("xhr " + (this.async ? "async " : "") + "open " + this.method + " " + url);
+        this.url = resolveURL(eb$base, url);
+        this.status = 0;
+        this.statusText = "";
+        // state = 1 and technically that's a change
+        // a website might use this to set something up, before send
+        // warning: if you don't call open, just set variables, this won't be called;
+        // but I think you're suppose to call open
+        let e = new Event("readystatechange");
+        this.dispatchEvent(e);
+    }
+
+    // set request header
+    setRequestHeader(header, value)
+    {
+        if (this.readyState != 1) return; // only in the open state
+        const previous = this.headers[header];
+        this.headers[header] = previous ? `${previous}, ${value}` : value;
+    }
+
+    // get response header
+    getResponseHeader(header)
+    {
+        let rHeader, returnedHeaders;
+        if (this.readyState < 3) throw new Error("INVALID_STATE_ERR");
+
+        returnedHeaders = [];
+        header = header.toLowerCase();
+        for (rHeader in this.responseHeaders)
+            if (rHeader.toLowerCase() == header)
+                returnedHeaders.push(this.responseHeaders[rHeader]);
+
+        if (returnedHeaders.length) return returnedHeaders.join(", ");
+        return null;
+    }
+
+    // get all response headers
+    getAllResponseHeaders()
+    {
+        const returnedHeaders = [];
+        if (this.readyState < 3) throw new Error("INVALID_STATE_ERR");
+        for (const header in this.responseHeaders)
+            returnedHeaders.push(`${header}: ${this.responseHeaders[header]}`);
+        return returnedHeaders.join("\r\n");
+    }
+
+    // Convert FormData to multipart. Surprised there is no open source for this.
+    #FormDataMultipart(f)
+    {
+        let b = null, s = "";
+        function sanitizeName(n)
+        {
+            if (!n) return null;
+            if (n.match(/[^ -~]/)) {
+                alert3(`name ${n} has invalid characters`)
+                n = n.replace(/[^ -~]/g, '?');
+            }
+            if (n.match(/"/)) {
+                alert3(`name ${n} has quotes`)
+                n = n.replace(/"/g, '?');
+            }
+            return n;
+        }
+
+        for (const entry of f) {
+            if (!b) b = "--" + makeBoundary();
+            s += `${b}\r\nContent-Disposition: form-data; name="${sanitizeName(entry[0])}"\r\n`;
+            let b64 = false;
+            const v = entry[1];
+            // nothing seems to cause crome to encode64 the field.
+            if (b64) s += "Content-Transfer-Encoding: base64\r\n";
+            s += "\r\n";
+            if (b64) s += btoa(v).replace(/.{72}/g, (a)=>{return a+"\r\n"});
+            else
+                /*
+                    \n is replaced with \r\n. I don't know about \r on it's own.
+                    If we already have \r\n, we don't want to replace \n with \r\n again.
+                    This lets us use one of the most fun features of pcre, negative look behind.
+                */
+                s += v.replace(/(?<!\r)\n/g, "\r\n");
+            s += "\r\n";
+        }
+        // last boundary has extra -- at the end
+        if (b) s += `${b}--\r\n`;
+        return s;
+    }
+
+    // send the request, wait for the data to return, possibly asynchronous
+    send(data, parsedoc)
+    {
+        if (parsedoc) alert3("xml parsedoc ignored");
+        let headerstring = "";
+        for (const item in this.headers) {
+            const v1 = item;
+            const v2 = this.headers[item];
+            headerstring += v1+': '+v2+'\n';
+        }
+        if (headerstring) alert3("xhr headers " + headerstring.replace(/\n$/,''));
+        let urlcopy = this.url;
+        if (urlcopy.match(/[*'";\[\]$\u0000-\u0020\u007f-\uffff]/)) {
+            alert3("xhr url does not look encoded");
+            // but assume it was anyways, cause it should be
+            //urlcopy = encodeURI(urlcopy);
+        }
+        if (data) {
+            // output could be huge if data is huge
+            alert3("xhr data " + data);
+        }
+        // check the sanity of data
+        if (data === null || data === undefined) data = "";
+        let pd = 0; // how to process the data
+        let d8;
+        // can't send a request twice.
+        if (this.readyState > 1) throw new DOMException("invalid state");
+        if (data instanceof Uint16Array) {
+            // only Uint8Array has the base64 method
+            d8 = new Uint8Array(data.length * 2);
+            for (let i = 0; i < data.length; ++i) {
+                d8[2*i] = data[i];
+                d8[2*i+1] = (data[i]>>8);
+            }
+            data = d8;
+        }
+        if (data instanceof Uint32Array) {
+            d8 = new Uint8Array(data.length * 4);
+            for (let i = 0; i < data.length; ++i) {
+                d8[4*i] = data[i];
+                d8[4*i+1] = (data[i]>>8);
+                d8[4*i+2] = (data[i]>>16);
+                d8[4*i+3] = (data[i]>>24);
+            }
+            data = d8;
+        }
+        if (data instanceof Uint8Array) {
+            pd = 1;
+            data = data.toBase64();
+        }
+        if (data instanceof FormData) {
+            data = this.#FormDataMultipart(data);
+        }
+        // what do we do about Uint16Array and Uint32Array?
+        // some things we can just stringify
+        if (data instanceof URLSearchParams) {
+            data = data.toString();
+        }
+        if (typeof data != "string")
+            alert3(`payload data has improper type ${typeof data}`);
+
+        this.$entire =  eb$fetchHTTP.call(this, urlcopy,this.method,headerstring,data, pd);
+        if (this.$entire != "async") this.parseResponse();
+    }
+
+    // parse the returned data
+    parseResponse()
+    {
+        const responsebody_array = this.$entire.split("\r\n\r\n");
+        let success = parseInt(responsebody_array[0]);
+        let code = parseInt(responsebody_array[1]);
+        let url2 = responsebody_array[2];
+        let http_headers = responsebody_array[3];
+        for (let i = 0; i < 4; ++i) responsebody_array[i] = "";
+        this.responseText = responsebody_array[4];
+        if (typeof this.responseText != "string") this.responseText = "";
+        // some want responseText, some just want response
+        this.response = this.responseText;
+        let hhc = http_headers.split(/\r?\n/);
+        for (let i=0; i<hhc.length; ++i) {
+            let value1 = hhc[i];
+            if (!value1.match(/:/)) continue;
+            let value2 = value1.replace(/:.*/, "");
+            let value3 = value1.replace(/^.*?:/, "");
+            this.responseHeaders[value2] = value3.trim();
+        }
+
+        this.readyState$2 = 4;
+        this.responseURL = url2.replace(/#.*/,"");
+        if (success) {
+            this.status = code;
+            // need a real statusText for the codes
+            this.statusText = (code == 200 ? "OK" : "http error " + code);
+            // Should we run the xml parser if the status was not 200?
+            // And should we run it before the onreadystatechange function?
+            let ct = this.getResponseHeader("content-type");
+            if (!ct) ct = "text/xml"; // default
+            // if overrideMimeType called, should we replace it in headers, or just here?
+            if (this.eb$mt) ct = this.eb$mt;
+            if (ct) ct = ct.toLowerCase().replace(/;.*/,'');
+            if (code >= 200 && code < 300 && ct && (ct == "text/xml" || ct == "application/xml")) {
+                alert3("parsing the response as xml");
+                this.responseXML = (new (DOMParser)()).parseFromString(this.responseText, "text/xml");
+            }
+
+            // I'll do the load events, not loadstart or progress or loadend etc.
+            // readyState comes first though
+            let e = new Event;
+            e.initEvent("readystatechange", true, true);
+            this.dispatchEvent(e);
+            // now for onload
+            e = new Event;
+            e.initEvent("load", true, true);
+            e.loaded = this.response.length;
+            this.dispatchEvent(e);
+            // I don't understand the upload object at all
+            e = new Event;
+            e.initEvent("load", true, true);
+            e.loaded = this.response.length;
+            this.upload.dispatchEvent(e);
+        }
+        else {
+            this.status = 0;
+            this.statusText = "network error";
+        }
+    }
+
     toString (){ return "[object XMLHttpRequest]"; }
     // make sure readyState is readonly
     get readyState() {     return this.readyState$2; }
     overrideMimeType(t) { if(typeof t == "string") this.eb$mt = t; }
 }
 swdc(XMLHttpRequest);
-/* I'm going to set some instance methods, which are currently
-in the shared window. I could have set them in the section above.
-        tp.open = mw$.xml.open;
-But then swdc comes along and tries to wrap that function in a string
-    function open() { [native code] }
-but it can't because the shared window is frozen and that stuff is readonly
-and edbrowse blows up! So I have to put them here, after swdc is called.
-We may move all those functions to this page some day, maybe inside this class,
-as they are called nowhere else. Then you can delete all this stuff. */
-this.xmlp = XMLHttpRequest.prototype;
-    xmlp.open = mw$.xml.open;
-    xmlp.setRequestHeader = mw$.xml.srh;
-    xmlp.getResponseHeader = mw$.xml.grh;
-    xmlp.getAllResponseHeaders = mw$.xml.garh;
-    xmlp.send = mw$.xml.send;
-    xmlp.parseResponse = mw$.xml.parse;
-delete this.xmlp;
 
 class Validity
 {
@@ -5148,10 +5355,132 @@ return cf;
 // Request, Response, Headers, fetch; link to third party code in master window.
 // fetch calls XMLHttpRequest, but puts the Response in a Promise
 for(let f of [
-"Headers", "Request", "Response", "fetch",
+"Headers", "Request", "Response",
 "alert", "showarg", "showarglist"])
     swpc(f, mw$[f]);
 
+this.fetch = function(input, init)
+{
+    return new Promise(function(resolve, reject) {
+        const request = new Request(input, init);
+
+        if (request.signal && request.signal.aborted) {
+            return reject(new DOMException('Aborted', 'AbortError'));
+        }
+
+        const xhr = new XMLHttpRequest();
+
+        function abortXhr() { xhr.abort(); }
+
+        function parseHeaders(rawHeaders)
+        {
+            const headers = new Headers()
+            // Replace instances of \r\n and \n followed by at least one space or horizontal tab with a space
+            // https://tools.ietf.org/html/rfc7230#section-3.2
+            const preProcessedHeaders = rawHeaders.replace(/\r?\n[\t ]+/g, ' ')
+            preProcessedHeaders.split('\r').map(
+                (h) => h.indexOf('\n') === 0 ? h.substr(1, h.length) : h
+            ).forEach((line) => {
+                const parts = line.split(':')
+                const key = parts.shift().trim()
+                if (key) {
+                    const value = parts.join(':').trim()
+                    headers.append(key, value)
+                }
+            })
+            return headers
+        }
+
+        xhr.addEventListener("load", function() {
+            const options = {
+                statusText: xhr.statusText,
+                headers: parseHeaders(xhr.getAllResponseHeaders() || '')
+            };
+            // This check if specifically for when a user fetches a file locally from
+            // the file system Only if the status is out of a normal range
+            if (
+                request.url.indexOf('file://') === 0 &&
+                (xhr.status < 200 || xhr.status > 599)
+            ) {
+                options.status = 200;
+            }
+            else {
+                options.status = xhr.status;
+            }
+            options.url = (
+                'responseURL' in xhr
+                ? xhr.responseURL
+                : options.headers.get('X-Request-URL')
+            );
+            const body = 'response' in xhr ? xhr.response : xhr.responseText;
+            resolve(new Response(body, options));
+        });
+
+        xhr.addEventListener("error", function() {
+            reject(new TypeError('Network request failed'));
+        });
+
+        xhr.addEventListener("timeout", function() {
+            reject(new TypeError('Network request timed out'));
+        });
+
+        xhr.addEventListener("abort", function() {
+            reject(new DOMException('Aborted', 'AbortError'));
+        });
+
+        function fixUrl(url) {
+            try {
+                return url === '' && g.location.href ? g.location.href : url;
+            }
+            catch (e) {
+                return url;
+            }
+        }
+
+        xhr.open(request.method, fixUrl(request.url), true);
+
+        if (request.credentials === 'include') xhr.withCredentials = true;
+        else if (request.credentials === 'omit') xhr.withCredentials = false;
+
+        if ('responseType' in xhr) xhr.responseType = 'blob';
+        if (
+            init &&
+            typeof init.headers === 'object' &&
+            !(init.headers instanceof Headers)
+        ) {
+            const names = [];
+            Object.getOwnPropertyNames(init.headers).forEach(function(name) {
+                names.push(normalizeName(name));
+                xhr.setRequestHeader(name, normalizeValue(init.headers[name]));
+            });
+            request.headers.forEach(function(value, name) {
+                if (names.indexOf(name) === -1) xhr.setRequestHeader(name, value);
+            });
+        }
+        else {
+            request.headers.forEach(function(value, name) {
+                xhr.setRequestHeader(name, value);
+            });
+        }
+
+        if (request.signal) {
+            request.signal.addEventListener('abort', abortXhr);
+            xhr.addEventListener("readystatechange", function() {
+                // DONE (success or failure)
+                if (xhr.readyState === 4)
+                    request.signal.removeEventListener('abort', abortXhr);
+            });
+        }
+
+        xhr.send(
+            typeof request._bodyInit === 'undefined'
+            ? null
+            : request._bodyInit
+        );
+    });
+}
+sfts(fetch);
+odp(this, "fetch", {enumerable: false, writable: true, configurable: true});
 // pages seem to want document.style to exist
 sdp("style", new CSSStyleDeclaration)
 document.style.element = document;
@@ -5518,12 +5847,11 @@ if (!window.DOMException) {
 }
 
 // don't need these any more
-;(function() {
-    let names_to_delete = [
-    "swgs", "swp", "swpv", "swpc", "swpp",
-    "sdp", "sdpc", "swdc", "swde"];
-    for (let k of names_to_delete) delete window[k]
-})();
+
+for (const k of [
+    "swgs", "swp", "swpv", "swpc", "swpp", "scts", "sfts", "swc", "sdp",
+    "sdpc", "swdc", "swde"
+]) delete window[k];
 
 /* Remember the reserved classes, objects, functions, etc in window,
 so we don't overwrite them with <div id=HTMLElement>.
