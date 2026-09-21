@@ -2636,17 +2636,20 @@ fontSet: function(h) {
 s.fontStyle =  s.fontWeight =  s.fontSize =  s.lineHeight =  s.fontFamily =  s.fontVariant =  s.fontSizeAdjust =  s.fontStretch = "";
         return;
     }
-    this.fontStyle = h[0];
-    this.fontWeight = h[1] ? h[1] : "x";
+// in chrome I only got l == 2 to work
+    if(l >= 2) {
+        this.fontSize = h[0];
+        this.fontFamily = h[1];
+    }
+/*
     if(l >= 3) {
         let parts = h[2].split('/');
         this.fontSize = parts[0];
         if(parts.length >= 2) this.lineHeight = parts[1];
     }
-    this.fontFamily = h[3] ? h[3] : '"Times New Roman"';
-    this.fontVariant = h[4] ? h[4] : "normal";
-    this.fontSizeAdjust = h[5] ? h[5] : "none";
-    this.fontStretch = h[6] ? h[6] : "100%";
+*/
+// setting font spins off 19 other properties, besides size and family.
+// They obtain their defaults unless l > 2 in ways I don't understand.
 },
 
 borderGet: function() {
