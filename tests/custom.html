@@ -72,6 +72,7 @@ if(info1.dataset.text.substr(0, 5) != "Bolog") msg += `|bad info1.dataset.text $
 // preserve the children, even though they will not be seen when shadowRoot appears
 if(info1.textContent != "unseen") msg += `|info1 content ${info1.textContent}`;
 if(!info1.shadowRoot) msg += "|shadowRoot not created";
+if(info1.shadowRoot.querySelector("img").src.indexOf("/v194513") < 0) msg += "|image not found under shadowRoot";
 
 // spin up a new custom element and link into the tree
 info2 = document.createElement("popup-info");

@@ -125,8 +125,10 @@ if(s0.item(17) !== "") msg += "|item 17 not empty string";
 if(s0.getPropertyValue("cat") !== "") msg += "|cat not empty string";
 s0.borderInline = "17px none rgb(60, 70, 80)";
 if(s0.borderInlineWidth != "17px" || s0.borderInlineColor != "rgb(60, 70, 80)") msg += "|wrong borderInline";
+s0.padding = ""; // deletes
+if(s0.paddingBottom != "") msg += "|padding didn't delete";
 
-// p not rooted, so css doesn't kick in
+// p not rooted, so css doesn't kick in at all
 s0g = getComputedStyle(p0);
 if(s0g.borderTopLeftRadius !== "") msg += `|s0g radius ${s0g.borderTopLeftRadius}`;
 

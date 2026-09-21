@@ -1563,6 +1563,10 @@ function camelCase(t) {
     return t.replace(/-./g, function(f){return f[1].toUpperCase()});
 }
 
+function uncamelCase(t) {
+    return t.replace(/([a-z])([A-Z])/g, function(f,a,b){return a+'-'+b.toLowerCase()});
+}
+
     /*********************************************************************
     cloneNode creates a copy of the node and its children recursively.
     The argument 'deep' refers to whether or not the clone will recurs.
@@ -2511,10 +2515,11 @@ aroundSet0: (s, p1, p2, p3, p4, h) => {
     if(typeof h != "string") h = "";
     h = h.trim();
     if(h === "") {
-        delete s[p1];
-        delete s[p2];
-        delete s[p3];
-        delete s[p4];
+        // don't just delete, use removeProperty so we can have the side effects
+        s.removeProperty(uncamelCase(p1));
+        s.removeProperty(uncamelCase(p2));
+        s.removeProperty(uncamelCase(p3));
+        s.removeProperty(uncamelCase(p4));
         return;
     }
     h = h.split(/\s+/);
@@ -2599,10 +2604,10 @@ backgroundGet: function() {
 backgroundSet: function(h) {
     h = css.splitWithQuotes(h);
     const l = h.length;
-delete this.backgroundColor;
-delete this.backgroundImage;
-delete this.backgroundRepeat;
-delete this.backgroundPosition;
+this.removeProperty("background-color");
+this.removeProperty("background-image");
+this.removeProperty("background-repeat");
+this.removeProperty("background-position");
 if(l >= 1)
 this.backgroundColor = h[0];
 if(l >= 2)
@@ -2618,14 +2623,14 @@ fontGet: function() { return this.fontSize + ' ' + this.fontFamily; },
 fontSet: function(h) {
     h = css.splitWithQuotes(h);
     const l = h.length;
-delete this.fontStyle;
-delete this.fontWeight;
-delete this.fontSize;
-delete this.lineHeight;
-delete this.fontFamily;
-delete this.fontVariant;
-delete this.fontSizeAdjust;
-delete this.fontStretch;
+this.removeProperty("font-style");
+this.removeProperty("font-weight");
+this.removeProperty("font-size");
+this.removeProperty("line-height");
+this.removeProperty("font-family");
+this.removeProperty("font-variant");
+this.removeProperty("font-size-adjust");
+this.removeProperty("font-stretch");
 if(l >= 1)
 this.fontStyle = h[0];
 if(l >= 2)
@@ -2710,10 +2715,10 @@ textDecorationGet: function() {
 textDecorationSet: function(h) {
     h = css.splitWithQuotes(h);
     const l = h.length;
-delete this.textDecorationLine;
-delete this.textDecorationColor;
-delete this.textDecorationStyle;
-delete this.textDecorationThickness;
+this.removeProperty("text-decoration-line");
+this.removeProperty("text-decoration-color");
+this.removeProperty("text-decoration-style");
+this.removeProperty("text-decoration-thickness");
 if(l >= 1)
 this.textDecorationLine = h[0];
 if(l >= 2)
