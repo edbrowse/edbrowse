@@ -2197,9 +2197,9 @@ We have fallen out of the loop, so s is now the style for the bottom node. */
       "appRegion", "appearance",
       "backdropFilter", "backgroundImage",
       "borderBlockEndStyle", "borderBlockStartStyle",
-      "borderBlockStyle", "borderBottomStyle",
+      "borderBottomStyle",
       "borderImageSource",
-      "borderInlineEndStyle", "borderInlineStartStyle", "borderInlineStyle",
+      "borderInlineEndStyle", "borderInlineStartStyle",
       "borderLeftStyle", "borderRightStyle", "borderTopStyle",
       "boxShadow",
       "clear", "clipPath",
@@ -2285,10 +2285,10 @@ We have fallen out of the loop, so s is now the style for the bottom node. */
 
     for(let k of [
       "baselineShift",
-      "borderBlockEndWidth", "borderBlockStartWidth", "borderBlockWidth",
+      "borderBlockEndWidth", "borderBlockStartWidth",
       "borderBottomLeftRadius", "borderBottomRightRadius",
       "borderBottomWidth", "borderEndEndRadius", "borderEndStartRadius",
-      "borderInlineEndWidth", "borderInlineStartWidth", "borderInlineWidth",
+      "borderInlineEndWidth", "borderInlineStartWidth",
       "borderLeftWidth", "borderRightWidth", "borderSpacing",
       "borderStartEndRadius", "borderStartStartRadius",
       "borderTopLeftRadius", "borderTopRightRadius",
@@ -2296,13 +2296,13 @@ We have fallen out of the loop, so s is now the style for the bottom node. */
       "columnRuleWidth", "cx", "cy",
       "minBlockSize", "minHeight", "minInlineSize", "minWidth",
       "offsetDistance", "outlineOffset", "outlineWidth", "overflowClipMargin",
-      "paddingBlock", "paddingBlockEnd", "paddingBlockStart",
-      "paddingBottom", "paddingInline", "paddingInlineEnd", "paddingInlineStart",
+      "paddingBlockEnd", "paddingBlockStart",
+      "paddingBottom", "paddingInlineEnd", "paddingInlineStart",
       "paddingLeft", "paddingRight", "paddingTop",
       "r",
-      "scrollMarginBlock", "scrollMarginBlockEnd", "scrollMarginBlockStart",
+      "scrollMarginBlockEnd", "scrollMarginBlockStart",
       "scrollMarginBottom",
-      "scrollMarginInline", "scrollMarginInlineEnd", "scrollMarginInlineStart",
+      "scrollMarginInlineEnd", "scrollMarginInlineStart",
       "scrollMarginLeft", "scrollMarginRight", "scrollMarginTop",
       "shapeMargin", "strokeDashoffset",
       "textIndent",
@@ -2321,8 +2321,8 @@ We have fallen out of the loop, so s is now the style for the bottom node. */
         if(!s[k]) s[k] = "0px";
 
     for(let k of [
-      "marginBlock", "marginBlockEnd", "marginBlockStart",
-      "marginInline", "marginInlineEnd", "marginInlineStart",
+      "marginBlockEnd", "marginBlockStart",
+      "marginInlineEnd", "marginInlineStart",
       "marginTop", "marginRight", "marginBottom", "marginLeft",
       "webkitMarginAfter", "webkitMarginBefore",
       "webkitMarginEnd", "webkitMarginStart",
@@ -2341,12 +2341,12 @@ We have fallen out of the loop, so s is now the style for the bottom node. */
       "fontSynthesisStyle", "fontSynthesisWeight",
       "forcedColorAdjust",
       "gridArea", "gridAutoColumns", "gridAutoRows",
-      "gridColumn", "gridColumnEnd", "gridColumnStart",
-      "gridRow", "gridRowEnd", "gridRowStart",
+      "gridColumnEnd", "gridColumnStart",
+      "gridRowEnd", "gridRowStart",
       "hyphenateCharacter", "hyphenateLimitChars",
       "imageRendering",
-      "insetBlock", "insetBlockEnd", "insetBlockStart",
-      "insetInline", "insetInlineEnd", "insetInlineStart",
+      "insetBlockEnd", "insetBlockStart",
+      "insetInlineEnd", "insetInlineStart",
       "interactivity", "isolation",
       "justifySelf", "left", "lineBreak",
       "maskSize", "offsetAnchor", "overflowAnchor",
@@ -2355,9 +2355,9 @@ We have fallen out of the loop, so s is now the style for the bottom node. */
       "page", "pageBreakAfter", "pageBreakBefore", "pageBreakInside",
       "placeSelf", "pointerEvents",
       "quotes", "right", "rx", "ry",
-      "scrollBehavior", "scrollPaddingBlock",
+      "scrollBehavior",
       "scrollPaddingBlockEnd", "scrollPaddingBlockStart",
-      "scrollPaddingBottom", "scrollPaddingInline",
+      "scrollPaddingBottom",
       "scrollPaddingInlineEnd", "scrollPaddingInlineStart",
       "scrollPaddingLeft", "scrollPaddingRight",
       "scrollPaddingTop",
@@ -2420,7 +2420,7 @@ We have fallen out of the loop, so s is now the style for the bottom node. */
       "gap",
       "gridColumnGap", "gridGap", "gridRowGap",
       "initialLetter",
-      "interestDelay", "interestDelayEnd", "interestDelayStart",
+      "interestDelayEnd", "interestDelayStart",
       "justifyContent", "justifyItems",
       "letterSpacing", "lineHeight",
       "mathShift", "mathStyle", "mixBlendMode",
@@ -2443,9 +2443,9 @@ We have fallen out of the loop, so s is now the style for the bottom node. */
 
 // black black black is the color of my true love's hair
     for(let k of [
-      "borderBlockColor", "borderBlockEndColor", "borderBlockStartColor",
+      "borderBlockEndColor", "borderBlockStartColor",
       "borderBottomColor",
-      "borderInlineColor", "borderInlineEndColor", "borderInlineStartColor",
+      "borderInlineEndColor", "borderInlineStartColor",
       "borderLeftColor", "borderRightColor", "borderTopColor",
       "caretColor", "color", "columnRuleColor",
       "fill", "floodColor",
@@ -2561,17 +2561,28 @@ splitWithQuotes: (h) => {
     h = h.trim();
     if(h == "") return [];
     const a = h.split(/\s+/);
-    if(h.indexOf('"') < 0) return a; // high runner case
     if(a.length == 0) return a;
-// step through and watch for "
-    let j = 0, k, l;
+// step through and watch for " or rgb(x, y, z)
+    let j = 0, k;
     while(j < a.length) {
-        if(a[j].substr(0, 1) != '"') { ++j; continue; }
-        for(k = j+1; k < a.length; ++k)
-            if(a[k].indexOf('"') >= 0) break;
-        if(k == a.length) { ++j; continue; } // should never happen
-        let s = a.slice(j, k+1).join(' ');
-        a.splice(j, k+1-j, s);
+        if(a[j].substr(0, 1) == '"') {
+            for(k = j+1; k < a.length; ++k)
+                if(a[k].indexOf('"') >= 0) break;
+            if(k == a.length) { ++j; continue; } // should never happen
+            let s = a.slice(j, k+1).join(' ');
+            a.splice(j, k+1-j, s);
+            ++j;
+            continue;
+        }
+        if(a[j].substr(0, 4) == 'rgb(') {
+            for(k = j+1; k < a.length; ++k)
+                if(a[k].indexOf(')') >= 0) break;
+            if(k == a.length) { ++j; continue; } // should never happen
+            let s = a.slice(j, k+1).join(' ');
+            a.splice(j, k+1-j, s);
+            ++j;
+            continue;
+        }
         ++j;
     }
     return a;
@@ -2741,8 +2752,7 @@ wscSet(s, pre, h) => {
     h = css.splitWithQuotes(h);
     s[pre + "Width"] = h[0] ? h[0] : "";
     s[pre + "Style"] = h[1] ? h[1] : "";
-// rgb has spaces in it and will be separated out; put it back together
-    s[pre + "Color"] =  h[2] ? h.slice(2).join(' ') : "";
+    s[pre + "Color"] =  h[2] ? h[2] : "";
 },
 
 borderInlineGet: function() { return css.wscGet(this, "borderInline"); },
@@ -2773,6 +2783,67 @@ webkitBorderStartGet: function() { return css.wscGet(this, "webkitBorderStart");
 webkitBorderStartSet: function(h) { css.wscSet(this, "webkitBorderStart", h); },
 webkitBorderEndGet: function() { return css.wscGet(this, "webkitBorderEnd"); },
 webkitBorderEndSet: function(h) { css.wscSet(this, "webkitBorderEnd", h); },
+
+// start end
+seGet(s, pre, post) => {
+    const a = s[pre + "Start" + post];
+    const b = s[pre + "End" + post];
+    return a == b ? a : (a + ' ' + b);
+},
+
+seSet(s, pre, post, h) => {
+    const p1 = pre + "Start" + post;
+    const p2 = pre + "End" + post;
+    h = css.splitWithQuotes(h);
+    const l = h.length;
+    if(!l) {
+        s.removeProperty(uncamelCase(p1));
+        s.removeProperty(uncamelCase(p2));
+    } else if(l == 1) {
+        s[p2] = s[p1] = h[0];
+    } else {
+        s[p1] = h[0], s[p2] = h[1];
+    }
+},
+
+borderInlineWidthGet: function() { return css.seGet(this, "borderInline", "Width"); },
+borderInlineWidthSet: function(h) { css.seSet(this, "borderInline", "Width", h); },
+borderInlineStyleGet: function() { return css.seGet(this, "borderInline", "Style"); },
+borderInlineStyleSet: function(h) { css.seSet(this, "borderInline", "Style", h); },
+borderInlineColorGet: function() { return css.seGet(this, "borderInline", "Color"); },
+borderInlineColorSet: function(h) { css.seSet(this, "borderInline", "Color", h); },
+borderBlockWidthGet: function() { return css.seGet(this, "borderBlock", "Width"); },
+borderBlockWidthSet: function(h) { css.seSet(this, "borderBlock", "Width", h); },
+borderBlockStyleGet: function() { return css.seGet(this, "borderBlock", "Style"); },
+borderBlockStyleSet: function(h) { css.seSet(this, "borderBlock", "Style", h); },
+borderBlockColorGet: function() { return css.seGet(this, "borderBlock", "Color"); },
+borderBlockColorSet: function(h) { css.seSet(this, "borderBlock", "Color", h); },
+paddingBlockGet: function() { return css.seGet(this, "paddingBlock", ""); },
+paddingBlockSet: function(h) { css.seSet(this, "paddingBlock", "", h); },
+paddingInlineGet: function() { return css.seGet(this, "paddingInline", ""); },
+paddingInlineSet: function(h) { css.seSet(this, "paddingInline", "", h); },
+marginBlockGet: function() { return css.seGet(this, "marginBlock", ""); },
+marginBlockSet: function(h) { css.seSet(this, "marginBlock", "", h); },
+marginInlineGet: function() { return css.seGet(this, "marginInline", ""); },
+marginInlineSet: function(h) { css.seSet(this, "marginInline", "", h); },
+scrollPaddingBlockGet: function() { return css.seGet(this, "scrollPaddingBlock", ""); },
+scrollPaddingBlockSet: function(h) { css.seSet(this, "scrollPaddingBlock", "", h); },
+scrollPaddingInlineGet: function() { return css.seGet(this, "scrollPaddingInline", ""); },
+scrollPaddingInlineSet: function(h) { css.seSet(this, "scrollPaddingInline", "", h); },
+scrollMarginBlockGet: function() { return css.seGet(this, "scrollMarginBlock", ""); },
+scrollMarginBlockSet: function(h) { css.seSet(this, "scrollMarginBlock", "", h); },
+scrollMarginInlineGet: function() { return css.seGet(this, "scrollMarginInline", ""); },
+scrollMarginInlineSet: function(h) { css.seSet(this, "scrollMarginInline", "", h); },
+insetBlockGet: function() { return css.seGet(this, "insetBlock", ""); },
+insetBlockSet: function(h) { css.seSet(this, "insetBlock", "", h); },
+insetInlineGet: function() { return css.seGet(this, "insetInline", ""); },
+insetInlineSet: function(h) { css.seSet(this, "insetInline", "", h); },
+gridColumnGet: function() { return css.seGet(this, "gridColumn", ""); },
+gridColumnSet: function(h) { css.seSet(this, "gridColumn", "", h); },
+gridRowGet: function() { return css.seGet(this, "gridRow", ""); },
+gridRowSet: function(h) { css.seSet(this, "gridRow", "", h); },
+interestDelayGet: function() { return css.seGet(this, "interestDelay", ""); },
+interestDelaySet: function(h) { css.seSet(this, "interestDelay", "", h); },
 
 }
 Object.freeze(css)

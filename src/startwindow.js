@@ -3828,6 +3828,14 @@ swdc(CSSStyleDeclaration);
       "borderTop", "borderRight", "borderBottom", "borderLeft",
       "webkitBorderBefore", "webkitBorderAfter",
       "webkitBorderStart", "webkitBorderEnd",
+      "borderInlineWidth", "borderInlineStyle", "borderInlineColor",
+      "borderBlockWidth", "borderBlockStyle", "borderBlockColor",
+      "paddingBlock", "paddingInline",
+      "marginBlock", "marginInline",
+      "scrollMarginBlock", "scrollMarginInline",
+      "scrollPaddingBlock", "scrollPaddingInline",
+      "insetBlock", "insetInline",
+      "gridColumn", "gridRow", "interestDelay",
     ];
 // In qjs -C mode, these getters setters just aren't there.
 if(mw$.share) {
