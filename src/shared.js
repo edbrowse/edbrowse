@@ -2330,6 +2330,16 @@ We have fallen out of the loop, so s is now the style for the bottom node. */
         if(!s[k]) s[k] = "8px";
 
     for(let k of [
+      "blockSize", "height", "webkitLogicalHeight",
+    ])
+        if(!s[k]) s[k] = "417px";
+
+    for(let k of [
+      "inlineSize", "webkitLogicalWidth", "width",
+    ])
+        if(!s[k]) s[k] = "764px";
+
+    for(let k of [
       "accentColor", "alignSelf", "alignmentBaseline",
       "animationTimeline", "aspectRatio",
       "backgroundSize", "baselineSource", "bottom",
