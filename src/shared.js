@@ -2512,14 +2512,14 @@ aroundGet2: (s, pre, post) => {
 },
 
 aroundSet0: (s, p1, p2, p3, p4, h) => {
-    if(typeof h != "string") h = "";
+    const t = typeof h;
+    if(t == "number") h += '';
+    else if(t != "string") return; // bizarre type, don't do anything
     h = h.trim();
     if(h === "") {
         // don't just delete, use removeProperty so we can have the side effects
-        s.removeProperty(uncamelCase(p1));
-        s.removeProperty(uncamelCase(p2));
-        s.removeProperty(uncamelCase(p3));
-        s.removeProperty(uncamelCase(p4));
+        // setting to "" has the same effect
+        s[p1] = s[p2] = s[p3] = s[p4] = "";
         return;
     }
     h = h.split(/\s+/);
@@ -2557,7 +2557,7 @@ aroundSet2: (s, pre, post, h) => {
 splitWithQuotes: (h) => {
     const t = typeof h;
     if(t == "number") h = h + '';
-    else if(t != "string") return [];
+    else if(t != "string") return null;
     h = h.trim();
     if(h == "") return [];
     const a = h.split(/\s+/);
@@ -2614,11 +2614,12 @@ backgroundGet: function() {
 
 backgroundSet: function(h) {
     h = css.splitWithQuotes(h);
+    if(h == null) return;
     const l = h.length;
-this.removeProperty("background-color");
-this.removeProperty("background-image");
-this.removeProperty("background-repeat");
-this.removeProperty("background-position");
+    if(!l) {
+        this.backgroundColor = this.backgroundImage = this.backgroundRepeat = this.backgroundPosition = "";
+        return;
+    }
 if(l >= 1)
 this.backgroundColor = h[0];
 if(l >= 2)
@@ -2633,15 +2634,12 @@ fontGet: function() { return this.fontSize + ' ' + this.fontFamily; },
 
 fontSet: function(h) {
     h = css.splitWithQuotes(h);
+    if(h == null) return;
     const l = h.length;
-this.removeProperty("font-style");
-this.removeProperty("font-weight");
-this.removeProperty("font-size");
-this.removeProperty("line-height");
-this.removeProperty("font-family");
-this.removeProperty("font-variant");
-this.removeProperty("font-size-adjust");
-this.removeProperty("font-stretch");
+    if(!l) {
+s.fontStyle =  s.fontWeight =  s.fontSize =  s.lineHeight =  s.fontFamily =  s.fontVariant =  s.fontSizeAdjust =  s.fontStretch = "";
+        return;
+    }
 if(l >= 1)
 this.fontStyle = h[0];
 if(l >= 2)
@@ -2668,10 +2666,16 @@ return `${this.borderWidth} ${this.borderStyle} ${this.borderColor} ${this.borde
 
 borderSet: function(h) {
     h = css.splitWithQuotes(h);
-this.borderWidth = h[0] ? h[0] : "";
-this.borderStyle = h[1] ? h[1] : "";
-this.borderColor =  h[2] ? h[2] : "";
-this.borderImage =  h[3] ? h[3] : "";
+    if(h == null) return;
+    const l = h.length;
+    if(!l) {
+        this.borderWidth = this.borderStyle = this.borderColor = this.borderImage = "";
+        return;
+    }
+this.borderWidth = h[0] ? h[0] : "0px";
+this.borderStyle = h[1] ? h[1] : "none";
+this.borderColor =  h[2] ? h[2] : "black";
+this.borderImage =  h[3] ? h[3] : "none";
 },
 
 borderImageGet: function() {
@@ -2680,11 +2684,17 @@ borderImageGet: function() {
 
 borderImageSet: function(h) {
     h = css.splitWithQuotes(h);
-this.borderImageSource = h[0] ? h[0] : "";
-this.borderImageSlice = h[1] ? h[1] : "";
-this.borderImageWidth =  h[2] ? h[2] : "";
-this.borderImageOutset =  h[3] ? h[3] : "";
-this.borderImageRepeat =  h[4] ? h[4] : "";
+    if(h == null) return;
+    const l = h.length;
+    if(!l) {
+        this.borderImageSource = this.borderImageSlice = this.borderImageWidth = this.borderImageOutset = this.borderImageRepeat = "";
+        return;
+    }
+    this.borderImageSource = h[0] ? h[0] : "none";
+    this.borderImageSlice = h[1] ? h[1] : "100%";
+    this.borderImageWidth =  h[2] ? h[2] : "0px";
+    this.borderImageOutset =  h[3] ? h[3] : "0";
+    this.borderImageRepeat =  h[4] ? h[4] : "stretch";
 },
 
 // top right bottom left are lower case here, can't use Around1
@@ -2694,6 +2704,7 @@ insetGet: function() {
 
 insetSet: function(h) {
     h = css.splitWithQuotes(h);
+    if(h == null) return;
     const l = h.length;
 if(l == 1) {
 this.left = this.bottom = this.right = this.top = h[0];
@@ -2725,11 +2736,12 @@ textDecorationGet: function() {
 
 textDecorationSet: function(h) {
     h = css.splitWithQuotes(h);
+    if(h == null) return;
     const l = h.length;
-this.removeProperty("text-decoration-line");
-this.removeProperty("text-decoration-color");
-this.removeProperty("text-decoration-style");
-this.removeProperty("text-decoration-thickness");
+    if(!l) {
+        s.textDecorationLine = s.textDecorationColor = s.textDecorationStyle = s.textDecorationThickness = "";
+        return;
+    }
 if(l >= 1)
 this.textDecorationLine = h[0];
 if(l >= 2)
@@ -2750,6 +2762,7 @@ wscGet(s, pre) => {
 
 wscSet(s, pre, h) => {
     h = css.splitWithQuotes(h);
+    if(h == null) return;
     s[pre + "Width"] = h[0] ? h[0] : "";
     s[pre + "Style"] = h[1] ? h[1] : "";
     s[pre + "Color"] =  h[2] ? h[2] : "";
@@ -2795,6 +2808,7 @@ seSet(s, pre, post, h) => {
     const p1 = pre + "Start" + post;
     const p2 = pre + "End" + post;
     h = css.splitWithQuotes(h);
+    if(h == null) return;
     const l = h.length;
     if(!l) {
         s.removeProperty(uncamelCase(p1));

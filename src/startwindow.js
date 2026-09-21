@@ -3718,6 +3718,12 @@ will ever do that! Use removeProperty like you're suppose to. */
     }
 
     intelligentSet(p, h) {
+        const t = typeof h;
+        if(t == "number") h += '';
+        else if(t != "string") return; // bizarre type, don't do anything
+        h = h.trim();
+// set to "" is same as delete
+        if(h === "") { this.removeProperty(uncamelCase(p)); return; }
         const p2 = p + "$2";
         if(this[p2] !== undefined) { // already there
             this[p2] = h;
