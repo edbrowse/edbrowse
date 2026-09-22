@@ -3690,6 +3690,41 @@ class CSSStyleDeclaration extends HTMLElement
         this.validList = cssAllowable();
         this.validHash = {};
         this.validList.forEach(k=>this.validHash[k] = true);
+
+        const tp = this.prototype;
+        odp(tp, "parentRule", {value: null, writeable: true});
+
+// This list has to match with the composite getters setters below,
+// or things will blow up.
+        const expand_list = [
+          "margin", "scrollMargin", "padding", "scrollPadding",
+          "borderRadius", "webkitBorderRadius", "border",
+          "borderWidth", "borderColor", "borderStyle", "borderImage",
+          "background", "font", "inset", "textDecoration",
+          "borderInline", "borderInlineStart", "borderInlineEnd",
+          "borderBlock", "borderBlockStart", "borderBlockEnd",
+          "borderTop", "borderRight", "borderBottom", "borderLeft",
+          "webkitBorderBefore", "webkitBorderAfter",
+          "webkitBorderStart", "webkitBorderEnd",
+          "borderInlineWidth", "borderInlineStyle", "borderInlineColor",
+          "borderBlockWidth", "borderBlockStyle", "borderBlockColor",
+          "paddingBlock", "paddingInline",
+          "marginBlock", "marginInline",
+          "scrollMarginBlock", "scrollMarginInline",
+          "scrollPaddingBlock", "scrollPaddingInline",
+          "insetBlock", "insetInline",
+          "gridColumn", "gridRow", "interestDelay",
+        ];
+// Create hundreds of geters and setters, one for each css property.
+// It's only done on class prototype, not on each style element on each node.
+        for (let k of this.validList) {
+            // we can't tromp on top of a composite setter
+            if(expand_list.includes(k)) continue;
+            // nor can we quash the magic float
+            if(k == "float") continue;
+            odp(tp, k, {get: function() { return this.intelligentGet(`${k}`)},
+            set: function(h) { this.intelligentSet(`${k}`, h)}});
+        }
     }
 
 // several helper functions for css composite properties,
@@ -4192,48 +4227,6 @@ will ever do that! Use removeProperty like you're suppose to. */
     }
 }
 swdc(CSSStyleDeclaration);
-
-// Default values for properties, and setters for shorthand properties.
-// None of these are instance methods.
-(function(){
-    const csdp = CSSStyleDeclaration.prototype;
-// when one property is shorthand for several others.
-// margin implies top right bottom left
-// Not clear how this meshes with my $$scy specificity system.
-// This has to match with the getters setters above, or things will blow up.
-    const expand_list = [
-      "margin", "scrollMargin", "padding", "scrollPadding",
-      "borderRadius", "webkitBorderRadius", "border",
-      "borderWidth", "borderColor", "borderStyle", "borderImage",
-      "background", "font", "inset", "textDecoration",
-      "borderInline", "borderInlineStart", "borderInlineEnd",
-      "borderBlock", "borderBlockStart", "borderBlockEnd",
-      "borderTop", "borderRight", "borderBottom", "borderLeft",
-      "webkitBorderBefore", "webkitBorderAfter",
-      "webkitBorderStart", "webkitBorderEnd",
-      "borderInlineWidth", "borderInlineStyle", "borderInlineColor",
-      "borderBlockWidth", "borderBlockStyle", "borderBlockColor",
-      "paddingBlock", "paddingInline",
-      "marginBlock", "marginInline",
-      "scrollMarginBlock", "scrollMarginInline",
-      "scrollPaddingBlock", "scrollPaddingInline",
-      "insetBlock", "insetInline",
-      "gridColumn", "gridRow", "interestDelay",
-    ];
-
-// Create hundreds of geters and setters, one for each css property.
-// It's only done on class prototype, not on each style element on each node.
-    for (let k of CSSStyleDeclaration.validList) {
-        // we can't tromp on top of a setter that we just set above.
-        if(expand_list.includes(k)) continue;
-        // nor can we quash the magic float
-        if(k == "float") continue;
-        odp(csdp, k, {get: function() { return this.intelligentGet(`${k}`)},
-        set: function(h) { this.intelligentSet(`${k}`, h)}});
-    }
-
-    odp(csdp, "parentRule", {value: null, writeable: true});
-})();
 
 class CSSRule
 {
