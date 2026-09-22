@@ -28,6 +28,7 @@ this.eb$ctx = 77;
 // or console.log, or anything present in the command line js interpreter.
 if(!window.print) this.print = console.log;
 this.alert = print;
+this.cssAllowable = ()=>["marginTop"];
 this.eb$nullfunction = function() { return null}
 this.eb$voidfunction = function() { }
 this.eb$truefunction = function() { return true}
@@ -69,7 +70,6 @@ if(!window.mw$) {
     this.mw$.xml = {};
     this.mw$.css = {};
     this.mw$.css.validList = ["marginTop"];
-    this.mw$.css.validHash = {};
     this.mw$.getElementsByTagName = () => [];
     this.mw$.getComputedStyle = () => {};
     this.mw$.structuredClone = () => {};
@@ -3685,6 +3685,379 @@ class CSSStyleDeclaration extends HTMLElement
         odp(this, "length", {value:0, writable:true});
     }
 
+    static {
+        // valid css properties, in an array and in a hash for rapid validation
+        this.validList = cssAllowable();
+        this.validHash = {};
+        this.validList.forEach(k=>this.validHash[k] = true);
+    }
+
+// several helper functions for css composite properties,
+// like margin splitting off into marginTop marginRight marginBottom marginLeft
+    static aroundGet0(a, b, c, d) {
+        if(b != d) return `${a} ${b} ${c} ${d}`;
+        if(a != c) return `${a} ${b} ${c}`;
+        return a == b ? a : `${a} ${b}`;
+    };
+
+    static aroundGet1(s, pre, post) {
+        const a = s[pre + "Top" + post];
+        const b = s[pre + "Right" + post];
+        const c = s[pre + "Bottom" + post];
+        const d = s[pre + "Left" + post];
+        return CSSStyleDeclaration.aroundGet0(a, b, c, d);
+    };
+
+    static aroundGet2(s, pre, post) {
+        const a = s[pre + "TopLeft" + post];
+        const b = s[pre + "TopRight" + post];
+        const c = s[pre + "BottomRight" + post];
+        const d = s[pre + "BottomLeft" + post];
+        return CSSStyleDeclaration.aroundGet0(a, b, c, d);
+    };
+
+    static aroundSet0(s, p1, p2, p3, p4, h) {
+        const t = typeof h;
+        if(t == "number") h += '';
+        else if(t != "string") return; // bizarre type, don't do anything
+        h = h.trim();
+        if(h === "") {
+            // don't just delete, use removeProperty so we can have the side effects
+            // setting to "" has the same effect
+            s[p1] = s[p2] = s[p3] = s[p4] = "";
+            return;
+        }
+        h = h.split(/\s+/);
+        const l = h.length;
+        if(l == 1) {
+    // = is right precedence, so this assigns properties right to left, which is
+    // the order we want, as per tests/style-shorthand.html.
+            s[p4] = s[p3] = s[p2] = s[p1] = h[0];
+        } else if(l == 2) {
+            s[p1] = h[0];
+            s[p2] = h[1];
+            s[p3] = h[0];
+            s[p4] = h[1];
+        } else if(l == 3) {
+            s[p1] = h[0];
+            s[p2] = h[1];
+            s[p3] = h[2];
+            s[p4] = h[1];
+        } else {
+            s[p1] = h[0];
+            s[p2] = h[1];
+            s[p3] = h[2];
+            s[p4] = h[3];
+        }
+    };
+
+    static aroundSet1(s, pre, post, h) {
+        CSSStyleDeclaration.aroundSet0(s, pre+"Top"+post, pre+"Right"+post, pre+"Bottom"+post, pre+"Left"+post, h);
+    };
+
+    static aroundSet2(s, pre, post, h) {
+        CSSStyleDeclaration.aroundSet0(s, pre+"TopLeft"+post, pre+"TopRight"+post, pre+"BottomRight"+post, pre+"BottomLeft"+post, h);
+    };
+
+    static wscGet(s, pre) {
+        const a = s[pre + "Width"];
+        const b = s[pre + "Style"];
+        const c = s[pre + "Color"];
+        return `${a} ${b} ${c}`;
+    };
+
+    static wscSet(s, pre, h) {
+        h = CSSStyleDeclaration.splitWithQuotes(h);
+        if(h == null) return;
+        if(h.length == 0) {
+            s[pre + "Width"] = s[pre + "Style"] = s[pre + "Color"] = "";
+            return;
+        }
+        s[pre + "Width"] = h[0];
+        s[pre + "Style"] = h[1] ? h[1] : "none";
+        s[pre + "Color"] =  h[2] ? h[2] : "black";
+    };
+
+// start end
+    static seGet(s, pre, post)  {
+        const a = s[pre + "Start" + post];
+        const b = s[pre + "End" + post];
+        return a == b ? a : (a + ' ' + b);
+    };
+
+    static seSet(s, pre, post, h) {
+        const p1 = pre + "Start" + post;
+        const p2 = pre + "End" + post;
+        h = CSSStyleDeclaration.splitWithQuotes(h);
+        if(h == null) return;
+        const l = h.length;
+        if(!l) {
+            s[p1] = s[p2] = "";
+        } else if(l == 1) {
+            s[p2] = s[p1] = h[0];
+        } else {
+            s[p1] = h[0], s[p2] = h[1];
+        }
+    };
+
+    static splitWithQuotes(h) {
+        const t = typeof h;
+        if(t == "number") h = h + '';
+        else if(t != "string") return null;
+        h = h.trim();
+        if(h == "") return [];
+        const a = h.split(/\s+/);
+        if(a.length == 0) return a;
+    // step through and watch for " or rgb(x, y, z)
+        let j = 0, k;
+        while(j < a.length) {
+            if(a[j].substr(0, 1) == '"') {
+                for(k = j+1; k < a.length; ++k)
+                    if(a[k].indexOf('"') >= 0) break;
+                if(k == a.length) { ++j; continue; } // should never happen
+                let s = a.slice(j, k+1).join(' ');
+                a.splice(j, k+1-j, s);
+                ++j;
+                continue;
+            }
+            if(a[j].substr(0, 4) == 'rgb(') {
+                for(k = j+1; k < a.length; ++k)
+                    if(a[k].indexOf(')') >= 0) break;
+                if(k == a.length) { ++j; continue; } // should never happen
+                let s = a.slice(j, k+1).join(' ');
+                a.splice(j, k+1-j, s);
+                ++j;
+                continue;
+            }
+            ++j;
+        }
+        return a;
+    };
+
+// around: top right bottom left
+    get margin() { return CSSStyleDeclaration.aroundGet1(this, "margin", ""); }
+    set margin(h) { CSSStyleDeclaration.aroundSet1(this, "margin", "", h); }
+    get scrollMargin() { return CSSStyleDeclaration.aroundGet1(this, "scrollMargin", ""); }
+    set scrollMargin(h) { CSSStyleDeclaration.aroundSet1(this, "scrollMargin", "", h); }
+    get padding() { return CSSStyleDeclaration.aroundGet1(this, "padding", ""); }
+    set padding(h) { CSSStyleDeclaration.aroundSet1(this, "padding", "", h); }
+    get scrollPadding() { return CSSStyleDeclaration.aroundGet1(this, "scrollPadding", ""); }
+    set scrollPadding(h) { CSSStyleDeclaration.aroundSet1(this, "scrollPadding", "", h); }
+    get borderRadius() { return CSSStyleDeclaration.aroundGet2(this, "border", "Radius"); }
+    set borderRadius(h) { CSSStyleDeclaration.aroundSet2(this, "border", "Radius", h); }
+    get webkitBorderRadius() { return CSSStyleDeclaration.aroundGet2(this, "webkitBorder", "Radius"); }
+    set webkitBorderRadius(h) { CSSStyleDeclaration.aroundSet2(this, "webkitBorder", "Radius", h); }
+    get borderWidth() { return CSSStyleDeclaration.aroundGet1(this, "border", "Width"); }
+    set borderWidth(h) { CSSStyleDeclaration.aroundSet1(this, "border", "Width", h); }
+    get borderColor() { return CSSStyleDeclaration.aroundGet1(this, "border", "Color"); }
+    set borderColor(h) { CSSStyleDeclaration.aroundSet1(this, "border", "Color", h); }
+    get borderStyle() { return CSSStyleDeclaration.aroundGet1(this, "border", "Style"); }
+    set borderStyle(h) { CSSStyleDeclaration.aroundSet1(this, "border", "Style", h); }
+
+                // width style color
+    get borderInline() { return CSSStyleDeclaration.wscGet(this, "borderInline"); }
+    set borderInline(h) { CSSStyleDeclaration.wscSet(this, "borderInline", h); }
+    get borderInlineStart() { return CSSStyleDeclaration.wscGet(this, "borderInlineStart"); }
+    set borderInlineStart(h) { CSSStyleDeclaration.wscSet(this, "borderInlineStart", h); }
+    get borderInlineEnd() { return CSSStyleDeclaration.wscGet(this, "borderInlineEnd"); }
+    set borderInlineEnd(h) { CSSStyleDeclaration.wscSet(this, "borderInlineEnd", h); }
+    get borderBlock() { return CSSStyleDeclaration.wscGet(this, "borderBlock"); }
+    set borderBlock(h) { CSSStyleDeclaration.wscSet(this, "borderBlock", h); }
+    get borderBlockStart() { return CSSStyleDeclaration.wscGet(this, "borderBlockStart"); }
+    set borderBlockStart(h) { CSSStyleDeclaration.wscSet(this, "borderBlockStart", h); }
+    get borderBlockEnd() { return CSSStyleDeclaration.wscGet(this, "borderBlockEnd"); }
+    set borderBlockEnd(h) { CSSStyleDeclaration.wscSet(this, "borderBlockEnd", h); }
+    get borderTop() { return CSSStyleDeclaration.wscGet(this, "borderTop"); }
+    set borderTop(h) { CSSStyleDeclaration.wscSet(this, "borderTop", h); }
+    get borderRight() { return CSSStyleDeclaration.wscGet(this, "borderRight"); }
+    set borderRight(h) { CSSStyleDeclaration.wscSet(this, "borderRight", h); }
+    get borderBottom() { return CSSStyleDeclaration.wscGet(this, "borderBottom"); }
+    set borderBottom(h) { CSSStyleDeclaration.wscSet(this, "borderBottom", h); }
+    get borderLeft() { return CSSStyleDeclaration.wscGet(this, "borderLeft"); }
+    set borderLeft(h) { CSSStyleDeclaration.wscSet(this, "borderLeft", h); }
+    get webkitBorderBefore() { return CSSStyleDeclaration.wscGet(this, "webkitBorderBefore"); }
+    set webkitBorderBefore(h) { CSSStyleDeclaration.wscSet(this, "webkitBorderBefore", h); }
+    get webkitBorderAfter() { return CSSStyleDeclaration.wscGet(this, "webkitBorderAfter"); }
+    set webkitBorderAfter(h) { CSSStyleDeclaration.wscSet(this, "webkitBorderAfter", h); }
+    get webkitBorderStart() { return CSSStyleDeclaration.wscGet(this, "webkitBorderStart"); }
+    set webkitBorderStart(h) { CSSStyleDeclaration.wscSet(this, "webkitBorderStart", h); }
+    get webkitBorderEnd() { return CSSStyleDeclaration.wscGet(this, "webkitBorderEnd"); }
+    set webkitBorderEnd(h) { CSSStyleDeclaration.wscSet(this, "webkitBorderEnd", h); }
+
+// start end
+    get borderInlineWidth() { return CSSStyleDeclaration.seGet(this, "borderInline", "Width"); }
+    set borderInlineWidth(h) { CSSStyleDeclaration.seSet(this, "borderInline", "Width", h); }
+    get borderInlineStyle() { return CSSStyleDeclaration.seGet(this, "borderInline", "Style"); }
+    set borderInlineStyle(h) { CSSStyleDeclaration.seSet(this, "borderInline", "Style", h); }
+    get borderInlineColor() { return CSSStyleDeclaration.seGet(this, "borderInline", "Color"); }
+    set borderInlineColor(h) { CSSStyleDeclaration.seSet(this, "borderInline", "Color", h); }
+    get borderBlockWidth() { return CSSStyleDeclaration.seGet(this, "borderBlock", "Width"); }
+    set borderBlockWidth(h) { CSSStyleDeclaration.seSet(this, "borderBlock", "Width", h); }
+    get borderBlockStyle() { return CSSStyleDeclaration.seGet(this, "borderBlock", "Style"); }
+    set borderBlockStyle(h) { CSSStyleDeclaration.seSet(this, "borderBlock", "Style", h); }
+    get borderBlockColor() { return CSSStyleDeclaration.seGet(this, "borderBlock", "Color"); }
+    set borderBlockColor(h) { CSSStyleDeclaration.seSet(this, "borderBlock", "Color", h); }
+    get paddingBlock() { return CSSStyleDeclaration.seGet(this, "paddingBlock", ""); }
+    set paddingBlock(h) { CSSStyleDeclaration.seSet(this, "paddingBlock", "", h); }
+    get paddingInline() { return CSSStyleDeclaration.seGet(this, "paddingInline", ""); }
+    set paddingInline(h) { CSSStyleDeclaration.seSet(this, "paddingInline", "", h); }
+    get marginBlock() { return CSSStyleDeclaration.seGet(this, "marginBlock", ""); }
+    set marginBlock(h) { CSSStyleDeclaration.seSet(this, "marginBlock", "", h); }
+    get marginInline() { return CSSStyleDeclaration.seGet(this, "marginInline", ""); }
+    set marginInline(h) { CSSStyleDeclaration.seSet(this, "marginInline", "", h); }
+    get scrollPaddingBlock() { return CSSStyleDeclaration.seGet(this, "scrollPaddingBlock", ""); }
+    set scrollPaddingBlock(h) { CSSStyleDeclaration.seSet(this, "scrollPaddingBlock", "", h); }
+    get scrollPaddingInline() { return CSSStyleDeclaration.seGet(this, "scrollPaddingInline", ""); }
+    set scrollPaddingInline(h) { CSSStyleDeclaration.seSet(this, "scrollPaddingInline", "", h); }
+    get scrollMarginBlock() { return CSSStyleDeclaration.seGet(this, "scrollMarginBlock", ""); }
+    set scrollMarginBlock(h) { CSSStyleDeclaration.seSet(this, "scrollMarginBlock", "", h); }
+    get scrollMarginInline() { return CSSStyleDeclaration.seGet(this, "scrollMarginInline", ""); }
+    set scrollMarginInline(h) { CSSStyleDeclaration.seSet(this, "scrollMarginInline", "", h); }
+    get insetBlock() { return CSSStyleDeclaration.seGet(this, "insetBlock", ""); }
+    set insetBlock(h) { CSSStyleDeclaration.seSet(this, "insetBlock", "", h); }
+    get insetInline() { return CSSStyleDeclaration.seGet(this, "insetInline", ""); }
+    set insetInline(h) { CSSStyleDeclaration.seSet(this, "insetInline", "", h); }
+    get gridColumn() { return CSSStyleDeclaration.seGet(this, "gridColumn", ""); }
+    set gridColumn(h) { CSSStyleDeclaration.seSet(this, "gridColumn", "", h); }
+    get gridRow() { return CSSStyleDeclaration.seGet(this, "gridRow", ""); }
+    set gridRow(h) { CSSStyleDeclaration.seSet(this, "gridRow", "", h); }
+    get interestDelay() { return CSSStyleDeclaration.seGet(this, "interestDelay", ""); }
+    set interestDelay(h) { CSSStyleDeclaration.seSet(this, "interestDelay", "", h); }
+
+// composite properties that don't follow any of the above patterns
+
+    get background() {
+        return `${this.backgroundcolor} ${this.backgroundImage} ${this.backgroundRepeat} ${this.backgroundPosition}`;
+    }
+
+    set backgroundh(h) {
+        h = CSSStyleDeclaration.splitWithQuotes(h);
+        if(h == null) return;
+        const l = h.length;
+        if(!l) {
+            this.backgroundColor = this.backgroundImage = this.backgroundRepeat = this.backgroundPosition = "";
+            return;
+        }
+        this.backgroundColor = h[0] ? h[0] : "white";
+        if(l > 1) this.backgroundImage = h[1] ? h[1] : "none";
+        if(l > 2) this.backgroundRepeat = h[2] ? h[2] : "repeat";
+        if(l > 3) this.backgroundPosition = h[3] ? h[3] : "0% 0%";
+    }
+
+    get font() { return this.fontSize + ' ' + this.fontFamily; }
+
+    set font(h) {
+        h = CSSStyleDeclaration.splitWithQuotes(h);
+        if(h == null) return;
+        const l = h.length;
+        if(!l) {
+    s.fontStyle =  s.fontWeight =  s.fontSize =  s.lineHeight =  s.fontFamily =  s.fontVariant =  s.fontSizeAdjust =  s.fontStretch = "";
+            return;
+        }
+    // in chrome I only got l == 2 to work
+        if(l >= 2) {
+            this.fontSize = h[0];
+            this.fontFamily = h[1];
+        }
+    /*
+        if(l >= 3) {
+            let parts = h[2].split('/');
+            this.fontSize = parts[0];
+            if(parts.length >= 2) this.lineHeight = parts[1];
+        }
+    */
+    // setting font spins off 19 other properties, besides size and family.
+    // They obtain their defaults unless l > 2 in ways I don't understand.
+    }
+
+    get border() {
+    return `${this.borderWidth} ${this.borderStyle} ${this.borderColor} ${this.borderImage}`
+    }
+
+    set border(h) {
+        h = CSSStyleDeclaration.splitWithQuotes(h);
+        if(h == null) return;
+        const l = h.length;
+        if(!l) {
+            this.borderWidth = this.borderStyle = this.borderColor = this.borderImage = "";
+            return;
+        }
+    this.borderWidth = h[0] ? h[0] : "0px";
+    this.borderStyle = h[1] ? h[1] : "none";
+    this.borderColor =  h[2] ? h[2] : "black";
+    this.borderImage =  h[3] ? h[3] : "none";
+    }
+
+    get borderImage() {
+        return `${this.borderImageSource} ${this.borderImageSlice} ${this.borderImageWidth} ${this.borderImageOutset} ${this.borderImageRepeat}`
+    }
+
+    set borderImage(h) {
+        h = CSSStyleDeclaration.splitWithQuotes(h);
+        if(h == null) return;
+        const l = h.length;
+        if(!l) {
+            this.borderImageSource = this.borderImageSlice = this.borderImageWidth = this.borderImageOutset = this.borderImageRepeat = "";
+            return;
+        }
+        this.borderImageSource = h[0] ? h[0] : "none";
+        this.borderImageSlice = h[1] ? h[1] : "100%";
+        this.borderImageWidth =  h[2] ? h[2] : "0px";
+        this.borderImageOutset =  h[3] ? h[3] : "0";
+        this.borderImageRepeat =  h[4] ? h[4] : "stretch";
+    }
+
+        // top right bottom left are lower case here, can't use Around1
+    get inset() {
+        return CSSStyleDeclaration.around0(this.top, this.right, this.bottom, this.left);
+    }
+
+    set inset(h) {
+        h = CSSStyleDeclaration.splitWithQuotes(h);
+        if(h == null) return;
+        const l = h.length;
+        if(l == 1) {
+            this.left = this.bottom = this.right = this.top = h[0];
+            return;
+        }
+        if(l == 2) {
+            this.top = this.bottom = h[0];
+            this.left = this.right = h[1];
+            return;
+        }
+        if(l == 3) {
+            this.top = h[0];
+            this.left = this.right = h[1];
+            this.bottom = h[2];
+            return;
+        }
+        if(l >= 4) {
+            this.top = h[0];
+            this.right = h[1];
+            this.bottom = h[2];
+            this.left = h[3];
+            return;
+        }
+    }
+
+    get textDecoration() {
+        return `${this.textDecorationLine} ${this.textDecorationColor} ${this.textDecorationStyle} ${this.textDecorationThickness}`
+    }
+
+    set textDecoration(h) {
+        h = CSSStyleDeclaration.splitWithQuotes(h);
+        if(h == null) return;
+        const l = h.length;
+        if(!l) {
+            s.textDecorationLine = s.textDecorationColor = s.textDecorationStyle = s.textDecorationThickness = "";
+            return;
+        }
+        this.textDecorationLine = h[0];
+        this.textDecorationColor = h[1] ? h[1] : "black";
+        this.textDecorationStyle =  h[2] ? h[2] : "solid";
+        this.textDecorationThickness =  h[3] ? h[3] : "auto";
+    }
+
     *[Symbol.iterator]() {
         for(let i = 0; i < this.length; ++i)
             yield this[i];
@@ -3745,7 +4118,7 @@ will ever do that! Use removeProperty like you're suppose to. */
 
     getPropertyValue(p) {
         p = camelCase(p);
-        if(!mw$.css.validHash[p]) return "";
+        if(!CSSStyleDeclaration.validHash[p]) return "";
         // getter should convert this to "" if not defined
         return this[p];
     }
@@ -3753,7 +4126,7 @@ will ever do that! Use removeProperty like you're suppose to. */
     setProperty(p, v, prv)
     {
         p = camelCase(p);
-        if(!mw$.css.validHash[p]) return;
+        if(!CSSStyleDeclaration.validHash[p]) return;
         this[p] = v; // with all its side effects
         if(typeof prv == "string") prv = prv.toLowerCase();
         const pri = p + "$pri";
@@ -3765,7 +4138,7 @@ will ever do that! Use removeProperty like you're suppose to. */
     getPropertyPriority(p)
     {
         p = camelCase(p);
-        if(!mw$.css.validHash[p]) return "";
+        if(!CSSStyleDeclaration.validHash[p]) return "";
         const pri = p + "$pri";
         return this[pri] ? "important" : "";
     }
@@ -3773,7 +4146,7 @@ will ever do that! Use removeProperty like you're suppose to. */
     removeProperty(p)
     {
         const p1 = camelCase(p);
-        if(!mw$.css.validHash[p1]) return;
+        if(!CSSStyleDeclaration.validHash[p1]) return;
         const p2 = p1 + "$2";
         if(this[p2] === undefined) return; // not there
         delete this[p2];
@@ -3824,9 +4197,10 @@ swdc(CSSStyleDeclaration);
 // None of these are instance methods.
 (function(){
     const csdp = CSSStyleDeclaration.prototype;
-        // when one property is shorthand for several others.
-        // margin implies top right bottom left
-        // Not clear how this meshes with my $$scy specificity system.
+// when one property is shorthand for several others.
+// margin implies top right bottom left
+// Not clear how this meshes with my $$scy specificity system.
+// This has to match with the getters setters above, or things will blow up.
     const expand_list = [
       "margin", "scrollMargin", "padding", "scrollPadding",
       "borderRadius", "webkitBorderRadius", "border",
@@ -3846,18 +4220,10 @@ swdc(CSSStyleDeclaration);
       "insetBlock", "insetInline",
       "gridColumn", "gridRow", "interestDelay",
     ];
-// In qjs -C mode, these getters setters just aren't there.
-if(mw$.share) {
-    for (let k of expand_list) {
-        odp(csdp, k, {
-            get: mw$.css[`${k}Get`],             set: mw$.css[`${k}Set`]
-        })
-    }
-}
 
 // Create hundreds of geters and setters, one for each css property.
 // It's only done on class prototype, not on each style element on each node.
-    for (let k of mw$.css.validList) {
+    for (let k of CSSStyleDeclaration.validList) {
         // we can't tromp on top of a setter that we just set above.
         if(expand_list.includes(k)) continue;
         // nor can we quash the magic float
