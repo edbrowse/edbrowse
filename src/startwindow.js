@@ -71,7 +71,6 @@ if(!window.mw$) {
     this.mw$.css = {};
     this.mw$.css.validList = ["marginTop"];
     this.mw$.getElementsByTagName = () => [];
-    this.mw$.getComputedStyle = () => {};
     this.mw$.structuredClone = () => {};
     this.mw$.attr = {};
     this.mw$.setupClasses = () => {};
@@ -284,7 +283,6 @@ swpv("focus", ()=>(document.activeElement = document.body))
 swpv("self", window)
 this.print = ()=>  alert("javascript is trying to print this document")
 this.stop = ()=>  alert("javascript is trying to stop the browse process")
-swpc("getComputedStyle", mw$.getComputedStyle.bind(window))
 swpc("structuredClone", mw$.structuredClone.bind(window))
 swp("dom$class", "Window")
 window.top = eb$top();
@@ -3694,8 +3692,10 @@ class CSSStyleDeclaration extends HTMLElement
         const tp = this.prototype;
         odp(tp, "parentRule", {value: null, writeable: true});
 
-// This list has to match with the composite getters setters below,
-// or things will blow up.
+/* This list has to match with the composite getters setters below,
+or things will blow up. We could move this code down past all the composite
+setters, then use natok to see what was in the prototype,
+then we wouldn't need this parallel list. */
         const expand_list = [
           "margin", "scrollMargin", "padding", "scrollPadding",
           "borderRadius", "webkitBorderRadius", "border",
@@ -4227,6 +4227,443 @@ will ever do that! Use removeProperty like you're suppose to. */
     }
 }
 swdc(CSSStyleDeclaration);
+
+// getComputedStyle returns a CSSStyleDeclaration object, so you want to be
+// familiar with the above class and it's weird side effects.
+// parameters: e is the node and pe is the pseudoelement
+function getComputedStyle(e,pe) {
+    if(typeof pe != "string") pe = 0;
+    else if(pe.match(/^\s*$/)) pe = 0;
+    else if(pe.match(/:before$/)) pe = 1;
+    else if(pe.match(/:after$/)) pe = 2;
+    else { alert3("getComputedStyle pseudoelement " + pe + " is invalid"); pe = 0; }
+
+/*********************************************************************
+Some sites call getComputedStyle on the same node over and over again.
+Can we remember the previous call and just return the same style object?
+Can we know that nothing has changed in between the two calls?
+I can track when the tree changes, and even the class and id attributes,
+but what about other attributes?
+The answer is, no, there is no practical way to do that.
+Any attribute on any node anywhere in the tree can change which selectors
+match this particular node, or even the nodes up the line.
+So we have to grunt along and perform the calculations every time.
+One thing we can do is confirm that the css selectors and rules haven't changed.
+If those haven't changed then we don't have to rebuild the css C structures again.
+That test is coming up below, but first, let's see if the node
+is even rooted. If not, then there's nothing to do.
+I could call isRooted2(), and that would give me the answer,
+but I need the chain of nodes up to the top,
+so I may as well replicate that logic here.
+*********************************************************************/
+
+    let w = null, t = e, chain = [];
+    while(t) {
+        if(t.nodeType != 1) break;
+        if(t.nodeName == "TEMPLATE") break;
+        chain.splice(0, 0, t);
+        if(t.nodeName == "HTML") { w = t.eb$win; break; }
+        t = t.eb$shadowNode ? t.eb$shadowNode : t.parentNode;
+    }
+
+    if(!w) return new CSSStyleDeclaration; // not rooted
+
+/*********************************************************************
+What if js has added or removed style objects from the tree?
+Maybe the selectors and rules are different from when they were first compiled.
+Does this ever happen? It does in acid test 33.
+Does it happen in the real world? Probably.
+This recheck is awkward when the css has @import which pulls in another
+css file, and now we have to fetch that file on every call to getComputedStyle.
+The imported css file could be fetched 100 times just to load the page.
+I get around this by the shortcache feature in css.c. I remember
+the imported css file and don't fetch it again, not even a head request.
+If the css has changed in any way, I recompile the descriptors.
+Any information we might have saved about nodes and descriptors,
+such as keys for the selectors, must be recalculated.
+*********************************************************************/
+
+    mw$.cssGather(w);
+
+/*********************************************************************
+The style of a node inherits from the nodes above. The only algorithm
+That works is computing the style of each node, from document down to e.
+If this reminds you of the capture phase of dispatchEvent, well, it should.
+This is computationally intensive. I hope it isn't done very often.
+The variable "above" is the style from above, from which we inherit.
+It starts out null at the top.
+I assume almost every property inherits.
+Most things inherit directly, copy from above, unless the
+property is set here.
+At least one property is cumulative, fontSize.
+If body is 15px, and div is 2em, and p below div is 2em,
+them p is 60px. Such properties are rare, I hope.
+When cascading downward, I look at the side properties, that end in $2.
+No need to vector through all those getters and setters.
+I query the properties extant in above, rather than all 700 properties.
+Even if there are 2,000 css rules, they typically set just a few properties
+on any given node. It's faster to look at those.
+They aren't enumerable, so I have to use natok() to find them.
+*********************************************************************/
+
+    let above = null, shadow = null, s;
+    for(t of chain) {
+        const bottom = (t == e);
+        if(bottom) {
+// I'll create the object from the window that contains the node,
+// which may not be the current window.
+// If the node is in another frame, I'm using the css rules from that frame,
+// so may as well create the object in that frame. If it matters at all.
+            s = new w.CSSStyleDeclaration;
+            s.element = e;
+        } else {
+            // This is more efficient than invoking all those constructors
+            s = Object.create(CSSStyleDeclaration.prototype);
+        }
+        if(t.eb$shadowNode) { // new shadow root
+            shadow = t;
+            mw$.cssGather(t);
+        }
+
+        window.soj$ = s;
+        mw$.cssApply(shadow ? -shadow.eb$seqno : w.eb$ctx, t, pe);
+        delete window.soj$;
+
+// If js sets a style property, or if it is set by style= in the html tag,
+// that carries across, and it takes precedence.
+// These should all be singleton properties, not composites.
+
+        if(bottom && e.style$2) {
+            for(let p of e.style) {
+                p = camelCase(p);
+                s[p] = e.style[p];
+            }
+        }
+
+        if(above) { // inherit from above
+            for(const p of natok(above)) {
+                if(p.substr(-2) != "$2") continue;
+                const p2 = p.substr(p, p.length - 2);
+                // make sure we aren't snookered by foo$2
+                if(!CSSStyleDeclaration.validHash[p2]) continue;
+                if(s[p]) continue; // set in the current node
+                s[p] = above[p]; // inherit
+            }
+        }
+
+        if(s.fontSize) {
+            let ppc = 16; // previous pixel count
+            const pfs = above ?above.fontSize : ""; // previous font size
+            if(/^\d+px$/.test(pfs))
+                ppc = parseInt(pfs, 10);
+// many conversions are possible here
+            if(/^\d+%$/.test(s.fontSize))
+                s.fontSize = Math.trunc(parseInt(s.fontSize, 10) * ppc / 100) + "px";
+            else if(/^[0-9.]+em$/.test(s.fontSize))
+                s.fontSize = Math.trunc(parseFloat(s.fontSize) * ppc) + "px";
+        }
+
+        above = s;
+    }
+
+/* textTransform is the only default style conversion that acid3 tests for,
+in acid test 46, but there are hundreds of them. They apply only
+in the bottom node, the node that was passed to getComputedStyle.
+We have fallen out of the loop, so s is now the style for the bottom node. */
+
+    for(let k of [
+      "anchorName", "anchorScope",
+      "animation", "animationFillMode", "animationName", "animationTrigger",
+      "appRegion", "appearance",
+      "backdropFilter", "backgroundImage",
+      "borderBlockEndStyle", "borderBlockStartStyle",
+      "borderBottomStyle",
+      "borderImageSource",
+      "borderInlineEndStyle", "borderInlineStartStyle",
+      "borderLeftStyle", "borderRightStyle", "borderTopStyle",
+      "boxShadow",
+      "clear", "clipPath",
+      "columnRuleStyle", "columnSpan",
+      "contain", "containIntrinsicBlockSize", "containIntrinsicHeight",
+      "containIntrinsicInlineSize", "containIntrinsicSize",
+      "containIntrinsicWidth", "container", "containerName",
+      "counterIncrement", "counterReset", "counterSet",
+      "d", "filter",
+      "fontSizeAdjust",
+      "gridTemplate", "gridTemplateAreas", "gridTemplateColumns",
+      "gridTemplateRows",
+      "listStyleImage",
+      "marker", "markerEnd", "markerMid", "markerStart",
+      "mask", "maskImage",
+      "maxBlockSize", "maxHeight", "maxInlineSize", "maxWidth",
+      "objectViewBox", "offsetPath", "outlineStyle", "overlay",
+      "perspective", "positionAnchor",
+      "positionArea", "positionTry", "positionTryFallbacks",
+      "resize", "rotate",
+      "scale",
+      "scrollInitialTarget", "scrollMarkerGroup", "scrollSnapAlign",
+      "scrollSnapType", "scrollTargetGroup", "scrollTimeline",
+      "scrollTimelineName",
+      "shapeOutside", "stroke", "strokeDasharray",
+      "textBoxTrim", "textCombineUpright",
+      "textDecorationLine", "textEmphasisStyle",
+      "textShadow", "textTransform",
+      "timelineScope", "timelineTrigger", "timelineTriggerName",
+      "transform", "translate", "triggerScope",
+      "vectorEffect",
+      "viewTimeline", "viewTimelineName",
+      "viewTransitionClass", "viewTransitionName",
+      "webkitAnimation", "webkitAnimationFillMode",
+      "webkitAnimationName", "webkitAppRegion",
+      "webkitAppearance",
+      "webkitBorderAfterStyle", "webkitBorderBeforeStyle",
+      "webkitBorderEndStyle", "webkitBorderImage",
+      "webkitBorderStartStyle", "webkitBoxReflect",
+      "webkitBoxShadow",
+      "webkitClipPath", "webkitColumnRuleStyle", "webkitColumnSpan",
+      "webkitFilter",
+      "webkitLineClamp",
+      "webkitMask", "webkitMaskBoxImage", "webkitMaskBoxImageSource",
+      "webkitMaskImage",
+      "webkitMaxLogicalHeight", "webkitMaxLogicalWidth",
+      "webkitPerspective",
+      "webkitShapeOutside",
+      "webkitTextCombine", "webkitTextDecorationsInEffect",
+      "webkitTextEmphasisStyle", "webkitTextSecurity",
+      "webkitTransform",
+      "cssFloat",
+    ])
+        if(!s[k]) s[k] = "none";
+
+    for(let k of [
+      "backfaceVisibility", "contentVisibility",
+      "overflow", "overflowBlock", "overflowInline",
+      "overflowX", "overflowY",
+      "visibility", "webkitBackfaceVisibility",
+    ])
+        if(!s[k]) s[k] = "visible";
+
+    for(let k of [
+      "display", "scrollTimelineAxis", "viewTimelineAxis",
+    ])
+        if(!s[k]) s[k] = "block";
+
+    for(let k of [
+      "cornerBlockEndShape", "cornerBlockStartShape",
+      "cornerBottomLeftShape", "cornerBottomRightShape",
+      "cornerBottomShape",
+      "cornerEndEndShape", "cornerEndStartShape",
+      "cornerInlineEndShape", "cornerInlineStartShape",
+      "cornerLeftShape",
+      "cornerRightShape",
+      "cornerShape",
+      "cornerStartEndShape", "cornerStartStartShape",
+      "cornerTopLeftShape", "cornerTopRightShape",
+      "cornerTopShape",
+    ])
+        if(!s[k]) s[k] = "round";
+
+    for(let k of [
+      "baselineShift",
+      "borderBlockEndWidth", "borderBlockStartWidth",
+      "borderBottomLeftRadius", "borderBottomRightRadius",
+      "borderBottomWidth", "borderEndEndRadius", "borderEndStartRadius",
+      "borderInlineEndWidth", "borderInlineStartWidth",
+      "borderLeftWidth", "borderRightWidth", "borderSpacing",
+      "borderStartEndRadius", "borderStartStartRadius",
+      "borderTopLeftRadius", "borderTopRightRadius",
+      "borderTopWidth",
+      "columnRuleWidth", "cx", "cy",
+      "minBlockSize", "minHeight", "minInlineSize", "minWidth",
+      "offsetDistance", "outlineOffset", "outlineWidth", "overflowClipMargin",
+      "paddingBlockEnd", "paddingBlockStart",
+      "paddingBottom", "paddingInlineEnd", "paddingInlineStart",
+      "paddingLeft", "paddingRight", "paddingTop",
+      "r",
+      "scrollMarginBlockEnd", "scrollMarginBlockStart",
+      "scrollMarginBottom",
+      "scrollMarginInlineEnd", "scrollMarginInlineStart",
+      "scrollMarginLeft", "scrollMarginRight", "scrollMarginTop",
+      "shapeMargin", "strokeDashoffset",
+      "textIndent",
+      "webkitBorderAfterWidth", "webkitBorderBeforeWidth",
+      "webkitBorderBottomLeftRadius", "webkitBorderBottomRightRadius",
+      "webkitBorderEndWidth", "webkitBorderHorizontalSpacing",
+      "webkitBorderStartWidth",
+      "webkitBorderTopLeftRadius", "webkitBorderTopRightRadius",
+      "webkitBorderVerticalSpacing", "webkitColumnRuleWidth",
+      "webkitMinLogicalHeight", "webkitMinLogicalWidth",
+      "webkitPaddingAfter", "webkitPaddingBefore",
+      "webkitPaddingEnd", "webkitPaddingStart",
+      "webkitShapeMargin", "webkitTextStrokeWidth",
+      "wordSpacing", "x", "y",
+    ])
+        if(!s[k]) s[k] = "0px";
+
+    for(let k of [
+      "marginBlockEnd", "marginBlockStart",
+      "marginInlineEnd", "marginInlineStart",
+      "marginTop", "marginRight", "marginBottom", "marginLeft",
+      "webkitMarginAfter", "webkitMarginBefore",
+      "webkitMarginEnd", "webkitMarginStart",
+    ])
+        if(!s[k]) s[k] = "8px";
+
+    for(let k of [
+      "blockSize", "height", "webkitLogicalHeight",
+    ])
+        if(!s[k]) s[k] = "417px";
+
+    for(let k of [
+      "inlineSize", "webkitLogicalWidth", "width",
+    ])
+        if(!s[k]) s[k] = "764px";
+
+    for(let k of [
+      "accentColor", "alignSelf", "alignmentBaseline",
+      "animationTimeline", "aspectRatio",
+      "backgroundSize", "baselineSource", "bottom",
+      "breakAfter", "breakBefore", "breakInside", "bufferedRendering",
+      "caretAnimation", "caretShape", "clip", "colorRendering",
+      "columnCount", "columnHeight", "columnWidth", "columnWrap", "columns",
+      "cursor", "dominantBaseline", "flexBasis",
+      "fontKerning", "fontOpticalSizing", "fontSynthesisSmallCaps",
+      "fontSynthesisStyle", "fontSynthesisWeight",
+      "forcedColorAdjust",
+      "gridArea", "gridAutoColumns", "gridAutoRows",
+      "gridColumnEnd", "gridColumnStart",
+      "gridRowEnd", "gridRowStart",
+      "hyphenateCharacter", "hyphenateLimitChars",
+      "imageRendering",
+      "insetBlockEnd", "insetBlockStart",
+      "insetInlineEnd", "insetInlineStart",
+      "interactivity", "isolation",
+      "justifySelf", "left", "lineBreak",
+      "maskSize", "offsetAnchor", "overflowAnchor",
+      "overscrollBehavior", "overscrollBehaviorBlock", "overscrollBehaviorInline",
+      "overscrollBehaviorX", "overscrollBehaviorY",
+      "page", "pageBreakAfter", "pageBreakBefore", "pageBreakInside",
+      "placeSelf", "pointerEvents",
+      "quotes", "right", "rx", "ry",
+      "scrollBehavior",
+      "scrollPaddingBlockEnd", "scrollPaddingBlockStart",
+      "scrollPaddingBottom",
+      "scrollPaddingInlineEnd", "scrollPaddingInlineStart",
+      "scrollPaddingLeft", "scrollPaddingRight",
+      "scrollPaddingTop",
+      "scrollbarColor", "scrollbarGutter", "scrollbarWidth",
+      "shapeRendering",
+      "tableLayout",
+      "textAlignLast",
+      "textBoxEdge",
+      "textDecorationSkipInk", "textDecorationThickness",
+      "textJustify",
+      "textRendering", "textSizeAdjust",
+      "textUnderlineOffset", "textUnderlinePosition",
+      "textWrapStyle",
+      "timelineTriggerActiveRange", "timelineTriggerActiveRangeEnd",
+      "timelineTriggerActiveRangeStart", "timelineTriggerSource",
+      "top", "touchAction",
+      "userSelect", "viewTimelineInset",
+      "webkitAlignSelf", "webkitBackgroundSize",
+      "webkitColumnBreakAfter", "webkitColumnBreakBefore",
+      "webkitColumnBreakInside", "webkitColumnCount",
+      "webkitColumnWidth", "webkitColumns",
+      "webkitFlexBasis", "webkitFontSmoothing",
+      "webkitHyphenateCharacter", "webkitLineBreak",
+      "webkitLocale", "webkitMaskBoxImageWidth",
+      "webkitMaskSize", "webkitTextSizeAdjust",
+      "webkitUserDrag", "webkitUserSelect",
+      "willChange", "zIndex",
+    ])
+        if(!s[k]) s[k] = "auto";
+
+    for(let k of [
+      "animationDelay", "animationDuration",
+      "transitionDelay", "transitionDuration",
+      "webkitAnimationDelay", "webkitAnimationDuration",
+      "webkitTransitionDelay", "webkitTransitionDuration",
+    ])
+        if(!s[k]) s[k] = "0s";
+
+    for(let k of [
+      "backgroundPositionX", "backgroundPositionY",
+      "webkitMaskPositionX", "webkitMaskPositionY",
+    ])
+        if(!s[k]) s[k] = "0%";
+
+    for(let k of [
+      "alignContent", "alignItems",
+      "animationDirection", "animationRange",
+      "animationRangeEnd", "animationRangeStart",
+      "backgroundBlendMode",
+      "colorScheme", "columnGap", "containerType",
+      "content",
+      "fontFeatureSettings",
+      "fontLanguageOverride",
+      "fontPalette", "fontStyle",
+      "fontVariant", "fontVariantAlternates",
+      "fontVariantCaps", "fontVariantEastAsian",
+      "fontVariantEmoji", "fontVariantLigatures",
+      "fontVariantNumeric", "fontVariantPosition",
+      "fontVariationSettings",
+      "gap",
+      "gridColumnGap", "gridGap", "gridRowGap",
+      "initialLetter",
+      "interestDelayEnd", "interestDelayStart",
+      "justifyContent", "justifyItems",
+      "letterSpacing", "lineHeight",
+      "mathShift", "mathStyle", "mixBlendMode",
+      "offsetPosition", "overflowWrap",
+      "paintOrder", "placeContent", "placeItems",
+      "positionTryOrder",
+      "readingFlow", "rowGap",
+      "scrollSnapStop", "speak",
+      "textBox", "textSpacingTrim",
+      "timelineTriggerActivationRange", "timelineTriggerActivationRangeEnd",
+      "timelineTriggerActivationRangeStart", "transitionBehavior",
+      "unicodeBidi", "viewTransitionGroup",
+      "webkitAlignContent", "webkitAlignItems",
+      "webkitAnimationDirection", "webkitBoxDirection",
+      "webkitColumnGap", "webkitFontFeatureSettings",
+      "webkitJustifyContent", "whiteSpace",
+      "wordBreak", "wordWrap",
+    ])
+        if(!s[k]) s[k] = "normal";
+
+// black black black is the color of my true love's hair
+    for(let k of [
+      "borderBlockEndColor", "borderBlockStartColor",
+      "borderBottomColor",
+      "borderInlineEndColor", "borderInlineStartColor",
+      "borderLeftColor", "borderRightColor", "borderTopColor",
+      "caretColor", "color", "columnRuleColor",
+      "fill", "floodColor",
+      "outlineColor", "stopColor",
+      "textDecorationColor", "textEmphasisColor",
+      "webkitBorderAfterColor", "webkitBorderBeforeColor",
+      "webkitBorderEndColor", "webkitBorderStartColor",
+      "webkitColumnRuleColor",
+      "webkitTextEmphasisColor", "webkitTextFillColor",
+      "webkitTextStrokeColor",
+    ]) {
+        if(!s[k])  s[k] = s.color;
+        if(s[k]) s[k] = color2rgb(s[k]);
+        else s[k] = "rgb(0, 0, 0)";
+    }
+
+if(s.backgroundColor) s.backgroundColor = color2rgb(s.backgroundColor);
+else s.backgroundColor = "rgba(0, 0, 0, 0";
+
+    if(!s.boxSizing) s.boxSizing = "content-box";
+    if(!s.textAlign) s.textAlign = "start";
+    if(!s.verticalAlign) s.verticalAlign = "baseline";
+// this one is quoted because it has spaces, but rgb(0, 0, 0) has spaces
+// and is not quoted, so I don't understand the inconsistency.
+    if(!s.fontFamily) s.fontFamily = '"Times New Roman"';
+
+    return s;
+}
 
 class CSSRule
 {
