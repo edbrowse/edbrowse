@@ -177,7 +177,7 @@ if(s1.textAlign != "start") msg += `|bad align ${s1.textAlign}`;
 if(s1.verticalAlign != "baseline") msg += `|bad valign ${s1.verticalAlign}`;
 if(s1.zIndex != "auto") msg += `|bad zIndex ${s1.zIndex}`;
 // invalid properties don't push through from css either.
-if(s1.nonsense) msg += "|got nonsense from css";
+if(s1.nonsense || s1.getPropertyValue("nonsense")) msg += "|got nonsense from css";
 // I found --tw-translate-x and a hundred others like it on a website,
 // they persist in the styleSheet, and recover by getPropertyValue,
 // but I can't find them anywhere in the object.
