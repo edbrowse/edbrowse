@@ -3600,12 +3600,6 @@ swdc(HTMLTableCellElement);
 class HTMLStyleElement extends HTMLElement
 {
     constructor() { super(); }
-    get css$data() { // edbrowse feature
-        let s = "";
-        for(let c of this.childNodes)
-            if(c.nodeType == 3) s += c.data;
-        return s;
-    }
 }
 swdc(HTMLStyleElement);
 

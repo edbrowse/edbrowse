@@ -1978,10 +1978,11 @@ function cssGather(base) {
             }
         }
         if(t.nodeName == "STYLE") {
-            if(t.css$data) {
-                base.cssSource.push({data: t.css$data, src:thisfile, fromstyle:true});
+            const tc = t.textContent;
+            if(tc) {
+                base.cssSource.push({data: tc, src:thisfile, fromstyle:true});
                 css_all += "@ebdelim0" + thisfile + "+{}\n";
-                css_all += t.css$data;
+                css_all += tc;
             }
         }
     }
