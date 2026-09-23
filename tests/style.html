@@ -178,6 +178,12 @@ if(s1.verticalAlign != "baseline") msg += `|bad valign ${s1.verticalAlign}`;
 if(s1.zIndex != "auto") msg += `|bad zIndex ${s1.zIndex}`;
 // invalid properties don't push through from css either.
 if(s1.nonsense) msg += "|got nonsense from css";
+// I found --tw-translate-x and a hundred others like it on a website,
+// they persist in the styleSheet, and recover by getPropertyValue,
+// but I can't find them anywhere in the object.
+// not under -TwTranslateX or anything else I can conjour up.
+// I assume the leading - makes it custom, and ok to put in the style node.
+if(s1.getPropertyValue("--tw-translate-x") != 63) msg += `|custom translate ${s1.getPropertyValue("--tw-translate-x")}`;
 
 sh1 = getComputedStyle(h1);
 // here is an up the chain calculation.

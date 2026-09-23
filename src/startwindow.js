@@ -3662,7 +3662,7 @@ swdc(ShadowRoot);
 
 // use by the css system and the dataset system
 function camelCase(t) {
-    return t.replace(/-./g, function(f){return f[1].toUpperCase()});
+    return t.replace(/-[a-zA-Z]/g, function(f){return f[1].toUpperCase()});
 }
 function dataCamel(t) { return camelCase(t.replace(/^data-/,"")); }
 function uncamelCase(t) {
@@ -4151,7 +4151,7 @@ will ever do that! Use removeProperty like you're suppose to. */
 
     getPropertyValue(p) {
         p = camelCase(p);
-        if(!CSSStyleDeclaration.validHash[p]) return "";
+        if(!CSSStyleDeclaration.validHash[p] && p.substr(0, 1) != '-') return "";
         // getter should convert this to "" if not defined
         return this[p];
     }
@@ -4159,7 +4159,7 @@ will ever do that! Use removeProperty like you're suppose to. */
     setProperty(p, v, prv)
     {
         p = camelCase(p);
-        if(!CSSStyleDeclaration.validHash[p]) return;
+        if(!CSSStyleDeclaration.validHash[p] && p.substr(0, 1) != '-') return;
         this[p] = v; // with all its side effects
         if(typeof prv == "string") prv = prv.toLowerCase();
         const pri = p + "$pri";
@@ -4171,7 +4171,7 @@ will ever do that! Use removeProperty like you're suppose to. */
     getPropertyPriority(p)
     {
         p = camelCase(p);
-        if(!CSSStyleDeclaration.validHash[p]) return "";
+        if(!CSSStyleDeclaration.validHash[p] && p.substr(0, 1) != '-') return "";
         const pri = p + "$pri";
         return this[pri] ? "important" : "";
     }
@@ -4179,7 +4179,7 @@ will ever do that! Use removeProperty like you're suppose to. */
     removeProperty(p)
     {
         const p1 = camelCase(p);
-        if(!CSSStyleDeclaration.validHash[p1]) return;
+        if(!CSSStyleDeclaration.validHash[p1] && p.substr(0, 1) != '-') return;
         const p2 = p1 + "$2";
         if(this[p2] === undefined) return; // not there
         delete this[p2];

@@ -767,6 +767,7 @@ const char * const allowableStyleElements[] = {
 static bool validStyleElement(const char *s)
 {
     if(!s) return false;
+    if(s[0] == '-') return true; // custom css property
     int i, l = -1, r = sizeof(allowableStyleElements) / sizeof(const char *), rc;
     --r; // the last 0 doesn't count
     while(r - l > 1) {

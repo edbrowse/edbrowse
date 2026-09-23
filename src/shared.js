@@ -1544,7 +1544,7 @@ That is what script+ is for, and so far the only place we use + */
 }
 
 function camelCase(t) {
-    return t.replace(/-./g, function(f){return f[1].toUpperCase()});
+    return t.replace(/-[a-zA-Z]/g, function(f){return f[1].toUpperCase()});
 }
 
     /*********************************************************************
