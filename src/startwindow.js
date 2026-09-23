@@ -816,6 +816,11 @@ class Node extends EventTarget
         if(c.nodeType != 3) {
             checkUpward(this);
             checkDownward(c);
+        } else if(this.nodeName == "STYLE") {
+            // call checkUpward only to rebuild the styleSheets.
+            // This is overkill, since that function does a lot more,
+            // but this is a very rare pathway.
+            checkUpward(this);
         }
         // a text node can have an observer - for CharacterData
         mutFixup(this, 0, c, null);
@@ -867,7 +872,7 @@ class Node extends EventTarget
         if (c.nodeType != 3) {
             checkUpward(this);
             checkDownward(c);
-        }
+        } else if(this.nodeName == "STYLE") checkUpward(this);
         mutFixup(this, 0, c, null);
         return c;
     }
@@ -897,7 +902,7 @@ class Node extends EventTarget
         if (c.nodeType != 3) {
             unlinkIds(w, c);
             checkUpward(this);
-        }
+        } else if(this.nodeName == "STYLE") checkUpward(this);
         // passing an integer as third argument is a special case, only from here.
         mutFixup(this, 0, mark, c);
         return c;
@@ -2248,8 +2253,7 @@ class HTMLElement extends Element
             return;
         }
         const oldlist = Array.from(top.childNodes); // make a copy
-        while(top.firstChild)
-            top.removeChild$nm(top.firstChild);
+        while(top.firstChild) top.removeChild$nm(top.firstChild);
         // do nothing if s is undefined, or null, or the empty string
         if(s) {
             let newtext = document.createTextNode(s);
@@ -2262,7 +2266,7 @@ class HTMLElement extends Element
     }
 
 get textContent() { return HTMLElement.textUnder(this); }
-set textContent(h) { return HTMLElement.newTextUnder(this, h); }
+set textContent(h) { HTMLElement.newTextUnder(this, h); }
 get innerText() { return HTMLElement.textUnder(this); }
 set innerText(h) { return HTMLElement.newTextUnder(this, h); }
 

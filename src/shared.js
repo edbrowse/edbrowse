@@ -1969,7 +1969,7 @@ function cssGather(base) {
     const a = gebtn((shadow ? base : base.document.documentElement), "link|style", true, false);
     for(const t of a) {
         if(t.nodeName == "LINK") {
-            if(t.css$data && (
+            if(typeof t.css$data == "string" && (
             t.type && t.type.toLowerCase() == "text/css" ||
             t.rel && t.rel.toLowerCase() == "stylesheet")) {
                 base.cssSource.push({data: t.css$data, src:t.href, fromstyle:false});
@@ -1979,11 +1979,9 @@ function cssGather(base) {
         }
         if(t.nodeName == "STYLE") {
             const tc = t.textContent;
-            if(tc) {
-                base.cssSource.push({data: tc, src:thisfile, fromstyle:true});
-                css_all += "@ebdelim0" + thisfile + "+{}\n";
-                css_all += tc;
-            }
+            base.cssSource.push({data: tc, src:thisfile, fromstyle:true});
+            css_all += "@ebdelim0" + thisfile + "+{}\n";
+            css_all += tc;
         }
     }
 

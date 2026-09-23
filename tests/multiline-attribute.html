@@ -51,6 +51,11 @@ let expected = "prefix >\n<html>\n<body>raw source</body>\n</html>\nsuffix"
 if(sample.getAttribute("data-html") != expected) msg += `|bad data ${sample.getAttribute("data-html")}`;
 if(sample.dataset.html != expected) msg += "| sample html not found in dataset";
 if(sample.textContent != "visible") msg += `|bad content ${sample.textContent}`;
+empty_node = document.createElement("p");
+if(empty_node.textContent !== "") msg += "|empty node wrong textContent";
+empty_node.textContent = "horse";
+empty_node.textContent = "";
+if(empty_node.firstChild) msg += "|empty node has children";
 
 // more dataset stuff
 if( sample.dataset.dogFood  != "chow") msg += "|dogFood didn't camel case";
