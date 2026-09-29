@@ -5346,6 +5346,9 @@ nocolor:
 		if (t->href) {
 			if (opentag) {
 				sprintf(hnum, "%c%d{", InternalCodeChar, tagno);
+#if 0
+// this seems to do more harm than good, until we can figure out a good strategy.
+// Perhaps insert the title if there is no content, or the content is just an image.
 				if((al = arialabeltitle(t))) {
 // for <a>,  aria-label or title replaces anything that was below
 					ns_hnum();
@@ -5356,6 +5359,7 @@ nocolor:
 					deltag = t;
 					break;
 				}
+#endif
 			} else // open or closed
 				sprintf(hnum, "%c0}", InternalCodeChar);
 		} else { // href or no href
