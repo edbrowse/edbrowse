@@ -20,6 +20,17 @@ Eventually, the whole project will be indented under one style.
 
 ------------------------------------------------------------
 
+## Building
+
+You can build with
+
+```
+make
+```
+
+You can specify parallel make execution with `-jNUM`, e.g. `-j8`. You can
+install edbrowse with `make install`.
+
 ## Running tests
 
 Run these commands from the repository root, using the executable built
@@ -27,18 +38,12 @@ from the current sources. See [installing.md](installing.md) for build
 dependencies, including the QuickJS library and the `qjs` executable.
 
 ```sh
-make
-./tests/runtests
-```
-
-or for short:
-
-```
 make test
 ```
 
-Run the full suite for behavioral changes. The runner ignores your personal
-configuration, runs each HTML fixture in its own process, checks table
+This will build and run the tests. Pass `-jNUM` for parallel tests.
+This runs the full suite for behavioral changes. The runner ignores your
+personal configuration, runs each HTML fixture in its own process, checks table
 rendering, and runs acid3. Some tests require access to edbrowse.org.
 A successful run prints `ok` and exits with status 0. Failures are printed
 and the runner exits with status 1; inspect those messages as well as the
@@ -55,13 +60,28 @@ make test LOCAL=1
 This skips the network fixtures `frames.html` and `xhr.html`, and acid3.
 It still checks table rendering. For significant JavaScript or DOM changes,
 run the full suite, including acid3, and run `jsrt` separately.
+Network checks (`frames.html`, `xhr.html`, and acid3) run sequentially in
+one job to limit requests to external services; that job can overlap local
+checks. A failure does not prevent the remaining checks from running.
+
+The standalone runner accepts `./tests/runtests -j8 -l` or
+`./tests/runtests -j 8`. Without a job option or inherited make flags, it
+runs serially. `-t` includes the optional Alpine trace comparison, which
+requires a previously generated Chrome baseline; `make test TRACE=1` does
+the same. Each check uses private temporary output files, so separate
+runner invocations can also run concurrently.
+
+Output is grouped by make target, but parallel diagnostics can still be
+interleaved. On failure, rerun with `make -j1 test` or
+`make -j1 test LOCAL=1` for a sequential diagnostic log. The standalone
+equivalent is `./tests/runtests -j1`, with `-l` when appropriate.
 
 ### Running an individual HTML fixture
 
 Replace the path below with the fixture you want to check:
 
 ```sh
-src/edbrowse -c "" -d0 tests/performance-observer.html <<'EOF'
+src/edbrowse -c "" -d0 tests/classlist.html <<'EOF'
 b
 tmwait
 rr

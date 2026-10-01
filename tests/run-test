@@ -1,0 +1,96 @@
+#!/bin/sh
+# Run one check. The makefile owns the fixture list and parallel scheduling.
+[ "$#" -eq 2 ] || exit 2
+program=$1
+check=$2
+cd "$(dirname "$0")" || exit 1
+case "$program" in
+    /*) ;;
+    *) program="$(pwd)/$program" ;;
+esac
+
+if [ "$check" = network ]; then
+    # Keep requests to external services sequential, and run every check
+    # even when an earlier one fails.
+    status=0
+    for fixture in frames.html xhr.html acid3; do
+        ./run-test "$program" "$fixture" || status=1
+    done
+    exit "$status"
+fi
+
+tempdir=$(mktemp -d "${TMPDIR:-/tmp}/edbrowse-test.XXXXXX") || exit 1
+trap 'rm -rf "$tempdir"' 0
+trap 'exit 1' HUP INT TERM
+log=$tempdir/output
+
+case "$check" in
+    table-render)
+        cat > "$tempdir/expected" <<'EOF'
+ok
+
+winston cigarettes
+first|middle|last
+fred|t|flintstone
+wilma|p|flintstone
+betty|l|rubble
+bambam|y|rubble
+hoppy|g|rubble
+joe|v|rockhead
+anne|p|margrock
+
+<press3> {here}
+EOF
+        if ! "$program" -c "" -d0 table.html > "$log" 2>&1 <<EOF
+b
+et
+w $tempdir/rendered
+q
+EOF
+        then
+            echo "table rendering process failed"
+            cat "$log"
+            exit 1
+        fi
+        if ! cmp -s "$tempdir/expected" "$tempdir/rendered"; then
+            echo "table output has changed"
+            cat "$log"
+            diff -u "$tempdir/expected" "$tempdir/rendered"
+            exit 1
+        fi
+        ;;
+    trace)
+        if ! EDBROWSE="$program" ./trace/run-trace-alpine e \
+            "$tempdir/trace-alpine-edbrowse" > "$log" 2>&1; then
+            echo "trace alpine found discrepancies"
+            cat "$log"
+            exit 1
+        fi
+        ;;
+    *)
+        line=1
+        expected=ok
+        if [ "$check" = acid3 ]; then
+            line=3
+            expected=69/69
+        fi
+        if ! "$program" -c "" "$check" > "$log" 2>&1 <<EOF
+b
+tmwait
+rr
+$line
+q
+EOF
+        then
+            echo "$check process failed"
+            cat "$log"
+            exit 1
+        fi
+        result=$(tail -n 1 "$log")
+        if [ "$result" != "$expected" ]; then
+            echo "$check failed"
+            cat "$log"
+            exit 1
+        fi
+        ;;
+esac

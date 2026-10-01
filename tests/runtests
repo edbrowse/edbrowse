@@ -1,133 +1,37 @@
 #!/bin/sh
-# This script runs the tests in this directory that should pass under edbrowse.
-# They pass under chrome via the <chromethis function.
-# Pass is defined by printing ok on the first line.
-# These tests are not clean - they clutter the window with
-# global variables, thus each test should be run on its own.
-# Furthermore, your .ebrc settings should not get in the way.
-# This test calls upon the latest edbrowse, not the one installed.
-cd "$(dirname "$0")"
-program=../src/edbrowse
-outfile=/tmp/runtests.out
+# Keep the standalone interface; GNU make schedules the individual checks.
+usage()
+{
+    echo "usage: runtests [-l] [-t] [-j jobs]" >&2
+    exit 2
+}
 
-# Some tests require the internet, tapping into edbrowse.org.
-# Use -l for the local tests only.
-# Use -t to run the trace test, which does not require the internet,
-# but assumes you have set things up in advance with chrome.
-
-local=n
-dotrace=n
-if [ $# != 0 -a "$1" = -l ]
-then
-local=y
-shift
-fi
-if [ $# != 0 -a "$1" = -t ]
-then
-dotrace=y
-shift
-fi
-if [ $# != 0 ]
-then
-echo "usage: runtests [-l] [-t]"
-exit 2
-fi
-
-# Some of these tests aren't complete until timers run.
-# Use the tmwait command to wait for the timers.
-# If there are no timers, tmwait returns immediately.
-# acid3 is the longest, and can take 10 seconds or more.
-# Note that jsrt is not included here.
-# That is an important test, but it follows a different format,
-# and is more interactive.
-
-status=0
-list="classlist.html collection.html custom.html dynamic-form.html fragment.html getelem.html multiline-attribute.html mutation.html performance-observer.html queryselector.html script-adds-nodes.html scriptorder.html style.html table.html unbalanced-attribute.html"
-if [ $local = n ]
-then
-list="$list frames.html xhr.html"
-fi
-
-for t in $list
-do
-$program -c "" $t >$outfile <<!
-b
-tmwait
-rr
-1
-q
-!
-result=`tail -1 $outfile`
-rm $outfile
-if [ "$result" != ok ]; then
-echo "$t failed $result"
-status=1
-fi
+local_tests=
+trace_tests=
+jobs=
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -l) local_tests=1 ;;
+        -t) trace_tests=1 ;;
+        -j)
+            shift
+            [ "$#" -gt 0 ] && [ -n "$1" ] || usage
+            jobs=$1 ;;
+        -j?*) jobs=${1#-j} ;;
+        *) usage ;;
+    esac
+    shift
 done
-
-# The table test adds rows and cells, deletes rows and cells;
-# we should make sure it is rendered properly on the screen.
-t1='ok
-
-winston cigarettes
-first|middle|last
-fred|t|flintstone
-wilma|p|flintstone
-betty|l|rubble
-bambam|y|rubble
-hoppy|g|rubble
-joe|v|rockhead
-anne|p|margrock
-
-<press3> {here}'
-$program -c "" -d0 table.html <<!
-b
-et
-w $outfile
-q
-!
-t2=`cat $outfile`
-if [ "$t1" != "$t2" ]
-then
-echo "table output has changed"
-status=1
-fi
-rm $outfile
-
-# acid3 is third party, and doesn't follow our format.
-# The pass fail message is on line 3, not line 1.
-# This taps into acid3.org, I believe, so requires the internet.
-if [ $local = n ]
-then
-t=acid3
-$program -c "" $t >$outfile <<!
-b
-tmwait
-rr
-3
-q
-!
-result=`tail -1 $outfile`
-rm $outfile
-if [ "$result" != 69/69 ]; then
-echo "$t failed $result"
-status=1
-fi
+if [ -n "$jobs" ]; then
+    case "$jobs" in *[!0-9]*) usage ;; esac
+    [ "$jobs" -gt 0 ] 2>/dev/null || usage
 fi
 
-# the apline trace test is also nonstandard
-# not everyone has the chrome plugin on their system
-if [ $dotrace = y ]
-then
-if ./trace/run-trace-alpine >/dev/null 2>&1
-then
-:
-else
-echo "trace alpine found discrepancies"
-status=1
+testdir=$(CDPATH= cd "$(dirname "$0")" && pwd) || exit 1
+set -- --no-print-directory -s -k --output-sync=target -C "$testdir" \
+    "LOCAL=$local_tests" "TRACE=$trace_tests" test
+[ -z "$jobs" ] || set -- "$@" "-j$jobs"
+if "${MAKE:-make}" "$@"; then
+    exit 0
 fi
-fi
-
-if [ $status = 0 ]; then echo ok; fi
-
-exit $status
+exit 1
