@@ -1,15 +1,22 @@
 ##Edbrowse development
 
-The code in this project is indented via the script Lindent,
+The code in this project was originally indented via the script Lindent,
 which is in the tools directory, and is taken from the Linux kernel source.
-In other words, the indenting style is the same as the Linux kernel.
-Except it isn't always.
-I've drifted away from it on occasion.
+In other words, the indenting style was the same as the Linux kernel.
+However, we no longer run code through any kind of indent program.
+We found that indent sometimes changes format A to format B,
+then on the next run it changes format B back to format A.
+It thrashes, and creates diffs needlessly,
+so it's better to stay in control and do it ourselves.
+A little more manual work, but it's worth it.
+Also, we are moving away from the linux 8 space indent and to a 4 space indent.
+Some code runs several blocks deep, and the 8 space indent was prohibitive.
+If you make changes or additions, try to follow the 4 space convention.
 If the statement under the if is just a break or continue or return,
-I may well put it on the same line.
-It's really not that important all in all, especially to blind developers.
-If you take over this project, or send patches,
-try to sort of follow our indenting style.
+we sometimes put it on the same line.
+A matter of taste perhaps.
+We are starting to indent the javascript as well, which was originally not indented at all.
+Eventually, the whole project will be indented under one style.
 
 ------------------------------------------------------------
 
@@ -91,7 +98,7 @@ coverage and limitations.
 Start edbrowse in a terminal:
 
 ```sh
-src/edbrowse -c "" -d3 src/jsrt
+src/edbrowse -c "" -d1 src/jsrt
 ```
 
 Enter `b`. There should be no `failed NUMBER` messages or JavaScript
@@ -102,9 +109,8 @@ increase. Select `/Interval/` again and enter `i=-` to stop the timer.
 Enter `q` to quit. Use a terminal for this check, rather than piping all
 commands into edbrowse at once.
 
-The current `src/jsrt` uses this checkbox to start its interval; it does
-not schedule the automatic ten-second timer described in the older
-regression notes. See [regression.md](regression.md) for the other manual
+The current `src/jsrt` uses this checkbox to start its interval.
+See [regression.md](regression.md) for the other manual
 checks, including forms and frames.
 
 ------------------------------------------------------------
