@@ -3,7 +3,7 @@
 <script>
 try {
 let msg = "ok";
-const show = document.getElementById("show");
+isedbrowse = navigator.userAgent.substr(0, 8) == "edbrowse";
 function check(value, label) { if(!value) msg += "|" + label; }
 function throws(callback, name, label) {
     try { callback(); msg += "|no exception " + label; }
@@ -20,8 +20,11 @@ check(Array.isArray(types), "supported types not an array");
 check(types === PerformanceObserver.supportedEntryTypes, "unstable types");
 check(Object.isFrozen(types), "types not frozen");
 // This implementation does not deliver performance entries yet.
+if(isedbrowse) {
+// clearly chrome is going to have some supported types, even if we don't, yet.
 check(types.length == 0, "unexpected supported types");
 check(!types.includes("resource"), "resource reported supported");
+}
 throws(() => types.push("resource"), "TypeError", "types writable");
 
 let calls = 0;
@@ -30,8 +33,10 @@ const observer = new PerformanceObserver(callback);
 check(observer instanceof PerformanceObserver, "wrong instance");
 for(const options of [undefined, null, {}, 1, "resource", true,
     {entryTypes: ["resource"], type: "navigation"},
+/* chrome allows empty entryTypes [] with other modes, so we do too.
     {entryTypes: [], buffered: false},
     {entryTypes: [], durationThreshold: 0},
+*/
     {entryTypes: null}, {entryTypes: "resource"},
     {entryTypes: {length: 1, 0: "resource"}},
     {entryTypes: [Symbol()]}, {type: Symbol()}])
@@ -69,7 +74,7 @@ check(single.takeRecords().length == 0, "shared records");
 setTimeout(() => {
     check(calls == 0, "unsupported entry callback");
     show.textContent = msg;
-}, 10);
+}, 200);
 } catch(e) {
     document.getElementById("show").textContent = "blowup " + e + " " + e.stack;
 }

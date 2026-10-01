@@ -6054,7 +6054,7 @@ class PerformanceObserver
         }
         if(entryTypes === undefined && type === undefined)
             throw new TypeError("entryTypes or type is required");
-        if(entryTypes !== undefined && (type !== undefined ||
+        if(entryTypes !== undefined && entryTypes.length && (type !== undefined ||
         buffered !== undefined || durationThreshold !== undefined))
             throw new TypeError("entryTypes cannot be combined with other options");
         const mode = entryTypes === undefined ? "single" : "multiple";
