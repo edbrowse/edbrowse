@@ -35,7 +35,7 @@ $s = "src/$p2 $s";
 }
 
 # Ready to go.
-system "NOCOMPRESSSOURCE=1 perl -w tools/buildsourcestring.pl $s src/ebrc.c";
+my $generator_status = system "NOCOMPRESSSOURCE=1 perl -w tools/buildsourcestring.pl $s src/ebrc.c";
 
 for(my $j = 0; $j <= $#guides; ++$j) {
 my $p2 = $guides[$j];
@@ -45,4 +45,4 @@ $p2 .= "_en" if $p2 eq "qrg";
 unlink "src/$p2";
 }
 
-exit 0;
+exit($generator_status ? 1 : 0);

@@ -1,5 +1,4 @@
 # Simple makefile to move to the src directory.
-# This only works if you are making the default target.
 
 all: build
 
@@ -15,5 +14,10 @@ install:
 test: build
 	@./tests/runtests \
 		$(if $(LOCAL),-l)
+
+# Finish cleaning before launching a recursive build, even with -j.
+ifneq ($(filter clean,$(MAKECMDGOALS)),)
+build install: | clean
+endif
 
 .PHONY: all build clean install test

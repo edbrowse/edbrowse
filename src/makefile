@@ -60,6 +60,9 @@ CFLAGS += -Wall -D_FILE_OFFSET_BITS=64 -Wno-trigraphs $(dependency_cflags) $(qui
 
 EDBR_JS_ASSETS = shared.js startwindow.js demin.js
 
+# Do not reuse partially generated sources after a failed recipe.
+.DELETE_ON_ERROR:
+
 # If EBDEBUG is set to on, or a non-empty string, build with debug flags and
 # don't strip executables.
 	STRIP = -s
@@ -104,13 +107,15 @@ dbodbc.o dbinfx.o dbops.o : dbapi.h
 %.js-ok: %.js
 	qjs -C $< && touch $@
 
-startwindow.c: $(patsubst %.js,%.js-ok,$(EDBR_JS_ASSETS))
+startwindow.c: $(patsubst %.js,%.js-ok,$(EDBR_JS_ASSETS)) \
+	../tools/buildsourcestring.pl
 	$(PERL) ../tools/buildsourcestring.pl $(EDBR_JS_ASSETS) startwindow.c
 
-ebrc.c: ../lang/ebrc-* ../doc/usersguide*.html
+ebrc.c: ../lang/ebrc-* ../doc/usersguide*.html \
+	../tools/buildebrcstring.pl ../tools/buildsourcestring.pl
 	cd .. ; $(PERL) ./tools/buildebrcstring.pl
 
-msg-strings.c: ../lang/msg-*
+msg-strings.c: ../lang/msg-* ../tools/buildmsgstrings.pl
 	cd .. ; $(PERL) ./tools/buildmsgstrings.pl
 
 # The implicit linking rule isn't good enough, because we don't have an
