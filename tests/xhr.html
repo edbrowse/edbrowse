@@ -71,16 +71,18 @@ Probably some kind of security risk that I don't understand.
 So I settled on language, which most servers will provide
 through the environment, and hence I can echo it back.
 I use a back door of xyz. */
+// Explicit language headers override the default, regardless of case.
+for (const header of ["accept-language", "Accept-Language", "AcCePt-LaNgUaGe"]) {
 xhrl = new XMLHttpRequest;
 xhrl.open("get", echourl + "?xyz", false);
-xhrl.setRequestHeader("accept-language", "pt_br");
+xhrl.setRequestHeader(header, "pt_br");
 // second should concatenate
-xhrl.setRequestHeader("accept-language", "cz");
+xhrl.setRequestHeader(header, "cz");
 xhrl.send();
 if(xhrl.response.substr(0, 11) != "get {\nxyz\n}") msg += "|no xyz";
-// some clients or servers include the native language of the computer,
-// so we just have to check for what we set.
-if(xhrl.response.indexOf("pt_br, cz") < 0) msg += `|wrong languages ${xhrl.response}`;
+if(xhrl.response.indexOf("pt_br, cz") < 0)
+    msg += `|wrong languages (${header}) ${xhrl.response}`;
+}
 
 /* sending a string with nonascii characters is bizarre under chrome.
 alpha turns into a weird chinese character.

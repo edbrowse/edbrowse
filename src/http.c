@@ -817,6 +817,24 @@ static void urlSanitize(struct i_get *g, const char *post)
 	}
 }
 
+/* Match header names at line boundaries, not inside header values. */
+static bool hasCustomHeader(const char *headers, const char *name)
+{
+	const size_t len = strlen(name);
+	const char *end;
+
+	while (headers && *headers) {
+		end = strchr(headers, '\n');
+		if (!end)
+			break;
+		if ((size_t)(end - headers) >= len &&
+		    memEqualCI(headers, name, len))
+			return true;
+		headers = end + 1;
+	}
+	return false;
+}
+
 bool httpConnect(struct i_get *g)
 {
 	const char *url = g->url;
@@ -945,7 +963,8 @@ mimestream:
 	custom_headers = curl_slist_append(custom_headers, "Expect:");
 	if (custom_headers == NULL)
 		i_printfExit(MSG_NoMem);
-	if (httpLanguage) {
+	if (httpLanguage &&
+	    !hasCustomHeader(g->custom_h, "Accept-Language:")) {
 		custom_headers =
 		    curl_slist_append(custom_headers, httpLanguage);
 		if (custom_headers == NULL)
