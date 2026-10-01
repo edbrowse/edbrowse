@@ -107,12 +107,13 @@ the readline library and headers installed e.g. readline and readline-devel.
 For a time, edbrowse could be built on windows, but this is no longer supported.
 On all other systems, you should be able to use the GNU version of make.
 
-First of all switch to the src directory under the main Edbrowse directory.
-then, if quickjs-ng is installed, just type:
+If quickjs-ng is installed, just type:
 
 ```shell
 make
 ```
+
+pass `-j<NUM>` to run this in parallel, e.g. `-j8` for 8 cores.
 
 To build edbrowse against a quickjs-ng project that is built locally, but not installed,
 set `QUICKJS_INCLUDE` and `QUICKJS_LIB` appropriately.
