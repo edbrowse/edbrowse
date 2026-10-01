@@ -13,6 +13,102 @@ try to sort of follow our indenting style.
 
 ------------------------------------------------------------
 
+## Running tests
+
+Run these commands from the repository root, using the executable built
+from the current sources. See [installing.md](installing.md) for build
+dependencies, including the QuickJS library and the `qjs` executable.
+
+```sh
+make
+./tests/runtests
+```
+
+or for short:
+
+```
+make test
+```
+
+Run the full suite for behavioral changes. The runner ignores your personal
+configuration, runs each HTML fixture in its own process, checks table
+rendering, and runs acid3. Some tests require access to edbrowse.org.
+A successful run prints `ok` and exits with status 0. Failures are printed
+and the runner exits with status 1; inspect those messages as well as the
+exit status. The runner does not include the interactive `jsrt` test.
+
+To run the local subset:
+
+```sh
+./tests/runtests -l
+# or
+make test LOCAL=1
+```
+
+This skips the network fixtures `frames.html` and `xhr.html`, and acid3.
+It still checks table rendering. For significant JavaScript or DOM changes,
+run the full suite, including acid3, and run `jsrt` separately.
+
+### Running an individual HTML fixture
+
+Replace the path below with the fixture you want to check:
+
+```sh
+src/edbrowse -c "" -d0 tests/performance-observer.html <<'EOF'
+b
+tmwait
+rr
+1
+q
+EOF
+```
+
+The empty argument to `-c` disables the personal configuration. `b` enters
+browse mode, `tmwait` waits for pending timers, `rr` rerenders after script
+updates, `1` prints the first line, and `q` quits. The final printed result
+should be `ok`; edbrowse's process exit status alone does not establish that
+the fixture passed. `tmwait` stops waiting if a user interval is active;
+exercise recurring timers interactively instead.
+
+### Running acid3 separately
+
+```sh
+src/edbrowse -c "" -d0 tests/acid3 <<'EOF'
+b
+tmwait
+rr
+3
+q
+EOF
+```
+
+The result on line 3 should be `69/69`. The notice that eight tests were
+skipped is expected. See [regression.md](regression.md) for the test's
+coverage and limitations.
+
+### Running the interactive JavaScript test
+
+Start edbrowse in a terminal:
+
+```sh
+src/edbrowse -c "" -d3 src/jsrt
+```
+
+Enter `b`. There should be no `failed NUMBER` messages or JavaScript
+exceptions. To exercise the interval timer, enter `/Interval/` to select
+the line with its checkbox, then `i=+`. Leave the terminal idle for a few
+seconds and enter `rr` to rerender; the displayed seconds count should
+increase. Select `/Interval/` again and enter `i=-` to stop the timer.
+Enter `q` to quit. Use a terminal for this check, rather than piping all
+commands into edbrowse at once.
+
+The current `src/jsrt` uses this checkbox to start its interval; it does
+not schedule the automatic ten-second timer described in the older
+regression notes. See [regression.md](regression.md) for the other manual
+checks, including forms and frames.
+
+------------------------------------------------------------
+
 Debug levels:
 0: silent
 1: show the sizes of files and web pages as they are read and written
