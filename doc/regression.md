@@ -45,20 +45,6 @@ Sometimes I direct the output into a file and compare it with the previous run.
 any error, from one of my tests or from javascript itself, will show up in the diff.
 also, the javascript error is printed in the db3 stream; you can see how far jsrt got before it produced the error.
 
-After it browses successfully, there is still one more thing it will do on its own.
-It creates a timer that fires in 10 seconds.
-The function (on the timer) tells you that 10 seconds have passed,
-and then it calls document.body.apendChild to add a TextNode to the tree of objects.
-The text simply says, "and the timer text".
-The alert tells you that the timer fired.
-Then, a periodic rerender should take place, (there could be a small delay), and edbrowse will detect a change in the buffer,
-something there that wasn't there before.
-(This is a diff between this rerender and the last one.)
-It notifies you by saying "lines 42 through 43 have been added"
-You may be somewhere else in the file, but you can go down to line 43 to see what is new.
-There you will find the timer text.
-This is how edbrowse presents a web page that dynamically changes in the real world.
-
 There is another way to browse jsrt - with javascript turned off.
 Needless to say, this does not test any javascript, but it does test the &lt;noscript&gt; feature.
 The noscript tag includes a numbered list with one item, and this appears at or near the top of the file.

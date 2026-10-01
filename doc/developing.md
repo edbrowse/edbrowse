@@ -1,15 +1,117 @@
 ##Edbrowse development
 
-The code in this project is indented via the script Lindent,
+The code in this project was originally indented via the script Lindent,
 which is in the tools directory, and is taken from the Linux kernel source.
-In other words, the indenting style is the same as the Linux kernel.
-Except it isn't always.
-I've drifted away from it on occasion.
+In other words, the indenting style was the same as the Linux kernel.
+However, we no longer run code through any kind of indent program.
+We found that indent sometimes changes format A to format B,
+then on the next run it changes format B back to format A.
+It thrashes, and creates diffs needlessly,
+so it's better to stay in control and do it ourselves.
+A little more manual work, but it's worth it.
+Also, we are moving away from the linux 8 space indent and to a 4 space indent.
+Some code runs several blocks deep, and the 8 space indent was prohibitive.
+If you make changes or additions, try to follow the 4 space convention.
 If the statement under the if is just a break or continue or return,
-I may well put it on the same line.
-It's really not that important all in all, especially to blind developers.
-If you take over this project, or send patches,
-try to sort of follow our indenting style.
+we sometimes put it on the same line.
+A matter of taste perhaps.
+We are starting to indent the javascript as well, which was originally not indented at all.
+Eventually, the whole project will be indented under one style.
+
+------------------------------------------------------------
+
+## Running tests
+
+Run these commands from the repository root, using the executable built
+from the current sources. See [installing.md](installing.md) for build
+dependencies, including the QuickJS library and the `qjs` executable.
+
+```sh
+make
+./tests/runtests
+```
+
+or for short:
+
+```
+make test
+```
+
+Run the full suite for behavioral changes. The runner ignores your personal
+configuration, runs each HTML fixture in its own process, checks table
+rendering, and runs acid3. Some tests require access to edbrowse.org.
+A successful run prints `ok` and exits with status 0. Failures are printed
+and the runner exits with status 1; inspect those messages as well as the
+exit status. The runner does not include the interactive `jsrt` test.
+
+To run the local subset:
+
+```sh
+./tests/runtests -l
+# or
+make test LOCAL=1
+```
+
+This skips the network fixtures `frames.html` and `xhr.html`, and acid3.
+It still checks table rendering. For significant JavaScript or DOM changes,
+run the full suite, including acid3, and run `jsrt` separately.
+
+### Running an individual HTML fixture
+
+Replace the path below with the fixture you want to check:
+
+```sh
+src/edbrowse -c "" -d0 tests/performance-observer.html <<'EOF'
+b
+tmwait
+rr
+1
+q
+EOF
+```
+
+The empty argument to `-c` disables the personal configuration. `b` enters
+browse mode, `tmwait` waits for pending timers, `rr` rerenders after script
+updates, `1` prints the first line, and `q` quits. The final printed result
+should be `ok`; edbrowse's process exit status alone does not establish that
+the fixture passed. `tmwait` stops waiting if a user interval is active;
+exercise recurring timers interactively instead.
+
+### Running acid3 separately
+
+```sh
+src/edbrowse -c "" -d0 tests/acid3 <<'EOF'
+b
+tmwait
+rr
+3
+q
+EOF
+```
+
+The result on line 3 should be `69/69`. The notice that eight tests were
+skipped is expected. See [regression.md](regression.md) for the test's
+coverage and limitations.
+
+### Running the interactive JavaScript test
+
+Start edbrowse in a terminal:
+
+```sh
+src/edbrowse -c "" -d1 src/jsrt
+```
+
+Enter `b`. There should be no `failed NUMBER` messages or JavaScript
+exceptions. To exercise the interval timer, enter `/Interval/` to select
+the line with its checkbox, then `i=+`. Leave the terminal idle for a few
+seconds and enter `rr` to rerender; the displayed seconds count should
+increase. Select `/Interval/` again and enter `i=-` to stop the timer.
+Enter `q` to quit. Use a terminal for this check, rather than piping all
+commands into edbrowse at once.
+
+The current `src/jsrt` uses this checkbox to start its interval.
+See [regression.md](regression.md) for the other manual
+checks, including forms and frames.
 
 ------------------------------------------------------------
 
