@@ -79,7 +79,7 @@ hoppy|g|rubble
 joe|v|rockhead
 anne|p|margrock
 
-<press3> {to the moon}'
+<press3> {here}'
 $program -c "" -d0 table.html <<!
 b
 et
