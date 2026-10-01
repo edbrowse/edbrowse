@@ -6014,13 +6014,61 @@ timing:{navigationStart:0},
 }
 odp(window, "performance", {get: function(){return new Performance}});
 
-// this is a stub, I hope I don't have to implement this stuff.
-swp("PerformanceObserver", {
-supportedEntryTypes: {
-// no types are supported
-includes: eb$falsefunction
+// No performance entry types are observed yet, but scripts can construct
+// an observer and request unsupported types without interrupting execution.
+class PerformanceObserver
+{
+    #observerType;
+    static #supportedEntryTypes = Object.freeze([]);
+
+    constructor(callback)
+    {
+        if(typeof callback != "function")
+            throw new TypeError("PerformanceObserver callback is not callable");
+    }
+
+    static get supportedEntryTypes() { return this.#supportedEntryTypes; }
+
+    observe(options = {})
+    {
+        if(options === null) options = {};
+        if(typeof options != "object" && typeof options != "function")
+            throw new TypeError("PerformanceObserver options is not a dictionary");
+        let entryTypes = options.entryTypes;
+        let type = options.type;
+        const buffered = options.buffered;
+        const durationThreshold = options.durationThreshold;
+        if(entryTypes !== undefined) {
+            if(entryTypes === null ||
+            typeof entryTypes[Symbol.iterator] != "function" ||
+            typeof entryTypes == "string")
+                throw new TypeError("entryTypes is not a sequence");
+            entryTypes = Array.from(entryTypes, t => {
+                if(typeof t == "symbol") throw new TypeError("invalid entry type");
+                return String(t);
+            });
+        }
+        if(type !== undefined) {
+            if(typeof type == "symbol") throw new TypeError("invalid entry type");
+            type = String(type);
+        }
+        if(entryTypes === undefined && type === undefined)
+            throw new TypeError("entryTypes or type is required");
+        if(entryTypes !== undefined && (type !== undefined ||
+        buffered !== undefined || durationThreshold !== undefined))
+            throw new TypeError("entryTypes cannot be combined with other options");
+        const mode = entryTypes === undefined ? "single" : "multiple";
+        if(this.#observerType && this.#observerType != mode)
+            throw new DOMException("cannot change observation mode",
+                "InvalidModificationError");
+        this.#observerType = mode;
+        // All requested types are unsupported. There is nothing to register.
+    }
+
+    disconnect() {}
+    takeRecords() { return []; }
 }
-})
+swc(PerformanceObserver);
 
 swp("onmessage$$queue", []);
 swpv("postMessage", function (message,target_origin, transfer) {

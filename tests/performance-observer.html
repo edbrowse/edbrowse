@@ -1,0 +1,77 @@
+<head></head><body>
+<p id=show>start</p>
+<script>
+try {
+let msg = "ok";
+const show = document.getElementById("show");
+function check(value, label) { if(!value) msg += "|" + label; }
+function throws(callback, name, label) {
+    try { callback(); msg += "|no exception " + label; }
+    catch(e) { check(e.name == name, label + " " + e.name); }
+}
+
+check(typeof PerformanceObserver == "function", "not a constructor");
+for(const callback of [undefined, null, 1, {}, "callback"])
+    throws(() => new PerformanceObserver(callback), "TypeError", "callback");
+throws(() => PerformanceObserver(() => {}), "TypeError", "requires new");
+
+const types = PerformanceObserver.supportedEntryTypes;
+check(Array.isArray(types), "supported types not an array");
+check(types === PerformanceObserver.supportedEntryTypes, "unstable types");
+check(Object.isFrozen(types), "types not frozen");
+// This implementation does not deliver performance entries yet.
+check(types.length == 0, "unexpected supported types");
+check(!types.includes("resource"), "resource reported supported");
+throws(() => types.push("resource"), "TypeError", "types writable");
+
+let calls = 0;
+const callback = () => ++calls;
+const observer = new PerformanceObserver(callback);
+check(observer instanceof PerformanceObserver, "wrong instance");
+for(const options of [undefined, null, {}, 1, "resource", true,
+    {entryTypes: ["resource"], type: "navigation"},
+    {entryTypes: [], buffered: false},
+    {entryTypes: [], durationThreshold: 0},
+    {entryTypes: null}, {entryTypes: "resource"},
+    {entryTypes: {length: 1, 0: "resource"}},
+    {entryTypes: [Symbol()]}, {type: Symbol()}])
+    throws(() => observer.observe(options), "TypeError", "options");
+
+// This is the construction and observation pattern in the failing challenge.
+check(observer.observe({entryTypes: ["resource", "navigation"]}) === undefined,
+    "observe return");
+observer.observe({entryTypes: []});
+observer.observe({entryTypes: new Set(["unknown"]), ignored: true});
+throws(() => observer.observe({type: "resource"}),
+    "InvalidModificationError", "multiple to single");
+check(observer.disconnect() === undefined, "disconnect return");
+observer.disconnect();
+// Disconnect does not reset the observer's observation mode.
+throws(() => observer.observe({type: "resource"}),
+    "InvalidModificationError", "mode after disconnect");
+observer.observe({entryTypes: ["resource"]});
+
+const single = new PerformanceObserver(callback);
+single.observe({type: "resource", buffered: true});
+single.observe({type: "navigation", buffered: false, durationThreshold: 0});
+throws(() => single.observe({entryTypes: []}),
+    "InvalidModificationError", "single to multiple");
+single.disconnect();
+single.observe({type: "unknown"});
+
+const records = observer.takeRecords();
+check(Array.isArray(records) && records.length == 0, "nonempty records");
+records.push("local change");
+check(observer.takeRecords().length == 0, "records reused");
+check(single.takeRecords().length == 0, "shared records");
+
+// Unsupported entries must not cause callbacks, even in a later task.
+setTimeout(() => {
+    check(calls == 0, "unsupported entry callback");
+    show.textContent = msg;
+}, 10);
+} catch(e) {
+    document.getElementById("show").textContent = "blowup " + e + " " + e.stack;
+}
+</script>
+</body>
