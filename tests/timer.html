@@ -1,0 +1,84 @@
+<head></head><body>
+<p id=show>waiting</p>
+<script>
+let msg = "ok", pending = 7, cancelled = 0;
+const show = document.getElementById("show");
+function check(value, label) { if(!value) msg += "|" + label; }
+function done() {
+    if(--pending) return;
+    clearTimeout(watchdog);
+    check(cancelled == 0, "cancelled callback ran");
+    show.textContent = msg;
+}
+const watchdog = setTimeout(() => {
+    clearInterval(interval);
+    show.textContent = msg + "|unfinished callbacks " + pending;
+}, 3000);
+
+// This is the request URL and payload pattern used by the live challenge.
+const payload = {value: 1};
+const token = Symbol("token");
+const callback = () => {};
+setTimeout(function(url, data, number, empty, missing, symbol, fn) {
+    "use strict";
+    check(this === window, "timeout receiver");
+    check(arguments.length == 7, "timeout argument count");
+    check(url === "/request", "timeout URL");
+    check(data === payload, "timeout object identity");
+    check(data && data.value == 42, "mutation before timeout");
+    check(number === 7 && empty === null && missing === undefined,
+        "timeout primitive values");
+    check(symbol === token && fn === callback, "timeout reference values");
+    done();
+}, 0, "/request", payload, 7, null, undefined, token, callback);
+payload.value = 42;
+
+setTimeout(function() {
+    check(arguments.length == 0, "zero arguments");
+    check(this === window, "zero argument receiver");
+    done();
+}, 0);
+
+// Other timers must not overwrite each other's saved argument lists.
+setTimeout(function(value) {
+    check(value === "other" && arguments.length == 1, "independent arguments");
+    setTimeout(function(nested) {
+        check(nested === payload, "nested timer identity");
+        done();
+    }, 0, payload);
+    done();
+}, 0, "other");
+
+const receiver = {};
+setTimeout(function(value) {
+    check(this === receiver && value === payload, "bound callback");
+    done();
+}.bind(receiver), 0, payload);
+
+// String callbacks do not receive the extra arguments.
+function timerStringCheck(count, receiver) {
+    check(count == 0 && receiver, "string callback changed");
+    done();
+}
+setTimeout("timerStringCheck(arguments.length, this === window)", 0, 1, payload);
+
+let ticks = 0;
+const intervalPayload = {value: 1};
+const interval = setInterval(function(url, data) {
+    check(this === window, "interval receiver");
+    check(arguments.length == 2 && url === "/interval", "interval arguments");
+    check(data === intervalPayload, "interval identity");
+    check(data && data.value === ticks + 1, "interval mutation");
+    intervalPayload.value++;
+    if(++ticks == 2) {
+        clearInterval(interval);
+        done();
+    }
+}, 200, "/interval", intervalPayload);
+
+const timeoutCancelled = setTimeout(() => ++cancelled, 0, payload);
+clearTimeout(timeoutCancelled);
+const intervalCancelled = setInterval(() => ++cancelled, 200, payload);
+clearInterval(intervalCancelled);
+</script>
+</body>

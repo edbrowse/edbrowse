@@ -634,7 +634,17 @@ static bool run_function_bool(JSContext *cx, JSValueConst parent, const char *na
 	    debugPrint(dbl, "exec %s timer %d context %d", name, seqno, cf->gsn);
 	    // the timer object is our mythical creation, and shouldn't be "this"
 	    JSValue g = JS_GetGlobalObject(cx);
-	    r = JS_Call(cx, v, g, 0, l);
+	    JSValue args = get_property_object(cx, parent, "args");
+	    int argc = get_arraylength(cx, args);
+	    if (argc < 0) argc = 0;
+	    JSValue *argv = argc ? allocMem(argc * sizeof(JSValue)) : NULL;
+	    for (int i = 0; i < argc; ++i)
+	        argv[i] = get_array_element_object(cx, args, i);
+	    r = JS_Call(cx, v, g, argc, argv);
+	    for (int i = 0; i < argc; ++i)
+	        JS_Release(argv[i]);
+	    nzFree(argv);
+	    JS_Release(args);
 	    JS_Release(g);
 	} else {
 	    debugPrint(dbl, "exec %s", name);
@@ -2235,6 +2245,14 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 	}
 
 	JS_SetPropertyStr(cx, to, "ms", JS_NewInt32(cx, n));
+	// Keep callback arguments alive with the timer, including for repeated calls.
+	// String handlers do not receive arguments.
+	if (JS_IsFunction(cx, argv[0]) && argc > 2) {
+		JSValue args = JS_NewArray(cx);
+		for (int i = 2; i < argc; ++i)
+			set_array_element_object(cx, args, i - 2, argv[i]);
+		JS_SetPropertyStr(cx, to, "args", args);
+	}
 // function is contained in an ontimer handler
 // don't free fo after this line
 	JS_SetPropertyStr(cx, to, "ontimer", fo);

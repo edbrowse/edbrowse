@@ -74,9 +74,16 @@ EOF
             line=3
             expected=69/69
         fi
+        wait_commands=tmwait
+        if [ "$check" = timer.html ]; then
+            # tmwait stops when it sees an interval. This fixture clears its
+            # interval after two ticks; sleep runs timers in the meantime.
+            wait_commands='sleep 2
+tmwait'
+        fi
         if ! "$program" -c "" "$check" > "$log" 2>&1 <<EOF
 b
-tmwait
+$wait_commands
 rr
 $line
 q
