@@ -12,7 +12,7 @@ install:
 	$(MAKE) -C src install
 
 test: build
-	+@$(MAKE) -s -k --output-sync=target -C tests \
+	+$(MAKE) -s -k --output-sync=target -C tests \
 		$(if $(LOCAL),LOCAL=1) $(if $(TRACE),TRACE=1) test
 
 # Finish cleaning before launching a recursive build, even with -j.
