@@ -1278,6 +1278,15 @@ A leading 0 indicates an octal code.
 /\07/ searches for control g bell.
 
 <li><p>
+For some people, on some keyboards, entering 4 at the end of a search string instead of $ is a frequent typo.
+This can be frustrating.
+if the environment variable EBFIXDOLLAR is set to any nonempty string, edbrowse activates the fix dollar feature.
+If a substitute command applies to one line, not in global mode,
+and the search string ends in 4, but not a multidigit number like 234,
+and the search string is not found, edbrowse tries again using $ instead of 4.
+This is a somewhat contrived feature, but the author of edbrowse likes it.
+
+<li><p>
 s, is shorthand for s/, +/,\n
 This is used to split lines at phrase boundaries.
 You can also use s. to split a line after the first period -- at a sentence boundary.
