@@ -18,7 +18,6 @@ even if the functionality is limited.
 To this end, I create the window object if it isn't already there,
 using the obvious window = this.
 *********************************************************************/
-"use strict";
 if(!this.window) {
 this.window = this;
 this.document = {};
@@ -79,6 +78,39 @@ if(!window.mw$) {
     this.CSSStyleDeclaration = function(){}
 }
 
+// Function to compile event handlers, has to come before use strict.
+function handlerCompile(f)
+{
+    let cf; // the compiled function
+    try {
+        cf = eval(`(function(){${f}})`);
+    } catch(e) {
+// Don't just use eb$truefunction; I want to put the text
+// on function.body, for debugging, and that means I need my own function.
+        cf = eval("(function(){return true;})");
+        alert3(`handler syntax error <${f}>`);
+    }
+    cf.body = f;
+    cf.toString = function() { return this.body; }
+    return cf;
+}
+
+// a simpler version of handlerCompile, for setTimeout().
+function timeoutCompile(f)
+{
+    let cf; // the compiled function
+    try {
+        cf = eval(`(function(){${f}})`);
+    } catch(e) {
+        cf = eval("(function(){})");
+        alert3("timeout syntax error <" + f + ">");
+    }
+    cf.body = f;
+    cf.toString = function() { return this.body; }
+    return cf;
+}
+
+"use strict";
 
 Object.defineProperty(this, "odp", {value: Object.defineProperty});
 /*
@@ -1448,23 +1480,6 @@ We set up for HR.onsubmit, for example; other browsers might not. */
         return false;
     }
 
-// Function to compile event handlers
-    static handlerCompile(f)
-    {
-        let cf; // the compiled function
-        try {
-            cf = eval(`(function(){${f}})`);
-        } catch(e) {
-    // Don't just use eb$truefunction; I want to put the text
-    // on function.body, for debugging, and that means I need my own function.
-            cf = eval("(function(){return true;})");
-            alert3(`handler syntax error <${f}>`);
-        }
-        cf.body = f;
-        cf.toString = function() { return this.body; }
-        return cf;
-    }
-
 // And now, the zoo of attribute methods.
 
     getAttribute(name)
@@ -1551,7 +1566,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
             const name2 = name + "$2";
             if (db$flags(1))
                 alert3(`${(this[name2] ? "clobber": "create")} ${(this.nodeName ? this.nodeName : this.dom$class)}.${name}`);
-            if(typeof v === "string") v = Element.handlerCompile(v);
+            if(typeof v === "string") v = handlerCompile(v);
             if(typeof v === "function") {
                 Object.defineProperty(this, name2, {
                     value: v, writable: true, configurable: true});
@@ -6177,21 +6192,6 @@ doc.appendChild(below);
 }
 return doc;
 }
-})
-
-// a simpler version of handlerCompile, for setTimeout().
-// We don't need to bind to this or return a value.
-swp("handlerCompile",  function(f) {
-let cf; // the compiled function
-try {
-cf = eval(`(function(){${f}})`);
-} catch(e) {
-cf = eval("(function(){})");
-alert3("timeout syntax error <" + f + ">");
-}
-cf.body = f;
-cf.toString = function() { return this.body; }
-return cf;
 })
 
 // Request, Response, Headers, fetch; link to third party code in master window.

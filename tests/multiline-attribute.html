@@ -12,12 +12,7 @@
 suffix" data-dog-food=chow data-fly=leash>visible</div>
 <wow></wow>
 
-<!--   Warning: in the following onload function, chrome doesn't need window.dataload.
-It is happy with dataload = 2345
-I have to set window.dataload and I don't know why.
-It seems to be in strict mode but that is not clear.
-We need to fix this but I'm not sure how. -->
-<script type="text/javascript" src="data:text/javascript,var data_uri1_test %3d %22set%22%3b" onload="window.dataload=2345"></script>
+<script type="text/javascript" src="data:text/javascript,var data_uri1_test %3d %22set%22%3b" onload="dataload=2345"></script>
 <script type="text/javascript" src="data:text/javascript;base64,dmFyIGRhdGFfdXJpMl90ZXN0ID0gInNldCI7Cg=="></script>
 
 <script>
