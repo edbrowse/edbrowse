@@ -466,418 +466,417 @@ static void loadReplacements(void);
 
 int main(int argc, char **argv)
 {
-	int cx, account;
-	bool rc, doConfig = true, autobrowse = false;
-	bool dofetch = false, domail = false, setDebugOpt = false;
-	char *firstFile = 0;
-	int firstFilePosition = 0, k;
-	static char agent0[64] = "edbrowse/";
+    int cx, account;
+    bool rc, doConfig = true, autobrowse = false;
+    bool dofetch = false, domail = false, setDebugOpt = false;
+    char *firstFile = 0;
+    int firstFilePosition = 0, k;
+    static char agent0[64] = "edbrowse/";
 
 // In case this is being piped over to a synthesizer, or whatever.
-	if (fileTypeByHandle(fileno(stdout)) != 'f')
-		setlinebuf(stdout);
+    if (fileTypeByHandle(fileno(stdout)) != 'f')
+        setlinebuf(stdout);
 
-	selectLanguage();
-	setHTTPLanguage(eb_language);
-	set_tdchars("**x@__~~");
+    selectLanguage();
+    setHTTPLanguage(eb_language);
+    set_tdchars("**x@__~~");
 
-	curlCiphers = getenv("EBCIPHERS");
-	if(curlCiphers && !*curlCiphers) curlCiphers = 0;
+    curlCiphers = getenv("EBCIPHERS");
+    if(curlCiphers && !*curlCiphers) curlCiphers = 0;
 // 1 is shorthand for the only setting we know of so far
-	if(curlCiphers && stringEqual(curlCiphers, "1")) curlCiphers = "DEFAULT@SECLEVEL=1";
+    if(curlCiphers && stringEqual(curlCiphers, "1")) curlCiphers = "DEFAULT@SECLEVEL=1";
 
-	const char *ipv = getenv("EBIPV");
-	if(stringEqual(ipv, "4")) curlIPV = 4;
-	if(stringEqual(ipv, "6")) curlIPV = 6;
+    const char *ipv = getenv("EBIPV");
+    if(stringEqual(ipv, "4")) curlIPV = 4;
+    if(stringEqual(ipv, "6")) curlIPV = 6;
 
-	const char *fix4 = getenv("EBFIXDOLLAR");
-	if(fix4 && *fix4) fixDollar = true;
+    const char *fix4 = getenv("EBFIXDOLLAR");
+    if(fix4 && *fix4) fixDollar = true;
 
 // Establish the home directory, and standard edbrowse files thereunder.
-	home = getenv("HOME");
+    home = getenv("HOME");
 
 // Empty is the same as missing
-	if (home && !*home)
-		home = 0;
-	if (!home)
-		i_printfExit(MSG_NotHome);
-	if (fileTypeByName(home, 0) != 'd')
-		i_printfExit(MSG_NotDir, home);
+    if (home && !*home)
+        home = 0;
+    if (!home)
+        i_printfExit(MSG_NotHome);
+    if (fileTypeByName(home, 0) != 'd')
+        i_printfExit(MSG_NotDir, home);
 
-        configHome = getenv("XDG_CONFIG_HOME");
-        if (configHome && *configHome) createFormattedString(&configFile, "%s/edbrowse/ebrc", configHome);
-        else createFormattedString(&configFile, "%s/.config/edbrowse/ebrc", home);
+    configHome = getenv("XDG_CONFIG_HOME");
+    if (configHome && *configHome) createFormattedString(&configFile, "%s/edbrowse/ebrc", configHome);
+    else createFormattedString(&configFile, "%s/.config/edbrowse/ebrc", home);
 /* For now just check for the presence of the config in the xdg location but
 create in the old location to avoid surprises */
-	if (fileTypeByName(configFile, 0) == 0) {
-	    setError(-1); // this is an ok error
-            free(configFile);
-            createFormattedString(&configFile, "%s/.ebrc", home);
-// if not present then create it
-            if (fileTypeByName(configFile, 0) == 0) {
-                int fh = creat(configFile, MODE_private);
-                if (fh >= 0) {
-		    int l = strlen(ebrc_string);
-                    if(write(fh, ebrc_string, l) < l)
-			unlink(configFile);
-                    close(fh);
-                    i_printfExit(MSG_Personalize, configFile);
-                }
+    if (fileTypeByName(configFile, 0) == 0) {
+        setError(-1); // this is an ok error
+        free(configFile);
+        createFormattedString(&configFile, "%s/.ebrc", home);
+        // if not present then create it
+        if (fileTypeByName(configFile, 0) == 0) {
+            int fh = creat(configFile, MODE_private);
+            if (fh >= 0) {
+                int l = strlen(ebrc_string);
+                if(write(fh, ebrc_string, l) < l)
+                    unlink(configFile);
+                close(fh);
+                i_printfExit(MSG_Personalize, configFile);
+            }
+        }
+    }
+
+/* recycle bin and .signature files are unix-like, and not adjusted for windows. */
+    recycleBin = allocMem(strlen(home) + 8);
+    sprintf(recycleBin, "%s/.Trash", home);
+    if (fileTypeByName(recycleBin, 0) != 'd') {
+        if (mkdir(recycleBin, 0700)) {
+        // Don't want to abort here; we might be on a readonly filesystem.
+        // no Trash directory and can't creat one; yet we should move on.
+            free(recycleBin);
+            recycleBin = 0;
+        }
+    }
+
+    if (recycleBin) {
+        mailStash = allocMem(strlen(recycleBin) + 12);
+        sprintf(mailStash, "%s/rawmail", recycleBin);
+        if (fileTypeByName(mailStash, 0) != 'd') {
+            if (mkdir(mailStash, 0700)) {
+                free(mailStash);
+                mailStash = 0;
+            }
+        }
+    }
+
+    sigFile = allocMem(strlen(home) + 20);
+    sprintf(sigFile, "%s/.signature", home);
+    sigFileEnd = sigFile + strlen(sigFile);
+
+    strcat(agent0, version);
+    userAgents[0] = currentAgent = agent0;
+
+    progname = argv[0];
+    ++argv, --argc;
+
+    ttySaveSettings();
+    initializeReadline();
+
+    loadReplacements(); // for debugging a snapshot
+
+    if (argc && stringEqual(argv[0], "-c")) {
+        if (argc == 1) {
+            *argv = configFile;
+            doConfig = false;
+        } else {
+            configFile = argv[1];
+            if(!*configFile) doConfig = false;
+            argv += 2, argc -= 2;
+        }
+    }
+    if (doConfig)
+        readConfigFile();
+    account = localAccount;
+
+    for (; argc && argv[0][0] == '-'; ++argv, --argc) {
+        char *s = *argv;
+        ++s;
+
+        if (stringEqual(s, "v")) {
+            printf("edbrowse %s\n",version);
+            const int cv = LIBCURL_VERSION_NUM;
+            printf("curl %d.%d.%d\n",
+            cv >> 16,
+            (cv >> 8) & 0xff,
+            cv & 0xff);
+            printf("openssl %s\n", ssl_version());
+            printf("pcre2 %s\n", pcre_version());
+            printf("quickjs %s\n", jseng_version());
+            exit(0);
+        }
+
+        if (stringEqual(s, "d")) {
+            setDebugOpt = true;
+            debugLevel = 4;
+            continue;
+        }
+
+        if (*s == 'd' && isdigitByte(s[1]) && !s[2]) {
+            setDebugOpt = true;
+            debugLevel = s[1] - '0';
+            continue;
+        }
+
+        if (stringEqual(s, "e")) {
+            errorExit = true;
+            continue;
+        }
+
+        if (stringEqual(s, "b")) {
+            autobrowse = true;
+            continue;
+        }
+
+        if (*s == 'p')
+            ++s, passMail = true;
+
+        if (*s == 'm' || *s == 'f') {
+            if (!maxAccount)
+                i_printfExit(MSG_NoMailAcc);
+            if (*s == 'f') {
+                account = 0, dofetch = true, ++s;
+                if (*s == 'm')
+                    domail = true, ++s;
+            } else {
+                domail = true;
+                ++s;
+            }
+            if (isdigitByte(*s)) {
+                account = strtol(s, &s, 10);
+                if (account == 0 || account > maxAccount)
+                    i_printfExit(MSG_BadAccNb, maxAccount);
+            }
+            if (!*s) {
+                ismc = true; // running as a mail client
+                allowJS = false; // no javascript in mail client
+                eb_curl_global_init();
+                ++argv, --argc;
+                if (!argc || !dofetch)
+                    break;
             }
         }
 
-/* recycle bin and .signature files are unix-like, and not adjusted for windows. */
-	recycleBin = allocMem(strlen(home) + 8);
-	sprintf(recycleBin, "%s/.Trash", home);
-	if (fileTypeByName(recycleBin, 0) != 'd') {
-		if (mkdir(recycleBin, 0700)) {
-/* Don't want to abort here; we might be on a readonly filesystem.
- * Don't have a Trash directory and can't creat one; yet we should move on. */
-			free(recycleBin);
-			recycleBin = 0;
-		}
-	}
+        i_printfExit(MSG_Usage);
+    } // options
 
-	if (recycleBin) {
-		mailStash = allocMem(strlen(recycleBin) + 12);
-		sprintf(mailStash, "%s/rawmail", recycleBin);
-		if (fileTypeByName(mailStash, 0) != 'd') {
-			if (mkdir(mailStash, 0700)) {
-				free(mailStash);
-				mailStash = 0;
-			}
-		}
-	}
+    srand(time(0));
+    loadAddressBook();
 
-	sigFile = allocMem(strlen(home) + 20);
-	sprintf(sigFile, "%s/.signature", home);
-	sigFileEnd = sigFile + strlen(sigFile);
+    if (ismc) {
+        char **reclist, **atlist;
+        char **reclist2, **atlist2;
+        char *s, *body;
+        int nat, nalt, nrec;
 
-	strcat(agent0, version);
-	userAgents[0] = currentAgent = agent0;
-
-	progname = argv[0];
-	++argv, --argc;
-
-	ttySaveSettings();
-	initializeReadline();
-
-	loadReplacements(); // for debugging a snapshot
-
-	if (argc && stringEqual(argv[0], "-c")) {
-		if (argc == 1) {
-			*argv = configFile;
-			doConfig = false;
-		} else {
-			configFile = argv[1];
-			if(!*configFile) doConfig = false;
-			argv += 2, argc -= 2;
-		}
-	}
-	if (doConfig)
-		readConfigFile();
-	account = localAccount;
-
-	for (; argc && argv[0][0] == '-'; ++argv, --argc) {
-		char *s = *argv;
-		++s;
-
-		if (stringEqual(s, "v")) {
-			printf("edbrowse %s\n",version);
-			const int cv = LIBCURL_VERSION_NUM;
-			printf("curl %d.%d.%d\n",
-			cv >> 16,
-			(cv >> 8) & 0xff,
-			cv & 0xff);
-			printf("openssl %s\n", ssl_version());
-			printf("pcre2 %s\n", pcre_version());
-			printf("quickjs %s\n", jseng_version());
-			exit(0);
-		}
-
-		if (stringEqual(s, "d")) {
-			setDebugOpt = true;
-			debugLevel = 4;
-			continue;
-		}
-
-		if (*s == 'd' && isdigitByte(s[1]) && !s[2]) {
-			setDebugOpt = true;
-			debugLevel = s[1] - '0';
-			continue;
-		}
-
-		if (stringEqual(s, "e")) {
-			errorExit = true;
-			continue;
-		}
-
-		if (stringEqual(s, "b")) {
-			autobrowse = true;
-			continue;
-		}
-
-		if (*s == 'p')
-			++s, passMail = true;
-
-		if (*s == 'm' || *s == 'f') {
-			if (!maxAccount)
-				i_printfExit(MSG_NoMailAcc);
-			if (*s == 'f') {
-				account = 0, dofetch = true, ++s;
-				if (*s == 'm')
-					domail = true, ++s;
-			} else {
-				domail = true;
-				++s;
-			}
-			if (isdigitByte(*s)) {
-				account = strtol(s, &s, 10);
-				if (account == 0 || account > maxAccount)
-					i_printfExit(MSG_BadAccNb, maxAccount);
-			}
-			if (!*s) {
-				ismc = true;	/* running as a mail client */
-				allowJS = false;	/* no javascript in mail client */
-				eb_curl_global_init();
-				++argv, --argc;
-				if (!argc || !dofetch)
-					break;
-			}
-		}
-
-		i_printfExit(MSG_Usage);
-	}			// options
-
-	srand(time(0));
-	loadAddressBook();
-
-	if (ismc) {
-		char **reclist, **atlist;
-		char **reclist2, **atlist2;
-		char *s, *body;
-		int nat, nalt, nrec;
-
-		if (!argc) {
+        if (!argc) {
 /* This is fetch / read mode */
-			if (dofetch) {
-				int nfetch = 0;
-				if (account) {
-					if (accounts[account - 1].imap) domail = false;
-					nfetch = fetchMail(account);
+            if (dofetch) {
+                int nfetch = 0;
+                if (account) {
+                    if (accounts[account - 1].imap) domail = false;
+                    nfetch = fetchMail(account);
 // fetchMail does not return in imap mode.
-				} else {
-					nfetch = fetchAllMail();
-				}
-				if (!domail) {
-					if (nfetch) i_printf(MSG_MessagesX, nfetch);
-					else i_puts(MSG_NoMail);
-				}
-			}
+                } else {
+                    nfetch = fetchAllMail();
+                }
+                if (!domail) {
+                    if (nfetch) i_printf(MSG_MessagesX, nfetch);
+                    else i_puts(MSG_NoMail);
+                }
+            }
 
-			if (domail)
-				scanUnreadMail();
+            if (domail)
+                scanUnreadMail();
 
-			exit(0);
-		}
+            exit(0);
+        }
 
 /* now in sendmail mode */
-		if (argc == 1)
-			i_printfExit(MSG_MinOneRec);
+        if (argc == 1)
+            i_printfExit(MSG_MinOneRec);
 /* I don't know that argv[argc] is 0, or that I can set it to 0,
  * so I back everything up by 1. */
-		reclist = argv - 1;
-		for (nat = nalt = 0; nat < argc; ++nat) {
-			s = argv[argc - 1 - nat];
-			if (*s != '+' && *s != '-')
-				break;
-			if (*s == '-')
-				++nalt;
-			strmove(s, s + 1);
-		}
-		atlist = argv + argc - nat - 1;
-		if (atlist <= argv)
-			i_printfExit(MSG_MinOneRecBefAtt);
-		body = *atlist;
-		if (nat)
-			memmove(atlist, atlist + 1, sizeof(char *) * nat);
-		atlist[nat] = 0;
-		nrec = atlist - argv;
-		memmove(reclist, reclist + 1, sizeof(char *) * nrec);
-		atlist[-1] = 0;
+        reclist = argv - 1;
+        for (nat = nalt = 0; nat < argc; ++nat) {
+            s = argv[argc - 1 - nat];
+            if (*s != '+' && *s != '-')
+                break;
+            if (*s == '-')
+                ++nalt;
+            strmove(s, s + 1);
+        }
+        atlist = argv + argc - nat - 1;
+        if (atlist <= argv)
+            i_printfExit(MSG_MinOneRecBefAtt);
+        body = *atlist;
+        if (nat)
+            memmove(atlist, atlist + 1, sizeof(char *) * nat);
+        atlist[nat] = 0;
+        nrec = atlist - argv;
+        memmove(reclist, reclist + 1, sizeof(char *) * nrec);
+        atlist[-1] = 0;
 
 // Make room for possible recipients or attachments in the mail descriptor.
-		atlist2 = allocMem(sizeof(char*) * (nat + MAXCC + 1));
-		memcpy(atlist2, atlist, sizeof(char*) * nat);
-		atlist2[nat] = 0;
-		reclist2 = allocMem(sizeof(char*) * (nrec + MAXCC + 1));
-		memcpy(reclist2, reclist, sizeof(char*) * nrec);
-		reclist2[nrec] = 0;
+        atlist2 = allocMem(sizeof(char*) * (nat + MAXCC + 1));
+        memcpy(atlist2, atlist, sizeof(char*) * nat);
+        atlist2[nat] = 0;
+        reclist2 = allocMem(sizeof(char*) * (nrec + MAXCC + 1));
+        memcpy(reclist2, reclist, sizeof(char*) * nrec);
+        reclist2[nrec] = 0;
 // These don't get freed, but we're going to exit anyways.
 
-		if (sendMail(account, (const char **)reclist2, body, 1,
-			     (const char **)atlist2, 0, nalt, 0, true))
-			exit(0);
-		showError();
-		exit(1);
-	}
+        if (sendMail(account, (const char **)reclist2, body, 1,
+                 (const char **)atlist2, 0, nalt, 0, true))
+            exit(0);
+        showError();
+        exit(1);
+    }
 
-	signal(SIGINT, catchSig);
+    signal(SIGINT, catchSig);
 
 // a child process terminates, either from a plugin or from a w !command,
 // all of edbrowse should not crash.
-	signal(SIGPIPE, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
 
-	js_main();
+    js_main();
 
 // This sanity check on number of files assumes they are all files,
 // not commands to execute.
-	if(argc >= MAXSESSION)
-		i_printfExit(MSG_ManyOpen, MAXSESSION - 1);
+    if(argc >= MAXSESSION)
+        i_printfExit(MSG_ManyOpen, MAXSESSION - 1);
 
-	cx = 0;
+    cx = 0;
 // where is the first file?
-	for(k = 0; k < argc; ++k) {
-		if(argv[k][0] != '+') {
-			firstFile = argv[k];
-			firstFilePosition = k;
-			break;
-		}
-	}
+    for(k = 0; k < argc; ++k) {
+        if(argv[k][0] != '+') {
+            firstFile = argv[k];
+            firstFilePosition = k;
+            break;
+        }
+    }
 
-	if(firstFile && firstFilePosition) {
+    if(firstFile && firstFilePosition) {
 // move +commands to after the first file
-		memmove(argv + 1, argv, firstFilePosition * sizeof(char*));
-		argv[0] = firstFile;
-	}
+        memmove(argv + 1, argv, firstFilePosition * sizeof(char*));
+        argv[0] = firstFile;
+    }
 
-	if (!cx && !firstFile) {		// no files
+    if (!cx && !firstFile) { // no files
 // create an empty buffer
-		++cx;
-		cxSwitch(cx, false);
-		inInitFunction = setDebugOpt;
-		runEbFunction("init");
-		inInitFunction = false;
-		if(debugLevel >= 1)
-			i_puts(MSG_Ready);
-	}
+        ++cx;
+        cxSwitch(cx, false);
+        inInitFunction = setDebugOpt;
+        runEbFunction("init");
+        inInitFunction = false;
+        if(debugLevel >= 1)
+            i_puts(MSG_Ready);
+    }
 
-	while (argc) {
-		char *file = *argv;
-		char *file2 = 0;	// will be allocated
+    while (argc) {
+        char *file = *argv;
+        char *file2 = 0; // will be allocated
 
 // edbrowse command as argument
-		if (file[0] == '+') {
-			debugPrint(3, "+ %s", file + 1);
-			edbrowseCommand(file + 1, false);
-			++argv, --argc;
-			continue;
-		}
+        if (file[0] == '+') {
+            debugPrint(3, "+ %s", file + 1);
+            edbrowseCommand(file + 1, false);
+            ++argv, --argc;
+            continue;
+        }
 
-		++cx;
-		if (cx == MAXSESSION)
-			i_printfExit(MSG_ManyOpen, MAXSESSION - 1);
-		cxSwitch(cx, false);
-		if (cx == 1) {
-			inInitFunction = setDebugOpt;
-			runEbFunction("init");
-			inInitFunction = false;
-		}
+        ++cx;
+        if (cx == MAXSESSION)
+            i_printfExit(MSG_ManyOpen, MAXSESSION - 1);
+        cxSwitch(cx, false);
+        if (cx == 1) {
+            inInitFunction = setDebugOpt;
+            runEbFunction("init");
+            inInitFunction = false;
+        }
 
-		if(!*file) { // empty string, empty buffer
-			debugPrint(1, "0");
-			++argv, --argc;
-			continue;
-		}
+        if(!*file) { // empty string, empty buffer
+            debugPrint(1, "0");
+            ++argv, --argc;
+            continue;
+        }
 
-		if(!isURL(file)) {
+        if(!isURL(file)) {
 // trim off slashes
-			char *t = file + strlen(file) - 1;
-			while(t > file && *t == '/') *t-- = 0;
-		}
+            char *t = file + strlen(file) - 1;
+            while(t > file && *t == '/') *t-- = 0;
+        }
 
-		changeFileName = 0;
-		file2 = allocMem(strlen(file) + 10);
+        changeFileName = 0;
+        file2 = allocMem(strlen(file) + 10);
 // Every URL needs a protocol.
-		if (missingProtURL(file))
-			sprintf(file2 + 2, "http://%s", file);
-		else
-			strcpy(file2 + 2, file);
-		file = file2 + 2;
+        if (missingProtURL(file))
+            sprintf(file2 + 2, "http://%s", file);
+        else
+            strcpy(file2 + 2, file);
+        file = file2 + 2;
 
-		if (autobrowse) {
-			const struct MIMETYPE *mt;
-			uchar sxfirst = 0;
-			if (isURL(file))
-				mt = findMimeByURL(file, &sxfirst);
-			else
-				mt = findMimeByFile(file);
-			if (mt && !mt->outtype)
-				playBuffer("pb", file);
-			else {
-				file2[0] = 'b';
-				file2[1] = ' ';
-				if (runCommand(file2))
-					debugPrint(1, "%lld", fileSize);
-				else
-					showError();
-			}
+        if (autobrowse) {
+            const struct MIMETYPE *mt;
+            uchar sxfirst = 0;
+            if (isURL(file))
+                mt = findMimeByURL(file, &sxfirst);
+            else
+                mt = findMimeByFile(file);
+            if (mt && !mt->outtype)
+                playBuffer("pb", file);
+            else {
+                file2[0] = 'b';
+                file2[1] = ' ';
+                if (runCommand(file2))
+                    debugPrint(1, "%lld", fileSize);
+                else
+                    showError();
+            }
 
-		} else {
+        } else {
 
-			char *newhash = findHash(file);
-			if(newhash)
-				newhash = cloneString(newhash + 1);
-			cf->fileName = cloneString(file);
-			cf->firstURL = cloneString(file);
-			if (isSQL(file))
-				cw->sqlMode = true;
-			rc = readFileArgv(file, 0, 0);
-			if (fileSize >= 0)
-				debugPrint(1, "%lld", fileSize);
-			fileSize = -1;
-			if (!rc) {
-				showError();
-			} else if (changeFileName) {
-				nzFree(cf->fileName);
-				cf->fileName = changeFileName;
-				if(redirect_count) {
-					nzFree(newhash);
-					newhash = findHash(changeFileName);
-					if(newhash) {
-						*newhash++ = 0;
-						newhash = cloneString(newhash);
-					}
-				}
-				changeFileName = 0;
-			}
-			cw->undoable = cw->changeMode = false;
+            char *newhash = findHash(file);
+            if(newhash)
+                newhash = cloneString(newhash + 1);
+            cf->fileName = cloneString(file);
+            cf->firstURL = cloneString(file);
+            if (isSQL(file))
+                cw->sqlMode = true;
+            rc = readFileArgv(file, 0, 0);
+            if (fileSize >= 0)
+                debugPrint(1, "%lld", fileSize);
+            fileSize = -1;
+            if (!rc) {
+                showError();
+            } else if (changeFileName) {
+                nzFree(cf->fileName);
+                cf->fileName = changeFileName;
+                if(redirect_count) {
+                    nzFree(newhash);
+                    newhash = findHash(changeFileName);
+                    if(newhash) {
+                        *newhash++ = 0;
+                        newhash = cloneString(newhash);
+                    }
+                }
+                changeFileName = 0;
+            }
+            cw->undoable = cw->changeMode = false;
 /* Browse the text if it's a url */
-			if (rc && isURL(cf->fileName)
-			    && ((cf->mt && cf->mt->outtype)
-				|| isBrowseableURL(cf->fileName))) {
-				if (runCommand("b")) {
-					debugPrint(1, "%lld", fileSize);
-					if(newhash) {
-						set_location_hash(newhash);
-						if(!jump2anchor(0, newhash))
-							showError();
-					}
-				} else
-					showError();
-			}
-			nzFree(newhash);
-		}
+            if (rc && isURL(cf->fileName)
+                && ((cf->mt && cf->mt->outtype)
+                || isBrowseableURL(cf->fileName))) {
+                if (runCommand("b")) {
+                    debugPrint(1, "%lld", fileSize);
+                    if(newhash) {
+                        set_location_hash(newhash);
+                        if(!jump2anchor(0, newhash))
+                            showError();
+                    }
+                } else
+                    showError();
+            }
+            nzFree(newhash);
+        }
 
-		nzFree(file2);
-		++argv, --argc;
-	}			// loop over files
+        nzFree(file2);
+        ++argv, --argc;
+    } // loop over files
 
-	if (cx > 1)
-		cxSwitch(1, false);
+    if (cx > 1) cxSwitch(1, false);
 
-	inputForever(NULL);
-	return 0;
+    inputForever(NULL);
+    return 0;
 }
 
 static void *inputForever(void *ptr)
