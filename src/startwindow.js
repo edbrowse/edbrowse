@@ -95,21 +95,6 @@ function handlerCompile(f)
     return cf;
 }
 
-// a simpler version of handlerCompile, for setTimeout().
-function timeoutCompile(f)
-{
-    let cf; // the compiled function
-    try {
-        cf = eval(`(function(){${f}})`);
-    } catch(e) {
-        cf = eval("(function(){})");
-        alert3("timeout syntax error <" + f + ">");
-    }
-    cf.body = f;
-    cf.toString = function() { return this.body; }
-    return cf;
-}
-
 "use strict";
 
 Object.defineProperty(this, "odp", {value: Object.defineProperty});

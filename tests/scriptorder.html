@@ -116,7 +116,8 @@ bad_timer = setTimeout(()=>{h += "@9"}, 100);
 clearTimeout(bad_timer);
 clearTimeout(0);
 // inject t to indicate a proper running timer with a real delay
-setTimeout(()=>{h += " / t"}, 300);
+// test passing a string to be compiled
+setTimeout('h += " / t"', 300);
 
 // set a show timer in case that innerHTML script ran later
 // And to accommodate the src scripts deferred and the microtask.
