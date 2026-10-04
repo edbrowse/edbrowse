@@ -90,7 +90,42 @@ msg += `|instance method toString ${b.append}`;
 wow = b.querySelector("wow");
 if(!wow instanceof HTMLUnknownElement) msg += "|wow not unknown";
 
-show.innerHTML = msg;
+/* Test the URL class, didn't want to create yet another test file for this,
+so this is as good a place as any to put it.
+I made this work in edbrowse but it blows up in chrome,
+it has to be a valid url, so I might undo
+the "build it" code in edbrowse.
+  uo = new URL("local-file");
+  if(uo.href != "http://yyz.rush.com/local-file") msg += `| local ${uo.href}`;
+*/
+newpath = "https://this.that.com:777/dir/ectory?search=k&l=english#middle";
+uo = new URL(newpath);
+if(uo != newpath) msg += `|url stringize ${uo}`;
+if(uo.protocol != "https:" ||
+uo.hostname != "this.that.com" ||
+uo.host != "this.that.com:777" ||
+uo.port != 777 ||
+uo.pathname != "/dir/ectory" ||
+uo.search != "?search=k&l=english" ||
+uo.hash != "#middle") msg += "| bad uo pieces";
+uo.port = 888;
+newpath = newpath.replace(/777/, "888");
+if(uo != newpath) msg += `|bad 888 ${uo}`;
+uo.protocol = "ftp:";
+newpath = newpath.replace(/https/, "ftp");
+if(uo != newpath) msg += `|bad ftp ${uo}`;
+uo.pathname = "otherplace";
+newpath = newpath.replace(/dir.ectory/, "otherplace");
+if(uo != newpath) msg += `|bad otherplace ${uo}`;
+uo.host = "otherplace.org:221";
+newpath = newpath.replace(/this.*888/, "otherplace.org:221");
+if(uo != newpath)
+msg += `|bad otherplace 221 ${uo}`;
+uo.hash = "#end";
+newpath = newpath.replace(/middle/, "end");
+if(uo != newpath) msg += `|bad end ${uo}`;
+
+show.textContent = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>
 </body>
