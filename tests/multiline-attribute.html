@@ -11,6 +11,15 @@
 &lt;/html&gt;
 suffix" data-dog-food=chow data-fly=leash>visible</div>
 <wow></wow>
+
+<!--   Warning: in the following onload function, chrome doesn't need window.dataload.
+It is happy with dataload = 2345
+I have to set window.dataload and I don't know why.
+It seems to be in strict mode but that is not clear.
+We need to fix this but I'm not sure how. -->
+<script type="text/javascript" src="data:text/javascript,var data_uri1_test %3d %22set%22%3b" onload="window.dataload=2345"></script>
+<script type="text/javascript" src="data:text/javascript;base64,dmFyIGRhdGFfdXJpMl90ZXN0ID0gInNldCI7Cg=="></script>
+
 <script>
 try {
 msg = "ok";
@@ -124,6 +133,14 @@ msg += `|bad otherplace 221 ${uo}`;
 uo.hash = "#end";
 newpath = newpath.replace(/middle/, "end");
 if(uo != newpath) msg += `|bad end ${uo}`;
+
+// test the data: protocol in a script.
+// exercised by the two scripts above this one.
+if(data_uri1_test != "set") msg += "|uri1 not set";
+if(data_uri2_test != "set") msg += "|uri2 not set";
+if(window.dataload != 2345) msg += "|dataload not set";
+s1 = document.scripts[0];
+if(s1.src.substr(0, 5) != "data:") msg += `|s1.src ${s1.src}`;
 
 show.textContent = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

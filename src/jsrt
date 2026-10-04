@@ -503,24 +503,8 @@ alert(e.stack);
 </script  	
 >
 
-<!-- this script has a url but it's data, and doesn't load, so onload does not run -->
-<script type="text/javascript" src="data:text/javascript,var data_uri1_test %3d %22set%22%3b" onload="onlv=2345"></script>
-<script type="text/javascript" src="data:text/javascript;base64,dmFyIGRhdGFfdXJpMl90ZXN0ID0gInNldCI7Cg=="></script>
-
-<script type=text/javascript language=JavaScript>
-if(data_uri1_test != "set")
-fail(146);
-if(data_uri2_test != "set")
-fail(147);
-</script>
-
 <script type=text/javascript language=JavaScript>
 try { // protect
-
-if(data_uri1_test != "set")
-fail(148);
-if(data_uri2_test != "set")
-fail(149);
 
 function test_cloneNode() {
 var x1  = document.createElement("div");

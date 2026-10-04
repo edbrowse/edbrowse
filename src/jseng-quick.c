@@ -946,56 +946,53 @@ static char *run_script(JSContext *cx, const char *s)
 // execute script.text code; more efficient than the above.
 void jsRunData(const Tag *t, const char *filename, int lineno, bool is_module)
 {
-	JSValue v;
-	const char *s;
-	JSContext *cx;
-	if (!allowJS || !t->jslink)
-		return;
-	debugPrint(5, "> script:");
-	cx = t->f0->cx;
-	jsSourceFile = filename;
-	jsLineno = lineno;
-        if (is_module) js_eval_flag = JS_EVAL_TYPE_MODULE;
-	v = JS_GetPropertyStr(cx, *((JSValue*)t->jv), "text");
-	if(!JS_IsString(v)) {
-// no data
-		jsSourceFile = 0;
-		JS_Release(v);
-		return;
-	}
-	s = JS_ToCString(cx, v);
-	if (!s || !*s) {
-		jsSourceFile = 0;
-		JS_ReleaseString(s);
-		JS_Release(v);
-		return;
-	}
-// have to set currentScript
-	JS_SetPropertyStr(cx, *((JSValue*)t->f0->docobj), "currentScript", JS_DupValue(cx, *((JSValue*)t->jv)));
-// defer to the earlier routine if there are breakpoints
-	if (strstr(s, "bp@(") || strstr(s, "trace@(")) {
-		char *result = run_script(cx, s);
-		nzFree(result);
-	} else {
-		JSValue r = JS_Eval(cx, s, strlen(s),
-		(jsSourceFile ? jsSourceFile : "internal"), js_eval_flag);
-		if (intFlag)
-			i_puts(MSG_Interrupted);
-		if(JS_IsException(r))
-			processError(cx);
-		JS_Release(r);
-	}
+    JSValue v;
+    const char *s;
+    JSContext *cx;
+    if (!allowJS || !t->jslink) return;
+    debugPrint(5, "> script:");
+    cx = t->f0->cx;
+    jsSourceFile = filename;
+    jsLineno = lineno;
+    if (is_module) js_eval_flag = JS_EVAL_TYPE_MODULE;
+    v = JS_GetPropertyStr(cx, *((JSValue*)t->jv), "text");
+    if(!JS_IsString(v)) { // no data
+        jsSourceFile = 0;
+        JS_Release(v);
+        return;
+    }
+    s = JS_ToCString(cx, v);
+    if (!s || !*s) {
+        jsSourceFile = 0;
+        JS_ReleaseString(s);
+        JS_Release(v);
+        return;
+    }
+    // have to set currentScript
+    JS_SetPropertyStr(cx, *((JSValue*)t->f0->docobj), "currentScript", JS_DupValue(cx, *((JSValue*)t->jv)));
+    // defer to the earlier routine if there are breakpoints
+    if (strstr(s, "bp@(") || strstr(s, "trace@(")) {
+        char *result = run_script(cx, s);
+        nzFree(result);
+    } else {
+        JSValue r = JS_Eval(cx, s, strlen(s),
+        (jsSourceFile ? jsSourceFile : "internal"), js_eval_flag);
+        if (intFlag) i_puts(MSG_Interrupted);
+        if(JS_IsException(r))
+            processError(cx);
+        JS_Release(r);
+    }
     JS_ReleaseString(s);
     JS_Release(v);
     jsSourceFile = NULL;
     js_eval_flag = JS_EVAL_TYPE_GLOBAL;
     delete_property(cx, *((JSValue*)t->f0->docobj), "currentScript");
+
 // onload handler? Should this run even if the script fails?
 // Right now it does.
 // The script could be removed, replaced by other nodes by innerHTML.
-    if (t->jslink && t->href && t->href[0] && !isDataURI(t->href)) {
+    if (t->jslink && t->href && t->href[0])
         run_event(cx, *((JSValue*)t->jv), "onload");
-    }
     debugPrint(5, "< ok");
 }
 
