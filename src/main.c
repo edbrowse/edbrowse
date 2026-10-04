@@ -29,6 +29,7 @@ bool allowRedirection = true, allowJS = true, sendReferrer = true;
 bool blockJS;
 bool ftpActive;
 bool errorExit;
+bool fixDollar;
 long webTimeout = 20, mailTimeout = 0;
 int displayLength = 500;
 int verifyCertificates = 1;
@@ -488,6 +489,9 @@ int main(int argc, char **argv)
 	const char *ipv = getenv("EBIPV");
 	if(stringEqual(ipv, "4")) curlIPV = 4;
 	if(stringEqual(ipv, "6")) curlIPV = 6;
+
+	const char *fix4 = getenv("EBFIXDOLLAR");
+	if(fix4 && *fix4) fixDollar = true;
 
 // Establish the home directory, and standard edbrowse files thereunder.
 	home = getenv("HOME");

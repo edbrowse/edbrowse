@@ -313,6 +313,7 @@ extern bool iuConvert;		// perform iso utf8 conversions automatically
 extern char type8859;		// 1 through 15
 extern bool js_redirects;	// window.location = new_url
 extern bool errorExit;		// exit on any error, for scripting purposes
+extern bool fixDollar; // change 4 to $ at the end in certain circumstances
 extern bool isInteractive;
 extern volatile bool intFlag;	/* set this when interrupt signal is caught */
 extern time_t intStart;

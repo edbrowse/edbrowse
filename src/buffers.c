@@ -4348,417 +4348,412 @@ None of those should inject newlines anyways.
 
 static int substituteText(const char *line)
 {
-	int whichField = 0;
-	bool bl_mode = false;	// running the bl command
-	bool g_mode = false;	// s/x/y/g
-	bool last_mode = false;	// s/x/y/$
-	bool ci = caseInsensitive;
-	bool forget = false;
-	bool ok = true; // substitutions ok so far
-	char c, *s, *t;
-	int nth = 0;		// s/x/y/7
-	int lastSubst = 0;	// last successful substitution
-	char *re;		// the parsed regular expression
-	int ln, ln2;			// line number
-	int dol2 = 0, alloc2 = 0;
-	int j, linecount, slashcount, nullcount, foldercount, tagno, total, realtotal;
-	char lhs[MAXRE], rhs[MAXRE];
-	struct lineMap *mptr, *newmap = 0;
-	bool *newg = 0;
-	bool hasMoved[MARKLETTERS];
+    int whichField = 0;
+    bool bl_mode = false; // running the bl command
+    bool g_mode = false; // s/x/y/g
+    bool last_mode = false; // s/x/y/$
+    bool ci = caseInsensitive;
+    bool forget = false;
+    bool ok = true; // substitutions ok so far
+    bool end4 = false; // search string ends in 4
+    char c, *s, *t;
+    int lhsl = 0; // length of lhs
+    int nth = 0; // s/x/y/7
+    int lastSubst = 0; // last successful substitution
+    char *re; // the parsed regular expression
+    int ln, ln2; // line number
+    int dol2 = 0, alloc2 = 0;
+    int j, linecount, slashcount, nullcount, foldercount, tagno, total, realtotal;
+    char lhs[MAXRE], rhs[MAXRE];
+    struct lineMap *mptr, *newmap = 0;
+    bool *newg = 0;
+    bool hasMoved[MARKLETTERS];
 
-	replaceString = 0;
-	memset(hasMoved, 0, sizeof(hasMoved));
+    replaceString = 0;
+    memset(hasMoved, 0, sizeof(hasMoved));
 
-	re_cc = 0;
-	if (stringEqual(line, "`bl")) {
-		bl_mode = true, breakLineSetup(), subPrint = 0;
-	} else {
-		subPrint = 1;	// default is to print the last line substituted
+    re_cc = 0;
+    if (stringEqual(line, "`bl")) {
+        bl_mode = true, breakLineSetup(), subPrint = 0;
+    } else {
+        subPrint = 1; // default is to print the last line substituted
 // watch for s2/x/y/ for the second input field
-		if (isdigitByte(*line))
-			whichField = strtol(line, (char **)&line, 10);
-		else if (*line == '$')
-			whichField = -1, ++line;
-		if (!*line) {
-			setError(MSG_RexpMissing, icmd);
-			return -1;
-		}
-		if (cw->dirMode && !dirWrite) {
-			setError(MSG_DirNoWrite);
-			return -1;
-		}
-		if (!regexpCheck(line, true, &re, &line))
-			return -1;
-		strcpy(lhs, re);
-		if (!regexpCheck(line, false, &re, &line))
-			return -1;
-		strcpy(rhs, re);
+        if (isdigitByte(*line))
+            whichField = strtol(line, (char **)&line, 10);
+        else if (*line == '$')
+            whichField = -1, ++line;
+        if (!*line) {
+            setError(MSG_RexpMissing, icmd);
+            return -1;
+        }
+        if (cw->dirMode && !dirWrite) {
+            setError(MSG_DirNoWrite);
+            return -1;
+        }
+        if (!regexpCheck(line, true, &re, &line)) return -1;
+        strcpy(lhs, re);
+        if (!regexpCheck(line, false, &re, &line)) return -1;
+        strcpy(rhs, re);
 
-		if (*line) {	// third delimiter
-			++line;
-			subPrint = 0;
-			while ((c = *line)) {
-				if (c == 'g') {
-					g_mode = true, ++line;
-					continue;
-				}
-				if (c == '$') {
-					last_mode = true, ++line;
-					continue;
-				}
-				if (c == 'i') {
-					ci = true, ++line;
-					continue;
-				}
-				if (c == 'f') {
-					forget = true, ++line;
-					continue;
-				}
-				if (c == 'p') {
-					subPrint = 2, ++line;
-					continue;
-				}
-				if (isdigitByte(c)) {
-					if (nth) {
-						setError(MSG_SubNumbersMany);
-						return -1;
-					}
-					nth = strtol(line, (char **)&line, 10);
-					continue;
-				}	// number
-				setError(MSG_SubSuffixBad);
-				return -1;
-			}	// loop gathering suffix flags
-			if ((g_mode & last_mode) ||
-			(nth && last_mode)) {
-				setError(MSG_SubNumberG);
-				return -1;
-			}
-		}		// closing delimiter
+        if(fixDollar && startRange == endRange && !globalMode &&
+        (lhsl = strlen(lhs)) &&
+        lhs[lhsl - 1] == '4' &&
+        (lhsl == 1 || !isdigit(lhs[lhsl - 2])))
+            end4 = true;
 
-		if (nth == 0 && !(g_mode|last_mode))
-			nth = 1;
+        if (*line) { // third delimiter
+            ++line;
+            subPrint = 0;
+            while ((c = *line)) {
+                if (c == 'g') {
+                    g_mode = true, ++line;
+                    continue;
+                }
+                if (c == '$') {
+                    last_mode = true, ++line;
+                    continue;
+                }
+                if (c == 'i') {
+                    ci = true, ++line;
+                    continue;
+                }
+                if (c == 'f') {
+                    forget = true, ++line;
+                    continue;
+                }
+                if (c == 'p') {
+                    subPrint = 2, ++line;
+                    continue;
+                }
+                if (isdigitByte(c)) {
+                    if (nth) {
+                        setError(MSG_SubNumbersMany);
+                        return -1;
+                    }
+                    nth = strtol(line, (char **)&line, 10);
+                    continue;
+                } // number
+                setError(MSG_SubSuffixBad);
+                return -1;
+            } // loop gathering suffix flags
+            if ((g_mode & last_mode) ||
+            (nth && last_mode)) {
+                setError(MSG_SubNumberG);
+                return -1;
+            }
+        } // closing delimiter
 
-		if(!forget) {
-			cw->lhs_yes = true;
-			cw->lhs_bang = false;
-			cw->lhs_ci = false;
-			strcpy(cw->lhs, globalSubs.temp_lhs);
-			cw->rhs_yes = true;
-			strcpy(cw->rhs, globalSubs.temp_rhs);
-		}
+        if (nth == 0 && !(g_mode|last_mode)) nth = 1;
 
-		regexpCompile(lhs, ci);
-		if (!re_cc)
-			return -1;
-	}
+        if(!forget) {
+            cw->lhs_yes = true;
+            cw->lhs_bang = false;
+            cw->lhs_ci = false;
+            strcpy(cw->lhs, globalSubs.temp_lhs);
+            cw->rhs_yes = true;
+            strcpy(cw->rhs, globalSubs.temp_rhs);
+        }
 
-	if (!globalMode)
-		setError(-1);
+retry:
+        regexpCompile(lhs, ci);
+        if (!re_cc) return -1;
+    }
 
-	ln2 = 0;
-	for (ln = startRange; ln <= endRange; ++ln) {
-		char *p;
-		int len, imaplen = 0;
+    if (!globalMode) setError(-1);
 
-		if(newmap) {
-			newmap[ln2] = cw->map[ln];
-			if(newg) newg[ln2] = gflag[ln];
-			for(j = 0; j < MARKLETTERS; ++j)
-				if(cw->labels[j] == ln && !hasMoved[j])
-					cw->labels[j] = ln2, hasMoved[j] = true;
-		}
+    ln2 = 0;
+    for (ln = startRange; ln <= endRange; ++ln) {
+        char *p;
+        int len, imaplen = 0;
 
-		replaceString = 0;
-		if(intFlag) goto abort;
-		if(!ok) { ++ln2; continue; }
+        if(newmap) {
+            newmap[ln2] = cw->map[ln];
+            if(newg) newg[ln2] = gflag[ln];
+            for(j = 0; j < MARKLETTERS; ++j)
+                if(cw->labels[j] == ln && !hasMoved[j])
+                    cw->labels[j] = ln2, hasMoved[j] = true;
+        }
 
-		p = (char *)fetchLine(ln, -1);
-		len = pstLength((pst) p);
-		if(cw->imapMode1)
-			imaplen = strrchr(p,':') - p; // this should always work
+        replaceString = 0;
+        if(intFlag) goto abort;
+        if(!ok) { ++ln2; continue; }
 
-		if (bl_mode) {
-			int newlen;
-			if (!breakLine(p, len, &newlen)) {
+        p = (char *)fetchLine(ln, -1);
+        len = pstLength((pst) p);
+        if(cw->imapMode1)
+            imaplen = strrchr(p,':') - p; // this should always work
+
+        if (bl_mode) {
+            int newlen;
+            if (!breakLine(p, len, &newlen)) {
 // you just should never be here
-				setError(MSG_BreakLong, 0);
-				nzFree0(breakLineResult);
-				goto abort;
-			}
+                setError(MSG_BreakLong, 0);
+                nzFree0(breakLineResult);
+                goto abort;
+            }
 // empty line is not allowed
-			if (!newlen)
-				breakLineResult[newlen++] = '\n';
+            if (!newlen)
+                breakLineResult[newlen++] = '\n';
 // perhaps no changes were made
-			if (newlen == len && !memcmp(p, breakLineResult, len)) {
-				nzFree0(breakLineResult);
-				++ln2;
-				continue;
-			}
-			replaceString = breakLineResult;
-			undoSpecialClear();
+            if (newlen == len && !memcmp(p, breakLineResult, len)) {
+                nzFree0(breakLineResult);
+                ++ln2;
+                continue;
+            }
+            replaceString = breakLineResult;
+            undoSpecialClear();
 // But the regular substitute doesn't have the \n on the end.
 // We need to make this one conform.
-			replaceStringLength = newlen - 1;
-		} else {
+            replaceStringLength = newlen - 1;
+        } else {
 
-			if (cw->browseMode) {
-				char search[20];
-				char searchend[4];
-				findInputField(p, 1, whichField, &total,
-					       &realtotal, &tagno);
-				if (!tagno) {
-					fieldNumProblem(0, "i", whichField,
-							total, realtotal);
-					continue;
-				}
-				sprintf(search, "%c%d<", InternalCodeChar,
-					tagno);
-				sprintf(searchend, "%c0>", InternalCodeChar);
+            if (cw->browseMode) {
+                char search[20];
+                char searchend[4];
+                findInputField(p, 1, whichField, &total,
+                           &realtotal, &tagno);
+                if (!tagno) {
+                    fieldNumProblem(0, "i", whichField,
+                            total, realtotal);
+                    continue;
+                }
+                sprintf(search, "%c%d<", InternalCodeChar, tagno);
+                sprintf(searchend, "%c0>", InternalCodeChar);
 // Ok, if the line contains a null, this ain't gonna work.
 // There should be no nulls in a browsed file.
-				s = strstr(p, search);
-				if (!s) // should never happen
-					continue;
-				s = strchr(s, '<') + 1;
-				t = strstr(s, searchend);
-				if (!t)
-					continue;
-				j = replaceText(s, t - s, rhs, nth,
-						g_mode, last_mode, ln);
-			} else {
-				j = replaceText(p, (cw->imapMode1 ? imaplen : len - 1), rhs, nth,
-						g_mode, last_mode, ln);
-			}
-			if (j < 0)
-				goto abort;
-			if (!j) { ++ln2; continue; }
-		}
+                s = strstr(p, search);
+                if (!s) continue; // should never happen
+                s = strchr(s, '<') + 1;
+                t = strstr(s, searchend);
+                if (!t) continue;
+                j = replaceText(s, t - s, rhs, nth,
+                        g_mode, last_mode, ln);
+            } else {
+                j = replaceText(p, (cw->imapMode1 ? imaplen : len - 1), rhs, nth,
+                        g_mode, last_mode, ln);
+            }
+            if (j < 0) goto abort;
+            if (!j) { ++ln2; continue; }
+        }
 
 // Did we split this line into many lines?
-		replaceStringEnd = replaceString + replaceStringLength;
-		linecount = slashcount = nullcount = foldercount = 0;
-		for (t = replaceString; t < replaceStringEnd; ++t) {
-			c = *t;
-			if (c == '\n')
-				++linecount;
-			if (c == 0)
-				++nullcount;
-			if (c == '/')
-				++slashcount;
-			if ((uchar)c < ' ' || c == '"')
-				++foldercount;
-		}
+        replaceStringEnd = replaceString + replaceStringLength;
+        linecount = slashcount = nullcount = foldercount = 0;
+        for (t = replaceString; t < replaceStringEnd; ++t) {
+            c = *t;
+            if (c == '\n') ++linecount;
+            if (c == 0) ++nullcount;
+            if (c == '/') ++slashcount;
+            if ((uchar)c < ' ' || c == '"') ++foldercount;
+        }
 
-		if (cw->sqlMode) {
-			if (linecount) {
-				setError(MSG_ReplaceNewline);
-				goto abort;
-			}
-			if (nullcount) {
-				setError(MSG_ReplaceNull);
-				goto abort;
-			}
-			*replaceStringEnd = '\n';
-			if (!sqlUpdateRow(ln, (pst) p, len - 1,
-			(pst) replaceString, replaceStringLength))
-				goto abort;
-		} // sql mode
+        if (cw->sqlMode) {
+            if (linecount) {
+                setError(MSG_ReplaceNewline);
+                goto abort;
+            }
+            if (nullcount) {
+                setError(MSG_ReplaceNull);
+                goto abort;
+            }
+            *replaceStringEnd = '\n';
+            if (!sqlUpdateRow(ln, (pst) p, len - 1,
+            (pst) replaceString, replaceStringLength))
+                goto abort;
+        } // sql mode
 
-		if (cw->dirMode) {
+        if (cw->dirMode) {
 // move the file, then update the text
-			char src[ABSPATH], *dest;
-			if (slashcount + nullcount + linecount) {
-				setError(MSG_DirNameBad);
-				goto abort;
-			}
-			p[len - 1] = 0;	// temporary
-			t = makeAbsPath(p);
-			p[len - 1] = '\n';
-			if (!t)
-				goto abort;
-			strcpy(src, t);
-			*replaceStringEnd = 0;
-			dest = makeAbsPath(replaceString);
-			if (!dest)
-				goto abort;
-			if (!stringEqual(src, dest)) {
-				if (fileTypeByName(dest, 1)) {
-					setError(MSG_DestFileExists, dest);
-					goto abort;
-				}
-				if (rename(src, dest)) {
-					setError(MSG_NoRename, dest, strerror(errno));
-					goto abort;
-				}
+            char src[ABSPATH], *dest;
+            if (slashcount + nullcount + linecount) {
+                setError(MSG_DirNameBad);
+                goto abort;
+            }
+            p[len - 1] = 0; // temporary
+            t = makeAbsPath(p);
+            p[len - 1] = '\n';
+            if (!t) goto abort;
+            strcpy(src, t);
+            *replaceStringEnd = 0;
+            dest = makeAbsPath(replaceString);
+            if (!dest) goto abort;
+            if (!stringEqual(src, dest)) {
+                if (fileTypeByName(dest, 1)) {
+                    setError(MSG_DestFileExists, dest);
+                    goto abort;
+                }
+                if (rename(src, dest)) {
+                    setError(MSG_NoRename, dest, strerror(errno));
+                    goto abort;
+                }
 // if substituting one line, remember it for undo
-				if(startRange == endRange && !globalMode) {
-					p[len - 1] = 0;
-					undoSpecial = cloneString(p), undo1line = ln, undoField = 0;
-					p[len - 1] = '\n';
-				}
-				cw->dot = ln;
-			}	// source and dest are different
+                if(startRange == endRange && !globalMode) {
+                    p[len - 1] = 0;
+                    undoSpecial = cloneString(p), undo1line = ln, undoField = 0;
+                    p[len - 1] = '\n';
+                }
+                cw->dot = ln;
+            } // source and dest are different
 } // dir mode
 
-		if (cw->imapMode1) {
-			if (foldercount || replaceStringEnd == replaceString) {
-				setError(MSG_FolderNameBad);
-				goto abort;
-			}
-			p[imaplen] = 0;	// temporary
-			*replaceStringEnd = 0;
-			if (!stringEqual(p, replaceString)) {
-				if (!renameFolder(p, replaceString)) {
+        if (cw->imapMode1) {
+            if (foldercount || replaceStringEnd == replaceString) {
+                setError(MSG_FolderNameBad);
+                goto abort;
+            }
+            p[imaplen] = 0; // temporary
+            *replaceStringEnd = 0;
+            if (!stringEqual(p, replaceString)) {
+                if (!renameFolder(p, replaceString)) {
 // renameFolder will set the error
-					p[imaplen] = ':';
-					goto abort;
-				}
-				cw->dot = ln;
-			}	// source and dest are different
-			p[imaplen] = ':';
+                    p[imaplen] = ':';
+                    goto abort;
+                }
+                cw->dot = ln;
+            } // source and dest are different
+            p[imaplen] = ':';
 // this function will replace foo: 127 with bar, no message count,
 // but it doesn't matter cause we're going to refresh anyways.
-		} // imap mode
+        } // imap mode
 
-		if (cw->browseMode) {
-			if (nullcount) {
-				setError(MSG_InputNull2);
-				goto abort;
-			}
-			if (linecount) {
-				setError(MSG_InputNewline2);
-				goto abort;
-			}
-			*replaceStringEnd = 0;
+        if (cw->browseMode) {
+            if (nullcount) {
+                setError(MSG_InputNull2);
+                goto abort;
+            }
+            if (linecount) {
+                setError(MSG_InputNewline2);
+                goto abort;
+            }
+            *replaceStringEnd = 0;
 // if substituting one line, remember it for undo
-			if(startRange == endRange && !globalMode)
-				undoSpecial = getFieldFromBuffer(tagno), undo1line = ln, undoField = whichField;
+            if(startRange == endRange && !globalMode)
+                undoSpecial = getFieldFromBuffer(tagno), undo1line = ln, undoField = whichField;
 // We're managing our own printing, so leave notify = 0
-			if (!infReplace(tagno, replaceString, false))
-				goto abort;
-			undoCompare();
-			cw->undoable = false;
-			tagList[tagno]->ipass = false;
-		} else {
+            if (!infReplace(tagno, replaceString, false)) goto abort;
+            undoCompare();
+            cw->undoable = false;
+            tagList[tagno]->ipass = false;
+        } else {
 
 // time to update the text in the buffer
-			undoPush();
-			*replaceStringEnd = '\n';
-			if (!linecount) {
+            undoPush();
+            *replaceStringEnd = '\n';
+            if (!linecount) {
 // normal substitute
-				mptr = newmap ? newmap + ln2 : cw->map + ln;
-				if(cw->sqlMode | cw->imapMode1)
-					nzFree(mptr->text);
-				mptr->text = allocMem(replaceStringLength + 1);
-				memcpy(mptr->text, replaceString,
-				       replaceStringLength + 1);
-				if (cw->dirMode)
-					undoCompare(), cw->undoable = false;
-				++ln2;
-			} else {
+                mptr = newmap ? newmap + ln2 : cw->map + ln;
+                if(cw->sqlMode | cw->imapMode1)
+                    nzFree(mptr->text);
+                mptr->text = allocMem(replaceStringLength + 1);
+                memcpy(mptr->text, replaceString,
+                       replaceStringLength + 1);
+                if (cw->dirMode)
+                    undoCompare(), cw->undoable = false;
+                ++ln2;
+            } else {
 // Becomes many lines, this is the tricky case.
-				bool notused;
-				text2linemap((pst) replaceString,
-				replaceStringLength + 1, &notused);
-				if(!newmap) {
+                bool notused;
+                text2linemap((pst) replaceString,
+                replaceStringLength + 1, &notused);
+                if(!newmap) {
 // switching over to newmap
-					debugPrint(3, "mass substitute");
-					dol2 = cw->dol;
-					alloc2 = dol2 / 9 * 10 + 60;
-					newmap = allocMem(LMSIZE * alloc2);
-					memcpy(newmap, cw->map,LMSIZE*(ln2 = ln));
-					if(gflag) {
-						newg = allocMem(alloc2);
-						memcpy(newg, gflag, ln);
-					}
-				}
-				dol2 += linecount;
-				if(dol2 + 2 > alloc2) {
-					alloc2 = dol2 / 9 * 10 + 20;
-					newmap = realloc(newmap, LMSIZE*alloc2);
-					if(newg) newg = realloc(newg, alloc2);
-				}
-				++linecount;
-				memcpy(newmap + ln2, newpiece, linecount*LMSIZE);
-				free(newpiece), newpiece = 0;
-				if(newg) memset(newg + ln2, 0, linecount);
-				ln2 += linecount;
+                    debugPrint(3, "mass substitute");
+                    dol2 = cw->dol;
+                    alloc2 = dol2 / 9 * 10 + 60;
+                    newmap = allocMem(LMSIZE * alloc2);
+                    memcpy(newmap, cw->map,LMSIZE*(ln2 = ln));
+                    if(gflag) {
+                        newg = allocMem(alloc2);
+                        memcpy(newg, gflag, ln);
+                    }
+                }
+                dol2 += linecount;
+                if(dol2 + 2 > alloc2) {
+                    alloc2 = dol2 / 9 * 10 + 20;
+                    newmap = realloc(newmap, LMSIZE*alloc2);
+                    if(newg) newg = realloc(newg, alloc2);
+                }
+                ++linecount;
+                memcpy(newmap + ln2, newpiece, linecount*LMSIZE);
+                free(newpiece), newpiece = 0;
+                if(newg) memset(newg + ln2, 0, linecount);
+                ln2 += linecount;
 // There's a quirk when adding newline to the end of a buffer
 // that had no newline at the end before.
-				if (cw->nlMode && ln == cw->dol
-				    && replaceStringEnd[-1] == '\n')
-					--ln2, --dol2;
-			}
-		}		// browse or not
+                if (cw->nlMode && ln == cw->dol
+                    && replaceStringEnd[-1] == '\n')
+                    --ln2, --dol2;
+            }
+        } // browse or not
 
-		if (subPrint == 2) {
-			if(!newmap) {
-				displayLine(ln);
-			} else {
+        if (subPrint == 2) {
+            if(!newmap) {
+                displayLine(ln);
+            } else {
 // this is hinky as hell, swap newmap in just to display the line
-				mptr = cw->map, cw->map = newmap;
-				j = cw->dol, cw->dol = dol2;
-				displayLine(ln2 - 1);
-				cw->map = mptr, cw->dol = j;
-			}
-		}
-		lastSubst = newmap ? ln2 - 1 : ln;
-		nzFree(replaceString);
+                mptr = cw->map, cw->map = newmap;
+                j = cw->dol, cw->dol = dol2;
+                displayLine(ln2 - 1);
+                cw->map = mptr, cw->dol = j;
+            }
+        }
+        lastSubst = newmap ? ln2 - 1 : ln;
+        nzFree(replaceString);
 // we may have just freed the result of a breakline command
-		breakLineResult = 0;
-		continue;
+        breakLineResult = 0;
+        continue;
 
 abort:
-		if (re_cc) {
-			pcre2_match_data_free(match_data);
-			pcre2_code_free(re_cc);
-		}
-		nzFree(replaceString);
-	// we may have just freed the result of a breakline command
-		breakLineResult = 0;
-		ok = false;
-		++ln2;
-	}			// loop over lines in the range
+        if (re_cc) {
+            pcre2_match_data_free(match_data);
+            pcre2_code_free(re_cc);
+        }
+        nzFree(replaceString);
+    // we may have just freed the result of a breakline command
+        breakLineResult = 0;
+        ok = false;
+        ++ln2;
+    } // loop over lines in the range
 
-	if(newmap) { // close it out
-		for(; ln <= cw->dol; ++ln, ++ln2) {
-			newmap[ln2] = cw->map[ln];
-			if(newg) newg[ln2] = gflag[ln];
-			for(j = 0; j < MARKLETTERS; ++j)
-				if(cw->labels[j] == ln && !hasMoved[j])
-					cw->labels[j] = ln2, hasMoved[j] = true;
-		}
-		newmap[ln2] = cw->map[ln]; // null terminate
-		free(cw->map), cw->map = newmap;
-		if(newg) free(gflag), gflag = newg;
+    if(newmap) { // close it out
+        for(; ln <= cw->dol; ++ln, ++ln2) {
+            newmap[ln2] = cw->map[ln];
+            if(newg) newg[ln2] = gflag[ln];
+            for(j = 0; j < MARKLETTERS; ++j)
+                if(cw->labels[j] == ln && !hasMoved[j])
+                    cw->labels[j] = ln2, hasMoved[j] = true;
+        }
+        newmap[ln2] = cw->map[ln]; // null terminate
+        free(cw->map), cw->map = newmap;
+        if(newg) free(gflag), gflag = newg;
 cw->dol = ln2 - 1;
-	}
+    }
 
-	if (intFlag && !ok) {
-		setError(MSG_Interrupted);
-		return -1;
-	}
+    if (intFlag && !ok) {
+        setError(MSG_Interrupted);
+        return -1;
+    }
 
-	if(!ok) return -1;
+    if(!ok) return -1;
 
-	if (re_cc) {
-		pcre2_match_data_free(match_data);
-		pcre2_code_free(re_cc);
-	}
+    if (re_cc) {
+        pcre2_match_data_free(match_data);
+        pcre2_code_free(re_cc);
+    }
 
-	if (!lastSubst) {
-		if (!globalMode) {
-			if (!errorMsg[0])
-				setError(bl_mode ? MSG_NoChange : MSG_NoMatch);
-		}
-		return false;
-	}
-	cw->dot = lastSubst;
-	if (subPrint == 1 && !globalMode)
-		printDot();
-	return true;
+    if (!lastSubst) {
+// this is the kludge line that turns 4 into $ if there was no match
+    if(end4) { lhs[lhsl - 1] = '$'; end4 = false; goto retry; }
+        if (!globalMode) {
+            if (!errorMsg[0])
+                setError(bl_mode ? MSG_NoChange : MSG_NoMatch);
+        }
+        return false;
+    }
+
+    cw->dot = lastSubst;
+    if (subPrint == 1 && !globalMode) printDot();
+    return true;
 }
 
 static char *lessFile(const char *line)
