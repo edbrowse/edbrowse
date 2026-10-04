@@ -1,0 +1,77 @@
+# You'll need tweb:
+# https://github.com/bmmcginty/tweb
+# Read the live web through tweb, which drives an ordinary Chrome, Chromium
+# or Firefox and hands the result to edbrowse as html.
+#
+#   b tweb://https://example.com
+#
+# Start the server first, in the tui-browser directory:
+#
+#   npm run edb                 (or: npm run edb -- --browser firefox)
+#
+# Every link and form in the page that comes back points at the server over
+# http, so edbrowse's own machinery — g, i=, i*, ib, rf, ^ — works normally
+# from there on, and the browser keeps your logins and clearance cookies.
+
+plugin {
+    type = */*
+    desc = Read a page through tweb's browser
+    protocol = tweb
+    program = edbrowse-plugin-tweb %i
+    outtype = h
+}
+
+# Send a real click, the kind the browser treats as a person's, to the link
+# on the current line. Audio, fullscreen, the clipboard and popups are gated
+# on that gesture; an ordinary g is a script-initiated click and is not.
+# Adapted from edbrowse's own render-chrome.rc.
+function+twebclick {
+    db0
+    A
+    2,d
+    s;^<br/*><a href='\(.*\)'>$;b $1/click;f
+    bw
+    up
+    db1
+    <*-1
+}
+
+# The accessibility tree, the visible text and the markup, as tweb's reader
+# sees them, for when edbrowse's rendering of a page is not the useful one.
+function+twebax {
+    b ax
+}
+
+function+twebsource {
+    b source
+}
+
+# Shortcuts, so that reaching the web is one short word and an address.
+# ~0 is everything you typed after the function name; the tweb server takes
+# an address the way a url bar does, so no scheme is needed.
+#
+#   <t example.com
+#   <t en.wikipedia.org/wiki/Braille
+#   <t https://skt222.bandcamp.com/album/weird-fish
+#
+# Rename these to whatever your fingers prefer — they are two lines each.
+function+t {
+    b tweb://~0
+}
+
+function+tweb {
+    b tweb://~0
+}
+
+# The tab list, which is also where the address field is when you have not
+# decided where to go yet.
+function+tt {
+    b tweb://tabs
+}
+
+# Search, in the browser, with its cookies and no bot check to fail.
+#
+#   <ts kangaroo habitat
+function+ts {
+    b tweb://https://duckduckgo.com/html/?q=~0
+}
