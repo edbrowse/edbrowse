@@ -128,6 +128,8 @@ msg += `|bad otherplace 221 ${uo}`;
 uo.hash = "#end";
 newpath = newpath.replace(/middle/, "end");
 if(uo != newpath) msg += `|bad end ${uo}`;
+uo = new URL("end.html", "ftp://fifth.firth.uk/gen/start.html");
+if(uo != "ftp://fifth.firth.uk/gen/end.html") msg += `| RUL two args ${uo}`;
 
 // test the data: protocol in a script.
 // exercised by the two scripts above this one.

@@ -4885,6 +4885,8 @@ class URL
     constructor()
     {
         let h = "";
+        // chrome blwos up if there is no argument or the argument
+        // is not a url.
         if(arguments.length == 1) h= arguments[0];
         if(arguments.length == 2) h= resolveURL(arguments[1], arguments[0]);
         this.href = h;
@@ -4978,10 +4980,8 @@ class URL
         if(v.dom$class == "URL" || v instanceof URL) v = v.toString();
         if(typeof v != "string") return;
         if(v.substr(0,7) == "Wp`Set@") v = v.substr(7), firstassign = true;
-        // resolveURL is a native method in the shared window.
-        // It can accommodate null, if eb$base is not defined
-        v = resolveURL(window.eb$base, v);
-        // return or blow up if v is not a url; not yet implemented
+        // blow up if v is not a url; not yet implemented
+        // chrome blows up if not a url
         if(typeof this.href$val == "string") inconstruct = false;
         if(inconstruct) {
             odp(this, "href$val", {enumerable:false, writable:true, value:v});
