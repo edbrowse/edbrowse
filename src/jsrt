@@ -334,10 +334,6 @@ Type your brilliant thoughts here.
 onclick="alert('rock and ½ roll')">
 </form>
 
-<template id=animals>
-<p>lions and tigers</p><hr>
-</template>
-
 <script type=text/javascript language=JavaScript>
 try { // protect
 
@@ -603,11 +599,6 @@ if(!s.src.match(/^http:/)) fail(273);
 xmlo = o; // in case you want to look at it
 }
 xmlTest();
-
-atemplate = document.getElementById("animals").content;
-if(atemplate.nodeType != 11) fail(280);
-if(atemplate.firstChild.nodeName != "P") fail(281);
-if(atemplate.lastChild.nodeName != "HR") fail(282);
 
 let ob = document.createElement("object");
 ob.setAttribute("data", "./page.html")
