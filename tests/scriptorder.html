@@ -1,7 +1,7 @@
 <head><script> h = "a"; on_css_load = false; </script>
 <LINK href="sample.css" rel=stylesheet type=text/css onload="on_css_load = true">
 </head>
-<body onload="h += 'l' + arguments[0].eventPhase">
+<body onload="h += 'l' + event.eventPhase">
 <p id=show>start</p>
 <p>The slashes delimit sections.</p>
 <ol>

@@ -81,9 +81,11 @@ if(!window.mw$) {
 // Function to compile event handlers, has to come before use strict.
 function handlerCompile(f, evname)
 {
+    // if called from C, we are compiling a timer function, and evname is null
+    if(!evname) evname = "timer";
     let cf; // the compiled function
     try {
-        cf = eval(`(function(){${f}})`);
+        cf = eval(`(function ${evname}(event){${f}})`);
     } catch(e) {
 // Don't just use eb$truefunction; I want to put the text
 // on function.body, for debugging, and that means I need my own function.
@@ -91,8 +93,7 @@ function handlerCompile(f, evname)
         alert3(`handler syntax error <${f}>`);
     }
     cf.body = f;
-    // if called from C, we are compiling a timer function, and evname is missing
-    if(!evname) evname = "timer";
+    cf.name = evname; // but this doesn't work
     cf.toString = function() { return `function ${evname}(event) {\n${this.body}\n}`; }
     return cf;
 }

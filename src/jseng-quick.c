@@ -2176,7 +2176,7 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 		JSAtom a = JS_NewAtom(cx, "handlerCompile");
 		body = JS_ToCString(cx, argv[0]);
 		l[0] = argv[0];
-		l[1] = g;
+		l[1] = JS_NULL;
 		fo = JS_Invoke(cx, g, a, 2, l);
 		JS_FreeAtom(cx, a);
 		if (JS_IsException(fo)) {
