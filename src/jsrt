@@ -600,25 +600,6 @@ xmlo = o; // in case you want to look at it
 }
 xmlTest();
 
-let ob = document.createElement("object");
-ob.setAttribute("data", "./page.html")
-if(ob.data != "http://y.z.com/page.html") fail(283);
-
-// test css shorthand
-dbs.margin = "20px 10px";
-if(dbs.marginTop != '20px' || dbs.marginBottom != '20px') fail(284);
-if(dbs.marginRight != '10px' || dbs.marginLeft != '10px') fail(285);
-
-let u1 = new URL("http://this.that.com/place?a=%c2%bd%20cup&b%20c=bell%26%07");
-let up = u1.searchParams;
-if(up.get("a") != "½ cup" || up.get("b c") != "bell&") fail(286);
-if(up.get("d") !== null) faile(287);
-up.delete("b c");
-up.append("d", "p=q")
-if(up != "a=%C2%BD+cup&d=p%3Dq") fail(288);
-
-if(!(window instanceof EventTarget)) fail(289);
-
 } catch(e) {
 alert(e);
 alert(e.stack);

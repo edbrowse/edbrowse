@@ -194,6 +194,10 @@ o.type = "checkbox";
 if(o.value != "on") msg += "|checkbox not on";
 o = document.createElement("button");
 if(o.type != "submit") msg += "|button not submit";
+o = document.createElement("object");
+o.setAttribute("data", "./page.html")
+if(o.data != "http://yyz.rush.com/page.html") msg += `|object url ${o.data}`;
+if(o.getAttribute("data") != "./page.html") msg += `|object attr data ${o.getAttribute("data")}`;
 }
 relative();
 
