@@ -5445,6 +5445,411 @@ class XMLHttpRequestUpload extends XMLHttpRequestEventTarget
 }
 swdc(XMLHttpRequestUpload);
 
+class Headers
+{
+    #map = new Map;
+
+    constructor(headers)
+    {
+        if (headers instanceof Headers)
+            headers.forEach(
+                (value, name) => this.append(name, value),this
+            );
+        else if (Array.isArray(headers))
+            headers.forEach((header) => {
+                if (header.length != 2)
+                    throw new TypeError(
+                        `Header pair unexpected length ${header.length}`
+                    );
+                this.append(header[0], header[1])
+            }, this);
+        else if (headers)
+            Object.getOwnPropertyNames(headers).forEach(
+                (name) => this.append(name, headers[name]), this
+            );
+    }
+
+    #normalizeName(name)
+    {
+        if (typeof name !== 'string') name = name.toString();
+        if (/[^a-z0-9\-#$%&'*+.^_`|~!]/i.test(name) || !name)
+            throw new TypeError(`Invalid character in header field: "${name}"`);
+
+        return name.toLowerCase();
+    }
+
+    #normalizeValue(value)
+    {
+        if (typeof value !== "string") value = value.toString();
+        return value
+    }
+
+    append(name, value)
+    {
+        name = this.#normalizeName(name);
+        value = this.#normalizeValue(value);
+        const old_value = this.#map.get(name);
+        this.#map.set(name, old_value ? `${old_value} ${value}` : value);
+    }
+
+    ["delete"](name)
+    {
+        this.#map.delete(this.#normalizeName(name));
+    }
+
+    get(name)
+    {
+        return this.#map.get(this.#normalizeName(name));
+    }
+
+    has(name)
+    {
+        return this.#map.has(this.#normalizeName(name));
+    }
+
+    set(name, value)
+    {
+        this.#map.set(
+            this.#normalizeName(name), this.#normalizeValue(value)
+        );
+    }
+
+    /*
+        some of these could be provided directly by the map but this makes 
+        sure the functions reference this object
+    */
+    forEach(callback, thisarg)
+    {
+        for (const [k, v] of this)
+            callback.call(thisarg, v, k, this);
+    }
+
+    *keys() { for (const [k,_] of this) yield k; }
+
+    *values() { for (const [_,v] of this) yield v; }
+
+    *entries() { yield *this; }
+
+    *[Symbol.iterator]() { for (const [k, v] of this.#map) yield [k, v]; }
+}
+swc(Headers);
+
+;(() => {
+    const g = globalThis;
+    function consumed(body) {
+      if (body._noBody) return
+      if (body.bodyUsed) {
+        return Promise.reject(new TypeError('Already read'))
+      }
+      body.bodyUsed = true
+    }
+
+    function fileReaderReady(reader) {
+      return new Promise(function(resolve, reject) {
+        reader.onload = function() {
+          resolve(reader.result)
+        }
+        reader.onerror = function() {
+          reject(reader.error)
+        }
+      })
+    }
+
+    function readBlobAsArrayBuffer(blob) {
+      var reader = new FileReader()
+      var promise = fileReaderReady(reader)
+      reader.readAsArrayBuffer(blob)
+      return promise
+    }
+
+    function readBlobAsText(blob) {
+      var reader = new FileReader()
+      var promise = fileReaderReady(reader)
+      var match = /charset=([A-Za-z0-9_-]+)/.exec(blob.type)
+      var encoding = match ? match[1] : 'utf-8'
+      reader.readAsText(blob, encoding)
+      return promise
+    }
+
+    function readArrayBufferAsText(buf) {
+      var view = new Uint8Array(buf)
+      var chars = new Array(view.length)
+
+      for (var i = 0; i < view.length; i++) {
+        chars[i] = String.fromCharCode(view[i])
+      }
+      return chars.join('')
+    }
+
+    function bufferClone(buf) {
+      if (buf.slice) {
+        return 
+      } else {
+        var view = new Uint8Array(buf.byteLength)
+        view.set(new Uint8Array(buf))
+        return view.buffer
+      }
+    }
+
+    function Body() {
+    // Don't set any properties in the prototype. Set them in the constructor.
+    //  this.bodyUsed = false
+
+      this._initBody = function(body) {
+
+        this._bodyInit = body
+        if (!body) {
+          this._noBody = true;
+          this._bodyText = ''
+        } else if (typeof body === 'string') {
+          this._bodyText = body
+        } else if (Blob.prototype.isPrototypeOf(body)) {
+          this._bodyBlob = body
+        } else if (formData && FormData.prototype.isPrototypeOf(body)) {
+          this._bodyFormData = body
+        } else if (URLSearchParams.prototype.isPrototypeOf(body)) {
+          this._bodyText = body.toString()
+        } else if (body instanceof DataView) {
+          this._bodyArrayBuffer = body.buffe.slice(0)
+        } else if (body instanceof ArrayBuffer || ArrayBuffer.isView(body)) {
+          this._bodyArrayBuffer = body.slice(0)
+        } else {
+          this._bodyText = body = Object.prototype.toString.call(body)
+        }
+
+        if (!this.headers.get('content-type')) {
+          if (typeof body === 'string') {
+            this.headers.set('content-type', 'text/plain;charset=UTF-8')
+          } else if (this._bodyBlob && this._bodyBlob.type) {
+            this.headers.set('content-type', this._bodyBlob.type)
+          } else if (URLSearchParams.prototype.isPrototypeOf(body)) {
+            this.headers.set('content-type', 'application/x-www-form-urlencoded;charset=UTF-8')
+          }
+        }
+      }
+
+        this.blob = function() {
+          var rejected = consumed(this)
+          if (rejected) {
+            return rejected
+          }
+
+          if (this._bodyBlob) {
+            return Promise.resolve(this._bodyBlob)
+          } else if (this._bodyArrayBuffer) {
+            return Promise.resolve(new Blob([this._bodyArrayBuffer]))
+          } else if (this._bodyFormData) {
+            throw new Error('could not read FormData body as blob')
+          } else {
+            return Promise.resolve(new Blob([this._bodyText]))
+          }
+        }
+
+      this.arrayBuffer = function() {
+        if (this._bodyArrayBuffer) {
+          var isConsumed = consumed(this)
+          if (isConsumed) {
+            return isConsumed
+          } else if (ArrayBuffer.isView(this._bodyArrayBuffer)) {
+            return Promise.resolve(
+              this._bodyArrayBuffer.buffer.slice(
+                this._bodyArrayBuffer.byteOffset,
+                this._bodyArrayBuffer.byteOffset + this._bodyArrayBuffer.byteLength
+              )
+            )
+          } else {
+            return Promise.resolve(this._bodyArrayBuffer)
+          }
+        } else return this.blob().then(readBlobAsArrayBuffer)
+
+      }
+
+      this.text = function() {
+        var rejected = consumed(this)
+        if (rejected) {
+          return rejected
+        }
+
+        if (this._bodyBlob) {
+          return readBlobAsText(this._bodyBlob)
+        } else if (this._bodyArrayBuffer) {
+          return Promise.resolve(readArrayBufferAsText(this._bodyArrayBuffer))
+        } else if (this._bodyFormData) {
+          throw new Error('could not read FormData body as text')
+        } else {
+          return Promise.resolve(this._bodyText)
+        }
+      }
+
+
+        this.formData = function() {
+          return this.text().then(decode)
+        }
+
+      this.json = function() {
+        return this.text().then(JSON.parse)
+      }
+
+      return this
+    }
+
+    // HTTP methods whose capitalization should be normalized
+    var methods = ['CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT', 'TRACE']
+
+    function normalizeMethod(method) {
+      var upcased = method.toUpperCase()
+      return methods.indexOf(upcased) > -1 ? upcased : method
+    }
+
+    function Request(input, options) {
+      if (!(this instanceof Request)) {
+        throw new TypeError('Please use the "new" operator, this DOM object constructor cannot be called as a function.')
+      }
+
+    // This was in Body(), and thus put onto the prototype; now I'm putting it here.
+       this.bodyUsed = false;
+
+      options = options || {}
+      var body = options.body
+
+      if (input instanceof Request) {
+        if (input.bodyUsed) {
+          throw new TypeError('Already read')
+        }
+        this.url = input.url
+        this.credentials = input.credentials
+        if (!options.headers) {
+          this.headers = new Headers(input.headers)
+        }
+        this.method = input.method
+        this.mode = input.mode
+        this.signal = input.signal
+        if (!body && input._bodyInit != null) {
+          body = input._bodyInit
+          input.bodyUsed = true
+        }
+      } else {
+        this.url = String(input)
+      }
+
+      this.credentials = options.credentials || this.credentials || 'same-origin'
+      if (options.headers || !this.headers) {
+        this.headers = new Headers(options.headers)
+      }
+      this.method = normalizeMethod(options.method || this.method || 'GET')
+      this.mode = options.mode || this.mode || null
+      this.signal = options.signal || this.signal || (function () {
+        if ('AbortController' in g) {
+          var ctrl = new AbortController();
+          return ctrl.signal;
+        }
+      }());
+      this.referrer = null
+
+      if ((this.method === 'GET' || this.method === 'HEAD') && body) {
+        throw new TypeError('Body not allowed for GET or HEAD requests')
+      }
+      this._initBody(body)
+
+      if (this.method === 'GET' || this.method === 'HEAD') {
+        if (options.cache === 'no-store' || options.cache === 'no-cache') {
+          // Search for a '_' parameter in the query string
+          var reParamSearch = /([?&])_=[^&]*/
+          if (reParamSearch.test(this.url)) {
+            // If it already exists then set the value with the current time
+            this.url = this.url.replace(reParamSearch, '$1_=' + new Date().getTime())
+          } else {
+            // Otherwise add a new '_' parameter to the end with the current time
+            var reQueryString = /\?/
+            this.url += (reQueryString.test(this.url) ? '&' : '?') + '_=' + new Date().getTime()
+          }
+        }
+      }
+    }
+
+    Request.prototype.clone = function() {
+      return new Request(this, {body: this._bodyInit})
+    }
+
+    function decode(body) {
+      var form = new FormData()
+      body
+        .trim()
+        .split('&')
+        .forEach(function(bytes) {
+          if (bytes) {
+            var split = bytes.split('=')
+            var name = split.shift().replace(/\+/g, ' ')
+            var value = split.join('=').replace(/\+/g, ' ')
+            form.append(decodeURIComponent(name), decodeURIComponent(value))
+          }
+        })
+      return form
+    }
+
+    Body.call(Request.prototype)
+
+    function Response(bodyInit, options) {
+      if (!(this instanceof Response)) {
+        throw new TypeError('Please use the "new" operator, this DOM object constructor cannot be called as a function.')
+      }
+    // This was in Body(), and thus put onto the prototype; now I'm putting it here.
+       this.bodyUsed = false;
+      if (!options) {
+        options = {}
+      }
+
+      this.type = 'default'
+      this.status = options.status === undefined ? 200 : options.status
+      if (this.status < 200 || this.status > 599) {
+        throw new RangeError("Failed to construct 'Response': The status provided (0) is outside the range [200, 599].")
+      }
+      this.ok = this.status >= 200 && this.status < 300
+      this.statusText = options.statusText === undefined ? '' : '' + options.statusText
+      this.headers = new Headers(options.headers)
+      this.url = options.url || ''
+      this._initBody(bodyInit)
+    }
+
+    Body.call(Response.prototype)
+
+    Response.prototype.clone = function() {
+      return new Response(this._bodyInit, {
+        status: this.status,
+        statusText: this.statusText,
+        headers: new Headers(this.headers),
+        url: this.url
+      })
+    }
+
+    Response.error = function() {
+      var response = new Response(null, {status: 200, statusText: ''})
+      response.ok = false
+      response.status = 0
+      response.type = 'error'
+      return response
+    }
+
+    var redirectStatuses = [301, 302, 303, 307, 308]
+
+    Response.redirect = function(url, status) {
+      if (redirectStatuses.indexOf(status) === -1) {
+        throw new RangeError('Invalid status code')
+      }
+
+      return new Response(null, {status: status, headers: {location: url}})
+    }
+
+
+      g.Headers = Headers
+      g.Request = Request
+      g.Response = Response
+
+    Headers.prototype.toString = function(){return "[object Headers]"}
+    Request.prototype.toString = function(){return "[object Request]"}
+    Response.prototype.toString = function(){return "[object Response]"}
+})();
+
 // Originally implemented by Yehuda Katz
 // And since then, from envjs, by Thatcher et al
 class XMLHttpRequest extends EventTarget
@@ -6794,11 +7199,8 @@ return doc;
 }
 })
 
-// Request, Response, Headers, fetch; link to third party code in master window.
-// fetch calls XMLHttpRequest, but puts the Response in a Promise
-for(let f of [
-"Headers", "Request", "Response",
-"alert", "showarg", "showarglist"])
+
+for(let f of ["alert", "showarg", "showarglist"])
     swpc(f, mw$[f]);
 
 this.fetch = function(input, init)
@@ -6885,25 +7287,22 @@ this.fetch = function(input, init)
         else if (request.credentials === 'omit') xhr.withCredentials = false;
 
         if ('responseType' in xhr) xhr.responseType = 'blob';
+        let h;
         if (
             init &&
-            typeof init.headers === 'object' &&
+            typeof init == "object" &&
             !(init.headers instanceof Headers)
         ) {
-            const names = [];
-            Object.getOwnPropertyNames(init.headers).forEach(function(name) {
-                names.push(normalizeName(name));
-                xhr.setRequestHeader(name, normalizeValue(init.headers[name]));
-            });
-            request.headers.forEach(function(value, name) {
-                if (names.indexOf(name) === -1) xhr.setRequestHeader(name, value);
-            });
+            h = new Headers;
+            for (const [name, value] of Object.entries(init.headers))
+                h.append(name, value);
+            for (const [name, value] of request.headers)
+                if (!h.has(name)) h.set(name, value);
         }
-        else {
-            request.headers.forEach(function(value, name) {
-                xhr.setRequestHeader(name, value);
-            });
-        }
+        else
+            h = request.headers;
+
+        for (const [name, value] of h) xhr.setRequestHeader(name, value);
 
         if (request.signal) {
             request.signal.addEventListener('abort', abortXhr);
@@ -6923,6 +7322,7 @@ this.fetch = function(input, init)
 }
 sfts(fetch);
 odp(this, "fetch", {enumerable: false, writable: true, configurable: true});
+
 // pages seem to want document.style to exist
 sdp("style", new CSSStyleDeclaration)
 document.style.element = document;
