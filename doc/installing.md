@@ -153,7 +153,7 @@ You should get something like this; if you do then all is well.
 ```
 complete
 body loading
-711
+691
 ```
 
 Type ,p to see the page, if you wish, as though it were ed.

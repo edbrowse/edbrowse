@@ -33,7 +33,6 @@ static const struct tagInfo availableTags[] = {
 	{"audio", "audio passage", TAGACT_MUSIC, 0, 0},
 	{"b", "bold text", TAGACT_B, 0, 0},
 	{"base", "base reference for relative URLs", TAGACT_BASE, 0, 4},
-	{"bgsound", "background music", TAGACT_MUSIC, 0, 0},
 	{"blockquote", "a quoted section", TAGACT_BQ, 0, 1},
 	{"body", "the html body", TAGACT_BODY, 10, 5},
 	{"br", "a line break", TAGACT_BR, 1, 4},
@@ -289,7 +288,6 @@ static const struct specialtag {
     {"area", 1, 0, 0, 0, 0},
     {"b",0,1, 0, 0, 0},
     {"base", 1, 0, 1, 0, 0},
-    {"bgsound", 1, 0, 1, 0, 0},
     {"blockquote", 0, 1, 0, 0, 0},
     {"body", 0, 0, 0, 1, 0},
 /*********************************************************************

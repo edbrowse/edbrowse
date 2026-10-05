@@ -5,8 +5,6 @@
 <base href=http://y.z.com>
 <meta content=Snoopy>
 <title>Edbrowse js&pi; regression test</title>
-<!-- tidy5 says this is not a valid tag any more -->
-<bgsound src=whatever.mid>
 <style>
 body { background: white; color: black; }
 body:hover { animation:windshield }
