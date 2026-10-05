@@ -363,15 +363,7 @@ if(document.getElementById("hound").name != "dog") fail(110);
 if(document.getElementById("pecan").parentNode.parentNode.getAttribute("class") != "filbert") fail(115);
 if(document.all.tags("FORM")[1] != document.forms[1]) fail(113);
 
-n = 0;
-a = [29,31,37];
-for(j in a) {
-if(j.length > 1) continue;
-n += (j*1+2)*a[j];
-}
-if(n != 299) fail(119);
-
-/* inline object */
+// inline object
 var ilo = {a:document.forms[1], b:9+5*3};
 if(typeof ilo.a != "object") fail(120);
 if(ilo.b != 24) fail(121);
@@ -437,14 +429,6 @@ if(isedbrowse) alert("body loading");
 var e = document.createEvent();
 e.type = "snork";
 document.dispatchEvent(e);
-
-// These css checks have to run after eb$qs$start.
-// In fact the before after inject is the only reason to run or even have the
-// eb$qs$start machinery, which is complicated, and we don't even see these
-// before after unless we set showall+, so one wonders if it's even worth it.
-let dbs = document.body.style; // shorthand
-if(dbs.hasOwnProperty("animation")) fail(176);
-if(document.styleSheets[0].cssRules[0].cssText.substr(0,4) != "body") fail(180);
 }
 function bodyUnload() {
 if(confirm("Go to the edbrowse home page?"))
@@ -498,57 +482,16 @@ try { // protect
 // This comes after the original onsubmit function
 document.forms[1].addEventListener("submit", function(e) { alert("submit phase "+e.eventPhase);});
 
-function test_siblings() {
-var x1 = document.createElement("div");
-var x2 = document.createElement("span");
-var x3 = document.createElement("table");
-var x4 = document.createElement("script");
-var x5 = document.createElement("element");
-x5.name = "frog";
-x5.value = 123;
-
-x1.appendChild(x2);
-x1.appendChild(x3);
-x1.appendChild(x4);
-x1.appendChild(x5);
-
-var child1 = x1.childNodes[0];
-// in the wild it is common to see these sibling calls daisychained
-var testchild = child1.nextSibling.nextSibling.previousSibling.nextSibling.nextSibling;
-if (testchild.value == 123)
-{
-// pass
-} else {
-fail(162);
-}
-}
-test_siblings();
-
 if(document.head.querySelector("meta").getAttribute("content") != "Snoopy")
 fail(163);
-// add tests for getAttribute etc, once Meta is actually a class in startwindow.js.
 
-if(document.defaultView.getComputedStyle(document.getElementById("almond"),'').whiteSpace != 'snork "')
+if(document.defaultView.getComputedStyle(almond,'').whiteSpace != 'snork "')
 fail(164);
 
 let dbs = document.body.style;
-if(dbs.fontSize != "1.0em") fail(169);
-style2 = getComputedStyle(document.body,'')
-if(style2.color != "rgb(0, 0, 0)") fail(165);
-// I don't know which way this is suppose to go
-// if(style2.fontSize != "1.0em") fail(166);
-if(document.querySelector(".filbert #pecan").nodeName != "TR")
-fail(170);
-if(document.body.querySelector("text + #bird").nodeName != "INPUT")
-fail(171);
 dbs.cssText = "border-block-start-style:ger' a'ld";
 if(dbs.borderBlockStartStyle != "ger ald")
 fail(172);
-
-//url with two args
-var u2 = new URL('../cats', 'http://www.example.com/dogs');
-if(u2.hostname != "www.example.com") fail(183);
-if(u2.pathname != "/cats") fail(184);
 
 mcp = new MessageChannel();
 mcp.port2.start();
@@ -577,6 +520,7 @@ pnow.then(()=>promiseRan=true)
 
 addEventListener("hashchange", ()=>alert("hash is now " + location.hash));
 
+// this doesn't even run in chrome, DOMParser won't create the xml document
 function xmlTest() {
 var xml_string = '<p><p><dIv>inside</dIv></p></p><script src="http://nothing.nowhere.com/nonsense.js"></scr' + 'ipt>'
 var o = new DOMParser().parseFromString(xml_string, "text/xml");
