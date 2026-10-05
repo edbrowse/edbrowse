@@ -186,10 +186,7 @@ if( l.firstChild.disabled  != true) msg += "|disabled not true";
 if( l.firstChild.getAttribute( "disabled" ) != "") msg += "|attr disabled not empty";
 if( l.firstChild.onclick  != "function onclick(event) {\nyyz()\n}") msg += `|onclick property ${l.firstChild.onclick}`;
 if( l.firstChild.getAttribute( "onclick" ) != "yyz()") msg += `|onclick attr ${l.firstChild.getAttribute("onclick")}`;
-if(!isedbrowse) {
-// I can't get this to work in edbrowse
 if(l.firstChild.onclick.name != "onclick") msg += `|onclick name ${l.firstChild.onclick.name}`;
-}
 l.textContent = "";
 if(l.lastChild) msg += "|child ater empty textContent";
 let o = document.createElement("input");

@@ -93,7 +93,6 @@ function handlerCompile(f, evname)
         alert3(`handler syntax error <${f}>`);
     }
     cf.body = f;
-    cf.name = evname; // but this doesn't work
     cf.toString = function() { return `function ${evname}(event) {\n${this.body}\n}`; }
     return cf;
 }
