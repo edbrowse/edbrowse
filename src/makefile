@@ -3,6 +3,7 @@ CC ?= cc
 PERL ?= perl
 INSTALL ?= install
 MKDIR ?= mkdir
+QJS ?= qjs
 # may need to be set to pkgconf on some systems but most still come with the
 # link to the older name
 PKG_CONFIG ?= pkg-config
@@ -105,7 +106,7 @@ $(EBOBJS) : eb.h ebprot.h messages.h
 dbodbc.o dbinfx.o dbops.o : dbapi.h
 
 %.js-ok: %.js
-	qjs -C $< && touch $@
+	$(QJS) -C $< && touch $@
 
 startwindow.c: $(patsubst %.js,%.js-ok,$(EDBR_JS_ASSETS)) \
 	../tools/buildsourcestring.pl
