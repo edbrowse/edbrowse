@@ -139,6 +139,63 @@ if(window.dataload != 2345) msg += "|dataload not set";
 s1 = document.scripts[0];
 if(s1.src.substr(0, 5) != "data:") msg += `|s1.src ${s1.src}`;
 
+// some attribute property tests that use to be in jsrt
+function relative() {
+let l = document.createElement("DIV")
+l.innerHTML = "<img src=/foo snork=77 id=garage>";
+if( l.firstChild.snork != undefined) msg += "|snork found";
+if( l.firstChild.getAttribute("snork") != 77) msg += "|snork not 77";
+l.firstChild.snork = 78;
+l.firstChild.setAttribute("snork", 79);
+if( l.firstChild.snork != 78) msg += "|snork not 78";
+if( l.firstChild.getAttribute("snork") != 79) msg += "|snork not 79";
+l.firstChild.setAttribute("length", -37);
+if( l.firstChild.length != undefined) msg += "|length found";
+if( l.firstChild.getAttribute("length") != -37) msg += "|length not -37";
+if( l.firstChild.src != "http://yyz.rush.com/foo") msg += "|rush foo not found";
+if( l.firstChild.getAttribute("src") != "/foo") msg += "|/foo not found";
+l.firstChild.setAttribute( "src" , "/goo");
+if( l.firstChild.src != "http://yyz.rush.com/goo") msg += "|rush goo not found";
+if( l.firstChild.getAttribute("src") != "/goo") msg += "|/goo not found";
+l.innerHTML = "<a href='/hoo'></a>";
+if( l.firstChild.href != "http://yyz.rush.com/hoo") msg += "|a hoo not found";
+if( l.firstChild.getAttribute( "href" ) != "/hoo") msg += "|/hoo not found";
+if( l.firstChild.protocol != "http:") msg += "|http not found";
+l.firstChild.setAttribute( "href" , "/zoo");
+if( l.firstChild.href != "http://yyz.rush.com/zoo") msg += "|a zoo not found";
+if( l.firstChild.getAttribute( "href" ) != "/zoo") msg += "|/zoo not found";
+if( l.firstChild.getAttribute( "class" ) !== null) msg += "|class not null";
+if( l.firstChild.getAttribute( "name" ) !== null) msg += "|name not null";
+l.innerHTML = "<img src=/foo data-fly=leash>";
+l.firstChild.src = "/koo";
+if( l.firstChild.src != "http://yyz.rush.com/koo") msg += "|img koo not found";
+if( l.firstChild.getAttribute("src") != "/koo") msg += "|/koo not found";
+l.innerHTML = "<a href='/hoo' class='bell drum' name=feeney id=ring></a>";
+if( l.firstChild.getAttribute( "class" ) != "bell drum") msg += "|class bell drum";
+if( l.firstChild.name  != "feeney") msg += "|name feeney";
+if( l.firstChild.getAttribute( "name" ) != "feeney") msg += "|attr name feeney";
+if( l.firstChild.id  != "ring") msg += "|id ring";
+l.innerHTML = "<input name=field type=checkbox readonly checked disabled onclick=yyz()>";
+if( l.firstChild.name  != "field") msg += "|name not field";
+if( l.firstChild.type  != "checkbox") msg += "|type not checkbox";
+if( l.firstChild.getAttribute( "type" ) != "checkbox") msg += "|atttr type not checkbox";
+if( l.firstChild.checked  != true) msg += "|checked not true";
+if( l.firstChild.readOnly  != true) msg += "|readonly not true";
+if( l.firstChild.getAttribute( "readonly" ) != "") msg += "|attr readonly not empty";
+if( l.firstChild.disabled  != true) msg += "|disabled not true";
+if( l.firstChild.getAttribute( "disabled" ) != "") msg += "|attr disabled not empty";
+if( l.firstChild.onclick  != "function onclick(event) {\nyyz()\n}") msg += `|onclick property ${l.firstChild.onclick}`;
+if( l.firstChild.getAttribute( "onclick" ) != "yyz()") msg += `|onclick attr ${l.firstChild.getAttribute("onclick")}`;
+l.textContent = "";
+if(l.lastChild) msg += "|child ater empty textContent";
+let o = document.createElement("input");
+o.type = "checkbox";
+if(o.value != "on") msg += "|checkbox not on";
+o = document.createElement("button");
+if(o.type != "submit") msg += "|button not submit";
+}
+relative();
+
 show.textContent = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>

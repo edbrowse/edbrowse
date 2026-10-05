@@ -151,7 +151,6 @@ You will get a number, the size of the file, just as you would from /bin/ed.
 Then type b for browse.
 You should get something like this; if you do then all is well.
 ```
-relative
 complete
 body loading
 711

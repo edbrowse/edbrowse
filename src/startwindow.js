@@ -79,7 +79,7 @@ if(!window.mw$) {
 }
 
 // Function to compile event handlers, has to come before use strict.
-function handlerCompile(f)
+function handlerCompile(f, evname)
 {
     let cf; // the compiled function
     try {
@@ -91,7 +91,9 @@ function handlerCompile(f)
         alert3(`handler syntax error <${f}>`);
     }
     cf.body = f;
-    cf.toString = function() { return this.body; }
+    // if called from C, we are compiling a timer function, and evname is missing
+    if(!evname) evname = "timer";
+    cf.toString = function() { return `function ${evname}(event) {\n${this.body}\n}`; }
     return cf;
 }
 
@@ -1551,7 +1553,7 @@ We set up for HR.onsubmit, for example; other browsers might not. */
             const name2 = name + "$2";
             if (db$flags(1))
                 alert3(`${(this[name2] ? "clobber": "create")} ${(this.nodeName ? this.nodeName : this.dom$class)}.${name}`);
-            if(typeof v === "string") v = handlerCompile(v);
+            if(typeof v === "string") v = handlerCompile(v, name);
             if(typeof v === "function") {
                 Object.defineProperty(this, name2, {
                     value: v, writable: true, configurable: true});
