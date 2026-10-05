@@ -139,11 +139,6 @@ action=http://www.edbrowse.org/cgi-bin/echo
 onsubmit='return submitFunction(this)'
 onreset='return resetFunction()'>
 
-<!-- we might want to test json some day. -->
-    <script type='application/json'>
-{"foo":736,"bar":737}
-</script>
-
 <script language=JavaScript type=text/javascript defer>
 function catdog(item) { alert('fluffy'); if(item.checked&&document.forms[1].dog.checked) alert('chased by dog'); }
 

@@ -14,6 +14,7 @@ This includes timers with a delay of 0 milliseconds.
 </ol>
 <div id="hs"></div>
 
+    <script id=json1 type='application/json'> {"foo":736,"bar":737} </script>
 <script id=last src=scriptord1.js defer onload="h += 'y'"></script>
 <script defer>
 // but you can't defer an inline script, so this runs now.
@@ -25,6 +26,12 @@ h += 'A';
 // This proves script execution is reentrant.
 try {
 b = document.body;
+
+// test script that is json rather than javascript
+j1 = JSON.parse(json1.text);
+if(Object.keys(j1).join(':') != "foo:bar") msg += "|bad json keys";
+if(j1.foo != 736 || j1.bar != 737) msg += "|bad json value";
+
 s = document.createElement("script")
 s.text = "h += 'b'"
 b.appendChild(s); // runs right now
@@ -53,9 +60,7 @@ h += 'g'
 document.write("<script src=scriptord2.js> <" + "/script>")
 h += "h / "
 
-// put a couple of handlers on the scrip load. this is just a warmup -
-// we need a file for testing events.
-last = document.getElementById("last")
+// put a couple of handlers on the script load.
 // order should be capture, fire, bubble. Thus xyw
 // even though these are capture and bubble, the phase is 2
 function handle_c(e) {
