@@ -3,6 +3,7 @@
 <script>
 let msg = "ok", pending = 7, cancelled = 0;
 const show = document.getElementById("show");
+isedbrowse = navigator.userAgent.substr(0, 8) == "edbrowse";
 function check(value, label) { if(!value) msg += "|" + label; }
 function done() {
     if(--pending) return;
@@ -13,7 +14,7 @@ function done() {
 const watchdog = setTimeout(() => {
     clearInterval(interval);
     show.textContent = msg + "|unfinished callbacks " + pending;
-}, 3000);
+}, 1200);
 
 // This is the request URL and payload pattern used by the live challenge.
 const payload = {value: 1};
@@ -60,7 +61,13 @@ function timerStringCheck(count, receiver) {
     check(count == 0 && receiver, "string callback changed");
     done();
 }
+if(isedbrowse) {
 setTimeout("timerStringCheck(arguments.length, this === window)", 0, 1, payload);
+} else {
+// we wrap the compiled string in function(){}, chrome doesn't do that.
+// It's just a chunk of code, so arguments is not defined.
+setTimeout("timerStringCheck(0, this === window)", 0, 1, payload);
+}
 
 let ticks = 0;
 const intervalPayload = {value: 1};
@@ -74,11 +81,11 @@ const interval = setInterval(function(url, data) {
         clearInterval(interval);
         done();
     }
-}, 200, "/interval", intervalPayload);
+}, 100, "/interval", intervalPayload);
 
 const timeoutCancelled = setTimeout(() => ++cancelled, 0, payload);
 clearTimeout(timeoutCancelled);
-const intervalCancelled = setInterval(() => ++cancelled, 200, payload);
+const intervalCancelled = setInterval(() => ++cancelled, 120, payload);
 clearInterval(intervalCancelled);
 </script>
 </body>
