@@ -6083,8 +6083,54 @@ class Range extends AbstractRange
 {
     constructor() {
         super();
-        this.start = this.end = document;
+        // the range is strictly between these two nodes.
+        // thus the initial range is empty.
+        this.start0 = this.end0 = document;
     }
+
+    setStart(n) {
+        if(isRooted(n) != window) return; // not in the tree
+        this.start0 = n;
+    }
+
+    setEnd(n) {
+        if(isRooted(n) != window) return;
+        this.end0 = n;
+    }
+
+/* there are two different designs, with pros and cons.
+We could call getElementsByTagName('*') once, and the resulting live array
+would always be available for future calls to this range object.
+Or - we could call gebtn() as needed.
+The former is better if the program is calling Range instance methods
+over and over again throughout the life of the web page.
+The latter is better if a few calls set up the range, and then it is not
+modified or queried very often thereafter.
+One website may run one way, another may run the other way.
+There is no clear correct answer.
+I'll probably do the simplest thing, which is to call gebtn as needed.
+either way, it's good to start with isRooted().
+Take a few steps up, and make sure the node is in the tree. */
+
+    setStartBefore(n) {
+        if(n == document) { this.start0 = n; return; }
+        if(isRooted(n) != window) return;
+        const list = gebtn(document, '*', true, true);
+        const j = list.indexOf(n);
+        // we already handled n == document, so n should be in the list.
+        if(j < 0) return;
+        this.start0 = (j > 0 ? list[j-1] : document);
+    }
+
+    setEndAfter(n) {
+        if(n == document) { this.end0 = n; return; }
+        if(isRooted(n) != window) return;
+        const list = gebtn(document, '*', true, true);
+        const j = list.indexOf(n);
+        if(j < 0) return;
+        this.end0 = (j < list.length - 1 ? list[j+1] : document);
+    }
+
 }
 swc(Range);
 
