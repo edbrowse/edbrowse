@@ -6084,18 +6084,8 @@ class Range extends AbstractRange
     constructor() {
         super();
         // the range is strictly between these two nodes.
-        // thus the initial range is empty.
-        this.start0 = this.end0 = document;
-    }
-
-    setStart(n) {
-        if(isRooted(n) != window) return; // not in the tree
-        this.start0 = n;
-    }
-
-    setEnd(n) {
-        if(isRooted(n) != window) return;
-        this.end0 = n;
+        // nodes must be set or there is no range
+        this.start0 = this.end0 = null;
     }
 
 /* there are two different designs, with pros and cons.
@@ -6112,7 +6102,19 @@ I'll probably do the simplest thing, which is to call gebtn as needed.
 either way, it's good to start with isRooted().
 Take a few steps up, and make sure the node is in the tree. */
 
-    setStartBefore(n) {
+    setStart(n, offset) {
+        if(n == document) { this.start0 = n; return; }
+        if(isRooted(n) != window) return; // not in the tree
+        this.start0 = n;
+    }
+
+    setEnd(n, offset) {
+        if(n == document) { this.end0 = n; return; }
+        if(isRooted(n) != window) return;
+        this.end0 = n;
+    }
+
+    setStartBefore(n, offset) {
         if(n == document) { this.start0 = n; return; }
         if(isRooted(n) != window) return;
         const list = gebtn(document, '*', true, true);
@@ -6122,13 +6124,32 @@ Take a few steps up, and make sure the node is in the tree. */
         this.start0 = (j > 0 ? list[j-1] : document);
     }
 
-    setEndAfter(n) {
+    setEndAfter(n, offset) {
         if(n == document) { this.end0 = n; return; }
         if(isRooted(n) != window) return;
         const list = gebtn(document, '*', true, true);
         const j = list.indexOf(n);
         if(j < 0) return;
         this.end0 = (j < list.length - 1 ? list[j+1] : document);
+    }
+
+    toString() {
+        if(!this.start0 || !this.end0) return ""; // range not set
+        const list = gebtn(document, '*', true, true);
+        let j = -1, k = list.length;
+        if(this.start0 != document) {
+            j = list.indexOf(this.start0);
+            if(j < 0) return ""; // should not happen
+        }
+        if(this.end0 != document) {
+            k = list.indexOf(this.end0);
+            if(k < 0) return ""; // should not happen
+        }
+        if(k <= j) return "";
+        let s = "";
+        for(++j; j < k; ++j)
+            if(list[j].nodeType == 3) s += list[j].data;
+        return s;
     }
 
 }
