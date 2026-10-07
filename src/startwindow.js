@@ -4231,7 +4231,7 @@ swdc(CSSStyleDeclaration);
 // getComputedStyle returns a CSSStyleDeclaration object, so you want to be
 // familiar with the above class and it's weird side effects.
 // parameters: e is the node and pe is the pseudoelement
-function getComputedStyle(e,pe) {
+this.getComputedStyle = function(e,pe) {
     if(typeof pe != "string") pe = 0;
     else if(pe.match(/^\s*$/)) pe = 0;
     else if(pe.match(/:before$/)) pe = 1;
@@ -5771,9 +5771,9 @@ sdpc("createNodeIterator", mw$.createNodeIterator)
 sdpc("createTreeWalker", mw$.createTreeWalker)
 sdpc("eb$xml", false)
 sdp("close", eb$voidfunction)
-sdp("write", eb$write)
-sdp("writeln", eb$writeln)
-sdp("hasFocus", eb$hasFocus)
+sdpc("write", eb$write)
+sdpc("writeln", eb$writeln)
+sdpc("hasFocus", eb$hasFocus)
 sdp("eb$ctx", eb$ctx)
 sdp("eb$seqno", 0)
 
