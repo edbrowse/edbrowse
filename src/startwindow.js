@@ -6072,6 +6072,22 @@ class PerformanceObserver
 }
 swc(PerformanceObserver);
 
+// Range is here as a placeholder and to remind us there's a whole
+// world of nontrivial stuff to implement here.
+class AbstractRange
+{
+}
+swc(AbstractRange);
+
+class Range extends AbstractRange
+{
+    constructor() {
+        super();
+        this.start = this.end = document;
+    }
+}
+swc(Range);
+
 swp("onmessage$$queue", []);
 swpv("postMessage", function (message,target_origin, transfer) {
     let locstring = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
