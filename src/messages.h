@@ -890,4 +890,5 @@ MSG_ImaskOn,
 	MSG_PjobsOn,
 	MSG_BlankLine,
 	MSG_NonIndent,
+	MSG_NoPrivate,
 };

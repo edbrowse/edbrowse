@@ -6779,6 +6779,16 @@ Type f to see which group you are sending to.
 Others will not see this message.
 
 <p>
+:r text, reply to the last private message you received.
+In other words, send a private message back to that person.
+This is shorthand for :m person text, where person is the one who just sent a pm to you.
+This is not practical if you are having multiple private conversations at the same time.
+The last person who messaged you might not be the person you want to message.
+Fortunately, multiple simultaneous private conversations over irc are rare.
+At debug level 2 or higher, edbrowse prints ^nickname, to confirm the person you are replying to.
+db2 is a good idea for an ongoing conversation, because it tells you if that person drops out of chat for any reason.
+
+<p>
 :me or /me agrees, sends the action of agreeing to the group.
 Most clients, including edbrowse, will turn this into "username agrees", like a statement of fact, rather than the user speaking.
 

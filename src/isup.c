@@ -4097,203 +4097,234 @@ static void ircSetChannel(Window *w, const char *channel)
 // parameter is output window
 void ircSetFileName(Window *w)
 {
-	int i, len;
-	char *p;
-	Window *w2;
-	if(!w->ircoMode) return;
-	for(i = 1, len = 0; i <= maxSession; ++i) {
-		w2 = sessionList[i].lw;
-		if(!w2 || !w2->irciMode || w2->ircOther != w->sno) continue;
-		if(w2->ircChannel) len += strlen(w2->ircChannel) + 1;
-	}
-	nzFree(w->f0.fileName);
-	if(!len) { w->f0.fileName = cloneString("irc receive"); return; }
-	p = allocMem(len + 8);
-	for(i = 1, *p = 0; i <= maxSession; ++i) {
-		w2 = sessionList[i].lw;
-		if(!w2 || !w2->irciMode || w2->ircOther != w->sno) continue;
-		if(w2->ircChannel) {
-			strcat(p, w2->ircChannel);
-			strcat(p, " ");
-		}
-	}
-	strcat(p, "receive");
-	w->f0.fileName = p;
+    int i, len;
+    char *p;
+    Window *w2;
+    if(!w->ircoMode) return;
+    for(i = 1, len = 0; i <= maxSession; ++i) {
+        w2 = sessionList[i].lw;
+        if(!w2 || !w2->irciMode || w2->ircOther != w->sno) continue;
+        if(w2->ircChannel) len += strlen(w2->ircChannel) + 1;
+    }
+    nzFree(w->f0.fileName);
+    if(!len) { w->f0.fileName = cloneString("irc receive"); return; }
+    p = allocMem(len + 8);
+    for(i = 1, *p = 0; i <= maxSession; ++i) {
+        w2 = sessionList[i].lw;
+        if(!w2 || !w2->irciMode || w2->ircOther != w->sno) continue;
+        if(w2->ircChannel) {
+            strcat(p, w2->ircChannel);
+            strcat(p, " ");
+        }
+    }
+    strcat(p, "receive");
+    w->f0.fileName = p;
+}
+
+// find the last incoming private message, indicated by a leading *
+static bool findLastPrivate(Window *wout,
+char **p1, char **p2)
+{
+    int ln = wout->dol;
+    for(; ln; --ln) {
+        uchar *s1 = fetchLineWindow(ln, -1, wout);
+        if(*s1 != '*') continue;
+        while(*s1 != '\n' && *s1 != '<') ++s1;
+        if(*s1 != '<') return false; // should not happen
+        uchar *s2 = s1;
+        while(*s2 != '\n' && *s2 != '>') ++s2;
+        if(*s2 != '>') return false; // should not happen
+        *p1 = (char*)s1, *p2 = (char*)s2;
+        return true;
+    }
+    return false; // leading * not found
 }
 
 // win is the same as cw
 static void ircPrepSend(Window *win, Window *wout, char *s)
 {
-	char c, *p;
-	if(s[0] == '\0')
-		return;
-	ircChomp(s, '\n');
-	if(s[0] != ':' ||
-	!strncmp(s, ":me ", 4)) {
-		ircMessage(wout, win->ircChannel, s);
-		return;
-	}
-	c = *++s;
-	if(c != '\0' && isspaceByte(s[1])) {
-		p = s + 2;
-		switch(c) {
-		case 'j':
-			ircSend(win, "JOIN %s", p);
+    char c, *p, *r1, *r2;
+    if(s[0] == '\0')
+        return;
+    ircChomp(s, '\n');
+    if(s[0] != ':' ||
+    !strncmp(s, ":me ", 4)) {
+        ircMessage(wout, win->ircChannel, s);
+        return;
+    }
+    c = *++s;
+    if(c != '\0' && isspaceByte(s[1])) {
+        p = s + 2;
+        switch(c) {
+        case 'j': // join
+            ircSend(win, "JOIN %s", p);
 // I'm just assuming it works
-				ircSetChannel(win, p);
-			return;
-		case 'l':
-			s = ircEat(p, isspace, 1);
-			p = ircEat(s, isspace, 0);
-			if(!*s)
-				s = (win->ircChannel ? win->ircChannel : emptyString);
-			if(*p)
-				*p++ = '\0';
-			if(!*p)
-				p = "edbrowse irc";
-			ircSend(win, "PART %s :%s", s, p);
-			if(stringEqual(s, win->ircChannel)) {
+                ircSetChannel(win, p);
+            return;
+        case 'l': // leave
+            s = ircEat(p, isspace, 1);
+            p = ircEat(s, isspace, 0);
+            if(!*s)
+                s = (win->ircChannel ? win->ircChannel : emptyString);
+            if(*p)
+                *p++ = '\0';
+            if(!*p)
+                p = "edbrowse irc";
+            ircSend(win, "PART %s :%s", s, p);
+            if(stringEqual(s, win->ircChannel)) {
 // leaving the channel we are currently sending on,
 // what are we suppose to do?
-				ircSetChannel(win, 0);
-			}
-			return;
-		case 'm':
-			s = ircEat(p, isspace, 1);
-			p = ircEat(s, isspace, 0);
-			if(*p)
-				*p++ = '\0';
-			ircMessage(wout, s, p);
-			return;
-		case 's':
-			ircSetChannel(win, p);
-			return;
-		}
-	}
-	ircSend(win, "%s", s);
+                ircSetChannel(win, 0);
+            }
+            return;
+        case 'm': // private message
+            s = ircEat(p, isspace, 1);
+            p = ircEat(s, isspace, 0);
+            if(*p)
+                *p++ = '\0';
+            ircMessage(wout, s, p);
+            return;
+        case 'r': // reply to private message
+            if(!findLastPrivate(wout, &r1, &r2)) {
+                i_puts(MSG_NoPrivate);
+                return;
+            }
+            s = ircEat(p, isspace, 1);
+            ++r1;
+            *r2 = 0; // I'll put it back
+            debugPrint(2, "^%s", r1);
+            ircMessage(wout, r1, s);
+            *r2 = '>';
+            return;
+        case 's': // switch channel
+            ircSetChannel(win, p);
+            return;
+        }
+    }
+    ircSend(win, "%s", s);
 }
 
 bool ircWrite(void)
 {
-	Window *nw = sessionList[cw->ircOther].lw;
-	int i;
-	pst s;
-	if(nw && !nw->ircoMode) nw = 0;
-	if(!nw) { // should never happen
-		setError(MSG_TextRec, cw->ircOther);
-		return false;
-	}
-	fileSize = 0;
-	for(i = 1; i <= cw->dol; ++i) {
-		s = fetchLine(i, 1);
-		fileSize += pstLength(s);
-		if(*s != '\n') { // cull empty lines
-//	*** Message to #edbrowse throttled due to flooding
+    Window *nw = sessionList[cw->ircOther].lw;
+    int i;
+    pst s;
+    if(nw && !nw->ircoMode) nw = 0;
+    if(!nw) { // should never happen
+        setError(MSG_TextRec, cw->ircOther);
+        return false;
+    }
+    fileSize = 0;
+    for(i = 1; i <= cw->dol; ++i) {
+        s = fetchLine(i, 1);
+        fileSize += pstLength(s);
+        if(*s != '\n') { // cull empty lines
+// *** Message to #edbrowse throttled due to flooding
 // Hopefully one second between each line is enough.
-			if(i > 1) sleep(1);
-			ircPrepSend(cw, nw, (char*)s);
-		}
-		free(s);
-	}
-	return true;
+            if(i > 1) sleep(1);
+            ircPrepSend(cw, nw, (char*)s);
+        }
+        free(s);
+    }
+    return true;
 }
 
 // on the input side
 static time_t ircNow;
 static void ircRead0(Window *w)
 {
-	Window *w2;
-	const char *emsg;
-	int fd = w->irc_fd, rc;
+    Window *w2;
+    const char *emsg;
+    int fd = w->irc_fd, rc;
 
 // find output window; should always be there
-	 w2 = sessionList[w->ircOther].lw;
-	if(w2 && !w2->ircoMode) w2 = 0;
+     w2 = sessionList[w->ircOther].lw;
+    if(w2 && !w2->ircoMode) w2 = 0;
 
 // use select to see if data is available
-	fd_set rd;
-	struct timeval tv;
+    fd_set rd;
+    struct timeval tv;
 top:
-	FD_ZERO(&rd);
-	FD_SET(fd, &rd);
-	tv.tv_sec = 0; // nonblocking
-	tv.tv_usec = 0;
-	rc = select(fd + 1, &rd, 0, 0, &tv);
-	if(rc < 0) {
+    FD_ZERO(&rd);
+    FD_SET(fd, &rd);
+    tv.tv_sec = 0; // nonblocking
+    tv.tv_usec = 0;
+    rc = select(fd + 1, &rd, 0, 0, &tv);
+    if(rc < 0) {
 // did somebody hit ^c and precisely the wrong time?
-		if(errno == EINTR)
-			return;
+        if(errno == EINTR)
+            return;
 // some other inexplicable error
-		emsg = " irc select error";
-		goto teardown;
-	}
-	if(rc == 0) {
+        emsg = " irc select error";
+        goto teardown;
+    }
+    if(rc == 0) {
 // ping the host if nothing has come in for 10 minutes
-		if(ircNow - w->ircRespond >= 500 && !w->ircPingOut) {
-			debugPrint(3, "pingout %s", w->f0.hbase);
-			ircSend(w, "PING %s", w->f0.hbase);
-			w->ircPingOut = true;
-		} else if(ircNow - w->ircRespond >= 550 && w->ircPingOut) {
-			emsg = " irc server timeout";
-			goto teardown;
-		}
-		return;
-	}
-	if(FD_ISSET(fd, &rd)) {
+        if(ircNow - w->ircRespond >= 500 && !w->ircPingOut) {
+            debugPrint(3, "pingout %s", w->f0.hbase);
+            ircSend(w, "PING %s", w->f0.hbase);
+            w->ircPingOut = true;
+        } else if(ircNow - w->ircRespond >= 550 && w->ircPingOut) {
+            emsg = " irc server timeout";
+            goto teardown;
+        }
+        return;
+    }
+    if(FD_ISSET(fd, &rd)) {
 // this should always happen.
-		unsigned pos = 0;
-		int n;
-		char *linebreak;
-		w->ircRespond = ircNow;
-		w->ircPingOut = 0;
+        unsigned pos = 0;
+        int n;
+        char *linebreak;
+        w->ircRespond = ircNow;
+        w->ircPingOut = 0;
 nextread:
-		if(w->ircSecure)
-			n = SSL_read(w->irc_ssl, irc_in + pos, sizeof(irc_in) - pos - 1);
-		else
-			n = read(fd, irc_in + pos, sizeof(irc_in) - pos - 1);
-		if(n <= 0) {
-			emsg = " irc connection lost";
-			goto teardown;
-		}
+        if(w->ircSecure)
+            n = SSL_read(w->irc_ssl, irc_in + pos, sizeof(irc_in) - pos - 1);
+        else
+            n = read(fd, irc_in + pos, sizeof(irc_in) - pos - 1);
+        if(n <= 0) {
+            emsg = " irc connection lost";
+            goto teardown;
+        }
 // null terminate so it is a string
-		irc_in[pos += n] = 0;
+        irc_in[pos += n] = 0;
 nextline:
-		linebreak = strchr(irc_in, '\n');
-		if(!linebreak) { // still don't have a complete line
-			if(pos < sizeof(irc_in) - 1) goto nextread; // get the rest of the line
+        linebreak = strchr(irc_in, '\n');
+        if(!linebreak) { // still don't have a complete line
+            if(pos < sizeof(irc_in) - 1) goto nextread; // get the rest of the line
 // Oops irc_in is full and still no nl. Just force it.
 // This should never happen, servers have a limit on line length.
-			irc_in[pos - 2] = '\r';
-			irc_in[pos - 1] = '\n';
-			linebreak = irc_in + pos - 1;
-		}
-		ircPrepLine(w, w2, irc_in);
-		++linebreak;
-		if(!*linebreak) goto top; // select again
+            irc_in[pos - 2] = '\r';
+            irc_in[pos - 1] = '\n';
+            linebreak = irc_in + pos - 1;
+        }
+        ircPrepLine(w, w2, irc_in);
+        ++linebreak;
+        if(!*linebreak) goto top; // select again
 // There is another line or another partial line.
-		strmove(irc_in, linebreak);
-		pos = strlen(irc_in);
-		goto nextline;
-	}
-	return;
+        strmove(irc_in, linebreak);
+        pos = strlen(irc_in);
+        goto nextline;
+    }
+    return;
 
 teardown:
-	debugPrint(1, "%s%s", (w->ircChannel ? w->ircChannel : "?"), emsg);
-	if(w2) {
-		Window *save_cw = cw;
-		cw = w2;
-		ircAddLine(w->ircChannel, true, false, emsg);
-		cw = save_cw;
-		if(--w2->ircCount == 0) {
-			w2->ircoMode = false;
-			nzFree0(w2->f0.fileName);
-		} else {
+    debugPrint(1, "%s%s", (w->ircChannel ? w->ircChannel : "?"), emsg);
+    if(w2) {
+        Window *save_cw = cw;
+        cw = w2;
+        ircAddLine(w->ircChannel, true, false, emsg);
+        cw = save_cw;
+        if(--w2->ircCount == 0) {
+            w2->ircoMode = false;
+            nzFree0(w2->f0.fileName);
+        } else {
 // I have to clear the channel here so the file name comes out right.
-			nzFree0(w->ircChannel);
-			ircSetFileName(w2);
-		}
-	}
-	ircClose(w);
+            nzFree0(w->ircChannel);
+            ircSetFileName(w2);
+        }
+    }
+    ircClose(w);
 }
 
 void ircRead(void)
