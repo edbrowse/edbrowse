@@ -4192,7 +4192,7 @@ static void ircPrepSend(Window *win, Window *wout, char *s)
             s = ircEat(p, isspace, 1);
             ++r1;
             *r2 = 0; // I'll put it back
-            debugPrint(2, "^%s", r1);
+            printf("^%s\n", r1);
             ircMessage(wout, r1, s);
             *r2 = '>';
             return;
