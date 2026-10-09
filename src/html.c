@@ -4006,9 +4006,13 @@ static void runOnload(void)
     run_function_bool_win(cf, "readyStateComplete");
     // bubble order
     Tag *t = cf->bodytag;
-    run_event_t(t, "load");
-    if (t->onunload)
-        unloadHyperlink("document.body.onunload", "Body");
+// there should always be a head and a body, but in case there isn't...
+    if(t) {
+        run_event_t(t, "load");
+        if (t->onunload) unloadHyperlink("document.body.onunload", "Body");
+    } else {
+        debugPrint(2, "document has no body");
+    }
     run_event_win(cf, "load");
 }
 
