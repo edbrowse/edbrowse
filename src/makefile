@@ -66,7 +66,7 @@ EDBR_JS_ASSETS = shared.js startwindow.js demin.js
 
 # If EBDEBUG is set to on, or a non-empty string, build with debug flags and
 # don't strip executables.
-	STRIP = -s
+STRIP = -s
 ifneq ($(EBDEBUG),)
 	CFLAGS += -g -ggdb
 	STRIP =
