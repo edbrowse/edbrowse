@@ -456,18 +456,18 @@ static int isNonest(const char *name, const struct opentag *k)
 
 // td can be inside td, if there is table in between,
 // second indicates this in-between tag
-	if(!(s = y->second)) return true;
-	while(*s) {
-		t = strchr(s, ',');
-		if(!t) t = s + strlen(s);
-		strncpy(watch, s, t-s);
-		watch[t - s] = 0;
-		for(l = stack; l != k; l = l->next)
-			if(stringEqual(l->lowname, watch)) return false;
-		s = t;
-		if(*s == ',') ++s;
-	}
-	return true;
+    if(!(s = y->second)) return true;
+    while(*s) {
+        t = strchr(s, ',');
+        if(!t) t = s + strlen(s);
+        strncpy(watch, s, t-s);
+        watch[t - s] = 0;
+        for(l = stack; l != k; l = l->next)
+            if(stringEqual(l->lowname, watch)) return false;
+        s = t;
+        if(*s == ',') ++s;
+    }
+    return true;
 }
 
 // seek point for the html scanner
@@ -476,101 +476,125 @@ static const char *seek;
 // generate a tag using newTag, which does most of the work
 static void makeTag(const char *name, const char *lowname, bool slash, const char *mark)
 {
-	Tag *t, *parent;
-	struct opentag *k;
+    Tag *t, *parent;
+    struct opentag *k;
 
-	if(slash) {
-		if(!(k = balance(lowname))) {
+    if(slash) {
+        if(!(k = balance(lowname))) {
 // </foo> without <foo>, may as well just throw it away.
-			scannerError2("%s unbalanced", name);
-			return;
-		}
+            scannerError2("%s unbalanced", name);
+            return;
+        }
 // now handle <i><b></i></b>
 // the balancing tag is not at the top of the stack, where it should be!
 // I think the best thing is to close out the other tags.
-		while(stack != k) {
-			scannerError2("force closure of %s", stack->name);
-			makeTag(stack->name, stack->lowname, true, mark);
-		}
-	}
+        while(stack != k) {
+            scannerError2("force closure of %s", stack->name);
+            makeTag(stack->name, stack->lowname, true, mark);
+        }
+    }
 
-	if(!slash) {
-		working_t = t = newTag(cf, name);
+    if(!slash) {
+        working_t = t = newTag(cf, name);
 // xml parse comes from the xhr system, so we need the javascript objects -
 // unless you have faked it out with my xml code and this is the primary frame,
 // and then you don't need the js objects, and they only slow you down.
-		if(cf->xmlMode && cf != &cw->f0)
-			t->doorway = true;
-		if((t->action == TAGACT_HTML || t->action == TAGACT_BODY) && htmlGenerated)
-			goto skiplink;
-		t->parent = parent = stack ? stack->t : overnode;
-		if(parent) {
-			if(!parent->lastchild)
-				parent->firstchild = t;
-			else
-				parent->lastchild->sibling = t;
-			parent->lastchild = t;
-		}
+        if(cf->xmlMode && cf != &cw->f0)
+            t->doorway = true;
+        if((t->action == TAGACT_HTML || t->action == TAGACT_BODY) && htmlGenerated)
+            goto skiplink;
+        t->parent = parent = stack ? stack->t : overnode;
+        if(parent) {
+            if(!parent->lastchild)
+                parent->firstchild = t;
+            else
+                parent->lastchild->sibling = t;
+            parent->lastchild = t;
+        }
 skiplink:
 
-		k = allocMem(sizeof(struct opentag));
-		strcpy(k->name, name);
-		strcpy(k->lowname, lowname);
-		k->t = t;
-		k->start = mark;
-		k->next = stack, stack = k;
+        k = allocMem(sizeof(struct opentag));
+        strcpy(k->name, name);
+        strcpy(k->lowname, lowname);
+        k->t = t;
+        k->start = mark;
+        k->next = stack, stack = k;
 
-		if(cf->xmlMode) goto past_html_open_semantics;
-		if(stringEqual(lowname, htmltag)) {
-			headbody = 1;
-			scannerInfo1("in html", 0);
-			if(htmlGenerated) t->dead = true, ++cw->deadTags;
-		}
-		if(stringEqual(lowname, headtag)) {
-			headbody = 2;
-			scannerInfo1("in head", 0);
-		}
-		if(stringEqual(lowname, bodytag)) {
-			headbody = 4, bodycount = htmlcount = 1;
-			scannerInfo1("in body", 0);
-			if(htmlGenerated) t->dead = true, ++cw->deadTags;
-		}
-		if(stringEqual(lowname, "pre")) {
-			premode = true;
-			scannerInfo1("pre", 0);
+        if(cf->xmlMode) goto past_html_open_semantics;
+        if(stringEqual(lowname, htmltag)) {
+            headbody = 1;
+            scannerInfo1("in html", 0);
+            if(htmlGenerated) t->dead = true, ++cw->deadTags;
+        }
+        if(stringEqual(lowname, headtag)) {
+            headbody = 2;
+            scannerInfo1("in head", 0);
+        }
+        if(stringEqual(lowname, bodytag)) {
+            headbody = 4, bodycount = htmlcount = 1;
+            scannerInfo1("in body", 0);
+            if(htmlGenerated) t->dead = true, ++cw->deadTags;
+        }
+        if(stringEqual(lowname, "pre")) {
+            premode = true;
+            scannerInfo1("pre", 0);
 // Need a tag for </pre>. It's weird.
-			t = newTag(cf, name);
-			t->slash = t->dead = true, ++cw->deadTags;
-		}
+            t = newTag(cf, name);
+            t->slash = t->dead = true, ++cw->deadTags;
+        }
 past_html_open_semantics: ;
-	} else {
-		if(cf->xmlMode) goto past_html_close_semantics;
-		if(stringEqual(lowname, headtag)) {
-			headbody = 3;
-			scannerInfo1("post head", 0);
-		}
-		if(stringEqual(lowname, bodytag)) {
-			headbody = 5, bodycount = 0;
-			scannerInfo1("post body", 0);
-		}
-		if(stringEqual(lowname, htmltag)) {
-			headbody = 6, htmlcount = 0;
-			scannerInfo1("post html", 0);
-		}
-		if(stringEqual(lowname, "pre")) {
-			premode = false;
-			scannerInfo1("close pre", 0);
-		}
+    } else {
+        if(cf->xmlMode) goto past_html_close_semantics;
+        if(stringEqual(lowname, headtag)) {
+            headbody = 3;
+            scannerInfo1("post head", 0);
+        }
+        if(stringEqual(lowname, bodytag)) {
+            headbody = 5, bodycount = 0;
+            scannerInfo1("post body", 0);
+        }
+        if(stringEqual(lowname, htmltag)) {
+            if(headbody == 1) {
+                if(htmlGenerated) {
+                    scannerInfo1("skip head section\nin head\npost head", 0);
+                } else {
+                    scannerInfo1("initiate and terminate head", 0);
+                    debugPrint(3, "head section missing");
+                    makeTag(headtag, headtag, false, mark);
+                    makeTag(headtag, headtag, true, mark);
+                }
+            } else if(headbody == 2) {
+                scannerInfo1("terminate head", 0);
+                debugPrint(3, "premature end to head section");
+                makeTag(headtag, headtag, true, mark);
+            }
+            if(headbody == 3) {
+                scannerInfo1("initiate and terminate body", 0);
+                debugPrint(3, "body section missing");
+                makeTag(bodytag, bodytag, false, mark);
+                makeTag(bodytag, bodytag, true, mark);
+            } else if(headbody == 4) {
+                scannerInfo1("terminate body", 0);
+                debugPrint(3, "premature end to body section");
+                makeTag(bodytag, bodytag, true, mark);
+            }
+            headbody = 6, htmlcount = 0;
+            scannerInfo1("post html", 0);
+        }
+        if(stringEqual(lowname, "pre")) {
+            premode = false;
+            scannerInfo1("close pre", 0);
+        }
 past_html_close_semantics:
 
-		stack = k->next;
+        stack = k->next;
 // set up for innerHTML
-		if(k->t->info->bits & TAG_INNERHTML && k->start && mark
+        if(k->t->info->bits & TAG_INNERHTML && k->start && mark
 // I don't think innerHTML is meaningful in xml
-		&& allowJS && !cf->xmlMode)
-			k->t->innerHTML = pullString1(k->start, mark);
-		free(k);
-	}
+        && allowJS && !cf->xmlMode)
+            k->t->innerHTML = pullString1(k->start, mark);
+        free(k);
+    }
 }
 
 static void pushTag(Tag *t);
