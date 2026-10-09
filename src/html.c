@@ -1585,48 +1585,43 @@ past_html_events:
 /* See if there are simple tags like <p> or </font> */
 bool htmlTest(void)
 {
-	int j, ln;
-	char look[12];
-	for (ln = 1; ln <= cw->dol; ++ln) {
-		pst line = fetchLine(ln, -1);
-		char *p = (char *)line;
-// How much text is on this line, not counting the newline that ends it.
-// Good to know, but we don't really need it; memEqualCI steps byte for byte,
-// and will not go past the end of line, since nothing I am searching for
-// contains \n
-		int plen = pstLength(line) - 1;
+    int j, ln;
+    char look[12];
+    for (ln = 1; ln <= cw->dol; ++ln) {
+        pst line = fetchLine(ln, -1);
+        char *p = (char *)line;
+/* How much text is on this line, not counting the newline that ends it.
+Good to know, but we don't really need it; memEqualCI steps byte for byte,
+and will not go past the end of line, since nothing I am searching for
+contains \n */
+        int plen = pstLength(line) - 1;
 // special xml indicator of my own creation. Check for plen here,
 // because we don't know how memcmp works inside.
-		if(ln == 1 && plen >= 9 && !memcmp(p, "`~*xml}@;", 9))
-			return true;
-		while (plen && isspaceByte(*p))
-			++p, --plen;
-		if (!plen) continue;	// skip blank line
-		if (*p != '<') return false;
+        if(ln == 1 && plen >= 9 && !memcmp(p, "`~*xml}@;", 9))
+            return true;
+        while (plen && isspaceByte(*p)) ++p, --plen;
+        if (!plen) continue; // skip blank line
+        if (*p != '<') return false;
 // check for <!doctype and other things
-		if (memEqualCI(p + 1, "!doctype", 8))
-			return true;
-		if (memEqualCI(p + 1, "?xml", 4))
-			return true;
-		if (memEqualCI(p + 1, "!--", 3))
-			return true;
-		if (memEqualCI(p + 1, "!if", 3))
-			return true;
+        if (memEqualCI(p + 1, "!doctype", 8)) return true;
+        if (memEqualCI(p + 1, "?xml", 4)) return true;
+        if (memEqualCI(p + 1, "!--", 3)) return true;
+        if (memEqualCI(p + 1, "!if", 3)) return true;
 // If it starts with <tag, for any tag we recognize,
 // we'll call it good.
-		for (j = 1; j < 10 && j < plen; ++j) {
-			if (!isalnumByte(p[j]))
-				break;
-			look[j - 1] = p[j];
-		}
-		look[j - 1] = 0;
-		if (j > 1 && (p[j] == '>' || isspaceByte(p[j]))) {
-// something we recognize?
-                    if(name2tagInfo(look)) return true;
-		}
-		return false;
-	}
-	return false;
+        for (j = 1; j < 10 && j < plen; ++j) {
+            if (!isalnumByte(p[j])) break;
+            look[j - 1] = p[j];
+        }
+        look[j - 1] = 0;
+        if (j > 1 &&
+        (p[j] == '>' || p[j] == '/' || isspaceByte(p[j]))) {
+            // something we recognize?
+            if(name2tagInfo(look)) return true;
+        }
+        return false;
+    }
+    return false;
 }
 
 bool browseCurrentBuffer(const char *suffix, bool plain)
