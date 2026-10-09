@@ -7038,7 +7038,7 @@ bool runCommand(const char *line)
 	debugPrint(8, "in:%s", line);
 	if (!strncmp(line, "ReF@b", 5)) {
 		line += 4;
-		noStack = 1;
+		noStack = 2;
 		uriEncoded = true;
 		if (cf != newloc_f) {
 /* replace a frame, not the whole window */

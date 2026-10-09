@@ -6490,6 +6490,9 @@ this.location$2.href = h;
     location.replace = document.location.replace = function(s) { this.href = s};
 odp(window.location,'replace',{enumerable:false});
 odp(document.location,'replace',{enumerable:false});
+    location.reload = document.location.reload = function() { this.href = location + ''};
+odp(window.location,'reload',{enumerable:false});
+odp(document.location,'reload',{enumerable:false});
 odp(window.location,'eb$ctx',{value:eb$ctx});
 odp(document.location,'eb$ctx',{value:eb$ctx});
 
