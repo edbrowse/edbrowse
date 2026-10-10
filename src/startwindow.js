@@ -991,11 +991,19 @@ class Node extends EventTarget
 
     cloneNode(deep) { return mw$.cloneNodeHelper(this,deep, false); }
 
-    compareDocumentPosition(z)
+/* Static function to find the common ancestor of two nodes.
+This is a simple algorithm, and is quadratic in the depth of the tree,
+however, trees in the real world are rrarely more than a dozen deep
+so I'm going with it. If you want to improve the algorithm,
+to handle even pathologically deep trees,
+travel up both nodes to document,
+put all those nodes together in a list, quicksort,
+then look through the list for duplicate nodes, the duplicate that is the
+deepest is your common ancestor, and that's n*log(n) */
+    static commonAncestor(y, z, result)
     {
-        if(!z || z.nodeType != 1) return 0;
-        let y = this;
-        if(y === z) return 0;
+        // check the easy case first, the same node
+        if(y == z) { result.root = y, result.i = 0, result.j = 0; return; }
         let py = [], pz = []; // paths to root
         for(let t = y; t; t = t.parentNode) {
             py.push(t);
@@ -1008,16 +1016,26 @@ class Node extends EventTarget
             if(t.is$frame) break;
         }
         let root = null, i, j;
-        // this is inefficient, but paths aren't likely to be more than 6
         for(i = 0; i < py.length; ++i) {
             for(j = 0; j < pz.length; ++j)
                 if(py[i] == pz[j]) { root = py[i]; break; }
                 if(root) break;
         }
-        if(!root) return this.DOCUMENT_POSITION_DISCONNECTED;
+        result.root = root;
+        if(root) result.i = i, result.j = j, result.py = py, result.pz = pz;
+    }
+
+    compareDocumentPosition(z)
+    {
+        if(!z || z.nodeType != 1) return 0;
+        let y = this, result = {};
+        if(y === z) return 0;
+        Node.commonAncestor(y, z, result);
+        if(!result.root) return this.DOCUMENT_POSITION_DISCONNECTED;
+        const i = result.i, j = result.j;
         if(!i) return this.DOCUMENT_POSITION_FOLLOWING | this.DOCUMENT_POSITION_CONTAINED_BY;
         if(!j) return this.DOCUMENT_POSITION_PRECEDING | this.DOCUMENT_POSITION_CONTAINS;
-        y = py[i-1], z = pz[j-1];
+        y = result.py[i-1], z =result. pz[j-1];
         for(let t = y.nextSibling; t; t = t.nextSibling)
             if(t == z) return this.DOCUMENT_POSITION_FOLLOWING;
         for(let t = y.previousSibling; t; t = t.previousSibling)
