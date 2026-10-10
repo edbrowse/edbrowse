@@ -1007,14 +1007,13 @@ deepest is your common ancestor, and that's n*log(n) */
         let py = [], pz = []; // paths to root
         for(let t = y; t; t = t.parentNode) {
             py.push(t);
-            // if it make sense to call this function on text nodes,
-            // then we have to allow nodeType == 3
-            if(t.nodeType != 1) break; // document or fragment
+            // allow nodeType == 3 for a text node
+            if(t.nodeType != 1 && t.nodeType != 3) break; // document or fragment
             if(t.is$frame) break;
         }
         for(let t = z; t; t = t.parentNode) {
             pz.push(t);
-            if(t.nodeType != 1) break; // document or fragment
+            if(t.nodeType != 1 && t.nodeType != 3) break; // document or fragment
             if(t.is$frame) break;
         }
         let root = null, i, j;
@@ -6103,7 +6102,7 @@ class Range extends AbstractRange
 {
     constructor() {
         super();
-        // the range is strictly between these two nodes.
+        // the range is the half-open interval [start,end)
         // thus the initial range is nothing
         this.start0 = this.end0 = document;
     }
@@ -6124,14 +6123,10 @@ Take a few steps up, and make sure the node is in the tree. */
 
     setStart(n, offset) {
         if(!n) return;
-        if(n.nodeType == 3) n = n.parentNode;
-        if(!n) return;
         this.start0 = n;
     }
 
     setEnd(n, offset) {
-        if(!n) return;
-        if(n.nodeType == 3) n = n.parentNode;
         if(!n) return;
         this.end0 = n;
     }
@@ -6171,7 +6166,12 @@ Take a few steps up, and make sure the node is in the tree. */
         }
         if(k <= j) return "";
         let s = "";
-        for(++j; j < k; ++j) {
+        if(anc == this.start0) {
+            if(anc.nodeType == 3) s += anc.data;
+            if(anc.nodeType == 1 && anc.nodeName == "SCRIPT") s += anc.text;
+            ++j;
+        }
+        for(; j < k; ++j) {
             const t = list[j];
             if(t.nodeType == 3) s += t.data;
             if(t.nodeType == 1 && t.nodeName == "SCRIPT") s += t.text;

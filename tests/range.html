@@ -43,6 +43,8 @@ range.setStart(para[1].firstChild, 0);
 range.setEnd(para[4].firstChild, 0);
 check((range == "123"), "text text range string");
 check((range.commonAncestorContainer == b), "text text range ancestor");
+range.setEnd(para[1].firstChild, 0);
+check((range.commonAncestorContainer == para[1].firstChild), "text alone range ancestor");
 
 frag = document.createDocumentFragment();
 frag.appendChild(document.createElement("p"));

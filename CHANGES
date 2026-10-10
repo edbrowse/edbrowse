@@ -13,7 +13,6 @@ Reverse the css shorthand, so that setting margin sets its four
 constituents, and getting margin puts those four pieces back into one string.
 
 Move the node invisible test into C, which makes rendering faster.
-
 Move the node css injection test into C, which makes rendering faster.
 Also, we can get rid of a truckload of confusing code in css,
 that tried to anticipate these injections, it's much easier to determine
@@ -39,6 +38,8 @@ Implement getPropertyValue, setProperty, removeProperty.
 shadowroot, and styles wholly contained within a shadowRoot.
 
 custom element connectedCallback and disconnectedCallback functions.
+
+:r (reply) feature in irc.
 
 3.8.18
 
