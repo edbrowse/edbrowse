@@ -26,6 +26,7 @@ check((range.commonAncestorContainer == b), "123 range ancestor");
 p5 = document.createElement("p");
 p5.textContent = "5";
 b.insertBefore(p5, para[3]);
+check((para.length == 5), "querySelectorAll static");
 check((range == "1253"), "1253 range string");
 p5.remove();
 
@@ -43,9 +44,28 @@ range.setEnd(para[4].firstChild, 0);
 check((range == "123"), "text text range string");
 check((range.commonAncestorContainer == b), "text text range ancestor");
 
-/* setStart something not in the tree, I don't understand what this is suppose to do
+frag = document.createDocumentFragment();
+frag.appendChild(document.createElement("p"));
+frag.appendChild(document.createElement("p"));
+frag.appendChild(document.createElement("p"));
+frag.appendChild(document.createElement("p"));
+fpara = frag.querySelectorAll("p");
+fpara[0].textContent = "a";
+fpara[1].textContent = "b";
+fpara[2].textContent = "c";
+fpara[3].textContent = "d";
+range.setStart(fpara[1], 0);
+range.setEnd(fpara[3], 0);
+check((range == "bc"), "bc range string");
+check((range.commonAncestorContainer == frag), "bc range ancestor");
+range.setStart(frag, 0);
+check((range == "abc"), "abc range string");
+check((range.commonAncestorContainer == frag), "abc range ancestor");
+
+// setStart something unrelated
 range.setStart(p5, 0);
-*/
+check((range == ""), "disconnected range string");
+check((range.commonAncestorContainer == p5), "disconnected range ancestor");
 
 // check for offset nonzero and the many other instance methods...
 

@@ -6126,8 +6126,6 @@ Take a few steps up, and make sure the node is in the tree. */
         if(!n) return;
         if(n.nodeType == 3) n = n.parentNode;
         if(!n) return;
-        if(n == document) { this.start0 = n; return; }
-        if(isRooted(n) != window) return; // not in the tree
         this.start0 = n;
     }
 
@@ -6135,8 +6133,6 @@ Take a few steps up, and make sure the node is in the tree. */
         if(!n) return;
         if(n.nodeType == 3) n = n.parentNode;
         if(!n) return;
-        if(n == document) { this.end0 = n; return; }
-        if(isRooted(n) != window) return;
         this.end0 = n;
     }
 
@@ -6161,13 +6157,15 @@ Take a few steps up, and make sure the node is in the tree. */
 
     toString() {
         if(this.start0 == this.end0) return ""; // empty
-        const list = gebtn(document, '*', true, true);
+        const anc = this.commonAncestorContainer;
+        if(!anc) return "";
+        const list = gebtn(anc, '*', true, true);
         let j = -1, k = list.length;
-        if(this.start0 != document) {
+        if(this.start0 != anc) {
             j = list.indexOf(this.start0);
             if(j < 0) return ""; // should not happen
         }
-        if(this.end0 != document) {
+        if(this.end0 != anc) {
             k = list.indexOf(this.end0);
             if(k < 0) return ""; // should not happen
         }
@@ -6185,6 +6183,8 @@ Take a few steps up, and make sure the node is in the tree. */
         if(y == z) return y;
         let result = {};
         Node.commonAncestor(y, z, result);
+// no common ancestor, return start; that's bizarre but that's what chrome does
+        if(!result.root) return y;
         return result.root;
     }
 
