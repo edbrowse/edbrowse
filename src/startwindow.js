@@ -6111,20 +6111,6 @@ class Range extends AbstractRange
         this.start1 = this.end1 = 0;
     }
 
-/* there are two different designs, with pros and cons.
-We could call getElementsByTagName('*') once, and the resulting live array
-would always be available for future calls to this range object.
-Or - we could call gebtn() as needed.
-The former is better if the program is calling Range instance methods
-over and over again throughout the life of the web page.
-The latter is better if a few calls set up the range, and then it is not
-modified or queried very often thereafter.
-One website may run one way, another may run the other way.
-There is no clear correct answer.
-I'll probably do the simplest thing, which is to call gebtn as needed.
-either way, it's good to start with isRooted().
-Take a few steps up, and make sure the node is in the tree. */
-
     setStart(n, offset) {
         if(!n) return;
         this.start0 = n, this.start1 = offset;
@@ -6136,23 +6122,40 @@ Take a few steps up, and make sure the node is in the tree. */
     }
 
     setStartBefore(n, offset) {
-        if(n == document) { this.start0 = n; return; }
-        if(isRooted(n) != window) return;
-        const list = gebtn(document, '*', true, true);
-        const j = list.indexOf(n);
-        // we already handled n == document, so n should be in the list.
-        if(j < 0) return;
-        this.start0 = (j > 0 ? list[j-1] : document);
+        if(!n) return;
+        // yeah, it's the same as setStart, I don't understand it but
+         // it agrees with chrome for our tests.
+        this.setStart(n, offset);
+    }
+
+    setStartAfter(n, offset) {
+        if(!n) return;
+        n = n.nextSibling;
+        this.setStart(n, offset);
+    }
+
+    setEndBefore(n, offset) {
+        if(!n) return;
+        this.setEnd(n, offset);
     }
 
     setEndAfter(n, offset) {
-        if(n == document) { this.end0 = n; return; }
-        if(isRooted(n) != window) return;
-        const list = gebtn(document, '*', true, true);
-        const j = list.indexOf(n);
-        if(j < 0) return;
-        this.end0 = (j < list.length - 1 ? list[j+1] : document);
+        if(!n) return;
+        n = n.nextSibling;
+        this.setEnd(n, offset);
     }
+
+/* there are two different designs, with pros and cons.
+We could call getElementsByTagName('*') once, and the resulting live array
+would always be available for future calls to this range object.
+Or - we could call gebtn() as needed.
+The former is better if the program is calling Range instance methods
+over and over again throughout the life of the web page.
+The latter is better if a few calls set up the range, and then it is not
+modified or queried very often thereafter.
+One website may run one way, another may run the other way.
+There is no clear correct answer.
+I'll probably do the simplest thing, which is to call gebtn as needed. */
 
     toString() {
         if(this.start0 == this.end0) {

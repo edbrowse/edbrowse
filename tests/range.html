@@ -92,7 +92,10 @@ range.setStart(fpara[3].firstChild, 2);
 check((range == "rt"), "rt range string");
 check((range.commonAncestorContainer == fpara[3].firstChild), "rt range ancestor");
 
-// check for offset nonzero under nodes and the many other instance methods...
+// this comes out exactly the same as setStart   ???
+range.setStartBefore(fpara[1], 0);
+range.setEndAfter(fpara[2], 0);
+check((range == "horsebird"), "before after string");
 
 show.textContent = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
