@@ -61,6 +61,12 @@ check((range.commonAncestorContainer == frag), "bc range ancestor");
 range.setStart(frag, 0);
 check((range == "abc"), "abc range string");
 check((range.commonAncestorContainer == frag), "abc range ancestor");
+s5 = document.createElement("script");
+s5.text = "xyz = 999";
+frag.insertBefore(s5, fpara[2]);
+// script won't run, it's not rooted, but it is there
+check((range == "abxyz = 999c"), "xyz = 999 range string");
+s5.remove();
 
 // setStart something unrelated
 range.setStart(p5, 0);

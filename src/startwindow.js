@@ -6171,8 +6171,11 @@ Take a few steps up, and make sure the node is in the tree. */
         }
         if(k <= j) return "";
         let s = "";
-        for(++j; j < k; ++j)
-            if(list[j].nodeType == 3) s += list[j].data;
+        for(++j; j < k; ++j) {
+            const t = list[j];
+            if(t.nodeType == 3) s += t.data;
+            if(t.nodeType == 1 && t.nodeName == "SCRIPT") s += t.text;
+        }
         return s;
     }
 
