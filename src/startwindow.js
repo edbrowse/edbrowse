@@ -6145,6 +6145,11 @@ class Range extends AbstractRange
         this.setEnd(n, offset);
     }
 
+    get startContainer() { return this.start0; }
+    get endContainer() { return this.end0; }
+    get startOffset() { return this.start1; }
+    get endOffset() { return this.end1; }
+
 /* there are two different designs, with pros and cons.
 We could call getElementsByTagName('*') once, and the resulting live array
 would always be available for future calls to this range object.
@@ -6207,6 +6212,13 @@ I'll probably do the simplest thing, which is to call gebtn as needed. */
 // no common ancestor, return start; that's bizarre but that's what chrome does
         if(!result.root) return y;
         return result.root;
+    }
+
+    cloneRange() {
+        const r = new Range;
+        r.start0 = this.start0, r.end0 = this.end0;
+        r.start1 = this.start1, r.end1 = this.end1;
+        return r;
     }
 
 }

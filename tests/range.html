@@ -39,6 +39,10 @@ check((range.commonAncestorContainer == document), "doc4 range ancestor");
 range.setStart(b, 0);
 check(/^\s*start *123$/.test(range), "body4 range string");
 check((range.commonAncestorContainer == b), "body4 range ancestor");
+check((range.startContainer == b), "body4 startContainer");
+check((range.endContainer == para[4]), "body4 endContainer");
+check((range.startOffset == 0), "body4 startOffset");
+check((range.endOffset == 0), "body4 endOffset");
 range.setStart(para[1].firstChild, 0);
 range.setEnd(para[4].firstChild, 0);
 check((range == "123"), "text text range string");
@@ -84,6 +88,18 @@ range.setStart(fpara[0].firstChild, 2);
 range.setEnd(fpara[3].firstChild, 4);
 check((range == "gcatbirdturt"), "catbird range string");
 check((range.commonAncestorContainer == frag), "catbird range ancestor");
+check((range.startContainer == fpara[0].firstChild), "catbird startContainer");
+check((range.endContainer == fpara[3].firstChild), "catbird endContainer");
+check((range.startOffset == 2), "catbird startOffset");
+check((range.endOffset == 4), "catbird endOffset");
+
+r2 = range.cloneRange();
+check((r2.startContainer == fpara[0].firstChild), "r2 startContainer");
+check((r2.endContainer == fpara[3].firstChild), "r2 endContainer");
+check((r2.startOffset == 2), "r2 startOffset");
+check((r2.endOffset == 4), "r2 endOffset");
+
+// change the second animal in two ways
 fpara[1].textContent = "cow";
 check((range == "gcowbirdturt"), "cowbird range string");
 fpara[1].firstChild.data = "horse";
