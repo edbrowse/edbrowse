@@ -997,7 +997,7 @@ however, trees in the real world are rrarely more than a dozen deep
 so I'm going with it. If you want to improve the algorithm,
 to handle even pathologically deep trees,
 travel up both nodes to document,
-put all those nodes together in a list, quicksort,
+put all those nodes together in a list, quicksort on eb$seqno,
 then look through the list for duplicate nodes, the duplicate that is the
 deepest is your common ancestor, and that's n*log(n) */
     static commonAncestor(y, z, result)
@@ -1007,6 +1007,8 @@ deepest is your common ancestor, and that's n*log(n) */
         let py = [], pz = []; // paths to root
         for(let t = y; t; t = t.parentNode) {
             py.push(t);
+            // if it make sense to call this function on text nodes,
+            // then we have to allow nodeType == 3
             if(t.nodeType != 1) break; // document or fragment
             if(t.is$frame) break;
         }
@@ -6168,6 +6170,16 @@ Take a few steps up, and make sure the node is in the tree. */
         for(++j; j < k; ++j)
             if(list[j].nodeType == 3) s += list[j].data;
         return s;
+    }
+
+    get commonAncestorContainer()
+    {
+        const y = this.start0, z = this.end0;
+        if(!y || !z) return null;
+        if(y == z) return y;
+        let result = {};
+        Node.commonAncestor(y, z, result);
+        return result.root;
     }
 
 }
