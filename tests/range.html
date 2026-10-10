@@ -75,7 +75,20 @@ range.setStart(p5, 0);
 check((range == ""), "disconnected range string");
 check((range.commonAncestorContainer == p5), "disconnected range ancestor");
 
-// check for offset nonzero and the many other instance methods...
+// offsets into text nodes
+fpara[0].textContent = "dog";
+fpara[1].textContent = "cat";
+fpara[2].textContent = "bird";
+fpara[3].textContent = "turtle";
+range.setStart(fpara[0].firstChild, 2);
+range.setEnd(fpara[3].firstChild, 4);
+check((range == "gcatbirdturt"), "catbird range string");
+check((range.commonAncestorContainer == frag), "catbird range ancestor");
+range.setStart(fpara[3].firstChild, 2);
+check((range == "rt"), "rt range string");
+check((range.commonAncestorContainer == fpara[3].firstChild), "rt range ancestor");
+
+// check for offset nonzero under nodes and the many other instance methods...
 
 show.textContent = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

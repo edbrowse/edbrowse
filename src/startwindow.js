@@ -6155,7 +6155,12 @@ Take a few steps up, and make sure the node is in the tree. */
     }
 
     toString() {
-        if(this.start0 == this.end0) return ""; // empty
+        if(this.start0 == this.end0) {
+            if(this.end1 <= this.start1) return "";
+            const t = this.start0;
+            if(t.nodeType == 3 || t.nodeType == 8) return t.data.substring(this.start1, this.end1);
+            return "";
+        }
         const anc = this.commonAncestorContainer;
         if(!anc) return "";
         const list = gebtn(anc, '*', true, true);
@@ -6171,14 +6176,20 @@ Take a few steps up, and make sure the node is in the tree. */
         if(k <= j) return "";
         let s = "";
         if(anc == this.start0) {
-            if(anc.nodeType == 3 || anc.nodeType == 8) s += anc.data;
-            if(anc.nodeType == 1 && anc.nodeName == "SCRIPT") s += anc.text;
+            if(anc.nodeType == 3 || anc.nodeType == 8) s += anc.data.substr(this.start1)
+            if(anc.nodeType == 1 && anc.nodeName == "SCRIPT") s += anc.text.substr(this.start1);
             ++j;
         }
         for(; j < k; ++j) {
             const t = list[j];
-            if(t.nodeType == 3 || t.nodeType == 8) s += t.data;
-            if(t.nodeType == 1 && t.nodeName == "SCRIPT") s += t.text;
+        const b = (t == this.start0 ? this.start1 : 0);
+            if(t.nodeType == 3 || t.nodeType == 8) s += t.data.substr(b);
+            if(t.nodeType == 1 && t.nodeName == "SCRIPT") s += t.text.substr(b);
+        }
+        if(j < list.length && this.end1) {
+            const t = list[j];
+            if(t.nodeType == 3 || t.nodeType == 8) s += t.data.substr(0, this.end1)
+            if(t.nodeType == 1 && t.nodeName == "SCRIPT") s += t.text.substr(0, this.end1);
         }
         return s;
     }
