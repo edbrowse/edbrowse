@@ -1008,12 +1008,12 @@ deepest is your common ancestor, and that's n*log(n) */
         for(let t = y; t; t = t.parentNode) {
             py.push(t);
             // allow nodeType == 3 for a text node
-            if(t.nodeType != 1 && t.nodeType != 3) break; // document or fragment
+            if(t.nodeType != 1 && t.nodeType != 3 && t.nodeType != 8) break;
             if(t.is$frame) break;
         }
         for(let t = z; t; t = t.parentNode) {
             pz.push(t);
-            if(t.nodeType != 1 && t.nodeType != 3) break; // document or fragment
+            if(t.nodeType != 1 && t.nodeType != 3 && t.nodeType != 8) break;
             if(t.is$frame) break;
         }
         let root = null, i, j;
@@ -2706,6 +2706,9 @@ all those classes will exist. */
         }
         return u;
     }
+
+    createRange() { return new Range(); }
+
 }
 swdc(Document);
 
@@ -6105,6 +6108,7 @@ class Range extends AbstractRange
         // the range is the half-open interval [start,end)
         // thus the initial range is nothing
         this.start0 = this.end0 = document;
+        this.start1 = this.end1 = 0;
     }
 
 /* there are two different designs, with pros and cons.
@@ -6123,12 +6127,12 @@ Take a few steps up, and make sure the node is in the tree. */
 
     setStart(n, offset) {
         if(!n) return;
-        this.start0 = n;
+        this.start0 = n, this.start1 = offset;
     }
 
     setEnd(n, offset) {
         if(!n) return;
-        this.end0 = n;
+        this.end0 = n, this.end1 = offset;
     }
 
     setStartBefore(n, offset) {
@@ -6167,13 +6171,13 @@ Take a few steps up, and make sure the node is in the tree. */
         if(k <= j) return "";
         let s = "";
         if(anc == this.start0) {
-            if(anc.nodeType == 3) s += anc.data;
+            if(anc.nodeType == 3 || anc.nodeType == 8) s += anc.data;
             if(anc.nodeType == 1 && anc.nodeName == "SCRIPT") s += anc.text;
             ++j;
         }
         for(; j < k; ++j) {
             const t = list[j];
-            if(t.nodeType == 3) s += t.data;
+            if(t.nodeType == 3 || t.nodeType == 8) s += t.data;
             if(t.nodeType == 1 && t.nodeName == "SCRIPT") s += t.text;
         }
         return s;
