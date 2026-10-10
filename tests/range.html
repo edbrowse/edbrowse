@@ -15,12 +15,14 @@ range.setStart(b, 0);
 range.setEnd(b, 0);
 check((range == ""), "body range string");
 check((range.commonAncestorContainer == b), "body range ancestor");
+check((range.collapsed), "body collapsed");
 
 para = b.querySelectorAll("p");
 range.setStart(para[1], 0);
 range.setEnd(para[4], 0);
 check((range == "123"), "123 range string");
 check((range.commonAncestorContainer == b), "123 range ancestor");
+check((!range.collapsed), "123 not collapsed");
 
 // check liveness
 p5 = document.createElement("p");
@@ -48,6 +50,7 @@ range.setEnd(para[4].firstChild, 0);
 check((range == "123"), "text text range string");
 check((range.commonAncestorContainer == b), "text text range ancestor");
 range.setEnd(para[1].firstChild, 0);
+check((range.collapsed), "text alone collapsed");
 check((range.commonAncestorContainer == para[1].firstChild), "text alone range ancestor");
 
 frag = document.createDocumentFragment();
@@ -76,6 +79,7 @@ s5.remove();
 
 // setStart something unrelated
 range.setStart(p5, 0);
+check((range.collapsed), "disconnected collapsed");
 check((range == ""), "disconnected range string");
 check((range.commonAncestorContainer == p5), "disconnected range ancestor");
 
@@ -106,6 +110,7 @@ fpara[1].firstChild.data = "horse";
 check((range == "ghorsebirdturt"), "horsebird range string");
 range.setStart(fpara[3].firstChild, 2);
 check((range == "rt"), "rt range string");
+check((!range.collapsed), "rt not collapsed");
 check((range.commonAncestorContainer == fpara[3].firstChild), "rt range ancestor");
 
 // this comes out exactly the same as setStart   ???

@@ -6175,11 +6175,11 @@ I'll probably do the simplest thing, which is to call gebtn as needed. */
         let j = -1, k = list.length;
         if(this.start0 != anc) {
             j = list.indexOf(this.start0);
-            if(j < 0) return ""; // should not happen
+            if(j < 0) return "";
         }
         if(this.end0 != anc) {
             k = list.indexOf(this.end0);
-            if(k < 0) return ""; // should not happen
+            if(k < 0) return "";
         }
         if(k <= j) return "";
         let s = "";
@@ -6212,6 +6212,29 @@ I'll probably do the simplest thing, which is to call gebtn as needed. */
 // no common ancestor, return start; that's bizarre but that's what chrome does
         if(!result.root) return y;
         return result.root;
+    }
+
+    // this is very similar to toString
+    get collapsed() {
+        if(this.start0 == this.end0) {
+            if(this.end1 <= this.start1) return true;
+            const t = this.start0;
+            if(t.nodeType == 3 || t.nodeType == 8) return false;
+            return true;
+        }
+        const anc = this.commonAncestorContainer;
+        if(!anc) return true;
+        const list = gebtn(anc, '*', true, true);
+        let j = -1, k = list.length;
+        if(this.start0 != anc) {
+            j = list.indexOf(this.start0);
+            if(j < 0) return true;
+        }
+        if(this.end0 != anc) {
+            k = list.indexOf(this.end0);
+            if(k < 0) return true;
+        }
+        return k <= j;
     }
 
     cloneRange() {

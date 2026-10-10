@@ -565,14 +565,18 @@
 */
       return 1;
     },
-
-//@` I never saw a website use the Range object, ever,
-// or for that matter, NodeIterator or TreeWalker.
-// I implemented the last two just to satisfy acid3, and Range looks 4 times
-// as complicated as TreeWalker, so I'm gonna skip the Range tests for now,
-// unless you can show me a real world website that uses it.
-// On to test 14.
-    function() { return 1; }, // test 7
+    function () {
+      // test 7: basic ranges tests
+      var r = document.createRange();
+      assert(r, "range not created");
+      assert(r.collapsed, "new range wasn't collapsed");
+      assertEquals(r.commonAncestorContainer, document, "new range's common ancestor wasn't the document");
+      assertEquals(r.startContainer, document, "new range's start container wasn't the document");
+      assertEquals(r.startOffset, 0, "new range's start offset wasn't zero");
+      assertEquals(r.endContainer, document, "new range's end container wasn't the document");
+      assertEquals(r.endOffset, 0, "new range's end offset wasn't zero");
+      return 1;
+    },
     function() { return 1; }, // test 8
     function() { return 1; }, // test 9
     function() { return 1; }, // test 10
