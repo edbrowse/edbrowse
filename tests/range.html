@@ -1,0 +1,54 @@
+<head><title>Range Test</title></head>
+<body>
+<p id=show>start</p><p>1</p><p>2</p><p>3</p><p>4</p>
+<script>
+// Range tests, lots of cases here.
+try {
+msg = "ok";
+b = document.body;
+function check(condition, s) { if(!condition) msg += ` | ${s}`; }
+
+range = new Range();
+check((range == ""), "default range string");
+check((range.commonAncestorContainer == document), "default range ancestor");
+range.setStart(b, 0);
+range.setEnd(b, 0);
+check((range == ""), "body range string");
+check((range.commonAncestorContainer == b), "body range ancestor");
+
+para = b.querySelectorAll("p");
+range.setStart(para[1], 0);
+range.setEnd(para[4], 0);
+check((range == "123"), "123 range string");
+check((range.commonAncestorContainer == b), "123 range ancestor");
+
+// check liveness
+p5 = document.createElement("p");
+p5.textContent = "5";
+b.insertBefore(p5, para[3]);
+check((range == "1253"), "1253 range string");
+p5.remove();
+
+// one side document, make it the left side so we don't have to encompass this script.
+range.setStart(document, 0);
+// once again I have to allow for differing whitespace between
+// chrome and edbrowse.
+check(/^Range Test\s*start *123$/.test(range), "doc4 range string");
+check((range.commonAncestorContainer == document), "doc4 range ancestor");
+range.setStart(b, 0);
+check(/^\s*start *123$/.test(range), "body4 range string");
+check((range.commonAncestorContainer == b), "body4 range ancestor");
+range.setStart(para[1].firstChild, 0);
+range.setEnd(para[4].firstChild, 0);
+check((range == "123"), "text text range string");
+check((range.commonAncestorContainer == b), "text text range ancestor");
+
+/* setStart something not in the tree, I don't understand what this is suppose to do
+range.setStart(p5, 0);
+*/
+
+// check for offset nonzero and the many other instance methods...
+
+show.textContent = msg;
+} catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
+</script>

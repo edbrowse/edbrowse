@@ -3,7 +3,7 @@ PROGRAM ?= ../src/edbrowse
 
 checks = classlist.html collection.html custom.html dynamic-form.html \
 	fragment.html getelem.html multiline-attribute.html mutation.html \
-	performance-observer.html queryselector.html \
+	performance-observer.html queryselector.html range.html \
 	script-adds-nodes.html scriptorder.html style.html \
 	table.html timer.html unbalanced-attribute.html table-render
 ifeq ($(strip $(LOCAL)),)

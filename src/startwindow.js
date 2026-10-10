@@ -6104,8 +6104,8 @@ class Range extends AbstractRange
     constructor() {
         super();
         // the range is strictly between these two nodes.
-        // nodes must be set or there is no range
-        this.start0 = this.end0 = null;
+        // thus the initial range is nothing
+        this.start0 = this.end0 = document;
     }
 
 /* there are two different designs, with pros and cons.
@@ -6123,12 +6123,18 @@ either way, it's good to start with isRooted().
 Take a few steps up, and make sure the node is in the tree. */
 
     setStart(n, offset) {
+        if(!n) return;
+        if(n.nodeType == 3) n = n.parentNode;
+        if(!n) return;
         if(n == document) { this.start0 = n; return; }
         if(isRooted(n) != window) return; // not in the tree
         this.start0 = n;
     }
 
     setEnd(n, offset) {
+        if(!n) return;
+        if(n.nodeType == 3) n = n.parentNode;
+        if(!n) return;
         if(n == document) { this.end0 = n; return; }
         if(isRooted(n) != window) return;
         this.end0 = n;
@@ -6154,7 +6160,7 @@ Take a few steps up, and make sure the node is in the tree. */
     }
 
     toString() {
-        if(!this.start0 || !this.end0) return ""; // range not set
+        if(this.start0 == this.end0) return ""; // empty
         const list = gebtn(document, '*', true, true);
         let j = -1, k = list.length;
         if(this.start0 != document) {
