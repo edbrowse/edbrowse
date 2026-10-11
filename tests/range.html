@@ -25,6 +25,26 @@ check((range == "123"), "123 range string");
 check((range.commonAncestorContainer == b), "123 range ancestor");
 check((!range.collapsed), "123 not collapsed");
 
+r2 = new Range;
+r2.setStart(b, 0);
+r2.setEnd(para[4], 0);
+check((range.compareBoundaryPoints(range.START_TO_START, r2) == 1), "node start to start");
+check((range.compareBoundaryPoints(range.START_TO_END, r2) == 1), "node start to end");
+check((range.compareBoundaryPoints(range.END_TO_START, r2) == -1), "node end to start");
+check((range.compareBoundaryPoints(range.END_TO_END, r2) == 0), "node end to end");
+
+// compare the same text node, using offsets
+const text = new Text("0123456789");
+r1 = new Range();
+r1.setStart(text, 1);
+r1.setEnd(text, 6);
+r2.setStart(text, 1);
+r2.setEnd(text, 4);
+check((r1.compareBoundaryPoints(r1.START_TO_START, r2) == 0), "offset start to start");
+check((r1.compareBoundaryPoints(r1.START_TO_END, r2) == 1), "offset start to end");
+check((r1.compareBoundaryPoints(r1.END_TO_START, r2) == -1), "offset end to start");
+check((r1.compareBoundaryPoints(r1.END_TO_END, r2) == 1), "offset end to end");
+
 // check liveness
 p5 = document.createElement("p");
 p5.textContent = "5";

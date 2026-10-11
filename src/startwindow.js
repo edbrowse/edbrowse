@@ -6111,6 +6111,14 @@ class Range extends AbstractRange
         this.start1 = this.end1 = 0;
     }
 
+    static {
+        const tp = this.prototype;
+        tp.START_TO_START = 0;
+        tp.START_TO_END = 1;
+        tp.END_TO_END = 2;
+        tp.END_TO_START = 3;
+    }
+
     setStart(n, offset) {
         if(!n) return;
         this.start0 = n, this.start1 = offset;
@@ -6258,6 +6266,31 @@ collapse(side) {
         delete this.anc;
         delete this.base;
         return newnode;
+    }
+
+    // compare nodes and offsets
+    static orderNodes(n1, n2, o1, o2) {
+        if(n1 == n2)
+            return o1 < o2 ? -1 : o1 > o2 ? 1 : 0;
+        const v = n1.compareDocumentPosition(n2);
+        if(v == n1.DOCUMENT_POSITION_DISCONNECTED) {
+            // oops - not even in the same tree
+            // there is no right answer here
+            return null;
+        }
+        return v&n1.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+    }
+
+    compareBoundaryPoints(how, other) {
+        if(how == this.START_TO_START)
+            return Range.orderNodes(this.start0, other.start0, this.start1, other.start1);
+        if(how == this.START_TO_END)
+            return Range.orderNodes(this.end0, other.start0, this.end1, other.start1);
+        if(how == this.END_TO_END)
+            return Range.orderNodes(this.end0, other.end0, this.end1, other.end1);
+        if(how == this.END_TO_START)
+            return Range.orderNodes(this.start0, other.end0, this.start1, other.end1);
+        return null; // bad how value
     }
 
 }
