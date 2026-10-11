@@ -5534,6 +5534,137 @@ class Headers
 }
 swc(Headers);
 
+class HttpBodyHelper
+{
+    #body = null;
+    #consumed()
+    {
+        if (!this.#body) return;
+        if (this.bodyUsed) {
+            return Promise.reject(new TypeError('Already read'))
+        }
+        this.bodyUsed = true
+    }
+
+    #fileReaderReady(reader)
+    {
+        return new Promise((resolve, reject) => {
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(reader.error);
+        });
+    }
+
+    #readBlobAsArrayBuffer()
+    {
+        const reader = new FileReader();
+        const promise = this.#fileReaderReady(reader);
+        reader.readAsArrayBuffer(this.#body);
+        return promise;
+    }
+
+    #readBlobAsText()
+    {
+          const reader = new FileReader();
+          const promise = this.#fileReaderReady(reader);
+          const match = /charset=([A-Za-z0-9_-]+)/.exec(this.#body.type);
+          const encoding = match ? match[1] : 'utf-8';
+          reader.readAsText(this.#body, encoding);
+          return promise;
+    }
+
+    #readArrayBufferAsText()
+    {
+        const view = new Uint8Array(buf);
+        const chars = new Array(view.length);
+        for (let i = 0; i < view.length; ++i)
+            chars[i] = String.fromCharCode(view[i]);
+        return chars.join('');
+    }
+
+    _initBody(body)
+    {
+        if (
+            typeof body === "string" ||
+            body instanceof Blob ||
+            body instanceof FormData
+        ) this.#body = body;
+        else if (body instanceof DataView)
+            this.#body = body.buffer.slice(0);
+        else if (ArrayBuffer.isView(body))
+            this.#body = body.buffer.slice(
+                body.byteOffset,
+                body.byteOffset + body.byteLength
+            );
+        else if (body instanceof ArrayBuffer)
+            this.#body = body.slice(0);
+        else
+            this.#body = body.toString();
+
+        if (!this.headers.get('content-type'))
+            if (typeof body === "string")
+                this.headers.set('content-type', 'text/plain;charset=UTF-8')
+            else if (body instanceof Blob && body.type)
+                this.headers.set('content-type', body.type);
+            else if (body instanceof URLSearchParams)
+                this.headers.set(
+                    'content-type',
+                    'application/x-www-form-urlencoded;charset=UTF-8'
+                );
+    }
+
+    blob()
+    {
+        const rejected = this.#consumed();
+        if (rejected)
+            return rejected;
+
+        if (this.#body instanceof Blob)
+            return Promise.resolve(this.#body);
+
+        if (this.#body instanceof FormData)
+            throw new Error('could not read FormData body as blob')
+
+        return Promise.resolve(new Blob([this.#body]));
+    }
+
+    arrayBuffer()
+    {
+        if (!(this.#body instanceof ArrayBuffer))
+            return this.blob().then(this.#readBlobAsArrayBuffer);
+
+        const rejected = this.#consumed();
+        if (rejected) return rejected;
+
+        return Promise.resolve(this.#body);
+    }
+
+    text()
+    {
+        const rejected = this.#consumed();
+        if (rejected)
+            return rejected;
+
+        if (this.#body instanceof Blob) 
+            return promise.resolve(this.#readBlobAsText());
+        else if (this.#body instanceof ArrayBuffer)
+            return Promise.resolve(this.#readArrayBufferAsText());
+        else if (this.#body instanceof FormData)
+            throw new Error('could not read FormData body as text')
+        else
+            return Promise.resolve(this.#body);
+    }
+
+    formData()
+    {
+        return this.text().then(decode);
+    }
+
+    json()
+    {
+        return this.text().then(JSON.parse);
+    }
+}
+
 ;(() => {
     const g = globalThis;
     function consumed(body) {
@@ -5692,6 +5823,7 @@ swc(Headers);
 
       return this
     }
+
 
     // HTTP methods whose capitalization should be normalized
     var methods = ['CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT', 'TRACE']
