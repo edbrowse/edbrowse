@@ -116,6 +116,7 @@ check((cc.childNodes.length == 4), "clone 4 kids");
 check((cc.lastChild.childNodes.length == 1), "clone no flower");
 check((cc.childNodes[1].getAttribute("jj") == 99), "clone jj = 99");
 check((cc.childNodes[1].style.getPropertyValue("margin-top") == "9px"), "clone marginTop = 9px");
+check((cc.textContent == "gcatbirdturt"), "clone gcatbirdturt");
 
 // change the second animal in two ways
 fpara[1].textContent = "cow";

@@ -1612,9 +1612,12 @@ function cloneNodeHelper(root, deep, flavor, range)
             return d.createDocumentFragment();
         }
 
-        if (node1.nodeName == "#text")
-            node2 = d.createTextNode(node1.data);
-        else if (node1.nodeName == "#comment")
+        if (node1.nodeName == "#text") {
+            let v = node1.data;
+            if(leftpoint) v = node1.data.substr(range.start1);
+            if(rightpoint) v = node1.data.substr(0, range.end1);
+            node2 = d.createTextNode(v);
+        } else if (node1.nodeName == "#comment")
             node2 = d.createComment();
         else if (node1.nodeName == "#document-fragment")
             node2 = d.createDocumentFragment();
@@ -1814,6 +1817,10 @@ function cloneNodeHelper(root, deep, flavor, range)
                     if(k != leftbranch) continue;
                     inout = 1;
                 }
+                // if k is the end marker then we stop here, unless it holds
+                // some piece of text that we have to carry across
+                if(inout == 1 && k == range.end0 &&
+                (!range.end1 || k.nodeType != 3)) break;
                 if(inout == 1 && rightbranch && k.previousSibling == rightbranch) inout = 2;
                 if(inout == 2) continue;
                 if(k.nodeType == 11) {
