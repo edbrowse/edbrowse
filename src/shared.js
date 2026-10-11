@@ -1547,33 +1547,38 @@ function camelCase(t) {
     return t.replace(/-[a-zA-Z]/g, function(f){return f[1].toUpperCase()});
 }
 
-    /*********************************************************************
-    cloneNode creates a copy of the node and its children recursively.
-    The argument 'deep' refers to whether or not the clone will recurs.
-    clone1 is a helper function that is not tied to any particular prototype.
-    into means we are cloning into this context, as in importNode().
-    It's frickin complicated, so set cloneDebug to debug it.
-    *********************************************************************/
+/*********************************************************************
+cloneNode creates a copy of the node and its children recursively.
+clone1 is a helper function that is not tied to any particular prototype.
+It's frickin complicated, so set cloneDebug to debug it.
+The argument 'deep' refers to whether or not the clone will recurs.
+flavor = 0: regular cloneNode
+flavor = 1: importNode
+flavor = 2: Range.cloneContents
+*********************************************************************/
 
-function cloneNodeHelper(root, deep, into)
+function cloneNodeHelper(root, deep, flavor, range)
 {
-    // these days we always have cloneRoot1 = node1 so just do that
     const cloneRoot1 = root;
     let cloneRoot2;
     const w0 = my$win();
+    let w = w0;
+    // if cloneNode then refer to the window that created the node
+    if (flavor != 1 && root.ownerDocument && root.ownerDocument.defaultView)
+        w = root.ownerDocument.defaultView
+    const d = w.document
+    const anc = (flavor == 2 ? range.anc : null);
     const debug = db$flags(2);
 
-    function clone1(node1)
+    // mode = 0: clone the entire node
+    // mode = 2: node is ancestor of the entire range
+    // mode = 3: node is ancestor of the start of the range
+    // mode = 4: node is ancestor of the end of the range
+    function clone1(node1, mode)
     {
         let node2;
         let i, j;
         let kids = null;
-
-        let w = w0;
-        // if cloneNode then refer to the window that created the node
-        if (!into && node1.ownerDocument && node1.ownerDocument.defaultView)
-            w = node1.ownerDocument.defaultView
-        const d = w.document
 
         // WARNING: don't use instanceof NodeList here.
         // It's a different class in another frame.
@@ -1788,7 +1793,7 @@ function cloneNodeHelper(root, deep, into)
                 }
                 // mutation observers don't apply to these newly created items.
                 // I can call the faster, simpler appendChild method.
-                node2.appendChild$nm(clone1(k));
+                node2.appendChild$nm(clone1(k), mode);
             }
         }
 
@@ -1836,7 +1841,7 @@ function cloneNodeHelper(root, deep, into)
         return c;
     }
 
-    return clone1(root);
+    return clone1(root, 0);
 }
 
 /* an attempt at a structured clone implementation, definitely needs some work

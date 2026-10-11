@@ -575,6 +575,9 @@
       assertEquals(r.startOffset, 0, "new range's start offset wasn't zero");
       assertEquals(r.endContainer, document, "new range's end container wasn't the document");
       assertEquals(r.endOffset, 0, "new range's end offset wasn't zero");
+      assert(r.cloneContents(), "cloneContents() didn't return an object");
+      assertEquals(r.cloneContents().childNodes.length, 0, "nothing cloned was more than nothing");
+      assertEquals(r.cloneRange().toString(), "", "nothing cloned stringifed to more than nothing");
       return 1;
     },
     function() { return 1; }, // test 8

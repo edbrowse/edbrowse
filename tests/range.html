@@ -103,6 +103,13 @@ check((r2.endContainer == fpara[3].firstChild), "r2 endContainer");
 check((r2.startOffset == 2), "r2 startOffset");
 check((r2.endOffset == 4), "r2 endOffset");
 
+fpara[3].appendChild(document.createTextNode("flower"));
+// flower should not carry along with the clone
+fpara[1].setAttribute("jj", 99);
+fpara[1].style.marginTop = "9px";
+cc = range.cloneContents();
+check((cc.nodeType == 11), "clone type fragment");
+
 // change the second animal in two ways
 fpara[1].textContent = "cow";
 check((range == "gcowbirdturt"), "cowbird range string");

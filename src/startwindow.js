@@ -989,7 +989,7 @@ class Node extends EventTarget
         ) ? this.parentNode : null;
     }
 
-    cloneNode(deep) { return mw$.cloneNodeHelper(this,deep, false); }
+    cloneNode(deep) { return mw$.cloneNodeHelper(this,deep, 0); }
 
 /* Static function to find the common ancestor of two nodes.
 This is a simple algorithm, and is quadratic in the depth of the tree,
@@ -5784,7 +5784,7 @@ swp("removeEventListener", mw$.removeEventListener.bind(window))
 // of objects from another context into the current context.
 // Set the second parameter to true to indicate this.
 sdp("importNode", function(start,deep) {
-    return mw$.cloneNodeHelper(start,deep, true);
+    return mw$.cloneNodeHelper(start,deep, 1);
 })
 
 // link functions from the shared window into document
@@ -6242,6 +6242,16 @@ I'll probably do the simplest thing, which is to call gebtn as needed. */
         r.start0 = this.start0, r.end0 = this.end0;
         r.start1 = this.start1, r.end1 = this.end1;
         return r;
+    }
+
+    // stub for now
+    cloneContents() {
+        this.anc = this.commonAncestorContainer;
+        this.base = this.anc ? this.anc : this.start0;
+        const newnode = mw$.cloneNodeHelper(this.base, false, 2, this);
+        delete this.anc;
+        delete this.base;
+        return newnode;
     }
 
 }
