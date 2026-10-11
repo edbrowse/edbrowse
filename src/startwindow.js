@@ -6248,7 +6248,7 @@ I'll probably do the simplest thing, which is to call gebtn as needed. */
     cloneContents() {
         this.anc = this.commonAncestorContainer;
         this.base = this.anc ? this.anc : this.start0;
-        const newnode = mw$.cloneNodeHelper(this.base, false, 2, this);
+        const newnode = mw$.cloneNodeHelper(this.base, true, 2, this);
         delete this.anc;
         delete this.base;
         return newnode;

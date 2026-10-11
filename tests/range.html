@@ -3,6 +3,7 @@
 <p id=show>start</p><p>1</p><p>2</p><p>3</p><p>4</p>
 <script>
 // Range tests, lots of cases here.
+// There are more range tests in acid3, but I test for different stuff.
 try {
 msg = "ok";
 b = document.body;
@@ -103,12 +104,18 @@ check((r2.endContainer == fpara[3].firstChild), "r2 endContainer");
 check((r2.startOffset == 2), "r2 startOffset");
 check((r2.endOffset == 4), "r2 endOffset");
 
+frag.appendChild(p5);
 fpara[3].appendChild(document.createTextNode("flower"));
-// flower should not carry along with the clone
+// p5 and flower should not carry along with the clone
 fpara[1].setAttribute("jj", 99);
 fpara[1].style.marginTop = "9px";
 cc = range.cloneContents();
+p5.remove();
 check((cc.nodeType == 11), "clone type fragment");
+check((cc.childNodes.length == 4), "clone 4 kids");
+check((cc.lastChild.childNodes.length == 1), "clone no flower");
+check((cc.childNodes[1].getAttribute("jj") == 99), "clone jj = 99");
+check((cc.childNodes[1].style.getPropertyValue("margin-top") == "9px"), "clone marginTop = 9px");
 
 // change the second animal in two ways
 fpara[1].textContent = "cow";

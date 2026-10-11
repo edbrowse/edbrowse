@@ -1568,7 +1568,9 @@ function cloneNodeHelper(root, deep, flavor, range)
         w = root.ownerDocument.defaultView
     const d = w.document
     const anc = (flavor == 2 ? range.anc : null);
+    if(flavor == 1) flavor = 0;
     const debug = db$flags(2);
+    const dbp = debug ? alert3 : eb$voidfunction; // debug print
 
     // mode = 0: clone the entire node
     // mode = 2: node is ancestor of the entire range
@@ -1586,10 +1588,28 @@ function cloneNodeHelper(root, deep, flavor, range)
             kids = node1.childNodes;
 
         // We should always be cloning a node.
-        if (debug) alert3("clone " + node1.nodeName + " {");
         if (debug) {
-            if (kids && kids.length) alert3("kids " + kids.length);
-            else alert3("no childNodes, type " + typeof node1.childNodes);
+            if(!mode) dbp(`clone ${node1.nodeName} {`);
+            else dbp(`clone ${node1.nodeName} mode ${mode} {`);
+            if (kids && kids.length) dbp("kids " + kids.length);
+            else dbp("no kids");
+        }
+
+        let leftpoint = false, rightpoint = false, leftbranch = null, rightbranch = null;
+        if(mode == 2 || mode == 3) {
+            if(node1 == range.start0) {
+                leftpoint = true, dbp("leftpoint");
+            } else leftbranch = findBranch(node1, range.start0);
+        }
+        if(mode == 2 || mode == 4) {
+            if(node1 == range.end0) {
+                rightpoint = true, dbp("rightpoint");
+            } else rightbranch = findBranch(node1, range.end0);
+        }
+
+        if(leftpoint & rightpoint) {
+            // collapsed range. Worry about offsets later.
+            return d.createDocumentFragment();
         }
 
         if (node1.nodeName == "#text")
@@ -1599,7 +1619,7 @@ function cloneNodeHelper(root, deep, flavor, range)
         else if (node1.nodeName == "#document-fragment")
             node2 = d.createDocumentFragment();
         else if (node1.dom$class == "CSSStyleDeclaration") {
-            if (debug) alert3("skipping style object");
+            dbp("skipping style object");
             return null;
         }
         else {
@@ -1634,13 +1654,13 @@ function cloneNodeHelper(root, deep, flavor, range)
             if (w0.Element.attrNameImplicit(node1, item)) continue;
 
             if (typeof node1[item] === 'function') {
-                if (debug) alert3("copy function " + item);
+                dbp("copy function " + item);
                 node2[item] = node1[item];
                 continue;
             }
 
             if (node1[item] === node1) {
-                if (debug) alert3("selflink through " + item);
+                dbp("selflink through " + item);
                 node2[item] = node2;
                 continue;
             }
@@ -1660,7 +1680,7 @@ function cloneNodeHelper(root, deep, flavor, range)
                 ) continue;
 
                 node2[item] = new w.Array;
-                if (debug) alert3("copy array " + item + " with " + node1[item].length + " members");
+                dbp("copy array " + item + " with " + node1[item].length + " members");
                 for (const i of node1[item]) node2[item].push(i);
                 continue;
             }
@@ -1678,7 +1698,7 @@ function cloneNodeHelper(root, deep, flavor, range)
                 // Check for URL objects.
                 if (node1[item].dom$class == "URL") {
                     const u = node1[item];
-                    if (debug) alert3("copy URL " + item);
+                    dbp("copy URL " + item);
                     node2[item] = new w.z$URL(u.href);
                     continue;
                 }
@@ -1686,7 +1706,7 @@ function cloneNodeHelper(root, deep, flavor, range)
                 // some sites displace my URL with theirs
                 if (node1[item] instanceof w.URL) {
                     const u = node1[item];
-                    if (debug) alert3("copy URL " + item);
+                    dbp("copy URL " + item);
                     node2[item] = new w.URL(u.toString());
                     continue;
                 }
@@ -1703,11 +1723,11 @@ function cloneNodeHelper(root, deep, flavor, range)
                 // rather like tar or cpio preserving hard links.
                 const p = findObject(node1[item]);
                 if (p.length) {
-                    if(debug) alert3("link " + item + " " + p);
+                    dbp("link " + item + " " + p);
                     node2[item] = correspondingObject(p);
                 }
                 else // I don't think we should point to a generic object that we don't know anything about.
-                    if (debug) alert3("unknown object " + item);
+                    dbp("unknown object " + item);
 
                 continue;
             }
@@ -1733,7 +1753,7 @@ function cloneNodeHelper(root, deep, flavor, range)
                 if(debug) {
                     let showstring = node1[item];
                     if(showstring.length > 140) showstring = "long";
-                    alert3("copy string " + item + " = " + showstring);
+                    dbp("copy string " + item + " = " + showstring);
                 }
                 node2[item] = node1[item];
                 continue;
@@ -1741,7 +1761,7 @@ function cloneNodeHelper(root, deep, flavor, range)
             if (typeof node1[item] === 'number') {
                 if (item == "eb$seqno") continue;
                 if (item == "nodeType" && node1.nodeType == 1) continue;
-                if (debug) alert3("copy number " + item + " = " + node1[item]);
+                dbp("copy number " + item + " = " + node1[item]);
                 node2[item] = node1[item];
                 continue;
             }
@@ -1755,17 +1775,17 @@ function cloneNodeHelper(root, deep, flavor, range)
                 if (item == "eb$xml") continue;
                 // these are spilldown from the attributes, and will be copied over as attributes
                 if (item == "ariaHidden") continue;
-                if (debug) alert3("copy boolean " + item + " = " + node1[item]);
+                dbp("copy boolean " + item + " = " + node1[item]);
                 node2[item] = node1[item];
                 continue;
             }
         }
 
         if (node1.attributes$2) { // has attributes
-            if (debug) alert3("copy attributes");
+            dbp("copy attributes");
             for (let i=0; i < node1.attributes.length; ++i) {
                 const a = node1.attributes[i];
-                if(debug) alert3(`copy attribute ${a.name}`);
+                dbp(`copy attribute ${a.name}`);
                 node2.setAttribute(a.name, a.value);
             }
         }
@@ -1774,26 +1794,38 @@ function cloneNodeHelper(root, deep, flavor, range)
         // This has to happen after the attributes.
         // In case the style property and getAttribute("style") disagree.
         if (node1.style$2 && node1.style$2.dom$class == "CSSStyleDeclaration") {
-            if (debug) alert3("copy style");
+            dbp("copy style");
             // referencing it will create it
             node2.style;
             node2.style.element = node2;
             for (let p of node1.style) {
-                if (debug) alert3("copy stattr " + p);
+                dbp("copy stattr " + p);
                 p = camelCase(p);
                 node2.style$2[p] = node1.style$2[p];
             }
         }
 
         if (deep && kids) {
+            let inout = 0; // inside or outside of the range
+            if(leftpoint || mode == 4) inout = 1;
             for(const k of kids) {
+                // don't clone kids outside of the range
+                if(leftbranch && inout == 0) {
+                    if(k != leftbranch) continue;
+                    inout = 1;
+                }
+                if(inout == 1 && rightbranch && k.previousSibling == rightbranch) inout = 2;
+                if(inout == 2) continue;
                 if(k.nodeType == 11) {
                     alert3("cannot clone a fragment, skipping this child.");
                     continue;
                 }
+                let newmode = 0;
+                if(k == leftbranch) newmode = 3;
+                if(k == rightbranch) newmode = 4;
                 // mutation observers don't apply to these newly created items.
                 // I can call the faster, simpler appendChild method.
-                node2.appendChild$nm(clone1(k), mode);
+                node2.appendChild$nm(clone1(k, newmode));
             }
         }
 
@@ -1805,7 +1837,7 @@ function cloneNodeHelper(root, deep, flavor, range)
             if (node1.nodeName == "DATALIST") datalistReindex(node2);
         }
 
-        if (debug) alert3("}");
+        dbp("}");
         return node2;
     }
 
@@ -1841,7 +1873,29 @@ function cloneNodeHelper(root, deep, flavor, range)
         return c;
     }
 
-    return clone1(root, 0);
+    // find the child that leads to a branch of the tree
+    function findBranch(start, tip)
+    {
+        if(tip == start) return tip;
+        let last = null;
+        while(tip) {
+            if(tip == start) {
+                if(debug) {
+                    for(let i = 0; i < start.childNodes.length; ++i)
+                        if(start.childNodes[i] == last)
+                            dbp("branch on child " + i);
+                }
+                return last;
+            }
+            if(tip.nodeType == 9 || tip.nodeType == 11) break;
+            if(tip.is$frame) break;
+            last = tip;
+            tip = tip.parentNode;
+        }
+        return null; // should not happen
+    }
+
+    return clone1(root, flavor);
 }
 
 /* an attempt at a structured clone implementation, definitely needs some work
