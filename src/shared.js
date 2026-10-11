@@ -1608,8 +1608,12 @@ function cloneNodeHelper(root, deep, flavor, range)
         }
 
         if(leftpoint & rightpoint) {
-            // collapsed range. Worry about offsets later.
-            return d.createDocumentFragment();
+            // collapsed range. Check for a piece of text.
+            node2 = d.createDocumentFragment();
+            if(node1.nodeType == 3 && range.end1 > range.start1) {
+                node2.appendChild(d.createTextNode(node1.data.substring(range.start1, range.end1)));
+            }
+            return node2;
         }
 
         if (node1.nodeName == "#text") {
@@ -1617,15 +1621,17 @@ function cloneNodeHelper(root, deep, flavor, range)
             if(leftpoint) v = node1.data.substr(range.start1);
             if(rightpoint) v = node1.data.substr(0, range.end1);
             node2 = d.createTextNode(v);
-        } else if (node1.nodeName == "#comment")
+        } else if (node1.nodeName == "#comment") {
             node2 = d.createComment();
-        else if (node1.nodeName == "#document-fragment")
+        }else if (node1.nodeName == "#document-fragment") {
             node2 = d.createDocumentFragment();
-        else if (node1.dom$class == "CSSStyleDeclaration") {
+        }else if (node1.dom$class == "CSSStyleDeclaration") {
             dbp("skipping style object");
             return null;
-        }
-        else {
+        } else if(mode == 2) {
+            // doesn't matter what the ancestor was, it becomes a gragment
+            node2 = d.createDocumentFragment();
+        } else {
             /* Here's what we use to do.
             node2 = d.createElement(node1.nodeName);
             Simple - right?

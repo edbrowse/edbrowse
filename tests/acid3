@@ -578,6 +578,7 @@
       assert(r.cloneContents(), "cloneContents() didn't return an object");
       assertEquals(r.cloneContents().childNodes.length, 0, "nothing cloned was more than nothing");
       assertEquals(r.cloneRange().toString(), "", "nothing cloned stringifed to more than nothing");
+      r.collapse(true); // no effect
       return 1;
     },
     function() { return 1; }, // test 8

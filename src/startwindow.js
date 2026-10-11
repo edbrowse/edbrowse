@@ -6237,6 +6237,12 @@ I'll probably do the simplest thing, which is to call gebtn as needed. */
         return k <= j;
     }
 
+collapse(side) {
+        if(typeof side == "boolean" && side)
+            this.end0 = this.start0, this.end1 = this.start1;
+        else this.start0 = this.end0, this.start1 = this.end1;
+    }
+
     cloneRange() {
         const r = new Range;
         r.start0 = this.start0, r.end0 = this.end0;

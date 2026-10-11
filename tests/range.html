@@ -45,6 +45,11 @@ check((range.commonAncestorContainer == b), "body4 range ancestor");
 check((range.startContainer == b), "body4 startContainer");
 check((range.endContainer == para[4]), "body4 endContainer");
 check((range.startOffset == 0), "body4 startOffset");
+
+cc = range.cloneContents();
+check((cc.nodeType == 11), "clone body4 fragment");
+check(/^\s*start *123$/.test(cc.textContent), "clone body4 string");
+
 check((range.endOffset == 0), "body4 endOffset");
 range.setStart(para[1].firstChild, 0);
 range.setEnd(para[4].firstChild, 0);
@@ -127,6 +132,11 @@ range.setStart(fpara[3].firstChild, 2);
 check((range == "rt"), "rt range string");
 check((!range.collapsed), "rt not collapsed");
 check((range.commonAncestorContainer == fpara[3].firstChild), "rt range ancestor");
+
+cc = range.cloneContents();
+check((cc.nodeType == 11), "clone rt fragment");
+check((cc.childNodes.length == 1), "clone rt 1 child");
+check((cc.firstChild.data == "rt"), "clone rt string");
 
 // this comes out exactly the same as setStart   ???
 range.setStartBefore(fpara[1], 0);
