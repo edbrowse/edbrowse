@@ -6354,6 +6354,29 @@ collapse(side) {
         return v;
     }
 
+    insertNode(n)
+    {
+        const y = this.start0,  p = y.parentNode,  type = y.nodeType;
+        if(type == 4 || type == 8 || type == 10) {
+            // comment, data section, doctype
+            y.after(n);
+            return;
+        }
+        if(type == 3) { // text
+            const v = y.data, o = this.start1;
+            if(v.length <= o) { y.after(n); return; }
+            if(!p) return;
+            if(o) { // split off the first piece
+                const t = document.createTextNode(v.substr(0, o));
+                y.before(t);
+                y.data = v.substr(o);
+            }
+            y.before(n);
+            return;
+        }
+        y.prepend$child(n);
+    }
+
 }
 swc(Range);
 

@@ -200,6 +200,18 @@ check((form.elements.length == 4 && form.a == form.elements[0] && form.d == form
 check((form.childNodes.length == 4), "4 children persist");
 check((cc.childNodes.length == 4), "4 elements extracted");
 check((cc.firstChild.name == 'b' && cc.lastChild.name == 'd'), "b c and d extracted");
+check((!cc.b), "clone form is not a form");
+
+r2.setStart(form, 0);
+r2.insertNode(document.createElement("hr"));
+check((form.firstChild.nodeName == "HR"), "leading hr");
+r2.insertNode(document.createTextNode("elephant"));
+check((form.firstChild.nodeType == 3), "leading text");
+r2.setStart(form.firstChild, 3);
+r2.insertNode(document.createTextNode("glass"));
+check((form.firstChild.data == "ele"), "ele");
+check((form.firstChild.nextSibling.data == "glass"), "glass");
+check((form.firstChild.nextSibling.nextSibling.data == "phant"), "phant");
 
 show.textContent = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

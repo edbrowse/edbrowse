@@ -582,6 +582,19 @@
       assertEquals(r.compareBoundaryPoints(r.START_TO_END, r.cloneRange()), 0, "starting boundary point of range wasn't the same as the end boundary point of the clone range");
       r.deleteContents(); // no effect
       assertEquals(r.extractContents().childNodes.length, 0, "nothing removed was more than nothing");
+      var endOffset = r.endOffset;
+      r.insertNode(document.createComment("commented inserted to test ranges"));
+      r.setEnd(r.endContainer, endOffset + 1); // added to work around spec bug that smaug is blocking the errata for
+      try {
+//@`        assert(!r.collapsed, "range with inserted comment is collapsed");
+        assertEquals(r.commonAncestorContainer, document, "range with inserted comment has common ancestor that isn't the document");
+        assertEquals(r.startContainer, document, "range with inserted comment has start container that isn't the document");
+        assertEquals(r.startOffset, 0, "range with inserted comment has start offset that isn't zero");
+        assertEquals(r.endContainer, document, "range with inserted comment has end container that isn't the document");
+        assertEquals(r.endOffset, 1, "range with inserted comment has end offset that isn't after the comment");
+      } finally {
+        document.removeChild(document.firstChild);
+      }
       return 1;
     },
     function() { return 1; }, // test 8
