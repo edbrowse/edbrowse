@@ -6158,6 +6158,31 @@ class Range extends AbstractRange
     get startOffset() { return this.start1; }
     get endOffset() { return this.end1; }
 
+    // normalize node and offset to the actual node.
+    // So we don't have to repeat this logic in every method that needs it.
+    // results are left in this.
+    normal$ize()
+    {
+        // start node end node start offset end offset
+        let sn = this.start0, en = this.end0, so = this.start1, eo = this.end1, type;
+        if(so) {
+            type = sn.nodeType;
+            if(type != 3 && type != 4 && type != 8) {
+                if(sn.childNodes.length <= so) return false;
+                sn = sn.childNodes[so], so = 0;
+            }
+        }
+        if(eo) {
+            type = en.nodeType;
+            if(type != 3 && type != 4 && type != 8) {
+                if(en.childNodes.length <= eo) return false;
+                en = en.childNodes[eo], eo = 0;
+            }
+        }
+        this.sn = sn, this.en = en, this.so = so, this.eo = eo;
+        return true;
+    }
+
 /* there are two different designs, with pros and cons.
 We could call getElementsByTagName('*') once, and the resulting live array
 would always be available for future calls to this range object.
