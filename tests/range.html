@@ -231,6 +231,12 @@ r2.setEnd(form.childNodes[5], 0);
 cc = r2.cloneContents();
 check((cc.childNodes.length == 4), "phant direct length 4");
 check((cc.lastChild.name == 'b'), "phant direct name b");
+// This may explain the whackiness. offset can be set after the end
+// of the array, thus not pointing to a real node.
+r2.setEnd(form, 8);
+cc = r2.cloneContents();
+check((cc.childNodes.length == 6), "phant limit length 6");
+check((cc.lastChild.type == 'submit'), "phant limit type submit");
 
 show.textContent = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

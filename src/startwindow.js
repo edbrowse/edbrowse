@@ -6175,7 +6175,9 @@ class Range extends AbstractRange
         if(eo) {
             type = en.nodeType;
             if(type != 3 && type != 4 && type != 8) {
-                if(en.childNodes.length <= eo) return false;
+                if(en.childNodes.length < eo) return false;
+                if(en.childNodes.length == eo)
+                    this.end$mark = en.appendChild(document.createComment(""));
                 en = en.childNodes[eo], eo = 0;
             }
         }
@@ -6183,11 +6185,18 @@ class Range extends AbstractRange
         return true;
     }
 
+    unnormal$ize()
+    {
+        delete this.sn; delete this.en;
+        delete this.so; delete this.eo;
+        if(this.end$mark) { this.end$mark.remove(); delete this.end$mark; }
+    }
+
     get commonAncestorContainer()
     {
         if(!this.normal$ize()) return null;
         const y = this.sn, z = this.en;
-        if(!y || !z) return null;
+        if(!y || !z) { this.unnormal$ize(); return null; }
         if(y == z) return y;
         let result = {};
         Node.commonAncestor(y, z, result);
@@ -6213,22 +6222,24 @@ I'll probably do the simplest thing, which is to call gebtn as needed. */
         const anc = this.commonAncestorContainer;
         if(!anc) return "";
         if(this.sn == this.en) {
-            if(this.eo <= this.so) return "";
+            if(this.eo <= this.so) { this.unnormal$ize(); return ""; }
             const t = this.sn;
-            if(t.nodeType == 3) return t.data.substring(this.so, this.eo);
-            return "";
+            let u = "";
+            if(t.nodeType == 3) u = t.data.substring(this.so, this.eo);
+            this.unnormal$ize();
+            return u;
         }
         const list = gebtn(anc, '*', true, true);
         let j = -1, k = list.length;
         if(this.sn != anc) {
             j = list.indexOf(this.sn);
-            if(j < 0) return "";
+            if(j < 0) { this.unnormal$ize(); return ""; }
         }
         if(this.en != anc) {
             k = list.indexOf(this.en);
-            if(k < 0) return "";
+            if(k < 0) { this.unnormal$ize(); return ""; }
         }
-        if(k <= j) return "";
+        if(k <= j) { this.unnormal$ize(); return ""; }
         let s = "";
         if(anc == this.sn) {
             if(anc.nodeType == 3 || anc.nodeType == 8) s += anc.data.substr(this.so)
@@ -6246,6 +6257,7 @@ I'll probably do the simplest thing, which is to call gebtn as needed. */
             if(t.nodeType == 3 || t.nodeType == 8) s += t.data.substr(0, this.eo)
             if(t.nodeType == 1 && t.nodeName == "SCRIPT") s += t.text.substr(0, this.eo);
         }
+        this.unnormal$ize();
         return s;
     }
 
@@ -6254,21 +6266,22 @@ I'll probably do the simplest thing, which is to call gebtn as needed. */
         const anc = this.commonAncestorContainer;
         if(!anc) return true;
         if(this.sn == this.en) {
-            if(this.eo <= this.so) return true;
+            if(this.eo <= this.so) { this.unnormal$ize(); return true; }
             const t = this.sn;
-            if(t.nodeType == 3 || t.nodeType == 8) return false;
-            return true;
+            this.unnormal$ize();
+            return t.nodeType != 3 && t.nodeType != 8;
         }
         const list = gebtn(anc, '*', true, true);
         let j = -1, k = list.length;
         if(this.sn != anc) {
             j = list.indexOf(this.sn);
-            if(j < 0) return true;
+            if(j < 0) { this.unnormal$ize(); return true; }
         }
         if(this.en != anc) {
             k = list.indexOf(this.en);
-            if(k < 0) return true;
+            if(k < 0) { this.unnormal$ize(); return true; }
         }
+        this.unnormal$ize();
         return k <= j;
     }
 
@@ -6291,6 +6304,7 @@ collapse(side) {
         const newnode = mw$.cloneNodeHelper(this.base, true, 2, this);
         delete this.anc;
         delete this.base;
+        this.unnormal$ize();
         return newnode;
     }
 
@@ -6309,16 +6323,19 @@ collapse(side) {
 
     compareBoundaryPoints(how, other) {
         if(!this.normal$ize()) return null;
-        if(!other.normal$ize()) return null;
+        if(!other.normal$ize()) { this.unnormal$ize(); return null; }
+        let v = null;
         if(how == this.START_TO_START)
-            return Range.orderNodes(this.sn, other.sn, this.so, other.so);
+            v = Range.orderNodes(this.sn, other.sn, this.so, other.so);
         if(how == this.START_TO_END)
-            return Range.orderNodes(this.en, other.sn, this.eo, other.so);
+            v = Range.orderNodes(this.en, other.sn, this.eo, other.so);
         if(how == this.END_TO_END)
-            return Range.orderNodes(this.en, other.en, this.eo, other.eo);
+            v = Range.orderNodes(this.en, other.en, this.eo, other.eo);
         if(how == this.END_TO_START)
-            return Range.orderNodes(this.sn, other.en, this.so, other.eo);
-        return null; // bad how value
+            v = Range.orderNodes(this.sn, other.en, this.so, other.eo);
+        this.unnormal$ize();
+        other.unnormal$ize();
+        return v;
     }
 
     deleteContents() {
@@ -6326,16 +6343,20 @@ collapse(side) {
         const n1 = this.sn, n2 = this.en;
         const o1 = this.so, o2 = this.eo;
         if(n1 == n2) {
-            if(n1.nodeType != 3 && n1.nodeType != 8) return;
-            if(o2 <= o1) return;
+            if((n1.nodeType != 3 && n1.nodeType != 8) ||
+            (o2 <= o1)) {
+                this.unnormal$ize();
+                return;
+            }
             n1.data = n1.data.substr(0, o1) + n1.data.substr(o2);
             this.end1 = o1;
+            this.unnormal$ize();
             return;
         }
         const result = {};
                 Node.commonAncestor(n1, n2, result);
                 const anc = result.root;
-        if(!anc) return;
+        if(!anc) { this.unnormal$ize(); return; }
         const i = result.i, j = result.j;
         const py = result.py, pz = result.pz;
         let y, z, t, k;
@@ -6343,7 +6364,7 @@ collapse(side) {
             y = py[i-1], z =pz[j-1];
             for(t = y.nextSibling; t; t = t.nextSibling)
                 if(t == z) break;
-            if(!t) return; // start and end out of order
+            if(!t) { this.unnormal$ize(); return; } // start and end out of order
             // delete everything between y and z
             for(t = y.nextSibling; t && t != z; t = y.nextSibling)
                 t.remove();
@@ -6374,6 +6395,7 @@ collapse(side) {
             if((n2.nodeType == 3 || n2.nodeType == 8) && o2 > 0)
                 n2.data = n2.data.substr(o2), this.start1 = this.end1 = 0;
         }
+        this.unnormal$ize();
     }
 
     extractContents() {
@@ -6389,12 +6411,13 @@ collapse(side) {
         if(type == 4 || type == 8 || type == 10) {
             // comment, data section, doctype
             y.after(n);
+            this.unnormal$ize();
             return;
         }
         if(type == 3) { // text
             const v = y.data, o = this.so;
-            if(v.length <= o) { y.after(n); return; }
-            if(!p) return;
+            if(v.length <= o) { y.after(n); this.unnormal$ize(); return; }
+            if(!p) { this.unnormal$ize(); return; }
             if(o) { // split off the first piece
                 const t = document.createTextNode(v.substr(0, o));
                 y.before(t);
@@ -6402,9 +6425,18 @@ collapse(side) {
                 this.start1 = 0;
             }
             y.before(n);
+            this.unnormal$ize();
             return;
         }
         y.prepend$child(n);
+        this.unnormal$ize();
+    }
+
+    selectNodeContents(n)
+    {
+        if(!n || n.nodeType != 1) return;
+        this.start0 = this.end0 = n;
+        this.start1 = 0, this.end1 = n.childNodes.length;
     }
 
 }
