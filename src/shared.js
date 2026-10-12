@@ -1814,7 +1814,8 @@ function cloneNodeHelper(root, deep, flavor, range)
             }
         }
 
-        if (deep && kids) {
+        // copy the end of a range, but not its children
+        if (deep && kids && !rightpoint) {
             let inout = 0; // inside or outside of the range
             if(leftpoint || mode == 4) inout = 1;
             for(const k of kids) {
@@ -1823,10 +1824,6 @@ function cloneNodeHelper(root, deep, flavor, range)
                     if(k != leftbranch) continue;
                     inout = 1;
                 }
-                // if k is the end marker then we stop here, unless it holds
-                // some piece of text that we have to carry across
-                if(inout == 1 && k == range.end0 &&
-                (!range.end1 || k.nodeType != 3)) break;
                 if(inout == 1 && rightbranch && k.previousSibling == rightbranch) inout = 2;
                 if(inout == 2) continue;
                 if(k.nodeType == 11) {
@@ -1842,12 +1839,12 @@ function cloneNodeHelper(root, deep, flavor, range)
             }
         }
 
-        if (node1.nodeType == 1) {
-            if (node1.nodeName == "FORM" ||
-            node1.nodeName == "FIELDSET"             ) formReindex(node2);
-            if (node1.nodeName == "TABLE") tableReindex(node2);
-            if (node1.nodeName == "SELECT") selectReindex(node2);
-            if (node1.nodeName == "DATALIST") datalistReindex(node2);
+        if (node2.nodeType == 1) {
+            if (node2.nodeName == "FORM" ||
+            node2.nodeName == "FIELDSET"             ) formReindex(node2);
+            if (node2.nodeName == "TABLE") tableReindex(node2);
+            if (node2.nodeName == "SELECT") selectReindex(node2);
+            if (node2.nodeName == "DATALIST") datalistReindex(node2);
         }
 
         dbp("}");
@@ -2378,6 +2375,10 @@ return port;
 // It's crude, but reindex the rows under <table>.
 function tableReindex1(t)
 {
+    if(t.nodeName != "TABLE") {
+        alert3("tableReindex not table");
+        return;
+    }
     let j, n = 0;
     t.rows.length = 0; // squash and start over
     let s; // section
@@ -2475,12 +2476,17 @@ function tableReindex(t)
 
 function formReindex(f)
 {
-    const isform = f.dom$class === "HTMLFormElement";
+    const isform = f.nodeName === "FORM";
+    if(!isform && f.nodeName != "FIELDSET") {
+        alert3("formReindex not form");
+        return;
+    }
     const elname = isform ? "HTMLFormControlsCollection": "[object HTMLCollection]";
     const backlink = isform ? "form" : "fs$";
     // clear out what we had; we are rebuilding from scratch
     // elements should always be there.
-    if (!f.elements) f.elements = [], f.elements.toString = ()=>{ return elname}
+    // we set toString on the new Array, thus its prototype can't be frozen
+    if (!f.elements) f.elements = new (my$win()).Array, f.elements.toString = ()=>{ return elname}
     else f.elements.length = 0;
     const el = f.elements; // shorthand
     let name;
@@ -2555,6 +2561,10 @@ Some may be in optgroups, not direct children of select.
 
 function selectReindex(t)
 {
+    if(t.nodeName != "SELECT") {
+        alert3("selectReindex not select");
+        return;
+    }
     const o = t.options;
     const a = t.selectedOptions;
     o.length = 0; a.length = 0;
@@ -2573,6 +2583,10 @@ function selectReindex(t)
 
 function datalistReindex(t)
 {
+    if(t.nodeName != "DATALIST") {
+        alert3("datalistReindex not datalist");
+        return;
+    }
     const o = t.options;
     o.length = 0;
     for(const c of gebtn(t, "option", false, false))

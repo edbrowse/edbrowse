@@ -6337,9 +6337,7 @@ collapse(side) {
                 t.remove();
         }
         if(i) {
-            if((n1.nodeType != 3 && n1.nodeType != 8) || o1 == 0)
-                n1.remove();
-            else
+            if((n1.nodeType == 3 || n1.nodeType == 8) && o1 > 0)
                 n1.data = n1.data.substr(0, o1);
         }
         this.start0 = this.end0, this.start1 = 0;
@@ -6348,6 +6346,12 @@ collapse(side) {
                 n2.data = n2.data.substr(o2);
         }
         this.end1 = 0;
+    }
+
+    extractContents() {
+        const v = this.cloneContents();
+        this.deleteContents();
+        return v;
     }
 
 }

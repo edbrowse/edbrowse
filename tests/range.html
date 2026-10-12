@@ -169,13 +169,25 @@ r2.deleteContents();
 check((text.data == "abcijklmnop"), "delete defgh");
 check((r2.endOffset == 3), "offset from 8 to 3");
 // a more copmlicated delete
-d0 = document.createElement("div");
-d0.innerHTML = "<p><i>cat</i>paragraph 1<i>dog</i></p><p>paragraph 2</p><p>paragraph 3</p>";
-r2.setStart(d0.firstChild.firstChild.nextSibling, 4);
-r2.setEnd(d0.lastChild.lastChild, 4);
+div = document.createElement("div");
+div.innerHTML = "<p><i>cat</i>paragraph 1<i>dog</i></p><p>paragraph 2</p><p>paragraph 3</p>";
+r2.setStart(div.firstChild.firstChild.nextSibling, 4);
+r2.setEnd(div.lastChild.lastChild, 4);
 r2.deleteContents();
-check((d0.textContent == "catparagraph 3"), "delete paragraph");
+check((div.textContent == "catparagraph 3"), "delete paragraph");
 check(r2.collapsed, "delete collapse");
+// make sure form keeps up with the changes
+div.innerHTML = "<form><input name=a><input name=b><br><input name=c><input name=d><input type=submit></form>";
+form = div.firstChild;
+r2.setStart(form.b, 0);
+r2.setEnd(form.d, 0);
+cc = r2.extractContents();
+check((form.a && form.b && form.d), "a b and d persist");
+check((!form.c), "c goes away");
+check((form.elements.length == 4 && form.a == form.elements[0] && form.d == form.elements[2]), "form.elements");
+check((form.childNodes.length == 4), "4 children persist");
+check((cc.childNodes.length == 4), "4 elements extracted");
+check((cc.firstChild.name == 'b' && cc.lastChild.name == 'd'), "b c and d extracted");
 
 show.textContent = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
