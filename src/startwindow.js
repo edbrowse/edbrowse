@@ -6183,6 +6183,19 @@ class Range extends AbstractRange
         return true;
     }
 
+    get commonAncestorContainer()
+    {
+        if(!this.normal$ize()) return null;
+        const y = this.sn, z = this.en;
+        if(!y || !z) return null;
+        if(y == z) return y;
+        let result = {};
+        Node.commonAncestor(y, z, result);
+// no common ancestor, return start; that's bizarre but that's what chrome does
+        if(!result.root) return y;
+        return result.root;
+    }
+
 /* there are two different designs, with pros and cons.
 We could call getElementsByTagName('*') once, and the resulting live array
 would always be available for future calls to this range object.
@@ -6195,76 +6208,65 @@ One website may run one way, another may run the other way.
 There is no clear correct answer.
 I'll probably do the simplest thing, which is to call gebtn as needed. */
 
-    toString() {
-        if(this.start0 == this.end0) {
-            if(this.end1 <= this.start1) return "";
-            const t = this.start0;
-            if(t.nodeType == 3) return t.data.substring(this.start1, this.end1);
-            return "";
-        }
+    toString()
+    {
         const anc = this.commonAncestorContainer;
         if(!anc) return "";
+        if(this.sn == this.en) {
+            if(this.eo <= this.so) return "";
+            const t = this.sn;
+            if(t.nodeType == 3) return t.data.substring(this.so, this.eo);
+            return "";
+        }
         const list = gebtn(anc, '*', true, true);
         let j = -1, k = list.length;
-        if(this.start0 != anc) {
-            j = list.indexOf(this.start0);
+        if(this.sn != anc) {
+            j = list.indexOf(this.sn);
             if(j < 0) return "";
         }
-        if(this.end0 != anc) {
-            k = list.indexOf(this.end0);
+        if(this.en != anc) {
+            k = list.indexOf(this.en);
             if(k < 0) return "";
         }
         if(k <= j) return "";
         let s = "";
-        if(anc == this.start0) {
-            if(anc.nodeType == 3 || anc.nodeType == 8) s += anc.data.substr(this.start1)
-            if(anc.nodeType == 1 && anc.nodeName == "SCRIPT") s += anc.text.substr(this.start1);
+        if(anc == this.sn) {
+            if(anc.nodeType == 3 || anc.nodeType == 8) s += anc.data.substr(this.so)
+            if(anc.nodeType == 1 && anc.nodeName == "SCRIPT") s += anc.text.substr(this.so);
             ++j;
         }
         for(; j < k; ++j) {
             const t = list[j];
-        const b = (t == this.start0 ? this.start1 : 0);
+        const b = (t == this.sn ? this.so : 0);
             if(t.nodeType == 3 || t.nodeType == 8) s += t.data.substr(b);
             if(t.nodeType == 1 && t.nodeName == "SCRIPT") s += t.text.substr(b);
         }
-        if(j < list.length && this.end1) {
+        if(j < list.length && this.eo) {
             const t = list[j];
-            if(t.nodeType == 3 || t.nodeType == 8) s += t.data.substr(0, this.end1)
-            if(t.nodeType == 1 && t.nodeName == "SCRIPT") s += t.text.substr(0, this.end1);
+            if(t.nodeType == 3 || t.nodeType == 8) s += t.data.substr(0, this.eo)
+            if(t.nodeType == 1 && t.nodeName == "SCRIPT") s += t.text.substr(0, this.eo);
         }
         return s;
     }
 
-    get commonAncestorContainer()
-    {
-        const y = this.start0, z = this.end0;
-        if(!y || !z) return null;
-        if(y == z) return y;
-        let result = {};
-        Node.commonAncestor(y, z, result);
-// no common ancestor, return start; that's bizarre but that's what chrome does
-        if(!result.root) return y;
-        return result.root;
-    }
-
     // this is very similar to toString
     get collapsed() {
-        if(this.start0 == this.end0) {
-            if(this.end1 <= this.start1) return true;
-            const t = this.start0;
+        const anc = this.commonAncestorContainer;
+        if(!anc) return true;
+        if(this.sn == this.en) {
+            if(this.eo <= this.so) return true;
+            const t = this.sn;
             if(t.nodeType == 3 || t.nodeType == 8) return false;
             return true;
         }
-        const anc = this.commonAncestorContainer;
-        if(!anc) return true;
         const list = gebtn(anc, '*', true, true);
         let j = -1, k = list.length;
-        if(this.start0 != anc) {
-            j = list.indexOf(this.start0);
+        if(this.sn != anc) {
+            j = list.indexOf(this.sn);
             if(j < 0) return true;
         }
-        if(this.end0 != anc) {
-            k = list.indexOf(this.end0);
+        if(this.en != anc) {
+            k = list.indexOf(this.en);
             if(k < 0) return true;
         }
         return k <= j;
@@ -6283,7 +6285,6 @@ collapse(side) {
         return r;
     }
 
-    // stub for now
     cloneContents() {
         this.anc = this.commonAncestorContainer;
         this.base = this.anc ? this.anc : this.start0;
@@ -6307,20 +6308,23 @@ collapse(side) {
     }
 
     compareBoundaryPoints(how, other) {
+        if(!this.normal$ize()) return null;
+        if(!other.normal$ize()) return null;
         if(how == this.START_TO_START)
-            return Range.orderNodes(this.start0, other.start0, this.start1, other.start1);
+            return Range.orderNodes(this.sn, other.sn, this.so, other.so);
         if(how == this.START_TO_END)
-            return Range.orderNodes(this.end0, other.start0, this.end1, other.start1);
+            return Range.orderNodes(this.en, other.sn, this.eo, other.so);
         if(how == this.END_TO_END)
-            return Range.orderNodes(this.end0, other.end0, this.end1, other.end1);
+            return Range.orderNodes(this.en, other.en, this.eo, other.eo);
         if(how == this.END_TO_START)
-            return Range.orderNodes(this.start0, other.end0, this.start1, other.end1);
+            return Range.orderNodes(this.sn, other.en, this.so, other.eo);
         return null; // bad how value
     }
 
     deleteContents() {
-        const n1 = this.start0, n2 = this.end0;
-        const o1 = this.start1, o2 = this.end1;
+        if(!this.normal$ize()) return;
+        const n1 = this.sn, n2 = this.en;
+        const o1 = this.so, o2 = this.eo;
         if(n1 == n2) {
             if(n1.nodeType != 3 && n1.nodeType != 8) return;
             if(o2 <= o1) return;
@@ -6365,12 +6369,11 @@ collapse(side) {
             if((n1.nodeType == 3 || n1.nodeType == 8) && o1 > 0)
                 n1.data = n1.data.substr(0, o1);
         }
-        this.start0 = this.end0, this.start1 = 0;
+        this.start0 = this.end0;
         if(j) {
             if((n2.nodeType == 3 || n2.nodeType == 8) && o2 > 0)
-                n2.data = n2.data.substr(o2);
+                n2.data = n2.data.substr(o2), this.start1 = this.end1 = 0;
         }
-        this.end1 = 0;
     }
 
     extractContents() {
@@ -6381,20 +6384,22 @@ collapse(side) {
 
     insertNode(n)
     {
-        const y = this.start0,  p = y.parentNode,  type = y.nodeType;
+        if(!this.normal$ize()) return;
+        const y = this.sn,  p = y.parentNode,  type = y.nodeType;
         if(type == 4 || type == 8 || type == 10) {
             // comment, data section, doctype
             y.after(n);
             return;
         }
         if(type == 3) { // text
-            const v = y.data, o = this.start1;
+            const v = y.data, o = this.so;
             if(v.length <= o) { y.after(n); return; }
             if(!p) return;
             if(o) { // split off the first piece
                 const t = document.createTextNode(v.substr(0, o));
                 y.before(t);
                 y.data = v.substr(o);
+                this.start1 = 0;
             }
             y.before(n);
             return;

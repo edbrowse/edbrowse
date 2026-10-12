@@ -1597,30 +1597,30 @@ function cloneNodeHelper(root, deep, flavor, range)
 
         let leftpoint = false, rightpoint = false, leftbranch = null, rightbranch = null;
         if(mode == 2 || mode == 3) {
-            if(node1 == range.start0) {
+            if(node1 == range.sn) {
                 leftpoint = true, dbp("leftpoint");
-            } else leftbranch = findBranch(node1, range.start0);
+            } else leftbranch = findBranch(node1, range.sn);
         }
         if(mode == 2 || mode == 4) {
-            if(node1 == range.end0) {
+            if(node1 == range.en) {
                 rightpoint = true, dbp("rightpoint");
-            } else rightbranch = findBranch(node1, range.end0);
+            } else rightbranch = findBranch(node1, range.en);
         }
 
         if(leftpoint & rightpoint) {
             // collapsed range. Check for a piece of text.
             node2 = d.createDocumentFragment();
-            if(node1.nodeType == 3 && range.end1 > range.start1)
-                node2.appendChild(d.createTextNode(node1.data.substring(range.start1, range.end1)));
-            if(node1.nodeType == 8 && range.end1 > range.start1)
-                node2.appendChild(d.createComment(node1.data.substring(range.start1, range.end1)));
+            if(node1.nodeType == 3 && range.eo > range.so)
+                node2.appendChild(d.createTextNode(node1.data.substring(range.so, range.eo)));
+            if(node1.nodeType == 8 && range.eo > range.so)
+                node2.appendChild(d.createComment(node1.data.substring(range.so, range.eo)));
             return node2;
         }
 
         if (node1.nodeName == "#text") {
             let v = node1.data;
-            if(leftpoint) v = node1.data.substr(range.start1);
-            if(rightpoint) v = node1.data.substr(0, range.end1);
+            if(leftpoint) v = node1.data.substr(range.so);
+            if(rightpoint) v = node1.data.substr(0, range.eo);
             node2 = d.createTextNode(v);
         } else if (node1.nodeName == "#comment") {
             node2 = d.createComment();

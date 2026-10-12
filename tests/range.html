@@ -213,6 +213,15 @@ check((form.firstChild.data == "ele"), "ele");
 check((form.firstChild.nextSibling.data == "glass"), "glass");
 check((form.firstChild.nextSibling.nextSibling.data == "phant"), "phant");
 
+// play with some node offsets
+r2.setStart(form, 2);
+r2.setEnd(form, 5);
+check((!r2.collapsed), "phant not collapsed");
+check((r2 == "phant"), "phant string");
+r2.setStart(form, 1);
+r2.setEnd(form, 2);
+check((r2 == "glass"), "glass string");
+
 show.textContent = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>

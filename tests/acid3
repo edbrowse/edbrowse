@@ -586,7 +586,7 @@
       r.insertNode(document.createComment("commented inserted to test ranges"));
       r.setEnd(r.endContainer, endOffset + 1); // added to work around spec bug that smaug is blocking the errata for
       try {
-//@`        assert(!r.collapsed, "range with inserted comment is collapsed");
+        assert(!r.collapsed, "range with inserted comment is collapsed");
         assertEquals(r.commonAncestorContainer, document, "range with inserted comment has common ancestor that isn't the document");
         assertEquals(r.startContainer, document, "range with inserted comment has start container that isn't the document");
         assertEquals(r.startOffset, 0, "range with inserted comment has start offset that isn't zero");
@@ -2345,7 +2345,7 @@ frames[1].contentDocument;
       var elapsedTime = ((endTime - startTime) - (delay * tests.length)) / 1000;
       log += "Total elapsed time: " + elapsedTime.toFixed(2) + "s";
       if (errors == 0)
-        log += "\nNo JS errors and no timing issues, but 8 tests were skipped.";
+        log += "\nNo JS errors and no timing issues, but 7 tests were skipped.";
   alert(log);
     }
   }
