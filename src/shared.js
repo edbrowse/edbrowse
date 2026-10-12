@@ -1610,9 +1610,10 @@ function cloneNodeHelper(root, deep, flavor, range)
         if(leftpoint & rightpoint) {
             // collapsed range. Check for a piece of text.
             node2 = d.createDocumentFragment();
-            if(node1.nodeType == 3 && range.end1 > range.start1) {
+            if(node1.nodeType == 3 && range.end1 > range.start1)
                 node2.appendChild(d.createTextNode(node1.data.substring(range.start1, range.end1)));
-            }
+            if(node1.nodeType == 8 && range.end1 > range.start1)
+                node2.appendChild(d.createComment(node1.data.substring(range.start1, range.end1)));
             return node2;
         }
 

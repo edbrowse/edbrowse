@@ -6174,7 +6174,7 @@ I'll probably do the simplest thing, which is to call gebtn as needed. */
         if(this.start0 == this.end0) {
             if(this.end1 <= this.start1) return "";
             const t = this.start0;
-            if(t.nodeType == 3 || t.nodeType == 8) return t.data.substring(this.start1, this.end1);
+            if(t.nodeType == 3) return t.data.substring(this.start1, this.end1);
             return "";
         }
         const anc = this.commonAncestorContainer;

@@ -45,6 +45,18 @@ check((r1.compareBoundaryPoints(r1.START_TO_END, r2) == 1), "offset start to end
 check((r1.compareBoundaryPoints(r1.END_TO_START, r2) == -1), "offset end to start");
 check((r1.compareBoundaryPoints(r1.END_TO_END, r2) == 1), "offset end to end");
 
+cmt = document.createComment("abcdefghijklmnop");
+r1.setStart(cmt, 1);
+r1.setEnd(cmt, 6);
+check((r1 == ""), "part of comment");
+cc = r1.cloneContents();
+check((cc.nodeType == 11), "clone comment fragment");
+check((cc.childNodes.length == 1), "clone comment");
+check((cc.firstChild.nodeType == 8), "clone comment node");
+check((cc.firstChild.data == "bcdef"), "clone comment string");
+r1.deleteContents();
+check((cmt.data == "aghijklmnop"), "bcdef deleted");
+
 // check liveness
 p5 = document.createElement("p");
 p5.textContent = "5";
