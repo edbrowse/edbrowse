@@ -1825,8 +1825,11 @@ function cloneNodeHelper(root, deep, flavor, range)
                     if(k != leftbranch) continue;
                     inout = 1;
                 }
-                if(inout == 1 && rightbranch && k.previousSibling == rightbranch) inout = 2;
-                if(inout == 2) continue;
+/* Based on chrome: we clone the end node, and not it's children,
+if the end node is set directly. However, if it is set by offset,
+then we don't clone it. Am I simply reproducing a bug in chrome? */
+                if(inout == 1 && k == range.en && k != range.end0) break;
+                if(inout == 1 && rightbranch && k.previousSibling == rightbranch) break;
                 if(k.nodeType == 11) {
                     alert3("cannot clone a fragment, skipping this child.");
                     continue;
