@@ -34,7 +34,7 @@ check((range.compareBoundaryPoints(range.END_TO_START, r2) == -1), "node end to 
 check((range.compareBoundaryPoints(range.END_TO_END, r2) == 0), "node end to end");
 
 // compare the same text node, using offsets
-const text = new Text("0123456789");
+text = new Text("abcdefghijklmnop");
 r1 = new Range();
 r1.setStart(text, 1);
 r1.setEnd(text, 6);
@@ -162,6 +162,20 @@ check((cc.firstChild.data == "rt"), "clone rt string");
 range.setStartBefore(fpara[1], 0);
 range.setEndAfter(fpara[2], 0);
 check((range == "horsebird"), "before after string");
+
+r2.setStart(text, 3);
+r2.setEnd(text, 8);
+r2.deleteContents();
+check((text.data == "abcijklmnop"), "delete defgh");
+check((r2.endOffset == 3), "offset from 8 to 3");
+// a more copmlicated delete
+d0 = document.createElement("div");
+d0.innerHTML = "<p><i>cat</i>paragraph 1<i>dog</i></p><p>paragraph 2</p><p>paragraph 3</p>";
+r2.setStart(d0.firstChild.firstChild.nextSibling, 4);
+r2.setEnd(d0.lastChild.lastChild, 4);
+r2.deleteContents();
+check((d0.textContent == "catparagraph 3"), "delete paragraph");
+check(r2.collapsed, "delete collapse");
 
 show.textContent = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

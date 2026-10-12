@@ -580,6 +580,7 @@
       assertEquals(r.cloneRange().toString(), "", "nothing cloned stringifed to more than nothing");
       r.collapse(true); // no effect
       assertEquals(r.compareBoundaryPoints(r.START_TO_END, r.cloneRange()), 0, "starting boundary point of range wasn't the same as the end boundary point of the clone range");
+      r.deleteContents(); // no effect
       return 1;
     },
     function() { return 1; }, // test 8

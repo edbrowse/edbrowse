@@ -6293,6 +6293,63 @@ collapse(side) {
         return null; // bad how value
     }
 
+    deleteContents() {
+        const n1 = this.start0, n2 = this.end0;
+        const o1 = this.start1, o2 = this.end1;
+        if(n1 == n2) {
+            if(n1.nodeType != 3 && n1.nodeType != 8) return;
+            if(o2 <= o1) return;
+            n1.data = n1.data.substr(0, o1) + n1.data.substr(o2);
+            this.end1 = o1;
+            return;
+        }
+        const result = {};
+                Node.commonAncestor(n1, n2, result);
+                const anc = result.root;
+        if(!anc) return;
+        const i = result.i, j = result.j;
+        const py = result.py, pz = result.pz;
+        let y, z, t, k;
+        if(i && j) {
+            y = py[i-1], z =pz[j-1];
+            for(t = y.nextSibling; t; t = t.nextSibling)
+                if(t == z) break;
+            if(!t) return; // start and end out of order
+            // delete everything between y and z
+            for(t = y.nextSibling; t && t != z; t = y.nextSibling)
+                t.remove();
+        }
+        for(k = 0; k < i - 1; ++k)
+            for(t = py[k].nextSibling; t; t = py[k].nextSibling)
+                t.remove();
+        for(k = 0; k < j - 1; ++k)
+            for(t = pz[k].previousSibling; t; t = pz[k].previousSibling)
+                t.remove();
+// I'm not going to remove head or body, so make sure anc is not document
+        if(i && !j && anc != document) {
+            y = py[i-1];
+            for(t = y.nextSibling; t; t = y.nextSibling)
+                t.remove();
+        }
+        if(!i && j && anc != document) {
+            z = pz[j-1];
+            for(t = z.previousSibling; t; t = z.previousSibling)
+                t.remove();
+        }
+        if(i) {
+            if((n1.nodeType != 3 && n1.nodeType != 8) || o1 == 0)
+                n1.remove();
+            else
+                n1.data = n1.data.substr(0, o1);
+        }
+        this.start0 = this.end0, this.start1 = 0;
+        if(j) {
+            if((n2.nodeType == 3 || n2.nodeType == 8) && o2 > 0)
+                n2.data = n2.data.substr(o2);
+        }
+        this.end1 = 0;
+    }
+
 }
 swc(Range);
 
