@@ -6434,9 +6434,13 @@ collapse(side) {
 
     selectNodeContents(n)
     {
-        if(!n || n.nodeType != 1) return;
+        if(!n) return;
         this.start0 = this.end0 = n;
-        this.start1 = 0, this.end1 = n.childNodes.length;
+        this.start1 = 0;
+        const type = n.nodeType;
+        if(type == 3 || type == 4 || type == 8)
+            this.end1 = n.data.length;
+        else this.end1 = n.childNodes.length;
     }
 
 }
