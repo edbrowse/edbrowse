@@ -597,7 +597,29 @@
       }
       return 1;
     },
-    function() { return 1; }, // test 8
+    function () {
+      // test 8: moving boundary points
+      var doc = document.implementation.createDocument(null, null, null);
+      var root = doc.createElement("root");
+      doc.appendChild(root);
+      var e1 = doc.createElement("e");
+      root.appendChild(e1);
+      var e2 = doc.createElement("e");
+      root.appendChild(e2);
+      var e3 = doc.createElement("e");
+      root.appendChild(e3);
+      var r = doc.createRange();
+      r.setStart(e2, 0);
+      r.setEnd(e3, 0);
+      assert(!r.collapsed, "non-empty range claims to be collapsed");
+      r.setEnd(e1, 0);
+      assert(r.collapsed, "setEnd() didn't collapse the range");
+      assertEquals(r.startContainer, e1, "startContainer is wrong after setEnd()");
+      assertEquals(r.startOffset, 0, "startOffset is wrong after setEnd()");
+      assertEquals(r.endContainer, e1, "endContainer is wrong after setEnd()");
+      assertEquals(r.endOffset, 0, "endOffset is wrong after setEnd()");
+      return 1;
+    },
     function () {
       // test 9: extractContents() in a Document
       var doc = getTestDocument();

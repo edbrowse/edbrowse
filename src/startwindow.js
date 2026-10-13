@@ -6107,7 +6107,7 @@ class Range extends AbstractRange
         super();
         // the range is the half-open interval [start,end)
         // thus the initial range is nothing
-        this.start0 = this.end0 = document;
+        this.start0 = this.end0 = this.anc = document;
         this.start1 = this.end1 = 0;
     }
 
@@ -6119,14 +6119,46 @@ class Range extends AbstractRange
         tp.END_TO_START = 3;
     }
 
+    get commonAncestorContainer() { return this.anc; }
+
+    deriveAncestor()
+    {
+// the common ancestor doesn't depend on the offsets, and we don't have to call
+// normal$ize(), or unnormal$ize() at the end.
+        this.anc = null;
+        const y = this.start0, z = this.end0;
+        if(!y || !z) return;
+        if(y == z) { this.anc = y; return; }
+        const result = {};
+        Node.commonAncestor(y, z, result);
+        if(!result.root) return;
+        // make sure the points aren't out of order.
+        const i = result.i, j = result.j;
+        const py = result.py, pz = result.pz;
+        if(i && j) {
+            const y = py[i-1], z =pz[j-1];
+            let t;
+            for(t = y.nextSibling; t; t = t.nextSibling)
+                if(t == z) break;
+            if(!t) return; // start and end out of order
+        }
+        this.anc = result.root;
+    }
+
     setStart(n, offset) {
         if(!n) return;
         this.start0 = n, this.start1 = offset;
+        this.deriveAncestor();
+        // if no ancestor then collapse back to start.
+        if(!this.anc) this.end0 = this.anc = n, this.end1 = offset;
     }
 
     setEnd(n, offset) {
         if(!n) return;
         this.end0 = n, this.end1 = offset;
+        this.deriveAncestor();
+        // if no ancestor then collapse back to end.
+        if(!this.anc) this.start0 = this.anc = n, this.start1 = offset;
     }
 
     setStartBefore(n, offset) {
@@ -6192,19 +6224,6 @@ class Range extends AbstractRange
         if(this.end$mark) { this.end$mark.remove(); delete this.end$mark; }
     }
 
-    get commonAncestorContainer()
-    {
-        if(!this.normal$ize()) return null;
-        const y = this.sn, z = this.en;
-        if(!y || !z) { this.unnormal$ize(); return null; }
-        if(y == z) return y;
-        let result = {};
-        Node.commonAncestor(y, z, result);
-// no common ancestor, return start; that's bizarre but that's what chrome does
-        if(!result.root) return y;
-        return result.root;
-    }
-
 /* there are two different designs, with pros and cons.
 We could call getElementsByTagName('*') once, and the resulting live array
 would always be available for future calls to this range object.
@@ -6219,8 +6238,9 @@ I'll probably do the simplest thing, which is to call gebtn as needed. */
 
     toString()
     {
-        const anc = this.commonAncestorContainer;
-        if(!anc) return "";
+        if(!this.normal$ize()) return "";
+        const anc = this.anc;
+        if(!anc) return ""; // should never happen
         if(this.sn == this.en) {
             if(this.eo <= this.so) { this.unnormal$ize(); return ""; }
             const t = this.sn;
@@ -6263,7 +6283,8 @@ I'll probably do the simplest thing, which is to call gebtn as needed. */
 
     // this is very similar to toString
     get collapsed() {
-        const anc = this.commonAncestorContainer;
+        if(!this.normal$ize()) return true;
+        const anc = this.anc;
         if(!anc) return true;
         if(this.sn == this.en) {
             if(this.eo <= this.so) { this.unnormal$ize(); return true; }
@@ -6289,20 +6310,21 @@ collapse(side) {
         if(typeof side == "boolean" && side)
             this.end0 = this.start0, this.end1 = this.start1;
         else this.start0 = this.end0, this.start1 = this.end1;
+        this.anc = this.start0;
     }
 
     cloneRange() {
         const r = new Range;
         r.start0 = this.start0, r.end0 = this.end0;
         r.start1 = this.start1, r.end1 = this.end1;
+        r.anc = this.anc;
         return r;
     }
 
     cloneContents() {
-        this.anc = this.commonAncestorContainer;
+        if(!this.normal$ize()) return document.createDocumentFragment();
         this.base = this.anc ? this.anc : this.start0;
         const newnode = mw$.cloneNodeHelper(this.base, true, 2, this);
-        delete this.anc;
         delete this.base;
         this.unnormal$ize();
         return newnode;
@@ -6355,7 +6377,7 @@ collapse(side) {
         }
         const result = {};
                 Node.commonAncestor(n1, n2, result);
-                const anc = result.root;
+                const anc = result.root; // should be the same as this.anc
         if(!anc) { this.unnormal$ize(); return; }
         const i = result.i, j = result.j;
         const py = result.py, pz = result.pz;
@@ -6398,6 +6420,7 @@ collapse(side) {
 // collapse to the end node, which is really there.
                     this.start0 = this.end0, this.start1 = this.end1;
         }
+        this.anc = this.start0;
         if(j) {
             if((n2.nodeType == 3 || n2.nodeType == 8) && o2 > 0)
                 n2.data = n2.data.substr(o2), this.start1 = this.end1 = 0;
@@ -6430,7 +6453,7 @@ collapse(side) {
             y.data = v.substr(0, o);
             y.after(n);
             this.start1 = o;
-            if(this.end0 == y) this.end0 = t, this.end1 -= o;
+            if(this.end0 == y) this.end0 = t, this.end1 -= o, this.anc = p;
             this.unnormal$ize();
             return;
         }
@@ -6447,6 +6470,7 @@ collapse(side) {
         if(type == 3 || type == 4 || type == 8)
             this.end1 = n.data.length;
         else this.end1 = n.childNodes.length;
+        this.anc = n;
     }
 
 }
