@@ -272,6 +272,7 @@ extern char *debugFileName;
 extern FILE *debugFile;
 // these settings don't do anything unless you are at db3 or higher
 extern bool debugClone; // cloneNode()
+extern bool debugCol; // html collections
 extern bool debugEvent; // events and listeners
 extern bool debugThrow; // stop at catch(e), but only with trace points injected
 extern bool debugCSS; // store css information in /tmp/css

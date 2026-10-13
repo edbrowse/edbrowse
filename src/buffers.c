@@ -6194,6 +6194,20 @@ et_go:
 		return true;
 	}
 
+	if (stringEqual(line, "dbcol")) {
+		debugCol ^= 1;
+		if (helpMessagesOn || debugLevel >= 1)
+			i_puts(debugCol + MSG_DebugCollectionsOff);
+		return true;
+	}
+
+	if (stringEqual(line, "dbcol+") || stringEqual(line, "dbcol-")) {
+		debugCol = (line[5] == '+');
+		if (helpMessagesOn)
+			i_puts(debugCol + MSG_DebugCollectionsOff);
+		return true;
+	}
+
 	if (stringEqual(line, "dbev")) {
 		debugEvent ^= 1;
 		if (helpMessagesOn || debugLevel >= 1)

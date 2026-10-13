@@ -15,7 +15,7 @@ int debugLevel = 1;
 FILE *debugFile = NULL;
 char *debugFileName;
 bool debugClone, debugEvent, debugThrow, debugCSS, debugPromise;
-bool debugLayout;
+bool debugLayout, debugCol;
 bool demin = false;
 bool gotimers = true;
 bool uvw;
@@ -1666,7 +1666,7 @@ char *dirSuffix2(int n, const char *path)
 	if(isupperByte(ftype)) *t++ = '@', ftype = tolower(ftype);
 	c = 0;
 	if (ftype == 'd') c = '/';
-	if (ftype == 's') c = '^';
+	if (ftype == 's') c = '=';
 	if (ftype == 'c') c = '<';
 	if (ftype == 'b') c = '*';
 	if (ftype == 'p') c = '|';
@@ -1917,7 +1917,7 @@ bool readDirectory(const char *filename, int endline, char cmd, struct lineMap *
 		ftype = tolower(ftype);
 		c = 0;
 		if (ftype == 'd') c = '/';
-		if (ftype == 's') c = '^';
+		if (ftype == 's') c = '=';
 		if (ftype == 'c') c = '<';
 		if (ftype == 'b') c = '*';
 		if (ftype == 'p') c = '|';
@@ -2139,7 +2139,7 @@ abort:
 		}
 
 		ftype = dirSuffix2(ln, path);
-		if (dirWrite == 2 || (*ftype && strchr("@<*^|", *ftype)))
+		if (dirWrite == 2 || (*ftype && strchr("@<*=|", *ftype)))
 			debugPrint(1, "%s%s ↓", file, ftype);
 		else
 			debugPrint(1, "%s%s → 🗑", file, ftype);

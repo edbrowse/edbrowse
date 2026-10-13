@@ -12,7 +12,7 @@ blank spaces for messages no longer used.
 Each file lang/msg-* must have exactly this many lines.
 *********************************************************************/
 
-#define EdbrowseMessageCount 800
+#define EdbrowseMessageCount 900
 
 // English
 extern const char *msg_en[], ebrc_en[], qrg_en[];
@@ -891,4 +891,6 @@ MSG_ImaskOn,
 	MSG_BlankLine,
 	MSG_NonIndent,
 	MSG_NoPrivate,
+	MSG_DebugCollectionsOff,
+	MSG_DebugCollectionsOn,
 };
