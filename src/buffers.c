@@ -4946,1403 +4946,1397 @@ like rf (refresh), which could be a long url.
 static char shortline[60];
 static int twoLetter(const char *line, const char **runThis)
 {
-	char c;
-	bool rc, ub;
-	int i, n;
-	char *allocatedLine;
+    char c;
+    bool rc, ub;
+    int i, n;
+    char *allocatedLine;
 
-	*runThis = shortline;
+    *runThis = shortline;
 
-	if (stringEqual(line, "qt"))
-		ebClose(0);
+    if (stringEqual(line, "qt")) ebClose(0);
 
-	if(line[0] == '[' && line[1] == ' ' &&
-	(n = strlen(line)) >= 5 &&
-	line[n-1] == ']' && line[n - 2] == ' ') {
-		const char *eq = strstr(line, " = ");
-		const char *neq = strstr(line, " != ");
-		int sign = 0;
-		if(eq && (!neq || neq > eq)) sign = 1;
-		if(neq && (!eq || eq > neq)) sign = -1;
-		if(sign) {
-			if(sign < 0) eq = neq;
-			const char *s = eq + 3;
-			while(isspace(eq[-1])) --eq;
-			while(isspace(*s)) ++s;
-			bool emptyleft = (eq == line + 1);
-			bool emptyright = (s == line + n - 1);
-			if(emptyleft & emptyright) {
-				if(sign > 0) return true;
+    if(line[0] == '[' && line[1] == ' ' &&
+    (n = strlen(line)) >= 5 &&
+    line[n-1] == ']' && line[n - 2] == ' ') {
+        const char *eq = strstr(line, " = ");
+        const char *neq = strstr(line, " != ");
+        int sign = 0;
+        if(eq && (!neq || neq > eq)) sign = 1;
+        if(neq && (!eq || eq > neq)) sign = -1;
+        if(sign) {
+            if(sign < 0) eq = neq;
+            const char *s = eq + 3;
+            while(isspace(eq[-1])) --eq;
+            while(isspace(*s)) ++s;
+            bool emptyleft = (eq == line + 1);
+            bool emptyright = (s == line + n - 1);
+            if(emptyleft & emptyright) {
+                if(sign > 0) return true;
 test_false:
-				setError(MSG_False);
-				return false;
-			}
-			if(emptyleft | emptyright) {
-				if(sign > 0) goto test_false;
-				return true;
-			}
-			const char *t = line + n - 2;
-			while(isspace(t[-1])) --t;
-			const char *u = line + 2;
-			while(isspace(*u)) ++u;
-			if(eq - u == t - s && !memcmp(u, s, t-s)) {
-				if(sign > 0) return true;
-				goto test_false;
-			}
-			if(sign > 0) goto test_false;
-			return true;
-		}
-	}
+                setError(MSG_False);
+                return false;
+            }
+            if(emptyleft | emptyright) {
+                if(sign > 0) goto test_false;
+                return true;
+            }
+            const char *t = line + n - 2;
+            while(isspace(t[-1])) --t;
+            const char *u = line + 2;
+            while(isspace(*u)) ++u;
+            if(eq - u == t - s && !memcmp(u, s, t-s)) {
+                if(sign > 0) return true;
+                goto test_false;
+            }
+            if(sign > 0) goto test_false;
+            return true;
+        }
+    }
 
-	if(!strncmp(line, "sleep", 5) && (line[5] == 0 || line[5] == ' ')) {
-		int pause, rc;
-		time_t start, now;
-		int delay_sec, delay_ms;
-		fd_set channels;
-		struct timeval tv;
-		const char *p = line + 5;
-		while(*p == ' ') ++p;
-		pause = stringIsNum(p);
-		if(pause <= 0) return true;
+    if(!strncmp(line, "sleep", 5) && (line[5] == 0 || line[5] == ' ')) {
+        int pause, rc;
+        time_t start, now;
+        int delay_sec, delay_ms;
+        fd_set channels;
+        struct timeval tv;
+        const char *p = line + 5;
+        while(*p == ' ') ++p;
+        pause = stringIsNum(p);
+        if(pause <= 0) return true;
 // This is a stripped down version of the input loop that runs timers,
 // I hope not too stripped down.
-		time(&start);
-		while (timerWait(&delay_sec, &delay_ms)) {
-			time(&now);
-			if(now + delay_sec >= start + pause) break;
+        time(&start);
+        while (timerWait(&delay_sec, &delay_ms)) {
+            time(&now);
+            if(now + delay_sec >= start + pause) break;
 // timers are pending, use select to pause
-			memset(&channels, 0, sizeof(channels));
-			tv.tv_sec = delay_sec;
-			tv.tv_usec = delay_ms * 1000;
-			rc = select(0, &channels, 0, 0, &tv);
-			if (rc < 0) return true; // interrupt
-			runTimer();
-		}
-		time(&now);
-		pause = now - (start + pause);
-		if(pause > 0) sleep(pause);
-		return true;
-	}
+            memset(&channels, 0, sizeof(channels));
+            tv.tv_sec = delay_sec;
+            tv.tv_usec = delay_ms * 1000;
+            rc = select(0, &channels, 0, 0, &tv);
+            if (rc < 0) return true; // interrupt
+            runTimer();
+        }
+        time(&now);
+        pause = now - (start + pause);
+        if(pause > 0) sleep(pause);
+        return true;
+    }
 
-	if (stringEqual(line, "P")) {
-		promptOn ^= 1;
-		return true;
-	}
+    if (stringEqual(line, "P")) {
+        promptOn ^= 1;
+        return true;
+    }
 
-	if (stringEqual(line, "P+") || stringEqual(line, "P-")) {
-		promptOn = (line[1] == '+');
-		return true;
-	}
+    if (stringEqual(line, "P+") || stringEqual(line, "P-")) {
+        promptOn = (line[1] == '+');
+        return true;
+    }
 
-	if(cw->imapMode1 && stringEqual(line, "imask")) {
-		struct MACCOUNT *a = accounts + cw->imap_n - 1;
-		if(!a->maskon) { setError(MSG_NoMask); return false; }
-		a->maskactive ^= 1;
-		if(debugLevel > 0)
-			i_puts(MSG_ImaskOff + a->maskactive);
-		return true;
-	}
+    if(cw->imapMode1 && stringEqual(line, "imask")) {
+        struct MACCOUNT *a = accounts + cw->imap_n - 1;
+        if(!a->maskon) { setError(MSG_NoMask); return false; }
+        a->maskactive ^= 1;
+        if(debugLevel > 0)
+            i_puts(MSG_ImaskOff + a->maskactive);
+        return true;
+    }
 
-	if((cw->imapMode1 | cw->imapMode2) && line[0] == 'l' && (line[1] == ' ' || line[1] == '=')) {
-		const char *p = line + 2;
-		skipWhite(&p);
-		if(*p == '-') ++p;
-		if(stringIsNum(p) >= 0) {
-			Window *w = 0;
-			setFetchLimit(line + 2);
+    if((cw->imapMode1 | cw->imapMode2) && line[0] == 'l' && (line[1] == ' ' || line[1] == '=')) {
+        const char *p = line + 2;
+        skipWhite(&p);
+        if(*p == '-') ++p;
+        if(stringIsNum(p) >= 0) {
+            Window *w = 0;
+            setFetchLimit(line + 2);
 // find the other window
-			if(cw->imapMode2) w = cw->prev;
-			else w = sessionList[context].fw2;
+            if(cw->imapMode2) w = cw->prev;
+            else w = sessionList[context].fw2;
 // and copy to the other window
-			if(w) w->imap_l = cw->imap_l;
-			return true;
-		}
-	}
+            if(w) w->imap_l = cw->imap_l;
+            return true;
+        }
+    }
 
-	if((cw->imapMode1 | cw->imapMode2) && line[0] == 'e' && (line[1] == ' ' || line[1] == '=')) {
-	const char *p = line + 2;
-	while(*p) {
-		if(!strchr("fstzdr", *p)) break;
-		++p;
-	}
-	if(*p) goto no_action; // doesn't look like envelope format
-		Window *w = 0;
-		setEnvelopeFormat(line + 2);
+    if((cw->imapMode1 | cw->imapMode2) && line[0] == 'e' && (line[1] == ' ' || line[1] == '=')) {
+    const char *p = line + 2;
+    while(*p) {
+        if(!strchr("fstzdr", *p)) break;
+        ++p;
+    }
+    if(*p) goto no_action; // doesn't look like envelope format
+        Window *w = 0;
+        setEnvelopeFormat(line + 2);
 // find the other window
-		if(cw->imapMode2) w = cw->prev;
-		else w = sessionList[context].fw2;
+        if(cw->imapMode2) w = cw->prev;
+        else w = sessionList[context].fw2;
 // and copy to the other window
-		if(w) strcpy(w->imap_env, cw->imap_env);
-		return true;
-	}
+        if(w) strcpy(w->imap_env, cw->imap_env);
+        return true;
+    }
 
-	if(cw->imapMode2 && line[0] && strchr("wWuU", line[0]) && (line[1] == 0 || line[1] == ' ')) {
-		char key = *line++;
-		skipWhite(&line);
-		if(!cw->dot) { setError(MSG_AtLine0); return false; }
-		return saveEmailWhileEnvelopes(key, line);
-	}
+    if(cw->imapMode2 && line[0] && strchr("wWuU", line[0]) && (line[1] == 0 || line[1] == ' ')) {
+        char key = *line++;
+        skipWhite(&line);
+        if(!cw->dot) { setError(MSG_AtLine0); return false; }
+        return saveEmailWhileEnvelopes(key, line);
+    }
 
-	if(cw->imapMode3 && line[0] && strchr("wWuU", line[0]) && (line[1] == 0 || line[1] == ' ')) {
-		char key = *line++;
-		skipWhite(&line);
-		return saveEmailWhileReading(key, line);
-	}
+    if(cw->imapMode3 && line[0] && strchr("wWuU", line[0]) && (line[1] == 0 || line[1] == ' ')) {
+        char key = *line++;
+        skipWhite(&line);
+        return saveEmailWhileReading(key, line);
+    }
 
-	if(!strncmp(line, "up", 2) ||
-	!strncmp(line, "down", 4)) {
-		struct ebSession *s = &sessionList[context];
-		int k;
-		const Window *w;
-		const bool down = (line[0] == 'd');
-		const char *v = line + (down ? 4 : 2);
-		if(!*v) {
-			n = 1;
-		} else if(*v == '/') {
-			bool found = false;
-			++v;
-			if (down) {
-				n = -1;
-				for(k = 0, w = s->lw2; w; w = w->prev, ++k)
-					if((!searchSameMode || sameMode(w, cw)) && (!*v || strcasestr(windowTitle(w), v))) {
-						found = true;
-						n = k;
-					}
-				n = k - n;
-			} else { // up/
-				for(n = 1, w = cw->prev; w; w = w->prev, ++n)
-					if((!searchSameMode || sameMode(w, cw)) && (!*v || strcasestr(windowTitle(w), v))) {
-						found = true;
-						break;
-					}
-			}
-			if(!found) {
-					cmd = 'e';
-					setError(MSG_NotFound);
-					return false;
-			}
-		} else {
-			n = stringIsNum(v);
-			if(n < 0) goto no_action;
-			if(!n) return true;
-		}
-		if(cw->irciMode | cw->ircoMode) {
-			cmd = 'e';
-			setError(MSG_IrcCommandS, line);
-			return false;
-		}
-		undoCompare();
-		cw->undoable = false;
-		undoSpecialClear();
-		cmd = 'e';
-		if(!down) { // up
-			for(k = 0, w = cw; w; w = w->prev, ++k) ;
-			if(n >= k) {
-				setError(MSG_NoUp);
-				return false;
-			}
+    if(!strncmp(line, "up", 2) ||
+    !strncmp(line, "down", 4)) {
+        struct ebSession *s = &sessionList[context];
+        int k;
+        const Window *w;
+        const bool down = (line[0] == 'd');
+        const char *v = line + (down ? 4 : 2);
+        if(!*v) {
+            n = 1;
+        } else if(*v == '/') {
+            bool found = false;
+            ++v;
+            if (down) {
+                n = -1;
+                for(k = 0, w = s->lw2; w; w = w->prev, ++k)
+                    if((!searchSameMode || sameMode(w, cw)) && (!*v || strcasestr(windowTitle(w), v))) {
+                        found = true;
+                        n = k;
+                    }
+                n = k - n;
+            } else { // up/
+                for(n = 1, w = cw->prev; w; w = w->prev, ++n)
+                    if((!searchSameMode || sameMode(w, cw)) && (!*v || strcasestr(windowTitle(w), v))) {
+                        found = true;
+                        break;
+                    }
+            }
+            if(!found) {
+                    cmd = 'e';
+                    setError(MSG_NotFound);
+                    return false;
+            }
+        } else {
+            n = stringIsNum(v);
+            if(n < 0) goto no_action;
+            if(!n) return true;
+        }
+        if(cw->irciMode | cw->ircoMode) {
+            cmd = 'e';
+            setError(MSG_IrcCommandS, line);
+            return false;
+        }
+        undoCompare();
+        cw->undoable = false;
+        undoSpecialClear();
+        cmd = 'e';
+        if(!down) { // up
+            for(k = 0, w = cw; w; w = w->prev, ++k) ;
+            if(n >= k) {
+                setError(MSG_NoUp);
+                return false;
+            }
 up_again:
-		s->lw = cw->prev;
-			cw->prev = 0;
-			if(!s->lw2) {
-				s->fw2 = s->lw2 = cw;
-			} else {
-				s->fw2->prev = cw;
-				s->fw2 = cw;
-			}
-			cw = s->lw;
-			if(--n) goto up_again;
-		} else { // down
-			for(k = 0, w = s->lw2; w; w = w->prev, ++k) ;
-			if(n > k) {
-				setError(MSG_NoDown);
-				return false;
-			}
+        s->lw = cw->prev;
+            cw->prev = 0;
+            if(!s->lw2) {
+                s->fw2 = s->lw2 = cw;
+            } else {
+                s->fw2->prev = cw;
+                s->fw2 = cw;
+            }
+            cw = s->lw;
+            if(--n) goto up_again;
+        } else { // down
+            for(k = 0, w = s->lw2; w; w = w->prev, ++k) ;
+            if(n > k) {
+                setError(MSG_NoDown);
+                return false;
+            }
 down_again:
-			s->lw = s->fw2;
-			s->fw2->prev = cw;
-			if(s->fw2 == s->lw2) {
-				s->fw2 = s->lw2 = 0;
-			} else {
-				Window *x = s->lw2;
-				while(x->prev != s->fw2) x = x->prev;
-				x->prev = 0;
-				s->fw2 = x;
-			}
-			cw = s->lw;
-			if(--n) goto down_again;
-		}
-		selfFrame();
-		if (debugLevel >= 1) {
-			const char *title = windowTitle(cw);
-			if(title[0]) eb_printf("%s", title);
-			else i_printf(MSG_NoFile);
-			nl();
-		}
-		return true;
-	}
+            s->lw = s->fw2;
+            s->fw2->prev = cw;
+            if(s->fw2 == s->lw2) {
+                s->fw2 = s->lw2 = 0;
+            } else {
+                Window *x = s->lw2;
+                while(x->prev != s->fw2) x = x->prev;
+                x->prev = 0;
+                s->fw2 = x;
+            }
+            cw = s->lw;
+            if(--n) goto down_again;
+        }
+        selfFrame();
+        if (debugLevel >= 1) {
+            const char *title = windowTitle(cw);
+            if(title[0]) eb_printf("%s", title);
+            else i_printf(MSG_NoFile);
+            nl();
+        }
+        return true;
+    }
 
-	if(stringEqual(line, "e+")) {
-		for(n = context + 1; n <= maxSession; ++n)
-			if(sessionList[n].lw) {
-					cxSwitch(n, true);
-					return true;
-				}
-		cmd = 'e';
-		setError(MSG_EPlus, context);
-		return false;
-	}
+    if(stringEqual(line, "e+")) {
+        for(n = context + 1; n <= maxSession; ++n)
+            if(sessionList[n].lw) {
+                    cxSwitch(n, true);
+                    return true;
+                }
+        cmd = 'e';
+        setError(MSG_EPlus, context);
+        return false;
+    }
 
-	if(stringEqual(line, "e-")) {
-		for(n = context - 1; n > 0; --n)
-			if(sessionList[n].lw) {
-					cxSwitch(n, true);
-					return true;
-				}
-		cmd = 'e';
-		setError(MSG_EMinus, context);
-		return false;
-	}
+    if(stringEqual(line, "e-")) {
+        for(n = context - 1; n > 0; --n)
+            if(sessionList[n].lw) {
+                    cxSwitch(n, true);
+                    return true;
+                }
+        cmd = 'e';
+        setError(MSG_EMinus, context);
+        return false;
+    }
 
-	if(stringEqual(line, "enum")) {
-		pst p, p0;
-		cmd = 'e';
-		if(!cw->dol) {
-			setError(MSG_AtLine0);
-			return false;
-		}
-		 p0 = p = fetchLine(cw->dot, 1);
-		n = -1;
-		while(*p != '\n') {
-			if(isdigitByte(*p)) {
-				n = atoi((char*)p);
-				break;
-			}
-			++p;
-		}
-		free(p0);
-		if(n < 0) {
-			setError(MSG_NumberExpected);
-			return false;
-		}
-		sprintf(shortline, "e%d", n);
-		return 2;
-	}
+    if(stringEqual(line, "enum")) {
+        pst p, p0;
+        cmd = 'e';
+        if(!cw->dol) {
+            setError(MSG_AtLine0);
+            return false;
+        }
+         p0 = p = fetchLine(cw->dot, 1);
+        n = -1;
+        while(*p != '\n') {
+            if(isdigitByte(*p)) {
+                n = atoi((char*)p);
+                break;
+            }
+            ++p;
+        }
+        free(p0);
+        if(n < 0) {
+            setError(MSG_NumberExpected);
+            return false;
+        }
+        sprintf(shortline, "e%d", n);
+        return 2;
+    }
 
-	if (!strncmp(line, "db>", 3)) {
-		setDebugFile(line + 3);
-		return true;
-	}
+    if (!strncmp(line, "db>", 3)) {
+        setDebugFile(line + 3);
+        return true;
+    }
 
-	if (stringEqual(line, "rr")) {
-		cmd = 'e';
-		if (!cw->browseMode) {
-			setError(MSG_NoBrowse);
-			return false;
-		}
-		rerender(1);
-		return true;
-	}
+    if (stringEqual(line, "rr")) {
+        cmd = 'e';
+        if (!cw->browseMode) {
+            setError(MSG_NoBrowse);
+            return false;
+        }
+        rerender(1);
+        return true;
+    }
 
-	if (!strncmp(line, "rr=", 3) && isdigitByte(line[3])) {
-		rr_interval = atoi(line + 3);
-		if(rr_interval < 5) // even 5 is prettty unreasonable
-			rr_interval = 5;
-		return true;
-	}
+    if (!strncmp(line, "rr=", 3) && isdigitByte(line[3])) {
+        rr_interval = atoi(line + 3);
+        if(rr_interval < 5) // even 5 is prettty unreasonable
+            rr_interval = 5;
+        return true;
+    }
 
-	if(stringEqual(line, "rr=")) {
-		eb_printf("%d\n", rr_interval);
-		return true;
-	}
+    if(stringEqual(line, "rr=")) {
+        eb_printf("%d\n", rr_interval);
+        return true;
+    }
 
-	if (line[0] == 'u' && line[1] == 'a' && isdigitByte(line[2])
-	    && (!line[3] || (isdigitByte(line[3]) && !line[4]))) {
-		char *t = 0;
-		n = atoi(line + 2);
-		if (n < MAXAGENT)
-			t = userAgents[n];
-		cmd = 'e';
-		if (!t) {
-			setError(MSG_NoAgent, n);
-			return false;
-		}
-		agentIndex = n, currentAgent = t;
-		if (helpMessagesOn || debugLevel >= 1)
-			eb_puts(currentAgent);
-		return true;
-	}
+    if (line[0] == 'u' && line[1] == 'a' && isdigitByte(line[2])
+        && (!line[3] || (isdigitByte(line[3]) && !line[4]))) {
+        char *t = 0;
+        n = atoi(line + 2);
+        if (n < MAXAGENT)
+            t = userAgents[n];
+        cmd = 'e';
+        if (!t) {
+            setError(MSG_NoAgent, n);
+            return false;
+        }
+        agentIndex = n, currentAgent = t;
+        if (helpMessagesOn || debugLevel >= 1)
+            eb_puts(currentAgent);
+        return true;
+    }
 
-	if(stringEqual(line, "ua")) {
-		eb_printf("%d: %s\n", agentIndex, currentAgent);
-		return true;
-	}
+    if(stringEqual(line, "ua")) {
+        eb_printf("%d: %s\n", agentIndex, currentAgent);
+        return true;
+    }
 
-	if (stringEqual(line, "re") || stringEqual(line, "rea")) {
-		cmd = 'e';	// so error messages are printed
-		if(cw->browseMode && !cw->mailInfo) {
+    if (stringEqual(line, "re") || stringEqual(line, "rea")) {
+        cmd = 'e'; // so error messages are printed
+        if(cw->browseMode && !cw->mailInfo) {
 // browsing html or some other non-mail file
-			setError(MSG_ReNoInfo);
-				return false;
-		}
-		undoCompare();
-		cw->undoable = false;
-		if(cw->imapMode2 && cw->dol) {
+            setError(MSG_ReNoInfo);
+                return false;
+        }
+        undoCompare();
+        cw->undoable = false;
+        if(cw->imapMode2 && cw->dol) {
 // basically g and re
-			char *p = (char *)cw->r_map[cw->dot].text; // uid and subject for the email
-			if(! mailDescend(p, 'g')) return false;
-		}
-		rc = setupReply(line[2] == 'a', false);
-		if (rc && cw->browseMode) {
-			ub = false;
-			cw->browseMode = cf->browseMode = false;
-			goto et_go;
-		}
+            char *p = (char *)cw->r_map[cw->dot].text; // uid and subject for the email
+            if(! mailDescend(p, 'g')) return false;
+        }
+        rc = setupReply(line[2] == 'a', false);
+        if (rc && cw->browseMode) {
+            ub = false;
+            cw->browseMode = cf->browseMode = false;
+            goto et_go;
+        }
 // in browse mode, none of the changes we made to the file leave a trail.
 // But here we are as a regular file, and I don't want the user to undo.
-		undoCompare();
-		cw->undoable = false;
-		return rc;
-	}
+        undoCompare();
+        cw->undoable = false;
+        return rc;
+    }
 
-	if (stringEqual(line, "fwd")) {
-		cmd = 'e';	// so error messages are printed
-		if(cw->browseMode && !cw->mailInfo) {
+    if (stringEqual(line, "fwd")) {
+        cmd = 'e'; // so error messages are printed
+        if(cw->browseMode && !cw->mailInfo) {
 // browsing html or some other non-mail file
-			setError(MSG_ReNoInfo);
-				return false;
-		}
-		undoCompare();
-		cw->undoable = false;
-		if(cw->imapMode2 && cw->dol) {
+            setError(MSG_ReNoInfo);
+                return false;
+        }
+        undoCompare();
+        cw->undoable = false;
+        if(cw->imapMode2 && cw->dol) {
 // basically g and fwd
-			char *p = (char *)cw->r_map[cw->dot].text; // uid and subject for the email
-			if(! mailDescend(p, 'g')) return false;
-		}
-		rc = setupReply(false, true);
-		if (rc && cw->browseMode) {
-			ub = false;
-			cw->browseMode = cf->browseMode = false;
-			goto et_go;
-		}
+            char *p = (char *)cw->r_map[cw->dot].text; // uid and subject for the email
+            if(! mailDescend(p, 'g')) return false;
+        }
+        rc = setupReply(false, true);
+        if (rc && cw->browseMode) {
+            ub = false;
+            cw->browseMode = cf->browseMode = false;
+            goto et_go;
+        }
 // in browse mode, none of the changes we made to the file leave a trail.
 // But here we are as a regular file, and I don't want the user to undo.
-		undoCompare();
-		cw->undoable = false;
-		return rc;
-	}
+        undoCompare();
+        cw->undoable = false;
+        return rc;
+    }
 
 /* ^^^^ is the same as ^4; same with & */
-	if ((line[0] == '^' || line[0] == '&') && line[1] == line[0]) {
-		const char *t = line + 2;
-		while (*t == line[0])
-			++t;
-		if (!*t) {
-			sprintf(shortline, "%c%ld", line[0], (long)(t - line));
-			return 2;
-		}
-	}
+    if ((line[0] == '^' || line[0] == '&') && line[1] == line[0]) {
+        const char *t = line + 2;
+        while (*t == line[0]) ++t;
+        if (!*t) {
+            sprintf(shortline, "%c%ld", line[0], (long)(t - line));
+            return 2;
+        }
+    }
 
-	if (!strncmp(line, "sort", 4)
-	    && (line[4] == '+' || line[4] == '-' || line[4] == '=') &&
-	    line[5] && !line[6] && strchr("ast", line[5])) {
-		ls_sort = 0;
-		if (line[5] == 's')
-			ls_sort = 1;
-		if (line[5] == 't')
-			ls_sort = 2;
-		ls_reverse = false;
-		if (line[4] == '-')
-			ls_reverse = true;
-		if (helpMessagesOn) {
-			if (ls_reverse)
-				i_printf(MSG_Reverse);
-			i_puts(MSG_SortAlpha + ls_sort);
-		}
-		return true;
-	}
+    if (!strncmp(line, "sort", 4)
+        && (line[4] == '+' || line[4] == '-' || line[4] == '=') &&
+        line[5] && !line[6] && strchr("ast", line[5])) {
+        ls_sort = 0;
+        if (line[5] == 's')
+            ls_sort = 1;
+        if (line[5] == 't')
+            ls_sort = 2;
+        ls_reverse = false;
+        if (line[4] == '-')
+            ls_reverse = true;
+        if (helpMessagesOn) {
+            if (ls_reverse)
+                i_printf(MSG_Reverse);
+            i_puts(MSG_SortAlpha + ls_sort);
+        }
+        return true;
+    }
 
-	if(stringEqual(line, "pwd"))
-		line = "cd";
-	if (line[0] == 'c' && line[1] == 'd') {
-		c = line[2];
-		if (!c || isspaceByte(c)) {
-			const char *t = line + 2;
-			skipWhite(&t);
-			c = *t;
-			cmd = 'e';	/* so error messages are printed */
-			if (!c) {
-				char cwdbuf[ABSPATH];
+    if(stringEqual(line, "pwd"))
+        line = "cd";
+    if (line[0] == 'c' && line[1] == 'd') {
+        c = line[2];
+        if (!c || isspaceByte(c)) {
+            const char *t = line + 2;
+            skipWhite(&t);
+            c = *t;
+            cmd = 'e'; // so error messages are printed
+            if (!c) {
+                char cwdbuf[ABSPATH];
 pwd:
-				if (!getcwd(cwdbuf, sizeof(cwdbuf))) {
-					setError(c ? MSG_CDGetError :
-						 MSG_CDSetError);
-					return false;
-				}
-				eb_puts(cwdbuf);
-				return true;
-			}
-			if (!envFile(t, &t))
-				return false;
-			if (!chdir(t)) {
-				if (debugLevel >= 1)
-					goto pwd;
-				return true;
-			}
-			setError(MSG_CDInvalid);
-			return false;
-		}
-	}
+                if (!getcwd(cwdbuf, sizeof(cwdbuf))) {
+                    setError(c ? MSG_CDGetError :
+                         MSG_CDSetError);
+                    return false;
+                }
+                eb_puts(cwdbuf);
+                return true;
+            }
+            if (!envFile(t, &t))
+                return false;
+            if (!chdir(t)) {
+                if (debugLevel >= 1) goto pwd;
+                return true;
+            }
+            setError(MSG_CDInvalid);
+            return false;
+        }
+    }
 
-	if (line[0] == 'l' && line[1] == 'l') {
-		c = line[2];
-		if (!c) {
-			eb_printf("%d\n", displayLength);
-			return true;
-		}
-		if ((isspaceByte(c) || c == '=') && isdigitByte(line[3])) {
-			displayLength = atoi(line + 3);
-			if (displayLength < 80)
-				displayLength = 80;
-			return true;
-		}
-		setError(MSG_NoSpaceAfter);
-		return false;
-	}
+    if (line[0] == 'l' && line[1] == 'l') {
+        c = line[2];
+        if (!c) {
+            eb_printf("%d\n", displayLength);
+            return true;
+        }
+        if ((isspaceByte(c) || c == '=') && isdigitByte(line[3])) {
+            displayLength = atoi(line + 3);
+            if (displayLength < 80)
+                displayLength = 80;
+            return true;
+        }
+        setError(MSG_NoSpaceAfter);
+        return false;
+    }
 
-	if (line[0] == 'f' && line[1] == 'l' && line[2] == 'l') {
-		char *s;
-		c = line[3];
-		if (!c) {
-			eb_printf("%d%s\n", formatLineLength,
-			       (formatOverflow ? "+" : ""));
-			return true;
-		}
-		if ((isspaceByte(c) || c == '=') && isdigitByte(line[4])) {
-			formatLineLength = strtol(line + 4, &s, 10);
-			if (formatLineLength < 32)
-				formatLineLength = 32;
-			formatOverflow = (*s == '+');
-			return true;
-		}
-		setError(MSG_NoSpaceAfter);
-		return false;
-	}
+    if (line[0] == 'f' && line[1] == 'l' && line[2] == 'l') {
+        char *s;
+        c = line[3];
+        if (!c) {
+            eb_printf("%d%s\n", formatLineLength,
+                   (formatOverflow ? "+" : ""));
+            return true;
+        }
+        if ((isspaceByte(c) || c == '=') && isdigitByte(line[4])) {
+            formatLineLength = strtol(line + 4, &s, 10);
+            if (formatLineLength < 32)
+                formatLineLength = 32;
+            formatOverflow = (*s == '+');
+            return true;
+        }
+        setError(MSG_NoSpaceAfter);
+        return false;
+    }
 
-	if (line[0] == 'p' && line[1] == 'b') {
-		n = playBuffer(line, NULL);
-		rc = (n > 0);
-		if (n == 2)
-			goto no_action;
-		cmd = 'e';	// to see the error right away
-		return rc;
-	}
+    if (line[0] == 'p' && line[1] == 'b') {
+        n = playBuffer(line, NULL);
+        rc = (n > 0);
+        if (n == 2) goto no_action;
+        cmd = 'e'; // to see the error right away
+        return rc;
+    }
 
-	if (stringEqual(line, "rf")) {
-		cmd = 'e';
-		selfFrame();
-		if (!cf->fileName) {
-			setError(MSG_NoRefresh);
-			return false;
-		}
+    if (stringEqual(line, "rf")) {
+        cmd = 'e';
+        selfFrame();
+        if (!cf->fileName) {
+            setError(MSG_NoRefresh);
+            return false;
+        }
 // refresh the imap folders is special
-		if(cw->imapMode1) return imap1rf();
-		if(cw->imapMode2) {
-			if(cw->mail_raw) // result of a search
-				return folderSearch(0, cw->mail_raw, true);
-			else
-				return folderDescend(0, true);
-		}
-		if(cw->imapMode3)
-			return rfWhileReading();
-		if (cw->irciMode | cw->ircoMode1) {
-			setError(MSG_IrcCommandS, "rf");
-			return false;
-		}
-		if (cw->browseMode)
-			cmd = 'b';
-		refresh_dot = cw->dot;
-		noStack = 2;
-		allocatedLine = allocMem(strlen(cf->fileName) + 3);
-		sprintf(allocatedLine, "%c %s", cmd, cf->fileName);
-		debrowseFilename(allocatedLine, true);
-		*runThis = allocatedLine;
-		uriEncoded = cf->uriEncoded;
-		return 3;
-	}
+        if(cw->imapMode1) return imap1rf();
+        if(cw->imapMode2) {
+            if(cw->mail_raw) // result of a search
+                return folderSearch(0, cw->mail_raw, true);
+            else
+                return folderDescend(0, true);
+        }
+        if(cw->imapMode3)
+            return rfWhileReading();
+        if (cw->irciMode | cw->ircoMode1) {
+            setError(MSG_IrcCommandS, "rf");
+            return false;
+        }
+        if (cw->browseMode)
+            cmd = 'b';
+        refresh_dot = cw->dot;
+        noStack = 2;
+        allocatedLine = allocMem(strlen(cf->fileName) + 3);
+        sprintf(allocatedLine, "%c %s", cmd, cf->fileName);
+        debrowseFilename(allocatedLine, true);
+        *runThis = allocatedLine;
+        uriEncoded = cf->uriEncoded;
+        return 3;
+    }
 
-	if(!strncmp(line, "img", 3) &&
-	(line[3] == 0 || strchr("0123456789$?", line[3]))) {
-	char *h, *p;
-	const char *s;
-	int tagno, n, j;
-	bool lookmode = false;
-	s = line + 3;
-	j = 0;
-	if (isdigitByte(*s))
-		j = strtol(s, (char **)&s, 10);
-	else if (*s == '$')
-		j = -1, ++s;
-	if(*s == '?') lookmode = true, ++s;
-	if(*s) goto no_action;
-	cmd = 'e'; // show errors
-	if(cw->dot == 0) {
-		setError(MSG_AtLine0);
-		return false;
-	}
-	p = (char *)fetchLine(cw->dot, -1);
-	findField(p, 4, j, &n, 0, &tagno, &h, 0);
-	debugPrint(5, "findField returns %d, %s", tagno, h);
-	if (!h) {
-		fieldNumProblem(3, "img", j, n, n);
-		return false;
-	}
-	if(lookmode) {
-		if(!strncmp(h, "data:", 5)) eb_puts("data:");
-		else eb_puts(h);
-		if(debugLevel >= 3) eb_printf("%d\n", tagList[tagno]->seqno);
-		return true;
-	}
-	uriEncoded = true;
-	if(!*h) { // why would this ever happen?
-		*runThis = "?";
-		return 2;
-	}
-	allocatedLine = allocMem(strlen(h) + 3);
-	sprintf(allocatedLine, "e %s", h);
-	*runThis = allocatedLine;
-	nzFree(h);
-		return 3;
-	}
+    if(!strncmp(line, "img", 3) &&
+    (line[3] == 0 || strchr("0123456789$?", line[3]))) {
+    char *h, *p;
+    const char *s;
+    int tagno, n, j;
+    bool lookmode = false;
+    s = line + 3;
+    j = 0;
+    if (isdigitByte(*s))
+        j = strtol(s, (char **)&s, 10);
+    else if (*s == '$')
+        j = -1, ++s;
+    if(*s == '?') lookmode = true, ++s;
+    if(*s) goto no_action;
+    cmd = 'e'; // show errors
+    if(cw->dot == 0) {
+        setError(MSG_AtLine0);
+        return false;
+    }
+    p = (char *)fetchLine(cw->dot, -1);
+    findField(p, 4, j, &n, 0, &tagno, &h, 0);
+    debugPrint(5, "findField returns %d, %s", tagno, h);
+    if (!h) {
+        fieldNumProblem(3, "img", j, n, n);
+        return false;
+    }
+    if(lookmode) {
+        if(!strncmp(h, "data:", 5)) eb_puts("data:");
+        else eb_puts(h);
+        if(debugLevel >= 3) eb_printf("%d\n", tagList[tagno]->seqno);
+        return true;
+    }
+    uriEncoded = true;
+    if(!*h) { // why would this ever happen?
+        *runThis = "?";
+        return 2;
+    }
+    allocatedLine = allocMem(strlen(h) + 3);
+    sprintf(allocatedLine, "e %s", h);
+    *runThis = allocatedLine;
+    nzFree(h);
+        return 3;
+    }
 
-	if (stringEqual(line, "config")) {
-		if(imapBufferPresent()) {
-			setError(MSG_ImapConfig);
-			return false;
-		}
-		readConfigFile();
-		setupEdbrowseCache();
-		if (curlActive) {
-			if (cookieFile)
-				curl_easy_setopt(global_http_handle,
-						 CURLOPT_COOKIEJAR, cookieFile);
-		}
-		return true;
-	}
+    if (stringEqual(line, "config")) {
+        if(imapBufferPresent()) {
+            setError(MSG_ImapConfig);
+            return false;
+        }
+        readConfigFile();
+        setupEdbrowseCache();
+        if (curlActive) {
+            if (cookieFile)
+                curl_easy_setopt(global_http_handle,
+                         CURLOPT_COOKIEJAR, cookieFile);
+        }
+        return true;
+    }
 
-	if (stringEqual(line, "shc")) {
-		cmd = 'e'; // trick to always show the errors
-		if(!cw->dot) {
-			setError(MSG_EmptyBuffer);
-			return 0;
-		}
-		if (!cw->sqlMode) {
-			if (!cw->browseMode) {
-				setError(MSG_NoBrowse);
-				return false;
-			}
-		return showHeaders(cw->dot);
-		}
-		showColumns();
-		return true;
-	}
+    if (stringEqual(line, "shc")) {
+        cmd = 'e'; // trick to always show the errors
+        if(!cw->dot) {
+            setError(MSG_EmptyBuffer);
+            return 0;
+        }
+        if (!cw->sqlMode) {
+            if (!cw->browseMode) {
+                setError(MSG_NoBrowse);
+                return false;
+            }
+        return showHeaders(cw->dot);
+        }
+        showColumns();
+        return true;
+    }
 
-	if (stringEqual(line, "shf")) {
-		if (!cw->sqlMode) {
-			setError(MSG_NoDB);
-			return false;
-		}
-		showForeign();
-		return true;
-	}
+    if (stringEqual(line, "shf")) {
+        if (!cw->sqlMode) {
+            setError(MSG_NoDB);
+            return false;
+        }
+        showForeign();
+        return true;
+    }
 
-	if (stringEqual(line, "sht")) {
-		if (!ebConnect())
-			return false;
-		return showTables();
-	}
+    if (stringEqual(line, "sht")) {
+        if (!ebConnect())
+            return false;
+        return showTables();
+    }
 
-	if (stringEqual(line, "jdb")) {
-		const Tag *t;
-		cmd = 'e';
-		if (!cw->browseMode) {
-			setError(MSG_NoBrowse);
-			return false;
-		}
-		if (!isJSAlive) {
-			setError(MSG_JavaOff);
-			return false;
-		}
+    if (stringEqual(line, "jdb")) {
+        const Tag *t;
+        cmd = 'e';
+        if (!cw->browseMode) {
+            setError(MSG_NoBrowse);
+            return false;
+        }
+        if (!isJSAlive) {
+            setError(MSG_JavaOff);
+            return false;
+        }
 /* debug the js context of the frame you are in */
-		t = line2frame(cw->dot, true);
-		if (t)
-			cf = t->f1;
-		else
-			selfFrame();
-		cw->jdb_frame = cf;
-		debugPrint(1, "cx%d %s", cf->gsn, cf->fileName ? cf->fileName : "?");
-		jSyncup(false, 0);
-		return true;
-	}
+        t = line2frame(cw->dot, true);
+        if (t)
+            cf = t->f1;
+        else
+            selfFrame();
+        cw->jdb_frame = cf;
+        debugPrint(1, "cx%d %s", cf->gsn, cf->fileName ? cf->fileName : "?");
+        jSyncup(false, 0);
+        return true;
+    }
 
-	if (stringEqual(line, "ub") || stringEqual(line, "et")) {
-		Frame *f, *fnext;
-		struct histLabel *label, *lnext;
-		ub = (line[0] == 'u');
-		cmd = 'e';
-		if (!cw->browseMode) {
-			setError(MSG_NoBrowse);
-			return false;
-		}
-		undoCompare();
-		cw->undoable = false;
-		undoSpecialClear();
-		if(ub) debrowseFilename(cf->fileName, false);
-		cw->browseMode = cf->browseMode = false;
-		cf->render2 = false;
-		if (cf->render1b)
-			cf->render1 = cf->render1b = false;
-		cf->render4 = cf->render5 = false;
-		cf->charset = 0;
-		if (ub) {
-			cw->nlMode = cw->rnlMode;
-			cw->f_dot = cw->dot;
-			cw->dot = cw->r_dot, cw->dol = cw->r_dol;
-			memcpy(cw->labels, cw->r_labels, sizeof(cw->labels));
-			freeWindowLines(cw->map);
-			cw->map = cw->r_map;
-			cw->r_map = 0;
-		} else {
+    if (stringEqual(line, "ub") || stringEqual(line, "et")) {
+        Frame *f, *fnext;
+        struct histLabel *label, *lnext;
+        ub = (line[0] == 'u');
+        cmd = 'e';
+        if (!cw->browseMode) {
+            setError(MSG_NoBrowse);
+            return false;
+        }
+        undoCompare();
+        cw->undoable = false;
+        undoSpecialClear();
+        if(ub) debrowseFilename(cf->fileName, false);
+        cw->browseMode = cf->browseMode = false;
+        cf->render2 = false;
+        if (cf->render1b)
+            cf->render1 = cf->render1b = false;
+        cf->render4 = cf->render5 = false;
+        cf->charset = 0;
+        if (ub) {
+            cw->nlMode = cw->rnlMode;
+            cw->f_dot = cw->dot;
+            cw->dot = cw->r_dot, cw->dol = cw->r_dol;
+            memcpy(cw->labels, cw->r_labels, sizeof(cw->labels));
+            freeWindowLines(cw->map);
+            cw->map = cw->r_map;
+            cw->r_map = 0;
+        } else {
 et_go:
-			cw->f_dot = 0;
-			for (i = 1; i <= cw->dol; ++i)
-				removeHiddenNumbers(cw->map[i].text, '\n', context, 0);
-			freeWindowLines(cw->r_map);
-			cw->r_map = 0;
-		}
-		freeTags(cw);
-		cw->mustrender = false;
-		cw->imapMode3 = false;
-		for (f = &cw->f0; f; f = fnext) {
-			fnext = f->next;
-			freeFrame(f);
-		}
-		cw->f0.next = 0;
-		lnext = cw->histLabel;
-		while ((label = lnext)) {
-			lnext = label->prev;
-			free(label);
-		}
-		cw->histLabel = 0;
-		nzFree0(cw->htmltitle);
-		nzFree0(cw->htmlauthor);
-		nzFree0(cw->htmldesc);
-		nzFree0(cw->htmlgen);
-		nzFree0(cw->htmlkey);
-		nzFree0(cw->mailInfo);
-		if (ub)
-			fileSize = bufferSize(context, false);
-		return true;
-	}
+            cw->f_dot = 0;
+            for (i = 1; i <= cw->dol; ++i)
+                removeHiddenNumbers(cw->map[i].text, '\n', context, 0);
+            freeWindowLines(cw->r_map);
+            cw->r_map = 0;
+        }
+        freeTags(cw);
+        cw->mustrender = false;
+        cw->imapMode3 = false;
+        for (f = &cw->f0; f; f = fnext) {
+            fnext = f->next;
+            freeFrame(f);
+        }
+        cw->f0.next = 0;
+        lnext = cw->histLabel;
+        while ((label = lnext)) {
+            lnext = label->prev;
+            free(label);
+        }
+        cw->histLabel = 0;
+        nzFree0(cw->htmltitle);
+        nzFree0(cw->htmlauthor);
+        nzFree0(cw->htmldesc);
+        nzFree0(cw->htmlgen);
+        nzFree0(cw->htmlkey);
+        nzFree0(cw->mailInfo);
+        if (ub)
+            fileSize = bufferSize(context, false);
+        return true;
+    }
 
-	if (stringEqual(line, "f/") || stringEqual(line, "w/") || stringEqual(line, "w+/")) {
-		char *t;
-		cmd = line[0];
-		if (!cf->fileName) {
-			setError(MSG_NoFileName);
-			return false;
-		}
-		t = strrchr(cf->fileName, '/');
-		if (!t) {
-			setError(MSG_NoSlash);
-			return false;
-		}
-		++t;
-		if (!*t) {
-			setError(MSG_YesSlash);
-			return false;
-		}
-		t = getFileURL(cf->fileName, false);
-		allocatedLine = allocMem(strlen(t) + 8);
+    if (stringEqual(line, "f/") || stringEqual(line, "w/") || stringEqual(line, "w+/")) {
+        char *t;
+        cmd = line[0];
+        if (!cf->fileName) {
+            setError(MSG_NoFileName);
+            return false;
+        }
+        t = strrchr(cf->fileName, '/');
+        if (!t) {
+            setError(MSG_NoSlash);
+            return false;
+        }
+        ++t;
+        if (!*t) {
+            setError(MSG_YesSlash);
+            return false;
+        }
+        t = getFileURL(cf->fileName, false);
+        allocatedLine = allocMem(strlen(t) + 8);
 // ` prevents wildcard expansion, which normally happens on an f command
-		if (line[1] == '+')
-			sprintf(allocatedLine, "%c+ `%s", cmd, t);
-		else
-			sprintf(allocatedLine, "%c `%s", cmd, t);
-		*runThis = allocatedLine;
-		return 3;
-	}
+        if (line[1] == '+')
+            sprintf(allocatedLine, "%c+ `%s", cmd, t);
+        else
+            sprintf(allocatedLine, "%c `%s", cmd, t);
+        *runThis = allocatedLine;
+        return 3;
+    }
 
 // If you want this feature, e< f< b< w< r<, uncomment this,
 // and be sure to document it in usersguide.
 #if 0
-	if (strchr("bwref", line[0]) && line[1] == '<') {
-		allocatedLine = lessFile(line + 2);
-		if (allocatedLine == 0)
-			return false;
-		n = strlen(allocatedLine);
-		allocatedLine = reallocMem(allocatedLine, n + 4);
-		strmove(allocatedLine + 3, allocatedLine);
-		allocatedLine[0] = line[0];
-		allocatedLine[1] = ' ';
-		allocatedLine[2] = ' ';
-		if (!isURL(allocatedLine + 3))
-			allocatedLine[2] = '`';	// suppress wildcard expansion
-		*runThis = allocatedLine;
-		return 3;
-	}
+    if (strchr("bwref", line[0]) && line[1] == '<') {
+        allocatedLine = lessFile(line + 2);
+        if (allocatedLine == 0)
+            return false;
+        n = strlen(allocatedLine);
+        allocatedLine = reallocMem(allocatedLine, n + 4);
+        strmove(allocatedLine + 3, allocatedLine);
+        allocatedLine[0] = line[0];
+        allocatedLine[1] = ' ';
+        allocatedLine[2] = ' ';
+        if (!isURL(allocatedLine + 3))
+            allocatedLine[2] = '`'; // suppress wildcard expansion
+        *runThis = allocatedLine;
+        return 3;
+    }
 #endif
 
-	if (stringEqual(line, "ft") || stringEqual(line, "fa") ||
-	    stringEqual(line, "fd") || stringEqual(line, "fg") ||
-	    stringEqual(line, "fk") || stringEqual(line, "fu")) {
-		const char *s = 0;
-		int t;
-		cmd = 'e';
-		if (!cw->browseMode) {
-			setError(MSG_NoBrowse);
-			return false;
-		}
-		if (line[1] == 't')
-			s = cw->htmltitle, t = MSG_NoTitle;
-		if (line[1] == 'a')
-			s = cw->htmlauthor, t = MSG_NoAuthor;
-		if (line[1] == 'd')
-			s = cw->htmldesc, t = MSG_NoDesc;
-		if (line[1] == 'g')
-			s = cw->htmlgen, t = MSG_NoGenerator;
-		if (line[1] == 'k')
-			s = cw->htmlkey, t = MSG_NoKeywords;
-		if (line[1] == 'u')
-			s = cw->saveURL, t = MSG_NoFileName;
-		if (s)
-			eb_puts(s);
-		else
-			i_puts(t);
-		return true;
-	}
+    if (stringEqual(line, "ft") || stringEqual(line, "fa") ||
+        stringEqual(line, "fd") || stringEqual(line, "fg") ||
+        stringEqual(line, "fk") || stringEqual(line, "fu")) {
+        const char *s = 0;
+        int t;
+        cmd = 'e';
+        if (!cw->browseMode) {
+            setError(MSG_NoBrowse);
+            return false;
+        }
+        if (line[1] == 't')
+            s = cw->htmltitle, t = MSG_NoTitle;
+        if (line[1] == 'a')
+            s = cw->htmlauthor, t = MSG_NoAuthor;
+        if (line[1] == 'd')
+            s = cw->htmldesc, t = MSG_NoDesc;
+        if (line[1] == 'g')
+            s = cw->htmlgen, t = MSG_NoGenerator;
+        if (line[1] == 'k')
+            s = cw->htmlkey, t = MSG_NoKeywords;
+        if (line[1] == 'u')
+            s = cw->saveURL, t = MSG_NoFileName;
+        if (s)
+            eb_puts(s);
+        else
+            i_puts(t);
+        return true;
+    }
 
-	if (line[0] == 's' && line[1] == 'm') {
-		const char *t = line + 2;
-		bool dosig = true;
-		int account = 0;
-		cmd = 'e';
-		if (*t == '-') { dosig = false;
-			++t;
-		}
-		if (isdigitByte(*t))
-			account = strtol(t, (char **)&t, 10);
-		if (!*t) {
+    if (line[0] == 's' && line[1] == 'm') {
+        const char *t = line + 2;
+        bool dosig = true;
+        int account = 0;
+        cmd = 'e';
+        if (*t == '-') dosig = false, ++t;
+        if (isdigitByte(*t))
+            account = strtol(t, (char **)&t, 10);
+        if (!*t) {
 // In case we haven't started curl yet.
-			if (!curlActive) {
-				eb_curl_global_init();
+            if (!curlActive) {
+                eb_curl_global_init();
 // we don't need cookies and cache for email, but http might follow.
-				cookiesFromJar();
-				setupEdbrowseCache();
-			}
-			return sendMailCurrent(account, dosig);
-		} else {
-			setError(MSG_SMBadChar);
-			return false;
-		}
-	}
+                cookiesFromJar();
+                setupEdbrowseCache();
+            }
+            return sendMailCurrent(account, dosig);
+        } else {
+            setError(MSG_SMBadChar);
+            return false;
+        }
+    }
 
-	if (stringEqual(line, "ci")) {
-		caseInsensitive ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(caseInsensitive + MSG_CaseSen);
-		return true;
-	}
+    if (stringEqual(line, "ci")) {
+        caseInsensitive ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(caseInsensitive + MSG_CaseSen);
+        return true;
+    }
 
-	if (stringEqual(line, "ci+") || stringEqual(line, "ci-")) {
-		caseInsensitive = (line[2] == '+');
-		if (helpMessagesOn)
-			i_puts(caseInsensitive + MSG_CaseSen);
-		return true;
-	}
+    if (stringEqual(line, "ci+") || stringEqual(line, "ci-")) {
+        caseInsensitive = (line[2] == '+');
+        if (helpMessagesOn)
+            i_puts(caseInsensitive + MSG_CaseSen);
+        return true;
+    }
 
-	if (stringEqual(line, "sg")) {
-		searchStringsAll ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(searchStringsAll + MSG_SubLocal);
-		return true;
-	}
+    if (stringEqual(line, "sg")) {
+        searchStringsAll ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(searchStringsAll + MSG_SubLocal);
+        return true;
+    }
 
-	if (stringEqual(line, "sg+") || stringEqual(line, "sg-")) {
-		searchStringsAll = (line[2] == '+');
-		if (helpMessagesOn)
-			i_puts(searchStringsAll + MSG_SubLocal);
-		return true;
-	}
+    if (stringEqual(line, "sg+") || stringEqual(line, "sg-")) {
+        searchStringsAll = (line[2] == '+');
+        if (helpMessagesOn)
+            i_puts(searchStringsAll + MSG_SubLocal);
+        return true;
+    }
 
-	if (stringEqual(line, "ebre")) {
-		ebre ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(ebre + MSG_EbreOff);
-		return true;
-	}
+    if (stringEqual(line, "ebre")) {
+        ebre ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(ebre + MSG_EbreOff);
+        return true;
+    }
 
-	if (stringEqual(line, "ebre+") || stringEqual(line, "ebre-")) {
-		ebre = (line[4] == '+');
-		if (helpMessagesOn)
-			i_puts(ebre + MSG_EbreOff);
-		return true;
-	}
+    if (stringEqual(line, "ebre+") || stringEqual(line, "ebre-")) {
+        ebre = (line[4] == '+');
+        if (helpMessagesOn)
+            i_puts(ebre + MSG_EbreOff);
+        return true;
+    }
 
-	if (stringEqual(line, "dr")) {
-		dirWrite = 0;
-		if (helpMessagesOn)
-			i_puts(MSG_DirReadonly);
-		return true;
-	}
+    if (stringEqual(line, "dr")) {
+        dirWrite = 0;
+        if (helpMessagesOn)
+            i_puts(MSG_DirReadonly);
+        return true;
+    }
 
-	if (stringEqual(line, "dw")) {
-		dirWrite = 1;
-		if (helpMessagesOn)
-			i_puts(MSG_DirWritable);
-		return true;
-	}
+    if (stringEqual(line, "dw")) {
+        dirWrite = 1;
+        if (helpMessagesOn)
+            i_puts(MSG_DirWritable);
+        return true;
+    }
 
-	if (stringEqual(line, "dx")) {
-		dirWrite = 2;
-		if (helpMessagesOn)
-			i_puts(MSG_DirX);
-		return true;
-	}
+    if (stringEqual(line, "dx")) {
+        dirWrite = 2;
+        if (helpMessagesOn)
+            i_puts(MSG_DirX);
+        return true;
+    }
 
-	if (stringEqual(line, "displace")) {
-		displaceFiles ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(displaceFiles + MSG_DisplaceOff);
-		return true;
-	}
+    if (stringEqual(line, "displace")) {
+        displaceFiles ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(displaceFiles + MSG_DisplaceOff);
+        return true;
+    }
 
-	if (stringEqual(line, "displace+") || stringEqual(line, "displace-")) {
-		displaceFiles = (line[8] == '+');
-		if (helpMessagesOn)
-			i_puts(displaceFiles + MSG_DisplaceOff);
-		return true;
-	}
+    if (stringEqual(line, "displace+") || stringEqual(line, "displace-")) {
+        displaceFiles = (line[8] == '+');
+        if (helpMessagesOn)
+            i_puts(displaceFiles + MSG_DisplaceOff);
+        return true;
+    }
 
-	if (stringEqual(line, "dno")) {
-		dno ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(dno + MSG_DirNamesOnlyOff);
-		return true;
-	}
+    if (stringEqual(line, "dno")) {
+        dno ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(dno + MSG_DirNamesOnlyOff);
+        return true;
+    }
 
-	if (stringEqual(line, "dno+") || stringEqual(line, "dno-")) {
-		dno = (line[3] == '+');
-		if (helpMessagesOn)
-			i_puts(dno + MSG_DirNamesOnlyOff);
-		return true;
-	}
+    if (stringEqual(line, "dno+") || stringEqual(line, "dno-")) {
+        dno = (line[3] == '+');
+        if (helpMessagesOn)
+            i_puts(dno + MSG_DirNamesOnlyOff);
+        return true;
+    }
 
-	if (stringEqual(line, "flow")) {
-		flow ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(flow + MSG_FormatFlowedOff);
-		return true;
-	}
+    if (stringEqual(line, "flow")) {
+        flow ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(flow + MSG_FormatFlowedOff);
+        return true;
+    }
 
-	if (stringEqual(line, "flow+") || stringEqual(line, "flow-")) {
-		flow = (line[4] == '+');
-		if (helpMessagesOn)
-			i_puts(flow + MSG_FormatFlowedOff);
-		return true;
-	}
+    if (stringEqual(line, "flow+") || stringEqual(line, "flow-")) {
+        flow = (line[4] == '+');
+        if (helpMessagesOn)
+            i_puts(flow + MSG_FormatFlowedOff);
+        return true;
+    }
 
-	if (stringEqual(line, "hr")) {
-		allowRedirection ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(allowRedirection + MSG_RedirectionOff);
-		return true;
-	}
+    if (stringEqual(line, "hr")) {
+        allowRedirection ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(allowRedirection + MSG_RedirectionOff);
+        return true;
+    }
 
-	if (stringEqual(line, "hr+") || stringEqual(line, "hr-")) {
-		allowRedirection = (line[2] == '+');
-		if (helpMessagesOn)
-			i_puts(allowRedirection + MSG_RedirectionOff);
-		return true;
-	}
+    if (stringEqual(line, "hr+") || stringEqual(line, "hr-")) {
+        allowRedirection = (line[2] == '+');
+        if (helpMessagesOn)
+            i_puts(allowRedirection + MSG_RedirectionOff);
+        return true;
+    }
 
-	if (stringEqual(line, "pg")) {
-		pluginsOn ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(pluginsOn + MSG_PluginsOff);
-		return true;
-	}
+    if (stringEqual(line, "pg")) {
+        pluginsOn ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(pluginsOn + MSG_PluginsOff);
+        return true;
+    }
 
-	if (stringEqual(line, "pg+") || stringEqual(line, "pg-")) {
-		pluginsOn = (line[2] == '+');
-		if (helpMessagesOn)
-			i_puts(pluginsOn + MSG_PluginsOff);
-		return true;
-	}
+    if (stringEqual(line, "pg+") || stringEqual(line, "pg-")) {
+        pluginsOn = (line[2] == '+');
+        if (helpMessagesOn)
+            i_puts(pluginsOn + MSG_PluginsOff);
+        return true;
+    }
 
-	if (stringEqual(line, "bg")) {
-		down_bg ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(down_bg + MSG_DownForeground);
-		return true;
-	}
+    if (stringEqual(line, "bg")) {
+        down_bg ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(down_bg + MSG_DownForeground);
+        return true;
+    }
 
-	if (stringEqual(line, "bg+") || stringEqual(line, "bg-")) {
-		down_bg = (line[2] == '+');
-		if (helpMessagesOn)
-			i_puts(down_bg + MSG_DownForeground);
-		return true;
-	}
-	if (stringEqual(line, "jsbg")) {
-		down_jsbg ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(down_jsbg + MSG_JSDownForeground);
-		return true;
-	}
+    if (stringEqual(line, "bg+") || stringEqual(line, "bg-")) {
+        down_bg = (line[2] == '+');
+        if (helpMessagesOn)
+            i_puts(down_bg + MSG_DownForeground);
+        return true;
+    }
+    if (stringEqual(line, "jsbg")) {
+        down_jsbg ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(down_jsbg + MSG_JSDownForeground);
+        return true;
+    }
 
-	if (stringEqual(line, "jsbg+") || stringEqual(line, "jsbg-")) {
-		down_jsbg = (line[4] == '+');
-		if (helpMessagesOn)
-			i_puts(down_jsbg + MSG_JSDownForeground);
-		return true;
-	}
+    if (stringEqual(line, "jsbg+") || stringEqual(line, "jsbg-")) {
+        down_jsbg = (line[4] == '+');
+        if (helpMessagesOn)
+            i_puts(down_jsbg + MSG_JSDownForeground);
+        return true;
+    }
 
-	if (stringEqual(line, "bglist")) {
-		bg_jobs(false);
-		return true;
-	}
+    if (stringEqual(line, "bglist")) {
+        bg_jobs(false);
+        return true;
+    }
 
-	if (stringEqual(line, "bflist") || !strncmp(line, "bflist/", 7) || !strncmp(line, "bflist?", 7)) {
-		const char c = line[6];
-		const char *s = line + 7;
-		for (i = 1; i <= maxSession; ++i) {
-			const char *title;
-			n = (!c || c == '/') ? i : 1 + maxSession -i;
-			Window *lw = sessionList[n].lw;
-			if (!lw) continue;
-			if (searchSameMode && !sameMode(lw, cw)) continue;
-			title = windowTitle(lw);
-			if (c && *s && !strcasestr(title, s))
-				continue;
-			eb_printf("%d%c %s\n", n, (n == context ? '*' : ':'), title);
-		}
-		return true;
-	}
+    if (stringEqual(line, "bflist") || !strncmp(line, "bflist/", 7) || !strncmp(line, "bflist?", 7)) {
+        const char c = line[6];
+        const char *s = line + 7;
+        for (i = 1; i <= maxSession; ++i) {
+            const char *title;
+            n = (!c || c == '/') ? i : 1 + maxSession -i;
+            Window *lw = sessionList[n].lw;
+            if (!lw) continue;
+            if (searchSameMode && !sameMode(lw, cw)) continue;
+            title = windowTitle(lw);
+            if (c && *s && !strcasestr(title, s))
+                continue;
+            eb_printf("%d%c %s\n", n, (n == context ? '*' : ':'), title);
+        }
+        return true;
+    }
 
-	if (stringEqual(line, "hist") || !strncmp(line, "hist/", 5) || !strncmp(line, "hist?", 5)) {
-		const char c = line[4];
-		const char *str = line + 5;
-		const Window *w, *x;
-		struct ebSession *s = sessionList + context;
-		if (!c || c == '/') {
+    if (stringEqual(line, "hist") || !strncmp(line, "hist/", 5) || !strncmp(line, "hist?", 5)) {
+        const char c = line[4];
+        const char *str = line + 5;
+        const Window *w, *x;
+        struct ebSession *s = sessionList + context;
+        if (!c || c == '/') {
 // This is the only place where not having a next link is a pain in the ass!
-			for(n = -1, w = cw; w; w = w->prev, ++n) ;
-			w = s->fw;
-			while(true) {
-				const char *title = windowTitle(w);
-				if (!c || ((!searchSameMode || sameMode(w, cw)) && (!*str || strcasestr(title, str))))
-					eb_printf("%c%d: %s\n", (n) ? '+' : '*', n, title);
-				if(w == cw) break;
-				--n;
-				for(x = s->lw; x->prev != w; x = x->prev) ;
-				w = x;
-			}
-			w = s->fw2;
-			if(!w) return true;
-			while(true) {
-				const char *title = windowTitle(w);
-				if (!c || ((!searchSameMode || sameMode(w, cw)) && (!*str || strcasestr(title, str))))
-					eb_printf("-%d: %s\n", ++n, title);
-				if(w == s->lw2) break;
-				for(x = s->lw2; x->prev != w; x = x->prev) ;
-				w = x;
-			}
-		} else {
-			for(n = 0, w = s->lw2; w != s->fw2; ++n, w = w->prev) ;
-			++n;
-			for(w = s->lw2; w; --n, w = w->prev) {
-				const char *title = windowTitle(w);
-				if (!c || ((!searchSameMode || sameMode(w, cw)) && (!*str || strcasestr(title, str))))
-					eb_printf("-%d: %s\n", n, title);
-			}
-			for(n = 0, w = cw; w; ++n, w = w->prev) {
-				const char *title = windowTitle(w);
-				if (!c || ((!searchSameMode || sameMode(w, cw)) && (!*str || strcasestr(title, str))))
-					eb_printf("%c%d: %s\n", (n) ? '+' : '*', n, title);
-			}
-		}
-		return true;
-	}
+            for(n = -1, w = cw; w; w = w->prev, ++n) ;
+            w = s->fw;
+            while(true) {
+                const char *title = windowTitle(w);
+                if (!c || ((!searchSameMode || sameMode(w, cw)) && (!*str || strcasestr(title, str))))
+                    eb_printf("%c%d: %s\n", (n) ? '+' : '*', n, title);
+                if(w == cw) break;
+                --n;
+                for(x = s->lw; x->prev != w; x = x->prev) ;
+                w = x;
+            }
+            w = s->fw2;
+            if(!w) return true;
+            while(true) {
+                const char *title = windowTitle(w);
+                if (!c || ((!searchSameMode || sameMode(w, cw)) && (!*str || strcasestr(title, str))))
+                    eb_printf("-%d: %s\n", ++n, title);
+                if(w == s->lw2) break;
+                for(x = s->lw2; x->prev != w; x = x->prev) ;
+                w = x;
+            }
+        } else {
+            for(n = 0, w = s->lw2; w != s->fw2; ++n, w = w->prev) ;
+            ++n;
+            for(w = s->lw2; w; --n, w = w->prev) {
+                const char *title = windowTitle(w);
+                if (!c || ((!searchSameMode || sameMode(w, cw)) && (!*str || strcasestr(title, str))))
+                    eb_printf("-%d: %s\n", n, title);
+            }
+            for(n = 0, w = cw; w; ++n, w = w->prev) {
+                const char *title = windowTitle(w);
+                if (!c || ((!searchSameMode || sameMode(w, cw)) && (!*str || strcasestr(title, str))))
+                    eb_printf("%c%d: %s\n", (n) ? '+' : '*', n, title);
+            }
+        }
+        return true;
+    }
 
-	if (stringEqual(line, "help")) {
-		return helpUtility();
-	}
+    if (stringEqual(line, "help")) {
+        return helpUtility();
+    }
 
-	if (stringEqual(line, "iu")) {
-		iuConvert ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(iuConvert + MSG_IUConvertOff);
-		return true;
-	}
+    if (stringEqual(line, "iu")) {
+        iuConvert ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(iuConvert + MSG_IUConvertOff);
+        return true;
+    }
 
-	if (stringEqual(line, "iu+") || stringEqual(line, "iu-")) {
-		iuConvert = (line[2] == '+');
-		if (helpMessagesOn)
-			i_puts(iuConvert + MSG_IUConvertOff);
-		return true;
-	}
+    if (stringEqual(line, "iu+") || stringEqual(line, "iu-")) {
+        iuConvert = (line[2] == '+');
+        if (helpMessagesOn)
+            i_puts(iuConvert + MSG_IUConvertOff);
+        return true;
+    }
 
-	if (stringEqual(line, "sr")) {
-		sendReferrer ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(sendReferrer + MSG_RefererOff);
-		return true;
-	}
+    if (stringEqual(line, "sr")) {
+        sendReferrer ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(sendReferrer + MSG_RefererOff);
+        return true;
+    }
 
-	if (stringEqual(line, "sr+") || stringEqual(line, "sr-")) {
-		sendReferrer = (line[2] == '+');
-		if (helpMessagesOn)
-			i_puts(sendReferrer + MSG_RefererOff);
-		return true;
-	}
+    if (stringEqual(line, "sr+") || stringEqual(line, "sr-")) {
+        sendReferrer = (line[2] == '+');
+        if (helpMessagesOn)
+            i_puts(sendReferrer + MSG_RefererOff);
+        return true;
+    }
 
-	if (stringEqual(line, "js")) {
+    if (stringEqual(line, "js")) {
 #if 0
-		if (blockJS) {
-			i_puts(MSG_JavaBlock);
-			return true;
-		}
+        if (blockJS) {
+            i_puts(MSG_JavaBlock);
+            return true;
+        }
 #endif
-		allowJS ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(allowJS + MSG_JavaOff);
-		return true;
-	}
+        allowJS ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(allowJS + MSG_JavaOff);
+        return true;
+    }
 
-	if (stringEqual(line, "js+") || stringEqual(line, "js-")) {
+    if (stringEqual(line, "js+") || stringEqual(line, "js-")) {
 #if 0
-		if (blockJS) {
-			i_puts(MSG_JavaBlock);
-			return true;
-		}
+        if (blockJS) {
+            i_puts(MSG_JavaBlock);
+            return true;
+        }
 #endif
-		allowJS = (line[2] == '+');
-		if (helpMessagesOn)
-			i_puts(allowJS + MSG_JavaOff);
-		return true;
-	}
+        allowJS = (line[2] == '+');
+        if (helpMessagesOn)
+            i_puts(allowJS + MSG_JavaOff);
+        return true;
+    }
 
-	if (stringEqual(line, "bd")) {
-		binaryDetect ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(binaryDetect + MSG_BinaryIgnore);
-		return true;
-	}
+    if (stringEqual(line, "bd")) {
+        binaryDetect ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(binaryDetect + MSG_BinaryIgnore);
+        return true;
+    }
 
-	if (stringEqual(line, "bd+") || stringEqual(line, "bd-")) {
-		binaryDetect = (line[2] == '+');
-		if (helpMessagesOn)
-			i_puts(binaryDetect + MSG_BinaryIgnore);
-		return true;
-	}
+    if (stringEqual(line, "bd+") || stringEqual(line, "bd-")) {
+        binaryDetect = (line[2] == '+');
+        if (helpMessagesOn)
+            i_puts(binaryDetect + MSG_BinaryIgnore);
+        return true;
+    }
 
-	if (stringEqual(line, "sss")) {
-		searchSameMode ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(searchSameMode + MSG_SearchSameModeOff);
-		return true;
-	}
+    if (stringEqual(line, "sss")) {
+        searchSameMode ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(searchSameMode + MSG_SearchSameModeOff);
+        return true;
+    }
 
-	if (stringEqual(line, "sss+") || stringEqual(line, "sss-")) {
-		searchSameMode = (line[3] == '+');
-		if (helpMessagesOn)
-			i_puts(searchSameMode + MSG_SearchSameModeOff);
-		return true;
-	}
+    if (stringEqual(line, "sss+") || stringEqual(line, "sss-")) {
+        searchSameMode = (line[3] == '+');
+        if (helpMessagesOn)
+            i_puts(searchSameMode + MSG_SearchSameModeOff);
+        return true;
+    }
 
-	if (stringEqual(line, "sw")) {
-		searchWrap ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(searchWrap + MSG_WrapOff);
-		return true;
-	}
+    if (stringEqual(line, "sw")) {
+        searchWrap ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(searchWrap + MSG_WrapOff);
+        return true;
+    }
 
-	if (stringEqual(line, "sw+") || stringEqual(line, "sw-")) {
-		searchWrap = (line[2] == '+');
-		if (helpMessagesOn)
-			i_puts(searchWrap + MSG_WrapOff);
-		return true;
-	}
+    if (stringEqual(line, "sw+") || stringEqual(line, "sw-")) {
+        searchWrap = (line[2] == '+');
+        if (helpMessagesOn)
+            i_puts(searchWrap + MSG_WrapOff);
+        return true;
+    }
 
-	if (stringEqual(line, "rl")) {
-		inputReadLine ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(inputReadLine + MSG_InputTTY);
-		return true;
-	}
+    if (stringEqual(line, "rl")) {
+        inputReadLine ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(inputReadLine + MSG_InputTTY);
+        return true;
+    }
 
-	if (stringEqual(line, "rl+") || stringEqual(line, "rl-")) {
-		inputReadLine = (line[2] == '+');
-		if (helpMessagesOn)
-			i_puts(inputReadLine + MSG_InputTTY);
-		return true;
-	}
+    if (stringEqual(line, "rl+") || stringEqual(line, "rl-")) {
+        inputReadLine = (line[2] == '+');
+        if (helpMessagesOn)
+            i_puts(inputReadLine + MSG_InputTTY);
+        return true;
+    }
 
-	if (stringEqual(line, "crs")) {
-		if (curlActive) {
-			mergeCookies();
-			eb_curl_global_cleanup();
-		}
-		curlActive = false;
-		return true;
-	}
+    if (stringEqual(line, "crs")) {
+        if (curlActive) {
+            mergeCookies();
+            eb_curl_global_cleanup();
+        }
+        curlActive = false;
+        return true;
+    }
 
-	if (stringEqual(line, "can")) {
-		curlAuthNegotiate ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(curlAuthNegotiate + MSG_CurlNoAuthNegotiate);
-		return true;
-	}
+    if (stringEqual(line, "can")) {
+        curlAuthNegotiate ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(curlAuthNegotiate + MSG_CurlNoAuthNegotiate);
+        return true;
+    }
 
-	if (stringEqual(line, "can+") || stringEqual(line, "can-")) {
-		curlAuthNegotiate = (line[3] == '+');
-		if (helpMessagesOn)
-			i_puts(curlAuthNegotiate + MSG_CurlNoAuthNegotiate);
-		return true;
-	}
+    if (stringEqual(line, "can+") || stringEqual(line, "can-")) {
+        curlAuthNegotiate = (line[3] == '+');
+        if (helpMessagesOn)
+            i_puts(curlAuthNegotiate + MSG_CurlNoAuthNegotiate);
+        return true;
+    }
 
-	if (stringEqual(line, "lna")) {
-		listNA ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(listNA + MSG_ListControl);
-		return true;
-	}
+    if (stringEqual(line, "lna")) {
+        listNA ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(listNA + MSG_ListControl);
+        return true;
+    }
 
-	if (stringEqual(line, "lna+") || stringEqual(line, "lna-")) {
-		listNA = (line[3] == '+');
-		if (helpMessagesOn)
-			i_puts(listNA + MSG_ListControl);
-		return true;
-	}
+    if (stringEqual(line, "lna+") || stringEqual(line, "lna-")) {
+        listNA = (line[3] == '+');
+        if (helpMessagesOn)
+            i_puts(listNA + MSG_ListControl);
+        return true;
+    }
 
-	if (stringEqual(line, "ftpa")) {
-		ftpActive ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(MSG_PassiveMode + ftpActive);
-		return true;
-	}
+    if (stringEqual(line, "ftpa")) {
+        ftpActive ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(MSG_PassiveMode + ftpActive);
+        return true;
+    }
 
-	if (stringEqual(line, "ftpa+") || stringEqual(line, "ftpa-")) {
-		ftpActive = (line[4] == '+');
-		if (helpMessagesOn)
-			i_puts(ftpActive + MSG_PassiveMode);
-		return true;
-	}
+    if (stringEqual(line, "ftpa+") || stringEqual(line, "ftpa-")) {
+        ftpActive = (line[4] == '+');
+        if (helpMessagesOn)
+            i_puts(ftpActive + MSG_PassiveMode);
+        return true;
+    }
 
-	if (line[0] == 'p' && line[1] == 'd' &&
-	    line[2] && strchr("qdc", line[2]) && !line[3]) {
-		showProgress = line[2];
-		if (helpMessagesOn || debugLevel >= 1) {
-			if (showProgress == 'q')
-				i_puts(MSG_ProgressQuiet);
-			if (showProgress == 'd')
-				i_puts(MSG_ProgressDots);
-			if (showProgress == 'c')
-				i_puts(MSG_ProgressCount);
-		}
-		return true;
-	}
+    if (line[0] == 'p' && line[1] == 'd' &&
+        line[2] && strchr("qdc", line[2]) && !line[3]) {
+        showProgress = line[2];
+        if (helpMessagesOn || debugLevel >= 1) {
+            if (showProgress == 'q')
+                i_puts(MSG_ProgressQuiet);
+            if (showProgress == 'd')
+                i_puts(MSG_ProgressDots);
+            if (showProgress == 'c')
+                i_puts(MSG_ProgressCount);
+        }
+        return true;
+    }
 
-	if (stringEqual(line, "vs")) {
-		verifyCertificates ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(verifyCertificates + MSG_CertifyOff);
-		return true;
-	}
+    if (stringEqual(line, "vs")) {
+        verifyCertificates ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(verifyCertificates + MSG_CertifyOff);
+        return true;
+    }
 
-	if (stringEqual(line, "vs+") || stringEqual(line, "vs-")) {
-		verifyCertificates = (line[2] == '+');
-		if (helpMessagesOn)
-			i_puts(verifyCertificates + MSG_CertifyOff);
-		return true;
-	}
+    if (stringEqual(line, "vs+") || stringEqual(line, "vs-")) {
+        verifyCertificates = (line[2] == '+');
+        if (helpMessagesOn)
+            i_puts(verifyCertificates + MSG_CertifyOff);
+        return true;
+    }
 
-	if (stringEqual(line, "local")) {
-		hlocal ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(hlocal + MSG_HttpInternet);
-		return true;
-	}
+    if (stringEqual(line, "local")) {
+        hlocal ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(hlocal + MSG_HttpInternet);
+        return true;
+    }
 
-	if (stringEqual(line, "local+") || stringEqual(line, "local-")) {
-		hlocal = (line[5] == '+');
-		if (helpMessagesOn)
-			i_puts(hlocal + MSG_HttpInternet);
-		return true;
-	}
+    if (stringEqual(line, "local+") || stringEqual(line, "local-")) {
+        hlocal = (line[5] == '+');
+        if (helpMessagesOn)
+            i_puts(hlocal + MSG_HttpInternet);
+        return true;
+    }
 
-	if (stringEqual(line, "dbcn")) {
-		debugClone ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(debugClone + MSG_DebugCloneOff);
-		return true;
-	}
+    if (stringEqual(line, "dbcn")) {
+        debugClone ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(debugClone + MSG_DebugCloneOff);
+        return true;
+    }
 
-	if (stringEqual(line, "dbcn+") || stringEqual(line, "dbcn-")) {
-		debugClone = (line[4] == '+');
-		if (helpMessagesOn)
-			i_puts(debugClone + MSG_DebugCloneOff);
-		return true;
-	}
+    if (stringEqual(line, "dbcn+") || stringEqual(line, "dbcn-")) {
+        debugClone = (line[4] == '+');
+        if (helpMessagesOn)
+            i_puts(debugClone + MSG_DebugCloneOff);
+        return true;
+    }
 
-	if (stringEqual(line, "dbcol")) {
-		debugCol ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(debugCol + MSG_DebugCollectionsOff);
-		return true;
-	}
+    if (stringEqual(line, "dbcol")) {
+        debugCol ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(debugCol + MSG_DebugCollectionsOff);
+        return true;
+    }
 
-	if (stringEqual(line, "dbcol+") || stringEqual(line, "dbcol-")) {
-		debugCol = (line[5] == '+');
-		if (helpMessagesOn)
-			i_puts(debugCol + MSG_DebugCollectionsOff);
-		return true;
-	}
+    if (stringEqual(line, "dbcol+") || stringEqual(line, "dbcol-")) {
+        debugCol = (line[5] == '+');
+        if (helpMessagesOn)
+            i_puts(debugCol + MSG_DebugCollectionsOff);
+        return true;
+    }
 
-	if (stringEqual(line, "dbev")) {
-		debugEvent ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(debugEvent + MSG_DebugEventOff);
-		return true;
-	}
+    if (stringEqual(line, "dbev")) {
+        debugEvent ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(debugEvent + MSG_DebugEventOff);
+        return true;
+    }
 
-	if (stringEqual(line, "dbev+") || stringEqual(line, "dbev-")) {
-		debugEvent = (line[4] == '+');
-		if (helpMessagesOn)
-			i_puts(debugEvent + MSG_DebugEventOff);
-		return true;
-	}
+    if (stringEqual(line, "dbev+") || stringEqual(line, "dbev-")) {
+        debugEvent = (line[4] == '+');
+        if (helpMessagesOn)
+            i_puts(debugEvent + MSG_DebugEventOff);
+        return true;
+    }
 
-	if (stringEqual(line, "dbprom")) {
-		debugPromise ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(debugPromise + MSG_DebugPromiseOff);
-		return true;
-	}
+    if (stringEqual(line, "dbprom")) {
+        debugPromise ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(debugPromise + MSG_DebugPromiseOff);
+        return true;
+    }
 
-	if (stringEqual(line, "dbprom+") || stringEqual(line, "dbprom-")) {
-		debugPromise = (line[6] == '+');
-		if (helpMessagesOn)
-			i_puts(debugPromise + MSG_DebugPromiseOff);
-		return true;
-	}
+    if (stringEqual(line, "dbprom+") || stringEqual(line, "dbprom-")) {
+        debugPromise = (line[6] == '+');
+        if (helpMessagesOn)
+            i_puts(debugPromise + MSG_DebugPromiseOff);
+        return true;
+    }
 
-	if (stringEqual(line, "dberr")) {
-		debugThrow ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(debugThrow + MSG_DebugThrowOff);
-		return true;
-	}
+    if (stringEqual(line, "dberr")) {
+        debugThrow ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(debugThrow + MSG_DebugThrowOff);
+        return true;
+    }
 
-	if (stringEqual(line, "dberr+") || stringEqual(line, "dberr-")) {
-		debugThrow = (line[5] == '+');
-		if (helpMessagesOn)
-			i_puts(debugThrow + MSG_DebugThrowOff);
-		return true;
-	}
+    if (stringEqual(line, "dberr+") || stringEqual(line, "dberr-")) {
+        debugThrow = (line[5] == '+');
+        if (helpMessagesOn)
+            i_puts(debugThrow + MSG_DebugThrowOff);
+        return true;
+    }
 
-	if (stringEqual(line, "dbcss")) {
-		debugCSS ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(debugCSS + MSG_DebugCSSOff);
-		if (debugCSS)
-			unlink(cssDebugFile);
-		return true;
-	}
+    if (stringEqual(line, "dbcss")) {
+        debugCSS ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(debugCSS + MSG_DebugCSSOff);
+        if (debugCSS)
+            unlink(cssDebugFile);
+        return true;
+    }
 
-	if (stringEqual(line, "dbcss+") || stringEqual(line, "dbcss-")) {
-		debugCSS = (line[5] == '+');
-		if (helpMessagesOn)
-			i_puts(debugCSS + MSG_DebugCSSOff);
-		if (debugCSS)
-			unlink(cssDebugFile);
-		return true;
-	}
+    if (stringEqual(line, "dbcss+") || stringEqual(line, "dbcss-")) {
+        debugCSS = (line[5] == '+');
+        if (helpMessagesOn)
+            i_puts(debugCSS + MSG_DebugCSSOff);
+        if (debugCSS)
+            unlink(cssDebugFile);
+        return true;
+    }
 
-	if (stringEqual(line, "dbtags")) {
-		debugScanner ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(debugScanner + MSG_DebugTagsOff);
-		return true;
-	}
+    if (stringEqual(line, "dbtags")) {
+        debugScanner ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(debugScanner + MSG_DebugTagsOff);
+        return true;
+    }
 
-	if (stringEqual(line, "dbtags+") || stringEqual(line, "dbtags-")) {
-		debugScanner = (line[6] == '+');
-		if (helpMessagesOn)
-			i_puts(debugScanner + MSG_DebugTagsOff);
-		return true;
-	}
+    if (stringEqual(line, "dbtags+") || stringEqual(line, "dbtags-")) {
+        debugScanner = (line[6] == '+');
+        if (helpMessagesOn)
+            i_puts(debugScanner + MSG_DebugTagsOff);
+        return true;
+    }
 
-	if (stringEqual(line, "pjobs")) {
-		do_pjobs ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(do_pjobs + MSG_PjobsOff);
-		return true;
-	}
+    if (stringEqual(line, "pjobs")) {
+        do_pjobs ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(do_pjobs + MSG_PjobsOff);
+        return true;
+    }
 
-	if (stringEqual(line, "pjobs+") || stringEqual(line, "pjobs-")) {
-		do_pjobs = (line[5] == '+');
-		if (helpMessagesOn)
-			i_puts(do_pjobs + MSG_PjobsOff);
-		return true;
-	}
+    if (stringEqual(line, "pjobs+") || stringEqual(line, "pjobs-")) {
+        do_pjobs = (line[5] == '+');
+        if (helpMessagesOn)
+            i_puts(do_pjobs + MSG_PjobsOff);
+        return true;
+    }
 
-	if (stringEqual(line, "dblay")) {
-		debugLayout ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(debugLayout + MSG_DebugLayOff);
-		return true;
-	}
+    if (stringEqual(line, "dblay")) {
+        debugLayout ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(debugLayout + MSG_DebugLayOff);
+        return true;
+    }
 
-	if (stringEqual(line, "dblay+") || stringEqual(line, "dblay-")) {
-		debugLayout = (line[5] == '+');
-		if (helpMessagesOn)
-			i_puts(debugLayout + MSG_DebugLayOff);
-		return true;
-	}
+    if (stringEqual(line, "dblay+") || stringEqual(line, "dblay-")) {
+        debugLayout = (line[5] == '+');
+        if (helpMessagesOn)
+            i_puts(debugLayout + MSG_DebugLayOff);
+        return true;
+    }
 
-	if (stringEqual(line, "demin")) {
-		demin ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(demin + MSG_DeminOff);
-		return true;
-	}
+    if (stringEqual(line, "demin")) {
+        demin ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(demin + MSG_DeminOff);
+        return true;
+    }
 
-	if (stringEqual(line, "demin+") || stringEqual(line, "demin-")) {
-		demin = (line[5] == '+');
-		if (helpMessagesOn)
-			i_puts(demin + MSG_DeminOff);
-		return true;
-	}
+    if (stringEqual(line, "demin+") || stringEqual(line, "demin-")) {
+        demin = (line[5] == '+');
+        if (helpMessagesOn)
+            i_puts(demin + MSG_DeminOff);
+        return true;
+    }
 
-	if (stringEqual(line, "trace")) {
-		uvw ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(uvw + MSG_DebugTraceOff);
-		return true;
-	}
+    if (stringEqual(line, "trace")) {
+        uvw ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(uvw + MSG_DebugTraceOff);
+        return true;
+    }
 
-	if (stringEqual(line, "trace+") || stringEqual(line, "trace-")) {
-		uvw = (line[5] == '+');
-		if (helpMessagesOn)
-			i_puts(uvw + MSG_DebugTraceOff);
-		return true;
-	}
+    if (stringEqual(line, "trace+") || stringEqual(line, "trace-")) {
+        uvw = (line[5] == '+');
+        if (helpMessagesOn)
+            i_puts(uvw + MSG_DebugTraceOff);
+        return true;
+    }
 
-	if (stringEqual(line, "tmlist")) {
-		showTimers();
-		return true;
-	}
+    if (stringEqual(line, "tmlist")) {
+        showTimers();
+        return true;
+    }
 
         if (stringEqual(line, "tmwait")) {
     int delay_sec, delay_ms;
@@ -6360,435 +6354,435 @@ et_go:
     return true;
 }
 
-	if (stringEqual(line, "timers")) {
-		gotimers ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(gotimers + MSG_TimersOff);
-		return true;
-	}
+    if (stringEqual(line, "timers")) {
+        gotimers ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(gotimers + MSG_TimersOff);
+        return true;
+    }
 
-	if (stringEqual(line, "timers+") || stringEqual(line, "timers-")) {
-		gotimers = (line[6] == '+');
-		if (helpMessagesOn)
-			i_puts(gotimers + MSG_TimersOff);
-		return true;
-	}
+    if (stringEqual(line, "timers+") || stringEqual(line, "timers-")) {
+        gotimers = (line[6] == '+');
+        if (helpMessagesOn)
+            i_puts(gotimers + MSG_TimersOff);
+        return true;
+    }
 
-	if(!strncmp(line, "selsep=", 7)) {
-		char oldsep = selsep;
-		if(!(c = line[7])) {
-			eb_printf("%c\n", selsep);
-			return true;
-		}
-		if(c == selsep)
-			return true;
-		if(charInOptions(c)) {
-			setError(MSG_OptionC, c);
-			return 0;
-		}
-		if(charInFiles(c)) {
-			setError(MSG_FileC, c);
-			return 0;
-		}
-		selsep = c;
+    if(!strncmp(line, "selsep=", 7)) {
+        char oldsep = selsep;
+        if(!(c = line[7])) {
+            eb_printf("%c\n", selsep);
+            return true;
+        }
+        if(c == selsep)
+            return true;
+        if(charInOptions(c)) {
+            setError(MSG_OptionC, c);
+            return 0;
+        }
+        if(charInFiles(c)) {
+            setError(MSG_FileC, c);
+            return 0;
+        }
+        selsep = c;
 // FixFiles has to be first, as FixOptions runs rerender
-		charFixFiles(oldsep);
-		charFixOptions(oldsep);
-		return true;
-	}
+        charFixFiles(oldsep);
+        charFixOptions(oldsep);
+        return true;
+    }
 
-	if(!strncmp(line, "speed=", 6)) {
-		char *t;
-		if(!(c = line[6])) {
-			eb_printf("%d\n", timerspeed);
-			return true;
-		}
-		n = strtol(line + 6, &t, 10);
-		if(n < 0 || *t)
-			return 2; // wrong syntax
-		timerspeed = n ? n : 1;
-		return true;
-	}
+    if(!strncmp(line, "speed=", 6)) {
+        char *t;
+        if(!(c = line[6])) {
+            eb_printf("%d\n", timerspeed);
+            return true;
+        }
+        n = strtol(line + 6, &t, 10);
+        if(n < 0 || *t)
+            return 2; // wrong syntax
+        timerspeed = n ? n : 1;
+        return true;
+    }
 
-	if (stringEqual(line, "hf")) {
-		showHiddenFiles ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(showHiddenFiles + MSG_HiddenOff);
-		return true;
-	}
+    if (stringEqual(line, "hf")) {
+        showHiddenFiles ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(showHiddenFiles + MSG_HiddenOff);
+        return true;
+    }
 
-	if (stringEqual(line, "hf+") || stringEqual(line, "hf-")) {
-		showHiddenFiles = (line[2] == '+');
-		if (helpMessagesOn)
-			i_puts(showHiddenFiles + MSG_HiddenOff);
-		return true;
-	}
+    if (stringEqual(line, "hf+") || stringEqual(line, "hf-")) {
+        showHiddenFiles = (line[2] == '+');
+        if (helpMessagesOn)
+            i_puts(showHiddenFiles + MSG_HiddenOff);
+        return true;
+    }
 
-	if (stringEqual(line, "attimg")) {
-		attimg ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(attimg + MSG_AttImgOff);
-		rerender(0);
-		return true;
-	}
+    if (stringEqual(line, "attimg")) {
+        attimg ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(attimg + MSG_AttImgOff);
+        rerender(0);
+        return true;
+    }
 
-	if (stringEqual(line, "attimg+") || stringEqual(line, "attimg-")) {
-		attimg = (line[6] == '+');
-		if (helpMessagesOn)
-			i_puts(attimg + MSG_AttImgOff);
-		rerender(0);
-		return true;
-	}
+    if (stringEqual(line, "attimg+") || stringEqual(line, "attimg-")) {
+        attimg = (line[6] == '+');
+        if (helpMessagesOn)
+            i_puts(attimg + MSG_AttImgOff);
+        rerender(0);
+        return true;
+    }
 
-	if (stringEqual(line, "showchan")) {
-		if(!cw->irciMode) { setError(MSG_NotIrcSend); return false; }
-		cw->showchan ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(cw->showchan + MSG_ShowChanOff);
-		return true;
-	}
+    if (stringEqual(line, "showchan")) {
+        if(!cw->irciMode) { setError(MSG_NotIrcSend); return false; }
+        cw->showchan ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(cw->showchan + MSG_ShowChanOff);
+        return true;
+    }
 
-	if (stringEqual(line, "showchan+") || stringEqual(line, "showchan-")) {
-		if(!cw->irciMode) { setError(MSG_NotIrcSend); return false; }
-		cw->showchan = (line[8] == '+');
-		if (helpMessagesOn)
-			i_puts(cw->showchan + MSG_ShowChanOff);
-		return true;
-	}
+    if (stringEqual(line, "showchan+") || stringEqual(line, "showchan-")) {
+        if(!cw->irciMode) { setError(MSG_NotIrcSend); return false; }
+        cw->showchan = (line[8] == '+');
+        if (helpMessagesOn)
+            i_puts(cw->showchan + MSG_ShowChanOff);
+        return true;
+    }
 
-	if (stringEqual(line, "showall")) {
-		showall ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(showall + MSG_HoverOff);
-		if (cw->browseMode)
-			rerender(0);
-		return true;
-	}
+    if (stringEqual(line, "showall")) {
+        showall ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(showall + MSG_HoverOff);
+        if (cw->browseMode)
+            rerender(0);
+        return true;
+    }
 
-	if (stringEqual(line, "showall+") || stringEqual(line, "showall-")) {
-		showall = (line[7] == '+');
-		if (helpMessagesOn)
-			i_puts(showall + MSG_HoverOff);
-		if (cw->browseMode && isJSAlive)
-			rerender(0);
-		return true;
-	}
+    if (stringEqual(line, "showall+") || stringEqual(line, "showall-")) {
+        showall = (line[7] == '+');
+        if (helpMessagesOn)
+            i_puts(showall + MSG_HoverOff);
+        if (cw->browseMode && isJSAlive)
+            rerender(0);
+        return true;
+    }
 
-	if (stringEqual(line, "textd")) {
-		textd ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(textd + MSG_TextDecOff);
-		if (cw->browseMode)
-			rerender(0);
-		return true;
-	}
+    if (stringEqual(line, "textd")) {
+        textd ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(textd + MSG_TextDecOff);
+        if (cw->browseMode)
+            rerender(0);
+        return true;
+    }
 
-	if (stringEqual(line, "textd+") || stringEqual(line, "textd-")) {
-		textd = (line[5] == '+');
-		if (helpMessagesOn)
-			i_puts(textd + MSG_TextDecOff);
-		if (cw->browseMode)
-			rerender(0);
-		return true;
-	}
+    if (stringEqual(line, "textd+") || stringEqual(line, "textd-")) {
+        textd = (line[5] == '+');
+        if (helpMessagesOn)
+            i_puts(textd + MSG_TextDecOff);
+        if (cw->browseMode)
+            rerender(0);
+        return true;
+    }
 
-	if (stringEqual(line, "colors")) {
-		doColors ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(doColors + MSG_ColorOff);
-		if (cw->browseMode && isJSAlive)
-			rerender(0);
-		return true;
-	}
+    if (stringEqual(line, "colors")) {
+        doColors ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(doColors + MSG_ColorOff);
+        if (cw->browseMode && isJSAlive)
+            rerender(0);
+        return true;
+    }
 
-	if (stringEqual(line, "colors+") || stringEqual(line, "colors-")) {
-		doColors = (line[6] == '+');
-		if (helpMessagesOn)
-			i_puts(doColors + MSG_ColorOff);
-		if (cw->browseMode && isJSAlive)
-			rerender(0);
-		return true;
-	}
+    if (stringEqual(line, "colors+") || stringEqual(line, "colors-")) {
+        doColors = (line[6] == '+');
+        if (helpMessagesOn)
+            i_puts(doColors + MSG_ColorOff);
+        if (cw->browseMode && isJSAlive)
+            rerender(0);
+        return true;
+    }
 
-	if (stringEqual(line, "su8")) {
-		re_utf8 ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(re_utf8 + MSG_ReAscii);
-		return true;
-	}
+    if (stringEqual(line, "su8")) {
+        re_utf8 ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(re_utf8 + MSG_ReAscii);
+        return true;
+    }
 
-	if (stringEqual(line, "su8+") || stringEqual(line, "su8-")) {
-		re_utf8 = (line[3] == '+');
-		if (helpMessagesOn)
-			i_puts(re_utf8 + MSG_ReAscii);
-		return true;
-	}
+    if (stringEqual(line, "su8+") || stringEqual(line, "su8-")) {
+        re_utf8 = (line[3] == '+');
+        if (helpMessagesOn)
+            i_puts(re_utf8 + MSG_ReAscii);
+        return true;
+    }
 
-	if (!strncmp(line, "ds=", 3)) {
-		if (!line[3]) {
-			if (!dbarea || !*dbarea) {
-				i_puts(MSG_DBNoSource);
-			} else {
-				eb_printf("%s", dbarea);
-				if (dblogin)
-					eb_printf(",%s", dblogin);
-				if (dbpw)
-					eb_printf(",%s", dbpw);
-				nl();
-			}
-			return true;
-		}
-		dbClose();
-		setDataSource(cloneString(line + 3));
-		return true;
-	}
+    if (!strncmp(line, "ds=", 3)) {
+        if (!line[3]) {
+            if (!dbarea || !*dbarea) {
+                i_puts(MSG_DBNoSource);
+            } else {
+                eb_printf("%s", dbarea);
+                if (dblogin)
+                    eb_printf(",%s", dblogin);
+                if (dbpw)
+                    eb_printf(",%s", dbpw);
+                nl();
+            }
+            return true;
+        }
+        dbClose();
+        setDataSource(cloneString(line + 3));
+        return true;
+    }
 
-	if (stringEqual(line, "fbc")) {
-		fetchBlobColumns ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(MSG_FetchBlobOff + fetchBlobColumns);
-		return true;
-	}
+    if (stringEqual(line, "fbc")) {
+        fetchBlobColumns ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(MSG_FetchBlobOff + fetchBlobColumns);
+        return true;
+    }
 
-	if (stringEqual(line, "fbc+") || stringEqual(line, "fbc-")) {
-		fetchBlobColumns = (line[3] == '+');
-		if (helpMessagesOn)
-			i_puts(fetchBlobColumns + MSG_FetchBlobOff);
-		return true;
-	}
+    if (stringEqual(line, "fbc+") || stringEqual(line, "fbc-")) {
+        fetchBlobColumns = (line[3] == '+');
+        if (helpMessagesOn)
+            i_puts(fetchBlobColumns + MSG_FetchBlobOff);
+        return true;
+    }
 
-	if (stringEqual(line, "endm")) {
-		endMarks ^= 1;
-		if (helpMessagesOn || debugLevel >= 1)
-			i_puts(endMarks + MSG_MarkersOff);
-		return true;
-	}
+    if (stringEqual(line, "endm")) {
+        endMarks ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(endMarks + MSG_MarkersOff);
+        return true;
+    }
 
-	if (stringEqual(line, "endm+") || stringEqual(line, "endm-")) {
-		endMarks = (line[4] == '+');
-		if (helpMessagesOn)
-			i_puts(endMarks + MSG_MarkersOff);
-		return true;
-	}
+    if (stringEqual(line, "endm+") || stringEqual(line, "endm-")) {
+        endMarks = (line[4] == '+');
+        if (helpMessagesOn)
+            i_puts(endMarks + MSG_MarkersOff);
+        return true;
+    }
 
-	if (stringEqual(line, "enew") || stringEqual(line, "etmp")) {
-		bool etmp = (line[1] == 't');
-		Window *w;
-		cmd = 'e';
-		if(cw->irciMode | cw->ircoMode) {
-			setError(MSG_IrcCommand, 'e');
-			return false;
-		}
-		if(!etmp && !cxQuit( context, 0))
-			return false;
-		undoCompare();
-		cw->undoable = false;
-		undoSpecialClear();
-		freeWindows(context, false);
-		w = createWindow();
-		w->sno = context;
-		w->prev = cw;
-		cw = w;
-		if(etmp) cw->quitMode = true;
-		selfFrame();
-		cs->lw = w;
-		debugPrint(1, "0");
-		return true;
-	}
+    if (stringEqual(line, "enew") || stringEqual(line, "etmp")) {
+        bool etmp = (line[1] == 't');
+        Window *w;
+        cmd = 'e';
+        if(cw->irciMode | cw->ircoMode) {
+            setError(MSG_IrcCommand, 'e');
+            return false;
+        }
+        if(!etmp && !cxQuit( context, 0))
+            return false;
+        undoCompare();
+        cw->undoable = false;
+        undoSpecialClear();
+        freeWindows(context, false);
+        w = createWindow();
+        w->sno = context;
+        w->prev = cw;
+        cw = w;
+        if(etmp) cw->quitMode = true;
+        selfFrame();
+        cs->lw = w;
+        debugPrint(1, "0");
+        return true;
+    }
 
-	if(!strncmp(line, "irc", 3) && (isspaceByte(line[3]) || line[3] == 0)) {
-		cmd = 'e';
-		char *p = cloneString(line);
-		rc = ircSetup(p);
-		nzFree(p);
-		if(rc && cw->ircoMode) {
-			cw->changeMode = false;
-		}
-		return rc;
-	}
+    if(!strncmp(line, "irc", 3) && (isspaceByte(line[3]) || line[3] == 0)) {
+        cmd = 'e';
+        char *p = cloneString(line);
+        rc = ircSetup(p);
+        nzFree(p);
+        if(rc && cw->ircoMode) {
+            cw->changeMode = false;
+        }
+        return rc;
+    }
 
-	if(!strncmp(line, "imap", 4) && (isspaceByte(line[4]) || line[4] == 0)) {
-		cmd = 'e';
-		if(!cxQuit(context, 0)) return false;
-		undoCompare();
-		cw->changeMode = cw->undoable = false;
-		char *p = cloneString(line);
-		rc = imapBuffer(p);
-		nzFree(p);
-		return rc;
-	}
+    if(!strncmp(line, "imap", 4) && (isspaceByte(line[4]) || line[4] == 0)) {
+        cmd = 'e';
+        if(!cxQuit(context, 0)) return false;
+        undoCompare();
+        cw->changeMode = cw->undoable = false;
+        char *p = cloneString(line);
+        rc = imapBuffer(p);
+        nzFree(p);
+        return rc;
+    }
 
 no_action:
-	*runThis = line;
-	return 2;		/* no change */
+    *runThis = line;
+    return 2; // no change
 }
 
 // these two-letter commands are ok to run even in a g/re/ construct.
 // There aren't very many of them.
 static int twoLetterG(const char *line)
 {
-	if (stringEqual(line, "bw") || !strncmp(line, "bw/", 3) || !strncmp(line, "bw?", 3) || (!strncmp(line, "bw", 2) && isdigitByte(line[2]))) {
-		Window *lw;
-		if(!line[2]) lw = cw;
-		else if(line[2] == '/' || line[2] == '?') {
-			const int n = sessionByText(line + 3, line[2] == '/' ? 1 : -1);
-			if(!n) return false;
-			lw = sessionList[n].lw;
-		} else {
-			const char *s = line + 2;
-			const int n = strtol(s, (char **)&s, 10);
-			if(*s) {
-				setError(MSG_BWAfter);
-				return false;
-			}
-			if (!cxCompare(n))
-				return false;
-			if (!cxActive(n, true))
-				return false;
-			lw = sessionList[n].lw;
-		}
-		lw->changeMode = false;
-		lw->quitMode = true;
-		return true;
-	}
+    if (stringEqual(line, "bw") || !strncmp(line, "bw/", 3) || !strncmp(line, "bw?", 3) || (!strncmp(line, "bw", 2) && isdigitByte(line[2]))) {
+        Window *lw;
+        if(!line[2]) lw = cw;
+        else if(line[2] == '/' || line[2] == '?') {
+            const int n = sessionByText(line + 3, line[2] == '/' ? 1 : -1);
+            if(!n) return false;
+            lw = sessionList[n].lw;
+        } else {
+            const char *s = line + 2;
+            const int n = strtol(s, (char **)&s, 10);
+            if(*s) {
+                setError(MSG_BWAfter);
+                return false;
+            }
+            if (!cxCompare(n))
+                return false;
+            if (!cxActive(n, true))
+                return false;
+            lw = sessionList[n].lw;
+        }
+        lw->changeMode = false;
+        lw->quitMode = true;
+        return true;
+    }
 
-	if(!strncmp(line, "dld=", 4)) {
-		nzFree(down_prefile);
-		if(line[4]) down_prefile = cloneString(line+4);
-		else down_prefile = 0;
-		return true;
-	}
+    if(!strncmp(line, "dld=", 4)) {
+        nzFree(down_prefile);
+        if(line[4]) down_prefile = cloneString(line+4);
+        else down_prefile = 0;
+        return true;
+    }
 
-	if(!strncmp(line, "var ", 4))
-		return varCommand(line + 4);
+    if(!strncmp(line, "var ", 4))
+        return varCommand(line + 4);
 
-	if (line[0] == 'l' && line[1] == 's') {
-		char lsmode[12];
-		bool setmode = false;
-		char *file, *path, *t;
-		const char *s = line + 2;
-		skipWhite(&s);
-		if (*s == '=') {
-			setmode = true;
-			++s;
-			skipWhite(&s);
-		} else if (stringEqual(s, "X")) {
-			if (!cw->dirMode) {
-				setError(MSG_NoDir);
-				return globalMode = false;
-			} else
-				return true;
-		}
-		if (!lsattrChars(s, lsmode)) {
-			setError(MSG_LSBadChar);
-			return globalMode = false;
-		}
-		if (setmode) {
-			strcpy(lsformat, lsmode);
-			return true;
-		}
+    if (line[0] == 'l' && line[1] == 's') {
+        char lsmode[12];
+        bool setmode = false;
+        char *file, *path, *t;
+        const char *s = line + 2;
+        skipWhite(&s);
+        if (*s == '=') {
+            setmode = true;
+            ++s;
+            skipWhite(&s);
+        } else if (stringEqual(s, "X")) {
+            if (!cw->dirMode) {
+                setError(MSG_NoDir);
+                return globalMode = false;
+            } else
+                return true;
+        }
+        if (!lsattrChars(s, lsmode)) {
+            setError(MSG_LSBadChar);
+            return globalMode = false;
+        }
+        if (setmode) {
+            strcpy(lsformat, lsmode);
+            return true;
+        }
 // default ls mode is size time
-		if (!lsmode[0])
-			strcpy(lsmode, (cw->imapMode2 | cw->imapMode3) ? "fdz" : "st");
-		if(cw->ircoMode1 && lsmode[1] == 0 &&
-		(*lsmode == 't' || *lsmode == 'c')) {
-			if (cw->dot == 0) {
-				setError(MSG_AtLine0);
-				return false;
-			}
-			const char *timestring = cw->r_map ? (char*)cw->r_map[cw->dot].text : 0;
-			if(!timestring) {
-				puts("-");
-			} else if(*lsmode == 't') {
+        if (!lsmode[0])
+            strcpy(lsmode, (cw->imapMode2 | cw->imapMode3) ? "fdz" : "st");
+        if(cw->ircoMode1 && lsmode[1] == 0 &&
+        (*lsmode == 't' || *lsmode == 'c')) {
+            if (cw->dot == 0) {
+                setError(MSG_AtLine0);
+                return false;
+            }
+            const char *timestring = cw->r_map ? (char*)cw->r_map[cw->dot].text : 0;
+            if(!timestring) {
+                puts("-");
+            } else if(*lsmode == 't') {
 // modifying a const string but I'll put it back
-				char *t2 = (char *)strchr(timestring, '^');
-				if(t2) *t2 = 0;
-				puts(timestring);
-				if(t2) *t2 = '^';
-			} else {
-				const char *t2 = strchr(timestring, '^');
-				puts(t2 ? t2+1 : "-");
-			}
-			return true;
-		}
-		if(cw->imapMode2 | cw->imapMode3) {
-			if (cw->dot == 0) {
-				setError(MSG_AtLine0);
-				return false;
-			}
-			lsEnvelope(lsmode);
-			return true;
-		}
-		if (cw->dirMode) {
-			if (cw->dot == 0) {
-				setError(MSG_AtLine0);
-				return false;
-			}
-			file = (char *)fetchLine(cw->dot, -1);
-			t = strchr(file, '\n');
-			if (!t) i_printfExit(MSG_NoNlOnDir, file);
-			*t = 0;
-			path = makeAbsPath(file);
-			*t = '\n';	// put it back
-		} else {
-			path = cloneString(cf->fileName);
-			debrowseFilename(path, true);
-			path = skipFileProtocol(path);
-			if(!path || !*path) {
-				setError(MSG_MissingFileName);
-				return false;
-			}
-		}
-		if (path && fileTypeByName(path, 1))
-			t = lsattr(path, lsmode);
-		else
-			t = emptyString;
-		if (*t)
-			eb_puts(t);
-		else
-			i_puts(MSG_Inaccess);
-		return true;
-	}
+                char *t2 = (char *)strchr(timestring, '^');
+                if(t2) *t2 = 0;
+                puts(timestring);
+                if(t2) *t2 = '^';
+            } else {
+                const char *t2 = strchr(timestring, '^');
+                puts(t2 ? t2+1 : "-");
+            }
+            return true;
+        }
+        if(cw->imapMode2 | cw->imapMode3) {
+            if (cw->dot == 0) {
+                setError(MSG_AtLine0);
+                return false;
+            }
+            lsEnvelope(lsmode);
+            return true;
+        }
+        if (cw->dirMode) {
+            if (cw->dot == 0) {
+                setError(MSG_AtLine0);
+                return false;
+            }
+            file = (char *)fetchLine(cw->dot, -1);
+            t = strchr(file, '\n');
+            if (!t) i_printfExit(MSG_NoNlOnDir, file);
+            *t = 0;
+            path = makeAbsPath(file);
+            *t = '\n'; // put it back
+        } else {
+            path = cloneString(cf->fileName);
+            debrowseFilename(path, true);
+            path = skipFileProtocol(path);
+            if(!path || !*path) {
+                setError(MSG_MissingFileName);
+                return false;
+            }
+        }
+        if (path && fileTypeByName(path, 1))
+            t = lsattr(path, lsmode);
+        else
+            t = emptyString;
+        if (*t)
+            eb_puts(t);
+        else
+            i_puts(MSG_Inaccess);
+        return true;
+    }
 
-	if (line[0] == 'd' && line[1] == 'b' && isdigitByte(line[2])
-	    && !line[3]) {
-		if(!inInitFunction)
-			debugLevel = line[2] - '0';
-		return true;
-	}
+    if (line[0] == 'd' && line[1] == 'b' && isdigitByte(line[2])
+        && !line[3]) {
+        if(!inInitFunction)
+            debugLevel = line[2] - '0';
+        return true;
+    }
 
-	if(stringEqual(line, "db")) {
-		eb_printf("%d\n", debugLevel);
-		return true;
-	}
+    if(stringEqual(line, "db")) {
+        eb_printf("%d\n", debugLevel);
+        return true;
+    }
 
-	if (stringEqual(line, "H")) {
-		if (helpMessagesOn ^= 1)
-			if (debugLevel >= 1)
-				i_puts(MSG_HelpOn);
-		return true;
-	}
+    if (stringEqual(line, "H")) {
+        if (helpMessagesOn ^= 1)
+            if (debugLevel >= 1)
+                i_puts(MSG_HelpOn);
+        return true;
+    }
 
-	if (stringEqual(line, "H+") || stringEqual(line, "H-")) {
-		helpMessagesOn = (line[1] == '+');
-		if (helpMessagesOn && debugLevel >= 1)
-			i_puts(MSG_HelpOn);
-		return true;
-	}
+    if (stringEqual(line, "H+") || stringEqual(line, "H-")) {
+        helpMessagesOn = (line[1] == '+');
+        if (helpMessagesOn && debugLevel >= 1)
+            i_puts(MSG_HelpOn);
+        return true;
+    }
 
-	if(!strncmp(line, "P ", 2) || !strncmp(line, "P=", 2)) {
-		nzFree(promptString);
-		if(line[2]) promptString = cloneString(line+2);
-		else promptString = 0;
-		return true;
-	}
+    if(!strncmp(line, "P ", 2) || !strncmp(line, "P=", 2)) {
+        nzFree(promptString);
+        if(line[2]) promptString = cloneString(line+2);
+        else promptString = 0;
+        return true;
+    }
 
-	if(!strncmp(line, "p ", 2)) {
-		eb_puts(line + 2);
-		return true;
-	}
+    if(!strncmp(line, "p ", 2)) {
+        eb_puts(line + 2);
+        return true;
+    }
 
-	return 2;		/* no change */
+    return 2; // no change
 }
 
 static char *showLinks(void)
