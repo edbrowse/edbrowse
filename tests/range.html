@@ -209,6 +209,10 @@ r2.insertNode(document.createTextNode("elephant"));
 check((form.firstChild.nodeType == 3), "leading text");
 r2.setStart(form.firstChild, 3);
 r2.insertNode(document.createTextNode("glass"));
+check((r2.startOffset == 3), "offset advances to 3");
+// in chrome, end changes from form.d to form offset 6
+// I don't know if that's specifically because of split text,
+// or if we should do the same.
 check((form.firstChild.data == "ele"), "ele");
 check((form.firstChild.nextSibling.data == "glass"), "glass");
 check((form.firstChild.nextSibling.nextSibling.data == "phant"), "phant");

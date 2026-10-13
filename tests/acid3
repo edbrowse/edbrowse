@@ -223,7 +223,7 @@
     });
   }
   var kungFuDeathGrip = null; // used to hold things from test to test
-// @` skipped: 8 11 12 13 65
+// @` skipped: 8 11 13 65
 // I run 16 but it's meaningless, has no semantics in edbrowse.
   var tests = [ // start of tests
 
@@ -671,7 +671,45 @@ of the original, so this line, looking for exact equality on t3, won't run.
       return 1;
     },
     function() { return 1; }, // test 11
-    function() { return 1; }, // test 12
+    function () {
+      // test 12: Ranges under mutations: insertion into text nodes
+      var doc = getTestDocument();
+      var p = doc.createElement('p');
+      var t1 = doc.createTextNode('12345');
+      p.appendChild(t1);
+      var t2 = doc.createTextNode('ABCDE');
+      p.appendChild(t2);
+      doc.body.appendChild(p);
+      var r = doc.createRange();
+      r.setStart(p.firstChild, 2);
+      r.setEnd(p.firstChild, 3);
+      assert(!r.collapsed, "collapsed is wrong at start");
+      assertEquals(r.commonAncestorContainer, p.firstChild, "commonAncestorContainer is wrong at start");
+      assertEquals(r.startContainer, p.firstChild, "startContainer is wrong at start");
+      assertEquals(r.startOffset, 2, "startOffset is wrong at start");
+      assertEquals(r.endContainer, p.firstChild, "endContainer is wrong at start");
+      assertEquals(r.endOffset, 3, "endOffset is wrong at start");
+      assertEquals(r.toString(), "3", "range in text node stringification failed");
+      r.insertNode(p.lastChild);
+      assertEquals(p.childNodes.length, 3, "insertion of node made wrong number of child nodes");
+      assertEquals(p.childNodes[0], t1, "unexpected first text node");
+      assertEquals(p.childNodes[0].data, "12", "unexpected first text node contents");
+      assertEquals(p.childNodes[1], t2, "unexpected second text node");
+      assertEquals(p.childNodes[1].data, "ABCDE", "unexpected second text node");
+      assertEquals(p.childNodes[2].data, "345", "unexpected third text node contents");
+      // The spec is very vague about what exactly should be in the range afterwards:
+      // the insertion results in a splitText(), which it says is equivalent to a truncation
+      // followed by an insertion, but it doesn't say what to do when you have a truncation,
+      // so we don't know where either the start or the end boundary points end up.
+      // The spec really should be clarified for how to handle splitText() and
+      // text node truncation in general
+      // The only thing that seems very clear is that the inserted text node should
+      // be in the range, and it has to be at the start, since insertion always puts it at
+      // the start.
+      assert(!r.collapsed, "collapsed is wrong after insertion");
+      assert(r.toString().match(/^ABCDE/), "range didn't start with the expected text; range stringified to '" + r.toString() + "'");
+      return 1;
+    },
     function() { return 1; }, // test 13
 
     function () {
@@ -2415,7 +2453,7 @@ frames[1].contentDocument;
       var elapsedTime = ((endTime - startTime) - (delay * tests.length)) / 1000;
       log += "Total elapsed time: " + elapsedTime.toFixed(2) + "s";
       if (errors == 0)
-        log += "\nNo JS errors and no timing issues, but 5 tests were skipped.";
+        log += "\nNo JS errors and no timing issues, but 4 tests were skipped.";
   alert(log);
     }
   }

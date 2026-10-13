@@ -6423,15 +6423,14 @@ collapse(side) {
         }
         if(type == 3) { // text
             const v = y.data, o = this.so;
-            if(v.length <= o) { y.after(n); this.unnormal$ize(); return; }
+            if(v.length <= o || !o) { y.after(n); this.unnormal$ize(); return; }
             if(!p) { this.unnormal$ize(); return; }
-            if(o) { // split off the first piece
-                const t = document.createTextNode(v.substr(0, o));
-                y.before(t);
-                y.data = v.substr(o);
-                this.start1 = 0;
-            }
-            y.before(n);
+            const t = document.createTextNode(v.substr(o));
+            y.after(t);
+            y.data = v.substr(0, o);
+            y.after(n);
+            this.start1 = o;
+            if(this.end0 == y) this.end0 = t, this.end1 -= o;
             this.unnormal$ize();
             return;
         }

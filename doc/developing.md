@@ -109,7 +109,7 @@ q
 EOF
 ```
 
-The result on line 3 should be `69/69`. The notice that 5 tests were
+The result on line 3 should be `69/69`. The notice that 4 tests were
 skipped is expected. See [regression.md](regression.md) for the test's
 coverage and limitations.
 
