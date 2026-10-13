@@ -6386,11 +6386,18 @@ collapse(side) {
             for(t = z.previousSibling; t; t = z.previousSibling)
                 t.remove();
         }
-        if(i) {
-            if((n1.nodeType == 3 || n1.nodeType == 8) && o1 > 0)
-                n1.data = n1.data.substr(0, o1);
+        if(i && (n1.nodeType == 3 || n1.nodeType == 8) && o1 > 0)
+            n1.data = n1.data.substr(0, o1);
+// delete the start node if it is there by offset
+        if(n1 != this.start0) n1.remove();
+        if(n2 == this.end$mark) {
+// special case deleting up to an end marker, which isn't really there.
+// Collapse back to start.
+            this.end0 = this.start0, this.end1 = this.start1;
+        } else {
+// collapse to the end node, which is really there.
+                    this.start0 = this.end0, this.start1 = this.end1;
         }
-        this.start0 = this.end0;
         if(j) {
             if((n2.nodeType == 3 || n2.nodeType == 8) && o2 > 0)
                 n2.data = n2.data.substr(o2), this.start1 = this.end1 = 0;

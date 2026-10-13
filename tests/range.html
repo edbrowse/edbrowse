@@ -238,6 +238,16 @@ cc = r2.cloneContents();
 check((cc.childNodes.length == 6), "phant limit length 6");
 check((cc.lastChild.type == 'submit'), "phant limit type submit");
 
+// delete up to the end marker, not the end tag.
+r2.deleteContents();
+check((r2.startContainer == form), "delete marker start form");
+check((r2.startOffset == 2), "delete marker start 2");
+check((r2.endContainer == form), "delete marker end form");
+check((r2.endOffset == 2), "delete marker end 2");
+check(r2.collapsed, "delete marker collapsed");
+check((form.childNodes.length == 2), "delete marker form leaves 2");
+check((form.elements.length == 0), "delete marker form elements gone");
+
 show.textContent = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>
