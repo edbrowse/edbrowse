@@ -223,7 +223,7 @@
     });
   }
   var kungFuDeathGrip = null; // used to hold things from test to test
-// @` skipped: 8 10 11 12 13 65
+// @` skipped: 8 11 12 13 65
 // I run 16 but it's meaningless, has no semantics in edbrowse.
   var tests = [ // start of tests
 
@@ -649,7 +649,27 @@ of the original, so this line, looking for exact equality on t3, won't run.
       assert(f.childNodes[1] != p, "failure 15");
       return 1;
     },
-    function() { return 1; }, // test 10
+    function () {
+      // test 10: Ranges and Attribute Nodes
+// COMMENTED OUT FOR 2011 UPDATE - turns out instead of dropping Attr entirely, as Acid3 originally expected, the API is just being refactored
+//      var e = document.getElementById('result');
+//      if (!e.getAttributeNode)
+//        return 1; // support for attribute nodes is optional in Acid3, because attribute nodes might be removed from DOM Core in the future.
+//      // however, if they're supported, they'd better work:
+//      var a = e.getAttributeNode('id');
+//      var r = document.createRange();
+//      r.selectNodeContents(a);
+//      assertEquals(r.toString(), "result", "toString() didn't work for attribute node");
+//      var t = a.firstChild;
+//      var f = r.extractContents();
+//      assertEquals(f.childNodes.length, 1, "extracted contents were the wrong length");
+//      assertEquals(f.childNodes[0], t, "extracted contents were the wrong node");
+//      assertEquals(t.textContent, 'result', "extracted contents didn't match old attribute value");
+//      assertEquals(r.toString(), '', "extracting contents didn't empty attribute value; instead equals '" + r.toString() + "'");
+//      assertEquals(e.getAttribute('id'), '', "extracting contents didn't change 'id' attribute to empty string");
+//      e.id = 'result';
+      return 1;
+    },
     function() { return 1; }, // test 11
     function() { return 1; }, // test 12
     function() { return 1; }, // test 13
@@ -2395,7 +2415,7 @@ frames[1].contentDocument;
       var elapsedTime = ((endTime - startTime) - (delay * tests.length)) / 1000;
       log += "Total elapsed time: " + elapsedTime.toFixed(2) + "s";
       if (errors == 0)
-        log += "\nNo JS errors and no timing issues, but 6 tests were skipped.";
+        log += "\nNo JS errors and no timing issues, but 5 tests were skipped.";
   alert(log);
     }
   }
