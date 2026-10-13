@@ -292,6 +292,7 @@ static bool jdb_passthrough(const char *s)
 	static const char *const oklist[] = {
 		"dberr", "dberr+", "dberr-",
 		"dbcn", "dbcn+", "dbcn-",
+		"dbcol", "dbcol+", "dbcol-",
 		"dbev", "dbev+", "dbev-",
 		"dbprom", "dbprom+", "dbprom-",
 		"dbcss", "dbcss+", "dbcss-", "db",
