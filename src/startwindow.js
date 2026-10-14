@@ -6481,6 +6481,30 @@ collapse(side) {
         return v;
     }
 
+// This function is limited in what it can do, in the type of range
+// that it will accept. Chrome is also limited but it may allow
+// for more possibilities.
+    surroundContents(a)
+    {
+        if(!a || a.nodeType != 1) { alert3("surround invalid node"); return; }
+        if(this.start0 != this.end0) { alert3("surround boundary points are not equal"); return; }
+        const y = this.start0, o1 = this.start1, o2 = this.end1;
+        if(y.nodeType == 3) {
+            if(o1 || o2 < y.data.length) { alert3("surround part of a text node"); return; }
+            const p = y.parentNode;
+            if(!p) { const e = new Error("missing parent"); e.code = e.INVALID_NODE_TYPE_ERR; throw e; }
+            p.insertBefore(a, y);
+            a.appendChild(y);
+            return;
+        }
+        if(o1 == o2) { alert3("surround empty range"); return; }
+        if(o2 > y.childNodes.length) { alert3("surround offset out of bounds"); return; }
+        for(let k = o1; k < o2; ++k)
+            a.appendChild(y.childNodes[o1]);
+        if(o1) y.childNodes[o1-1].after(a);
+        else y.prepend$child(a);
+    }
+
     insertNode(n)
     {
         if(!this.normal$ize()) return;

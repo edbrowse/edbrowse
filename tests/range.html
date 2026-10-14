@@ -249,6 +249,31 @@ check(r2.collapsed, "delete marker collapsed");
 check((form.childNodes.length == 2), "delete marker form leaves 2");
 check((form.elements.length == 0), "delete marker form elements gone");
 
+// surround three adjacent nodes
+div.innerHTML = "a<br>b<br>c<br>d<br>e";
+r2.setStart(div, 2);
+r2.setEnd(div, 5);
+amid = document.createElement("a");
+r2.surroundContents(amid);
+check((div.childNodes.length == 7), "div length 7");
+check((amid.childNodes.length == 3), "amid length 3");
+check((amid.parentNode == div), "div parent of amid");
+check((div.textContent == "abcde"), "div content cd");
+check((amid.textContent == "bc"), "amid content bc");
+div.innerHTML = "<p>hot<br>cold</p>";
+r2.selectNode(div.firstChild);
+amid = document.createElement("a");
+/*
+r2.surroundContents(amid);
+check((div.childNodes.length == 1), "div length 1");
+check((amid.childNodes.length == 1), "amid length 1");
+check((amid.parentNode == div), "div parent of amid");
+check((amid.textContent == "hotcold"), "amid content hotcold");
+check((r2.startContainer == amid.firstChild), "r2.start is amid");
+check((r2.endContainer == amid.firstChild), "r2.end is amid");
+check((r2.endOffset == 3), "r2.end offset is 3");
+*/
+
 show.textContent = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>

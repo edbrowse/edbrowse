@@ -41,6 +41,8 @@ custom element connectedCallback and disconnectedCallback functions.
 
 :r (reply) feature in irc.
 
+Most of the Range class.
+
 3.8.18
 
 The if (input field) command to bring a textarea inline.
