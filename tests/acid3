@@ -223,7 +223,7 @@
     });
   }
   var kungFuDeathGrip = null; // used to hold things from test to test
-// @` skipped: 8 11 13 65
+// @` skipped: 11 13 65
 // I run 16 but it's meaningless, has no semantics in edbrowse.
   var tests = [ // start of tests
 
@@ -672,6 +672,12 @@
       assertEquals(r.startOffset, 0, "startOffset is wrong after selectNodeContents()");
       assertEquals(r.endContainer, root, "endContainer is wrong after selectNodeContents()");
       assertEquals(r.endOffset, 3, "endOffset is wrong after selectNodeContents()");
+      r.selectNode(e2);
+      assert(!r.collapsed, "collapsed is wrong after selectNode()");
+      assertEquals(r.startContainer, root, "startContainer is wrong after selectNode()");
+      assertEquals(r.startOffset, 1, "startOffset is wrong after selectNode()");
+      assertEquals(r.endContainer, root, "endContainer is wrong after selectNode()");
+      assertEquals(r.endOffset, 2, "endOffset is wrong after selectNode()");
       return 1;
     },
     function () {
@@ -2529,7 +2535,7 @@ frames[1].contentDocument;
       var elapsedTime = ((endTime - startTime) - (delay * tests.length)) / 1000;
       log += "Total elapsed time: " + elapsedTime.toFixed(2) + "s";
       if (errors == 0)
-        log += "\nNo JS errors and no timing issues, but 4 tests were skipped.";
+        log += "\nNo JS errors and no timing issues, but 3 tests were skipped.";
   alert(log);
     }
   }

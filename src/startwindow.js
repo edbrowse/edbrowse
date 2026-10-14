@@ -6224,6 +6224,16 @@ class Range extends AbstractRange
         if(i < p.childNodes.length) this.setEnd(p, i + 1);
     }
 
+    selectNode(n) {
+        if(!n) return;
+        const p = n.parentNode;
+        if(!p) { const e = new Error("missing parent"); e.code = e.INVALID_NODE_TYPE_ERR; throw e; }
+        let i;
+        for(i = 0; i < p.childNodes.length; ++i)
+            if(p.childNodes[i] == n) break;
+        if(i < p.childNodes.length) this.setStart(p, i), this.setEnd(p, i + 1);
+    }
+
     get startContainer() { return this.start0; }
     get endContainer() { return this.end0; }
     get startOffset() { return this.start1; }
