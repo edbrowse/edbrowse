@@ -60,6 +60,8 @@ check((cmt.data == "aghijklmnop"), "bcdef deleted");
 // check liveness
 p5 = document.createElement("p");
 p5.textContent = "5";
+// comments don't appear in toString
+p5.appendChild(document.createComment("dragon"));
 b.insertBefore(p5, para[3]);
 check((para.length == 5), "querySelectorAll static");
 check((range == "1253"), "1253 range string");

@@ -6311,20 +6311,18 @@ I'll probably do the simplest thing, which is to call gebtn as needed. */
         if(k <= j) { this.unnormal$ize(); return ""; }
         let s = "";
         if(anc == this.sn) {
-            if(anc.nodeType == 3 || anc.nodeType == 8) s += anc.data.substr(this.so)
-            if(anc.nodeType == 1 && anc.nodeName == "SCRIPT") s += anc.text.substr(this.so);
+            if(anc.nodeType == 3) s += anc.data.substr(this.so)
             ++j;
         }
         for(; j < k; ++j) {
             const t = list[j];
         const b = (t == this.sn ? this.so : 0);
-            if(t.nodeType == 3 || t.nodeType == 8) s += t.data.substr(b);
+            if(t.nodeType == 3) s += t.data.substr(b);
             if(t.nodeType == 1 && t.nodeName == "SCRIPT") s += t.text.substr(b);
         }
         if(j < list.length && this.eo) {
             const t = list[j];
-            if(t.nodeType == 3 || t.nodeType == 8) s += t.data.substr(0, this.eo)
-            if(t.nodeType == 1 && t.nodeName == "SCRIPT") s += t.text.substr(0, this.eo);
+            if(t.nodeType == 3) s += t.data.substr(0, this.eo)
         }
         this.unnormal$ize();
         return s;
