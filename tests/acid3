@@ -618,6 +618,60 @@
       assertEquals(r.startOffset, 0, "startOffset is wrong after setEnd()");
       assertEquals(r.endContainer, e1, "endContainer is wrong after setEnd()");
       assertEquals(r.endOffset, 0, "endOffset is wrong after setEnd()");
+      r.setStartBefore(e3);
+      assert(r.collapsed, "setStartBefore() didn't collapse the range");
+      assertEquals(r.startContainer, root, "startContainer is wrong after setStartBefore()");
+      assertEquals(r.startOffset, 2, "startOffset is wrong after setStartBefore()");
+      assertEquals(r.endContainer, root, "endContainer is wrong after setStartBefore()");
+      assertEquals(r.endOffset, 2, "endOffset is wrong after setStartBefore()");
+      r.setEndAfter(root);
+      assert(!r.collapsed, "setEndAfter() didn't uncollapse the range");
+      assertEquals(r.startContainer, root, "startContainer is wrong after setEndAfter()");
+      assertEquals(r.startOffset, 2, "startOffset is wrong after setEndAfter()");
+      assertEquals(r.endContainer, doc, "endContainer is wrong after setEndAfter()");
+      assertEquals(r.endOffset, 1, "endOffset is wrong after setEndAfter()");
+      r.setStartAfter(e2);
+      assert(!r.collapsed, "setStartAfter() collapsed the range");
+      assertEquals(r.startContainer, root, "startContainer is wrong after setStartAfter()");
+      assertEquals(r.startOffset, 2, "startOffset is wrong after setStartAfter()");
+      assertEquals(r.endContainer, doc, "endContainer is wrong after setStartAfter()");
+      assertEquals(r.endOffset, 1, "endOffset is wrong after setStartAfter()");
+      var msg = '';
+      try {
+        r.setEndBefore(doc);
+        msg = "no exception thrown for setEndBefore() the document itself";
+      } catch (e) {
+// COMMENTED OUT FOR 2011 UPDATE - we may want to merge RangeException and DOMException
+//        if (e.BAD_BOUNDARYPOINTS_ERR != 1)
+//          msg = 'not a RangeException';
+//        else
+//        if (e.INVALID_NODE_TYPE_ERR != 2)
+//          msg = 'RangeException has no INVALID_NODE_TYPE_ERR';
+//        else
+//        if ("INVALID_ACCESS_ERR" in e)
+//          msg = 'RangeException has DOMException constants';
+//        else
+        if (e.code != e.INVALID_NODE_TYPE_ERR)
+          msg = 'wrong exception raised from setEndBefore()';
+      }
+      assert(msg == "", msg);
+      assert(!r.collapsed, "setEndBefore() collapsed the range");
+      assertEquals(r.startContainer, root, "startContainer is wrong after setEndBefore()");
+      assertEquals(r.startOffset, 2, "startOffset is wrong after setEndBefore()");
+      assertEquals(r.endContainer, doc, "endContainer is wrong after setEndBefore()");
+      assertEquals(r.endOffset, 1, "endOffset is wrong after setEndBefore()");
+      r.collapse(false);
+      assert(r.collapsed, "collapse() collapsed the range");
+      assertEquals(r.startContainer, doc, "startContainer is wrong after collapse()");
+      assertEquals(r.startOffset, 1, "startOffset is wrong after collapse()");
+      assertEquals(r.endContainer, doc, "endContainer is wrong after collapse()");
+      assertEquals(r.endOffset, 1, "endOffset is wrong after collapse()");
+      r.selectNodeContents(root);
+      assert(!r.collapsed, "collapsed is wrong after selectNodeContents()");
+      assertEquals(r.startContainer, root, "startContainer is wrong after selectNodeContents()");
+      assertEquals(r.startOffset, 0, "startOffset is wrong after selectNodeContents()");
+      assertEquals(r.endContainer, root, "endContainer is wrong after selectNodeContents()");
+      assertEquals(r.endOffset, 3, "endOffset is wrong after selectNodeContents()");
       return 1;
     },
     function () {

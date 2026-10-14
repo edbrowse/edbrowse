@@ -3,7 +3,7 @@
 <p id=show>start</p><p>1</p><p>2</p><p>3</p><p>4</p>
 <script>
 // Range tests, lots of cases here.
-// There are more range tests in acid3, but I test for different stuff.
+// There are more range tests in acid3, but I test for different stuff here.
 try {
 msg = "ok";
 b = document.body;
@@ -169,11 +169,6 @@ cc = range.cloneContents();
 check((cc.nodeType == 11), "clone rt fragment");
 check((cc.childNodes.length == 1), "clone rt 1 child");
 check((cc.firstChild.data == "rt"), "clone rt string");
-
-// this comes out exactly the same as setStart   ???
-range.setStartBefore(fpara[1], 0);
-range.setEndAfter(fpara[2], 0);
-check((range == "horsebird"), "before after string");
 
 r2.setStart(text, 3);
 r2.setEnd(text, 8);

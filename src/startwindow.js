@@ -278,8 +278,9 @@ this.swde = function (cls, exp, changeable=true)
 }
 
 // * don't understand all the error codes and subcodes.
-// This is just a stub for now, to make acid 25 work.
-Error.prototype.NAMESPACE_ERR = 1;
+// stubs for now, to make some of the acid tests work
+Error.prototype.NAMESPACE_ERR = 1; // test 25
+Error.prototype.INVALID_NODE_TYPE_ERR = 2; // test 8
 
 // link functions in the shared window to this window
 for(let f of ["UnsupportedError",
@@ -6126,23 +6127,45 @@ class Range extends AbstractRange
 // the common ancestor doesn't depend on the offsets, and we don't have to call
 // normal$ize(), or unnormal$ize() at the end.
         this.anc = null;
-        const y = this.start0, z = this.end0;
+        let y = this.start0, z = this.end0, t, o;
         if(!y || !z) return;
-        if(y == z) { this.anc = y; return; }
+        if(y == z) {
+            // only a problem if offsets are out of order
+            if(this.start1 <= this.end1) this.anc = y;
+            return;
+        }
         const result = {};
         Node.commonAncestor(y, z, result);
-        if(!result.root) return;
+        if(!result.root) return; // disconnected
+        const anc = result.root;
         // make sure the points aren't out of order.
         const i = result.i, j = result.j;
         const py = result.py, pz = result.pz;
         if(i && j) {
-            const y = py[i-1], z =pz[j-1];
-            let t;
+            y = py[i-1], z =pz[j-1];
             for(t = y.nextSibling; t; t = t.nextSibling)
                 if(t == z) break;
-            if(!t) return; // start and end out of order
+            if(t) this.anc = anc;
+            return;
         }
-        this.anc = result.root;
+        // Exactly one of the boundary points is the ancestor,
+        // the other is below it.
+        // Could be out of order depending on the offset of the ancestor.
+        if(!i) { // start is the ancestor
+            o = this.start1;
+            if(o >= anc.childNodes.length) return;
+            if(o <= 1) { this.anc = anc; return; }
+            y = anc.childNodes[o], z = pz[j-1];
+        } else { // end is the ancestor
+            o = this.end1;
+            if(o == 0) return;
+            if(o >= anc.childNodes.length) { this.anc = anc; return; }
+            y = py[i-1], z = anc.childNodes[o];
+        }
+        if(y == z) { this.anc = anc; return; }
+        for(t = y.nextSibling; t; t = t.nextSibling)
+            if(t == z) break;
+        if(t) this.anc = anc;
     }
 
     setStart(n, offset) {
@@ -6161,28 +6184,44 @@ class Range extends AbstractRange
         if(!this.anc) this.start0 = this.anc = n, this.start1 = offset;
     }
 
-    setStartBefore(n, offset) {
+    setStartBefore(n) {
         if(!n) return;
-        // yeah, it's the same as setStart, I don't understand it but
-         // it agrees with chrome for our tests.
-        this.setStart(n, offset);
+        const p = n.parentNode;
+        if(!p) { const e = new Error("missing parent"); e.code = e.INVALID_NODE_TYPE_ERR; throw e; }
+        let i;
+        for(i = 0; i < p.childNodes.length; ++i)
+            if(p.childNodes[i] == n) break;
+        if(i < p.childNodes.length) this.setStart(p, i);
     }
 
-    setStartAfter(n, offset) {
+    setStartAfter(n) {
         if(!n) return;
-        n = n.nextSibling;
-        this.setStart(n, offset);
+        const p = n.parentNode;
+        if(!p) { const e = new Error("missing parent"); e.code = e.INVALID_NODE_TYPE_ERR; throw e; }
+        let i;
+        for(i = 0; i < p.childNodes.length; ++i)
+            if(p.childNodes[i] == n) break;
+        if(i < p.childNodes.length) this.setStart(p, i + 1);
     }
 
-    setEndBefore(n, offset) {
+    setEndBefore(n) {
         if(!n) return;
-        this.setEnd(n, offset);
+        const p = n.parentNode;
+        if(!p) { const e = new Error("missing parent"); e.code = e.INVALID_NODE_TYPE_ERR; throw e; }
+        let i;
+        for(i = 0; i < p.childNodes.length; ++i)
+            if(p.childNodes[i] == n) break;
+        if(i < p.childNodes.length) this.setEnd(p, i);
     }
 
-    setEndAfter(n, offset) {
+    setEndAfter(n) {
         if(!n) return;
-        n = n.nextSibling;
-        this.setEnd(n, offset);
+        const p = n.parentNode;
+        if(!p) { const e = new Error("missing parent"); e.code = e.INVALID_NODE_TYPE_ERR; throw e; }
+        let i;
+        for(i = 0; i < p.childNodes.length; ++i)
+            if(p.childNodes[i] == n) break;
+        if(i < p.childNodes.length) this.setEnd(p, i + 1);
     }
 
     get startContainer() { return this.start0; }
