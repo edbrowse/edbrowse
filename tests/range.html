@@ -289,6 +289,18 @@ r2.setStart(brlist[0], 0);
 r2.setEnd(brlist[1], 0);
 check((r2 == "h2b3i"), "inside h2b3i");
 
+c1 = document.createComment("1");
+c2 = document.createComment("2");
+c3 = document.createComment("3");
+r1 = new Range;
+r1.insertNode(c1);
+r1.insertNode(c2);
+r1.setStart(r1.startContainer, r1.startOffset + 1);
+r1.insertNode(c3);
+check((document.firstChild == c2 && document.childNodes[1] == c3 && document.childNodes[2] == c1), "comments order 231");
+c1.remove(), c2.remove(), c3.remove(); // clean up
+check((document.firstChild == document.documentElement), "back to documentElement");
+
 show.textContent = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>
