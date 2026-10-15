@@ -281,6 +281,7 @@ this.swde = function (cls, exp, changeable=true)
 // stubs for now, to make some of the acid tests work
 Error.prototype.NAMESPACE_ERR = 1; // test 25
 Error.prototype.INVALID_NODE_TYPE_ERR = 2; // test 8
+Error.prototype.HIERARCHY_REQUEST_ERR = 3; // test 11
 
 // link functions in the shared window to this window
 for(let f of ["UnsupportedError",
@@ -814,7 +815,7 @@ class Node extends EventTarget
         while(b) {
             if(b === a) {
                 let e = new Error;
-                e.HIERARCHY_REQUEST_ERR = e.code = 3;
+                e.code = e.HIERARCHY_REQUEST_ERR;
                 throw e;
             }
             if(++j == 1000) {
@@ -2438,11 +2439,10 @@ class Document extends Node
 
     get documentElement()
     {
-        let e = this.lastChild;
-        if(!e) { alert3("missing documentElement node"); return null; }
-        if(e.nodeName.toUpperCase() != "HTML")
-            alert3("html expected, got " + e.nodeName);
-        return e
+        for(let e of this.childNodes)
+            if(e.nodeName == "HTML") return e;
+        alert3("HTML not found in documentElement getter");
+        return null;
     }
 
 // We need a helper function to get and set document.head and document.body.
@@ -2717,6 +2717,39 @@ class HTMLDocument extends Document
 {
     constructor() { super(); }
     toString() { return "[object HTMLDocument]" };
+
+    appendChild(c)
+    {
+        if(c.nodeType == 1) { // only one element allowed
+            // I would call document.firstElementChild,
+            // but document is not an instance of Element.
+            for(let k of this.childNodes)
+                if(k.nodeType == 1) {
+                    const e = new Error("document can only contain one element");
+                    e.code = e.HIERARCHY_REQUEST_ERR;
+                    throw e;
+                }
+        }
+        // I have no way to add other things to document in the C world.
+        // This works in js, but produces the error
+        // tagFromObject() returns null  in C
+        Node.prototype.appendChild.call(this, c);
+        return c;
+    }
+
+    insertBefore(c, point)
+    {
+        if(c.nodeType == 1) { // only one element allowed
+            for(let k of this.childNodes)
+                if(k.nodeType == 1) {
+                    const e = new Error("document can only contain one element");
+                    e.code = e.HIERARCHY_REQUEST_ERR;
+                    throw e;
+                }
+        }
+        Node.prototype.insertBefore.call(this, c, point);
+    }
+
 }
 swdc(HTMLDocument);
 
@@ -6487,7 +6520,10 @@ collapse(side) {
     surroundContents(a)
     {
         if(!a || a.nodeType != 1) { alert3("surround invalid node"); return; }
-        if(this.start0 != this.end0) { alert3("surround boundary points are not equal"); return; }
+        if(this.start0 != this.end0) {
+            const e = new Error("surrounding partial or nonadjacent nodes");
+            throw e;
+        }
         const y = this.start0, o1 = this.start1, o2 = this.end1;
         if(y.nodeType == 3) {
             const p = y.parentNode;
@@ -6504,36 +6540,34 @@ collapse(side) {
         if(o2 > y.childNodes.length) { alert3("surround offset out of bounds"); return; }
         for(let k = o1; k < o2; ++k)
             a.appendChild(y.childNodes[o1]);
-        if(o1) y.childNodes[o1-1].after(a);
-        else y.prepend$child(a);
+        if(o1 == y.childNodes.length) y.appendChild(a);
+        else y.insertBefore(a, y.childNodes[o1]);
         this.selectNode(a);
     }
 
     insertNode(n)
     {
-        if(!this.normal$ize()) return;
-        const y = this.sn,  p = y.parentNode,  type = y.nodeType;
+        const y = this.start0,  p = y.parentNode,  type = y.nodeType;
+        const o = this.start1;
         if(type == 4 || type == 8 || type == 10) {
-            // comment, data section, doctype
-            y.after(n);
-            this.unnormal$ize();
+            alert3("insertNode into comment or data section");
             return;
         }
         if(type == 3) { // text
-            const v = y.data, o = this.so;
-            if(v.length <= o || !o) { y.after(n); this.unnormal$ize(); return; }
-            if(!p) { this.unnormal$ize(); return; }
+            if(!p) { const e = new Error("missing parent"); e.code = e.INVALID_NODE_TYPE_ERR; throw e; }
+            const v = y.data;
+            if(v.length <= o) { y.after(n); return; }
             const t = document.createTextNode(v.substr(o));
             y.after(t);
             y.data = v.substr(0, o);
             y.after(n);
             this.start1 = o;
-            if(this.end0 == y) this.end0 = t, this.end1 -= o, this.anc = p;
-            this.unnormal$ize();
+            if(this.end0 == y) this.end0 = t, this.end1 = 0, this.anc = p;
             return;
         }
-        y.prepend$child(n);
-        this.unnormal$ize();
+        if(o) y.insertBefore(n, y.childNodes[o]);
+        else y.prepend$child(n);
+        if(y == this.end0) this.end1++;
     }
 
     selectNodeContents(n)

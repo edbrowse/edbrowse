@@ -223,7 +223,7 @@
     });
   }
   var kungFuDeathGrip = null; // used to hold things from test to test
-// @` skipped: 11 13 65
+// @` skipped: 13 65
 // I run 16 but it's meaningless, has no semantics in edbrowse.
   var tests = [ // start of tests
 
@@ -752,7 +752,46 @@ of the original, so this line, looking for exact equality on t3, won't run.
 //      e.id = 'result';
       return 1;
     },
-    function() { return 1; }, // test 11
+    function () {
+      // test 11: Ranges and Comments
+      var msg;
+      var doc = getTestDocument();
+      var c1 = doc.createComment("11111");
+      doc.appendChild(c1);
+      var r = doc.createRange();
+      r.selectNode(c1);
+      msg = 'wrong exception raised';
+      try {
+        r.surroundContents(doc.createElement('a'));
+        msg = 'no exception raised';
+      } catch (e) {
+        if ('code' in e)
+          msg += '; code = ' + e.code;
+        if (e.code == 3) // HIERARCHY_REQUEST_ERR
+          msg = '';
+      }
+      assert(msg == '', "when inserting <a> into Document with another child: " + msg);
+      var c2 = doc.createComment("22222");
+      doc.body.appendChild(c2);
+      var c3 = doc.createComment("33333");
+      doc.body.appendChild(c3);
+      r.setStart(c2, 2);
+      r.setEnd(c3, 3);
+      var msg = 'wrong exception raised';
+      try {
+        r.surroundContents(doc.createElement('a'));
+        msg = 'no exception raised';
+      } catch (e) {
+// COMMENTED OUT FOR 2011 UPDATE - DOM Core changes the exception from RangeException.BAD_BOUNDARYPOINTS_ERR (1) to DOMException.INVALID_STATE_ERR (11)
+//        if ('code' in e)
+//          msg += '; code = ' + e.code;
+//        if (e.code == 1)
+          msg = '';
+      }
+      assert(msg == '', "when trying to surround two halves of comment: " + msg);
+      assertEquals(r.toString(), "", "comments returned text");
+      return 1;
+    },
     function () {
       // test 12: Ranges under mutations: insertion into text nodes
       var doc = getTestDocument();
@@ -2535,7 +2574,7 @@ frames[1].contentDocument;
       var elapsedTime = ((endTime - startTime) - (delay * tests.length)) / 1000;
       log += "Total elapsed time: " + elapsedTime.toFixed(2) + "s";
       if (errors == 0)
-        log += "\nNo JS errors and no timing issues, but 3 tests were skipped.";
+        log += "\nNo JS errors and no timing issues, but 2 tests were skipped.";
   alert(log);
     }
   }
