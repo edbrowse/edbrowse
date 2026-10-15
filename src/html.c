@@ -1450,7 +1450,7 @@ passes:
 			t->threadjoined = true;
 			if (!t->loadsuccess || t->hcode != 200) {
 				if (debugLevel >= 3)
-					i_printf(MSG_GetJS, t->href, t->hcode);
+					i_printf((t->inxhr ? MSG_GetXHR : MSG_GetJS), t->href, t->hcode);
 				t->step = 6;
 				continue;
 			}
@@ -4374,108 +4374,102 @@ done:
 
 static void runTimer0(struct jsTimer *jt, const Frame *save_cf)
 {
-	Tag *t;
+    Tag *t;
 
-	if (!gotimers) goto skip_execution;
+    if (!gotimers) goto skip_execution;
 
-	cf = jt->f;
-	cw = cf->owner;
-	jt->running = true;
-	if ((t = jt->t)) {
+    cf = jt->f;
+    cw = cf->owner;
+    jt->running = true;
+    if ((t = jt->t)) {
 // asynchronous script or xhr
-		if (t->step == 3) {	// background load
-			int rc =
-			    pthread_tryjoin_np(t->loadthread, NULL);
-			if (rc != 0 && rc != EBUSY) {
-// should never happen
-				debugPrint(3,
-					   "script background thread test returns %d",
-					   rc);
-				pthread_join(t->loadthread, NULL);
-				rc = 0;
-			}
-			if (!rc) {	// it's done
-				t->threadjoined = true;
-				if (!t->loadsuccess ||
-				(t->action == TAGACT_SCRIPT &&  t->hcode != 200)) {
-					if (debugLevel >= 3)
-						i_printf(MSG_GetJS,
-							 t->href, t->hcode);
-					t->step = 6;
-				} else {
-					if (t->action == TAGACT_SCRIPT) {
-						set_property_string_t(t, "text", t->value);
-						nzFree0(t->value);
-					}
-					t->step = 4;	// loaded
-				}
-			}
-		}
-		if (t->step == 4 && t->action == TAGACT_SCRIPT) {
-			char *sourcefile = t->js_file;
-			int ln = t->js_ln;
+        if (t->step == 3) { // background load
+            int rc = pthread_tryjoin_np(t->loadthread, NULL);
+            if (rc != 0 && rc != EBUSY) { // should never happen
+                debugPrint(3, "script background thread test returns %d", rc);
+                pthread_join(t->loadthread, NULL);
+                rc = 0;
+            }
+            if (!rc) { // it's done
+                t->threadjoined = true;
+                if (!t->loadsuccess ||
+                (t->action == TAGACT_SCRIPT &&  t->hcode != 200)) {
+                    if (debugLevel >= 3)
+                        i_printf((t->action == TAGACT_SCRIPT ? MSG_GetJS : MSG_GetXHR),
+                             t->href, t->hcode);
+                    t->step = 6;
+                } else {
+                    if (t->action == TAGACT_SCRIPT) {
+                        set_property_string_t(t, "text", t->value);
+                        nzFree0(t->value);
+                    }
+                    t->step = 4; // loaded
+                }
+            }
+        }
+        if (t->step == 4 && t->action == TAGACT_SCRIPT) {
+            char *sourcefile = t->js_file;
+            int ln = t->js_ln;
                         const char *a = get_property_string_t(t, "type");
-			t->step = 5;	// running
-			if (!sourcefile) sourcefile = "generated";
-			if (!ln) ln = 1;
-			if (ln > 1) ++ln;
-			if (cf != save_cf)
-				debugPrint(4,
-					   "running script at a lower frame %s",
-					   sourcefile);
-			debugPrint(3, "async exec timer %d %s at %d",
-				   jt->tsn, sourcefile, ln);
-			jsRunData(t, sourcefile, ln,
+            t->step = 5; // running
+            if (!sourcefile) sourcefile = "generated";
+            if (!ln) ln = 1;
+            if (ln > 1) ++ln;
+            if (cf != save_cf)
+                debugPrint(4, "running script at a lower frame %s", sourcefile);
+            debugPrint(3, "async exec timer %d %s at %d",
+                   jt->tsn, sourcefile, ln);
+            jsRunData(t, sourcefile, ln,
                                 (a && *a && stringEqualCI(a, "module")));
                         cnzFree(a);
-			debugPrint(3, "async exec complete");
-		}
-		if (t->step == 4 && t->action != TAGACT_SCRIPT) {
-			t->step = 5;
-			set_property_string_t(t, "$entire", t->value);
-			nzFree0(t->value);
-			debugPrint(3, "run xhr %d", jt->tsn);
-			run_function_bool_t(t, "parseResponse");
-		}
-		if (t->step >= 5)
-			jt->deleted = true;
-	} else {
+            debugPrint(3, "async exec complete");
+        }
+        if (t->step == 4 && t->action != TAGACT_SCRIPT) {
+            t->step = 5;
+            set_property_string_t(t, "$entire", t->value);
+            nzFree0(t->value);
+            debugPrint(3, "run xhr %d", jt->tsn);
+            run_function_bool_t(t, "parseResponse");
+        }
+        if (t->step >= 5)
+            jt->deleted = true;
+    } else {
 // regular timer
-		debugPrint(4, "exec timer %d context %d", jt->tsn, jt->f->gsn);
-		run_ontimer(jt->f, jt->backlink);
-		debugPrint(4, "exec complete");
-	}
-	jt->running = false;
+        debugPrint(4, "exec timer %d context %d", jt->tsn, jt->f->gsn);
+        run_ontimer(jt->f, jt->backlink);
+        debugPrint(4, "exec complete");
+    }
+    jt->running = false;
 skip_execution:
 
-	if (!jt->isInterval || jt->deleted) {
-		debugPrint(3, "timer %d complete in context %d",
-		jt->tsn, (jt->f ? jt->f->gsn : -1));
+    if (!jt->isInterval || jt->deleted) {
+        debugPrint(3, "timer %d complete in context %d",
+        jt->tsn, (jt->f ? jt->f->gsn : -1));
 // at debug 3 or higher, keep these around, in case you have to
 // track down an error.
-		if(debugLevel < 3 && jt->backlink)
-			delete_property_win(jt->f, jt->backlink);
-		t = jt->t;
-		delFromList(jt);
-		nzFree(jt->backlink);
-		nzFree(jt);
-		if(t) {
+        if(debugLevel < 3 && jt->backlink)
+            delete_property_win(jt->f, jt->backlink);
+        t = jt->t;
+        delFromList(jt);
+        nzFree(jt->backlink);
+        nzFree(jt);
+        if(t) {
 // this will free the xhr object and allow for garbage collection.
-			disconnectTagObject(t);
-			t->dead = true;
-			t->action = TAGACT_NOP;
-		}
-	} else {
-		int n = jt->jump_sec * 1000 + jt->jump_ms;
-		if (n < timerSpread) n = timerSpread;
-		if(timerspeed > 1 && !jt->pending && !jt->t &&
-		0x40000000 / timerspeed >= n)
-			n *= timerspeed;
-		jt->sec = now_sec + n / 1000;
-		jt->ms = now_ms + n % 1000;
-		if (jt->ms >= 1000)
-			jt->ms -= 1000, ++jt->sec;
-	}
+            disconnectTagObject(t);
+            t->dead = true;
+            t->action = TAGACT_NOP;
+        }
+    } else {
+        int n = jt->jump_sec * 1000 + jt->jump_ms;
+        if (n < timerSpread) n = timerSpread;
+        if(timerspeed > 1 && !jt->pending && !jt->t &&
+        0x40000000 / timerspeed >= n)
+            n *= timerspeed;
+        jt->sec = now_sec + n / 1000;
+        jt->ms = now_ms + n % 1000;
+        if (jt->ms >= 1000)
+            jt->ms -= 1000, ++jt->sec;
+    }
 }
 
 static int runTimersNow(void)

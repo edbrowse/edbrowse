@@ -893,4 +893,5 @@ MSG_ImaskOn,
 	MSG_NoPrivate,
 	MSG_DebugCollectionsOff,
 	MSG_DebugCollectionsOn,
+	MSG_GetXHR,
 };
