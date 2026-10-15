@@ -1363,10 +1363,10 @@ static void runOnload(void);
 static int runTimersNow(void);
 void runScriptsPending(bool startbrowse)
 {
-	Tag *t;
-	int j, n;
-	bool change, async;
-	Frame *f, *save_cf = cf;
+    Tag *t;
+    int j, n;
+    bool change, async;
+    Frame *f, *save_cf = cf;
 
     // Manage document.write outside the context of a script.
     // It could come from an onload function or other places.
@@ -1400,103 +1400,97 @@ If not then it's probably an infinite loop, and we should move on. */
     }
 
 top:
-	change = false;
+    change = false;
 
-	for (j = 0; j < cw->numTags; ++j) {
-		t = tagList[j];
-		//		printf("script %d step %d\n", t->seqno, t->step);
-		if(t->action != TAGACT_SCRIPT) continue;
-		if (t->dead || !t->jslink || t->step >= 3) continue;
+    for (j = 0; j < cw->numTags; ++j) {
+        t = tagList[j];
+        if(t->action != TAGACT_SCRIPT) continue;
+        if (t->dead || !t->jslink || t->step >= 3) continue;
 // don't execute a script until it is linked into the tree.
-		if(!isRooted(t)) continue;
-		cf = t->f0;
-		loadScriptData(t);
+        if(!isRooted(t)) continue;
+        cf = t->f0;
+        loadScriptData(t);
 // step will now be 3, load in background, 4, loaded, or 6, failure.
-	}
+    }
 
-	async = false;
+    async = false;
 passes:
 
-	for (j = 0; j < cw->numTags; ++j) {
-		t = tagList[j];
-		if(t->action != TAGACT_SCRIPT) continue;
-		if (t->dead || !t->jslink || t->step >= 5 || t->step <= 2) continue;
+    for (j = 0; j < cw->numTags; ++j) {
+        t = tagList[j];
+        if(t->action != TAGACT_SCRIPT) continue;
+        if (t->dead || !t->jslink || t->step >= 5 || t->step <= 2) continue;
 // js may have upgraded step
-		if((n = get_property_number_t(t, "eb$step")) > 4) {
-			t->step = n;
-			continue;
-		}
-		if(!isRooted(t)) continue;
-		if(t->async != async) continue;
-		cf = t->f0;
-		if (!is_subframe(cf, save_cf))
-			continue;
-		if (intFlag) {
-			t->step = 6;
-			continue;
-		}
+        if((n = get_property_number_t(t, "eb$step")) > 4) {
+            t->step = n;
+            continue;
+        }
+        if(!isRooted(t)) continue;
+        if(t->async != async) continue;
+        cf = t->f0;
+        if (!is_subframe(cf, save_cf)) continue;
+        if (intFlag) {
+            t->step = 6;
+            continue;
+        }
 
-		if (async && down_jsbg && cw->browseMode) {
-			if (!t->intimer) {
-				scriptOnTimer(t);
-				t->intimer = true;
-			}
-			continue;
-		}
+        if (async && down_jsbg && cw->browseMode) {
+            if (!t->intimer) {
+                scriptOnTimer(t);
+                t->intimer = true;
+            }
+            continue;
+        }
 
-		if (t->step == 3) {
+        if (t->step == 3) {
 // waiting for background process to load
-			pthread_join(t->loadthread, NULL);
-			t->threadjoined = true;
-			if (!t->loadsuccess || t->hcode != 200) {
-				if (debugLevel >= 3)
-					i_printf((t->inxhr ? MSG_GetXHR : MSG_GetJS), t->href, t->hcode);
-				t->step = 6;
-				continue;
-			}
-			set_property_string_t(t,
-					    (t->inxhr ? "$entire" : "text"),
-					    t->value);
-			nzFree0(t->value);
-			t->step = 4;	// loaded
-		}
+            pthread_join(t->loadthread, NULL);
+            t->threadjoined = true;
+            if (!t->loadsuccess || t->hcode != 200) {
+                if (debugLevel >= 3)
+                    i_printf((t->inxhr ? MSG_GetXHR : MSG_GetJS), t->href, t->hcode);
+                t->step = 6;
+                continue;
+            }
+            set_property_string_t(t,
+                        (t->inxhr ? "$entire" : "text"), t->value);
+            nzFree0(t->value);
+            t->step = 4; // loaded
+        }
 
-		runScriptNow(save_cf, t);
+        runScriptNow(save_cf, t);
 
-		change = true;
-	}
+        change = true;
+    }
 
 // after each pass, see if there is a link onload to run.
-	for (j = 0; j < cw->numTags; ++j) {
-		t = tagList[j];
-		if(t->action != TAGACT_LINK) continue;
-		if(t->lic == 1 && t->jslink && !t->dead &&
-		t->step >= 4 &&
-		save_cf == t->f0) {
-			cf = save_cf;
-			run_event_t(t, "onload");
-			t->lic = 0;
-			change = true;
-		}
-	}
+    for (j = 0; j < cw->numTags; ++j) {
+        t = tagList[j];
+        if(t->action != TAGACT_LINK) continue;
+        if(t->lic == 1 && t->jslink && !t->dead &&
+        t->step >= 4 &&
+        save_cf == t->f0) {
+            cf = save_cf;
+            run_event_t(t, "onload");
+            t->lic = 0;
+            change = true;
+        }
+    }
 
 // If a frame has an onload function, that function might need to run.
 // We don't get to wait around for on-demand expansion; we have to expand.
 // Fortunately this doesn't happen often.
-	for (j = 0; j < cw->numTags; ++j) {
-		t = tagList[j];
-		if(t->action != TAGACT_FRAME) continue;
-		if(!t->f1 && // not expanded yet
-		!t->expf && // we haven't tried to expand it yet
-		isRooted(t) && // it's in our tree
-		handlerPresent(t, "onload"))
-			forceFrameExpand(t);
-	}
-
-    if (!async) {
-        async = true;
-        goto passes;
+    for (j = 0; j < cw->numTags; ++j) {
+        t = tagList[j];
+        if(t->action != TAGACT_FRAME) continue;
+        if(!t->f1 && // not expanded yet
+        !t->expf && // we haven't tried to expand it yet
+        isRooted(t) && // it's in our tree
+        handlerPresent(t, "onload"))
+            forceFrameExpand(t);
     }
+
+    if (!async) { async = true; goto passes; }
 
     if(startbrowse) {
         cf = save_cf;

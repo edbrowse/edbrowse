@@ -793,7 +793,7 @@ El directorio temporal no existe %s
 0
 0
 0
-0
+no se puede obtener el xhr de %s, codigo %ld\n
 0
 0
 0

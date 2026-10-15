@@ -793,7 +793,7 @@ Le répertoire temporaire n'existe pas %s
 0
 0
 0
-0
+impossible de charger xhr depuis %s, code %ld\n
 0
 0
 0
