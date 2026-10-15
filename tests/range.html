@@ -258,21 +258,36 @@ r2.surroundContents(amid);
 check((div.childNodes.length == 7), "div length 7");
 check((amid.childNodes.length == 3), "amid length 3");
 check((amid.parentNode == div), "div parent of amid");
-check((div.textContent == "abcde"), "div content cd");
+check((div.textContent == "abcde"), "div content abcde");
 check((amid.textContent == "bc"), "amid content bc");
 div.innerHTML = "<p>hot<br>cold</p>";
 r2.selectNode(div.firstChild);
 amid = document.createElement("a");
-/*
 r2.surroundContents(amid);
 check((div.childNodes.length == 1), "div length 1");
 check((amid.childNodes.length == 1), "amid length 1");
 check((amid.parentNode == div), "div parent of amid");
 check((amid.textContent == "hotcold"), "amid content hotcold");
-check((r2.startContainer == amid.firstChild), "r2.start is amid");
-check((r2.endContainer == amid.firstChild), "r2.end is amid");
-check((r2.endOffset == 3), "r2.end offset is 3");
-*/
+check((r2.startContainer == div), "r2.start is still div");
+check((r2.endContainer == div), "r2.end is still div");
+check((r2.endOffset == 1), "r2.end offset is 1");
+div.textContent = "hork snork";
+r2.setStart(div.firstChild, 1);
+r2.setEnd(div.firstChild, 9);
+amid = document.createElement("a");
+r2.surroundContents(amid);
+check((div.textContent == "hork snork"), "content still hork snork");
+check((div.childNodes.length == 3), "hork div length 3");
+check((div.firstChild.data == 'h' && div.lastChild.data == 'k' && amid.firstChild.data == "ork snor"), "hork in 3 pieces");
+check((r2.startContainer == div && r2.endContainer == div), "hork range still div");
+check((r2.startOffset == 1 && r2.endOffset == 2), "hork range now 1 and 2");
+
+// deeper tree to verify inside outside
+div.innerHTML = "<p>a<p>1<p>g<br>h</p>2</p>b<p>3<p>i<br>j</p>4</p></p>"
+brlist = div.querySelectorAll("br");
+r2.setStart(brlist[0], 0);
+r2.setEnd(brlist[1], 0);
+check((r2 == "h2b3i"), "inside h2b3i");
 
 show.textContent = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
