@@ -6141,8 +6141,29 @@ class Range extends AbstractRange
         super();
         // the range is the half-open interval [start,end)
         // thus the initial range is nothing
-        this.start0 = this.end0 = this.anc = document;
+        this.start0 = this.end0 = document;
         this.start1 = this.end1 = 0;
+        this.setanc(document);
+    }
+
+    setanc(a)
+    {
+        if(a == this.anc) return; // no change
+        if(this.anc) this.clearanc();
+        if(!a.range$set) a.range$set = new Set;
+// this should probably be a weak reference, so it can go away when range goes away
+        a.range$set.add(this);
+        this.anc = a;
+    }
+
+    clearanc()
+    {
+        if(!this.anc) return;
+        const s = this.anc.range$set;
+        if(!s) return; // should never happen
+        s.delete(this);
+        if(!s.size) delete this.anc.range$set;
+        this.anc = null;
     }
 
     static {
@@ -6159,12 +6180,12 @@ class Range extends AbstractRange
     {
 // the common ancestor doesn't depend on the offsets, and we don't have to call
 // normal$ize(), or unnormal$ize() at the end.
-        this.anc = null;
+        this.clearanc();
         let y = this.start0, z = this.end0, t, o;
         if(!y || !z) return;
         if(y == z) {
             // only a problem if offsets are out of order
-            if(this.start1 <= this.end1) this.anc = y;
+            if(this.start1 <= this.end1) this.setanc(y);
             return;
         }
         const result = {};
@@ -6178,7 +6199,7 @@ class Range extends AbstractRange
             y = py[i-1], z =pz[j-1];
             for(t = y.nextSibling; t; t = t.nextSibling)
                 if(t == z) break;
-            if(t) this.anc = anc;
+            if(t) this.setanc(anc);
             return;
         }
         // Exactly one of the boundary points is the ancestor,
@@ -6187,18 +6208,18 @@ class Range extends AbstractRange
         if(!i) { // start is the ancestor
             o = this.start1;
             if(o >= anc.childNodes.length) return;
-            if(o <= 1) { this.anc = anc; return; }
+            if(o <= 1) { this.setanc(anc); return; }
             y = anc.childNodes[o], z = pz[j-1];
         } else { // end is the ancestor
             o = this.end1;
             if(o == 0) return;
-            if(o >= anc.childNodes.length) { this.anc = anc; return; }
+            if(o >= anc.childNodes.length) { this.setanc(anc); return; }
             y = py[i-1], z = anc.childNodes[o];
         }
-        if(y == z) { this.anc = anc; return; }
+        if(y == z) { this.setanc(anc); return; }
         for(t = y.nextSibling; t; t = t.nextSibling)
             if(t == z) break;
-        if(t) this.anc = anc;
+        if(t) this.setanc(anc);
     }
 
     setStart(n, offset) {
@@ -6206,7 +6227,7 @@ class Range extends AbstractRange
         this.start0 = n, this.start1 = offset;
         this.deriveAncestor();
         // if no ancestor then collapse back to start.
-        if(!this.anc) this.end0 = this.anc = n, this.end1 = offset;
+        if(!this.anc) this.end0 = n, this.end1 = offset, this.setanc(n);
     }
 
     setEnd(n, offset) {
@@ -6214,7 +6235,7 @@ class Range extends AbstractRange
         this.end0 = n, this.end1 = offset;
         this.deriveAncestor();
         // if no ancestor then collapse back to end.
-        if(!this.anc) this.start0 = this.anc = n, this.start1 = offset;
+        if(!this.anc) this.start0 = n, this.start1 = offset, this.setanc(n);
     }
 
     setStartBefore(n) {
@@ -6390,14 +6411,14 @@ collapse(side) {
         if(typeof side == "boolean" && side)
             this.end0 = this.start0, this.end1 = this.start1;
         else this.start0 = this.end0, this.start1 = this.end1;
-        this.anc = this.start0;
+        this.setanc(this.start0);
     }
 
     cloneRange() {
         const r = new Range;
         r.start0 = this.start0, r.end0 = this.end0;
         r.start1 = this.start1, r.end1 = this.end1;
-        r.anc = this.anc;
+        r.setanc(this.anc);
         return r;
     }
 
@@ -6413,8 +6434,10 @@ collapse(side) {
     extractContents() {
         if(!this.normal$ize()) return document.createDocumentFragment();
         this.base = this.anc ? this.anc : this.start0;
+        this.skipdelcheck = true;
         const newnode = mw$.cloneNodeHelper(this.base, true, 5, this);
         delete this.base;
+        delete this.skipdelcheck;
         this.unnormal$ize();
         return newnode;
     }
@@ -6449,6 +6472,29 @@ collapse(side) {
         return v;
     }
 
+/* deleteContents() deletes everything inside the range.
+When we remove nodes, there are side effects, most of which we want.
+Adjust form elements, table rows, select options, etc.
+Another side effect is ranges; that one we don't want.
+The start and end points of this range will not change,
+even as we remove the nodes inside.
+However, the ancestor of this node may have other ranges,
+with the same ancestor, other ranges in anc.range$set,
+and we do want to check on those.
+We may indeed be removing the start or end point of a different range that has
+the same ancestor as this range.
+I will set skipdel check, as a flag to skip that deletion check for this range.
+Just make sure we unset it when we're done, and furthermore, we may need
+to check the end offsets when we're done.
+Range might be node,3 and node,1000, so after the delete operation,
+range should become node,3 node,4.
+Range adjustments will be part of mutfixup, before we review
+the mutation records. We need to know exactly what was removed, what was added.
+Ad something between offsets 3 and 6, and we have to bump 6 to 7.
+Remove childNodes[2], and the offsets drop to 2 and 5.
+This will be a piece of work, and I don't know if it's worth doing;
+although acid test 13 expects it. */
+
     deleteContents() {
         if(!this.normal$ize()) return;
         const n1 = this.sn, n2 = this.en;
@@ -6468,6 +6514,7 @@ collapse(side) {
                 Node.commonAncestor(n1, n2, result);
                 const anc = result.root; // should be the same as this.anc
         if(!anc) { this.unnormal$ize(); return; }
+        this.skipdelcheck = true;
         const i = result.i, j = result.j;
         const py = result.py, pz = result.pz;
         let y, z, t, k;
@@ -6475,7 +6522,11 @@ collapse(side) {
             y = py[i-1], z =pz[j-1];
             for(t = y.nextSibling; t; t = t.nextSibling)
                 if(t == z) break;
-            if(!t) { this.unnormal$ize(); return; } // start and end out of order
+            if(!t) { // start and end out of order
+                this.unnormal$ize();
+                delete this.skipdelcheck;
+                return;
+            }
             // delete everything between y and z
             for(t = y.nextSibling; t && t != z; t = y.nextSibling)
                 t.remove();
@@ -6509,12 +6560,13 @@ collapse(side) {
 // collapse to the end node, which is really there.
                     this.start0 = this.end0, this.start1 = this.end1;
         }
-        this.anc = this.start0;
+        this.setanc(this.start0);
         if(j) {
             if((n2.nodeType == 3 || n2.nodeType == 8) && o2 > 0)
                 n2.data = n2.data.substr(o2), this.start1 = this.end1 = 0;
         }
         this.unnormal$ize();
+        delete this.skipdelcheck;
     }
 
 // This function is limited in what it can do, in the type of range
@@ -6565,7 +6617,7 @@ collapse(side) {
             y.data = v.substr(0, o);
             y.after(n);
             this.start1 = o;
-            if(this.end0 == y) this.end0 = t, this.end1 = 0, this.anc = p;
+            if(this.end0 == y) this.end0 = t, this.end1 = 0, this.setanc(p);
             return;
         }
         if(o) y.insertBefore(n, y.childNodes[o]);
@@ -6582,7 +6634,7 @@ collapse(side) {
         if(type == 3 || type == 4 || type == 8)
             this.end1 = n.data.length;
         else this.end1 = n.childNodes.length;
-        this.anc = n;
+        this.setanc(n);
     }
 
 }

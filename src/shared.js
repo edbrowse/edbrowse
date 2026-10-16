@@ -1595,7 +1595,6 @@ function cloneNodeHelper(root, deep, flavor, range)
             if(!mode) dbp(`clone ${node1.nodeName} {`);
             else dbp(`clone ${node1.nodeName} mode ${mode} {`);
             if (kids && kids.length) dbp("kids " + kids.length);
-            else dbp("no kids");
         }
 
         let leftpoint = false, rightpoint = false, leftbranch = null, rightbranch = null;
@@ -1617,6 +1616,7 @@ function cloneNodeHelper(root, deep, flavor, range)
                 node2.appendChild(d.createTextNode(node1.data.substring(range.so, range.eo)));
             if(node1.nodeType == 8 && range.eo > range.so)
                 node2.appendChild(d.createComment(node1.data.substring(range.so, range.eo)));
+            dbp("}");
             return node2;
         }
 
@@ -1630,7 +1630,7 @@ function cloneNodeHelper(root, deep, flavor, range)
         }else if (node1.nodeName == "#document-fragment") {
             node2 = d.createDocumentFragment();
         }else if (node1.dom$class == "CSSStyleDeclaration") {
-            dbp("skipping style object");
+            dbp("skipping style object\n}");
             return null;
         } else if(mode == 2) {
             // doesn't matter what the ancestor was, it becomes a gragment
@@ -1704,6 +1704,7 @@ function cloneNodeHelper(root, deep, flavor, range)
                 if (item === "style$2") continue;
                 if (item === "attributes$2") continue;
                 if (item === "dataset$2") continue;
+                if (item === "range$set") continue;
                 if (item === "getElements$$cache") continue;
                 if (item === "ownerDocument") continue; // handled by createElement
                 if (item === "validity") continue; // created by constructor
@@ -1822,7 +1823,7 @@ function cloneNodeHelper(root, deep, flavor, range)
         if (deep && kids && !rightpoint) {
             let inout = 0; // inside or outside of the range
             if(leftpoint || mode == 4) inout = 1;
-            for(const k of Array.from(kids)) {
+            for(const k of (extract ? Array.from(kids) : kids)) {
                 // don't clone kids outside of the range
                 if(leftbranch && inout == 0) {
                     if(k != leftbranch) continue;
@@ -1839,6 +1840,7 @@ then we don't clone it. */
                 }
 // If extracting, just move the node, don't clone it.
                 if(extract && k != leftbranch && k != rightbranch) {
+                    dbp(`move ${k.nodeName}`);
                     node2.appendChild(k);
                     continue;
                 }
