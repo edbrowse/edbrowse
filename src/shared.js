@@ -1841,7 +1841,8 @@ then we don't clone it. */
 // If extracting, just move the node, don't clone it.
                 if(extract && k != leftbranch && k != rightbranch) {
                     dbp(`move ${k.nodeName}`);
-                    node2.appendChild(k);
+                    k.remove();
+                    node2.appendChild$nm(k);
                     continue;
                 }
                 let newmode = 0;
