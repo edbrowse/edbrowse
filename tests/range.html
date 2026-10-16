@@ -190,6 +190,7 @@ div.innerHTML = "<form><input name=a><input name=b><br><input name=c><input name
 form = div.firstChild;
 r2.setStart(form.b, 0);
 r2.setEnd(form.d, 0);
+inputc = form.c;
 cc = r2.extractContents();
 check((form.a && form.b && form.d), "a b and d persist");
 check((!form.c), "c goes away");
@@ -197,6 +198,7 @@ check((form.elements.length == 4 && form.a == form.elements[0] && form.d == form
 check((form.childNodes.length == 4), "4 children persist");
 check((cc.childNodes.length == 4), "4 elements extracted");
 check((cc.firstChild.name == 'b' && cc.lastChild.name == 'd'), "b c and d extracted");
+check((cc.childNodes[2] == inputc), "input c moves and is not cloned");
 check((!cc.b), "clone form is not a form");
 
 r2.setStart(form, 0);

@@ -1555,6 +1555,7 @@ The argument 'deep' refers to whether or not the clone will recurs.
 flavor = 0: regular cloneNode
 flavor = 1: importNode
 flavor = 2: Range.cloneContents
+flavor = 5: Range.extractContents
 *********************************************************************/
 
 function cloneNodeHelper(root, deep, flavor, range)
@@ -1567,6 +1568,8 @@ function cloneNodeHelper(root, deep, flavor, range)
     if (flavor != 1 && root.ownerDocument && root.ownerDocument.defaultView)
         w = root.ownerDocument.defaultView
     const d = w.document
+    let extract = false;
+    if(flavor == 5) extract = true, flavor = 2;
     const anc = (flavor == 2 ? range.anc : null);
     if(flavor == 1) flavor = 0;
     const debug = db$flags(2);
@@ -1819,7 +1822,7 @@ function cloneNodeHelper(root, deep, flavor, range)
         if (deep && kids && !rightpoint) {
             let inout = 0; // inside or outside of the range
             if(leftpoint || mode == 4) inout = 1;
-            for(const k of kids) {
+            for(const k of Array.from(kids)) {
                 // don't clone kids outside of the range
                 if(leftbranch && inout == 0) {
                     if(k != leftbranch) continue;
@@ -1827,11 +1830,16 @@ function cloneNodeHelper(root, deep, flavor, range)
                 }
 /* Based on chrome: we clone the end node, and not it's children,
 if the end node is set directly. However, if it is set by offset,
-then we don't clone it. Am I simply reproducing a bug in chrome? */
+then we don't clone it. */
                 if(inout == 1 && k == range.en && k != range.end0) break;
                 if(inout == 1 && rightbranch && k.previousSibling == rightbranch) break;
                 if(k.nodeType == 11) {
                     alert3("cannot clone a fragment, skipping this child.");
+                    continue;
+                }
+// If extracting, just move the node, don't clone it.
+                if(extract && k != leftbranch && k != rightbranch) {
+                    node2.appendChild(k);
                     continue;
                 }
                 let newmode = 0;

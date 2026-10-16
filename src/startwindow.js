@@ -6410,6 +6410,15 @@ collapse(side) {
         return newnode;
     }
 
+    extractContents() {
+        if(!this.normal$ize()) return document.createDocumentFragment();
+        this.base = this.anc ? this.anc : this.start0;
+        const newnode = mw$.cloneNodeHelper(this.base, true, 5, this);
+        delete this.base;
+        this.unnormal$ize();
+        return newnode;
+    }
+
     // compare nodes and offsets
     static orderNodes(n1, n2, o1, o2) {
         if(n1 == n2)
@@ -6506,12 +6515,6 @@ collapse(side) {
                 n2.data = n2.data.substr(o2), this.start1 = this.end1 = 0;
         }
         this.unnormal$ize();
-    }
-
-    extractContents() {
-        const v = this.cloneContents();
-        this.deleteContents();
-        return v;
     }
 
 // This function is limited in what it can do, in the type of range
