@@ -64,6 +64,8 @@ entry += ']';
 const config_all = { attributes: true, childList: true, subtree: true , characterData: true, attributeOldValue:true, characterDataOldValue: true};
 // without the subtree
 const config_shallow = { attributes: true, childList: true, characterData: true, attributeOldValue:true, characterDataOldValue: true};
+// for the range test
+const config_range = { childList: true, subtree:true};
 const ob1 = new MutationObserver(generalCallback);
 const ob2 = new MutationObserver(generalCallback);
 
@@ -184,6 +186,22 @@ sr6.appendChild(sr6p);
 sr6p.textContent = "I'm in shadow";
 sr6p.setAttribute("pumpkin", "orange");
 
+// Range.deleteContents and mutation records
+rdiv = document.createElement("div");
+rdiv.innerHTML = "<hr><br><br><br><hr>";
+// delete all the <br> tags, between the <hr> tags
+range = new Range();
+range.setStart(rdiv.firstChild, 0);
+range.setEnd(rdiv.lastChild, 0);
+        ob1.observe(rdiv, config_range);
+range.deleteContents();
+/* I'm not going to test that the range delete worked,
+all the range methods are tested in range.html.
+This is here to test mutation records that result from the delete.
+Chrome doesn't optimize this operation, and so, neither do I.
+Each delete of <br> is its own operation, and generates its own mutation record.
+Yeah, I was surprised by that too. */
+
 /* log is still empty, because these observers run asynchronously.
 change it to middle so we know we got this far.
 The timer will fire in half a second and overwrite it.
@@ -227,6 +245,9 @@ correct = new Set([
     '{42:[]>["yesterday"]}(1)',
     '{"yesterday":character=tomorrow>yesterday}(1)',
     '{I:[17]>[SPAN," go ",SPAN]}(1)',
+    '{DIV:~HR[BR]BR~>[]}(1)',
+    '{DIV:~HR[BR]BR~>[]}(2)',
+    '{DIV:~HR[BR]HR~>[]}(1)',
     '{2:["start"]>["mid"]}(1)',
     '{3:[]OL~>[BLOCKQUOTE]}(2)',
     '{1:~SCRIPT[]>[HR]}(1)',
