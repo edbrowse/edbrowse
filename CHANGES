@@ -43,6 +43,8 @@ custom element connectedCallback and disconnectedCallback functions.
 
 Most of the Range class.
 
+Arguments that are passed to the callback function on setTimeout and setInterval.
+
 3.8.18
 
 The if (input field) command to bring a textarea inline.
