@@ -4533,8 +4533,6 @@ if (typeof Blob !== 'undefined' && (typeof FormData === 'undefined' || !FormData
   const _FormData = global.FormData
 
   // To be monkey patched
-  const _send = global.XMLHttpRequest && global.XMLHttpRequest.prototype.send
-  const _fetch = global.Request && global.fetch
   const _sendBeacon = global.navigator && global.navigator.sendBeacon
   // Might be a worker thread...
   const _match = global.Element && global.Element.prototype
@@ -4912,38 +4910,6 @@ if (typeof Blob !== 'undefined' && (typeof FormData === 'undefined' || !FormData
      * It is accessed internally by the Object.prototype.toString().
      */
     FormDataPolyfill.prototype[stringTag] = 'FormData'
-  }
-
-  // Patch xhr's send method to call _blob transparently
-  if (_send) {
-    const setRequestHeader = global.XMLHttpRequest.prototype.setRequestHeader
-
-    global.XMLHttpRequest.prototype.setRequestHeader = function (name, value) {
-      setRequestHeader.call(this, name, value)
-      if (name.toLowerCase() === 'content-type') this._hasContentType = true
-    }
-
-    global.XMLHttpRequest.prototype.send = function (data) {
-      // need to patch send b/c old IE don't send blob's type (#44)
-      if (data instanceof FormDataPolyfill) {
-        const blob = data['_blob']()
-        if (!this._hasContentType) this.setRequestHeader('Content-Type', blob.type)
-        _send.call(this, blob)
-      } else {
-        _send.call(this, data)
-      }
-    }
-  }
-
-  // Patch fetch's function to call _blob transparently
-  if (_fetch) {
-    global.fetch = function (input, init) {
-      if (init && init.body && init.body instanceof FormDataPolyfill) {
-        init.body = init.body['_blob']()
-      }
-
-      return _fetch.call(this, input, init)
-    }
   }
 
   // Patch navigator.sendBeacon to use native FormData
