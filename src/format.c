@@ -93,57 +93,52 @@ Remove whitespace before or after <td>, as tidy does.
 
 static void cellDelimiters(char *buf)
 {
-	char *lastcell = 0;
-	int cellcount = 0;
-	char *s, *t;
+    char *lastcell = 0;
+    int cellcount = 0;
+    char *s, *t;
 
-	for (s = t = buf; *s; ++s) {
-		int n;
-		char *u;
-		if(*s != DataCellChar && *s != TableCellChar) {
-			*t++ = *s;
-			continue;
-		}
-// spaces behind
-		while(t > buf && t[-1] == ' ') --t;
-		*t++ = *s; // cell marker
-// spaces ahead
-respace:
-		if(s[1] == ' ') { ++s; goto respace; }
+    for (s = t = buf; *s; ++s) {
+        int n;
+        char *u;
+        if(*s != DataCellChar && *s != TableCellChar) {
+            *t++ = *s;
+            continue;
+        }
+        // spaces behind
+        while(t > buf && t[-1] == ' ') --t;
+        *t++ = *s; // cell marker
+respace: // spaces ahead
+        if(s[1] == ' ') { ++s; goto respace; }
 // tidy turns <td> <i> hello </i> </td> into <td><i>hello</i></td>
 // But not so with <p> or other strong tags.
 // I try to do the same.
-		if(s[1] != InternalCodeChar || !isdigitByte(s[2])) continue;
-			n = strtol(s + 2, &u, 10);
-// leave input fields alone
-			if(*u != '*' && *u != '{') continue;
-			if(tagList[n]->info->para & 3) continue;
+        if(s[1] != InternalCodeChar || !isdigitByte(s[2])) continue;
+            n = strtol(s + 2, &u, 10);
+            // leave input fields alone
+            if(*u != '*' && *u != '{') continue;
+            if(tagList[n]->info->para & 3) continue;
 // looks like a soft tag
-			memcpy(t, s + 1, u - s);
-			t += u - s;
-			s = u;
-			goto respace;
-	}
-	*t = 0;
+            memcpy(t, s + 1, u - s);
+            t += u - s;
+            s = u;
+            goto respace;
+    }
+    *t = 0;
 
-	for (s = buf; *s; ++s) {
-		if (*s == DataCellChar) {
-			*s = '|';
-			continue;
-		}
-		if (*s == TableCellChar) {
-			*s = '|';
-			lastcell = s;
-			++cellcount;
-			continue;
-		}
-		if (!strchr("\f\r\n", *s))
-			continue;
-// newline here, if just one cell delimiter then blank it out
-		if (cellcount == 1)
-			*lastcell = ' ';
-		cellcount = 0;
-	}
+// loop over buffer again, looking for cell delimiters
+    for (s = buf; *s; ++s) {
+        if (*s == DataCellChar) { *s = '|'; continue; }
+        if (*s == TableCellChar) {
+            *s = '|';
+            lastcell = s;
+            ++cellcount;
+            continue;
+        }
+        if (!strchr("\f\r\n", *s)) continue;
+        // newline here, if just one cell delimiter then blank it out
+        if (cellcount == 1) *lastcell = ' ';
+        cellcount = 0;
+    }
 }
 
 /*********************************************************************
@@ -165,136 +160,164 @@ Those must be exactly preserved, obviously.
 
 static void html_tr(char *buf)
 {
-	char *s, *ss, *w, c, d;
-	int n;
-	static const char from[] = "\x1b\x95\x99\x9c\x9d\x91\x92\x93\x94\xa0\xad\x96\x97\x85";
-	static const char becomes[] = "_*'`'`'`' x---";
-	bool inputmode = false;
-	char *pua = getenv("EB_PUA");
-	if(pua && !*pua) pua = 0;
+    char *s, *ss, *w, c, d;
+    int n;
+    static const char from[] = "\x1b\x95\x99\x9c\x9d\x91\x92\x93\x94\xa0\xad\x96\x97\x85";
+    static const char becomes[] = "_*'`'`'`' x---";
+    bool inputmode = false;
+    char *pua = getenv("EB_PUA");
+    if(pua && !*pua) pua = 0;
 
-	for (s = w = buf; (c = *s); ++s) {
-		d = s[1];
-		if (c == InternalCodeChar && isdigitByte(d)) {
-			int tagno = strtol(s + 1, &ss, 10);
-			if (*ss == '<' && !stringEqual(tagList[tagno]->info->name, "button"))
-				inputmode = true;
-			if (*ss == '>')
-				inputmode = false;
-			++ss;
-			n = ss - s;
-			memmove(w, s, n);
-			w += n;
-			s = ss - 1;
-			continue;
-		}
+    for (s = w = buf; (c = *s); ++s) {
+        d = s[1];
+        if (c == InternalCodeChar && isdigitByte(d)) {
+            int tagno = strtol(s + 1, &ss, 10);
+            if (*ss == '<' && !stringEqual(tagList[tagno]->info->name, "button"))
+                inputmode = true;
+            if (*ss == '>') inputmode = false;
+            ++ss;
+            n = ss - s;
+            memmove(w, s, n);
+            w += n;
+            s = ss - 1;
+            continue;
+        }
 
-		if (inputmode)
-			goto put1;
+        if (inputmode) goto put1;
 
 // utf8 test
-		if ((c & 0xc0) == 0xc0 && (d & 0xc0) == 0x80) {
-			unsigned int uni = 0, ubytes = 0;
-			if ((c & 0x3c) == 0) {
-/* fits in 8 bits */
-				uni = ((uchar) c << 6) | (d & 0x3f);
-				ss = strchr(from, (char)uni);
-				if (ss) {
-					c = becomes[ss - from];
-					++s;
-					if(c == 'x')
-						continue;
-					goto put1;
-				}
-			}
-// copy the utf8 sequence as is
-			uni = 0;
-			*w++ = c;
-			++s;
-			c = (char) ((uchar)c << 1);
-			while ((c & 0x80) && ((d = *s) & 0xc0) == 0x80) {
-				*w++ = d, ++s, ++ubytes;
-				uni = (uni << 6) | (d & 0x3f);
-				c = (char) ((uchar)c << 1);
-			}
-			--s;
-				c = (char) ((uchar)c >> (1+ubytes));
-				uni |= ((unsigned int)c << (ubytes*6));
+        if ((c & 0xc0) == 0xc0 && (d & 0xc0) == 0x80) {
+            unsigned int uni = 0, ubytes = 0;
+            if ((c & 0x3c) == 0) {
+                /* fits in 8 bits */
+                uni = ((uchar) c << 6) | (d & 0x3f);
+                ss = strchr(from, (char)uni);
+                if (ss) {
+                    c = becomes[ss - from];
+                    ++s;
+                    if(c == 'x') continue;
+                    goto put1;
+                }
+            }
+            // copy the utf8 sequence as is
+            uni = 0;
+            *w++ = c;
+            ++s;
+            c = (char) ((uchar)c << 1);
+            while ((c & 0x80) && ((d = *s) & 0xc0) == 0x80) {
+                *w++ = d, ++s, ++ubytes;
+                uni = (uni << 6) | (d & 0x3f);
+                c = (char) ((uchar)c << 1);
+            }
+            --s;
+                c = (char) ((uchar)c >> (1+ubytes));
+                uni |= ((unsigned int)c << (ubytes*6));
 // We can do things with high unicodes here, if we wish.
 // Suppresse private unicodes, which shouldn't appear on public websites,
 // and if they do, there isn't a consistent way to read them.
-			if(((uni >= 0xe000 && uni < 0xf8ff) ||
-			(uni >= 0xf0000 && uni < 0xffffd) ||
-			(uni >= 0x100000 && uni < 0x10fffd)) &&
-			!pua)
-				w -= ubytes+1;
-			continue;
-		}
+            if(((uni >= 0xe000 && uni < 0xf8ff) ||
+            (uni >= 0xf0000 && uni < 0xffffd) ||
+            (uni >= 0x100000 && uni < 0x10fffd)) &&
+            !pua)
+                w -= ubytes+1;
+            continue;
+        }
 
 // Now assuming iso8859-1, which is practically deprecated
-		ss = strchr(from, c);
-		if (ss) {
-			c = becomes[ss - from];
-			if(c == 'x')
-				continue;
-		}
+        ss = strchr(from, c);
+        if (ss) {
+            c = becomes[ss - from];
+            if(c == 'x') continue;
+        }
 
 put1:
-		*w++ = c;
-	}
-	*w = 0;
+        *w++ = c;
+    }
+    *w = 0;
 }
 
-// For <h3><div>hello</div></h3> which should not happen, but does
-// And for <blockquote><p> which is perfectly fine
-static void h3div(char *buf)
+// Like anchorSwap but here we push whitespace past emphasize marks.
+// Simpler, no tags, no pipes, just emphasize marks.
+// It's important to run this one first, before anchorSwap.
+
+static void emphasizeSwap(char *buf)
 {
-	char *s, *t;
-	bool in_h = false;
+    char c, *s, *w, *a;
+    bool change; // made a swap somewhere
+    int cnt = 0, l;
+    char mark[12];
 
-	for(s = buf; *s; ++s) {
+top1:
+    change = false;
+    ++cnt;
+    // w represents the state of whitespace
+    w = NULL;
+    // a points to the prior mark, which is swappable with following whitespace
+    a = NULL;
 
-// detect the start of a header
-		if(s[1] == 'h' &&
-		(uchar)s[2] >= '1' && (uchar)s[2] <= '6' && s[3] == ' ') {
-			if(*s == '\f') {
-				in_h = true, s += 3;
-				continue;
-			}
-// and now for the rare case of <li> <h2> stuff </h2> </li>
-// which is invalid html but it does happen
-			if(*s == ' ' && s >= buf+2 &&
-			s[-1] == '*' && s[-2] == '*') {
-				in_h = true, s += 3;
-				continue;
-			}
-// even less likely is <ol> numbers. False positives are possible here,
-// as they were above in the <ul> case.
-			if(*s == ' ' && s >= buf+2 &&
-			s[-1] == '.' && isdigitByte(s[-2])) {
-				in_h = true, s += 3;
-				continue;
-			}
-		}
+    for (s = buf; (c = *s); ++s) {
+        if (isspaceByte(c)) {
+            if (!w) w = s;
+            continue;
+        }
 
-		if(isspaceByte(*s)) {
-			if(in_h) *s = ' ';
-		} else in_h = false;
-	}
-	in_h = false;
-	for(s = t = buf; *s; ++s) {
-		if(*s == '\f' && s[1] == '`' && s[2] == '`'
-		&& isspaceByte(s[3])) {
-			memcpy(t, s, 3);
-			in_h = true, s += 3, t += 3;
-			continue;
-		}
-		if(isspaceByte(*s)) {
-			if(in_h) continue;
-		} else in_h = false;
-		*t++ = *s;
-	}
-	*t = 0;
+        // end of white space, should we swap it with prior mark?
+        if (w && a) {
+            memmove(a, w, s - w);
+            memmove(a + (s - w), mark, strlen(mark));
+            change = true;
+            w = NULL;
+        }
+
+        a = NULL;
+        if (c != '`' && c != '\'') goto normalChar;
+        if(s[1] != '@') goto normalChar;
+        if(!(l = is_tdchar(s + 2))) goto normalChar;
+        l += 2;
+        memcpy(mark, s, l);
+        mark[l] = 0;
+        // We have a mark, should we swap it with prior whitespace?
+        if(w && c == '\'') {
+            memmove(w + l, w, s - w);
+            memcpy(w, mark, l);
+            change = true;
+            w += l;
+            s += l - 1;
+            continue;
+        }
+
+        if(c == '`') a = s;
+        s += l - 1;
+normalChar:
+        w = 0;
+    }
+if(change) goto top1;
+    debugPrint(4, "emphasizeSwap %d", cnt);
+
+// compress <em></em>. you can see we couldn't do this with individual stars,
+// too many false positives; we need multicharacter markers.
+top2:
+    change = false;
+    for(s = a = buf; (c = *s); ++s) {
+        if(c == '`' && s[1] == '@' && (l = is_tdchar(s + 2)) &&
+        s[2 + l] == '\'' && s[3 + l] == '@' && !strncmp(s + 2, s + 4 + l, l)) {
+            s += 3 + 2*l;
+            change = true;
+            continue;
+        }
+        *a++ = c;
+    }
+    *a = 0;
+    if(change) goto top2;
+
+// and now let's crunch the marks down to single characters.
+    for(s = a = buf; (c = *s); ++s) {
+        if((c == '`' || c == '\'') &&
+        s[1] == '@' && is_tdchar(s + 2))
+            s += 2;
+        *a++ = *s;
+    }
+    *a = 0;
 }
 
 /*********************************************************************
@@ -328,193 +351,157 @@ A list tag might look like   ^b379**   (for <ul>), or   ^b379*5.   (for <ol>).
 
 static void anchorSwap(char *buf)
 {
-	char c, d, *s, *ss, *w, *a;
-	bool pretag;		// <pre>
-	bool premode;		// inside <pre> </pre>
-	bool slash;		// closing tag
-	bool change = true;		// made a swap somewhere
-	int n = 0, cnt = 0, tagno = 0;
-	char tag[20];
+    char c, d, *s, *ss, *w, *a;
+    bool pretag; // <pre>
+    bool premode; // inside <pre> </pre>
+    bool slash; // closing tag
+    bool change = true; // made a swap somewhere
+    int n = 0, cnt = 0, tagno = 0;
+    char tag[20];
 
 top:
-	change = false;
-	++cnt;
-	premode = false;
-// w represents the state of whitespace
-	w = NULL;
-// a points to the prior anchor, which is swappable with following whitespace
-	a = NULL;
+    change = false;
+    ++cnt;
+    premode = false;
+    // w represents the state of whitespace
+    w = NULL;
+    // a points to the prior anchor, which is swappable with following whitespace
+    a = NULL;
 
-	for (s = buf; (c = *s); ++s) {
-		if (isspaceByte(c) || (c == '|' && !premode)) {
-#if 0
-			if (c == '\t' && !premode)
-				*s = ' ';
-#endif
-			if (!w) w = s;
-			continue;
-		}
+    for (s = buf; (c = *s); ++s) {
+        if (isspaceByte(c) || (c == '|' && !premode)) {
+            if (!w) w = s;
+            continue;
+        }
 
-// end of white space, should we swap it with prior tag?
-		if (w && a) {
-			const Tag *t = tagList[tagno];
-			const char *q;
-// don't move td past newline; it screws things up.
-			if(t->action != TAGACT_TD) {
+        // end of white space, should we swap it with prior tag?
+        if (w && a) {
+            const Tag *t = tagList[tagno];
+            const char *q;
+            // don't move td past newline; it screws things up.
+            if(t->action != TAGACT_TD) {
 tagforward:
-				memmove(a, w, s - w);
-				memmove(a + (s - w), tag, n);
-				change = true;
-				w = NULL;
-				goto afterforward;
-			}
+                memmove(a, w, s - w);
+                memmove(a + (s - w), tag, n);
+                change = true;
+                w = NULL;
+                goto afterforward;
+            }
 // It's ok to move things around, unless it's a data table.
-			if(tableType(t) != 1) goto tagforward;
-			for(q = w; q < s; ++q)
-				if(*q != ' ') goto afterforward;
-			goto tagforward;
-		}
+            if(tableType(t) != 1) goto tagforward;
+            for(q = w; q < s; ++q)
+                if(*q != ' ') goto afterforward;
+            goto tagforward;
+        }
 afterforward:
 
-// prior anchor has no significance
-		a = NULL;
+        // prior anchor has no significance
+        a = NULL;
 
-		if (c != InternalCodeChar) goto normalChar;
-// some conditions that should never happen
-		if (!isdigitByte(s[1])) goto normalChar;
-		tagno = strtol(s + 1, &ss, 10);
-		preFormatCheck(tagno, &pretag, &slash);
-		d = *ss;
-		if (!strchr("{}<>*", d)) goto normalChar;
-		n = ss + 1 - s;
-		memcpy(tag, s, n);
-		tag[n] = 0;
+        if (c != InternalCodeChar) goto normalChar;
+        // some conditions that should never happen
+        if (!isdigitByte(s[1])) goto normalChar;
+        tagno = strtol(s + 1, &ss, 10);
+        preFormatCheck(tagno, &pretag, &slash);
+        d = *ss;
+        if (!strchr("{}<>*", d)) goto normalChar;
+        n = ss + 1 - s;
+        memcpy(tag, s, n);
+        tag[n] = 0;
 
-		if (pretag) {
-			w = 0;
-			premode = !slash;
-			s = ss;
-			continue;
-		}
+        if (pretag) {
+            w = 0;
+            premode = !slash;
+            s = ss;
+            continue;
+        }
 
 // We have a tag, should we swap it with prior whitespace?
-		if (w && !premode && d == '}') {
-			memmove(w + n, w, s - w);
-			memcpy(w, tag, n);
-			change = true;
-			w += n;
-			s = ss;
-			continue;
-		}
+        if (w && !premode && d == '}') {
+            memmove(w + n, w, s - w);
+            memcpy(w, tag, n);
+            change = true;
+            w += n;
+            s = ss;
+            continue;
+        }
 
-		if ((d == '*' || d == '{') && !premode)
-			a = s;
-		if(d == '*' &&
-		tagList[tagno]->action == TAGACT_LI) {
-			char *v = ss;
-			for(++v; *v == '*' || *v == '.' ||
-			isdigitByte(*v); ++v) ;
-// *v should always be space at this point
-			if(*v == ' ') {
-				ss = v;
-				n = ss + 1 - s;
-				memcpy(tag, s, n);
-				tag[n] = 0;
-			}
-		}
-		if(d == '<' && stringEqual(tagList[tagno]->info->name, "button"))
-			a = s;
-		s = ss;
+        if ((d == '*' || d == '{') && !premode)
+            a = s;
+        if(d == '*' &&
+        tagList[tagno]->action == TAGACT_LI) {
+            char *v = ss;
+            for(++v; *v == '*' || *v == '.' ||
+            isdigitByte(*v); ++v) ;
+            // *v should always be space at this point
+            if(*v == ' ') {
+                ss = v;
+                n = ss + 1 - s;
+                memcpy(tag, s, n);
+                tag[n] = 0;
+            }
+        }
+        if(d == '<' && stringEqual(tagList[tagno]->info->name, "button"))
+            a = s;
+        s = ss;
 
 normalChar:
-		w = 0;
-	}
-	if(change) goto top;
-	debugPrint(4, "anchorSwap %d", cnt);
+        w = 0;
+    }
+    if(change) goto top;
+    debugPrint(4, "anchorSwap %d", cnt);
 }
 
-// Like anchorSwap but this time we push whitespace past emphasize marks.
-// Simpler, no tags, no pipes, just emphasize marks.
-// It's important to run this one first, before anchorSwap.
-
-static void emphasizeSwap(char *buf)
+// For <h3><div>hello</div></h3> which should not happen, but does
+// And for <blockquote><p> which is perfectly fine
+static void h3div(char *buf)
 {
-	char c, *s, *w, *a;
-	bool change;		// made a swap somewhere
-	int cnt = 0, l;
-	char mark[12];
+    char *s, *t;
+    bool in_h = false;
 
-top1:
-	change = false;
-	++cnt;
-// w represents the state of whitespace
-	w = NULL;
-// a points to the prior mark, which is swappable with following whitespace
-	a = NULL;
+    for(s = buf; *s; ++s) {
 
-	for (s = buf; (c = *s); ++s) {
-		if (isspaceByte(c)) {
-			if (!w) w = s;
-			continue;
-		}
+// detect the start of a header
+        if(s[1] == 'h' &&
+        (uchar)s[2] >= '1' && (uchar)s[2] <= '6' && s[3] == ' ') {
+            if(*s == '\f') {
+                in_h = true, s += 3;
+                continue;
+            }
+// and now for the rare case of <li> <h2> stuff </h2> </li>
+// which is invalid html but it does happen
+            if(*s == ' ' && s >= buf+2 &&
+            s[-1] == '*' && s[-2] == '*') {
+                in_h = true, s += 3;
+                continue;
+            }
+// even less likely is <ol> numbers. False positives are possible here,
+// as they were above in the <ul> case.
+            if(*s == ' ' && s >= buf+2 &&
+            s[-1] == '.' && isdigitByte(s[-2])) {
+                in_h = true, s += 3;
+                continue;
+            }
+        }
 
-// end of white space, should we swap it with prior mark?
-		if (w && a) {
-			memmove(a, w, s - w);
-			memmove(a + (s - w), mark, strlen(mark));
-			change = true;
-			w = NULL;
-		}
-
-		a = NULL;
-		if (c != '`' && c != '\'') goto normalChar;
-		if(s[1] != '@') goto normalChar;
-		if(!(l = is_tdchar(s + 2))) goto normalChar;
-		l += 2;
-		memcpy(mark, s, l);
-		mark[l] = 0;
-// We have a mark, should we swap it with prior whitespace?
-		if(w && c == '\'') {
-			memmove(w + l, w, s - w);
-			memcpy(w, mark, l);
-			change = true;
-			w += l;
-			s += l - 1;
-			continue;
-		}
-
-		if(c == '`') a = s;
-		s += l - 1;
-normalChar:
-		w = 0;
-	}
-if(change) goto top1;
-	debugPrint(4, "emphasizeSwap %d", cnt);
-
-// compress <em></em>. you can see we couldn't do this with individual stars,
-// too many false positives; we need multicharacter markers.
-top2:
-	change = false;
-	for(s = a = buf; (c = *s); ++s) {
-		if(c == '`' && s[1] == '@' && (l = is_tdchar(s + 2)) &&
-		s[2 + l] == '\'' && s[3 + l] == '@' && !strncmp(s + 2, s + 4 + l, l)) {
-			s += 3 + 2*l;
-			change = true;
-			continue;
-		}
-		*a++ = c;
-	}
-	*a = 0;
-	if(change) goto top2;
-
-// and now let's crunch the marks down to single characters.
-    for(s = a = buf; (c = *s); ++s) {
-        if((c == '`' || c == '\'') &&
-        s[1] == '@' && is_tdchar(s + 2))
-            s += 2;
-    	*a++ = *s;
+        if(isspaceByte(*s)) {
+            if(in_h) *s = ' ';
+        } else in_h = false;
     }
-    *a = 0;
+    in_h = false;
+    for(s = t = buf; *s; ++s) {
+        if(*s == '\f' && s[1] == '`' && s[2] == '`'
+        && isspaceByte(s[3])) {
+            memcpy(t, s, 3);
+            in_h = true, s += 3, t += 3;
+            continue;
+        }
+        if(isspaceByte(*s)) {
+            if(in_h) continue;
+        } else in_h = false;
+        *t++ = *s;
+    }
+    *t = 0;
 }
 
 /* Framing characters like [] around an anchor are unnecessary here,
@@ -522,155 +509,137 @@ top2:
  * Get rid of these characters, even in premode. */
 static void anchorUnframe(char *buf)
 {
-	char c, *s, *w, *a;
-	int n;
+    char c, *s, *w, *a;
+    int n;
 
-	for (s = w = buf; (c = *s); ++s) {
-		char open, close, linkchar, d = 0;
-		if (!strchr("{[(<", c))
-			goto putc;
-		if (s[1] != InternalCodeChar)
-			goto putc;
-		if (!isdigitByte(s[2]))
-			goto putc;
-		for (a = s + 3; isdigitByte(*a); ++a) ;
-		linkchar = 0;
-		if (*a == '{')
-			linkchar = '}';
-		if (*a == '<')
-			linkchar = '>';
-		if (!linkchar)
-			goto putc;
-		open = c;
-		close = 0;
-		if (open == '{')
-			close = '}';
-		if (open == '[')
-			close = ']';
-		if (open == '(')
-			close = ')';
-		if (open == '<')
-			close = '>';
-		n = 1;
-		while (n < 120) {
-			d = a[n++];
-			if (!d)
-				break;
-			if (d != InternalCodeChar)
-				continue;
-			while (isdigitByte(a[n]))
-				++n;
-			d = a[n++];
-			if (!d)
-				break;	// should never happen
-			if (strchr("{}<>", d))
-				break;
-		}
-		if (n >= 120)
-			goto putc;
-		if (d != linkchar)
-			goto putc;
-		a += n;
-		if (*a != close)
-			goto putc;
-		++s;
-		memmove(w, s, a - s);
-		w += a - s;
-		s = a;
-		continue;
+    for (s = w = buf; (c = *s); ++s) {
+        char open, close, linkchar, d = 0;
+        if (!strchr("{[(<", c)) goto putc;
+        if (s[1] != InternalCodeChar) goto putc;
+        if (!isdigitByte(s[2])) goto putc;
+        for (a = s + 3; isdigitByte(*a); ++a) ;
+        linkchar = 0;
+        if (*a == '{') linkchar = '}';
+        if (*a == '<') linkchar = '>';
+        if (!linkchar) goto putc;
+        open = c;
+        close = 0;
+        if (open == '{') close = '}';
+        if (open == '[') close = ']';
+        if (open == '(') close = ')';
+        if (open == '<') close = '>';
+        n = 1;
+        while (n < 120) {
+            d = a[n++];
+            if (!d) break;
+            if (d != InternalCodeChar) continue;
+            while (isdigitByte(a[n])) ++n;
+            d = a[n++];
+            if (!d) break; // should never happen
+            if (strchr("{}<>", d)) break;
+        }
+        if (n >= 120) goto putc;
+        if (d != linkchar) goto putc;
+        a += n;
+        if (*a != close) goto putc;
+        ++s;
+        memmove(w, s, a - s);
+        w += a - s;
+        s = a;
+        continue;
 putc:
-		*w++ = c;
-	}			// loop over buffer
-	*w = 0;
-	debugPrint(4, "anchors unframed");
+        *w++ = c;
+    } // loop over buffer
+    *w = 0;
+    debugPrint(4, "anchors unframed");
 }
 
 // Now compress the implied linebreaks into one.
 static void html_ws(char *buf)
 {
-	char c, *s, *w, *w2, *a;
-	int n;
-	bool premode = false, pretag, strong, slash;
-	char *ss = 0;
+    char c, *s, *w, *w2, *a;
+    int n;
+    bool premode = false, pretag, strong, slash;
+    char *ss = 0;
 
-	for (s = buf; (c = *s); ++s) {
+    for (s = buf; (c = *s); ++s) {
 
-// look for <pre>
-		if (c == InternalCodeChar && isdigitByte(s[1])) {
-			n = strtol(s + 1, &s, 10);
-			if (*s == '*') {
-				preFormatCheck(n, &pretag, &slash);
-				if (pretag) premode = !slash;
-			}
-		}
+        // look for <pre>
+        if (c == InternalCodeChar && isdigitByte(s[1])) {
+            n = strtol(s + 1, &s, 10);
+            if (*s == '*') {
+                preFormatCheck(n, &pretag, &slash);
+                if (pretag) premode = !slash;
+            }
+        }
 
-		if (!isspaceByte(c)) continue;
+        if (!isspaceByte(c)) continue;
 
 // whitespace region starts here.
 // strong is anything harder than space, like <br> or <p> or <div>
-		strong = false;
+        strong = false;
 // watch for pipes inside whitespace, these are usually cell delimiters.
 // pipe ends a whitespace region if only spaces come before
-		for (w = s; isspaceByte(*w) || (*w == '|' && !premode); ++w) {
-			if(*w == '|') {
-				if(strong) continue;
-				break;
-			}
-			if(*w != ' ') strong = true;
-		}
+        for (w = s; isspaceByte(*w) || (*w == '|' && !premode); ++w) {
+            if(*w == '|') {
+                if(strong) continue;
+                break;
+            }
+            if(*w != ' ') strong = true;
+        }
 
 // whitespace region from s up to w
 // pipes have to be internal to whitespace to be moved;
 // pipes at the end are left alone.
 // Look ahead past anchors
-		w2 = w;
-		while(*w2 == InternalCodeChar) {
-			n = strtol(w2 + 1, &w2, 10);
-			++w2;
-		}
-		if(*w2)
-			while(w[-1] == '|') --w;
+        w2 = w;
+        while(*w2 == InternalCodeChar) {
+            n = strtol(w2 + 1, &w2, 10);
+            ++w2;
+        }
+        if(*w2)
+            while(w[-1] == '|') --w;
 
 // move internal pipes to the front
-		for(ss = --w; w >= s; --w)
-			if(*w != '|') *ss-- = *w;
-		while(ss >= s) *ss-- = '|';
-		while(*s == '|') ++s;
+        for(ss = --w; w >= s; --w)
+            if(*w != '|') *ss-- = *w;
+        while(ss >= s) *ss-- = '|';
+        while(*s == '|') ++s;
 
-		strong = false, a = 0;
-		for (w = s; isspaceByte(*w); ++w) {
-			if (*w == '\n' || *w == '\f')
-				strong = true;
-			if (*w == '\r' && !a)
-				a = w;
-		}
-		ss = s, s = w - 1;
-		if (!a)
-			continue;
-		if (premode)
-			continue;
-		if (strong) {
-			for (w = ss; w <= s; ++w)
-				if (*w == '\r')
-					*w = ' ';
-			continue;
-		}
-		for (w = ss; w <= s; ++w)
-			if (*w == '\r' && w != a)
-				*w = ' ';
-	}			// loop over buffer
-	debugPrint(4, "whitespace combined");
+        strong = false, a = 0;
+        for (w = s; isspaceByte(*w); ++w) {
+            if (*w == '\n' || *w == '\f')
+                strong = true;
+            if (*w == '\r' && !a)
+                a = w;
+        }
+        ss = s, s = w - 1;
+        if (!a)
+            continue;
+        if (premode)
+            continue;
+        if (strong) {
+            for (w = ss; w <= s; ++w)
+                if (*w == '\r')
+                    *w = ' ';
+            continue;
+        }
+        for (w = ss; w <= s; ++w)
+            if (*w == '\r' && w != a)
+                *w = ' ';
+    } // loop over buffer
+    debugPrint(4, "whitespace combined");
 
 /* Due to the anchor swap, the buffer could end in whitespace
  * followed by several anchors. Trim these off. */
-	s = buf + strlen(buf);
-	while (s > buf + 1 && s[-1] == '*' && isdigitByte(s[-2])) {
-		for (w = s - 3; w >= buf && isdigitByte(*w); --w) ;
-		if (w < buf || *w != InternalCodeChar)
-			break;
-		s = w;
-	}
-	*s = 0;
+    s = buf + strlen(buf);
+    while (s > buf + 1 && s[-1] == '*' && isdigitByte(s[-2])) {
+        for (w = s - 3; w >= buf && isdigitByte(*w); --w) ;
+        if (w < buf || *w != InternalCodeChar)
+            break;
+        s = w;
+    }
+    *s = 0;
 
 /*********************************************************************
 Some hyperlinks are multiline, due to some html inside, and our interpretation
@@ -680,23 +649,19 @@ Even submit, as shown by jsrt, if you submit the form it says b1=Send%20Message
 hence it would send a newline if there was one.
 *********************************************************************/
 
-	for (s = buf; (c = *s); ++s) {
-		if (c != InternalCodeChar)
-			continue;
-		n = strtol(s + 1, &s, 10);
-		if (*s == '<') {
-			if (!stringEqual(tagList[n]->info->name, "button"))
-				continue;
-		} else if (*s != '{')
-			continue;
-		for (a = s + 1; (c = *a); ++a) {
-			if (c == InternalCodeChar && a[1] == '0')
-				break;
-			if (c == '\n' || c == '\f')
-				*a = ' ';
-		}
-		s = a;
-	}
+    for (s = buf; (c = *s); ++s) {
+        if (c != InternalCodeChar) continue;
+        n = strtol(s + 1, &s, 10);
+        if (*s == '<') {
+            if (!stringEqual(tagList[n]->info->name, "button"))
+                continue;
+        } else if (*s != '{') continue;
+        for (a = s + 1; (c = *a); ++a) {
+            if (c == InternalCodeChar && a[1] == '0') break;
+            if (c == '\n' || c == '\f') *a = ' ';
+        }
+        s = a;
+    }
 }
 
 /*********************************************************************
@@ -709,9 +674,9 @@ static bool bl_overflow;
 /* This is a virtual column number, extra spaces for tab,
  * one space for emoji, and skipping over invisible anchors. */
 static int colno;
-int formatLineLength = 80;	// for html formatting or the bl command
+int formatLineLength = 80; // for html formatting or the bl command
 bool formatOverflow;
-static const int cutLineAfter = 36;	/* cut sentence after this column */
+static const int cutLineAfter = 36; // cut sentence after this column
 static const int paraLine = 120;	/* paragraph in a line */
 static int longcut, pre_cr;
 static int lspace;		/* last space value, 3 = paragraph */
@@ -876,7 +841,7 @@ static void appendSpaceChunk(const char *chunk, int len, bool premode)
 				bl_start[longcut] = ' ';
 				if (!nlc)
 					len = spc = 0, nlc = 1;
-			}	// pasting small fragment onto previous line
+			} // pasting small fragment onto previous line
 		}
 	}
 
