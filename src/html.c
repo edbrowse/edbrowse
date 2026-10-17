@@ -5829,6 +5829,7 @@ past_cell_paragraph:
 					--j;
 				ns[j] = 0;
 				ns_l = j;
+// append TableCellChar or DataCellChar depending on table type
 				j = tableType(t);
 				stringAndChar(&ns, &ns_l, "\3\4 "[j]);
 			}

@@ -149,10 +149,6 @@ Watch out for utf8 - don't translate the a0 in c3a0.  That is a grave.
 But a0 by itself is breakspace; turn it into space.
 And c2a0 is utf8 breakspace.
 99.9% of the time we are in utf8 mode.
-I strip out the private utf8 codes.
-Those should never be used on a public website.
-If they are used by your private work website, and you need to retain them,
-export EB_PUA=on
 Don't do any of these transliterations in an input field.
 Those must be exactly preserved, obviously.
 *********************************************************************/
@@ -164,8 +160,6 @@ static void html_tr(char *buf)
     static const char from[] = "\x1b\x95\x99\x9c\x9d\x91\x92\x93\x94\xa0\xad\x96\x97\x85";
     static const char becomes[] = "_*'`'`'`' x---";
     bool inputmode = false;
-    char *pua = getenv("EB_PUA");
-    if(pua && !*pua) pua = 0;
 
     for (s = w = buf; (c = *s); ++s) {
         d = s[1];
@@ -184,7 +178,7 @@ static void html_tr(char *buf)
 
         if (inputmode) goto put1;
 
-// utf8 test
+        // utf8 test
         if ((c & 0xc0) == 0xc0 && (d & 0xc0) == 0x80) {
             unsigned int uni = 0, ubytes = 0;
             if ((c & 0x3c) == 0) {
@@ -209,16 +203,9 @@ static void html_tr(char *buf)
                 c = (char) ((uchar)c << 1);
             }
             --s;
-                c = (char) ((uchar)c >> (1+ubytes));
-                uni |= ((unsigned int)c << (ubytes*6));
-// We can do things with high unicodes here, if we wish.
-// Suppresse private unicodes, which shouldn't appear on public websites,
-// and if they do, there isn't a consistent way to read them.
-            if(((uni >= 0xe000 && uni < 0xf8ff) ||
-            (uni >= 0xf0000 && uni < 0xffffd) ||
-            (uni >= 0x100000 && uni < 0x10fffd)) &&
-            !pua)
-                w -= ubytes+1;
+            c = (char) ((uchar)c >> (1+ubytes));
+            uni |= ((unsigned int)c << (ubytes*6));
+            // We can do things with high unicodes here if we wish.
             continue;
         }
 
