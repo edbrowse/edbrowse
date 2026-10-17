@@ -127,9 +127,8 @@ respace: // spaces ahead
 
 // loop over buffer again, looking for cell delimiters
     for (s = buf; *s; ++s) {
-        if (*s == DataCellChar) { *s = '|'; continue; }
+        if (*s == DataCellChar) { *s = TableCellChar; continue; }
         if (*s == TableCellChar) {
-            *s = '|';
             lastcell = s;
             ++cellcount;
             continue;
@@ -237,7 +236,7 @@ put1:
 }
 
 // Like anchorSwap but here we push whitespace past emphasize marks.
-// Simpler, no tags, no pipes, just emphasize marks.
+// Simpler, no tags, no td indicators, just emphasize marks.
 // It's important to run this one first, before anchorSwap.
 
 static void emphasizeSwap(char *buf)
@@ -334,14 +333,14 @@ kinda like bubble sort.
 It has the potential to be quadratic,
 but that doesn't seem to happen in practice.
 Use cnt to count the iterations, for debugging purposes.
-| is considered a whitespace character. Why is that?
+TableCellChar is considered a whitespace character. Why is that?
 Html tables are mostly used for visual layout, but sometimes not.
-I use | to separate the cells of a table, but if there's nothing in them,
-or at least no text, then I get rid of the pipes.
+I use TableCellChar to separate the cells of a table, but if there's nothing
+in them, or at least no text, then I get rid of the delimiters.
 But every cell is going to have an invisible anchor from <td>, so that js can,
 perhaps, set innerHTML inside this cell.
 So there's something there, but nothing there.
-I push these tags past the pipes, so I can clear it all away.
+I push these tags past the delimiters, so I can clear it all away.
 But not if it's a data table; the tags have to be true to their cells.
 If a tag is <li>, then the follow on *, for <ul>,
 or the follow on number, for <ol>, is considered part of the tag.
@@ -369,7 +368,7 @@ top:
     a = NULL;
 
     for (s = buf; (c = *s); ++s) {
-        if (isspaceByte(c) || (c == '|' && !premode)) {
+        if (isspaceByte(c) || (c == TableCellChar && !premode)) {
             if (!w) w = s;
             continue;
         }
@@ -580,8 +579,8 @@ static void html_ws(char *buf)
         strong = false;
 // watch for pipes inside whitespace, these are usually cell delimiters.
 // pipe ends a whitespace region if only spaces come before
-        for (w = s; isspaceByte(*w) || (*w == '|' && !premode); ++w) {
-            if(*w == '|') {
+        for (w = s; isspaceByte(*w) || (*w == TableCellChar && !premode); ++w) {
+            if(*w == TableCellChar) {
                 if(strong) continue;
                 break;
             }
@@ -598,13 +597,13 @@ static void html_ws(char *buf)
             ++w2;
         }
         if(*w2)
-            while(w[-1] == '|') --w;
+            while(w[-1] == TableCellChar) --w;
 
 // move internal pipes to the front
         for(ss = --w; w >= s; --w)
-            if(*w != '|') *ss-- = *w;
-        while(ss >= s) *ss-- = '|';
-        while(*s == '|') ++s;
+            if(*w != TableCellChar) *ss-- = *w;
+        while(ss >= s) *ss-- = TableCellChar;
+        while(*s == TableCellChar) ++s;
 
         strong = false, a = 0;
         for (w = s; isspaceByte(*w); ++w) {
@@ -662,6 +661,10 @@ hence it would send a newline if there was one.
         }
         s = a;
     }
+
+    // last step, turn TableCellChar into | so it is visible
+    for (s = buf; (c = *s); ++s)
+        if(c == TableCellChar) *s = '|';
 }
 
 /*********************************************************************
