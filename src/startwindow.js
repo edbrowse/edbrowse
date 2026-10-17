@@ -7053,19 +7053,20 @@ class MutationObserver
 
     observe$target(target, cfg, dbg=alert3)
     {
+        const dbp = db$flags(6) ? dbg : eb$voidfunction;
         // May have other valid targets so don't disconnect
         if (typeof cfg != "object" || !(target instanceof Node))
             throw new TypeError("invalid argument types");
         // Are there other unobservable elements?
         if (target.nodeName && target.nodeName == "TEMPLATE") {
-            dbg(`not observing ${target.dom$class} tag ${target.eb$seqno} config ${JSON.stringify(cfg)}`)
+            dbp(`not observing ${target.dom$class} tag ${target.eb$seqno} config ${JSON.stringify(cfg)}`)
             return false;
         }
-        dbg(`observing ${target.dom$class} tag ${target.eb$seqno} config ${JSON.stringify(cfg)}`)
+        dbp(`observing ${target.dom$class} tag ${target.eb$seqno} config ${JSON.stringify(cfg)}`)
         this.targets.set(target, cfg);
         this.active = true;
         if (!target.eb$observers) {
-            dbg("Attaching first observer");
+            dbp("Attaching first observer");
             Object.defineProperty(target, "eb$observers", {value: new Set});
         }
         target.eb$observers.add(this);

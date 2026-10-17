@@ -293,6 +293,7 @@ static bool jdb_passthrough(const char *s)
 		"dberr", "dberr+", "dberr-",
 		"dbcn", "dbcn+", "dbcn-",
 		"dbcol", "dbcol+", "dbcol-",
+		"dbmut", "dbmut+", "dbmut-",
 		"dbev", "dbev+", "dbev-",
 		"dbprom", "dbprom+", "dbprom-",
 		"dbcss", "dbcss+", "dbcss-", "db",
@@ -6200,6 +6201,20 @@ et_go:
         debugCol = (line[5] == '+');
         if (helpMessagesOn)
             i_puts(debugCol + MSG_DebugCollectionsOff);
+        return true;
+    }
+
+    if (stringEqual(line, "dbmut")) {
+        debugMut ^= 1;
+        if (helpMessagesOn || debugLevel >= 1)
+            i_puts(debugMut + MSG_DebugMutationOff);
+        return true;
+    }
+
+    if (stringEqual(line, "dbmut+") || stringEqual(line, "dbmut-")) {
+        debugMut = (line[5] == '+');
+        if (helpMessagesOn)
+            i_puts(debugMut + MSG_DebugMutationOff);
         return true;
     }
 

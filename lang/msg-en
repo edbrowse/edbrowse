@@ -794,8 +794,8 @@ no private message
 debug collections disabled
 debug collections enabled
 could not fetch xhr data from %s, code %ld\n
-0
-0
+debug mutations disabled
+debug mutations enabled
 0
 0
 0

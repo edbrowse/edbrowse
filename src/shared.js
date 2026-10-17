@@ -1127,6 +1127,7 @@ flavor:
 function mutFixup(b, flavor, y, z) {
     const w = my$win();
     let w2; // might not be the same window as w
+    const dbp = db$flags(6) ? alert3 : eb$voidfunction;
     // frames is a live array of windows.
     // Test: a change to the tree, and the base node is rooted,
     // and the thing added or removed is a frame or an array or it has frames below.
@@ -1157,7 +1158,7 @@ function mutFixup(b, flavor, y, z) {
         if(!o.active) {
             // not sure if this happens now but may be someone did something
             // unfortunate
-            alert3("mutFixup: disconnecting inactive observer");
+            dbp("mutFixup: disconnecting inactive observer");
             o.disconnect();
             continue;
         }
@@ -1196,12 +1197,12 @@ function mutFixup(b, flavor, y, z) {
         })();
         if (!record) continue;
         const nl = o.notification$queue.length;
-        if(flavor == 1) alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno}: attribute ${y}`);
-        else if(flavor == 2) alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno}: characterData`);
-        else alert3(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno}: children ${record.removedNodes.length}>${record.addedNodes.length}`);
+        if(flavor == 1) dbp(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno}: attribute ${y}`);
+        else if(flavor == 2) dbp(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno}: characterData`);
+        else dbp(`notify[${nl}] ${b.dom$class} tag ${b.eb$seqno}: children ${record.removedNodes.length}>${record.addedNodes.length}`);
         o.notification$queue.push(record);
         if (o.callback$queued) {
-            alert3("mutFixup: callback already queued");
+            dbp("mutFixup: callback already queued");
             continue;
         }
         o.observed$window.queueMicrotask(
@@ -1209,22 +1210,22 @@ function mutFixup(b, flavor, y, z) {
                 o.callback$queued = false;
                 const nl = o.notification$queue.length;
                 if (!o.active) {
-                    alert3("mutFixup: observer disconnected prior to callback");
-                    if (nl) alert3(`mutFixup: clearing ${nl} unprocessed records`);
+                    dbp("mutFixup: observer disconnected prior to callback");
+                    if (nl) dbp(`mutFixup: clearing ${nl} unprocessed records`);
                     o.notification$queue.length = 0;
                     return; // can just return undefined here
                 }
                 if (!nl) {
-                    alert3("mutFixup: callback queued but records cleared, not calling");
+                    dbp("mutFixup: callback queued but records cleared, not calling");
                     return;
                 }
-                alert3(`mutFixup: callback on ${nl} records`);
+                dbp(`mutFixup: callback on ${nl} records`);
                 // Assume callback wants the observer as this for now
                 o.callback.call(o, o.takeRecords(), o);
             }
         );
         o.callback$queued = true;
-        alert3("mutFixup: callback queued");
+        dbp("mutFixup: callback queued");
     }
 }
 

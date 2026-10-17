@@ -15,7 +15,7 @@ int debugLevel = 1;
 FILE *debugFile = NULL;
 char *debugFileName;
 bool debugClone, debugEvent, debugThrow, debugCSS, debugPromise;
-bool debugLayout, debugCol;
+bool debugLayout, debugCol, debugMut;
 bool demin = false;
 bool gotimers = true;
 bool uvw;
