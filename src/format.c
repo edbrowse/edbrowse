@@ -93,12 +93,14 @@ Remove whitespace before or after <td>, as tidy does.
 
 static void cellDelimiters(char *buf)
 {
+    char *lastcell = 0;
+    int cellcount = 0;
     char *s, *t;
 
     for (s = t = buf; *s; ++s) {
         int n;
         char *u;
-        if(*s != TableCellChar) {
+        if(*s != DataCellChar && *s != TableCellChar) {
             *t++ = *s;
             continue;
         }
@@ -125,7 +127,17 @@ respace: // spaces ahead
 
 // loop over buffer again, looking for cell delimiters
     for (s = buf; *s; ++s) {
-        if (*s == TableCellChar) { *s = '|'; continue; }
+        if (*s == DataCellChar) { *s = '|'; continue; }
+        if (*s == TableCellChar) {
+            *s = '|';
+            lastcell = s;
+            ++cellcount;
+            continue;
+        }
+        if (!strchr("\f\r\n", *s)) continue;
+        // newline here, if just one cell delimiter then blank it out
+        if (cellcount == 1) *lastcell = ' ';
+        cellcount = 0;
     }
 }
 
