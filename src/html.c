@@ -4776,7 +4776,7 @@ static void headingAndData(int j, const Tag *tr, int td_n, int ttype, bool close
 		return;
 	}
 	if(closerow && !tr->ur)
-		stringAndChar(&ns, &ns_l, DataCellChar);
+		stringAndChar(&ns, &ns_l, TableCellChar);
 	td_text = initString(&td_text_l);
 	td_textUnder(tagList[td_n]);
 	if(td_text_l) {
@@ -4786,7 +4786,7 @@ static void headingAndData(int j, const Tag *tr, int td_n, int ttype, bool close
 	if(tr->ur)
 		stringAndChar(&ns, &ns_l, '\n');
 	if(!closerow && !tr->ur)
-		stringAndChar(&ns, &ns_l, DataCellChar);
+		stringAndChar(&ns, &ns_l, TableCellChar);
 }
 
 static void td2columnHeading(const Tag *tr, const Tag *td)
