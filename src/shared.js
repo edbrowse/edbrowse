@@ -1104,6 +1104,181 @@ smb: 139
 };
 
 /*********************************************************************
+rangeReindex: has a change in the tree affected the end points of a range?
+You can look at a dozen websites, each with a dozen js files, some of those
+with ten thousand lines, and not see a single instance of Range.
+So the high runner case is: scoot up the tree, find no ranges, and return.
+If a node is adorned with range$set, that contains the ranges with this
+node as ancestor. Loop over those ranges and check each one.
+parameters: p is the parent node, the node where things changed.
+add is the node or array of nodes being added.
+remove is the node or array of nodes being removed.
+If remove is a single node then add is a number, the index where
+the node was removed. We can't check any other way; it's gone.
+If remove is an array then it represents all the nodes under p,
+they are all gone. This comes from setting innerHTML, and other things.
+If add is a node or array of nodes then you can tell under p where it was added.
+These are the same parameters that are passed to mutFixup.
+In fact mutFixup simply passses these parameters over to rangeReindex.
+This is part of the process of generating mutation records.
+mutFixup(p,0,c,null)
+mutFixup(p,0,additions,null)
+mutFixup(p,0,mark,c)
+mutFixup(p,0,0,deletions)
+mutFixup(p,0,additions,deletions)
+*********************************************************************/
+
+function rangeReindex(p, add, remove)
+{
+    const dbp = db$flags(6) ? alert3 : eb$voidfunction;
+    for(let p1 = p; p1; p1 = p1.parentNode) {
+        if(p1.range$set) {
+// The ancestor of a range could change, and thence it could be removed from
+// the set as a result. This could disrupt the iterator. So copy the set.
+            const s2 = new Set;
+            p1.range$set.forEach(k=>s2.add(k));
+       s2.forEach(rangeCheck);
+        }
+        if(p1.is$frame) break;
+        if(p1.nodeName == "TEMPLATE") break;
+    }
+    return; // probably nothing happened
+
+// we're not going to calculate the offsets if we don't have to,
+// but if we have to, we'll do it just once.
+    let offsetsCalculated = false;
+    let o1, o2; // range of nodes deleted
+    let o3, o4; // range of nodes added
+function calculateOffsets()
+{
+    if(offsetsCalculated) return;
+    offsetsCalculated = true;
+/* This is almost the same logic as in mrKids().
+mrKids wants the adjacent nodes, surrounding what was added or removed.
+This is needed for the mutation records.
+Here, we only need the offsets, where in childNodes were things added
+or removed. This will be compared with the offsets in the range,
+only when start or end container coincides with p. */
+    if(typeof add == "number") {
+        o1 = o3 = o4 = add;
+        if(Array.isArray(remove)) o2 = o1 + remove.length;
+        else o2 = o1 + 1; 
+        return;
+    }
+    const addmany = Array.isArray(add);
+    const l = addmany ? add.length : 1;
+    if(!l) { // adding nothing; how would this ever happen?
+        dbp(`rangeCheck can't compute offsets for ${p.nodeName} ${p.eb$seqno} because [] is added`);
+        o1 = o2 = o3 = o4 = 0;
+        return;
+    }
+    const c = addmany ? add[0] : add;
+    for(o1 = 0; o1 < p.length; ++o1)
+        if(p[o1] == c) break;
+    if(o1 == p.length) { // should never happen
+        dbp(`rangeCheck can't compute offsets for ${p.nodeName} ${p.eb$seqno} because additions were not found`);
+        o1 = o2 = o3 = o4 = 0;
+        return;
+    }
+        o2 = o3 = o1, o4 = o3 + l;
+    if(remove && Array.isArray(remove)) o2 = o1 + remove.length;
+}
+
+// when start or end is equal to p
+function adjustStartOffset(v)
+{
+    calculateOffsets();
+    if(v < o1) return v;
+    if(v < o2) return -1; // node was removed
+    return v + o4 - o2;
+}
+
+function adjustEndOffset(v)
+{
+    calculateOffsets();
+    if(v <= o1) return v;
+    if(v < o2) return -1; // node was removed
+    return v + o4 - o2;
+}
+
+function rangeDefault(r)
+{
+    r.start0 = r.end0 = my$doc();
+    r.start1 = r.end1 = 0;
+    r.setanc(r.start);
+}
+
+function rangeCheck(r)
+{
+    const s0 = r.start0, s1 = r.start1, e0 = r.end0, e1 = r.end1;
+    if(s0 == p && e0 == p) {
+        // the entire range lives in the node being modified
+        if(!s1 && !e1) return; // empty range
+        const s2 = adjustStartOffset(s1);
+        const e2 = adjustEndOffset(e1);
+        if(s2 < 0 && e2 < 0) {
+            rangeDefault(r);
+            return;
+        }
+        if(s2 < 0) {
+            r.start1 = r.end1 = e2;
+            return;
+        }
+        if(e2 < 0) {
+            r.start1 = r.end1 = s2;
+            return;
+        }
+        r.start1 = s2, r.end1 = e2;
+        return;
+    }
+    if(s0 == p && s1) {
+        const s2 = adjustStartOffset(s1);
+        if(s2 < 0) { // start lost, revert to end
+            r.start0 = r.end0, r.start1 = r.end1;
+            r.setanc(r.start0);
+            return;
+        }
+        r.start1 = s2;
+// end is somewhere else and should not be disturbed.
+// ancestor is the same.
+        return;
+    }
+    if(e0 == p && e1) {
+        const e2 = adjustEndOffset(e1);
+        if(e2 < 0) { // end lost, revert to start
+            r.end0 = r.start0, r.end1 = r.start1;
+            r.setanc(r.start0);
+            return;
+        }
+        r.end1 = e2;
+// start is somewhere else and should not be disturbed.
+// ancestor is the same.
+        return;
+    }
+    if(s0 == p || e0 == p) return;
+    if(!remove) return;
+// are start and end still connected to the ancestor?
+    const anc = r.anc;
+    let startcon = false, endcon = false;
+    for(let t = s0; t; t = t.parentNode)
+        if(t == anc) { startcon = true; break; }
+    for(let t = e0; t; t = t.parentNode)
+        if(t == anc) { endcon = true; break; }
+    if(startcon & endcon) return; // no change
+    if(!startcon && !endcon) { // I don't think this is possible!
+        rangeDefault(r);
+        return;
+    }
+    if(startcon) {
+        r.end0 = r.start0, r.end1 = r.start1;
+    } else {
+        r.start0 = r.end0, r.start1 = r.end1;
+    }
+    r.setanc(r.start0);
+}
+}
+
+/*********************************************************************
 I'm going to call Fixup from appendChild, removeChild, setAttribute,
 textContent; anything that changes something we might be observing.
 
@@ -1122,6 +1297,10 @@ flavor:
 0 change to the treee
 1 change of attribute
 2 change of character data
+
+For flavor 0, y is the node (or array of nodes) added,
+z is the node (or array of nodes) deleted.
+If y is a number, it marks the position of the node deleted.
 *********************************************************************/
 
 function mutFixup(b, flavor, y, z) {
