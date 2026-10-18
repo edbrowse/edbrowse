@@ -1195,6 +1195,7 @@ function adjustOffset(v)
 
 function rangeCheck(r)
 {
+    if(r.indelete) return;
     dbp(`rangeCheck for ${p.nodeName} ${p.eb$seqno}, ${typeof add == "number" ? add : Array.isArray(add) ? add.length + "additions" : "1 addition"}, ${remove ? (Array.isArray(remove) ? remove.length + "deletions" : "1 deletion") : "null"}`);
     calculateOffsets();
     let s0 = r.start0, s1 = r.start1, e0 = r.end0, e1 = r.end1;

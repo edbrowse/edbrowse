@@ -370,6 +370,18 @@ pg.insertBefore(hr, pg.childNodes[0]);
 check((r1.startContainer == ph && r1.startOffset == 0), "pg hr start");
 check((r1.endContainer == pg && r1.endOffset == 2), "pg hr end");
 check((r1.commonAncestorContainer == div), "pg hr ancestor");
+r1.deleteContents();
+check((r1.startContainer == div && r1.startOffset == 1), "delcon start");
+check((r1.endContainer == div && r1.endOffset == 1), "delcon end");
+check((r1.commonAncestorContainer == div), "delcon ancestor");
+check((div.firstChild == ph && div.lastChild == pg), "ph and pg still there");
+// by offset deletes the first node
+r1.setStart(div, 0);
+r1.deleteContents();
+check((r1.startContainer == div && r1.startOffset == 0), "delcon by offset start");
+check((r1.endContainer == div && r1.endOffset == 0), "delcon by offset end");
+check((r1.commonAncestorContainer == div), "delcon by offset ancestor");
+check((div.childNodes.length == 1 && div.lastChild == pg), "only pg remains");
 
 show.textContent = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}

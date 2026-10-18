@@ -6433,12 +6433,25 @@ collapse(side) {
 
     extractContents() {
         if(!this.normal$ize()) return document.createDocumentFragment();
-        this.base = this.anc ? this.anc : this.start0;
-        this.skipdelcheck = true;
-        const newnode = mw$.cloneNodeHelper(this.base, true, 5, this);
-        delete this.base;
-        delete this.skipdelcheck;
+        this.indelete = true;
+        const anc = this.anc;
+// prepare for the range that results from deleteContents or extractContents
+        let s1 = this.start1;
+        if(anc != this.start0) {
+            let y = this.start0;
+            while(y && y.parentNode != this.anc) y = y.parentNode;
+            if(y) {
+                const l = anc.childNodes.length;
+                for(s1 = 0; s1 < l; ++s1)
+                    if(anc.childNodes[s1] == y) break;
+                if(s1 < l) ++ s1;
+            }
+        }
+        const newnode = mw$.cloneNodeHelper(this.anc, true, 5, this);
+        delete this.indelete;
         this.unnormal$ize();
+        this.start0 = anc, this.start1 = s1;
+        this.end0 = anc, this.end1 = s1;
         return newnode;
     }
 
@@ -6472,29 +6485,6 @@ collapse(side) {
         return v;
     }
 
-/* deleteContents() deletes everything inside the range.
-When we remove nodes, there are side effects, most of which we want.
-Adjust form elements, table rows, select options, etc.
-Another side effect is ranges; that one we don't want.
-The start and end points of this range will not change,
-even as we remove the nodes inside.
-However, the ancestor of this node may have other ranges,
-with the same ancestor, other ranges in anc.range$set,
-and we do want to check on those.
-We may indeed be removing the start or end point of a different range that has
-the same ancestor as this range.
-I will set skipdel check, as a flag to skip that deletion check for this range.
-Just make sure we unset it when we're done, and furthermore, we may need
-to check the end offsets when we're done.
-Range might be node,3 and node,1000, so after the delete operation,
-range should become node,3 node,4.
-Range adjustments will be part of mutfixup, before we review
-the mutation records. We need to know exactly what was removed, what was added.
-Ad something between offsets 3 and 6, and we have to bump 6 to 7.
-Remove childNodes[2], and the offsets drop to 2 and 5.
-This will be a piece of work, and I don't know if it's worth doing;
-although acid test 13 expects it. */
-
     deleteContents() {
         if(!this.normal$ize()) return;
         const n1 = this.sn, n2 = this.en;
@@ -6514,7 +6504,7 @@ although acid test 13 expects it. */
                 Node.commonAncestor(n1, n2, result);
                 const anc = result.root; // should be the same as this.anc
         if(!anc) { this.unnormal$ize(); return; }
-        this.skipdelcheck = true;
+        this.indelete = true;
         const i = result.i, j = result.j;
         const py = result.py, pz = result.pz;
         let y, z, t, k;
@@ -6524,7 +6514,7 @@ although acid test 13 expects it. */
                 if(t == z) break;
             if(!t) { // start and end out of order
                 this.unnormal$ize();
-                delete this.skipdelcheck;
+                delete this.indelete;
                 return;
             }
             // delete everything between y and z
@@ -6552,21 +6542,22 @@ although acid test 13 expects it. */
             n1.data = n1.data.substr(0, o1);
 // delete the start node if it is there by offset
         if(n1 != this.start0) n1.remove();
-        if(n2 == this.end$mark) {
-// special case deleting up to an end marker, which isn't really there.
-// Collapse back to start.
-            this.end0 = this.start0, this.end1 = this.start1;
-        } else {
-// collapse to the end node, which is really there.
-                    this.start0 = this.end0, this.start1 = this.end1;
-        }
-        this.setanc(this.start0);
         if(j) {
             if((n2.nodeType == 3 || n2.nodeType == 8) && o2 > 0)
                 n2.data = n2.data.substr(o2), this.start1 = this.end1 = 0;
         }
         this.unnormal$ize();
-        delete this.skipdelcheck;
+        delete this.indelete;
+// deleteContents produces a special, collapsed range
+        if(i) {
+            this.start0 = anc;
+            y = py[i-1];
+            const l = anc.childNodes.length;
+            for(this.start1 = 0; this.start1 < l; ++this.start1)
+                if(anc.childNodes[this.start1] == y) break;
+            if(this.start1 < l) ++ this.start1;
+        }
+        this.end0 = anc, this.end1 = this.start1;
     }
 
 // This function is limited in what it can do, in the type of range
