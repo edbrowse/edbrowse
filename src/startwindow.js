@@ -5677,13 +5677,12 @@ class FetchHelper
         return this.text().then(JSON.parse);
     }
 
-    [Symbol.for("FetchHelper.make$options")]()
+    [Symbol.for("FetchHelper.make$options")](props=[])
     {
+        const opts = {body: this.#body};
         this.bodyUsed = true;
-        return {
-            body: this.#body,
-            headers: this.headers
-        };
+        for (const prop of ["headers", ...props]) opts[prop] = this[prop];
+        return opts;
     }
 
     clone() { return new this.constructor(this); }
@@ -5739,17 +5738,16 @@ class Request extends FetchHelper
 
     [Symbol.for("FetchHelper.make$options")]()
     {
-        const opts = super[Symbol.for("FetchHelper.make$options")]();
-        for (const prop of [
+        return super[Symbol.for("FetchHelper.make$options")]([
             "credentials",
             "method",
             "mode",
             "signal",
             "referrer",
             "cache"
-        ]) opts[prop] = this[prop];
-        return opts;
+        ]);
     }
+
 }
 swc(Request);
 
