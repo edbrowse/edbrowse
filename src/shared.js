@@ -1294,13 +1294,18 @@ z is the node (or array of nodes) deleted.
 If y is a number, it marks the position of the node deleted.
 *********************************************************************/
 
-function mutFixup(b, flavor, y, z) {
+function mutFixup(b, flavor, y, z)
+{
+    const dbp = db$flags(6) ? alert3 : eb$voidfunction;
+
+/* should we put a debug print here, at db3 and dbmut+, or would that generate
+too much output? For every change in the tree, every change of attribute,
+every change of text, etc. Or maybe at db4. */
 
     if(!flavor) rangeReindex(b, y, z);
 
     const w = my$win();
     let w2; // might not be the same window as w
-    const dbp = db$flags(6) ? alert3 : eb$voidfunction;
     // frames is a live array of windows.
     // Test: a change to the tree, and the base node is rooted,
     // and the thing added or removed is a frame or an array or it has frames below.
