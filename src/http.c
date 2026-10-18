@@ -3324,7 +3324,7 @@ int frameExpandLine(int ln, Tag *t)
 	cf->frametag = t;
 	cf->gsn = ++gfsn;
 	debugPrint(2, "fetch frame %s",
-		   (s ? s : (jssrc ? "javascript" : "empty")));
+		   (s ? (strncmp(s, "data:", 5) ? s : "data:") : (jssrc ? "javascript" : "empty")));
 
 	if (s) {
 		bool rc = false;

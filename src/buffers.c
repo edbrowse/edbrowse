@@ -6986,2354 +6986,2345 @@ If you want to use null in a search or substitute, use \0.
 
 bool runCommand(const char *line)
 {
-	int i, j, n;
-	int writeMode = O_TRUNC; // could change to append
-	int writeLine = -1; // write text into a session
-	int readLine1 = -1, readLine2 = -1; // read lines from a session
-	bool wrc = false; // read write command
-	bool wq = false; // the wq command, as in ed
-	const char *wrc_file = 0;
-	char *atsave = 0;
-	Window *w = NULL;
-	const Tag *tag = 0, *jumptag = 0;
-	bool nogo = true, rc = true;
-	bool emode = false;	// force e, not browse
-	bool postSpace = false, didRange = false;
-	char first;
-	int cx = 0;		// numeric suffix as in s/x/y/3 or w2
-	const Tag *gotag = 0;
-	int tagno;
-	int newloc_count = 0;
-	const char *s = NULL;
-		char *p;
-	char *thisfile;
-	const char *browseSuffix = 0;
-	bool plainMail = false;
-		char *allocatedLine;
-	static char newline[MAXTTYLINE];
+    int i, j, n;
+    int writeMode = O_TRUNC; // this could change to append
+    int writeLine = -1; // write text into a session
+    int readLine1 = -1, readLine2 = -1; // read lines from a session
+    bool wrc = false; // read write command
+    bool wq = false; // the wq command, as in ed
+    const char *wrc_file = 0;
+    char *atsave = 0;
+    Window *w = NULL;
+    const Tag *tag = 0, *jumptag = 0;
+    bool nogo = true, rc = true;
+    bool emode = false; // force e, not browse
+    bool postSpace = false, didRange = false;
+    char first;
+    int cx = 0; // numeric suffix as in s/x/y/3 or w2
+    const Tag *gotag = 0;
+    int tagno;
+    int newloc_count = 0;
+    const char *s = NULL;
+        char *p;
+    char *thisfile;
+    const char *browseSuffix = 0;
+    bool plainMail = false;
+        char *allocatedLine;
+    static char newline[MAXTTYLINE];
         static int nesting = 0;
 
-	selfFrame();
-	redirect_count = 0;
-	js_redirects = false;
-	cmd = icmd = 'p';
-	uriEncoded = false;
-	if(!globalMode) bad_utf8_alert = false;
+    selfFrame();
+    redirect_count = 0;
+    js_redirects = false;
+    cmd = icmd = 'p';
+    uriEncoded = false;
+    if(!globalMode) bad_utf8_alert = false;
 
 // Here is where we initialize allocatedLine, by possibly expanding variables.
-	if(!varExpand(line, &allocatedLine))
-		return false;
-	if(allocatedLine) line = allocatedLine;
+    if(!varExpand(line, &allocatedLine))
+        return false;
+    if(allocatedLine) line = allocatedLine;
 
         if ((++nesting) >= CMD_NESTING_LIMIT) {
                 setError(MSG_CommandNest);
                 goto failg;
         }
 
-	skipWhite(&line);
-	first = *line;
-	noStack = 0;
+    skipWhite(&line);
+    first = *line;
+    noStack = 0;
 
-	debugPrint(8, "in:%s", line);
-	if (!strncmp(line, "ReF@b", 5)) {
-		line += 4;
-		noStack = 2;
-		uriEncoded = true;
-		if (cf != newloc_f) {
+    debugPrint(8, "in:%s", line);
+    if (!strncmp(line, "ReF@b", 5)) {
+        line += 4;
+        noStack = 2;
+        uriEncoded = true;
+        if (cf != newloc_f) {
 /* replace a frame, not the whole window */
-			newlocation = cloneString(line + 2);
-			goto replaceframe;
-		}
-	}
+            newlocation = cloneString(line + 2);
+            goto replaceframe;
+        }
+    }
 
-		if (first == '#')
-			goto success;
+        if (first == '#') goto success;
 
-	if (!globalMode) {
-		madeChanges = false;
+    if (!globalMode) {
+        madeChanges = false;
 
-/* Watch for successive q commands. */
-		lastq = lastqq, lastqq = 0;
+        /* Watch for successive q commands. */
+        lastq = lastqq, lastqq = 0;
 
-// force a noStack
-		if (!strncmp(line, "nostack ", 8))
-			noStack = 2, line += 8, first = *line;
-		if (!strncmp(line, "^ ", 2))
-			noStack = 2, line += 2, first = *line;
+        // force a noStack
+        if (!strncmp(line, "nostack ", 8))
+            noStack = 2, line += 8, first = *line;
+        if (!strncmp(line, "^ ", 2))
+            noStack = 2, line += 2, first = *line;
 
-/* special 2 letter commands - most of these change operational modes */
-		j = twoLetter(line, &line);
-		if (j < 2) goto donej;
-		if(j == 3) allocatedLine = (char*)line;
-	}
+// special 2 letter commands - most of these change operational modes
+        j = twoLetter(line, &line);
+        if (j < 2) goto donej;
+        if(j == 3) allocatedLine = (char*)line;
+    }
 
-	j = twoLetterG(line);
-	if (j < 2) goto donej;
-	if(j == 3) allocatedLine = (char*)line;
+    j = twoLetterG(line);
+    if (j < 2) goto donej;
+    if(j == 3) allocatedLine = (char*)line;
 
-	if (first == '!') {
-		rc = shellEscape(line + 1);
-		goto done;
-	}
+    if (first == '!') {
+        rc = shellEscape(line + 1);
+        goto done;
+    }
 
-	if(stringEqual(line, "eret")) {
-		sprintf(newline, "e%d", cx_previous);
-		line = newline;
-	}
+    if(stringEqual(line, "eret")) {
+        sprintf(newline, "e%d", cx_previous);
+        line = newline;
+    }
 
-	startRange = endRange = cw->dot;	// default range
-	first = *line;
-	if (first == 0) {
-		didRange = true;
-		++startRange, ++endRange;
-		if (endRange > cw->dol) {
-			setError(MSG_EndBuffer);
-			goto fail;
-		}
-	}
+    startRange = endRange = cw->dot; // default range
+    first = *line;
+    if (first == 0) {
+        didRange = true;
+        ++startRange, ++endRange;
+        if (endRange > cw->dol) {
+            setError(MSG_EndBuffer);
+            goto fail;
+        }
+    }
 
 // search the imap server, not a local regexp search
-	if(cw->imapMode1 && first == '/' && cw->dot &&
+    if(cw->imapMode1 && first == '/' && cw->dot &&
 // there are some different syntaxes here
-	(stringEqual(line, "/u") ||
-	(line[1] && strchr("fstb", line[1]) && line[2] == ' ')  ||
-	(line[1] == 'u' && line[2] && strchr("fstb", line[2]) && line[3] == ' '))) {
-		rc = folderSearch((char*)cw->r_map[cw->dot].text, (char*)line + 1, false);
-		goto done;
-	}
+    (stringEqual(line, "/u") ||
+    (line[1] && strchr("fstb", line[1]) && line[2] == ' ')  ||
+    (line[1] == 'u' && line[2] && strchr("fstb", line[2]) && line[3] == ' '))) {
+        rc = folderSearch((char*)cw->r_map[cw->dot].text, (char*)line + 1, false);
+        goto done;
+    }
 
-	if (first == ',') {
-		startRange = 1;
-		if (cw->dol == 0)
-			startRange = 0;
-		goto range2;
-	}
+    if (first == ',') {
+        startRange = 1;
+        if (cw->dol == 0)
+            startRange = 0;
+        goto range2;
+    }
 
-	if (first == ';') {
-		didRange = true;
-		++line;
-		startRange = cw->dot;
-		endRange = cw->dol;
-	}
+    if (first == ';') {
+        didRange = true;
+        ++line;
+        startRange = cw->dot;
+        endRange = cw->dol;
+    }
 
-	if (first == 'j' || first == 'J') {
-		didRange = true;
-		endRange = startRange + 1;
-		if (endRange > cw->dol) {
-			setError(MSG_EndJoin);
-			goto fail;
-		}
-	}
+    if (first == 'j' || first == 'J') {
+        didRange = true;
+        endRange = startRange + 1;
+        if (endRange > cw->dol) {
+            setError(MSG_EndJoin);
+            goto fail;
+        }
+    }
 
-	if (first == '=') {
-		didRange = true;
-		startRange = endRange = cw->dol;
-	}
+    if (first == '=') {
+        didRange = true;
+        startRange = endRange = cw->dol;
+    }
 
-	if (first == 'w' || first == 'W' || first == 'v' || (first == 'g' && line[1]
-					     && strchr(valid_delim, line[1])
-					     && !stringEqual(line, "g-")
-					     && !stringEqual(line, "g?"))) {
-		didRange = true;
-		startRange = 1;
-		if (cw->dol == 0)
-			startRange = 0;
-		endRange = cw->dol;
-	}
+    if (first == 'w' || first == 'W' || first == 'v' || (first == 'g' && line[1]
+    && strchr(valid_delim, line[1])
+    && !stringEqual(line, "g-")
+    && !stringEqual(line, "g?"))) {
+        didRange = true;
+        startRange = 1;
+        if (cw->dol == 0)
+            startRange = 0;
+        endRange = cw->dol;
+    }
 
-	if (!didRange) {
-		if (!getRangePart(line, &startRange, &line))
-			goto failg;
-		endRange = startRange;
-		if(line[0] == 'j' || line[0] == 'J') { // special case, 5j
-			endRange = startRange + 1;
-			if (endRange > cw->dol) {
-				setError(MSG_EndJoin);
-				goto fail;
-			}
-		}
-		if (line[0] == ',') {
+    if (!didRange) {
+        if (!getRangePart(line, &startRange, &line))
+            goto failg;
+        endRange = startRange;
+        if(line[0] == 'j' || line[0] == 'J') { // special case, 5j
+            endRange = startRange + 1;
+            if (endRange > cw->dol) {
+                setError(MSG_EndJoin);
+                goto fail;
+            }
+        }
+        if (line[0] == ',') {
 range2:
-			++line;
-			endRange = cw->dol;	/* new default */
-			first = *line;
-			if (first && strchr(valid_laddr, first)) {
-				if (!getRangePart(line, &endRange, &line))
-					goto failg;
-			}
-		}
-	}
-	if (endRange < startRange) {
-		setError(MSG_BadRange);
-		goto fail;
-	}
+            ++line;
+            endRange = cw->dol; // new default
+            first = *line;
+            if (first && strchr(valid_laddr, first)) {
+                if (!getRangePart(line, &endRange, &line))
+                    goto failg;
+            }
+        }
+    }
+    if (endRange < startRange) {
+        setError(MSG_BadRange);
+        goto fail;
+    }
 
-	skipWhite(&line);
-	first = *line;
-/* change uc into a substitute command, converting the whole line */
-	if ((first == 'u' || first == 'l' || first == 'm') && line[1] == 'c' &&
-	    line[2] == 0) {
-		sprintf(newline, "s/.*/%cc/fp", first);
-		line = newline;
-	}
+    skipWhite(&line);
+    first = *line;
+// change uc into a substitute command, converting the whole line
+    if ((first == 'u' || first == 'l' || first == 'm') && line[1] == 'c' &&
+        line[2] == 0) {
+        sprintf(newline, "s/.*/%cc/fp", first);
+        line = newline;
+    }
 
-	if (stringEqual(line, "ur") ||
-	stringEqual(line, "ur+") ||
-	stringEqual(line, "ur-")) {
-		Tag *w;
-		char c = line[2];
-		cmd = 'e'; // trick to always show the errors
-		if(!cw->dot) {
-			setError(MSG_EmptyBuffer);
-			goto fail;
-		}
-		if (cw->sqlMode) {
-			sql_unfold(startRange, endRange, c);
-			goto success;
-		}
-		if (!cw->browseMode) {
-			setError(MSG_NoBrowse);
-			goto fail;
-		}
-		for(i = startRange; i <= endRange; ++i)
-			if((w = line2tr(i)))
-				w->inur = false;
-		for(i = startRange; i <= endRange; ++i)
-			if((w = line2tr(i)) && !w->inur) {
-				w->inur = true;
+    if (stringEqual(line, "ur") ||
+    stringEqual(line, "ur+") ||
+    stringEqual(line, "ur-")) {
+        Tag *w;
+        char c = line[2];
+        cmd = 'e'; // trick to always show the errors
+        if(!cw->dot) {
+            setError(MSG_EmptyBuffer);
+            goto fail;
+        }
+        if (cw->sqlMode) {
+            sql_unfold(startRange, endRange, c);
+            goto success;
+        }
+        if (!cw->browseMode) {
+            setError(MSG_NoBrowse);
+            goto fail;
+        }
+        for(i = startRange; i <= endRange; ++i)
+            if((w = line2tr(i)))
+                w->inur = false;
+        for(i = startRange; i <= endRange; ++i)
+            if((w = line2tr(i)) && !w->inur) {
+                w->inur = true;
 // could be a <th> row
-				if(all_th(w)) continue;
-				if(c == 0)
-					w->ur ^= 1;
-				if(c == '+')
-					w->ur = 1;
-				if(c == '-')
-					w->ur = 0;
-			}
-		rerender(1);
-		goto success;
-	}
+                if(all_th(w)) continue;
+                if(c == 0)
+                    w->ur ^= 1;
+                if(c == '+')
+                    w->ur = 1;
+                if(c == '-')
+                    w->ur = 0;
+            }
+        rerender(1);
+        goto success;
+    }
 
 // Breakline is actually a substitution of lines
-	if (stringEqual(line, "bl")) {
-		if (cw->dirMode) {
-			setError(MSG_BreakDir);
-			goto fail;
-		}
-		if (cw->sqlMode) {
-			setError(MSG_BreakDB);
-			goto fail;
-		}
-		if (cw->ircoMode) {
-			setError(MSG_BreakIrc);
-			goto fail;
-		}
-		if (cw->imapMode1 || cw->imapMode2) {
-			setError(MSG_BreakImap);
-			goto fail;
-		}
-		if (cw->browseMode) {
-			setError(MSG_BreakBrowse);
-			goto fail;
-		}
-		line = "s`bl";
-	}
+    if (stringEqual(line, "bl")) {
+        if (cw->dirMode) {
+            setError(MSG_BreakDir);
+            goto fail;
+        }
+        if (cw->sqlMode) {
+            setError(MSG_BreakDB);
+            goto fail;
+        }
+        if (cw->ircoMode) {
+            setError(MSG_BreakIrc);
+            goto fail;
+        }
+        if (cw->imapMode1 || cw->imapMode2) {
+            setError(MSG_BreakImap);
+            goto fail;
+        }
+        if (cw->browseMode) {
+            setError(MSG_BreakBrowse);
+            goto fail;
+        }
+        line = "s`bl";
+    }
 
 // [eqwr<][/?] and w+[/?] commands
-	if((first == 'e' || first == 'q') && (line[1] == '/' || line[1] == '?')) {
-		cmd = 'e';
-		n = sessionByText(line + 2, line[1] == '/' ? 1 : -1);
-		if(!n) goto failg;
-		sprintf(newline, "%c%d", first, n);
-		line = newline;
-	}
+    if((first == 'e' || first == 'q') && (line[1] == '/' || line[1] == '?')) {
+        cmd = 'e';
+        n = sessionByText(line + 2, line[1] == '/' ? 1 : -1);
+        if(!n) goto failg;
+        sprintf(newline, "%c%d", first, n);
+        line = newline;
+    }
 
-	if((first == 'r' || first == 'w' || first == '<') && (line[1] == '/' || line[1] == '?') && !stringEqual(line, "w/")) {
-		char *at = (char *)strchr(line, '@'); // look for at syntax
-		if(at) *at = 0; // I'll put it back
-		cmd = 'e';
-		n = sessionByText(line + 2, line[1] == '/' ? 1 : -1);
-		if(at) *at = '@';
-		if(!n) goto failg;
-		sprintf(newline, "%c%d", first, n);
-		if(at) {
+    if((first == 'r' || first == 'w' || first == '<') && (line[1] == '/' || line[1] == '?') && !stringEqual(line, "w/")) {
+        char *at = (char *)strchr(line, '@'); // look for at syntax
+        if(at) *at = 0; // I'll put it back
+        cmd = 'e';
+        n = sessionByText(line + 2, line[1] == '/' ? 1 : -1);
+        if(at) *at = '@';
+        if(!n) goto failg;
+        sprintf(newline, "%c%d", first, n);
+        if(at) {
 // check for buffer overrun, albeit extremely unlikely
 // Proper at syntax will always fit in the buffer.
-			i = sizeof(newline) - strlen(newline) - 1;
-			n = strlen(at);
-			if(n > i) n = i;
-			char *e = newline + strlen(newline);
-			strncpy(e, at, n);
-			e[n] = 0;
-		}
-		line = newline;
-	}
+            i = sizeof(newline) - strlen(newline) - 1;
+            n = strlen(at);
+            if(n > i) n = i;
+            char *e = newline + strlen(newline);
+            strncpy(e, at, n);
+            e[n] = 0;
+        }
+        line = newline;
+    }
 
-	if(first == '<' && line[1] == '*' && (line[2] == '/' || line[2] == '?')) {
-		char *at = (char *)strchr(line, '@'); // look for at syntax
-		if(at) *at = 0; // I'll put it back
-		cmd = 'e';
-		n = sessionByText(line + 3, line[1] == '/' ? 1 : -1);
-		if(at) *at = '@';
-		if(!n) goto failg;
-		sprintf(newline, "<*%d", n);
-		if(at) {
+    if(first == '<' && line[1] == '*' && (line[2] == '/' || line[2] == '?')) {
+        char *at = (char *)strchr(line, '@'); // look for at syntax
+        if(at) *at = 0; // I'll put it back
+        cmd = 'e';
+        n = sessionByText(line + 3, line[1] == '/' ? 1 : -1);
+        if(at) *at = '@';
+        if(!n) goto failg;
+        sprintf(newline, "<*%d", n);
+        if(at) {
 // check for buffer overrun, albeit extremely unlikely
 // Proper at syntax will always fit in the buffer.
-			i = sizeof(newline) - strlen(newline) - 1;
-			n = strlen(at);
-			if(n > i) n = i;
-			char *e = newline + strlen(newline);
-			strncpy(e, at, n);
-			e[n] = 0;
-		}
-		line = newline;
-	}
+            i = sizeof(newline) - strlen(newline) - 1;
+            n = strlen(at);
+            if(n > i) n = i;
+            char *e = newline + strlen(newline);
+            strncpy(e, at, n);
+            e[n] = 0;
+        }
+        line = newline;
+    }
 
 expctr:
-/* special commands to expand and contract frames */
-	if (stringEqual(line, "exp") || stringEqual(line, "ctr")) {
-		if (globalMode) {
-			cmd = 'g';
-			setError(MSG_GlobalCommand2, line);
-			goto fail;
-		}
-		cmd = 'e';
-		if (endRange == 0) {
-			setError(MSG_EmptyBuffer);
-			goto fail;
-		}
-		if (!cw->browseMode) {
-			setError(MSG_NoBrowse);
-			goto fail;
-		}
-		jSyncup(false, 0);
-		undoSpecialClear();
-		cw->dot = startRange;
-		if (!frameExpand((line[0] == 'e'), startRange, endRange))
-			showError();
-/* meta http refresh could send to another page */
-		if (newlocation) {
+// special commands to expand and contract frames
+    if (stringEqual(line, "exp") || stringEqual(line, "ctr")) {
+        if (globalMode) {
+            cmd = 'g';
+            setError(MSG_GlobalCommand2, line);
+            goto fail;
+        }
+        cmd = 'e';
+        if (endRange == 0) {
+            setError(MSG_EmptyBuffer);
+            goto fail;
+        }
+        if (!cw->browseMode) {
+            setError(MSG_NoBrowse);
+            goto fail;
+        }
+        jSyncup(false, 0);
+        undoSpecialClear();
+        cw->dot = startRange;
+        if (!frameExpand((line[0] == 'e'), startRange, endRange))
+            showError();
+// meta http refresh could send to another page
+        if (newlocation) {
 replaceframe:
-			if (!shortRefreshDelay(newlocation, newloc_d)) {
-				nzFree0(newlocation);
-			} else {
-				jSyncup(false, 0);
-				if (!reexpandFrame())
-					showError();
-				if (newlocation)
-					goto replaceframe;
-			}
-		}
-/* even if one frame failed to expand, another might, so always rerender */
-		selfFrame();
-		rerender(0);
-		goto success;
-	}
+            if (!shortRefreshDelay(newlocation, newloc_d)) {
+                nzFree0(newlocation);
+            } else {
+                jSyncup(false, 0);
+                if (!reexpandFrame())
+                    showError();
+                if (newlocation)
+                    goto replaceframe;
+            }
+        }
+// even if one frame failed to expand, another might, so always rerender
+        selfFrame();
+        rerender(0);
+        goto success;
+    }
 
-	// special command for hidden input
-	if (!strncmp(line, "ipass", 5)) {
-		char buffer[MAXUSERPASS];
-		int realtotal;
-		if (!cw->browseMode) {
-			setError(MSG_NoBrowse);
-			goto fail;
-		}
-		if (endRange > startRange) {
-			setError(MSG_RangeCmd, "ipass");
-			goto fail;
-		}
+    // special command for hidden input
+    if (!strncmp(line, "ipass", 5)) {
+        char buffer[MAXUSERPASS];
+        int realtotal;
+        if (!cw->browseMode) {
+            setError(MSG_NoBrowse);
+            goto fail;
+        }
+        if (endRange > startRange) {
+            setError(MSG_RangeCmd, "ipass");
+            goto fail;
+        }
 
-		s = line + 5;
-		if (isdigitByte(*s))
-			cx = strtol(s, (char **)&s, 10);
-		else if (*s == '$')
-			cx = -1, ++s;
-		// XXX try to guess cx if only one password input field?
+        s = line + 5;
+        if (isdigitByte(*s))
+            cx = strtol(s, (char **)&s, 10);
+        else if (*s == '$')
+            cx = -1, ++s;
+        // XXX try to guess cx if only one password input field?
 
-		cw->dot = endRange;
-		p = (char *)fetchLine(cw->dot, -1);
-		findInputField(p, 1, cx, &n, &realtotal, &tagno);
-		debugPrint(5, "findField returns %d.%d", n, tagno);
-		if (!tagno) {
-			fieldNumProblem(0, "ipass", cx, n, realtotal);
-			goto fail;
-		}
+        cw->dot = endRange;
+        p = (char *)fetchLine(cw->dot, -1);
+        findInputField(p, 1, cx, &n, &realtotal, &tagno);
+        debugPrint(5, "findField returns %d.%d", n, tagno);
+        if (!tagno) {
+            fieldNumProblem(0, "ipass", cx, n, realtotal);
+            goto fail;
+        }
 
-		undoSpecialClear();
-		prompt_and_read(MSG_Password, buffer, MAXUSERPASS,
-				MSG_PasswordLong, true);
+        undoSpecialClear();
+        prompt_and_read(MSG_Password, buffer, MAXUSERPASS,
+                MSG_PasswordLong, true);
 
-		const bool old_ipass = tagList[tagno]->ipass;
-		tagList[tagno]->ipass = true;
+        const bool old_ipass = tagList[tagno]->ipass;
+        tagList[tagno]->ipass = true;
 
-		rc = infReplace(tagno, buffer, true);
-		if (!rc)
-			tagList[tagno]->ipass = old_ipass;
-		goto done;
-	}
+        rc = infReplace(tagno, buffer, true);
+        if (!rc)
+            tagList[tagno]->ipass = old_ipass;
+        goto done;
+    }
 
 // special code for textareas into sessions
-	if(line[0] == 'i' &&
-	((line[1] == 'b' && (!line[2] || isdigitByte(line[2]))) ||
-	(line[1] == 'f' && !line[2]))) {
-		int d = 0;
-		char *s;
-		if(isdigitByte(line[2])) {
-			d = strtol(line + 2, &s, 10);
-			if(*s)
-				goto after_ib;
-		}
-		cmd = 'e';
-		if (!cw->browseMode) {
-			setError(MSG_NoBrowse);
-			goto fail;
-		}
-		if (endRange > startRange) {
-			setError(MSG_RangeCmd, "ib");
-			goto fail;
-		}
-		cw->dot = endRange;
-		if (!cw->dot) {	// should never happen
-			setError(MSG_EmptyBuffer);
-			goto fail;
-		}
-		if(d) {
-			if(!cxCompare(d) || (cxActive(d, false) && !cxQuit(d, 0)))
-				goto fail;
-		}
-			rc = itext(d, line[1] == 'f');
-		goto done;
-	}
+    if(line[0] == 'i' &&
+    ((line[1] == 'b' && (!line[2] || isdigitByte(line[2]))) ||
+    (line[1] == 'f' && !line[2]))) {
+        int d = 0;
+        char *s;
+        if(isdigitByte(line[2])) {
+            d = strtol(line + 2, &s, 10);
+            if(*s)
+                goto after_ib;
+        }
+        cmd = 'e';
+        if (!cw->browseMode) {
+            setError(MSG_NoBrowse);
+            goto fail;
+        }
+        if (endRange > startRange) {
+            setError(MSG_RangeCmd, "ib");
+            goto fail;
+        }
+        cw->dot = endRange;
+        if (!cw->dot) { // should never happen
+            setError(MSG_EmptyBuffer);
+            goto fail;
+        }
+        if(d) {
+            if(!cxCompare(d) || (cxActive(d, false) && !cxQuit(d, 0)))
+                goto fail;
+        }
+            rc = itext(d, line[1] == 'f');
+        goto done;
+    }
 after_ib:
 
 // get the command
-	cmd = *line;
-	if (cmd) ++line;
-	else cmd = 'p';
-	icmd = cmd;
-	if(cw->imapMode2 && cmd == 't' && !*line) cmd = 'g';
+    cmd = *line;
+    if (cmd) ++line;
+    else cmd = 'p';
+    icmd = cmd;
+    if(cw->imapMode2 && cmd == 't' && !*line) cmd = 'g';
 
-	if(cw->dirMode && cmd == 'L') {
-		; // L is allowed here
-	} else if (!strchr(valid_cmd, cmd)) {
-		setError(MSG_UnknownCommand, cmd);
-		goto failg;
-	}
+    if(cw->dirMode && cmd == 'L') {
+        ; // L is allowed here
+    } else if (!strchr(valid_cmd, cmd)) {
+        setError(MSG_UnknownCommand, cmd);
+        goto failg;
+    }
 
-	if (cw->irciMode && !strchr(irci_cmd, cmd)) {
-		setError(MSG_IrcCommand, cmd);
-		goto failg;
-	}
+    if (cw->irciMode && !strchr(irci_cmd, cmd)) {
+        setError(MSG_IrcCommand, cmd);
+        goto failg;
+    }
 
-	if (cw->ircoMode && !strchr(irco_cmd, cmd)) {
-		setError(MSG_IrcCommand, cmd);
-		goto failg;
-	}
+    if (cw->ircoMode && !strchr(irco_cmd, cmd)) {
+        setError(MSG_IrcCommand, cmd);
+        goto failg;
+    }
 
-	if(cw->irciMode | cw->ircoMode && cmd == 'g' && !*line) {
-		setError(MSG_IrcCommand, cmd);
-		goto failg;
-	}
+    if(cw->irciMode | cw->ircoMode && cmd == 'g' && !*line) {
+        setError(MSG_IrcCommand, cmd);
+        goto failg;
+    }
 
-	if (cw->imapMode1 && !strchr(imap1_cmd, cmd)) {
-		setError(MSG_ImapCommand, cmd);
-		goto failg;
-	}
+    if (cw->imapMode1 && !strchr(imap1_cmd, cmd)) {
+        setError(MSG_ImapCommand, cmd);
+        goto failg;
+    }
 
-	if(cmd == 'r' && cw->imapMode2 && (!*line || (*line == '-' && !line[1]))) {
-		cw->dot = endRange;
-		rc = imapMarkRead(startRange, endRange, *line);
-		goto done;
-	}
+    if(cmd == 'r' && cw->imapMode2 && (!*line || (*line == '-' && !line[1]))) {
+        cw->dot = endRange;
+        rc = imapMarkRead(startRange, endRange, *line);
+        goto done;
+    }
 
-	if (cw->imapMode2 && !strchr(imap2_cmd, cmd)) {
-		setError(MSG_ImapCommand, cmd);
-		goto failg;
-	}
+    if (cw->imapMode2 && !strchr(imap2_cmd, cmd)) {
+        setError(MSG_ImapCommand, cmd);
+        goto failg;
+    }
 
-	first = *line;
-	atWindow = 0;
+    first = *line;
+    atWindow = 0;
 
-	if(cmd == 'w' && first == 'q' && !line[1]) {
-		wq = true;
-		++line, first = 0;
-	}
+    if(cmd == 'w' && first == 'q' && !line[1]) {
+        wq = true;
+        ++line, first = 0;
+    }
 
-	if(cmd == 'w' && isdigitByte(first)) {
+    if(cmd == 'w' && isdigitByte(first)) {
 // check for at syntax
-		int sno = strtol(line, &p, 10);
-		int writeLine2;
-		if(*p == '@') {
-			if(!atPartCracker(0, sno, true, p, &writeLine, &writeLine2))
-				goto fail;
-			if(!cw->dol) {
-				setError(MSG_EmptyBuffer);
-				goto failg;
-			}
-			if(atWindow->dirMode | atWindow->binMode | atWindow->browseMode | atWindow->sqlMode | atWindow->ircoMode) {
-				setError(MSG_TextRec, sno);
-				goto failg;
-			}
-			writeLine = writeLine2;
+        int sno = strtol(line, &p, 10);
+        int writeLine2;
+        if(*p == '@') {
+            if(!atPartCracker(0, sno, true, p, &writeLine, &writeLine2))
+                goto fail;
+            if(!cw->dol) {
+                setError(MSG_EmptyBuffer);
+                goto failg;
+            }
+            if(atWindow->dirMode | atWindow->binMode | atWindow->browseMode | atWindow->sqlMode | atWindow->ircoMode) {
+                setError(MSG_TextRec, sno);
+                goto failg;
+            }
+            writeLine = writeLine2;
 // by being positive, writeLine will remember that this happened.
 // Clobber @, so it looks like writing to a session,
 // and we'll set cx and go down that path,
 // then writeLine will send us down another path at the last minute.
-			*p = 0, atsave = p;
-		}
-	}
+            *p = 0, atsave = p;
+        }
+    }
 
-	if(cmd == 'w' && (first == '-' || first == '+') && isdigitByte(line[1])) {
+    if(cmd == 'w' && (first == '-' || first == '+') && isdigitByte(line[1])) {
 // check for at syntax
-		int sno = strtol(line + 1, &p, 10);
-		int writeLine2;
-		if(*p == '@') {
-			if(!atPartCracker(first, sno, true, p, &writeLine, &writeLine2))
-				goto fail;
-			if(!cw->dol) {
-				setError(MSG_EmptyBuffer);
-				goto failg;
-			}
-			if(atWindow->dirMode | atWindow->binMode | atWindow->browseMode | atWindow->sqlMode | atWindow->ircoMode) {
-				setError(MSG_TextRecBuf);
-				goto failg;
-			}
-			writeLine = writeLine2;
+        int sno = strtol(line + 1, &p, 10);
+        int writeLine2;
+        if(*p == '@') {
+            if(!atPartCracker(first, sno, true, p, &writeLine, &writeLine2))
+                goto fail;
+            if(!cw->dol) {
+                setError(MSG_EmptyBuffer);
+                goto failg;
+            }
+            if(atWindow->dirMode | atWindow->binMode | atWindow->browseMode | atWindow->sqlMode | atWindow->ircoMode) {
+                setError(MSG_TextRecBuf);
+                goto failg;
+            }
+            writeLine = writeLine2;
 // by being positive, writeLine will remember that this happened.
 // Clobber @, so it looks like writing to a session,
 // and we'll set cx and go down that path,
 // then writeLine will send us down another path at the last minute.
-			*p = 0, atsave = p;
+            *p = 0, atsave = p;
 // skip past + or -
-			first = *++line;
-		}
-	}
+            first = *++line;
+        }
+    }
 
 // w+ file means append to file
-	if (cmd == 'w' && first == '+')
-		writeMode = O_APPEND, first = *++line;
+    if (cmd == 'w' && first == '+')
+        writeMode = O_APPEND, first = *++line;
 
 // may as well check r at syntax while we're at it.
-	if(cmd == 'r' && isdigitByte(first)) {
-		int sno = strtol(line, &p, 10);
-		if(*p == '@') { // at syntax
-			if(!atPartCracker(0, sno, false, p, &readLine1, &readLine2))
-				goto fail;
+    if(cmd == 'r' && isdigitByte(first)) {
+        int sno = strtol(line, &p, 10);
+        if(*p == '@') { // at syntax
+            if(!atPartCracker(0, sno, false, p, &readLine1, &readLine2))
+                goto fail;
 // by being positive, readLine1 will remember that this happened.
 // Clobber @, so it looks like reading from a session,
 // and we'll set cx and go down that path,
 // then readLine will send us down another path at the last minute.
-			*p = 0, atsave = p;
-		}
-	}
+            *p = 0, atsave = p;
+        }
+    }
 
-	if(cmd == 'r' && (first == '-' || first == '+') && isdigitByte(line[1])) {
-		int sno = strtol(line + 1, &p, 10);
-		if(!*p) {
-			static char shorthand[4];
-			strcpy(shorthand, "@,");
-			p = shorthand;
-		}
-		if(*p == '@') { // at syntax
-			if(!atPartCracker(first, sno, false, p, &readLine1, &readLine2))
-				goto fail;
+    if(cmd == 'r' && (first == '-' || first == '+') && isdigitByte(line[1])) {
+        int sno = strtol(line + 1, &p, 10);
+        if(!*p) {
+            static char shorthand[4];
+            strcpy(shorthand, "@,");
+            p = shorthand;
+        }
+        if(*p == '@') { // at syntax
+            if(!atPartCracker(first, sno, false, p, &readLine1, &readLine2))
+                goto fail;
 // by being positive, readLine1 will remember that this happened.
 // Clobber @, so it looks like reading from a session,
 // and we'll set cx and go down that path,
 // then readLine will send us down another path at the last minute.
-			*p = 0, atsave = p;
+            *p = 0, atsave = p;
 // skip past + or -
-			first = *++line;
-		}
-	}
+            first = *++line;
+        }
+    }
 
-	if(cmd == 'u' && cw->dirMode && undoSpecial) {
-		char *oldline = undoSpecial;
-		int len;
-		char src[ABSPATH], *dest, *t;
-		struct lineMap *mptr;
-		cw->dot = undo1line;
-		p = (char *)fetchLine(cw->dot, -1);
-		len = pstLength((pst) p);
-		p[len - 1] = 0;	/* temporary */
-		t = makeAbsPath(p);
-		p[len - 1] = '\n';
-		if (!t)
-			goto fail;
-		strcpy(src, t);
-		dest = makeAbsPath(oldline);
-		if (!dest)
-			goto fail;
-		if (fileTypeByName(dest, 1)) {
-			setError(MSG_DestFileExists, dest);
-			goto fail;
-		}
-		if (rename(src, dest)) {
-			setError(MSG_NoRename, dest, strerror(errno));
-			goto fail;
-		}
-		p[len - 1] = 0;
-		undoSpecial = cloneString(p);
-		p[len - 1] = '\n';
-		mptr = cw->map + cw->dot;
-		len = strlen(oldline);
-		oldline[len] = '\n';
-		mptr->text = (pst)oldline;
-		printDot();
-		goto success;
-	}
+    if(cmd == 'u' && cw->dirMode && undoSpecial) {
+        char *oldline = undoSpecial;
+        int len;
+        char src[ABSPATH], *dest, *t;
+        struct lineMap *mptr;
+        cw->dot = undo1line;
+        p = (char *)fetchLine(cw->dot, -1);
+        len = pstLength((pst) p);
+        p[len - 1] = 0; // temporary
+        t = makeAbsPath(p);
+        p[len - 1] = '\n';
+        if (!t)
+            goto fail;
+        strcpy(src, t);
+        dest = makeAbsPath(oldline);
+        if (!dest)
+            goto fail;
+        if (fileTypeByName(dest, 1)) {
+            setError(MSG_DestFileExists, dest);
+            goto fail;
+        }
+        if (rename(src, dest)) {
+            setError(MSG_NoRename, dest, strerror(errno));
+            goto fail;
+        }
+        p[len - 1] = 0;
+        undoSpecial = cloneString(p);
+        p[len - 1] = '\n';
+        mptr = cw->map + cw->dot;
+        len = strlen(oldline);
+        oldline[len] = '\n';
+        mptr->text = (pst)oldline;
+        printDot();
+        goto success;
+    }
 
-	if (cw->dirMode && !strchr(dir_cmd, cmd)) {
-		setError(MSG_DirCommand, icmd);
-		goto failg;
-	}
+    if (cw->dirMode && !strchr(dir_cmd, cmd)) {
+        setError(MSG_DirCommand, icmd);
+        goto failg;
+    }
 
-	if (cw->sqlMode && !strchr(sql_cmd, cmd)) {
-		setError(MSG_DBCommand, icmd);
-		goto failg;
-	}
+    if (cw->sqlMode && !strchr(sql_cmd, cmd)) {
+        setError(MSG_DBCommand, icmd);
+        goto failg;
+    }
 
-	if(cmd == 'u' && cw->browseMode && undoSpecial) {
-		char *oldline = undoSpecial;
-		const char *t;
-		int total, realtotal;
-		char search[20];
-		char searchend[4];
-		cw->dot = undo1line;
-		p = (char *)fetchLine(cw->dot, -1);
-		findInputField(p, 1, undoField, &total,        &realtotal, &tagno);
-		if (!tagno) {
-			fieldNumProblem(0, "i", undoField, total, realtotal);
-			goto fail;
-		}
-		sprintf(search, "%c%d<", InternalCodeChar, tagno);
-		sprintf(searchend, "%c0>", InternalCodeChar);
-		if(!(s = strstr(p, search)))
-			goto fail;
-		s = strchr(s, '<') + 1;
-		if(!(t = strstr(s, searchend)))
-			goto fail;
-		undoSpecial = getFieldFromBuffer(tagno);
-		rc = infReplace(tagno, oldline, true);
-		nzFree(oldline);
-		if(!rc)
-			undoSpecialClear();
-		goto done;
-	}
+    if(cmd == 'u' && cw->browseMode && undoSpecial) {
+        char *oldline = undoSpecial;
+        const char *t;
+        int total, realtotal;
+        char search[20];
+        char searchend[4];
+        cw->dot = undo1line;
+        p = (char *)fetchLine(cw->dot, -1);
+        findInputField(p, 1, undoField, &total,        &realtotal, &tagno);
+        if (!tagno) {
+            fieldNumProblem(0, "i", undoField, total, realtotal);
+            goto fail;
+        }
+        sprintf(search, "%c%d<", InternalCodeChar, tagno);
+        sprintf(searchend, "%c0>", InternalCodeChar);
+        if(!(s = strstr(p, search)))
+            goto fail;
+        s = strchr(s, '<') + 1;
+        if(!(t = strstr(s, searchend)))
+            goto fail;
+        undoSpecial = getFieldFromBuffer(tagno);
+        rc = infReplace(tagno, oldline, true);
+        nzFree(oldline);
+        if(!rc)
+            undoSpecialClear();
+        goto done;
+    }
 
-	if (cw->browseMode && !strchr(browse_cmd, cmd)) {
-		setError(MSG_BrowseCommand, icmd);
-		goto failg;
-	}
-	if (cw->browseMode && (cmd  == 'm' || cmd == 't') && !cw->imapMode3) {
-		setError(MSG_BrowseCommand, icmd);
-		goto failg;
-	}
+    if (cw->browseMode && !strchr(browse_cmd, cmd)) {
+        setError(MSG_BrowseCommand, icmd);
+        goto failg;
+    }
+    if (cw->browseMode && (cmd  == 'm' || cmd == 't') && !cw->imapMode3) {
+        setError(MSG_BrowseCommand, icmd);
+        goto failg;
+    }
 
-	if (startRange == 0 && !strchr(zero_cmd, cmd)) {
-		setError(MSG_AtLine0);
-		goto failg;
-	}
+    if (startRange == 0 && !strchr(zero_cmd, cmd)) {
+        setError(MSG_AtLine0);
+        goto failg;
+    }
 
 // b.pdf but already browsing
-	if(cmd == 'b' && first == '.' && cw->browseMode) {
-		setError(MSG_BrowseAlready);
-		goto failg;
-	}
+    if(cmd == 'b' && first == '.' && cw->browseMode) {
+        setError(MSG_BrowseAlready);
+        goto failg;
+    }
 
 // code for b.pdf and g.pdf
-	if((cmd == 'b' || cmd == 'g')
-	&& !(cw->browseMode | cw->sqlMode | cw->imapMode1 | cw->imapMode2 | cw->irciMode | cw->ircoMode)
-	&& first == '.') {
-		browseSuffix = line + 1;
-		first = 0;
-		line += strlen(line);
+    if((cmd == 'b' || cmd == 'g')
+    && !(cw->browseMode | cw->sqlMode | cw->imapMode1 | cw->imapMode2 | cw->irciMode | cw->ircoMode)
+    && first == '.') {
+        browseSuffix = line + 1;
+        first = 0;
+        line += strlen(line);
 // let's check suffix here.
-		if(strlen(browseSuffix) > 5) {
-			setError(MSG_SuffixLong);
-			cmd = 'e';
-			goto fail;
-		}
-		if(stringEqual(browseSuffix, "plain"))
-			browseSuffix = NULL, plainMail = true;
-		else if(!findMimeBySuffix(browseSuffix)) {
-			setError(MSG_SuffixBad, browseSuffix);
-			cmd = 'e';
-			goto fail;
-		}
-	}
+        if(strlen(browseSuffix) > 5) {
+            setError(MSG_SuffixLong);
+            cmd = 'e';
+            goto fail;
+        }
+        if(stringEqual(browseSuffix, "plain"))
+            browseSuffix = NULL, plainMail = true;
+        else if(!findMimeBySuffix(browseSuffix)) {
+            setError(MSG_SuffixBad, browseSuffix);
+            cmd = 'e';
+            goto fail;
+        }
+    }
 
 // eat spaces after the command, but not after J, those spaces could be significant
-	if(cmd != 'J') {
-		while (isspaceByte(first))
-			postSpace = true, first = *++line;
-	}
+    if(cmd != 'J') {
+        while (isspaceByte(first))
+            postSpace = true, first = *++line;
+    }
 
-	if (strchr(spaceplus_cmd, cmd) && !postSpace && first) {
-		s = line;
-		while (isdigitByte(*s))
-			++s;
-		if (*s) {
-			setError(MSG_NoSpaceAfter);
-			goto failg;
-		}
-	}
+    if (strchr(spaceplus_cmd, cmd) && !postSpace && first) {
+        s = line;
+        while (isdigitByte(*s)) ++s;
+        if (*s) {
+            setError(MSG_NoSpaceAfter);
+            goto failg;
+        }
+    }
 
-	if (globalMode && !strchr(global_cmd, cmd)) {
-		setError(MSG_GlobalCommand, icmd);
-		goto failg;
-	}
+    if (globalMode && !strchr(global_cmd, cmd)) {
+        setError(MSG_GlobalCommand, icmd);
+        goto failg;
+    }
 
 // a:text can be global, but not a
-	if(globalMode && (cmd == 'a' || cmd == 'c') && first != ':') {
-		setError(MSG_GlobalCommand, icmd);
-		goto failg;
-	}
+    if(globalMode && (cmd == 'a' || cmd == 'c') && first != ':') {
+        setError(MSG_GlobalCommand, icmd);
+        goto failg;
+    }
 
 // i as text insert cannot be global, but i for a fill-out form can.
 // g/re/ i=+ to set a bunch of checkboxes.
 // However, g/re/ i* probably should be disallowed. We need to refine this a bit.
-	if (globalMode && icmd == 'i' && ((!cw->browseMode && first != ':') || line[0] == '*')) {
-		setError(MSG_GlobalCommand, icmd);
-		goto failg;
-	}
+    if (globalMode && icmd == 'i' && ((!cw->browseMode && first != ':') || line[0] == '*')) {
+        setError(MSG_GlobalCommand, icmd);
+        goto failg;
+    }
 
 // move/copy destination, the third address
-	if (cmd == 't' || cmd == 'm') {
+    if (cmd == 't' || cmd == 'm') {
 
 // move or copy email to another folder
-		if(cw->imapMode2 && postSpace) {
-			rc = imapMovecopy(startRange, endRange, cmd, (char*)line);
-			if(!rc) globalMode = false;
-			goto done;
-		}
+        if(cw->imapMode2 && postSpace) {
+            rc = imapMovecopy(startRange, endRange, cmd, (char*)line);
+            if(!rc) globalMode = false;
+            goto done;
+        }
 
 // move or copy the current mail to another folder
-		if(cw->imapMode3 && postSpace) {
-			rc = imapMovecopyWhileReading(cmd, (char*)line);
-			if(!rc) globalMode = false;
-			goto done;
-		}
+        if(cw->imapMode3 && postSpace) {
+            rc = imapMovecopyWhileReading(cmd, (char*)line);
+            if(!rc) globalMode = false;
+            goto done;
+        }
 
-		if(cw->imapMode2) {
-			setError(MSG_ImapCommand, cmd);
-			goto failg;
-		}
+        if(cw->imapMode2) {
+            setError(MSG_ImapCommand, cmd);
+            goto failg;
+        }
 
-		if(cw->browseMode) {
-			setError(MSG_BrowseCommand, cmd);
-			goto failg;
-		}
-	} // m or t
+        if(cw->browseMode) {
+            setError(MSG_BrowseCommand, cmd);
+            goto failg;
+        }
+    } // m or t
 
-	if (cmd == 't' || cmd == 'm' ||
-	(cw->dirMode && ((cmd == 'l' && first) || cmd == 'L'))) {
-		if (!first) {
-			if (cw->dirMode) {
-				setError(MSG_BadDest);
-				goto failg;
-			}
-			destLine = cw->dot;
-		} else {
-			if (!strchr(valid_laddr, first)) {
-				setError(MSG_BadDest);
-				goto failg;
-			}
+    if (cmd == 't' || cmd == 'm' ||
+    (cw->dirMode && ((cmd == 'l' && first) || cmd == 'L'))) {
+        if (!first) {
+            if (cw->dirMode) {
+                setError(MSG_BadDest);
+                goto failg;
+            }
+            destLine = cw->dot;
+        } else {
+            if (!strchr(valid_laddr, first)) {
+                setError(MSG_BadDest);
+                goto failg;
+            }
 
 // destination has special meaning in directory mode
-			if (cw->dirMode) {
-				char relative = 0;
-				if(first == '+' || first == '-') {
-					relative = first, first = *++line;
-					if(!first) { j = 1; goto dest_ok; }
-				}
-				if (!relative && (first == '/' || first == '?')) {
-					j = sessionByText(line + 1, first == '/' ? 1 : -1);
-					if(!j) goto failg;
-					goto dest_ok;
-				}
-				if(!isdigitByte(first) || (j = stringIsNum(line)) < 0) {
-					setError(MSG_BadDest);
-					goto failg;
-				}
+            if (cw->dirMode) {
+                char relative = 0;
+                if(first == '+' || first == '-') {
+                    relative = first, first = *++line;
+                    if(!first) { j = 1; goto dest_ok; }
+                }
+                if (!relative && (first == '/' || first == '?')) {
+                    j = sessionByText(line + 1, first == '/' ? 1 : -1);
+                    if(!j) goto failg;
+                    goto dest_ok;
+                }
+                if(!isdigitByte(first) || (j = stringIsNum(line)) < 0) {
+                    setError(MSG_BadDest);
+                    goto failg;
+                }
 dest_ok:
-				cmd = 'e';
-				rc = moveFiles(startRange, endRange, j, icmd, relative);
-				undoCompare();
-				cw->undoable = false;
-				undoSpecialClear();
-				goto done;
-			}
+                cmd = 'e';
+                rc = moveFiles(startRange, endRange, j, icmd, relative);
+                undoCompare();
+                cw->undoable = false;
+                undoSpecialClear();
+                goto done;
+            }
 
 // normal destination for move or copy in a text file
-			if (!getRangePart(line, &destLine, &line))
-				goto failg;
-			first = *line;
-		}		// was there something after m or t
-	} // m or t
+            if (!getRangePart(line, &destLine, &line))
+                goto failg;
+            first = *line;
+        } // was there something after m or t
+    } // m or t
 
-	if(cmd == 'W') {
-		if(first != '!') {
-			setError(MSG_WBang);
-			goto failg;
-		}
-		wrc = true;
-		wrc_file = edbrowseTempFilename("txt", true);
-		cmd = 'w';
-	}
+    if(cmd == 'W') {
+        if(first != '!') {
+            setError(MSG_WBang);
+            goto failg;
+        }
+        wrc = true;
+        wrc_file = edbrowseTempFilename("txt", true);
+        cmd = 'w';
+    }
 
-	if((cmd == 'e' || cmd == 'b') && (cw->irciMode | cw->ircoMode) && postSpace) {
-		setError(MSG_IrcCommand, cmd);
-		goto fail;
-	}
+    if((cmd == 'e' || cmd == 'b') && (cw->irciMode | cw->ircoMode) && postSpace) {
+        setError(MSG_IrcCommand, cmd);
+        goto fail;
+    }
 
-/* -c is the config file */
-	if ((cmd == 'b' || cmd == 'e') && stringEqual(line, "-c"))
-		line = configFile;
+// -c is the config file
+    if ((cmd == 'b' || cmd == 'e') && stringEqual(line, "-c"))
+        line = configFile;
 
 // env variable and wild card expansion
-	if (strchr("brewf", cmd) && // command looks right
-	first && // reading or writing or editing something
-	!isURL(line) && // not a url
-	!isSQL(line) && // not an sql table
+    if (strchr("brewf", cmd) && // command looks right
+    first && // reading or writing or editing something
+    !isURL(line) && // not a url
+    !isSQL(line) && // not an sql table
 // don't expand if in sql mode, we must be reading a table
-	(cmd != 'r' || !cw->sqlMode)  &&
+    (cmd != 'r' || !cw->sqlMode)  &&
 // don't expand variables if r ! or W ! will run through the shell;
 // let the shell do it via popen().
-	(first != '!' || strchr("bef", cmd))) {
-		if (!envFile(line, &line))
-			goto fail;
-		first = *line;
-	}
+    (first != '!' || strchr("bef", cmd))) {
+        if (!envFile(line, &line))
+            goto fail;
+        first = *line;
+    }
 
-	if (cmd == 'z') {
-		if (isdigitByte(first)) {
-			last_z = strtol(line, (char **)&line, 10);
-			if (!last_z)
-				last_z = 1;
-			first = *line;
-		}
-		startRange = endRange + 1;
-		endRange = startRange;
-		if (startRange > cw->dol) {
-			startRange = endRange = 0;
-			setError(MSG_LineHigh);
-			goto fail;
-		}
-		cmd = 'p';
-		endRange += last_z - 1;
-		if (endRange > cw->dol)
-			endRange = cw->dol;
-	}
+    if (cmd == 'z') {
+        if (isdigitByte(first)) {
+            last_z = strtol(line, (char **)&line, 10);
+            if (!last_z)
+                last_z = 1;
+            first = *line;
+        }
+        startRange = endRange + 1;
+        endRange = startRange;
+        if (startRange > cw->dol) {
+            startRange = endRange = 0;
+            setError(MSG_LineHigh);
+            goto fail;
+        }
+        cmd = 'p';
+        endRange += last_z - 1;
+        if (endRange > cw->dol)
+            endRange = cw->dol;
+    }
 
-	// the a+ feature, when you thought you were in append mode
+    // the a+ feature, when you thought you were in append mode
 // or the a add this one line of text feature
-	if (cmd == 'a') {
-		if (stringEqual(line, "+")) {
-			++line, first = 0;
-			if(!a_plus && debugLevel > 0)
-				i_puts(MSG_NoPending);
-		} else if(*line == ':') {
-			nzFree(a_plus);
-			i = strlen(line);
-			a_plus = allocMem(i + 1);
+    if (cmd == 'a') {
+        if (stringEqual(line, "+")) {
+            ++line, first = 0;
+            if(!a_plus && debugLevel > 0)
+                i_puts(MSG_NoPending);
+        } else if(*line == ':') {
+            nzFree(a_plus);
+            i = strlen(line);
+            a_plus = allocMem(i + 1);
 strcpy((char*)a_plus, line + 1);
-			a_plus[i - 1] = '\n';
-			a_plus[i] = 0;
-			a_end = true;
-			line += i, first = 0;
-		} else {
-			nzFree0(a_plus);
-		}
-	}
+            a_plus[i - 1] = '\n';
+            a_plus[i] = 0;
+            a_end = true;
+            line += i, first = 0;
+        } else {
+            nzFree0(a_plus);
+        }
+    }
 
-	if (cmd == 'c' ||
-	(cmd == 'i' && !cw->browseMode)) {
-		nzFree0(a_plus);
-		if(*line == ':') {
-			i = strlen(line);
-			a_plus = allocMem(i + 1);
+    if (cmd == 'c' ||
+    (cmd == 'i' && !cw->browseMode)) {
+        nzFree0(a_plus);
+        if(*line == ':') {
+            i = strlen(line);
+            a_plus = allocMem(i + 1);
 strcpy((char*)a_plus, line + 1);
-			a_plus[i - 1] = '\n';
-			a_plus[i] = 0;
-			a_end = true;
-			line += i, first = 0;
-		}
-	}
+            a_plus[i - 1] = '\n';
+            a_plus[i] = 0;
+            a_end = true;
+            line += i, first = 0;
+        }
+    }
 
-	if (first && strchr(nofollow_cmd, cmd)) {
-		setError(MSG_TextAfter, icmd);
-		goto failg;
-	}
+    if (first && strchr(nofollow_cmd, cmd)) {
+        setError(MSG_TextAfter, icmd);
+        goto failg;
+    }
 
-	if (cmd == 'h') {
-		showError();
-		goto success;
-	}
+    if (cmd == 'h') {
+        showError();
+        goto success;
+    }
 
-	if (cmd == 'X') {
-		cw->dot = endRange;
-		goto success;
-	}
+    if (cmd == 'X') {
+        cw->dot = endRange;
+        goto success;
+    }
 
-	if (strchr("Llpn", cmd)) {
-		for (i = startRange; i <= endRange; ++i) {
-			displayLine(i);
-			cw->dot = i;
-			if (intFlag)
-				break;
-		}
-		goto success;
-	}
+    if (strchr("Llpn", cmd)) {
+        for (i = startRange; i <= endRange; ++i) {
+            displayLine(i);
+            cw->dot = i;
+            if (intFlag) break;
+        }
+        goto success;
+    }
 
-	if (cmd == '=') {
-		eb_printf("%d\n", endRange);
-		goto success;
-	}
+    if (cmd == '=') {
+        eb_printf("%d\n", endRange);
+        goto success;
+    }
 
-	if (cmd == 'B') {
-		rc = balanceLine(line, endRange);
-		goto done;
-	}
+    if (cmd == 'B') {
+        rc = balanceLine(line, endRange);
+        goto done;
+    }
 
-	if (cmd == 'u') {
-		Window *uw = &undoWindow;
-		struct lineMap *swapmap;
-		if (!cw->undoable) {
-			setError(MSG_NoUndo);
-			goto fail;
-		}
-/* swap, so we can undo our undo, if need be */
-		i = uw->dot, uw->dot = cw->dot, cw->dot = i;
-		i = uw->dol, uw->dol = cw->dol, cw->dol = i;
-		for (j = 0; j < MARKLETTERS; ++j) {
-			i = uw->labels[j], uw->labels[j] =
-			    cw->labels[j], cw->labels[j] = i;
-		}
-		swapmap = uw->map, uw->map = cw->map, cw->map = swapmap;
-		goto success;
-	}
+    if (cmd == 'u') {
+        Window *uw = &undoWindow;
+        struct lineMap *swapmap;
+        if (!cw->undoable) {
+            setError(MSG_NoUndo);
+            goto fail;
+        }
+// swap, so we can undo our undo, if need be
+        i = uw->dot, uw->dot = cw->dot, cw->dot = i;
+        i = uw->dol, uw->dol = cw->dol, cw->dol = i;
+        for (j = 0; j < MARKLETTERS; ++j) {
+            i = uw->labels[j], uw->labels[j] =
+                cw->labels[j], cw->labels[j] = i;
+        }
+        swapmap = uw->map, uw->map = cw->map, cw->map = swapmap;
+        goto success;
+    }
 
-	if (cmd == 'k') {
-		if (!islowerByte(first) || line[1]) {
-			setError(MSG_EnterKAZ);
-			goto fail;
-		}
-		if (startRange < endRange) {
-			setError(MSG_RangeLabel);
-			goto fail;
-		}
-		cw->labels[first - 'a'] = endRange;
-		goto success;
-	}
+    if (cmd == 'k') {
+        if (!islowerByte(first) || line[1]) {
+            setError(MSG_EnterKAZ);
+            goto fail;
+        }
+        if (startRange < endRange) {
+            setError(MSG_RangeLabel);
+            goto fail;
+        }
+        cw->labels[first - 'a'] = endRange;
+        goto success;
+    }
 
-	/* Find suffix, as in 27,59w2 */
-	if (!postSpace) {
-		cx = stringIsNum(line);
-		if (!cx &&
-		strchr("qwer^&", cmd)) {
-			setError((cmd == '^'
-				  || cmd == '&') ? MSG_Backup0 : MSG_Session0);
-			goto fail;
-		}
-		if (cx < 0)
-			cx = 0;
-	}
+    // Find suffix, as in 27,59w2
+    if (!postSpace) {
+        cx = stringIsNum(line);
+        if (!cx &&
+        strchr("qwer^&", cmd)) {
+            setError((cmd == '^'
+                  || cmd == '&') ? MSG_Backup0 : MSG_Session0);
+            goto fail;
+        }
+        if (cx < 0)
+            cx = 0;
+    }
 
-	if (cmd == 'q') {
+    if (cmd == 'q') {
 doquit:
-		if (cx) {
-			if (!cxCompare(cx))
-				goto fail;
-			if (!cxActive(cx, true))
-				goto fail;
-		} else {
-			cx = context;
-			if (first) {
-				setError(MSG_QAfter);
-				goto fail;
-			}
-		}
-		saveSubstitutionStrings();
-		if (!cxQuit(cx, 2)) goto fail;
-		if (cx != context)
-			goto success;
-/* look around for another active session */
-		while (true) {
-			if (++cx > maxSession)
-				cx = 1;
-			if (cx == context) {
+        if (cx) {
+            if (!cxCompare(cx))
+                goto fail;
+            if (!cxActive(cx, true))
+                goto fail;
+        } else {
+            cx = context;
+            if (first) {
+                setError(MSG_QAfter);
+                goto fail;
+            }
+        }
+        saveSubstitutionStrings();
+        if (!cxQuit(cx, 2)) goto fail;
+        if (cx != context)
+            goto success;
+// look around for another active session
+        while (true) {
+            if (++cx > maxSession)
+                cx = 1;
+            if (cx == context) {
 // A controled shutdown; try to close down javascript; see if it blows up.
-				jsClose();
-				ebClose(0);
-			}
-			if (!sessionList[cx].lw)
-				continue;
-			cxSwitch(cx, true);
-			goto success;
-		}		/* loop over sessions */
-	}
+                jsClose();
+                ebClose(0);
+            }
+            if (!sessionList[cx].lw) continue;
+            cxSwitch(cx, true);
+            goto success;
+        } // loop over sessions
+    }
 
-	if (cmd == 'f') {
-		selfFrame();
-		if (cx) {
-			if (!cxCompare(cx))
-				goto fail;
-			if (!cxActive(cx, true))
-				goto fail;
-			s = sessionList[cx].lw->f0.fileName;
-			if (s)
-				i_printf(MSG_String, s);
-			else
-				i_printf(MSG_NoFile);
-			if (sessionList[cx].lw->binMode)
-				i_printf(MSG_BinaryBrackets);
-			if (cw->jdb_frame)
-				i_printf(MSG_String, " jdb");
-			eb_puts("");
-			goto success;
-		}		// another session
-		if (first) {
-			if (cw->dirMode) {
-				setError(MSG_DirRename);
-				goto fail;
-			}
-			if (cw->sqlMode) {
-				setError(MSG_TableRename);
-				goto fail;
-			}
-			if (cw->irciMode | cw->ircoMode) {
-				setError(MSG_IrcRename);
-				goto fail;
-			}
-			if (cw->imapMode1 | cw->imapMode2 | cw->imapMode3) {
-				setError(MSG_ImapRename);
-				goto fail;
-			}
-			nzFree(cf->fileName);
-			if(stringEqual(line, "clear"))
-				cf->fileName = 0;
-			else
-				cf->fileName = cloneString(line);
-		}
-		s = cf->fileName;
-		if(!first || debugLevel >= 1) {
-			if (s)
-				eb_printf("%s", s);
-			else
-				i_printf(MSG_NoFile);
-			if (cw->binMode)
-				i_printf(MSG_BinaryBrackets);
-			nl();
-		}
-		goto success;
-	}
+    if (cmd == 'f') {
+        selfFrame();
+        if (cx) {
+            if (!cxCompare(cx))
+                goto fail;
+            if (!cxActive(cx, true))
+                goto fail;
+            s = sessionList[cx].lw->f0.fileName;
+            if (s)
+                i_printf(MSG_String, s);
+            else
+                i_printf(MSG_NoFile);
+            if (sessionList[cx].lw->binMode)
+                i_printf(MSG_BinaryBrackets);
+            if (cw->jdb_frame)
+                i_printf(MSG_String, " jdb");
+            eb_puts("");
+            goto success;
+        } // another session
+        if (first) {
+            if (cw->dirMode) {
+                setError(MSG_DirRename);
+                goto fail;
+            }
+            if (cw->sqlMode) {
+                setError(MSG_TableRename);
+                goto fail;
+            }
+            if (cw->irciMode | cw->ircoMode) {
+                setError(MSG_IrcRename);
+                goto fail;
+            }
+            if (cw->imapMode1 | cw->imapMode2 | cw->imapMode3) {
+                setError(MSG_ImapRename);
+                goto fail;
+            }
+            nzFree(cf->fileName);
+            if(stringEqual(line, "clear"))
+                cf->fileName = 0;
+            else
+                cf->fileName = cloneString(line);
+        }
+        s = cf->fileName;
+        if(!first || debugLevel >= 1) {
+            if (s)
+                eb_printf("%s", s);
+            else
+                i_printf(MSG_NoFile);
+            if (cw->binMode)
+                i_printf(MSG_BinaryBrackets);
+            nl();
+        }
+        goto success;
+    }
 
-	if (cmd == 'w') {
-		if (cx) {	// write to another session
-			if (writeMode == O_APPEND) {
-				setError(MSG_NoSpaceAfter);
-				goto fail;
-			}
-			if(atsave) *atsave = '@';
-			rc = writeContext(cx, atWindow, writeLine);
-			goto done;
-		}
-		selfFrame();
+    if (cmd == 'w') {
+        if (cx) { // write to another session
+            if (writeMode == O_APPEND) {
+                setError(MSG_NoSpaceAfter);
+                goto fail;
+            }
+            if(atsave) *atsave = '@';
+            rc = writeContext(cx, atWindow, writeLine);
+            goto done;
+        }
+        selfFrame();
 
-		if(first == '!') { // write to a command, like ed
-			int l = 0, pexit, outlen;
-			char *outdata;
-			char *wrapline = 0;
-			FILE *p;
-			char *newline = bangbang(line + 1);
-			eb_variables();
-			newline = apostropheMacros(newline);
+        if(first == '!') { // write to a command, like ed
+            int l = 0, pexit, outlen;
+            char *outdata;
+            char *wrapline = 0;
+            FILE *p;
+            char *newline = bangbang(line + 1);
+            eb_variables();
+            newline = apostropheMacros(newline);
 // W command must write to a temp file, then read back in
-			if(wrc)
-				createFormattedString(&wrapline, "( %s ) > %s", newline, wrc_file);
-			p = popen(wrapline ? wrapline : newline, "w");
-			nzFree(wrapline);
-			nzFree(newline);
-			if (!p) {
-				setError(MSG_NoSpawn, line + 1, errno);
-				goto fail;
-			}
+            if(wrc)
+                createFormattedString(&wrapline, "( %s ) > %s", newline, wrc_file);
+            p = popen(wrapline ? wrapline : newline, "w");
+            nzFree(wrapline);
+            nzFree(newline);
+            if (!p) {
+                setError(MSG_NoSpawn, line + 1, errno);
+                goto fail;
+            }
 // Compute file size ahead of time; shell command could start
 // printing stuff before we send it all the lines.
-			for (i = startRange; i <= endRange; ++i) {
-				if(i == 0) // empty buffer
-					continue;
-				pst s = fetchLine(i, (cw->browseMode ? 1 : -1));
-				int len = pstLength(s);
-				if (i == cw->dol && cw->nlMode)
-					--len;
-				l += len;
-				if (cw->browseMode)
-					free(s);
-			}
-			if(!globalMode && debugLevel >= 1)
-				eb_printf("%d\n", l);
-			for (i = startRange; i <= endRange; ++i) {
-				if(i == 0) // empty buffer
-					continue;
-				pst s = fetchLine(i, (cw->browseMode ? 1 : -1));
-				int len = pstLength(s);
-				if (i == cw->dol && cw->nlMode)
-					--len;
+            for (i = startRange; i <= endRange; ++i) {
+                if(i == 0) continue; // empty buffer
+                pst s = fetchLine(i, (cw->browseMode ? 1 : -1));
+                int len = pstLength(s);
+                if (i == cw->dol && cw->nlMode) --len;
+                l += len;
+                if (cw->browseMode)
+                    free(s);
+            }
+            if(!globalMode && debugLevel >= 1)
+                eb_printf("%d\n", l);
+            for (i = startRange; i <= endRange; ++i) {
+                if(i == 0) continue; // empty buffer
+                pst s = fetchLine(i, (cw->browseMode ? 1 : -1));
+                int len = pstLength(s);
+                if (i == cw->dol && cw->nlMode) --len;
 // in directory mode we don't write the suffix or attribute information
-				if (fwrite(s, len, 1, p) <= 0) {
-		// This could happen if the system doesn't accept all the input and closes the pipe.
-		// I don't know what to do here, so just return.
-					if (cw->browseMode)
-						free(s);
-					break;
-				}
-				if (cw->browseMode)
-					free(s);
-			}
-			pexit = pclose(p);
-			if(!globalMode && debugLevel > 0 && !pexit && !wrc)
-				i_puts(MSG_OK);
-			if(pexit) {
-				if(wrc) unlink(wrc_file);
-				setError(MSG_CmdFail);
-				goto fail;
-			}
-			if(!wrc) goto success;
-			rc = fileIntoMemory(wrc_file, &outdata, &outlen, 0);
-			unlink(wrc_file);
-			if(!rc) goto fail;
-			delText(startRange, endRange);
+                if (fwrite(s, len, 1, p) <= 0) {
+        // This could happen if the system doesn't accept all the input and closes the pipe.
+        // I don't know what to do here, so just return.
+                    if (cw->browseMode)
+                        free(s);
+                    break;
+                }
+                if (cw->browseMode)
+                    free(s);
+            }
+            pexit = pclose(p);
+            if(!globalMode && debugLevel > 0 && !pexit && !wrc)
+                i_puts(MSG_OK);
+            if(pexit) {
+                if(wrc) unlink(wrc_file);
+                setError(MSG_CmdFail);
+                goto fail;
+            }
+            if(!wrc) goto success;
+            rc = fileIntoMemory(wrc_file, &outdata, &outlen, 0);
+            unlink(wrc_file);
+            if(!rc) goto fail;
+            delText(startRange, endRange);
 // Warning, we don't convert output from iso8859 or other formats to utf8,
 // like we do when reading from a file; just assume it is proper.
-			rc = addTextToBuffer((pst)outdata, outlen, startRange - 1, true);
-			nzFree(outdata);
-			if(rc)
-				debugPrint(1, "%d", outlen);
-			goto success;
-		}
+            rc = addTextToBuffer((pst)outdata, outlen, startRange - 1, true);
+            nzFree(outdata);
+            if(rc)
+                debugPrint(1, "%d", outlen);
+            goto success;
+        }
 
-		if(!first && cw->irciMode) {
+        if(!first && cw->irciMode) {
 // write the buffer to the irc server
-			if(!startRange) {
-				setError(MSG_AtLine0);
-				goto fail;
-			}
-			if(startRange != 1 || endRange != cw->dol || globalMode) {
-				setError(MSG_IrcEntire);
-				goto fail;
-			}
-			if(!ircWrite()) goto fail;
-			delText(startRange, endRange);
-			cw->changeMode = cw->undoable = false;
-			goto success;
-		}
+            if(!startRange) {
+                setError(MSG_AtLine0);
+                goto fail;
+            }
+            if(startRange != 1 || endRange != cw->dol || globalMode) {
+                setError(MSG_IrcEntire);
+                goto fail;
+            }
+            if(!ircWrite()) goto fail;
+            delText(startRange, endRange);
+            cw->changeMode = cw->undoable = false;
+            goto success;
+        }
 
-		if (!first)
-			line = cf->fileName;
-		if (!line || (cw->ircoMode && !first)) {
-			setError(MSG_NoFileSpecified);
-			goto fail;
-		}
-		if (cw->dirMode && stringEqual(line, cf->fileName)) {
-			setError(MSG_NoDirWrite);
-			goto fail;
-		}
-		if (cw->sqlMode && stringEqual(line, cf->fileName)) {
-			setError(MSG_NoDBWrite);
-			goto fail;
-		}
-		rc = writeFile(line, writeMode);
-		if(!wq) goto done;
-		if(!rc) goto done;
-		debugPrint(1, "%lld", fileSize);
-		fileSize = -1;
-		goto doquit;
-	}
+        if (!first)
+            line = cf->fileName;
+        if (!line || (cw->ircoMode && !first)) {
+            setError(MSG_NoFileSpecified);
+            goto fail;
+        }
+        if (cw->dirMode && stringEqual(line, cf->fileName)) {
+            setError(MSG_NoDirWrite);
+            goto fail;
+        }
+        if (cw->sqlMode && stringEqual(line, cf->fileName)) {
+            setError(MSG_NoDBWrite);
+            goto fail;
+        }
+        rc = writeFile(line, writeMode);
+        if(!wq) goto done;
+        if(!rc) goto done;
+        debugPrint(1, "%lld", fileSize);
+        fileSize = -1;
+        goto doquit;
+    }
 
-	if (cmd == '&') {	// jump back key
-		if (first && !cx) {
-			setError(MSG_ArrowAfter);
-			goto fail;
-		}
-		if (!cx)
-			cx = 1;
-		while (cx) {
-			struct histLabel *label = cw->histLabel;
-			if (!label) {
-				setError(MSG_NoPrevious);
-				goto fail;
-			}
-			cw->histLabel = label->prev;
-			if (label->label)	/* this could be 0 because of line deletion */
-				cw->dot = label->label, --cx;
-			free(label);
-		}
-		if(debugLevel >= 1)
-			printDot();
-		goto success;
+    if (cmd == '&') { // jump back key
+        if (first && !cx) {
+            setError(MSG_ArrowAfter);
+            goto fail;
+        }
+        if (!cx)
+            cx = 1;
+        while (cx) {
+            struct histLabel *label = cw->histLabel;
+            if (!label) {
+                setError(MSG_NoPrevious);
+                goto fail;
+            }
+            cw->histLabel = label->prev;
+            if (label->label) // this could be 0 because of line deletion
+                cw->dot = label->label, --cx;
+            free(label);
+        }
+        if(debugLevel >= 1)
+            printDot();
+        goto success;
 
-	}
+    }
 
-	if (cmd == '^') {	// back key, pop the stack
-		if (first && !cx) {
-			setError(MSG_ArrowAfter);
-			goto fail;
-		}
-		if (!cx)
-			cx = 1;
-		undoSpecialClear();
-		while (cx) {
-			Window *prev = cw->prev;
-			if (!prev) {
-				setError(MSG_NoPrevious);
-				goto fail;
-			}
-			saveSubstitutionStrings();
-			if (!cxQuit(context, 1))
-				goto fail;
-			sessionList[context].lw = cw = prev;
-			selfFrame();
-			restoreSubstitutionStrings(cw);
-			--cx;
-		}
-		if(debugLevel >= 1)
-			printDot();
-		goto success;
-	}
+    if (cmd == '^') { // back key, pop the stack
+        if (first && !cx) {
+            setError(MSG_ArrowAfter);
+            goto fail;
+        }
+        if (!cx)
+            cx = 1;
+        undoSpecialClear();
+        while (cx) {
+            Window *prev = cw->prev;
+            if (!prev) {
+                setError(MSG_NoPrevious);
+                goto fail;
+            }
+            saveSubstitutionStrings();
+            if (!cxQuit(context, 1))
+                goto fail;
+            sessionList[context].lw = cw = prev;
+            selfFrame();
+            restoreSubstitutionStrings(cw);
+            --cx;
+        }
+        if(debugLevel >= 1)
+            printDot();
+        goto success;
+    }
 
-	if (cmd == 'M') {	// move this to another session
-		int scx = cx; // remember
-		if (first && (first != '0' || line[1]) && !cx) {
-			setError(MSG_MAfter);
-			goto fail;
-		}
-		if (cx) {
-			if (!cxCompare(cx))
-				goto fail;
-		} else {
-			cx = sideBuffer(0, emptyString, 0, NULL);
-			if (cx == 0)
-				goto fail;
-		}
-/* we likely just created it; now quit it */
-		if (cxActive(cx, false) && !cxQuit(cx, 2))
-			goto fail;
+    if (cmd == 'M') { // move this to another session
+        int scx = cx; // remember
+        if (first && (first != '0' || line[1]) && !cx) {
+            setError(MSG_MAfter);
+            goto fail;
+        }
+        if (cx) {
+            if (!cxCompare(cx))
+                goto fail;
+        } else {
+            cx = sideBuffer(0, emptyString, 0, NULL);
+            if (cx == 0)
+                goto fail;
+        }
+// we likely just created it; now quit it
+        if (cxActive(cx, false) && !cxQuit(cx, 2))
+            goto fail;
 // If changes were made to this buffer, they are undoable after the move
-		undoCompare();
-		cw->undoable = false;
-		undoSpecialClear();
-		if((!scx && first != '0') || debugLevel >= 1)
-			i_printf(MSG_MovedSession, cx);
+        undoCompare();
+        cw->undoable = false;
+        undoSpecialClear();
+        if((!scx && first != '0') || debugLevel >= 1)
+            i_printf(MSG_MovedSession, cx);
 // Magic with pointers, hang on to your hat.
-		cw->imapMode3 = false;
-		sessionList[cx].fw = sessionList[cx].lw = cw;
-		cw->sno = cx;
-		cs->lw = cw->prev;
-		cw->prev = 0;
-		cw = cs->lw;
-		if(cx > maxSession) maxSession = cx;
-		cx_previous = cx;
+        cw->imapMode3 = false;
+        sessionList[cx].fw = sessionList[cx].lw = cw;
+        cw->sno = cx;
+        cs->lw = cw->prev;
+        cw->prev = 0;
+        cw = cs->lw;
+        if(cx > maxSession) maxSession = cx;
+        cx_previous = cx;
 // Everything is different if we are moving the top buffer and there is nobody above
-		if(!cw) { // ouch
-			cs->fw = 0;
-			if(!cs->lw2) { // nobody below
-				i_printf(MSG_RelocateSession, cx);
-				cxSwitch(cx, false);
-				goto success;
-			}
+        if(!cw) { // ouch
+            cs->fw = 0;
+            if(!cs->lw2) { // nobody below
+                i_printf(MSG_RelocateSession, cx);
+                cxSwitch(cx, false);
+                goto success;
+            }
 // pull the buffer below up to current
-			cs->fw = cs->lw = cw = cs->fw2;
-			if(cs->fw2 == cs->lw2) {
-				cs->fw2 = cs->lw2 = 0;
-			} else {
-				Window *x = cs->lw2;
-				while(x->prev != cs->fw2) x = x->prev;
-				x->prev = 0;
-				cs->fw2 = x;
-			}
-		}
-		selfFrame();
-		if(debugLevel >= 1)
-			printDot();
-		goto success;
-	}
+            cs->fw = cs->lw = cw = cs->fw2;
+            if(cs->fw2 == cs->lw2) {
+                cs->fw2 = cs->lw2 = 0;
+            } else {
+                Window *x = cs->lw2;
+                while(x->prev != cs->fw2) x = x->prev;
+                x->prev = 0;
+                cs->fw2 = x;
+            }
+        }
+        selfFrame();
+        if(debugLevel >= 1)
+            printDot();
+        goto success;
+    }
 
-	if (cmd == 'A') {
-		char *a;
-		if (!cxQuit(context, 0))
-			goto fail;
-		if (!(a = showLinks()))
-			goto fail;
-		undoCompare();
-		cw->undoable = cw->changeMode = false;
-		undoSpecialClear();
-		w = createWindow();
-		w->sno = context;
-		w->prev = cw;
-		cw = w;
-		selfFrame();
-		cs->lw = w;
-		rc = addTextToBuffer((pst) a, strlen(a), 0, false);
-		nzFree(a);
-		cw->changeMode = false;
-		fileSize = bufferSize(context, false);
-		goto done;
-	}
+    if (cmd == 'A') {
+        char *a;
+        if (!cxQuit(context, 0))
+            goto fail;
+        if (!(a = showLinks()))
+            goto fail;
+        undoCompare();
+        cw->undoable = cw->changeMode = false;
+        undoSpecialClear();
+        w = createWindow();
+        w->sno = context;
+        w->prev = cw;
+        cw = w;
+        selfFrame();
+        cs->lw = w;
+        rc = addTextToBuffer((pst) a, strlen(a), 0, false);
+        nzFree(a);
+        cw->changeMode = false;
+        fileSize = bufferSize(context, false);
+        goto done;
+    }
 
-	if (cmd == '<') {	// run a function
-		cw->dot = endRange;
-		p = (char*)line;
-		bool stopflag = false;
-		char relative = 0;
-		if(*p == '*' && isdigit(p[1])) ++p, stopflag = true;
-		if(*p == '*' && (p[1] == '-' || p[1] == '+') && isdigit(p[2])) ++p, stopflag = true;
-		if(p[0] == '-' || p[0] == '+') relative = *p;
-		int b = strtol((relative ? p+1 : p), &p, 10);
-		if(b >= 0 && (*p == 0 || *p == '@')) {
-			int ln1 = 0, ln2 = 0;
-			atWindow = 0;
-			if(!*p && relative) {
-				static char shorthand[4];
-				strcpy(shorthand, "@,");
-				p = shorthand;
-			}
-			if(*p == '@') {
-				if(!atPartCracker(relative, b, false, p, &ln1, &ln2))
-					goto fail;
-			}
-			j = runBuffer(b, atWindow, stopflag, ln1, ln2);
-			if(!j) j = -1;
-		} else {
-			j =  runEbFunction(line);
-		}
-		if(j < 0)
-			globalMode = false, j = 0;
-		goto donej;
-	}
+    if (cmd == '<') { // run a function
+        cw->dot = endRange;
+        p = (char*)line;
+        bool stopflag = false;
+        char relative = 0;
+        if(*p == '*' && isdigit(p[1])) ++p, stopflag = true;
+        if(*p == '*' && (p[1] == '-' || p[1] == '+') && isdigit(p[2])) ++p, stopflag = true;
+        if(p[0] == '-' || p[0] == '+') relative = *p;
+        int b = strtol((relative ? p+1 : p), &p, 10);
+        if(b >= 0 && (*p == 0 || *p == '@')) {
+            int ln1 = 0, ln2 = 0;
+            atWindow = 0;
+            if(!*p && relative) {
+                static char shorthand[4];
+                strcpy(shorthand, "@,");
+                p = shorthand;
+            }
+            if(*p == '@') {
+                if(!atPartCracker(relative, b, false, p, &ln1, &ln2))
+                    goto fail;
+            }
+            j = runBuffer(b, atWindow, stopflag, ln1, ln2);
+            if(!j) j = -1;
+        } else {
+            j =  runEbFunction(line);
+        }
+        if(j < 0)
+            globalMode = false, j = 0;
+        goto donej;
+    }
 
-	// go to a folder in an imap listing
-	if (cmd == 'g' && cw->imapMode1 && !first) {
-		if (endRange > startRange) {
-			setError(MSG_RangeCmd, "g");
-			goto fail;
-		}
-		cw->dot = endRange;
-		p = (char *)cw->r_map[endRange].text; // path for the folder
-		cmd = 'e';
-		rc = folderDescend(p, false);
-		goto done;
-	}
+    // go to a folder in an imap listing
+    if (cmd == 'g' && cw->imapMode1 && !first) {
+        if (endRange > startRange) {
+            setError(MSG_RangeCmd, "g");
+            goto fail;
+        }
+        cw->dot = endRange;
+        p = (char *)cw->r_map[endRange].text; // path for the folder
+        cmd = 'e';
+        rc = folderDescend(p, false);
+        goto done;
+    }
 
-	// go to an email in an envelope listing
-	if (cmd == 'g' && cw->imapMode2 && (!first || (first == '-' && !line[1]))) {
-		if (endRange > startRange) {
-			setError(MSG_RangeCmd, "g");
-			goto fail;
-		}
-		cw->dot = endRange;
-		p = (char *)cw->r_map[endRange].text; // uid and subject for the email
-		cmd = 'e';
-		if(first) icmd = 'u'; // code to leave the email unformatted
-		rc = mailDescend(p, icmd);
-		goto done;
-	}
+    // go to an email in an envelope listing
+    if (cmd == 'g' && cw->imapMode2 && (!first || (first == '-' && !line[1]))) {
+        if (endRange > startRange) {
+            setError(MSG_RangeCmd, "g");
+            goto fail;
+        }
+        cw->dot = endRange;
+        p = (char *)cw->r_map[endRange].text; // uid and subject for the email
+        cmd = 'e';
+        if(first) icmd = 'u'; // code to leave the email unformatted
+        rc = mailDescend(p, icmd);
+        goto done;
+    }
 
 // Go to a file if in directory mode, or text mode and the line
 // exactly matches the name of a local file.
-	if (cmd == 'g' && (!first || stringEqual(line, "-")) &&
-	!(cw->binMode | cw->browseMode  | cw->sqlMode)) {
-		char *dirline;
-		const struct MIMETYPE *gmt = 0;	/* the go mime type */
-		emode = (first == '-');
-		if (endRange > startRange) {
-			setError(MSG_RangeCmd, "g");
-			cmd = 'e';
-			goto fail;
-		}
-		p = (char *)fetchLine(endRange, -1);
-		j = pstLength((pst) p);
-		--j;
-		for(i = 0; i < j; ++i)
-			if(!p[i])
-				goto past_g_file;
-		p[j] = 0;	// temporary
-		dirline = makeAbsPath(p);
-		p[j] = '\n';
-		if(cw->dirMode) {
-			cw->dot = endRange, cmd = 'e';
-			if(!dirline) goto fail;
-		} else {
-			if(!dirline || access(dirline, 4))
-				goto past_g_file;
-		}
-		cw->dot = endRange, cmd = 'e';
-		stripDotDot(dirline);
-		if (emode) goto regular_g_file;
-		if(!pluginsOn) goto regular_g_file;
+    if (cmd == 'g' && (!first || stringEqual(line, "-")) &&
+    !(cw->binMode | cw->browseMode  | cw->sqlMode)) {
+        char *dirline;
+        const struct MIMETYPE *gmt = 0; // the go mime type
+        emode = (first == '-');
+        if (endRange > startRange) {
+            setError(MSG_RangeCmd, "g");
+            cmd = 'e';
+            goto fail;
+        }
+        p = (char *)fetchLine(endRange, -1);
+        j = pstLength((pst) p);
+        --j;
+        for(i = 0; i < j; ++i)
+            if(!p[i])
+                goto past_g_file;
+        p[j] = 0; // temporary
+        dirline = makeAbsPath(p);
+        p[j] = '\n';
+        if(cw->dirMode) {
+            cw->dot = endRange, cmd = 'e';
+            if(!dirline) goto fail;
+        } else {
+            if(!dirline || access(dirline, 4))
+                goto past_g_file;
+        }
+        cw->dot = endRange, cmd = 'e';
+        stripDotDot(dirline);
+        if (emode) goto regular_g_file;
+        if(!pluginsOn) goto regular_g_file;
 // don't run a plugin on directory or special file
-		char ftype = fileTypeByName(dirline, 0);
-		if (ftype && ftype != 'f') goto regular_g_file;
-		if(browseSuffix)
-			gmt = findMimeBySuffix(browseSuffix);
-		else
-			gmt = findMimeByFile(dirline);
-		if (!gmt) goto regular_g_file;
-		if (!gmt->outtype) {
-			char pb_how[12];
-			strcpy(pb_how, "pb");
-			if(browseSuffix)
-				sprintf(pb_how, "pb.%s", browseSuffix);
-			rc = playBuffer(pb_how, dirline);
-			goto done;
-		}
+        char ftype = fileTypeByName(dirline, 0);
+        if (ftype && ftype != 'f') goto regular_g_file;
+        if(browseSuffix)
+            gmt = findMimeBySuffix(browseSuffix);
+        else
+            gmt = findMimeByFile(dirline);
+        if (!gmt) goto regular_g_file;
+        if (!gmt->outtype) {
+            char pb_how[12];
+            strcpy(pb_how, "pb");
+            if(browseSuffix)
+                sprintf(pb_how, "pb.%s", browseSuffix);
+            rc = playBuffer(pb_how, dirline);
+            goto done;
+        }
 // need to call runPluginCommand directly here, because the data is already in a local file
-		char *outbuf;
-		int outlen;
-		if (!cxQuit(context, 0)) goto fail;
-		undoCompare();
-		cw->undoable = cw->changeMode = false;
-		undoSpecialClear();
-		if(!noStack) freeWindows(context, false);
-		if(!runPluginCommand(gmt, 0, dirline, 0, 0, &outbuf, &outlen))
-			goto fail;
+        char *outbuf;
+        int outlen;
+        if (!cxQuit(context, 0)) goto fail;
+        undoCompare();
+        cw->undoable = cw->changeMode = false;
+        undoSpecialClear();
+        if(!noStack) freeWindows(context, false);
+        if(!runPluginCommand(gmt, 0, dirline, 0, 0, &outbuf, &outlen))
+            goto fail;
 // unfortunately this replicates some push&load code below
-		w = createWindow();
-		w->sno = context;
-		cw = w;		// we might wind up putting this back
-		selfFrame();
-			cf->fileName = cloneString(dirline);
-		addTextToBuffer((uchar*)outbuf, outlen, 0, false);
-		debugPrint(1, "%d", outlen); fileSize = -1;
-		cw->undoable = cw->changeMode = false;
-		nzFree(outbuf);
-		cw = cs->lw;	// put it back, for now
-		selfFrame();
-		if (noStack) {
-			w->prev = cw->prev;
-			nzFree(w->f0.firstURL);
-			w->f0.firstURL = cf->firstURL;
-			cf->firstURL = 0;
-			cxQuit(context, 1);
-		} else {
-			w->prev = cw;
-		}
-		cs->lw = cw = w;
-		selfFrame();
-		if (!w->prev)
-			cs->fw = w;
-		cf->render2 = cf->render3 = true;
-		if(gmt->outtype == 'h') {
-			addToFilename(".html");
-			cf->render1 = cf->render2 = false;
-			if(allowRedirection) browseCurrentBuffer(NULL, false);
-		} else if(gmt->outtype == 't') {
-			addToFilename(".txt");
-		}
-		goto success;
+        w = createWindow();
+        w->sno = context;
+        cw = w; // we might wind up putting this back
+        selfFrame();
+            cf->fileName = cloneString(dirline);
+        addTextToBuffer((uchar*)outbuf, outlen, 0, false);
+        debugPrint(1, "%d", outlen); fileSize = -1;
+        cw->undoable = cw->changeMode = false;
+        nzFree(outbuf);
+        cw = cs->lw; // put it back, for now
+        selfFrame();
+        if (noStack) {
+            w->prev = cw->prev;
+            nzFree(w->f0.firstURL);
+            w->f0.firstURL = cf->firstURL;
+            cf->firstURL = 0;
+            cxQuit(context, 1);
+        } else {
+            w->prev = cw;
+        }
+        cs->lw = cw = w;
+        selfFrame();
+        if (!w->prev)
+            cs->fw = w;
+        cf->render2 = cf->render3 = true;
+        if(gmt->outtype == 'h') {
+            addToFilename(".html");
+            cf->render1 = cf->render2 = false;
+            if(allowRedirection) browseCurrentBuffer(NULL, false);
+        } else if(gmt->outtype == 't') {
+            addToFilename(".txt");
+        }
+        goto success;
 regular_g_file:
 // I don't think we need to make a copy here
-		line = dirline;
-		first = *line;
-	}
+        line = dirline;
+        first = *line;
+    }
 past_g_file:
 
-	if (cmd == 'e') {
-		if (cx) {
+    if (cmd == 'e') {
+        if (cx) {
 // switchsession:
-			if (!cxCompare(cx))
-				goto fail;
-			undoSpecialClear();
-			cxSwitch(cx, true);
-			goto success;
-		}
-		if (!first) {
-			i_printf(MSG_SessionX, context);
-			goto success;
-		}
-/* more e to come */
-	}
+            if (!cxCompare(cx))
+                goto fail;
+            undoSpecialClear();
+            cxSwitch(cx, true);
+            goto success;
+        }
+        if (!first) {
+            i_printf(MSG_SessionX, context);
+            goto success;
+        }
+// more e to come
+    }
 
-	// see if it's a go command
-	if (cmd == 'g' && !(cw->sqlMode | cw->binMode | cw->ircoMode)) {
-		char *h;
-		int tagno;
-		bool click, dclick;
+    // see if it's a go command
+    if (cmd == 'g' && !(cw->sqlMode | cw->binMode | cw->ircoMode)) {
+        char *h;
+        int tagno;
+        bool click, dclick;
 // jsdead javascript is not running
 // jsh the href is javascript:
 // jsgo going to this link definitely entails javascript, e.g. onclick
-		bool jsh, jsgo, jsdead;
-		bool lookmode = false;
+        bool jsh, jsgo, jsdead;
+        bool lookmode = false;
 
-		j = strlen(line);
-		if (j && line[j - 1] == '?')
-			lookmode = true;
-		if (j && line[j - 1] == '-')
-			emode = true;
+        j = strlen(line);
+        if (j && line[j - 1] == '?')
+            lookmode = true;
+        if (j && line[j - 1] == '-')
+            emode = true;
 
-		/* Check to see if g means run an sql command. */
-		if (!first) {
-			char *rbuf;
-			j = goSelect(&startRange, &rbuf);
-			if (j >= 0) {
-				cmd = 'e';	/* for autoprint of errors */
-				cw->dot = startRange;
-				if (*rbuf) {
-					int savedol = cw->dol;
-					addTextToBuffer((pst) rbuf,
-							strlen(rbuf), cw->dot,
-							true);
-					nzFree(rbuf);
-					if (cw->dol > savedol) {
-						cw->labels[0] = startRange + 1;
-						cw->labels[1] =
-						    startRange + cw->dol -
-						    savedol;
-					}
-					cw->dot = startRange;
-				}
-				rc = !!j;
-				goto done;
-			}
-		}
+        // Check to see if g means run an sql command.
+        if (!first) {
+            char *rbuf;
+            j = goSelect(&startRange, &rbuf);
+            if (j >= 0) {
+                cmd = 'e'; // for autoprint of errors
+                cw->dot = startRange;
+                if (*rbuf) {
+                    int savedol = cw->dol;
+                    addTextToBuffer((pst) rbuf,
+                            strlen(rbuf), cw->dot,
+                            true);
+                    nzFree(rbuf);
+                    if (cw->dol > savedol) {
+                        cw->labels[0] = startRange + 1;
+                        cw->labels[1] =
+                            startRange + cw->dol -
+                            savedol;
+                    }
+                    cw->dot = startRange;
+                }
+                rc = !!j;
+                goto done;
+            }
+        }
 
-/* Now try to go to a hyperlink */
-		s = line;
-		j = 0;
-		if (first) {
-			if (isdigitByte(first))
-				j = strtol(s, (char **)&s, 10);
-			else if (first == '$')
-				j = -1, ++s;
-		}
-		cw->nextrender = 0;
-		if (*s == '?' || *s == '-')
-			++s;
-		if (!*s) {
-			if (cw->sqlMode) {
-				setError(MSG_DBG);
-				goto fail;
-			}
-			jsh = jsgo = nogo = false;
-			jsdead = !isJSAlive;
+// Now try to go to a hyperlink
+        s = line;
+        j = 0;
+        if (first) {
+            if (isdigitByte(first))
+                j = strtol(s, (char **)&s, 10);
+            else if (first == '$')
+                j = -1, ++s;
+        }
+        cw->nextrender = 0;
+        if (*s == '?' || *s == '-') ++s;
+        if (!*s) {
+            if (cw->sqlMode) {
+                setError(MSG_DBG);
+                goto fail;
+            }
+            jsh = jsgo = nogo = false;
+            jsdead = !isJSAlive;
 // remember we can go to a file or url from a text file
-			if(!cw->browseMode) jsdead = true;
-			click = dclick = false;
-			cmd = (emode ? 'e' : 'b');
-			uriEncoded = true;
-			if (endRange > startRange) {
-				setError(MSG_RangeCmd, "g");
-				goto fail;
-			}
-			p = (char *)fetchLine(endRange, -1);
-			findField(p, 0, j, &n, 0, &tagno, &h, &tag);
-			debugPrint(5, "findField returns %d, %s", tagno, h);
+            if(!cw->browseMode) jsdead = true;
+            click = dclick = false;
+            cmd = (emode ? 'e' : 'b');
+            uriEncoded = true;
+            if (endRange > startRange) {
+                setError(MSG_RangeCmd, "g");
+                goto fail;
+            }
+            p = (char *)fetchLine(endRange, -1);
+            findField(p, 0, j, &n, 0, &tagno, &h, &tag);
+            debugPrint(5, "findField returns %d, %s", tagno, h);
 
-			if (!h) {
-				fieldNumProblem(1, "g", j, n, n);
-				goto fail;
-			}
-			cw->dot = endRange;
-			jumptag = gotag = tag;
-			if (cw->browseMode && h[0] == '#')
-				emode = false, cmd = 'b';
-			jsh = memEqualCI(h, "javascript:", 11);
+            if (!h) {
+                fieldNumProblem(1, "g", j, n, n);
+                goto fail;
+            }
+            cw->dot = endRange;
+            jumptag = gotag = tag;
+            if (cw->browseMode && h[0] == '#')
+                emode = false, cmd = 'b';
+            jsh = memEqualCI(h, "javascript:", 11);
 
-			if (lookmode) {
-				if(!strncmp(h, "data:", 5)) eb_puts("data:");
-				else eb_puts(h);
-				nzFree(h);
-				if(debugLevel >= 3) eb_printf("%d\n", tag->seqno);
-				goto success;
-			}
+            if (lookmode) {
+                if(!strncmp(h, "data:", 5)) eb_puts("data:");
+                else eb_puts(h);
+                nzFree(h);
+                if(debugLevel >= 3) eb_printf("%d\n", tag->seqno);
+                goto success;
+            }
 
-			if (tag && (tag->action == TAGACT_FRAME || tag->action == TAGACT_DET)) {
-				nzFree(h);
-				line = "exp";
-				goto expctr;
-			}
+            if (tag && (tag->action == TAGACT_FRAME || tag->action == TAGACT_DET)) {
+                nzFree(h);
+                line = "exp";
+                goto expctr;
+            }
 
-			if (tagno) {
-				click = tagHandler(tagno, "onclick");
-				dclick = tagHandler(tagno, "ondblclick");
-			}
-			if (click)
-				jsgo = true;
-			jsgo |= jsh;
-			nogo = stringEqual(h, "#");
-			if (!*h)
-				nogo = true;
-			nogo |= jsh;
-			debugPrint(5, "go %d nogo %d jsh %d dead %d", jsgo,
-				   nogo, jsh, jsdead);
-			debugPrint(5, "click %d dclick %d", click, dclick);
-			if (jsgo & jsdead) {
-				if (nogo)
-					i_puts(MSG_NJNoAction);
-				else
-					i_puts(MSG_NJGoing);
-				jsgo = jsh = false;
-			}
+            if (tagno) {
+                click = tagHandler(tagno, "onclick");
+                dclick = tagHandler(tagno, "ondblclick");
+            }
+            if (click)
+                jsgo = true;
+            jsgo |= jsh;
+            nogo = stringEqual(h, "#");
+            if (!*h)
+                nogo = true;
+            nogo |= jsh;
+            debugPrint(5, "go %d nogo %d jsh %d dead %d", jsgo,
+                   nogo, jsh, jsdead);
+            debugPrint(5, "click %d dclick %d", click, dclick);
+            if (jsgo & jsdead) {
+                if (nogo)
+                    i_puts(MSG_NJNoAction);
+                else
+                    i_puts(MSG_NJGoing);
+                jsgo = jsh = false;
+            }
 // because I am setting allocatedLine to h, it will get freed on the next go round.
-			nzFree(allocatedLine);
-			line = allocatedLine = h;
-			first = *line;
-			setError(-1);
-			if(!cw->browseMode) goto past_js;
+            nzFree(allocatedLine);
+            line = allocatedLine = h;
+            first = *line;
+            setError(-1);
+            if(!cw->browseMode) goto past_js;
 
 // The website should not depend on the mouseover code running first.
 // edbrowse is more like a touchscreen, and there are such devices, so just go.
 // No mouseEnter, mouseOver, mouseExit, etc.
-			if (!jsdead)
-				set_property_string_win(cf, "status", h);
+            if (!jsdead)
+                set_property_string_win(cf, "status", h);
 // jsgo means running javascript or at least some onclick code,
 // but we should generate the click event whether jsgo is set or not.
 // A containing object could have an event handler capturing click.
-			jSyncup(false, tag);
-			rc = bubble_event_t(tag, "onclick");
-			jSideEffects();
-		if (newlocation)
-				goto redirect;
-			if (!rc)
-				goto success;
+            jSyncup(false, tag);
+            rc = bubble_event_t(tag, "onclick");
+            jSideEffects();
+        if (newlocation)
+                goto redirect;
+            if (!rc)
+                goto success;
 
-			if (jsh) {
-/* actually running the url, not passing it to http etc, need to unescape */
-				unpercentString(h);
-				cf = tag->f0;
-				jsRunScriptWin(h, "a.href", 1);
-				jSideEffects();
-				if (newlocation)
-					goto redirect;
-				goto success;
-			}
+            if (jsh) {
+// actually running the url, not passing it to http etc, need to unescape
+                unpercentString(h);
+                cf = tag->f0;
+                jsRunScriptWin(h, "a.href", 1);
+                jSideEffects();
+                if (newlocation)
+                    goto redirect;
+                goto success;
+            }
 
 past_js:
-			if (nogo)
-				goto success;
+            if (nogo)
+                goto success;
 // to access local files
 // but not for a fragment
-			if (!isURL(h) && *h != '#')
-				unpercentString(h);
-		}
-	}
+            if (!isURL(h) && *h != '#')
+                unpercentString(h);
+        }
+    }
 
-	if (cmd == 's') {
+    if (cmd == 's') {
 // Some shorthand, like s,2 to split the line at the second comma
-		if (!first) {
-			strcpy(newline, "//%");
-			line = newline;
-		} else if (first == '$' && !line[1]) {
-			strcpy(newline, "//%/$p");
-			line = newline;
-		} else if(isdigitByte(first) && !line[1]) {
-			sprintf(newline, "//%%/%cp", first);
-			line = newline;
+        if (!first) {
+            strcpy(newline, "//%");
+            line = newline;
+        } else if (first == '$' && !line[1]) {
+            strcpy(newline, "//%/$p");
+            line = newline;
+        } else if(isdigitByte(first) && !line[1]) {
+            sprintf(newline, "//%%/%cp", first);
+            line = newline;
 // cx was set, like a context, like w2, but it shouldn't be
-			cx = 0;
-		} else if (strchr(",.;:!?)-\"", first) &&
-			   (!line[1] || ((isdigitByte(line[1]) || line[1] == '$') && !line[2]))) {
-			char esc[2];
-			esc[0] = esc[1] = 0;
-			if (first == '.' || first == '?')
-				esc[0] = '\\';
-			sprintf(newline, "/%s%c +/%c\\n%s%s",
-				esc, first, first, (line[1] ? "/p" : ""),
-				line + 1);
-			debugPrint(6, "shorthand regexp %s", newline);
-			line = newline;
-		}
-		first = *line;
-	}
+            cx = 0;
+        } else if (strchr(",.;:!?)-\"", first) &&
+               (!line[1] || ((isdigitByte(line[1]) || line[1] == '$') && !line[2]))) {
+            char esc[2];
+            esc[0] = esc[1] = 0;
+            if (first == '.' || first == '?')
+                esc[0] = '\\';
+            sprintf(newline, "/%s%c +/%c\\n%s%s",
+                esc, first, first, (line[1] ? "/p" : ""),
+                line + 1);
+            debugPrint(6, "shorthand regexp %s", newline);
+            line = newline;
+        }
+        first = *line;
+    }
 
-	scmd = ' ';
-	if ((cmd == 'i' || cmd == 's') && first) {
-		char c;
-		s = line;
-		if (isdigitByte(*s))
-			cx = strtol(s, (char **)&s, 10);
-		else if (*s == '$')
-			cx = -1, ++s;
-		c = *s;
-		if (c &&
-		    (strchr(valid_delim, c) ||
-		     (cmd == 'i' && strchr("*<?=", c)))) {
-			if (!cw->browseMode && (cmd == 'i' || cx)) {
-				setError(MSG_NoBrowse);
-				goto fail;
-			}
-			if (endRange > startRange && cmd == 'i') {
-				setError(MSG_RangeI, c);
-				goto fail;
-			}
+    scmd = ' ';
+    if ((cmd == 'i' || cmd == 's') && first) {
+        char c;
+        s = line;
+        if (isdigitByte(*s))
+            cx = strtol(s, (char **)&s, 10);
+        else if (*s == '$')
+            cx = -1, ++s;
+        c = *s;
+        if (c &&
+            (strchr(valid_delim, c) ||
+             (cmd == 'i' && strchr("*<?=", c)))) {
+            if (!cw->browseMode && (cmd == 'i' || cx)) {
+                setError(MSG_NoBrowse);
+                goto fail;
+            }
+            if (endRange > startRange && cmd == 'i') {
+                setError(MSG_RangeI, c);
+                goto fail;
+            }
 
-			if (cmd == 'i' && strchr("?=<*", c)) {
-				int realtotal;
-				scmd = c;
-				line = s + 1;
-				first = *line;
-				debugPrint(5, "scmd = %c", scmd);
-				cw->dot = endRange;
+            if (cmd == 'i' && strchr("?=<*", c)) {
+                int realtotal;
+                scmd = c;
+                line = s + 1;
+                first = *line;
+                debugPrint(5, "scmd = %c", scmd);
+                cw->dot = endRange;
 
-				p = (char *)fetchLine(cw->dot, -1);
-				j = 1;
-				if (scmd == '*')
-					j = 2;
-				if (scmd == '?')
-					j = 3;
-				findInputField(p, j, cx, &n, &realtotal,
-					       &tagno);
-				debugPrint(5, "findField returns %d.%d", n,
-					   tagno);
-				if (!tagno) {
-					fieldNumProblem((c == '*' ? 2 : 0), "i",
-							cx, n, realtotal);
-					goto fail;
-				}
+                p = (char *)fetchLine(cw->dot, -1);
+                j = 1;
+                if (scmd == '*')
+                    j = 2;
+                if (scmd == '?')
+                    j = 3;
+                findInputField(p, j, cx, &n, &realtotal,
+                           &tagno);
+                debugPrint(5, "findField returns %d.%d", n,
+                       tagno);
+                if (!tagno) {
+                    fieldNumProblem((c == '*' ? 2 : 0), "i",
+                            cx, n, realtotal);
+                    goto fail;
+                }
 
-				if (scmd == '?') {
-					infShow(tagno, line);
-					if(debugLevel >= 3) eb_printf("tag %d\n", tagList[tagno]->seqno);
-					goto success;
-				}
+                if (scmd == '?') {
+                    infShow(tagno, line);
+                    if(debugLevel >= 3) eb_printf("tag %d\n", tagList[tagno]->seqno);
+                    goto success;
+                }
 
-				cw->undoable = false;
-				undoSpecialClear();
+                cw->undoable = false;
+                undoSpecialClear();
 
-				if (c == '<') {
-					if (globalMode) {
-						setError(MSG_IG);
-						goto failg;
-					}
-					nzFree(allocatedLine);
-					allocatedLine = lessFile(line);
-					if (!allocatedLine)
-						goto fail;
-					line = allocatedLine;
-					rc = infReplace(tagno, (char*)line, true);
-					if (newlocation)
-						goto redirect;
-					goto done;
-				}
+                if (c == '<') {
+                    if (globalMode) {
+                        setError(MSG_IG);
+                        goto failg;
+                    }
+                    nzFree(allocatedLine);
+                    allocatedLine = lessFile(line);
+                    if (!allocatedLine)
+                        goto fail;
+                    line = allocatedLine;
+                    rc = infReplace(tagno, (char*)line, true);
+                    if (newlocation)
+                        goto redirect;
+                    goto done;
+                }
 
-				if (scmd == '=') {
-					const bool old_ipass = tagList[tagno]->ipass;
-					tagList[tagno]->ipass = false;
-					rc = infReplace(tagno, (char*)line, true);
-					if (!rc)
-						tagList[tagno]->ipass = old_ipass;
-					if (newlocation)
-						goto redirect;
-					goto done;
-				}
+                if (scmd == '=') {
+                    const bool old_ipass = tagList[tagno]->ipass;
+                    tagList[tagno]->ipass = false;
+                    rc = infReplace(tagno, (char*)line, true);
+                    if (!rc)
+                        tagList[tagno]->ipass = old_ipass;
+                    if (newlocation)
+                        goto redirect;
+                    goto done;
+                }
 
-				if (c == '*') {
-					Frame *save_cf = cf;
-					jSyncup(false, tagList[tagno]);
-					nzFree0(allocatedLine);
-					c = infPush(tagno, &allocatedLine);
-					jSideEffects();
-					cf = save_cf;
+                if (c == '*') {
+                    Frame *save_cf = cf;
+                    jSyncup(false, tagList[tagno]);
+                    nzFree0(allocatedLine);
+                    c = infPush(tagno, &allocatedLine);
+                    jSideEffects();
+                    cf = save_cf;
 // the action of the button could fail, and stil some event handlers
 // could change some lines on the screen.
-					if(!inscript) rerender(0);
-					if (!c)
-						goto fail;
-					if (newlocation) goto redirect;
+                    if(!inscript) rerender(0);
+                    if (!c)
+                        goto fail;
+                    if (newlocation) goto redirect;
 // No url means it was a reset button
-					if (!allocatedLine) goto success;
-					line = allocatedLine;
-					first = *line;
-					cmd = 'b';
-					uriEncoded = true;
-				}
+                    if (!allocatedLine) goto success;
+                    line = allocatedLine;
+                    first = *line;
+                    cmd = 'b';
+                    uriEncoded = true;
+                }
 
-			} else
-				cmd = 's';
-		} else {
-			setError(MSG_TextAfter, icmd);
-			goto fail;
-		}
-	}
+            } else
+                cmd = 's';
+        } else {
+            setError(MSG_TextAfter, icmd);
+            goto fail;
+        }
+    }
 
-	if(cmd == 'e' && first == '!') {
+    if(cmd == 'e' && first == '!') {
 // did you make changes that you didn't write?
-		if (!cxQuit(context, 0)) goto fail;
-		undoCompare();
-		cw->undoable = cw->changeMode = false;
-		undoSpecialClear();
-		char *outdata;
-		int outlen, pexit;
-		FILE *p;
-		char *newline = bangbang(line + 1);
-		eb_variables();
-		newline = apostropheMacros(newline);
-		p = popen(newline, "r");
-		nzFree(newline);
-		if (!p) {
-			setError(MSG_NoSpawn, line + 1, errno);
-			goto fail;
-		}
-		rc = fdIntoMemory(fileno(p), &outdata, &outlen, 0);
-		if(!rc) {
-			pclose(p);
-			goto fail;
-		}
-		pexit = pclose(p);
-		if(pexit) {
-			setError(MSG_CmdFail);
-			nzFree(outdata);
-			goto fail;
-		}
+        if (!cxQuit(context, 0)) goto fail;
+        undoCompare();
+        cw->undoable = cw->changeMode = false;
+        undoSpecialClear();
+        char *outdata;
+        int outlen, pexit;
+        FILE *p;
+        char *newline = bangbang(line + 1);
+        eb_variables();
+        newline = apostropheMacros(newline);
+        p = popen(newline, "r");
+        nzFree(newline);
+        if (!p) {
+            setError(MSG_NoSpawn, line + 1, errno);
+            goto fail;
+        }
+        rc = fdIntoMemory(fileno(p), &outdata, &outlen, 0);
+        if(!rc) {
+            pclose(p);
+            goto fail;
+        }
+        pexit = pclose(p);
+        if(pexit) {
+            setError(MSG_CmdFail);
+            nzFree(outdata);
+            goto fail;
+        }
 // Warning, we don't convert output from iso8859 or other formats to utf8,
 // like we do when reading from a file; just assume it is proper.
-		if(!noStack) freeWindows(context, false);
-		w = createWindow();
-		w->sno = context;
-		cw = w;		// we might wind up putting this back
-		selfFrame();
-		rc = addTextToBuffer((pst)outdata, outlen, 0, true);
-		nzFree(outdata);
-		if(!rc) goto done; // should never happen
-		debugPrint(1, "%d", outlen);
-		w->undoable = w->changeMode = false;
-		cw = cs->lw;	// put it back, for now
-		selfFrame();
-		if (noStack) {
-			w->prev = cw->prev;
-			nzFree(w->f0.firstURL);
-			w->f0.firstURL = cf->firstURL;
-			cf->firstURL = 0;
-			cxQuit(context, 1);
-		} else {
-			w->prev = cw;
-		}
-		cs->lw = cw = w;
-		selfFrame();
-		if (!w->prev)
-			cs->fw = w;
-		goto done;
-	}
+        if(!noStack) freeWindows(context, false);
+        w = createWindow();
+        w->sno = context;
+        cw = w; // we might wind up putting this back
+        selfFrame();
+        rc = addTextToBuffer((pst)outdata, outlen, 0, true);
+        nzFree(outdata);
+        if(!rc) goto done; // should never happen
+        debugPrint(1, "%d", outlen);
+        w->undoable = w->changeMode = false;
+        cw = cs->lw; // put it back, for now
+        selfFrame();
+        if (noStack) {
+            w->prev = cw->prev;
+            nzFree(w->f0.firstURL);
+            w->f0.firstURL = cf->firstURL;
+            cf->firstURL = 0;
+            cxQuit(context, 1);
+        } else {
+            w->prev = cw;
+        }
+        cs->lw = cw = w;
+        selfFrame();
+        if (!w->prev)
+            cs->fw = w;
+        goto done;
+    }
 
 rebrowse:
-	debugPrint(4, "edbrowse command %c %s first %c count %d", cmd, line, first, redirect_count);
-	if (cmd == 'e' || (cmd == 'b' && first && first != '#')) {
-		debugPrint(4, "ifetch %d %s", uriEncoded, line);
+    debugPrint(4, "edbrowse command %c %s first %c count %d", cmd, line, first, redirect_count);
+    if (cmd == 'e' || (cmd == 'b' && first && first != '#')) {
+        debugPrint(4, "ifetch %d %s", uriEncoded, line);
 
 // If we got here from typing g in directory mode, and directory had /
 // at the end, and if the file starts with #, then the sameURL test passes,
 // and we go down a completely unintended path.
-		if (noStack < 2 && icmd != 'i' && !cw->dirMode &&
-			(isURL(cf->fileName) || !isURL(line)) &&
-			sameURL(line, cf->fileName)) {
-			if (!cw->browseMode) {
-				setError(MSG_AlreadyInBuffer);
-				goto fail;
-			} else {
-				if(!strncmp(cf->fileName, "http://", 7) &&
-				strncmp(line, "http://", 7)) {
+        if (noStack < 2 && icmd != 'i' && !cw->dirMode &&
+            (isURL(cf->fileName) || !isURL(line)) &&
+            sameURL(line, cf->fileName)) {
+            if (!cw->browseMode) {
+                setError(MSG_AlreadyInBuffer);
+                goto fail;
+            } else {
+                if(!strncmp(cf->fileName, "http://", 7) &&
+                strncmp(line, "http://", 7)) {
 // the weird case, it was http://www.stuff and we took the lazy way
 // and just typed in www.stuff, and that matches on sameURL.
-					char *q;
-					createFormattedString(&q, "http://%s.browse", line);
-					nzFree(cf->fileName);
-					cf->fileName = q;
-				} else {
-					nzFree(cf->fileName);
-					cf->fileName = cloneString(line);
-					addToFilename(".browse");
-				}
-				s = findHash(line);
-				if (!s) {	// no section specified
+                    char *q;
+                    createFormattedString(&q, "http://%s.browse", line);
+                    nzFree(cf->fileName);
+                    cf->fileName = q;
+                } else {
+                    nzFree(cf->fileName);
+                    cf->fileName = cloneString(line);
+                    addToFilename(".browse");
+                }
+                s = findHash(line);
+                if (!s) { // no section specified
 // If there are lines, jump to line 1 for the g command and to $ for other commands
-					if(!cw->dot) {
-						if(debugLevel >= 1)
-							i_puts(MSG_Empty);
-						goto success;
-					}
-					const int targetLine = (icmd == 'g') ? 1 : cw->dol;
-					if(cw->dot == targetLine) {
-						if(debugLevel >= 1)
-							printDot();
-						goto success;
-					}
-					struct histLabel *label =
-					    allocMem(sizeof(struct histLabel));
-					label->label = cw->dot;
-					label->prev = cw->histLabel;
-					cw->histLabel = label;
-					cw->dot = targetLine;
-					if(debugLevel >= 1)
-						printDot();
-					goto success;
-				}
-				line = s;
-				first = '#';
-				cmd = 'b';
-				emode = false;
-				debugPrint(2, " hash replace %s", line);
-				goto browse;
-			}
-		}
+                    if(!cw->dot) {
+                        if(debugLevel >= 1)
+                            i_puts(MSG_Empty);
+                        goto success;
+                    }
+                    const int targetLine = (icmd == 'g') ? 1 : cw->dol;
+                    if(cw->dot == targetLine) {
+                        if(debugLevel >= 1)
+                            printDot();
+                        goto success;
+                    }
+                    struct histLabel *label =
+                        allocMem(sizeof(struct histLabel));
+                    label->label = cw->dot;
+                    label->prev = cw->histLabel;
+                    cw->histLabel = label;
+                    cw->dot = targetLine;
+                    if(debugLevel >= 1)
+                        printDot();
+                    goto success;
+                }
+                line = s;
+                first = '#';
+                cmd = 'b';
+                emode = false;
+                debugPrint(2, " hash replace %s", line);
+                goto browse;
+            }
+        }
 
 // Different URL, go get it.
 // did you make changes that you didn't write?
-		if (!cxQuit(context, 0)) goto fail;
-		undoCompare();
-		cw->undoable = cw->changeMode = false;
-		uchar prebrowse = cw->browseMode;
-		undoSpecialClear();
-		startRange = endRange = 0;
-		if(!noStack) freeWindows(context, false);
-		changeFileName = 0;	// should already be zero
-		thisfile = ((icmd == 'g' || icmd == 'i') ? cf->fileName : 0);
-		jumptag = 0;
-		w = createWindow();
-		w->sno = context;
-		cw = w;		// we might wind up putting this back
-		selfFrame();
-		cf->uriEncoded = uriEncoded;
-/* Check for sendmail link */
-		if (cmd == 'b' && memEqualCI(line, "mailto:", 7)) {
-			char *addr, *subj, *body;
-			char *q;
-			int ql;
-			decodeMailURL(line, &addr, &subj, &body);
-			ql = strlen(addr);
-			ql += 4;	/* to:\n */
-			ql += subj ? strlen(subj) : 5;
-			ql += 9;	/* subject:\n */
-			if (body)
-				ql += strlen(body);
-			q = allocMem(ql + 1);
-			sprintf(q, "to:%s\nsubject:%s\n%s", addr,
-				subj ? subj : "Hello", body ? body : "");
-			j = addTextToBuffer((pst) q, ql, 0, false);
-			nzFree(q);
-			nzFree(addr);
-			nzFree(subj);
-			nzFree(body);
-			if (j)
-				i_puts(MSG_MailHowto);
+        if (!cxQuit(context, 0)) goto fail;
+        undoCompare();
+        cw->undoable = cw->changeMode = false;
+        uchar prebrowse = cw->browseMode;
+        undoSpecialClear();
+        startRange = endRange = 0;
+        if(!noStack) freeWindows(context, false);
+        changeFileName = 0; // should already be zero
+        thisfile = ((icmd == 'g' || icmd == 'i') ? cf->fileName : 0);
+        jumptag = 0;
+        w = createWindow();
+        w->sno = context;
+        cw = w; // we might wind up putting this back
+        selfFrame();
+        cf->uriEncoded = uriEncoded;
+// Check for sendmail link
+        if (cmd == 'b' && memEqualCI(line, "mailto:", 7)) {
+            char *addr, *subj, *body;
+            char *q;
+            int ql;
+            decodeMailURL(line, &addr, &subj, &body);
+            ql = strlen(addr);
+            ql += 4; // skip past to:\n
+            ql += subj ? strlen(subj) : 5;
+            ql += 9; // skip past subject:\n
+            if (body)
+                ql += strlen(body);
+            q = allocMem(ql + 1);
+            sprintf(q, "to:%s\nsubject:%s\n%s", addr,
+                subj ? subj : "Hello", body ? body : "");
+            j = addTextToBuffer((pst) q, ql, 0, false);
+            nzFree(q);
+            nzFree(addr);
+            nzFree(subj);
+            nzFree(body);
+            if (j)
+                i_puts(MSG_MailHowto);
 // serverData doesn't mean anything here, but it has to be not null
 // for some code that is coming up.
-			serverData = emptyString;
-		} else {
-			bool save_pg;
+            serverData = emptyString;
+        } else {
+            bool save_pg;
 
 /*********************************************************************
 Before we set the new file name, and before we call up the next web page,
 we have to make sure it has a protocol. Every url needs a protocol.
 *********************************************************************/
 
-			if (missingProtURL(line)) {
-				char *w = allocMem(strlen(line) + 8);
-				sprintf(w, "http://%s", line);
-				nzFree(allocatedLine);
-				line = allocatedLine = w;
-			}
+            if (missingProtURL(line)) {
+                char *w = allocMem(strlen(line) + 8);
+                sprintf(w, "http://%s", line);
+                nzFree(allocatedLine);
+                line = allocatedLine = w;
+            }
 
-			cf->fileName = cloneString(line);
-			cf->firstURL = cloneString(line);
-			if (isSQL(line))
-				cw->sqlMode = true;
-			if (icmd == 'g' && !nogo && isURL(line))
-				debugPrint(2, "*%s", (strncmp(line, "data:", 5) ? line : "data:"));
+            cf->fileName = cloneString(line);
+            cf->firstURL = cloneString(line);
+            if (isSQL(line))
+                cw->sqlMode = true;
+            if (icmd == 'g' && !nogo && isURL(line))
+                debugPrint(2, "*%s", (strncmp(line, "data:", 5) ? line : "data:"));
 // emode suppresses plugins, as well as browsing
-			save_pg = pluginsOn;
-			if (emode) pluginsOn = false;
-			j = readFile(line, (cmd != 'r'), 0,
-				     thisfile, 0, prebrowse,
-			(icmd == 'g' ? gotag : 0));
-			pluginsOn = save_pg;
-		}
-		w->undoable = w->changeMode = false;
-		cw = cs->lw;	// put it back, for now
-		selfFrame();
+            save_pg = pluginsOn;
+            if (emode) pluginsOn = false;
+            j = readFile(line, (cmd != 'r'), 0,
+                     thisfile, 0, prebrowse,
+            (icmd == 'g' ? gotag : 0));
+            pluginsOn = save_pg;
+        }
+        w->undoable = w->changeMode = false;
+        cw = cs->lw; // put it back, for now
+        selfFrame();
 /* Don't push a new session if we were trying to read a url,
  * and didn't get anything. */
 // it's possible to get here in directory mode, with serverData == NULL
 //  file:///var/log
-		if (!serverData && (isURL(line) || isSQL(line)) && !w->dirMode) {
-			fileSize = -1;
-			freeWindow(w);
-			if (noStack && cw->prev) {
-				w = cw;
-				cw = w->prev;
-				selfFrame();
-				cs->lw = cw;
-				freeWindow(w);
-			}
-			goto donej;
-		}
-		if (noStack) {
-			w->prev = cw->prev;
-			nzFree(w->f0.firstURL);
-			w->f0.firstURL = cf->firstURL;
-			cf->firstURL = 0;
-			cxQuit(context, 1);
-		} else {
-			w->prev = cw;
-		}
-		cs->lw = cw = w;
-		selfFrame();
-		if (!w->prev)
-			cs->fw = w;
-		if (!j)
-			goto fail;
-		if (changeFileName) {
+        if (!serverData && (isURL(line) || isSQL(line)) && !w->dirMode) {
+            fileSize = -1;
+            freeWindow(w);
+            if (noStack && cw->prev) {
+                w = cw;
+                cw = w->prev;
+                selfFrame();
+                cs->lw = cw;
+                freeWindow(w);
+            }
+            goto donej;
+        }
+        if (noStack) {
+            w->prev = cw->prev;
+            nzFree(w->f0.firstURL);
+            w->f0.firstURL = cf->firstURL;
+            cf->firstURL = 0;
+            cxQuit(context, 1);
+        } else {
+            w->prev = cw;
+        }
+        cs->lw = cw = w;
+        selfFrame();
+        if (!w->prev)
+            cs->fw = w;
+        if (!j)
+            goto fail;
+        if (changeFileName) {
 // If not browsing, and redriected here by 302, lop of the hash,
 // only cause that is consistent with no redirection.
-			if(redirect_count && cmd != 'b' &&
-			(p = findHash(changeFileName)))
-				*p = 0;
-			nzFree(w->f0.fileName);
-			w->f0.fileName = changeFileName;
-			w->f0.uriEncoded = true;
-			changeFileName = 0;
-		}
+            if(redirect_count && cmd != 'b' &&
+            (p = findHash(changeFileName)))
+                *p = 0;
+            nzFree(w->f0.fileName);
+            w->f0.fileName = changeFileName;
+            w->f0.uriEncoded = true;
+            changeFileName = 0;
+        }
 /* Some files we just can't browse */
-		if (!cw->dol || cw->dirMode)
-			cmd = 'e';
-		if (cw->binMode && (!cf->mt || !cf->mt->outtype))
-			cmd = 'e';
-		if (cmd == 'e')
-			goto success;
-	}
+        if (!cw->dol || cw->dirMode)
+            cmd = 'e';
+        if (cw->binMode && (!cf->mt || !cf->mt->outtype))
+            cmd = 'e';
+        if (cmd == 'e')
+            goto success;
+    }
 
 browse:
-	if (cmd == 'b') {
-		char *newhash;
-		if (cw->dirMode) {
-			setError(MSG_DirCommand, cmd);
-			goto fail;
-		}
-		if (!cw->browseMode) {
-			int save_count = redirect_count;
-			if (!cw->dol) {
-				setError(MSG_BrowseEmpty);
-				goto fail;
-			}
-			if (fileSize >= 0) {
-				debugPrint(1, "%lld", fileSize);
-				fileSize = -1;
-			}
-			if (!browseCurrentBuffer(browseSuffix, plainMail)) {
-				if (icmd == 'b')
-					goto fail;
-				goto success;
-			}
-			redirect_count = save_count;
-			if(cw->f_dot && cw->f_dot <= cw->dol)
-				cw->dot = cw->f_dot;
-		} else if (!first) {
-			setError(MSG_BrowseAlready);
-			goto fail;
-		}
+    if (cmd == 'b') {
+        char *newhash;
+        if (cw->dirMode) {
+            setError(MSG_DirCommand, cmd);
+            goto fail;
+        }
+        if (!cw->browseMode) {
+            int save_count = redirect_count;
+            if (!cw->dol) {
+                setError(MSG_BrowseEmpty);
+                goto fail;
+            }
+            if (fileSize >= 0) {
+                debugPrint(1, "%lld", fileSize);
+                fileSize = -1;
+            }
+            if (!browseCurrentBuffer(browseSuffix, plainMail)) {
+                if (icmd == 'b')
+                    goto fail;
+                goto success;
+            }
+            redirect_count = save_count;
+            if(cw->f_dot && cw->f_dot <= cw->dol)
+                cw->dot = cw->f_dot;
+        } else if (!first) {
+            setError(MSG_BrowseAlready);
+            goto fail;
+        }
 
-		if (newlocation) {
-			if (!shortRefreshDelay(newlocation, newloc_d)) {
-				nzFree0(newlocation);
-			} else {
+        if (newlocation) {
+            if (!shortRefreshDelay(newlocation, newloc_d)) {
+                nzFree0(newlocation);
+            } else {
 redirect:
 // sanity check for infinite loop
-				if(++newloc_count == 3) {
-				debugPrint(1, "more than 2 redirects, stop at %s", newlocation);
-				nzFree0(newlocation);
-				goto success;
-			}
-				selfFrame();
-				noStack = newloc_r;
-				if (newloc_f != cf)
-					goto replaceframe;
-				nzFree(allocatedLine);
-				line = allocatedLine = newlocation;
-				newlocation = 0;
-				debugPrint(2, "redirect %s", line);
-				icmd = cmd = 'b';
-				uriEncoded = true;
-				first = *line;
-				if (intFlag) {
-					i_puts(MSG_RedirectionInterrupted);
-					goto success;
-				}
-				goto rebrowse;
-			}
-		}
+                if(++newloc_count == 3) {
+                debugPrint(1, "more than 2 redirects, stop at %s", newlocation);
+                nzFree0(newlocation);
+                goto success;
+            }
+                selfFrame();
+                noStack = newloc_r;
+                if (newloc_f != cf)
+                    goto replaceframe;
+                nzFree(allocatedLine);
+                line = allocatedLine = newlocation;
+                newlocation = 0;
+                debugPrint(2, "redirect %s", line);
+                icmd = cmd = 'b';
+                uriEncoded = true;
+                first = *line;
+                if (intFlag) {
+                    i_puts(MSG_RedirectionInterrupted);
+                    goto success;
+                }
+                goto rebrowse;
+            }
+        }
 
 /* Jump to the #section if specified in the url */
-		if(!redirect_count) {
-			if(!(p = findHash(line)))
-				goto success;
-			newhash = cloneString(p + 1);
-		} else {
-			if(!(p = findHash(cf->fileName)))
-				goto success;
+        if(!redirect_count) {
+            if(!(p = findHash(line)))
+                goto success;
+            newhash = cloneString(p + 1);
+        } else {
+            if(!(p = findHash(cf->fileName)))
+                goto success;
 // have to pull #stuff out and still leave the .browse at the end.
-			s = p + strlen(p) - 7;
-			if(s <= p) // should never happen
-				goto success;
-			newhash = pullString1(p + 1, s);
-			strmove(p, s);
-		}
+            s = p + strlen(p) - 7;
+            if(s <= p) // should never happen
+                goto success;
+            newhash = pullString1(p + 1, s);
+            strmove(p, s);
+        }
 
 /* Print the file size before we print the line. */
-		if (fileSize >= 0) {
-			debugPrint(1, "%lld", fileSize);
-			fileSize = -1;
-		}
+        if (fileSize >= 0) {
+            debugPrint(1, "%lld", fileSize);
+            fileSize = -1;
+        }
 // muck with the file name
-		if(isURL(cf->fileName)) {
-			debrowseFilename(cf->fileName, false);
-			p = findHash(cf->fileName);
-			if(p) *p = 0;
-			createFormattedString(&p, "%s#%s.browse", cf->fileName, newhash);
-			nzFree(cf->fileName), cf->fileName = p;
-		}
-		debugPrint(3, "set hash %s", newhash);
-		set_location_hash(newhash);
-		unpercentString(newhash);
-		rc = jump2anchor(jumptag, newhash);
-		nzFree(newhash);
-		goto done;
-	}
+        if(isURL(cf->fileName)) {
+            debrowseFilename(cf->fileName, false);
+            p = findHash(cf->fileName);
+            if(p) *p = 0;
+            createFormattedString(&p, "%s#%s.browse", cf->fileName, newhash);
+            nzFree(cf->fileName), cf->fileName = p;
+        }
+        debugPrint(3, "set hash %s", newhash);
+        set_location_hash(newhash);
+        unpercentString(newhash);
+        rc = jump2anchor(jumptag, newhash);
+        nzFree(newhash);
+        goto done;
+    }
 
-	if (cmd == 'g' || cmd == 'v') {
-		undoSpecialClear();
-		rc = doGlobal(line);
-		nzFree0(gflag);
-		goto done;
-	}
+    if (cmd == 'g' || cmd == 'v') {
+        undoSpecialClear();
+        rc = doGlobal(line);
+        nzFree0(gflag);
+        goto done;
+    }
 
-	if (cmd == 'm' || cmd == 't') {
-		rc = moveCopy();
-		goto done;
-	}
+    if (cmd == 'm' || cmd == 't') {
+        rc = moveCopy();
+        goto done;
+    }
 
-	if (cmd == 'i') {
-		if (cw->browseMode) {
-			setError(MSG_BrowseCommand, 'i');
-			goto fail;
-		}
-		cmd = 'a';
-		--startRange, --endRange;
-	}
+    if (cmd == 'i') {
+        if (cw->browseMode) {
+            setError(MSG_BrowseCommand, 'i');
+            goto fail;
+        }
+        cmd = 'a';
+        --startRange, --endRange;
+    }
 
-	if (cmd == 'c') {
-		delText(startRange, endRange);
-		endRange = --startRange;
-		cmd = 'a';
-	}
+    if (cmd == 'c') {
+        delText(startRange, endRange);
+        endRange = --startRange;
+        cmd = 'a';
+    }
 
-	if (cmd == 'a') {
-		if (inscript && cw->sqlMode) {
-			setError(MSG_InsertFunction);
-			goto fail;
-		}
+    if (cmd == 'a') {
+        if (inscript && cw->sqlMode) {
+            setError(MSG_InsertFunction);
+            goto fail;
+        }
 
-		if (cw->sqlMode) {
-			rc = sqlAddRows(endRange);
-			goto done;
-		}
+        if (cw->sqlMode) {
+            rc = sqlAddRows(endRange);
+            goto done;
+        }
 
-		if (cw->imapMode1) {
-			rc = addFolders();
-			goto done;
-		}
+        if (cw->imapMode1) {
+            rc = addFolders();
+            goto done;
+        }
 
-		rc = inputLinesIntoBuffer();
-		goto done;
-	}
+        rc = inputLinesIntoBuffer();
+        goto done;
+    }
 
-	if (cmd == 'd' || cmd == 'D') {
-		if (cw->imapMode1) {
-			if (globalMode) {
-				setError(MSG_GlobalCommand, icmd);
-				goto failg;
-			}
-			if (endRange > startRange) {
-				setError(MSG_RangeCmd, "d");
-				goto fail;
-			}
-			rc = deleteFolder(endRange);
-			goto done;
-		}
+    if (cmd == 'd' || cmd == 'D') {
+        if (cw->imapMode1) {
+            if (globalMode) {
+                setError(MSG_GlobalCommand, icmd);
+                goto failg;
+            }
+            if (endRange > startRange) {
+                setError(MSG_RangeCmd, "d");
+                goto fail;
+            }
+            rc = deleteFolder(endRange);
+            goto done;
+        }
 
-		if (cw->imapMode2) {
-			rc = imapDelete(startRange, endRange, cmd);
-			if(!rc) globalMode = false;
-			goto done;
-		}
+        if (cw->imapMode2) {
+            rc = imapDelete(startRange, endRange, cmd);
+            if(!rc) globalMode = false;
+            goto done;
+        }
 
-		if (cw->imapMode3) {
-			globalMode = false;
-			if(endRange > startRange) {
-				setError(MSG_RangeCmd, "d");
-				goto fail;
-			}
-			rc = imapDeleteWhileReading();
-			goto done;
-		}
+        if (cw->imapMode3) {
+            globalMode = false;
+            if(endRange > startRange) {
+                setError(MSG_RangeCmd, "d");
+                goto fail;
+            }
+            rc = imapDeleteWhileReading();
+            goto done;
+        }
 
-		if (cw->dirMode) {
-			j = delFiles(startRange, endRange, true, icmd, &cmd);
-			undoCompare();
-			cw->undoable = false;
-			undoSpecialClear();
-			goto afterdelete;
-		}
+        if (cw->dirMode) {
+            j = delFiles(startRange, endRange, true, icmd, &cmd);
+            undoCompare();
+            cw->undoable = false;
+            undoSpecialClear();
+            goto afterdelete;
+        }
 
-		if (cw->sqlMode) {
-			j = sqlDelRows(startRange, endRange);
-			undoCompare();
-			cw->undoable = false;
-			goto afterdelete;
-		}
+        if (cw->sqlMode) {
+            j = sqlDelRows(startRange, endRange);
+            undoCompare();
+            cw->undoable = false;
+            goto afterdelete;
+        }
 
-		if (cw->browseMode) {
-			delTags(startRange, endRange);
-			undoSpecialClear();
-		}
+        if (cw->browseMode) {
+            delTags(startRange, endRange);
+            undoSpecialClear();
+        }
 
-		delText(startRange, endRange);
-		j = 1;
+        delText(startRange, endRange);
+        j = 1;
 afterdelete:
-		if (!j)
-			globalMode = false;
-		else if (cmd == 'D')
-			printDot();
-		if(cw->ircoMode) cw->undoable = true;
-		goto donej;
-	}
+        if (!j)
+            globalMode = false;
+        else if (cmd == 'D')
+            printDot();
+        if(cw->ircoMode) cw->undoable = true;
+        goto donej;
+    }
 
-	if (cmd == 'j' || cmd == 'J') {
-		rc = joinText(line);
-		goto done;
-	}
+    if (cmd == 'j' || cmd == 'J') {
+        rc = joinText(line);
+        goto done;
+    }
 
-	if (cmd == 'r') {
-		if (cx) {
-			if(atsave) *atsave = '@';
-			rc = readContext(cx, atWindow, readLine1, readLine2);
-			goto done;
-		}
+    if (cmd == 'r') {
+        if (cx) {
+            if(atsave) *atsave = '@';
+            rc = readContext(cx, atWindow, readLine1, readLine2);
+            goto done;
+        }
 
-		if(first == '!') { // read from a command, like ed
-			char *outdata;
-			int outlen, pexit;
-			FILE *p;
-			char *newline = bangbang(line + 1);
-			eb_variables();
-			newline = apostropheMacros(newline);
-			p = popen(newline, "r");
-			nzFree(newline);
-			if (!p) {
-				setError(MSG_NoSpawn, line + 1, errno);
-				goto fail;
-			}
-			rc = fdIntoMemory(fileno(p), &outdata, &outlen, 0);
-			if(!rc) {
-				pclose(p);
-				goto fail;
-			}
-			pexit = pclose(p);
-			if(pexit) {
-				setError(MSG_CmdFail);
-				nzFree(outdata);
-				goto fail;
-			}
+        if(first == '!') { // read from a command, like ed
+            char *outdata;
+            int outlen, pexit;
+            FILE *p;
+            char *newline = bangbang(line + 1);
+            eb_variables();
+            newline = apostropheMacros(newline);
+            p = popen(newline, "r");
+            nzFree(newline);
+            if (!p) {
+                setError(MSG_NoSpawn, line + 1, errno);
+                goto fail;
+            }
+            rc = fdIntoMemory(fileno(p), &outdata, &outlen, 0);
+            if(!rc) {
+                pclose(p);
+                goto fail;
+            }
+            pexit = pclose(p);
+            if(pexit) {
+                setError(MSG_CmdFail);
+                nzFree(outdata);
+                goto fail;
+            }
 // Warning, we don't convert output from iso8859 or other formats to utf8,
 // like we do when reading from a file; just assume it is proper.
-			rc = addTextToBuffer((pst)outdata, outlen, endRange, true);
-			nzFree(outdata);
-			if(rc)
-				debugPrint(1, "%d", outlen);
-			goto done;
-		}
+            rc = addTextToBuffer((pst)outdata, outlen, endRange, true);
+            nzFree(outdata);
+            if(rc)
+                debugPrint(1, "%d", outlen);
+            goto done;
+        }
 
-		if (first) {
-			if (cw->sqlMode && !isSQL(line)) {
-				strcpy(newline, cf->fileName);
-				strmove(strchr(newline + 1, ']') + 1, line);
-				line = newline;
-			}
-			rc = readFile(line, false, 0, 0, 0, cw->browseMode, 0);
-			if (!serverData)
-				fileSize = -1;
-			goto done;
-		}
-		setError(MSG_NoFileSpecified);
-		goto fail;
-	}
+        if (first) {
+            if (cw->sqlMode && !isSQL(line)) {
+                strcpy(newline, cf->fileName);
+                strmove(strchr(newline + 1, ']') + 1, line);
+                line = newline;
+            }
+            rc = readFile(line, false, 0, 0, 0, cw->browseMode, 0);
+            if (!serverData)
+                fileSize = -1;
+            goto done;
+        }
+        setError(MSG_NoFileSpecified);
+        goto fail;
+    }
 
-	if (cmd == 's') {
-		if (cw->imapMode1) {
-			if (globalMode) {
-				setError(MSG_GlobalCommand, icmd);
-				goto failg;
-			}
-			if (endRange > startRange) {
-				setError(MSG_RangeCmd, "s");
-				goto fail;
-			}
+    if (cmd == 's') {
+        if (cw->imapMode1) {
+            if (globalMode) {
+                setError(MSG_GlobalCommand, icmd);
+                goto failg;
+            }
+            if (endRange > startRange) {
+                setError(MSG_RangeCmd, "s");
+                goto fail;
+            }
 // substituteText will handle the imap folder rename
-			j = substituteText(line);
-			if(j <= 0) goto fail;
+            j = substituteText(line);
+            if(j <= 0) goto fail;
 // success, but we have to refresh.
-			rc = imap1rf();
-			goto done;
-		}
+            rc = imap1rf();
+            goto done;
+        }
 
-		pst p;
-		j = substituteText(line);
+        pst p;
+        j = substituteText(line);
 // special case, if last line became empty and nlMode is true.
-		if (cw->dol && cw->nlMode &&
-		    (p = fetchLine(cw->dol, -1)) && p[0] == '\n')
-			delText(cw->dol, cw->dol);
-		if (j < 0) {
-			globalMode = false;
-			j = false;
-		}
-		if (newlocation)
-			goto redirect;
-		goto donej;
-	}
+        if (cw->dol && cw->nlMode &&
+            (p = fetchLine(cw->dol, -1)) && p[0] == '\n')
+            delText(cw->dol, cw->dol);
+        if (j < 0) {
+            globalMode = false;
+            j = false;
+        }
+        if (newlocation)
+            goto redirect;
+        goto donej;
+    }
 
-	setError(MSG_CNYI, icmd);
-	goto failg;
+    setError(MSG_CNYI, icmd);
+    goto failg;
 
 // If this was C++ then I'd set this up so return would free allocatedLine,
 // but it's not so we have to jump to one of these cases.
 
 success:
-	if (refresh_dot) {
-		cw->dot = refresh_dot <= cw->dol ? refresh_dot : cw->dol;
-		refresh_dot = 0;
-	}
-	nzFree(allocatedLine);
+    if (refresh_dot) {
+        cw->dot = refresh_dot <= cw->dol ? refresh_dot : cw->dol;
+        refresh_dot = 0;
+    }
+    nzFree(allocatedLine);
         --nesting;
-	return true;
+    return true;
 
 fail:
-	refresh_dot = 0;
-	nzFree(allocatedLine);
+    refresh_dot = 0;
+    nzFree(allocatedLine);
         --nesting;
-	return false;
+    return false;
 
 failg:
-	refresh_dot = 0;
-	nzFree(allocatedLine);
+    refresh_dot = 0;
+    nzFree(allocatedLine);
         --nesting;
-	return globalMode = false;
+    return globalMode = false;
 
 donej:
-	rc = j;
+    rc = j;
 done:
-	nzFree(allocatedLine);
+    nzFree(allocatedLine);
         --nesting;
-	return rc;
+    return rc;
 }
 
 bool edbrowseCommand(const char *line, bool script)
