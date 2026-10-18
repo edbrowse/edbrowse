@@ -10,10 +10,7 @@ It has been much modified.
 It consists of 100 tests, but I only run the first 69.
 The latter tests seemed to have little relevance to websites in the real world,
 and quite frankly, I ran out of steam.
-1 of the earlier tests also didn't seem relevant, and is skipped.
-Even if acid3 passes, it will remind you, "1 test was skipped."
-So 68 tests in practice.
-I'd like to go back to these some day, the 1 that was skipped and the latter 31.
+I'd like to go back to these some day,
 I'm sure they would be valuable as part of the regression test.
 
 My modifications are indicated by the characters @`.

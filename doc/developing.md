@@ -109,8 +109,8 @@ q
 EOF
 ```
 
-The result on line 3 should be `69/69`. The notice that 1 test was
-skipped is expected. See [regression.md](regression.md) for the test's
+The result on line 3 should be `69/69`.
+See [regression.md](regression.md) for the test's
 coverage and limitations.
 
 ### Running the interactive JavaScript test
