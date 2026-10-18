@@ -5685,6 +5685,8 @@ class FetchHelper
             headers: this.headers
         };
     }
+
+    clone() { return new this.constructor(this); }
 }
 scts(FetchHelper);
 
@@ -5734,8 +5736,6 @@ class Request extends FetchHelper
                 this.headers.set("cache-control", "no-cache");
         }
     }
-
-    clone() { return new Request(this); }
 
     [Symbol.for("FetchHelper.make$options")]()
     {
