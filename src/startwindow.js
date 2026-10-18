@@ -2625,7 +2625,8 @@ all those classes will exist. */
         case "thead": case "tbody": case "tfoot":
             c = new HTMLTableSectionElement; break;
         case "canvas": c = new HTMLCanvasElement; break;
-        case "audio": case "video": c = new HTMLAudioElement; break;
+        case "audio": c = new HTMLAudioElement; break;
+        case "video": c = new HTMLVideoElement; break;
         case "fragment": c = new DocumentFragment; break;
         case "frame": c = new HTMLFrameElement; break;
         case "iframe": c = new HTMLIFrameElement; break;
@@ -4816,6 +4817,23 @@ class HTMLAudioElement extends HTMLMediaElement
 }
 swdc(HTMLAudioElement);
 window.Audio = HTMLAudioElement; // alias
+
+class HTMLVideoElement extends HTMLMediaElement
+{
+    constructor(t)
+    {
+        super();
+        // arg to constructor is the url of the video
+        if (typeof t == "string") this.src = t;
+        if (typeof t == "object") this.src = t.toString();
+    }
+    static {
+        const tp = this.prototype;
+        tp.nodeName = "VIDEO";
+    }
+}
+swdc(HTMLVideoElement);
+window.Video = HTMLVideoElement; // alias
 
 /*********************************************************************
 AudioContext, for playing music etc.

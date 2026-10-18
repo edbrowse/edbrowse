@@ -4118,203 +4118,178 @@ findField(const char *line, int ftype, int n,
 	  int *total, int *realtotal, int *tagno, char **href,
 	  const Tag **tagp)
 {
-	const Tag *t;
-	int nt = 0;		/* number of fields total */
-	int nrt = 0;		/* the real total, for input fields */
-	int nm = 0;		/* number match */
-	int j;
-	const char *s, *ss;
-	char *h, *nmh;
-	char c;
-	static const char urlok[] =
-	    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890,./?@#%&-_+=:~*()'";
+    const Tag *t;
+    int nt = 0; // number of fields total
+    int nrt = 0; // the real total, for input fields
+    int nm = 0; // number match
+    int j;
+    const char *s, *ss;
+    char *h, *nmh;
+    char c;
+    static const char urlok[] =
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890,./?@#%&-_+=:~*()'";
 
-	if (href) *href = 0;
-	if (tagp) *tagp = 0;
+    if (href) *href = 0;
+    if (tagp) *tagp = 0;
 
-	if (cw->browseMode) {
+    if (cw->browseMode) {
 
-		s = line;
-		while ((c = *s) != '\n') {
-			++s;
-			if (c != InternalCodeChar)
-				continue;
-			j = strtol(s, (char **)&s, 10);
-			if (ftype == 0) {
-				if (*s != '{')
-					continue;
-				++nt, ++nrt;
-				if (n == nt || n < 0)
-					nm = j;
-				if (!n) {
-					if (!nm)
-						nm = j;
-					else
-						nm = -1;
-				}
-			} else if (ftype == 4) {
-				if (*s != '*' || s[1] != '[')
-					continue;
+        s = line;
+        while ((c = *s) != '\n') {
+            ++s;
+            if (c != InternalCodeChar) continue;
+            j = strtol(s, (char **)&s, 10);
+            if (ftype == 0) {
+                if (*s != '{') continue;
+                ++nt, ++nrt;
+                if (n == nt || n < 0) nm = j;
+                if (!n) {
+                    if (!nm) nm = j;
+                    else nm = -1;
+                }
+            } else if (ftype == 4) {
+                if (*s != '*' || s[1] != '[') continue;
 // don't know why tag might be other than image, but it might be.
-				if(tagList[j]->action != TAGACT_IMAGE)
-					continue;
-				++nt, ++nrt;
-				if (n == nt || n < 0)
-					nm = j;
-				if (!n) {
-					if (!nm)
-						nm = j;
-					else
-						nm = -1;
-				}
-			} else { // 1 2 or 3
-				if (*s != '<')
-					continue;
-				if (n > 0) {
-					++nt, ++nrt;
-					if (n == nt)
-						nm = j;
-					continue;
-				}
-				if (n < 0) {
-					nm = j;
-					++nt, ++nrt;
-					continue;
-				}
-				++nrt;
-				t = tagList[j];
-				if (ftype == 1 && t->itype && t->itype <= INP_SUBMIT)
-					continue;
-				if (ftype == 2 && t->itype > INP_SUBMIT)
-					continue;
-				++nt;
-				if (!nm)
-					nm = j;
-				else
-					nm = -1;
-			}
-		}		// loop over line
+                if(tagList[j]->action != TAGACT_IMAGE) continue;
+                ++nt, ++nrt;
+                if (n == nt || n < 0) nm = j;
+                if (!n) {
+                    if (!nm) nm = j;
+                    else nm = -1;
+                }
+            } else { // 1 2 or 3
+                if (*s != '<') continue;
+                if (n > 0) {
+                    ++nt, ++nrt;
+                    if (n == nt) nm = j;
+                    continue;
+                }
+                if (n < 0) {
+                    nm = j;
+                    ++nt, ++nrt;
+                    continue;
+                }
+                ++nrt;
+                t = tagList[j];
+                if (ftype == 1 && t->itype && t->itype <= INP_SUBMIT)
+                    continue;
+                if (ftype == 2 && t->itype > INP_SUBMIT)
+                    continue;
+                ++nt;
+                if (!nm) nm = j;
+                else nm = -1;
+            }
+        } // loop over line
 
 // see if we're in the midst of a textarea
-		if(!nt && ftype == 1 &&
-		(n < 0 || n == 1) &&
-		(j = findOpenTA(endRange))) {
+        if(!nt && ftype == 1 &&
+        (n < 0 || n == 1) &&
+        (j = findOpenTA(endRange))) {
 // at present there should be no way to get here
-			debugPrint(1, "open textarea %d shouldn't exist", j);
-			if (total) *total = 1;
-			if (realtotal) *realtotal = 1;
-			if (tagno) *tagno = j;
-			return;
-		}
+            debugPrint(1, "open textarea %d shouldn't exist", j);
+            if (total) *total = 1;
+            if (realtotal) *realtotal = 1;
+            if (tagno) *tagno = j;
+            return;
+        }
 
-	}
+    }
 
-	if (nm < 0)
-		nm = 0;
-	if (total) *total = nrt;
-	if (realtotal) *realtotal = nt;
-	if (tagno) *tagno = nm;
-	if ((ftype == 0 || ftype == 4) && nm) {
-		t = tagList[nm];
-		if (tagp)
-			*tagp = t;
-		if (t->action == TAGACT_A || t->action == TAGACT_FRAME ||
-		t->action == TAGACT_IMAGE ||
-		    t->action == TAGACT_MUSIC || t->action == TAGACT_AREA) {
-			if (href)
-				*href = cloneString(t->href);
-			if (href && !*href) {
+    if (nm < 0) nm = 0;
+    if (total) *total = nrt;
+    if (realtotal) *realtotal = nt;
+    if (tagno) *tagno = nm;
+    if ((ftype == 0 || ftype == 4) && nm) {
+        t = tagList[nm];
+        if (tagp) *tagp = t;
+        if (t->action == TAGACT_A || t->action == TAGACT_FRAME ||
+            t->action == TAGACT_AUDIO || t->action == TAGACT_VIDEO ||
+        t->action == TAGACT_IMAGE || t->action == TAGACT_AREA) {
+            if (href)
+                *href = cloneString(t->href);
+            if (href && !*href) {
 // nothing yet, defer to the js variable for href
-				*href = get_property_url_t(t, false);
-			}
-		} else {
+                *href = get_property_url_t(t, false);
+            }
+        } else {
 // This link is not an anchor or frame, it's onclick on something else.
-			if (href)
-				*href = cloneString("#");
-		}
-	}
+            if (href)
+                *href = cloneString("#");
+        }
+    }
 
-	if (nt || ftype)
-		return;
+    if (nt || ftype) return;
 
 // Second time through, maybe the url is in plain text.
-	nmh = 0;
-	s = line;
-	while (true) {
+    nmh = 0;
+    s = line;
+    while (true) {
 // skip ahead to a letter, like http
-		while ((c = *s) != '\n') {
-			if (isalphaByte(c))
-				break;
-			++s;
-		}
-		if (c == '\n')
-			break;
-		ss = s;
-		while (strchr(urlok, *s))
-			++s;
-		h = pullString1(ss, s);
-// act upon the llinks we create, href='blah'
-		if(memEqualCI(h, "href=", 5)) strmove(h, h + 5);
-		if(memEqualCI(h, "src=", 4)) strmove(h, h + 4);
-		if(*h == '\'' || *h == ':') strmove(h, h + 1);
-		int l = strlen(h);
-		if(!l) { free(h); continue; }
+        while ((c = *s) != '\n') {
+            if (isalphaByte(c)) break;
+            ++s;
+        }
+        if (c == '\n') break;
+        ss = s;
+        while (strchr(urlok, *s)) ++s;
+        h = pullString1(ss, s);
+        // act upon the llinks we create, href='blah'
+        if(memEqualCI(h, "href=", 5)) strmove(h, h + 5);
+        if(memEqualCI(h, "src=", 4)) strmove(h, h + 4);
+        if(*h == '\'' || *h == ':') strmove(h, h + 1);
+        int l = strlen(h);
+        if(!l) { free(h); continue; }
 // When a url ends in period, that is almost always the end of the sentence,
 // as in please check out www.foobar.com/snork.
 // and rarely part of the url.
 // Similarly for comma and apostrophe
-		c = h[l - 1];
-		if (c == '.' || c == ',' || c == '\'')
-			h[l - 1] = 0;
-		if(c == ')') {
-// an unbalanced ) is probably not part of the url
-			l = 0;
-// we can use ss here, we don't need it as a marker any more
-			for(ss = h + strlen(h) - 1; ss > h; --ss) {
-				if(*ss == ')') { ++l; continue; }
-				if(*ss == '(') { --l;
-					if(!l) break; // balanced
-				}
-			}
-			if(ss == h) // unbalanced
-				h[strlen(h) - 1] = 0;
-		}
-		if (!isURL(h)) {
-			free(h);
-			continue;
-		}
-		++nt;
-		if (n == nt || n < 0) {
-			nm = nt;
-			nzFree(nmh);
-			nmh = h;
-			continue;
-		}
-		if (n) {
-			free(h);
-			continue;
-		}
-		if (!nm) {
-			nm = nt;
-			nmh = h;
-			continue;
-		}
-		free(h);
-		nm = -1;
-		free(nmh);
-		nmh = 0;
-	}			// loop over line
+        c = h[l - 1];
+        if (c == '.' || c == ',' || c == '\'')
+            h[l - 1] = 0;
+        if(c == ')') {
+            // an unbalanced ) is probably not part of the url
+            l = 0;
+            // we can use ss here, we don't need it as a marker any more
+            for(ss = h + strlen(h) - 1; ss > h; --ss) {
+                if(*ss == ')') { ++l; continue; }
+                if(*ss == '(') { --l;
+                    if(!l) break; // balanced
+                }
+            }
+            if(ss == h) // unbalanced
+                h[strlen(h) - 1] = 0;
+        }
+        if (!isURL(h)) {
+            free(h);
+            continue;
+        }
+        ++nt;
+        if (n == nt || n < 0) {
+            nm = nt;
+            nzFree(nmh);
+            nmh = h;
+            continue;
+        }
+        if (n) {
+            free(h);
+            continue;
+        }
+        if (!nm) {
+            nm = nt;
+            nmh = h;
+            continue;
+        }
+        free(h);
+        nm = -1;
+        free(nmh);
+        nmh = 0;
+    } // loop over line
 
-	if (nm < 0)
-		nm = 0;
-	if (total)
-		*total = nt;
-	if (realtotal)
-		*realtotal = nt;
-	if (href)
-		*href = nmh;
-	else
-		nzFree(nmh);
+    if (nm < 0) nm = 0;
+    if (total) *total = nt;
+    if (realtotal) *realtotal = nt;
+    if (href) *href = nmh;
+    else nzFree(nmh);
 }
 
 static void

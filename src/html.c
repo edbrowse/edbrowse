@@ -5992,7 +5992,8 @@ unparen:
 		deltag = t;
 		break;
 
-	case TAGACT_MUSIC:
+	case TAGACT_AUDIO:
+	case TAGACT_VIDEO:
 		if(!opentag) break;
 		if (!retainTag) break;
 		if (!t->href) break;

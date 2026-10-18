@@ -30,7 +30,7 @@ static const struct tagInfo availableTags[] = {
 	{"address", "an address block", TAGACT_NOP, 1, 0},
 	{"area", "an image map area", TAGACT_AREA, 0, 4},
 	{"article", "an article", TAGACT_HE, 10, 1},
-	{"audio", "audio passage", TAGACT_MUSIC, 0, 0},
+	{"audio", "audio passage", TAGACT_AUDIO, 0, 0},
 	{"b", "bold text", TAGACT_B, 0, 0},
 	{"base", "base reference for relative URLs", TAGACT_BASE, 0, 4},
 	{"blockquote", "a quoted section", TAGACT_BQ, 0, 1},
@@ -59,7 +59,7 @@ static const struct tagInfo availableTags[] = {
 	{"element", "an input element", TAGACT_INPUT, 0, 4},
 	{"ellipse", "an svg ellipse", TAGACT_ELLIPSE, 0, 0},
 	{"em", "emphasized text", TAGACT_EM, 0, 0},
-	{"embed", "embedded html", TAGACT_MUSIC, 0, 0},
+	{"embed", "embedded html", TAGACT_AUDIO, 0, 0},
 	{"fieldset", "a field set", TAGACT_FIELDSET, 10, 1},
 	{"figcaption", "a figure caption", TAGACT_NOP, 10, 0},
 	{"figure", "a figure", TAGACT_NOP, 10, 0},
@@ -148,7 +148,7 @@ static const struct tagInfo availableTags[] = {
 	{"ul", "a bullet list", TAGACT_UL, 10, 1},
 	{"use", "an svg use", TAGACT_USE, 0, 0},
 	{"var", "variable text", TAGACT_JS, 0, 0},
-	{"video", "video passage", TAGACT_MUSIC, 0, 0},
+	{"video", "video passage", TAGACT_VIDEO, 0, 0},
 	{"xmp", "an example", TAGACT_PRE, 1, 0},
 };
 static const int availableTagCount = sizeof(availableTags) / sizeof(struct tagInfo);
@@ -4520,7 +4520,8 @@ Are there other situations where we need to supress meta processing?
 		if(a && !stringEqual(a, "false")) t->contracted = false;
 		break;
 
-	case TAGACT_MUSIC:
+	case TAGACT_AUDIO:
+	case TAGACT_VIDEO:
 		if (opentag) {
 			currentAudio = t;
 			break;
@@ -5040,9 +5041,14 @@ So it's much more efficient to go straight to the underlying data$2.
 		loadScriptData(t);
 		break;
 
-	case TAGACT_MUSIC:
+	case TAGACT_AUDIO:
 		if(!opentag) break;
 		domLink(t, "HTMLAudioElement", 0, 4);
+		break;
+
+	case TAGACT_VIDEO:
+		if(!opentag) break;
+		domLink(t, "HTMLVideoElement", 0, 4);
 		break;
 
 	case TAGACT_TEMPLATE:
