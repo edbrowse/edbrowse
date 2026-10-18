@@ -2281,9 +2281,9 @@ class HTMLElement extends Element
         if(s) {
             let newtext = document.createTextNode(s);
             top.appendChild$nm(newtext);
-            mutFixup(top, 0, oldlist, [newtext]);
+            mutFixup(top, 0, [newtext], oldlist);
         } else {
-            mutFixup(top, 0, oldlist, null);
+            mutFixup(top, 0, 0, oldlist);
         }
         checkUpward(top);
     }

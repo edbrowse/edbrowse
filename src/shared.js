@@ -1131,6 +1131,10 @@ mutFixup(p,0,additions,deletions)
 function rangeReindex(p, add, remove)
 {
     const dbp = db$flags(6) ? alert3 : eb$voidfunction;
+    let offsetsCalculated = false;
+    let o1, o2; // range of nodes deleted
+    let o3, o4; // range of nodes added
+
     for(let p1 = p; p1; p1 = p1.parentNode) {
         if(p1.range$set) {
 // The ancestor of a range could change, and thence it could be removed from
@@ -1146,9 +1150,6 @@ function rangeReindex(p, add, remove)
 
 // we're not going to calculate the offsets if we don't have to,
 // but if we have to, we'll do it just once.
-    let offsetsCalculated = false;
-    let o1, o2; // range of nodes deleted
-    let o3, o4; // range of nodes added
 function calculateOffsets()
 {
     if(offsetsCalculated) return;
@@ -1168,15 +1169,15 @@ only when start or end container coincides with p. */
     const addmany = Array.isArray(add);
     const l = addmany ? add.length : 1;
     if(!l) { // adding nothing; how would this ever happen?
-        dbp(`rangeCheck can't compute offsets for ${p.nodeName} ${p.eb$seqno} because [] is added`);
+        dbp("rangeCheck can't compute offsets because [] was added");
         o1 = o2 = o3 = o4 = 0;
         return;
     }
     const c = addmany ? add[0] : add;
-    for(o1 = 0; o1 < p.length; ++o1)
-        if(p[o1] == c) break;
+    for(o1 = 0; o1 < p.childNodes.length; ++o1)
+        if(p.childNodes[o1] == c) break;
     if(o1 == p.length) { // should never happen
-        dbp(`rangeCheck can't compute offsets for ${p.nodeName} ${p.eb$seqno} because additions were not found`);
+        dbp("rangeCheck can't compute offsets because additions were not found");
         o1 = o2 = o3 = o4 = 0;
         return;
     }
@@ -1185,39 +1186,25 @@ only when start or end container coincides with p. */
 }
 
 // when start or end is equal to p
-function adjustStartOffset(v)
+function adjustOffset(v)
 {
-    calculateOffsets();
-    if(v < o1) return v;
-    if(v < o2) return -1; // node was removed
-    return v + o4 - o2;
-}
-
-function adjustEndOffset(v)
-{
-    calculateOffsets();
     if(v <= o1) return v;
     if(v < o2) return -1; // node was removed
     return v + o4 - o2;
 }
 
-function rangeDefault(r)
-{
-    r.start0 = r.end0 = my$doc();
-    r.start1 = r.end1 = 0;
-    r.setanc(r.start);
-}
-
 function rangeCheck(r)
 {
-    const s0 = r.start0, s1 = r.start1, e0 = r.end0, e1 = r.end1;
+    dbp(`rangeCheck for ${p.nodeName} ${p.eb$seqno}, ${typeof add == "number" ? add : Array.isArray(add) ? add.length + "additions" : "1 addition"}, ${remove ? (Array.isArray(remove) ? remove.length + "deletions" : "1 deletion") : "null"}`);
+    calculateOffsets();
+    let s0 = r.start0, s1 = r.start1, e0 = r.end0, e1 = r.end1;
     if(s0 == p && e0 == p) {
         // the entire range lives in the node being modified
         if(!s1 && !e1) return; // empty range
-        const s2 = adjustStartOffset(s1);
-        const e2 = adjustEndOffset(e1);
+        const s2 = adjustOffset(s1);
+        const e2 = adjustOffset(e1);
         if(s2 < 0 && e2 < 0) {
-            rangeDefault(r);
+            r.start1 = r.end1 = 0;
             return;
         }
         if(s2 < 0) {
@@ -1231,8 +1218,16 @@ function rangeCheck(r)
         r.start1 = s2, r.end1 = e2;
         return;
     }
-    if(s0 == p && s1) {
-        const s2 = adjustStartOffset(s1);
+// are start and end still connected to the ancestor?
+    let startcon = false, endcon = false;
+    const anc = r.anc;
+    for(let t = s0; t; t = t.parentNode)
+        if(t == anc) { startcon = true; break; }
+    for(let t = e0; t; t = t.parentNode)
+        if(t == anc) { endcon = true; break; }
+    if(s0 == p) {
+        if(!endcon) r.end0 = p, r.end1 = e1 = o1;
+        const s2 = adjustOffset(s1);
         if(s2 < 0) { // start lost, revert to end
             r.start0 = r.end0, r.start1 = r.end1;
             r.setanc(r.start0);
@@ -1243,8 +1238,9 @@ function rangeCheck(r)
 // ancestor is the same.
         return;
     }
-    if(e0 == p && e1) {
-        const e2 = adjustEndOffset(e1);
+    if(e0 == p) {
+        if(!startcon) r.start0 = p, r.start1 = s1 = o1;
+        const e2 = adjustOffset(e1);
         if(e2 < 0) { // end lost, revert to start
             r.end0 = r.start0, r.end1 = r.start1;
             r.setanc(r.start0);
@@ -1255,26 +1251,20 @@ function rangeCheck(r)
 // ancestor is the same.
         return;
     }
-    if(s0 == p || e0 == p) return;
     if(!remove) return;
-// are start and end still connected to the ancestor?
-    const anc = r.anc;
-    let startcon = false, endcon = false;
-    for(let t = s0; t; t = t.parentNode)
-        if(t == anc) { startcon = true; break; }
-    for(let t = e0; t; t = t.parentNode)
-        if(t == anc) { endcon = true; break; }
     if(startcon & endcon) return; // no change
-    if(!startcon && !endcon) { // I don't think this is possible!
-        rangeDefault(r);
+    if(!startcon && !endcon) {
+        r.start0 = r.end0 = p;
+        r.start1 = r.end1 = 0;
+        // ancestor should already be p
         return;
     }
     if(startcon) {
-        r.end0 = r.start0, r.end1 = r.start1;
+        r.end0 = p, r.end1 = o1;
     } else {
-        r.start0 = r.end0, r.start1 = r.end1;
+        r.start0 = p, r.start1 = o1;
     }
-    r.setanc(r.start0);
+    // I don't think this can change the ancestor
 }
 }
 
@@ -1304,6 +1294,9 @@ If y is a number, it marks the position of the node deleted.
 *********************************************************************/
 
 function mutFixup(b, flavor, y, z) {
+
+    if(!flavor) rangeReindex(b, y, z);
+
     const w = my$win();
     let w2; // might not be the same window as w
     const dbp = db$flags(6) ? alert3 : eb$voidfunction;

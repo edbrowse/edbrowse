@@ -303,6 +303,74 @@ check((document.firstChild == c2 && document.childNodes[1] == c3 && document.chi
 c1.remove(), c2.remove(), c3.remove(); // clean up
 check((document.firstChild == document.documentElement), "back to documentElement");
 
+// mutations in the tree, as they affect ranges.
+// acid test 13 is one such test but there are dozens of other combinations.
+div.innerHTML = "<br><br><br><br><br><br>";
+r1.setStart(div, 1);
+r1.setEnd(div, 5);
+hr = document.createElement("hr");
+div.insertBefore(hr, div.childNodes[1]);
+check((r1.startOffset == 1 && r1.endOffset ==  6), "offsets add hr 1");
+hr.remove();
+check((r1.startOffset == 1 && r1.endOffset ==  5), "offsets remove hr 1");
+div.insertBefore(hr, div.childNodes[5]);
+check((r1.startOffset == 1 && r1.endOffset ==  5), "offsets add hr 5");
+hr.remove();
+check((r1.startOffset == 1 && r1.endOffset ==  5), "offsets remove hr 5");
+div.textContent = "gone";
+check((r1.startContainer == div && r1.endContainer ==  div), "containers gone");
+check((r1.startOffset == 0 && r1.endOffset ==  0), "offsets gone");
+div.innerHTML = "<br><br><br><br><br><p>hello</p>";
+r1.setStart(div, 1);
+r1.setEnd(div.lastChild, 0);
+div.insertBefore(hr, div.childNodes[1]);
+check((r1.startOffset == 1 && r1.endContainer == div.lastChild), "add hr 1 1 p");
+r1.setEnd(div.lastChild.lastChild, 0);
+hr.remove();
+check((r1.startOffset == 1 && r1.endContainer == div.lastChild.lastChild), "remove hr 1 1 text");
+div.lastChild.remove();
+check((r1.startOffset == 1 && r1.endContainer == div && r1.endOffset == 5), "remove p 1 5");
+r1.selectNodeContents(div);
+div.appendChild(hr);
+check((r1.startOffset == 0 && r1.endContainer == div && r1.endOffset == 5), "append hr 0 5");
+div.innerHTML = "<br><p>hello</p><br><p>goodbye</p><br>";
+ph = div.childNodes[1];
+pg = div.childNodes[3];
+r1.setStart(ph, 0);
+r1.setEnd(pg, 0);
+ph.remove();
+check((r1.startContainer == div && r1.startOffset == 1), "remove hello start");
+check((r1.endContainer == pg && r1.endOffset == 0), "remove hello end");
+div.insertBefore(ph, div.childNodes[1]);
+check((r1.startOffset == 1), "ph putback offset 1");
+r1.setStart(ph.firstChild, 0);
+r1.setEnd(pg.firstChild, 0);
+pg.remove();
+check((r1.startContainer == ph.firstChild && r1.startOffset == 0), "remove goodbye start");
+check((r1.endContainer == div && r1.endOffset == 3), "remove goodbye end");
+ph.firstChild.remove();
+check((r1.startContainer == ph && r1.startOffset == 0), "remove hello text start");
+check((r1.endContainer == div && r1.endOffset == 3), "remove hello text end");
+div.appendChild(pg);
+r1.setEnd(pg, 0);
+div.textContent = "gone";
+check((r1.startContainer == div && r1.endContainer ==  div), "containers gone2");
+check((r1.startOffset == 0 && r1.endOffset ==  0), "offsets gone2");
+div.innerHTML = "<br><br><br>";
+r1.setStart(div, 1);
+r1.setEnd(div.lastChild, 0);
+div.textContent = "gone";
+check((r1.startContainer == div && r1.endContainer ==  div), "containers gone3");
+check((r1.startOffset == 0 && r1.endOffset ==  0), "offsets gone3");
+div.innerHTML = "<p></p><p>a<br>b</p>";
+ph = div.firstChild, pg = div.lastChild;
+r1.setStart(ph, 0);
+r1.setEnd(pg, 1);
+pg.insertBefore(hr, pg.childNodes[0]);
+check((r1.startContainer == ph && r1.startOffset == 0), "pg hr start");
+check((r1.endContainer == pg && r1.endOffset == 2), "pg hr end");
+check((r1.commonAncestorContainer == div), "pg hr ancestor");
+
 show.textContent = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/g, "<br>");}
 </script>

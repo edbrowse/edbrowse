@@ -223,7 +223,7 @@
     });
   }
   var kungFuDeathGrip = null; // used to hold things from test to test
-// @` skipped: 13 65
+// @` skipped: 65
 // I run 16 but it's meaningless, has no semantics in edbrowse.
   var tests = [ // start of tests
 
@@ -825,8 +825,30 @@
       assert(r.toString().match(/^ABCDE/), "range didn't start with the expected text; range stringified to '" + r.toString() + "'");
       return 1;
     },
-    function() { return 1; }, // test 13
-
+    function () {
+      // test 13: Ranges under mutations: deletion
+      var doc = getTestDocument();
+      var p = doc.createElement('p');
+      p.appendChild(doc.createTextNode("12345"));
+      doc.body.appendChild(p);
+      var r = doc.createRange();
+      r.setEnd(doc.body, 1);
+      r.setStart(p.firstChild, 2);
+      assert(!r.collapsed, "collapsed is wrong at start");
+      assertEquals(r.commonAncestorContainer, doc.body, "commonAncestorContainer is wrong at start");
+      assertEquals(r.startContainer, p.firstChild, "startContainer is wrong at start");
+      assertEquals(r.startOffset, 2, "startOffset is wrong at start");
+      assertEquals(r.endContainer, doc.body, "endContainer is wrong at start");
+      assertEquals(r.endOffset, 1, "endOffset is wrong at start");
+      doc.body.removeChild(p);
+      assert(r.collapsed, "collapsed is wrong after deletion");
+      assertEquals(r.commonAncestorContainer, doc.body, "commonAncestorContainer is wrong after deletion");
+      assertEquals(r.startContainer, doc.body, "startContainer is wrong after deletion");
+      assertEquals(r.startOffset, 0, "startOffset is wrong after deletion");
+      assertEquals(r.endContainer, doc.body, "endContainer is wrong after deletion");
+      assertEquals(r.endOffset, 0, "endOffset is wrong after deletion");
+      return 1;
+    },
     function () {
       // test 14: HTTP - Content-Type: image/png
       assert(!notifications['empty.png'], "privilege escalation security bug: PNG ran script");
@@ -2568,7 +2590,7 @@ frames[1].contentDocument;
       var elapsedTime = ((endTime - startTime) - (delay * tests.length)) / 1000;
       log += "Total elapsed time: " + elapsedTime.toFixed(2) + "s";
       if (errors == 0)
-        log += "\nNo JS errors and no timing issues, but 2 tests were skipped.";
+        log += "\nNo JS errors and no timing issues, but 1 test was skipped.";
   alert(log);
     }
   }
