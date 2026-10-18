@@ -5534,15 +5534,15 @@ class Headers
 }
 swc(Headers);
 
-class HttpBodyHelper
+class FetchHelper
 {
     #body = null;
     #consumed()
     {
         if (!this.#body) return;
-        if (this.bodyUsed) {
+        if (this.bodyUsed)
             return Promise.reject(new TypeError('Already read'))
-        }
+        
         this.bodyUsed = true
     }
 
@@ -5554,35 +5554,10 @@ class HttpBodyHelper
         });
     }
 
-    #readBlobAsArrayBuffer()
+    constructor(options)
     {
-        const reader = new FileReader();
-        const promise = this.#fileReaderReady(reader);
-        reader.readAsArrayBuffer(this.#body);
-        return promise;
-    }
-
-    #readBlobAsText()
-    {
-          const reader = new FileReader();
-          const promise = this.#fileReaderReady(reader);
-          const match = /charset=([A-Za-z0-9_-]+)/.exec(this.#body.type);
-          const encoding = match ? match[1] : 'utf-8';
-          reader.readAsText(this.#body, encoding);
-          return promise;
-    }
-
-    #readArrayBufferAsText()
-    {
-        const view = new Uint8Array(buf);
-        const chars = new Array(view.length);
-        for (let i = 0; i < view.length; ++i)
-            chars[i] = String.fromCharCode(view[i]);
-        return chars.join('');
-    }
-
-    _initBody(body)
-    {
+        const body = options.body;
+        this.headers = new Headers(options.headers);
         if (
             typeof body === "string" ||
             body instanceof Blob ||
@@ -5597,7 +5572,7 @@ class HttpBodyHelper
             );
         else if (body instanceof ArrayBuffer)
             this.#body = body.slice(0);
-        else
+        else if(body)
             this.#body = body.toString();
 
         if (!this.headers.get('content-type'))
@@ -5629,13 +5604,20 @@ class HttpBodyHelper
 
     arrayBuffer()
     {
-        if (!(this.#body instanceof ArrayBuffer))
-            return this.blob().then(this.#readBlobAsArrayBuffer);
-
         const rejected = this.#consumed();
-        if (rejected) return rejected;
+        if (rejected)
+            return rejected;
 
-        return Promise.resolve(this.#body);
+        if (this.#body instanceof ArrayBuffer)
+            return Promise.resolve(this.#body);
+
+        if (this.#body instanceof FormData)
+            throw new Error('could not read FormData body as ArrayBuffer')
+
+        const reader = new FileReader();
+        const promise = this.#fileReaderReady(reader);
+        reader.readAsArrayBuffer(new Blob([this.#body]));
+        return promise;
     }
 
     text()
@@ -5644,26 +5626,132 @@ class HttpBodyHelper
         if (rejected)
             return rejected;
 
-        if (this.#body instanceof Blob) 
-            return promise.resolve(this.#readBlobAsText());
-        else if (this.#body instanceof ArrayBuffer)
-            return Promise.resolve(this.#readArrayBufferAsText());
-        else if (this.#body instanceof FormData)
+        if (this.#body instanceof FormData)
             throw new Error('could not read FormData body as text')
-        else
-            return Promise.resolve(this.#body);
+
+
+        if (this.#body instanceof Blob) {
+            const reader = new FileReader();
+            const promise = this.#fileReaderReady(reader);
+            const match = /charset=([A-Za-z0-9_-]+)/.exec(this.#body.type);
+            const encoding = match ? match[1] : 'utf-8';
+            reader.readAsText(this.#body, encoding);
+            return promise;
+        }
+
+        if (this.#body instanceof ArrayBuffer)
+        {
+            const view = new Uint8Array(buf);
+            const chars = new Array(view.length);
+            for (let i = 0; i < view.length; ++i)
+                chars[i] = String.fromCharCode(view[i]);
+            return Promise.resolve(chars.join(''));
+        }
+
+        return Promise.resolve(this.#body);
     }
 
     formData()
     {
-        return this.text().then(decode);
+        if (this.#body instanceof FormData)
+            return Promise.resolve(this.#body);
+
+        return this.text().then((body) => {
+            const form = new FormData();
+            body.trim().split('&').forEach((bytes) => {
+                if (bytes) {
+                    const split = bytes.split('=');
+                    const name = split.shift().replace(/\+/g, ' ');
+                    const value = split.join('=').replace(/\+/g, ' ');
+                    form.append(
+                        decodeURIComponent(name), decodeURIComponent(value)
+                    );
+                }
+            });
+            return form;
+        });
     }
 
     json()
     {
         return this.text().then(JSON.parse);
     }
+
+    [Symbol.for("FetchHelper.make$options")]()
+    {
+        this.bodyUsed = true;
+        return {
+            body: this.#body,
+            headers: this.headers
+        };
+    }
 }
+scts(FetchHelper);
+
+class Request extends FetchHelper
+{
+    constructor(input, options={})
+    {
+        let url;
+        if (input instanceof Request) {
+            if (input.bodyUsed)
+                throw new TypeError("Already read");
+
+            for (const [k,v] of Object.entries(
+                input[Symbol.for("FetchHelper.make$options")]()
+            ))
+                if(!options[k]) options[k] = v;
+
+            url = input.url;
+        }
+        else
+            url = input.toString();
+
+        super(options);
+        // Not sure if this is right but keeps existing behaviour
+        this.url = url || window.location.href;
+        this.credentials = options.credentials || 'same-origin';
+        this.method = (
+            options.method && options.method.toUpperCase()
+        ) || 'GET';
+        this.mode = options.mode || null;
+        this.signal = options.signal || new AbortController().signal;
+        this.referrer = options.referrer || null;
+        if (this.referrer) this.headers.set("referer", this.referrer);
+        if (this.method === 'GET' || this.method === 'HEAD') {
+            if (options.body)
+                throw new TypeError(
+                    'Body not allowed for GET or HEAD requests'
+                );
+            /*
+                technically these should behave slightly differently but,
+                unless something actually breaks, I don't see the point in
+                rewriting the cache code to support the differences
+            */
+            const no_cache = new Set(["no-store", "no-cache", "reload"]);
+            this.cache = options.cache;
+            if (no_cache.has(this.cache))
+                this.headers.set("cache-control", "no-cache");
+        }
+    }
+
+    clone() { return new Request(this); }
+
+    [Symbol.for("FetchHelper.make$options")]()
+    {
+        const opts = super[Symbol.for("FetchHelper.make$options")]();
+        for (const prop of [
+            "credentials",
+            "method",
+            "mode",
+            "signal",
+            "referrer",
+            "cache"
+        ]) opts[prop] = this[prop];
+        return opts;
+    }
+}
+swc(Request);
 
 ;(() => {
     const g = globalThis;
@@ -5814,7 +5902,7 @@ class HttpBodyHelper
 
 
         this.formData = function() {
-          return this.text().then(decode)
+          return this.text().then(decode);
         }
 
       this.json = function() {
@@ -5830,75 +5918,7 @@ class HttpBodyHelper
       return method.toUpperCase();
     }
 
-    function Request(input, options) {
-      if (!(this instanceof Request)) {
-        throw new TypeError('Please use the "new" operator, this DOM object constructor cannot be called as a function.')
-      }
 
-    // This was in Body(), and thus put onto the prototype; now I'm putting it here.
-       this.bodyUsed = false;
-
-      options = options || {}
-      var body = options.body
-
-      if (input instanceof Request) {
-        if (input.bodyUsed) {
-          throw new TypeError('Already read')
-        }
-        this.url = input.url
-        this.credentials = input.credentials
-        if (!options.headers) {
-          this.headers = new Headers(input.headers)
-        }
-        this.method = input.method
-        this.mode = input.mode
-        this.signal = input.signal
-        if (!body && input._bodyInit != null) {
-          body = input._bodyInit
-          input.bodyUsed = true
-        }
-      } else {
-        this.url = String(input)
-      }
-
-      this.credentials = options.credentials || this.credentials || 'same-origin'
-      if (options.headers || !this.headers) {
-        this.headers = new Headers(options.headers)
-      }
-      this.method = normalizeMethod(options.method || this.method || 'GET')
-      this.mode = options.mode || this.mode || null
-      this.signal = options.signal || this.signal || (function () {
-        if ('AbortController' in g) {
-          var ctrl = new AbortController();
-          return ctrl.signal;
-        }
-      }());
-      this.referrer = null
-
-      if ((this.method === 'GET' || this.method === 'HEAD') && body) {
-        throw new TypeError('Body not allowed for GET or HEAD requests')
-      }
-      this._initBody(body)
-
-      if (this.method === 'GET' || this.method === 'HEAD') {
-        if (options.cache === 'no-store' || options.cache === 'no-cache') {
-          // Search for a '_' parameter in the query string
-          var reParamSearch = /([?&])_=[^&]*/
-          if (reParamSearch.test(this.url)) {
-            // If it already exists then set the value with the current time
-            this.url = this.url.replace(reParamSearch, '$1_=' + new Date().getTime())
-          } else {
-            // Otherwise add a new '_' parameter to the end with the current time
-            var reQueryString = /\?/
-            this.url += (reQueryString.test(this.url) ? '&' : '?') + '_=' + new Date().getTime()
-          }
-        }
-      }
-    }
-
-    Request.prototype.clone = function() {
-      return new Request(this, {body: this._bodyInit})
-    }
 
     function decode(body) {
       var form = new FormData()
@@ -5916,7 +5936,6 @@ class HttpBodyHelper
       return form
     }
 
-    Body.call(Request.prototype)
 
     function Response(bodyInit, options) {
       if (!(this instanceof Response)) {
@@ -5968,14 +5987,8 @@ class HttpBodyHelper
 
       return new Response(null, {status: status, headers: {location: url}})
     }
-
-
-      g.Headers = Headers
-      g.Request = Request
       g.Response = Response
 
-    Headers.prototype.toString = function(){return "[object Headers]"}
-    Request.prototype.toString = function(){return "[object Request]"}
     Response.prototype.toString = function(){return "[object Response]"}
 })();
 
@@ -6169,7 +6182,8 @@ class XMLHttpRequest extends EventTarget
         if (typeof data != "string")
             alert3(`payload data has improper type ${typeof data}`);
 
-        this.$entire =  eb$fetchHTTP.call(this, urlcopy,this.method,headerstring,data, pd);
+        this.$entire = eb$fetchHTTP.call(
+            this, urlcopy, this.method, headerstring, data, pd);
         if (this.$entire != "async") this.parseResponse();
     }
 
@@ -6560,6 +6574,7 @@ swp("$pjobsa", [])
 swpc("promiseCatchFunctionNative", eb$voidfunction)
 swp("promiseCatchFunction", function(e) {
 // use alert 3 so this will fold into the debug stream,  db>debug.log
+alert3("promise catch function called")
 alert3("promise error");
 alert3(e);
 alert3(e.stack);
@@ -7334,12 +7349,11 @@ for(let f of ["alert", "showarg", "showarglist"])
 
 this.fetch = function(input, init)
 {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve, reject)
+    {
         const request = new Request(input, init);
-
-        if (request.signal && request.signal.aborted) {
+        if (request.signal && request.signal.aborted)
             return reject(new DOMException('Aborted', 'AbortError'));
-        }
 
         const xhr = new XMLHttpRequest();
 
@@ -7347,24 +7361,25 @@ this.fetch = function(input, init)
 
         function parseHeaders(rawHeaders)
         {
-            const headers = new Headers()
+            const headers = new Headers();
             // Replace instances of \r\n and \n followed by at least one space or horizontal tab with a space
             // https://tools.ietf.org/html/rfc7230#section-3.2
-            const preProcessedHeaders = rawHeaders.replace(/\r?\n[\t ]+/g, ' ')
+            const preProcessedHeaders = rawHeaders.replace(/\r?\n[\t ]+/g, ' ');
             preProcessedHeaders.split('\r').map(
                 (h) => h.indexOf('\n') === 0 ? h.substr(1, h.length) : h
             ).forEach((line) => {
                 const parts = line.split(':')
-                const key = parts.shift().trim()
+                const key = parts.shift().trim();
                 if (key) {
-                    const value = parts.join(':').trim()
-                    headers.append(key, value)
+                    const value = parts.join(':').trim();
+                    headers.append(key, value);
                 }
-            })
-            return headers
+            });
+            return headers;
         }
 
-        xhr.addEventListener("load", function() {
+        xhr.addEventListener("load", function()
+        {
             const options = {
                 statusText: xhr.statusText,
                 headers: parseHeaders(xhr.getAllResponseHeaders() || '')
@@ -7374,12 +7389,10 @@ this.fetch = function(input, init)
             if (
                 request.url.indexOf('file://') === 0 &&
                 (xhr.status < 200 || xhr.status > 599)
-            ) {
+            )
                 options.status = 200;
-            }
-            else {
+            else
                 options.status = xhr.status;
-            }
             options.url = (
                 'responseURL' in xhr
                 ? xhr.responseURL
@@ -7389,28 +7402,21 @@ this.fetch = function(input, init)
             resolve(new Response(body, options));
         });
 
-        xhr.addEventListener("error", function() {
+        xhr.addEventListener("error", function()
+        {
             reject(new TypeError('Network request failed'));
         });
 
-        xhr.addEventListener("timeout", function() {
+        xhr.addEventListener("timeout", function()
+        {
             reject(new TypeError('Network request timed out'));
         });
 
-        xhr.addEventListener("abort", function() {
+        xhr.addEventListener("abort", function()
+        {
             reject(new DOMException('Aborted', 'AbortError'));
         });
-
-        function fixUrl(url) {
-            try {
-                return url === '' && g.location.href ? g.location.href : url;
-            }
-            catch (e) {
-                return url;
-            }
-        }
-
-        xhr.open(request.method, fixUrl(request.url), true);
+        xhr.open(request.method, request.url, true);
 
         if (request.credentials === 'include') xhr.withCredentials = true;
         else if (request.credentials === 'omit') xhr.withCredentials = false;
@@ -7435,18 +7441,15 @@ this.fetch = function(input, init)
 
         if (request.signal) {
             request.signal.addEventListener('abort', abortXhr);
-            xhr.addEventListener("readystatechange", function() {
+            xhr.addEventListener("readystatechange", function()
+            {
                 // DONE (success or failure)
                 if (xhr.readyState === 4)
                     request.signal.removeEventListener('abort', abortXhr);
             });
         }
 
-        xhr.send(
-            typeof request._bodyInit === 'undefined'
-            ? null
-            : request._bodyInit
-        );
+        xhr.send(request[Symbol.for("FetchHelper.make$options")]().body);
     });
 }
 sfts(fetch);
