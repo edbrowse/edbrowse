@@ -8404,8 +8404,7 @@ doquit:
 		w->sno = context;
 		cw = w;		// we might wind up putting this back
 		selfFrame();
-			cf->fileName = (char*)fetchLine(endRange, 0);
-			cf->fileName[j] = 0;
+			cf->fileName = cloneString(dirline);
 		addTextToBuffer((uchar*)outbuf, outlen, 0, false);
 		debugPrint(1, "%d", outlen); fileSize = -1;
 		cw->undoable = cw->changeMode = false;
