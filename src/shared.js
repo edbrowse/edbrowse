@@ -1139,9 +1139,8 @@ function rangeReindex(p, add, remove)
         if(p1.range$set) {
 // The ancestor of a range could change, and thence it could be removed from
 // the set as a result. This could disrupt the iterator. So copy the set.
-            const s2 = new Set;
-            p1.range$set.forEach(k=>s2.add(k));
-       s2.forEach(rangeCheck);
+            const s2 = new Set(p1.range$set);
+            s2.forEach(rangeCheck);
         }
         if(p1.is$frame) break;
         if(p1.nodeName == "TEMPLATE") break;
