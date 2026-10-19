@@ -1304,9 +1304,23 @@ function mutFixup(b, flavor, y, z)
 {
     const dbp = db$flags(6) ? alert3 : eb$voidfunction;
 
-/* should we put a debug print here, at db3 and dbmut+, or would that generate
-too much output? For every change in the tree, every change of attribute,
-every change of text, etc. Or maybe at db4. */
+/* should we put a debug print here, or would that generate too much output?
+For every change in the tree, every change of attribute,
+every change of text, etc. Perhaps at db4. */
+
+    if(db$flags(6)) {
+        switch(flavor) {
+        case 0:
+            alert4(`mutFixup for ${b.nodeName} ${b.eb$seqno}, ${typeof y == "number" ? y : Array.isArray(y) ? y.length + "additions" : "1 addition"}, ${z ? (Array.isArray(z) ? z.length + "deletions" : "1 deletion") : "null"}`);
+            break;
+        case 1:
+            alert4(`mutFixup for ${b.nodeName} ${b.eb$seqno}, attribute ${y}`);
+            break;
+        case 2:
+            alert4(`mutFixup for ${b.nodeName} ${b.eb$seqno}, text ${b.data.substr(0,20)}`);
+            break;
+        }
+    }
 
     if(!flavor) rangeReindex(b, y, z);
 

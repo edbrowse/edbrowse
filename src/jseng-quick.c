@@ -2024,7 +2024,7 @@ ab:
 	add->deleted = false;
 
 	t = add;
-	debugPrint(4, "fixup %s %d", a_name, t->seqno);
+	debugPrint(4, "adjust %s %d", a_name, t->seqno);
 	action = t->action;
 	cx = t->f0->cx;
 
