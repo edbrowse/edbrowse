@@ -1140,7 +1140,14 @@ function rangeReindex(p, add, remove)
 // The ancestor of a range could change, and thence it could be removed from
 // the set as a result. This could disrupt the iterator. So copy the set.
             const s2 = new Set(p1.range$set);
-            s2.forEach(rangeCheck);
+            s2.forEach(wr => {
+                const r  = wr.deref();
+                if(!r) { // already freed
+                    p1.range$set.delete(wr);
+                    dbp(`range with ancestor ${p1.nodeName} ${p1.eb$seqno} is freed`);
+                    if(!p1.range$set.size) delete p1.range$set;
+                } else rangeCheck(r);
+            });
         }
         if(p1.is$frame) break;
         if(p1.nodeName == "TEMPLATE") break;

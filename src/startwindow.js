@@ -6169,19 +6169,30 @@ class Range extends AbstractRange
         if(a == this.anc) return; // no change
         if(this.anc) this.clearanc();
         if(!a.range$set) a.range$set = new Set;
-// this should probably be a weak reference, so it can go away when range goes away
-        a.range$set.add(this);
+// Use a weak reference, so we can clean things up when the range is freed
+        this.weak = new WeakRef(this);
+/* The documantation says I can call register(target, help-value, target),
+then unregister(target) later, where target stands in for the token.
+This doesn't work in quickjs.
+The token has to be separate from the target. So I create one. */
+        this.token = {};
+        Range.registry.register(this, a, this.token);
+        a.range$set.add(this.weak);
         this.anc = a;
     }
 
     clearanc()
     {
         if(!this.anc) return;
+        Range.registry.unregister(this.token);
         const s = this.anc.range$set;
-        if(!s) return; // should never happen
-        s.delete(this);
-        if(!s.size) delete this.anc.range$set;
+        if(s) {
+            s.delete(this.weak);
+            if(!s.size) delete this.anc.range$set;
+        }
         this.anc = null;
+        delete this.weak;
+        delete this.token;
     }
 
     static {
@@ -6198,62 +6209,63 @@ class Range extends AbstractRange
     {
 // the common ancestor doesn't depend on the offsets, and we don't have to call
 // normal$ize(), or unnormal$ize() at the end.
-        this.clearanc();
+        let anc = null;
         let y = this.start0, z = this.end0, t, o;
-        if(!y || !z) return;
+        if(!y || !z) return anc;
         if(y == z) {
             // only a problem if offsets are out of order
-            if(this.start1 <= this.end1) this.setanc(y);
-            return;
+            if(this.start1 <= this.end1) anc = y;
+            return anc;
         }
         const result = {};
         Node.commonAncestor(y, z, result);
-        if(!result.root) return; // disconnected
-        const anc = result.root;
-        // make sure the points aren't out of order.
+        if(!result.root) return anc; // disconnected
+        anc = result.root;
         const i = result.i, j = result.j;
         const py = result.py, pz = result.pz;
+        // make sure the points aren't out of order.
         if(i && j) {
             y = py[i-1], z =pz[j-1];
             for(t = y.nextSibling; t; t = t.nextSibling)
-                if(t == z) break;
-            if(t) this.setanc(anc);
-            return;
+                if(t == z) return anc;
+            return null;
         }
         // Exactly one of the boundary points is the ancestor,
         // the other is below it.
         // Could be out of order depending on the offset of the ancestor.
         if(!i) { // start is the ancestor
             o = this.start1;
-            if(o >= anc.childNodes.length) return;
-            if(o <= 1) { this.setanc(anc); return; }
+            if(o >= anc.childNodes.length) return null;
+            if(o <= 1) return anc;
             y = anc.childNodes[o], z = pz[j-1];
         } else { // end is the ancestor
             o = this.end1;
-            if(o == 0) return;
-            if(o >= anc.childNodes.length) { this.setanc(anc); return; }
+            if(o == 0) return null;
+            if(o >= anc.childNodes.length) return anc;
             y = py[i-1], z = anc.childNodes[o];
         }
-        if(y == z) { this.setanc(anc); return; }
+        if(y == z) return anc;
         for(t = y.nextSibling; t; t = t.nextSibling)
-            if(t == z) break;
-        if(t) this.setanc(anc);
+            if(t == z) return anc;
+        return null;
     }
 
     setStart(n, offset) {
         if(!n) return;
         this.start0 = n, this.start1 = offset;
-        this.deriveAncestor();
+        let anc = this.deriveAncestor();
         // if no ancestor then collapse back to start.
-        if(!this.anc) this.end0 = n, this.end1 = offset, this.setanc(n);
+        if(!anc) this.end0 = n, this.end1 = offset, anc = n;
+        this.setanc(anc);
     }
 
     setEnd(n, offset) {
         if(!n) return;
         this.end0 = n, this.end1 = offset;
-        this.deriveAncestor();
+        let anc = this.deriveAncestor();
         // if no ancestor then collapse back to end.
-        if(!this.anc) this.start0 = n, this.start1 = offset, this.setanc(n);
+        if(!anc) this.start0 = n, this.start1 = offset, anc = n;
+        this.setanc(anc);
     }
 
     setStartBefore(n) {
@@ -6648,6 +6660,20 @@ collapse(side) {
 
 }
 swc(Range);
+
+Range.registry = new FinalizationRegistry(t => {
+    const s1 = t.range$set;
+    if(!s1) return;
+    const s2 = new Set(s1);
+    s2.forEach(k => {
+        if(!k.deref()) {
+            s1.delete(k);
+            if(db$flags(6))
+                alert3(`range with ancestor ${t.nodeName} ${t.eb$seqno} is freed`);
+        }
+    });
+    if(!s1.size) delete t.range$set;
+});
 
 swp("onmessage$$queue", []);
 swpv("postMessage", function (message,target_origin, transfer) {
