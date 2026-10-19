@@ -3064,6 +3064,8 @@ cleaning up when we really want to run all the finalizers */
                 v = JS_GetPropertyStr(ctx, g, "$pjobsa");
                 if(e->argc == 5)
                     set_array_element_object(ctx, v, jj, e->argv[4]);
+                else if(e->argc == 2)
+                    set_array_element_object(ctx, v, jj, e->argv[1]);
                 else
                     set_array_element_object(ctx, v, jj, JS_UNDEFINED);
                 JS_Release(v);
