@@ -4712,7 +4712,17 @@ We have fallen out of the loop, so s is now the style for the bottom node. */
 if(s.backgroundColor) s.backgroundColor = color2rgb(s.backgroundColor);
 else s.backgroundColor = "rgba(0, 0, 0, 0";
 
-    if(!s.boxSizing) s.boxSizing = "content-box";
+    for(let k of [
+      "boxSizing", "webkitBoxSizing",
+    ])
+        if(!s[k])  s[k] = "content-box";
+
+    for(let k of [
+      "backgroundClip", "maskClip", "maskOrigin",
+      "webkitBackgroundClip", "webkitMaskClip", "webkitMaskOrigin",
+    ])
+        if(!s[k])  s[k] = "border-box";
+
     if(!s.textAlign) s.textAlign = "start";
     if(!s.verticalAlign) s.verticalAlign = "baseline";
 // this one is quoted because it has spaces, but rgb(0, 0, 0) has spaces
