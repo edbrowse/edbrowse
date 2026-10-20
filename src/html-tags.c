@@ -5253,238 +5253,237 @@ static void rowspan2(Tag *tr, int ri);
 static void rowspan3(Tag *tr, int ri);
 void rowspan(void)
 {
-	const Tag *table, *section;
-	Tag *tr, *last_tr;
-	int i, ri;
+    const Tag *table, *section;
+    Tag *tr, *last_tr;
+    int i, ri;
 
-	for(i = 0; i < cw->numTags; ++i) {
-		table = tagList[i];
-		if(table->action != TAGACT_TABLE || table->dead || table->deleted)
-			continue;
+    for(i = 0; i < cw->numTags; ++i) {
+        table = tagList[i];
+        if(table->action != TAGACT_TABLE || table->dead || table->deleted)
+            continue;
 
 // I set last_tr here assuming rowspans and such carry through
 // from head to body to foot, and are not independent in each section.
 // If rather each section is independent then move this line down.
-		last_tr = 0;
+        last_tr = 0;
 
-		ri = 0;
-		for(section = table->firstchild; section; section = section->sibling) {
-			if(section->action != TAGACT_THEAD && 
-			section->action != TAGACT_TBODY &&
-			section->action != TAGACT_TFOOT)
-				continue;
-//			last_tr = 0;
-			for(tr = section->firstchild; tr; tr = tr->sibling) {
-				if(tr->action != TAGACT_TR) continue;
-// link to previous row
-				tr->same = last_tr;
-				last_tr = tr;
+        ri = 0;
+        for(section = table->firstchild; section; section = section->sibling) {
+            if(section->action != TAGACT_THEAD && 
+            section->action != TAGACT_TBODY &&
+            section->action != TAGACT_TFOOT)
+                continue;
+//          last_tr = 0;
+            for(tr = section->firstchild; tr; tr = tr->sibling) {
+                if(tr->action != TAGACT_TR) continue;
+                // link to previous row
+                tr->same = last_tr;
+                last_tr = tr;
 // js_file holds the descriptive string of the cells in the row
-				nzFree0(tr->js_file);
-				rowspan2(tr, ++ri);
-			}
-		}
+                nzFree0(tr->js_file);
+                rowspan2(tr, ++ri);
+            }
+        }
 
-		ri = 0;
-		for(section = table->firstchild; section; section = section->sibling) {
-			if(section->action != TAGACT_THEAD && 
-			section->action != TAGACT_TBODY &&
-			section->action != TAGACT_TFOOT)
-				continue;
-			for(tr = section->firstchild; tr; tr = tr->sibling) {
-				if(tr->action == TAGACT_TR)
-					rowspan3(tr, ++ri);
-			}
-		}
-	}
+        ri = 0;
+        for(section = table->firstchild; section; section = section->sibling) {
+            if(section->action != TAGACT_THEAD && 
+            section->action != TAGACT_TBODY &&
+            section->action != TAGACT_TFOOT)
+                continue;
+            for(tr = section->firstchild; tr; tr = tr->sibling) {
+                if(tr->action == TAGACT_TR)
+                    rowspan3(tr, ++ri);
+            }
+        }
+    }
 }
 
 static void rowspan2(Tag *tr, int ri)
 {
-	Tag *td, *last_td;
-	char *ihs; // inherited cellstring
-	char *save_ihs;
-	char *ns; // new string
-	int ns_l, end_l;
-	int c1, c2; // column numbers
-	int irl, irs; // inherited row level and span
-	int ics; // inherited colspan
-	int seqno = 0;
-	bool needstring;
-	char b[32];
+    Tag *td, *last_td;
+    char *ihs; // inherited cellstring
+    char *save_ihs;
+    char *ns; // new string
+    int ns_l, end_l;
+    int c1, c2; // column numbers
+    int irl, irs; // inherited row level and span
+    int ics; // inherited colspan
+    int seqno = 0;
+    bool needstring;
+    char b[32];
 
 // start by setting rowspan and colspan, possibly from javascript.
-	for(td = tr->firstchild; td; td = td->sibling) {
-		const char *v;
-		if(td->action != TAGACT_TD) continue;
-		td->lic = td->js_ln = 1;
+    for(td = tr->firstchild; td; td = td->sibling) {
+        const char *v;
+        if(td->action != TAGACT_TD) continue;
+        td->lic = td->js_ln = 1;
 // from html attributes first
-			v = attribVal(td, "rowspan");
-			if(v && isdigitByte(*v)) td->lic = atoi(v);
-			v = attribVal(td, "colspan");
-			if(v && isdigitByte(*v)) td->js_ln = atoi(v);
-		if(allowJS && td->jslink) {
-			int n = get_property_number_t(td, "rowspan");
-			if(n > 0) td->lic = n;
-			n = get_property_number_t(td, "colspan");
-			if(n > 0) td->js_ln = n;
-		}
-		if(td->lic <= 0) td->lic = 1;
-		if(td->js_ln <= 0) td->js_ln = 1;
-	}
+            v = attribVal(td, "rowspan");
+            if(v && isdigitByte(*v)) td->lic = atoi(v);
+            v = attribVal(td, "colspan");
+            if(v && isdigitByte(*v)) td->js_ln = atoi(v);
+        if(allowJS && td->jslink) {
+            int n = get_property_number_t(td, "rowspan");
+            if(n > 0) td->lic = n;
+            n = get_property_number_t(td, "colspan");
+            if(n > 0) td->js_ln = n;
+        }
+        if(td->lic <= 0) td->lic = 1;
+        if(td->js_ln <= 0) td->js_ln = 1;
+    }
 
-	ihs = (tr->same ? tr->same->js_file : 0);
-	c1 = c2 = 1;
-	ns = initString(&ns_l);
-	last_td = 0;
-	needstring = false;
+    ihs = (tr->same ? tr->same->js_file : 0);
+    c1 = c2 = 1;
+    ns = initString(&ns_l);
+    last_td = 0;
+    needstring = false;
 
-	for(td = tr->firstchild; td; td = td->sibling) {
-		if(td->action != TAGACT_TD) continue;
+    for(td = tr->firstchild; td; td = td->sibling) {
+        if(td->action != TAGACT_TD) continue;
 crack:
-		irs = irl = ics = 1;
-		if((save_ihs = ihs)) {
-			if(isdigitByte(*ihs)) {
-				irl = strtol(ihs, &ihs, 10);
-				irs = strtol(ihs + 1, &ihs, 10);
-				seqno = strtol(ihs + 1, &ihs, 10);
-			}
-			if(*ihs == '@')
-				ics = strtol(ihs + 1, &ihs, 10);
-			++ihs; // skip past comma
-			if(!*ihs) ihs = 0; // end of string
-		}
+        irs = irl = ics = 1;
+        if((save_ihs = ihs)) {
+            if(isdigitByte(*ihs)) {
+                irl = strtol(ihs, &ihs, 10);
+                irs = strtol(ihs + 1, &ihs, 10);
+                seqno = strtol(ihs + 1, &ihs, 10);
+            }
+            if(*ihs == '@')
+                ics = strtol(ihs + 1, &ihs, 10);
+            ++ihs; // skip past comma
+            if(!*ihs) ihs = 0; // end of string
+        }
 
 // c1 could be less than c2, if we just brought in a cell with a wide colspan
-		if(c1 < c2 && irl < irs) {
+        if(c1 < c2 && irl < irs) {
 // This is the error condition I talked about
 // shrink colspan so this cell fits
-			last_td->js_ln -= (c2-c1);
-			while(ns[--ns_l] != '@')  ;
-			if(last_td->js_ln == 1) strcpy(ns + ns_l, ",");
-			else
-				sprintf(ns + ns_l, "@%d,", last_td->js_ln);
-			ns_l = strlen(ns);
-			c2 = c1;
-		}
-		if(c1 < c2) {
-			c1 += ics;
-			goto crack;
-		}
-		if(c1 > c2) goto incorporate;
-		if(irl == irs) goto incorporate;
-		needstring = true;
-		sprintf(b, "%d/%d/%d", irl + 1, irs, seqno);
-		if(ics > 1) sprintf(b + strlen(b), "@%d", ics);
-		strcat(b, ",");
-		stringAndString(&ns, &ns_l, b);
-		c1 += ics, c2 += ics;
-		goto crack;
+            last_td->js_ln -= (c2-c1);
+            while(ns[--ns_l] != '@')  ;
+            if(last_td->js_ln == 1) strcpy(ns + ns_l, ",");
+            else
+                sprintf(ns + ns_l, "@%d,", last_td->js_ln);
+            ns_l = strlen(ns);
+            c2 = c1;
+        }
+        if(c1 < c2) {
+            c1 += ics;
+            goto crack;
+        }
+        if(c1 > c2) goto incorporate;
+        if(irl == irs) goto incorporate;
+        needstring = true;
+        sprintf(b, "%d/%d/%d", irl + 1, irs, seqno);
+        if(ics > 1) sprintf(b + strlen(b), "@%d", ics);
+        strcat(b, ",");
+        stringAndString(&ns, &ns_l, b);
+        c1 += ics, c2 += ics;
+        goto crack;
 incorporate:
-		b[0] = 0;
-		if(td->lic > 1) {
-			sprintf(b, "1/%d/%d", td->lic, td->seqno);
-			needstring = true;
-		}
-		if(td->js_ln > 1) sprintf(b + strlen(b), "@%d", td->js_ln);
-		strcat(b, ",");
-		stringAndString(&ns, &ns_l, b);
-		c2 += td->js_ln;
-		ihs = save_ihs;
-		last_td = td;
-	}
+        b[0] = 0;
+        if(td->lic > 1) {
+            sprintf(b, "1/%d/%d", td->lic, td->seqno);
+            needstring = true;
+        }
+        if(td->js_ln > 1) sprintf(b + strlen(b), "@%d", td->js_ln);
+        strcat(b, ",");
+        stringAndString(&ns, &ns_l, b);
+        c2 += td->js_ln;
+        ihs = save_ihs;
+        last_td = td;
+    }
 
-	end_l = ns_l;
-// rowspans hanging down after this row is done
-	while(ihs) {
-		irs = irl = ics = 1;
-		if(isdigitByte(*ihs)) {
-			irl = strtol(ihs, &ihs, 10);
-			irs = strtol(ihs + 1, &ihs, 10);
-			seqno = strtol(ihs + 1, &ihs, 10);
-		}
-		if(*ihs == '@')
-			ics = strtol(ihs + 1, &ihs, 10);
-		++ihs; // skip past comma
-		if(!*ihs) ihs = 0; // end of string
+    end_l = ns_l;
+    // rowspans hanging down after this row is done
+    while(ihs) {
+        irs = irl = ics = 1;
+        if(isdigitByte(*ihs)) {
+            irl = strtol(ihs, &ihs, 10);
+            irs = strtol(ihs + 1, &ihs, 10);
+            seqno = strtol(ihs + 1, &ihs, 10);
+        }
+        if(*ihs == '@')
+            ics = strtol(ihs + 1, &ihs, 10);
+        ++ihs; // skip past comma
+        if(!*ihs) ihs = 0; // end of string
 c1c2:
-		if(c1 < c2 && irl < irs) {
-			last_td->js_ln -= (c2-c1);
-			while(ns[--ns_l] != '@')  ;
-			if(last_td->js_ln == 1) strcpy(ns + ns_l, ",");
-			else
-				sprintf(ns + ns_l, "@%d,", last_td->js_ln);
-			end_l = ns_l = strlen(ns);
-			c2 = c1;
-		}
-		if(c1 < c2) {
-			c1 += ics;
-			continue;
-		}
-		if(c1 > c2) goto addcomma;
-		if(irl == irs) goto addcomma;
-		needstring = true;
-		sprintf(b, "%d/%d/%d", irl + 1, irs, seqno);
-		if(ics > 1) sprintf(b + strlen(b), "@%d", ics);
-		strcat(b, ",");
-		stringAndString(&ns, &ns_l, b);
-		end_l = ns_l;
-		c1 += ics, c2 += ics;
-		continue;
+        if(c1 < c2 && irl < irs) {
+            last_td->js_ln -= (c2-c1);
+            while(ns[--ns_l] != '@')  ;
+            if(last_td->js_ln == 1) strcpy(ns + ns_l, ",");
+            else sprintf(ns + ns_l, "@%d,", last_td->js_ln);
+            end_l = ns_l = strlen(ns);
+            c2 = c1;
+        }
+        if(c1 < c2) {
+            c1 += ics;
+            continue;
+        }
+        if(c1 > c2) goto addcomma;
+        if(irl == irs) goto addcomma;
+        needstring = true;
+        sprintf(b, "%d/%d/%d", irl + 1, irs, seqno);
+        if(ics > 1) sprintf(b + strlen(b), "@%d", ics);
+        strcat(b, ",");
+        stringAndString(&ns, &ns_l, b);
+        end_l = ns_l;
+        c1 += ics, c2 += ics;
+        continue;
 addcomma:
-		stringAndChar(&ns, &ns_l, ',');
-		++c2;
-		goto c1c2;
-	}
+        stringAndChar(&ns, &ns_l, ',');
+        ++c2;
+        goto c1c2;
+    }
 
-	if(needstring) {
-		ns[end_l] = 0;
-		tr->js_file = ns;
-		debugPrint(3, "row %d %s", ri, ns);
-		} else nzFree(ns);
+    if(needstring) {
+        ns[end_l] = 0;
+        tr->js_file = ns;
+        debugPrint(3, "row %d %s", ri, ns);
+        } else nzFree(ns);
 }
 
 // Simplify the cellstrings
 static void rowspan3(Tag *tr, int ri)
 {
-	char *ihs; // inherited cellstring
-	int irl, irs; // inherited row level and span
-	int seqno, ics;
-	char *s, *t;
-	bool needstring = false;
+    char *ihs; // inherited cellstring
+    int irl, irs; // inherited row level and span
+    int seqno, ics;
+    char *s, *t;
+    bool needstring = false;
 
-	if(!(ihs = tr->js_file)) return;
+    if(!(ihs = tr->js_file)) return;
 
-	s = t = ihs;
-	while(*s) {
-		if(isdigitByte(*s)) {
-			irl = strtol(s, &s, 10);
-			irs = strtol(s + 1, &s, 10);
-			(void)irs; // not used
-			seqno = strtol(s + 1, &s, 10);
-			ics = 1;
-			if(*s == '@')
-				ics = strtol(s + 1, &s, 10);
-			if(!--irl) continue; // don't need it
-			sprintf(t, "%d", seqno);
-			t += strlen(t);
-			if(ics > 1) {
-				sprintf(t, "@%d", ics);
-				t += strlen(t);
-			}
-			needstring = true;
-			continue;
-		}
-		if(*s == '@') {
-			while(*s != ',') *t++ = *s++;
-		}
-		*t++ = *s++;
-	}
-	*t = 0;
+    s = t = ihs;
+    while(*s) {
+        if(isdigitByte(*s)) {
+            irl = strtol(s, &s, 10);
+            irs = strtol(s + 1, &s, 10);
+            (void)irs; // not used
+            seqno = strtol(s + 1, &s, 10);
+            ics = 1;
+            if(*s == '@')
+                ics = strtol(s + 1, &s, 10);
+            if(!--irl) continue; // don't need it
+            sprintf(t, "%d", seqno);
+            t += strlen(t);
+            if(ics > 1) {
+                sprintf(t, "@%d", ics);
+                t += strlen(t);
+            }
+            needstring = true;
+            continue;
+        }
+        if(*s == '@') {
+            while(*s != ',') *t++ = *s++;
+        }
+        *t++ = *s++;
+    }
+    *t = 0;
 
-	if(!needstring) {
-		nzFree(ihs);
-		tr->js_file = 0;
-	} else
-		debugPrint(3, "row %d %s", ri, ihs);
+    if(!needstring) {
+        nzFree(ihs);
+        tr->js_file = 0;
+    } else
+        debugPrint(3, "row %d %s", ri, ihs);
 }
