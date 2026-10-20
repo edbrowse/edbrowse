@@ -42,6 +42,11 @@ gazoo||
 ||
 
 <press3> {here}
+
+a|b|{c} ↓3|d|e
+f|g|c|i|j
+kl →2|c|no ↓2→2
+p|q|r|no
 EOF
         if ! "$program" -c "" -d0 table.html > "$log" 2>&1 <<EOF
 b

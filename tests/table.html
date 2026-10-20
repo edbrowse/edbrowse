@@ -260,4 +260,22 @@ show.innerHTML = msg;
 // the last button tag is just to confirm that in the display,
 // aria-label takes precedence over title, over the text.
 b.querySelector("button").setAttribute("aria-label", "press3");
+
+/* The next table has nothing to do with javascript.
+It is there for the presentation test.
+It has rowspans and colspans. These should be shown with arrows,
+and the rowspan entry should be duplicated as text only.
+I don't have any th headings, so I must set role=table,
+so it knows it's a data table.
+The rowspan magic only happens for data tables. */
 </script>
+
+<head></head><body>
+<table role=table>
+<tbody>
+<tr><td>a</td><td>b</td><td rowspan=3><a href=http://this.thart.com/foo>c</a></td><td>d</td><td>e</td></tr>
+<tr><td>f</td><td>g</td><td>i</td><td>j</td></tr>
+<tr><td colspan=2>kl</td><td colspan=2 rowspan=2>no</td></tr>
+<tr><td>p</td><td>q</td><td>r</td></tr>
+</tbody></table>
+</body>

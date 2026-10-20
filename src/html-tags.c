@@ -5181,16 +5181,18 @@ Consider the table
 Lef to its own devices, edbrowse represents this as
 a|b|c|d|e
 w|x|y|z
-y is below c, and only 4 cells on the second row.  That's wrong.
-In a perfect world it might look like
+y is below c, and z is below d, and that's wrong!
+In a perfect world it might look like:
 a|b|c|d|e
 w|x|c|y|z
-This could be problematic if c is an entire paragraph with links and so on.
-Duplicating that could screw up javascript.
-Just duplicating its appearance could work but is not trivial.
-Perhaps an up arrow indicating that you need to look up for this value.
-a|b|c|d|e
-w|x|^|y|z
+We don't dare duplicate the tags or the javascript variables.
+javascript might break if we change the tree in any way.
+We only duplicate the appearance of the cell at render time.
+Copy only the text, not its connection to javascript.
+Example, if c is a hyperlink, it may look like {c}, something you can click on,
+but only on the first row. On the next row c is just text with no braces.
+a|b|{c}|d|e
+w|x|c|y|z
 You don't want to do any of this for a presentation table, only a data table.
 Presentation might have a picture with rowspan=3, then
 three cells to the right, each a section that javascript can access or update.
@@ -5202,24 +5204,16 @@ paragraph 3
 And that's exactly what you want. You don't particularly
 care that the paragraphs are to the right of the picture on the screen.
 Trying to convey that would be confusing.
-So there are many things to consider here.
-I don't know the answer, but I do know,
-you have to start with an accurate representation.
-If you can't represent it inside, you can't present it.
-As always,we have the javascript double-edged sword.
-1. js might create the entire table, including rowspan attributes, from scratch.
-We can't do this from the html tags, we have to do it when the screen
+So we only do this rowspan colspan magic for a data table.
+In that case, the entry that is duplicated down the rows
+is (usually) a simple entry, one that you don't mind reading
+again and again, one that you want to read again for clarity.
+As always, we have to start with an accurate representation.
+If we can't represent it inside, we can't display it properly. Remember that
+js might create the entire table, including rowspan attributes, from scratch.
+We can't do everything from the html tags, we have to do it when the screen
 is rendered, thus this machinery is called
 from the top of render() in html.c.
-Also, we can't change any of the tags or the tree structure.
-I can't copy tags from one row down to the row below,
-because running js might assume the cells are exactly as they were created.
-That is, 4 cells on row 2, w, x, y, and z.
-Changing that could break js in unexpected ways.
-I can only muck with the display.
-So, represent the location of the cells,
-and the propagation of the cells by rowspan, using edbrowse variables only,
-then figure out what to do about it in render().
 I'm overloading 3 variables in Tag, and I know that's ugly,
 but I don't feel like creating new ones just for this feature,
 and these three aren't being used by <tr> or <td>, so here we go.
@@ -5230,22 +5224,26 @@ on that row.
 If the cell is a simple <td></td>, then we don't need anything,
 and we can just append a comma.
 If rowspan = 7, append 1/7/seqno, the first row of 7,
-and the sequence number of this tag in its row.
+and the sequence number of this tag in the window.
 The next row will inherit this, in position, and will show 2/7/seqno.
 The next row 3/7/seqno and so on.
-If colspan=3, we append @3.
-Both rowspan and colspan are possible, but very unlikely.   1/7/seqno@3
+To copy the appearance of the cell that propagates down the table by rowspan,
+access tagList[seqno]. Reproduce its text only.
+If colspan=3, append @3.
+Both rowspan and colspan are possible, but unlikely.   1/7/seqno@3
 Each cellstring is constructed from the cells on that row
 and the cellstring from the row above.
 When you run into the first <td>, if the inherited string starts with
 3/7 then we have to put in 4/7, and then move on to the new cell <td>.
 This resembels the merge of two sorted lists.
 It's nontrivial though.
-Errors are possible, like
+html errors are possible, like:
 <tr><td></td><td rowspan=2></td></tr>
 <tr><td colspan=2></td></tr>
 Such should never happen in the real world, but don't be surprised if it does.
 I will defer to rowspan over colspan.
+debug prints at level 4 show the cellstrings on each row,
+if they are nontrivial.
 Hang on, here we go.
 *********************************************************************/
 
@@ -5439,7 +5437,7 @@ addcomma:
     if(needstring) {
         ns[end_l] = 0;
         tr->js_file = ns;
-        debugPrint(3, "row %d %s", ri, ns);
+        debugPrint(4, "spanB %d=%s", ri, ns);
         } else nzFree(ns);
 }
 
@@ -5485,5 +5483,5 @@ static void rowspan3(Tag *tr, int ri)
         nzFree(ihs);
         tr->js_file = 0;
     } else
-        debugPrint(3, "row %d %s", ri, ihs);
+        debugPrint(4, "spanC %d=%s", ri, ihs);
 }
