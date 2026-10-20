@@ -5554,9 +5554,8 @@ class FetchHelper
         });
     }
 
-    constructor(options)
+    constructor(body=null, options)
     {
-        const body = options.body;
         this.headers = new Headers(options.headers);
         if (
             typeof body === "string" ||
@@ -5679,9 +5678,15 @@ class FetchHelper
 
     [Symbol.for("FetchHelper.make$options")](props=[])
     {
-        const opts = {body: this.#body};
-        this.bodyUsed = true;
-        for (const prop of ["headers", ...props]) opts[prop] = this[prop];
+        const opts = {};
+        const prop_set = new Set(props);
+        if (prop_set.has("body")) {
+            prop_set.delete("body");
+            opts.body = this.#body;
+            this.bodyUsed = true; // we've read the body so should we set this?
+        }
+        prop_set.add("headers");
+        for (const p of prop_set) opts[p] = this[p];
         return opts;
     }
 
@@ -5708,7 +5713,7 @@ class Request extends FetchHelper
         else
             url = input.toString();
 
-        super(options);
+        super(options.body, options);
         // Not sure if this is right but keeps existing behaviour
         this.url = url || window.location.href;
         this.credentials = options.credentials || 'same-origin';
@@ -5744,10 +5749,10 @@ class Request extends FetchHelper
             "mode",
             "signal",
             "referrer",
-            "cache"
+            "cache",
+            "body"
         ]);
     }
-
 }
 swc(Request);
 
