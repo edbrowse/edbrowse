@@ -5690,7 +5690,7 @@ class FetchHelper
         return opts;
     }
 
-    clone() { return new this.constructor(this); }
+    clone(...args) { return new this.constructor(...args); }
 }
 scts(FetchHelper);
 
@@ -5753,247 +5753,57 @@ class Request extends FetchHelper
             "body"
         ]);
     }
+
+
+    clone() { return super.clone(this); }
 }
 swc(Request);
 
-;(() => {
-    const g = globalThis;
-    function consumed(body) {
-      if (body._noBody) return
-      if (body.bodyUsed) {
-        return Promise.reject(new TypeError('Already read'))
-      }
-      body.bodyUsed = true
+class Response extends FetchHelper
+{
+    constructor(body=null, options={})
+    {
+        super(body, options);
+        this.type = 'default'
+        this.status = options.status || 200;
+        if (this.status < 200 || this.status > 599)
+            throw new RangeError("status out of range");
+        this.ok = this.status >= 200 && this.status < 300;
+        this.statusText = options.statusText || "";
+        this.headers = new Headers(options.headers);
+        this.url = options.url || "";
     }
 
-    function fileReaderReady(reader) {
-      return new Promise(function(resolve, reject) {
-        reader.onload = function() {
-          resolve(reader.result)
-        }
-        reader.onerror = function() {
-          reject(reader.error)
-        }
-      })
+    [Symbol.for("FetchHelper.make$options")](clone=false)
+    {
+        const props = ["status", "statusText", "url"];
+        if (clone) props.push("body");
+        return super[Symbol.for("FetchHelper.make$options")](props);
     }
 
-    function readBlobAsArrayBuffer(blob) {
-      var reader = new FileReader()
-      var promise = fileReaderReady(reader)
-      reader.readAsArrayBuffer(blob)
-      return promise
+    clone() {
+        const opts = this[Symbol.for("FetchHelper.make$options")](true);
+        return super.clone(opts.body, opts);
     }
 
-    function readBlobAsText(blob) {
-      var reader = new FileReader()
-      var promise = fileReaderReady(reader)
-      var match = /charset=([A-Za-z0-9_-]+)/.exec(blob.type)
-      var encoding = match ? match[1] : 'utf-8'
-      reader.readAsText(blob, encoding)
-      return promise
+    static error()
+    {
+        const response = new Response(null, {status: 200, statusText: ''});
+        response.ok = false;
+        response.status = 0;
+        response.type = "error";
+        return response;
     }
 
-    function readArrayBufferAsText(buf) {
-      var view = new Uint8Array(buf)
-      var chars = new Array(view.length)
-
-      for (var i = 0; i < view.length; i++) {
-        chars[i] = String.fromCharCode(view[i])
-      }
-      return chars.join('')
+    static redirectStatuses = new Set([301, 302, 303, 307, 308]);
+    static redirect(url, status)
+    {
+        if (!Response.redirectStatuses.has(status))
+            throw new RangeError("Invalid status code");
+        return new Response(null, {status: status, headers: {location: url}});
     }
-
-    function bufferClone(buf) {
-      if (buf.slice) {
-        return 
-      } else {
-        var view = new Uint8Array(buf.byteLength)
-        view.set(new Uint8Array(buf))
-        return view.buffer
-      }
-    }
-
-    function Body() {
-    // Don't set any properties in the prototype. Set them in the constructor.
-    //  this.bodyUsed = false
-
-      this._initBody = function(body) {
-
-        this._bodyInit = body
-        if (!body) {
-          this._noBody = true;
-          this._bodyText = ''
-        } else if (typeof body === 'string') {
-          this._bodyText = body
-        } else if (Blob.prototype.isPrototypeOf(body)) {
-          this._bodyBlob = body
-        } else if (formData && FormData.prototype.isPrototypeOf(body)) {
-          this._bodyFormData = body
-        } else if (URLSearchParams.prototype.isPrototypeOf(body)) {
-          this._bodyText = body.toString()
-        } else if (body instanceof DataView) {
-          this._bodyArrayBuffer = body.buffe.slice(0)
-        } else if (body instanceof ArrayBuffer || ArrayBuffer.isView(body)) {
-          this._bodyArrayBuffer = body.slice(0)
-        } else {
-          this._bodyText = body = Object.prototype.toString.call(body)
-        }
-
-        if (!this.headers.get('content-type')) {
-          if (typeof body === 'string') {
-            this.headers.set('content-type', 'text/plain;charset=UTF-8')
-          } else if (this._bodyBlob && this._bodyBlob.type) {
-            this.headers.set('content-type', this._bodyBlob.type)
-          } else if (URLSearchParams.prototype.isPrototypeOf(body)) {
-            this.headers.set('content-type', 'application/x-www-form-urlencoded;charset=UTF-8')
-          }
-        }
-      }
-
-        this.blob = function() {
-          var rejected = consumed(this)
-          if (rejected) {
-            return rejected
-          }
-
-          if (this._bodyBlob) {
-            return Promise.resolve(this._bodyBlob)
-          } else if (this._bodyArrayBuffer) {
-            return Promise.resolve(new Blob([this._bodyArrayBuffer]))
-          } else if (this._bodyFormData) {
-            throw new Error('could not read FormData body as blob')
-          } else {
-            return Promise.resolve(new Blob([this._bodyText]))
-          }
-        }
-
-      this.arrayBuffer = function() {
-        if (this._bodyArrayBuffer) {
-          var isConsumed = consumed(this)
-          if (isConsumed) {
-            return isConsumed
-          } else if (ArrayBuffer.isView(this._bodyArrayBuffer)) {
-            return Promise.resolve(
-              this._bodyArrayBuffer.buffer.slice(
-                this._bodyArrayBuffer.byteOffset,
-                this._bodyArrayBuffer.byteOffset + this._bodyArrayBuffer.byteLength
-              )
-            )
-          } else {
-            return Promise.resolve(this._bodyArrayBuffer)
-          }
-        } else return this.blob().then(readBlobAsArrayBuffer)
-
-      }
-
-      this.text = function() {
-        var rejected = consumed(this)
-        if (rejected) {
-          return rejected
-        }
-
-        if (this._bodyBlob) {
-          return readBlobAsText(this._bodyBlob)
-        } else if (this._bodyArrayBuffer) {
-          return Promise.resolve(readArrayBufferAsText(this._bodyArrayBuffer))
-        } else if (this._bodyFormData) {
-          throw new Error('could not read FormData body as text')
-        } else {
-          return Promise.resolve(this._bodyText)
-        }
-      }
-
-
-        this.formData = function() {
-          return this.text().then(decode);
-        }
-
-      this.json = function() {
-        return this.text().then(JSON.parse)
-      }
-
-      return this
-    }
-
-
-    function normalizeMethod(method) {
-
-      return method.toUpperCase();
-    }
-
-
-
-    function decode(body) {
-      var form = new FormData()
-      body
-        .trim()
-        .split('&')
-        .forEach(function(bytes) {
-          if (bytes) {
-            var split = bytes.split('=')
-            var name = split.shift().replace(/\+/g, ' ')
-            var value = split.join('=').replace(/\+/g, ' ')
-            form.append(decodeURIComponent(name), decodeURIComponent(value))
-          }
-        })
-      return form
-    }
-
-
-    function Response(bodyInit, options) {
-      if (!(this instanceof Response)) {
-        throw new TypeError('Please use the "new" operator, this DOM object constructor cannot be called as a function.')
-      }
-    // This was in Body(), and thus put onto the prototype; now I'm putting it here.
-       this.bodyUsed = false;
-      if (!options) {
-        options = {}
-      }
-
-      this.type = 'default'
-      this.status = options.status === undefined ? 200 : options.status
-      if (this.status < 200 || this.status > 599) {
-        throw new RangeError("Failed to construct 'Response': The status provided (0) is outside the range [200, 599].")
-      }
-      this.ok = this.status >= 200 && this.status < 300
-      this.statusText = options.statusText === undefined ? '' : '' + options.statusText
-      this.headers = new Headers(options.headers)
-      this.url = options.url || ''
-      this._initBody(bodyInit)
-    }
-
-    Body.call(Response.prototype)
-
-    Response.prototype.clone = function() {
-      return new Response(this._bodyInit, {
-        status: this.status,
-        statusText: this.statusText,
-        headers: new Headers(this.headers),
-        url: this.url
-      })
-    }
-
-    Response.error = function() {
-      var response = new Response(null, {status: 200, statusText: ''})
-      response.ok = false
-      response.status = 0
-      response.type = 'error'
-      return response
-    }
-
-    var redirectStatuses = [301, 302, 303, 307, 308]
-
-    Response.redirect = function(url, status) {
-      if (redirectStatuses.indexOf(status) === -1) {
-        throw new RangeError('Invalid status code')
-      }
-
-      return new Response(null, {status: status, headers: {location: url}})
-    }
-      g.Response = Response
-
-    Response.prototype.toString = function(){return "[object Response]"}
-})();
+}
+swc(Response);
 
 // Originally implemented by Yehuda Katz
 // And since then, from envjs, by Thatcher et al
