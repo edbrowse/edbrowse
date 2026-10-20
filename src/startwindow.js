@@ -7560,8 +7560,8 @@ odp(AbortController.prototype, "signal",
 AbortController.prototype.abort = function(){
 alert3("abort dom request not implemented"); }
 
-swp("IntersectionObserverEntry", function(){})
-swp("IntersectionObserver", function(callback, o){
+swpc("IntersectionObserverEntry", function(){})
+swpc("IntersectionObserver", function(callback, o){
 this.callback = callback, this.root = null;
 var h = 1.0;
 if(typeof o == "object") {
