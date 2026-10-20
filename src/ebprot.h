@@ -479,7 +479,7 @@ Tag *querySelector(const char *selstring, Tag *top);
 bool querySelector0(const char *selstring, Tag *top);
 void cssApply(int frameNumber, Tag *t, int pe);
 char *cssBeforeAfter(Tag *t, int p);
-bool cssInvisible(Tag *t);
+int cssInvisible(Tag *t);
 void cssText(const char *rulestring);
 
 // sourcefile=jseng-quick.c

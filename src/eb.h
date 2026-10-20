@@ -758,6 +758,7 @@ enum {
 	INP_SEARCH, INP_TEL, INP_URL, INP_NUMBER, INP_PW,
 };
 extern const char *const inp_others[];
+extern const char *last_inv_selector;
 
 // type completed below but this allows us to define the callback type correctly
 typedef struct parseContext parseContext;

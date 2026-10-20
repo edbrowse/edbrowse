@@ -5194,17 +5194,23 @@ nocolorend:
         bool inv_now = false;
         if(allowJS && t->jslink) {
 // lots of text nodes, and they don't carry visibility information
-            if(action != TAGACT_TEXT)
-                    inv_now = cssInvisible(t);
+            if(action != TAGACT_TEXT) {
+                j = cssInvisible(t);
+                inv_now = (j&1), j >>= 1;
+            }
         } else {
 // allow html to hide sections, even if js is not running.
             if(((a = attribVal(t, "hidden")) && !stringEqual(a, "false")) ||
             ((a = attribVal(t, "aria-hidden")) && !stringEqual(a, "false")))
-                inv_now = true;
+                inv_now = true, j = 1;
         }
-        if(inv_now)
-            debugPrint(4, "tag %s.%d shows invisible",
-            t->info->name, t->seqno);
+        if(inv_now) {
+            static const char *const inv_reason[] = {
+            "", "hidden", "display", "css "};
+            debugPrint(4, "tag %s.%d invisible by %s%s",
+            t->info->name, t->seqno, inv_reason[j],
+            (j == 3 ? last_inv_selector : ""));
+        }
 // gather some stats
         if (inv_now) ++invcount;
         if (inv_now && !showall) {

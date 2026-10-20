@@ -3854,11 +3854,13 @@ char *cssBeforeAfter(Tag *t, int p)
     return match_ba_string;
 }
 
-bool cssInvisible(Tag *t)
+const     char *last_inv_selector = 0;
+int cssInvisible(Tag *t)
 {
-    if(get_property_bool_t(t, "hidden")) return true;
-    if(get_property_bool_t(t, "ariaHidden")) return true;
+    if(get_property_bool_t(t, "hidden")) return 3;
+    if(get_property_bool_t(t, "ariaHidden")) return 3;
     int n = directInvisible(t);
+    if(n == 1) n = 5;
     if(n >= 0) return n;
     struct cssmaster *cm = findLocalCSS(t);
     if(!cm) cm = cf->cssmaster;
@@ -3869,6 +3871,7 @@ bool cssInvisible(Tag *t)
     matchtype = 0;
     match_disp_inv = match_vis_inv = false;
     match_disp_spec = match_vis_spec = 0;
+    bool last_disp_inv = false, last_vis_inv = false;
     nzFree(t->class);
     t->class = get_js_attribute(t, "class");
     nzFree(t->id);
@@ -3878,11 +3881,20 @@ bool cssInvisible(Tag *t)
         if(!d->prop_ok) continue;
         if(visibility_only && !d->visrel) continue;
         if(!cssKeyMatch(d, t)) continue;
-        if (qsaMatchGroup(t, d))
-            do_rules(t, d->rules, d->highspec);
+        if (!qsaMatchGroup(t, d)) continue;
+        do_rules(t, d->rules, d->highspec);
+        if(match_disp_inv == last_disp_inv &&
+        match_vis_inv == last_vis_inv) continue;
+        // visibility status changed
+        if(match_disp_inv | match_vis_inv) last_inv_selector = d->lhs;
+        else last_inv_selector = 0;
+        last_disp_inv = match_disp_inv;
+        last_vis_inv = match_vis_inv;
     }
     gcsmatch = visibility_only = false;
-    return match_disp_inv | match_vis_inv;
+    n = (match_disp_inv | match_vis_inv);
+    if(n) n = 7;
+    return n;
 }
 
 void cssText(const char *rulestring)
