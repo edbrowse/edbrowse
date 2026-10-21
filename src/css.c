@@ -2255,181 +2255,174 @@ static void cssAtomic(struct asel *a)
 
 static void cssModify(struct asel *a, const char *m1, const char *m2)
 {
-	struct mod *mod;
-	char *t, *w, *propname;
-	char c, h;
-	int n = m2 - m1;
-	static const char *const okcolon[] = {
-		"first-child", "last-child", "only-child", "checked",
-		"first-of-type", "last-of-type", "only-of-type",
-		"first", "last", "empty",
-		"disabled", "enabled", "read-only", "read-write",
-		"required",
-		"scope", "root",
-		0
-	};
+    struct mod *mod;
+    char *t, *w, *propname;
+    char c, h;
+    int n = m2 - m1;
+    static const char *const okcolon[] = {
+      "first-child", "last-child", "only-child", "checked",
+      "first-of-type", "last-of-type", "only-of-type",
+      "first", "last", "empty",
+      "disabled", "enabled", "read-only", "read-write",
+      "required",
+      "scope", "root",
+      0
+    };
 
-	if (n == 1)		// empty
-		return;
-	t = allocMem(n + 1);
-	memcpy(t, m1, n);
-	t[n] = 0;
+    if (n == 1) return; // empty
+    t = allocMem(n + 1);
+    memcpy(t, m1, n);
+    t[n] = 0;
 
-	mod = allocZeroMem(sizeof(struct mod));
-	mod->part = t;
+    mod = allocZeroMem(sizeof(struct mod));
+    mod->part = t;
 // add this to the end of the chain
-	if (a->modifiers) {
-		struct mod *mod2 = a->modifiers;
-		while (mod2->next)
-			mod2 = mod2->next;
-		mod2->next = mod;
-	} else
-		a->modifiers = mod;
+    if (a->modifiers) {
+        struct mod *mod2 = a->modifiers;
+        while (mod2->next)
+            mod2 = mod2->next;
+        mod2->next = mod;
+    } else
+        a->modifiers = mod;
 
 // Handle not() first because it's weird.
-	if (!strncmp(t, ":not(", 5)) {
-		struct desc d0;	// dummy descriptor for not()
-		if (t[n - 1] != ')') {
-			a->error = CSS_ERROR_UNSUP;
-			return;
-		}
-		t[--n] = 0;
-		strmove(t, t + 5);
-		trim(t);
-		memset(&d0, 0, sizeof(d0));
-		d0.lhs = t;
-		cssParseLeft(&d0);
-		if (!d0.selectors)	//   :not()
-			return;
-		mod->negate = true;
-		if (d0.selectors->next) {
+    if (!strncmp(t, ":not(", 5)) {
+        struct desc d0; // dummy descriptor for not()
+        if (t[n - 1] != ')') {
+            a->error = CSS_ERROR_UNSUP;
+            return;
+        }
+        t[--n] = 0;
+        strmove(t, t + 5);
+        trim(t);
+        memset(&d0, 0, sizeof(d0));
+        d0.lhs = t;
+        cssParseLeft(&d0);
+        if (!d0.selectors) return; //   :not()
+        mod->negate = true;
+        if (d0.selectors->next) {
 // more than one chain beneath
-			struct sel *sel, *sel2;
-			sel = d0.selectors;
-			while (sel) {
-				chainFree(sel->chain);
-				sel2 = sel->next;
-				free(sel);
-				sel = sel2;
-			}
-			a->error = CSS_ERROR_MANYNOT;
-			return;
-		}
+            struct sel *sel, *sel2;
+            sel = d0.selectors;
+            while (sel) {
+                chainFree(sel->chain);
+                sel2 = sel->next;
+                free(sel);
+                sel = sel2;
+            }
+            a->error = CSS_ERROR_MANYNOT;
+            return;
+        }
 // one chain, that's good
-		mod->notchain = d0.selectors->chain;
-		free(d0.selectors);
-		a->error = d0.error;	// pass the error upward
+        mod->notchain = d0.selectors->chain;
+        free(d0.selectors);
+        a->error = d0.error; // pass the error upward
 // should we check for before after hover?
-		return;
-	}
+        return;
+    }
 // See if the modifier makes sense
-	h = t[0];
-	switch (h) {
-	case ':':
-		if (stringEqual(t, ":visited")
-		    || stringEqual(t, ":active") || stringEqual(t, ":focus")) {
-			a->error = CSS_ERROR_DYN;
-			return;
-		}
-		if (stringEqual(t, ":hover")) {
-			a->hover = true;
-			return;
-		}
-		if (stringEqual(t, ":link")) {
-			a->link = true;
-			return;
-		}
+    h = t[0];
+    switch (h) {
+    case ':':
+        if (stringEqual(t, ":visited")
+        || stringEqual(t, ":active") || stringEqual(t, ":focus")) {
+            a->error = CSS_ERROR_DYN;
+            return;
+        }
+        if (stringEqual(t, ":hover")) {
+            a->hover = true;
+            return;
+        }
+        if (stringEqual(t, ":link")) {
+            a->link = true;
+            return;
+        }
 // :lang(it) becomes [lang|=it], but more
-		if (!strncmp(t, ":lang(", 6) && t[n - 1] == ')') {
-			t[n - 1] = 0;
-			return;
-		}
-		if (t[n - 1] == ')' &&
-		    (!strncmp(t, ":nth-child(", 11) ||
-		     !strncmp(t, ":nth-last-child(", 16) ||
-		     !strncmp(t, ":nth-of-type(", 13) ||
-		     !strncmp(t, ":nth-last-of-type(", 18))) {
-			t[n - 1] = 0;
-			spaceCrunch(t, false, false);
-			return;
-		}
-		if (stringEqual(t, ":before")) {
-			a->before = true;
-			return;
-		}
-		if (stringEqual(t, ":after")) {
-			a->after = true;
-			return;
-		}
-		if (stringEqual(t, ":first-line") ||
-		    stringEqual(t, ":last-line") ||
-		    stringEqual(t, ":first-letter") ||
-		    stringEqual(t, ":last-letter")) {
-			a->error = CSS_ERROR_PE;
-			return;
-		}
-		if (stringInList(okcolon, t + 1) < 0) {
-			a->error = CSS_ERROR_UNSUP;
-			return;
-		}
-		break;
+        if (!strncmp(t, ":lang(", 6) && t[n - 1] == ')') {
+            t[n - 1] = 0;
+            return;
+        }
+        if (t[n - 1] == ')' &&
+        (!strncmp(t, ":nth-child(", 11) ||
+        !strncmp(t, ":nth-last-child(", 16) ||
+        !strncmp(t, ":nth-of-type(", 13) ||
+        !strncmp(t, ":nth-last-of-type(", 18))) {
+            t[n - 1] = 0;
+            spaceCrunch(t, false, false);
+            return;
+        }
+        if (stringEqual(t, ":before")) {
+            a->before = true;
+            return;
+        }
+        if (stringEqual(t, ":after")) {
+            a->after = true;
+            return;
+        }
+        if (stringEqual(t, ":first-line") ||
+        stringEqual(t, ":last-line") ||
+        stringEqual(t, ":first-letter") ||
+        stringEqual(t, ":last-letter")) {
+            a->error = CSS_ERROR_PE;
+            return;
+        }
+        if (stringInList(okcolon, t + 1) < 0) {
+            a->error = CSS_ERROR_UNSUP;
+            return;
+        }
+        break;
 
-	case '#':
-	case '.':
-		if (h == '.')
-			mod->isclass = true;
-		else
-			mod->isid = true;
-		propname = (h == '.' ? "[class~=" : "[id=");
-		w = allocMem(n + strlen(propname) + 1);
-		sprintf(w, "%s%s]", propname, t + 1);
-		nzFree(t);
-		mod->part = t = w;
-		n = strlen(t);
+    case '#':
+    case '.':
+        if (h == '.') mod->isclass = true;
+        else mod->isid = true;
+        propname = (h == '.' ? "[class~=" : "[id=");
+        w = allocMem(n + strlen(propname) + 1);
+        sprintf(w, "%s%s]", propname, t + 1);
+        nzFree(t);
+        mod->part = t = w;
+        n = strlen(t);
 // fall through
 
-	case '[':
-		if (t[n - 1] != ']') {
-			a->error = CSS_ERROR_RB;
-			return;
-		}
-		t[--n] = 0;	// lop off ]
-		trim(t);
-// remove whitespace from either side of =
-		w = strchr(t, '=');
-// I assume = is not in quotes, not part of the attribute name
-// Thus I'm postponing the call to unstring.
-		if (w) {
-			char *y = w + 1;
-			skipWhite2(&y);
-			if (y > w + 1)
-				strmove(w + 1, y);
-			if (strchr("|~^$*", w[-1]))
-				--w;
-			for (y = w - 1; isspaceByte(*y); --y) ;
-			++y;
-			if (w > y)
-				strmove(y, w);
-		}
+    case '[':
+        if (t[n - 1] != ']') {
+            a->error = CSS_ERROR_RB;
+            return;
+        }
+        t[--n] = 0; // lop off ]
+        trim(t);
+        // remove whitespace from either side of =
+        w = strchr(t, '=');
+        // I assume = is not in quotes, not part of the attribute name
+        // Thus I'm postponing the call to unstring.
+        if (w) {
+            char *y = w + 1;
+            skipWhite2(&y);
+            if (y > w + 1)
+                strmove(w + 1, y);
+            if (strchr("|~^$*", w[-1])) --w;
+            for (y = w - 1; isspaceByte(*y); --y) ;
+            ++y;
+            if (w > y)
+                strmove(y, w);
+        }
 // We might have had ["a "=b] now it's safe to undo the quotes
-		unstring(t);
-		for (w = t + 1; (c = *w); ++w) {
-			if (c == '=')
-				break;
-			if (strchr("|~^$*", c) && w[1] == '=') {
-				++w;
-				break;
-			}
-			if (isupperByte(c))
-				*w = tolower(c);
-		}
-		break;
+        unstring(t);
+        for (w = t + 1; (c = *w); ++w) {
+            if (c == '=') break;
+            if (strchr("|~^$*", c) && w[1] == '=') {
+                ++w;
+                break;
+            }
+            if (isupperByte(c)) *w = tolower(c);
+        }
+        break;
 
-	default:
+    default:
 // not sure how we would get here
-		a->error = CSS_ERROR_UNSUP;
-		return;
-	}			// switch
+        a->error = CSS_ERROR_UNSUP;
+        return;
+    } // switch
 }
 
 // Warning: this function changes the current frame!
