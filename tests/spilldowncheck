@@ -28,7 +28,6 @@ cat <<! >$file
 <p id=show></p>
 <script>
 try {
-show = document.getElementById("show");
 msg="";
 s = document.createElement("$node");
 msg += ':' + s["$attr"] + ':' + s.getAttribute("$attr");

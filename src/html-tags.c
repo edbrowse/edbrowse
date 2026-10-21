@@ -5172,6 +5172,15 @@ void decorate(int start, Tag *above)
 	debugPrint(4, "decorate complete");
 }
 
+int get_js_attribute_number(const Tag *t, const char *name)
+{
+    const char *a = get_js_attribute(t, name);
+    if(!a || !*a) return -1;
+    int n = stringIsNum(a);
+    cnzFree(a);
+    return n;
+}
+
 /*********************************************************************
 Consider the table
 <table>
@@ -5322,9 +5331,9 @@ static void rowspan2(Tag *tr, int ri)
             v = attribVal(td, "colspan");
             if(v && isdigitByte(*v)) td->js_ln = atoi(v);
         if(allowJS && td->jslink) {
-            int n = get_property_number_t(td, "rowspan");
+            int n = get_js_attribute_number(td, "rowspan");
             if(n > 0) td->lic = n;
-            n = get_property_number_t(td, "colspan");
+            n = get_js_attribute_number(td, "colspan");
             if(n > 0) td->js_ln = n;
         }
         if(td->lic <= 0) td->lic = 1;

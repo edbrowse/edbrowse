@@ -224,6 +224,7 @@ void formControl(Tag *t, bool namecheck);
 void htmlInputHelper(Tag *t);
 void prerender(int start);
 void decorate(int start, Tag *above);
+int get_js_attribute_number(const Tag *t, const char *name);
 void rowspan(void);
 
 // sourcefile=http.c

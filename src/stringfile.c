@@ -338,17 +338,14 @@ void stringAndLongLong(char **s, int *l, long long n)
 
 char *cloneString(const char *s)
 {
-	char *t;
-	unsigned len;
-
-	if (!s)
-		return 0;
-	if (!*s)
-		return emptyString;
-	len = strlen(s) + 1;
-	t = allocString(len);
-	strcpy(t, s);
-	return t;
+    char *t;
+    unsigned len;
+    if (!s) return 0;
+    if (!*s) return emptyString;
+    len = strlen(s) + 1;
+    t = allocString(len);
+    strcpy(t, s);
+    return t;
 }
 
 char *cloneMemory(const char *s, int n)

@@ -152,9 +152,8 @@ if(r2.textContent != "annepmargrock") msg += "|wrong margrock text";
 // add a last row with just the first name, so we can test empty fields at the end
 r2 = tab.insertRow();
 r2.insertCell();
-r2.insertCell();
-r2.insertCell();
-r2.cells[0].textContent = "gazoo";
+r2.cells[0].textContent = "great gazoo";
+r2.cells[0].setAttribute("colspan", 3);
 // and an empty row
 r2 = tab.insertRow();
 r2.insertCell();
