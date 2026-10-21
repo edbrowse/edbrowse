@@ -1048,8 +1048,8 @@ struct mod {
 	struct mod *next;
 	char *part;
 	bool isclass, isid, negate;
-// notchain is used only if negate is true, not(ul.lister), recursive
-	struct asel *notchain;
+// underselect is used for not() or is() etc.
+	struct sel *underselect;
 };
 
 struct rule {
@@ -2314,12 +2314,12 @@ static void cssModify(struct asel *a, const char *m1, const char *m2)
             return;
         }
 // one chain, that's good
-        mod->notchain = d0.selectors->chain;
-        free(d0.selectors);
+        mod->underselect = d0.selectors;
         a->error = d0.error; // pass the error upward
-// should we check for before after hover?
+        // should we check for before after hover?
         return;
     }
+
 // See if the modifier makes sense
     h = t[0];
     switch (h) {
@@ -2494,54 +2494,58 @@ done:
 
 static void chainFree(struct asel *asel)
 {
-	struct asel *asel2;
-	struct mod *mod, *mod2;
-	while (asel) {
-		mod = asel->modifiers;
-		while (mod) {
-			mod2 = mod->next;
-			nzFree(mod->part);
-			if (mod->notchain)
-				chainFree(mod->notchain);
-			free(mod);
-			mod = mod2;
-		}
-		nzFree(asel->part);
-		nzFree(asel->tag);
-		asel2 = asel->next;
-		free(asel);
-		asel = asel2;
-	}
+    struct asel *asel2;
+    struct mod *mod, *mod2;
+    struct sel *sel, *sel2;
+    while (asel) {
+        mod = asel->modifiers;
+        while (mod) {
+            mod2 = mod->next;
+            nzFree(mod->part);
+            for(sel = mod->underselect; sel; sel = sel2) {
+                chainFree(sel->chain);
+                sel2 = sel->next;
+                free(sel);
+            }
+            free(mod);
+            mod = mod2;
+        }
+        nzFree(asel->part);
+        nzFree(asel->tag);
+        asel2 = asel->next;
+        free(asel);
+        asel = asel2;
+    }
 }
 
 static void cssPiecesFree(struct desc *d)
 {
-	struct desc *d2;
-	struct sel *sel, *sel2;
-	struct rule *r, *r2;
-	if (!d)
-		return;		// nothing to do
-	free(d->lhs);		// the base string
-	while (d) {
-		sel = d->selectors;
-		while (sel) {
-			chainFree(sel->chain);
-			sel2 = sel->next;
-			free(sel);
-			sel = sel2;
-		}
-		r = d->rules;
-		while (r) {
-			free(r->atname);
-			nzFree(r->atval);
-			r2 = r->next;
-			free(r);
-			r = r2;
-		}
-		d2 = d->next;
-		free(d);
-		d = d2;
-	}
+    struct desc *d2;
+    struct sel *sel, *sel2;
+    struct rule *r, *r2;
+    if (!d)
+        return; // nothing to do
+    free(d->lhs); // the base string
+    while (d) {
+        sel = d->selectors;
+        while (sel) {
+            chainFree(sel->chain);
+            sel2 = sel->next;
+            free(sel);
+            sel = sel2;
+        }
+        r = d->rules;
+        while (r) {
+            free(r->atname);
+            nzFree(r->atval);
+            r2 = r->next;
+            free(r);
+            r = r2;
+        }
+        d2 = d->next;
+        free(d);
+        d = d2;
+    }
 }
 
 void cssFrameFree(Frame *f)
@@ -2591,9 +2595,9 @@ static void chainPrint(struct asel *asel)
 		fprintf(cssfile, "%s", tag);
 		for (mod = asel->modifiers; mod; mod = mod->next) {
 			if (mod->negate) {
-				if (mod->notchain) {
+				if (mod->underselect) {
 					fprintf(cssfile, ":not(");
-					chainPrint(mod->notchain);
+					chainPrint(mod->underselect->chain);
 					fprintf(cssfile, ")");
 				} else
 					fprintf(cssfile, ":not()");
@@ -2913,10 +2917,10 @@ if(!t) {
             continue;
 
         if (negate) {
-            if (mod->notchain) {
-                if (qsaMatchChain(t, mod->notchain))
+            if (mod->underselect) {
+                if (qsaMatchChain(t, mod->underselect->chain))
                     return false;
-// the notchain fails, which is what we want, so on we go.
+// the underselect fails, which is what we want, so on we go.
                 continue;
             }
 // empty not()
