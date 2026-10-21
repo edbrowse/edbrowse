@@ -2073,11 +2073,13 @@ static void cssParseLeft(struct desc *d)
 			continue;
 		}
 // :not( code, rather like closing a string.
-		if (!strncmp(s, ":not(", 5)) {
-			n = closeString(s + 5, '(');
-			if (n < 0)	// should never happen
-				break;
-			s += n + 5;
+		if (!strncmp(s, ":not(", 5) ||
+		!strncmp(s, ":is(", 4) ||
+		!strncmp(s, ":where(", 7)) {
+			const int l = s[1] == 'n' ? 5 : s[1] == 'i' ? 4 : 7;
+			n = closeString(s + l, '(');
+			if (n < 0) break;	// should never happen
+			s += n + l;
 			last_c = 0;
 			continue;
 		}
@@ -2228,11 +2230,27 @@ static void cssAtomic(struct asel *a)
 		if (s == m1 + 1 && !strncmp(m1, ":not(", 5)) {
 			last_c = 0;
 			n = closeString(s + 4, '(');
-			if (n < 0)	// should never happen
-				break;
+			if (n < 0) break;
 			s += n + 4;
 			continue;
 		}
+
+		if (s == m1 + 1 && !strncmp(m1, ":is(", 4)) {
+			last_c = 0;
+			n = closeString(s + 3, '(');
+			if (n < 0) break;
+			s += n + 3;
+			continue;
+		}
+
+		if (s == m1 + 1 && !strncmp(m1, ":where(", 7)) {
+			last_c = 0;
+			n = closeString(s + 6, '(');
+			if (n < 0) break;
+			s += n + 6;
+			continue;
+		}
+
 // I assume \ is an escape, though this could fail  foo\\:
 		if (!strchr(".[#:", c) || last_c == '\\') {
 			++s;
@@ -2281,23 +2299,27 @@ static void cssModify(struct asel *a, const char *m1, const char *m2)
     } else
         a->modifiers = mod;
 
-// Handle not() first because it's weird.
-    if (!strncmp(t, ":not(", 5)) {
+// Handle the under selectors first
+    if (!strncmp(t, ":not(", 5) ||
+    !strncmp(t, ":is(", 4) ||
+    !strncmp(t, ":where(", 7)) {
         struct desc d0; // dummy descriptor for not()
+        const uchar under = t[1] == 'n' ? MODNOT : t[1] == 'i' ? MODIS : MODWHERE;
+        const int l = t[1] == 'n' ? 5 : t[1] == 'i' ? 4 : 7;
         if (t[n - 1] != ')') {
             a->error = CSS_ERROR_UNSUP;
             return;
         }
         t[--n] = 0;
-        strmove(t, t + 5);
+        strmove(t, t + l);
         trim(t);
         memset(&d0, 0, sizeof(d0));
         d0.lhs = t;
         cssParseLeft(&d0);
-        mod->under = MODNOT;
+        mod->under = under;
         mod->underselect = d0.selectors;
         a->error = d0.error; // pass the error upward
-        if (!d0.selectors) //   :not()
+        if (!d0.selectors) //   :not() empty list
             a->error = CSS_ERROR_UNSUP;
         // should we check for before after hover?
         return;
@@ -2895,24 +2917,31 @@ if(!t) {
     for (mod = a->modifiers; mod; mod = mod->next) {
         char *p = mod->part;
         uchar under = mod->under;
+/* :is and :where are almost identical. They have different affects
+on specificity, but I don't understand specificity anyways,
+so I'm not gonna worry about that right now. */
         char c = p[0];
         int i, ntype, ns;
 
         if (!c) // empty modifier
-            continue;
+            goto next_mod;
 
         if (under) {
-            if ((sel = mod->underselect)) {
-                while(sel) {
-                    if (qsaMatchChain(t, sel->chain))
-                        return false;
-                    sel = sel->next;
-                }
-// the underselect failed, which is what we want, so on we go.
-                continue;
-            }
+            if (!(sel = mod->underselect)) {
 // empty list of under selects
-            continue;
+// this shouldn't happen
+                return false;
+            }
+            while(sel) {
+                if (qsaMatchChain(t, sel->chain)) {
+                    if(under == MODNOT) return false;
+                    goto next_mod;
+                }
+                sel = sel->next;
+            }
+            // we passed through all the under selects
+            if(under != MODNOT) return false;
+            goto next_mod;
         }
 
         if (c == '[') {
@@ -2994,7 +3023,7 @@ if(!t) {
 
         if (stringEqual(p, ":link") || stringEqual(p, ":hover") ||
             stringEqual(p, ":before") || stringEqual(p, ":after"))
-            continue;
+            goto next_mod;
 
         if (!strncmp(p, ":lang(", 6)) {
             if (languageSpecial(t, p + 6)) goto next_mod;
@@ -3207,19 +3236,17 @@ next_mod: ;
 
 /*********************************************************************
 There's an important optimization we don't do.
-qsa1 picks the best list based on the atomic selector it is looking at,
-but if you look at the entire chain you can sometimes do better.
-This really happens.
+This really happens:
 .foobar * {color:green}
 Everything below the node of class foobar is green.
 Right now * matches every node, then we march up the tree to see if
 .foobar is abov it, and if yes then the chain matches and it's green.
 It would be better to build a new list dynamically, everything below .foobar,
 and apply the rules to those nodes, which we were going to do anyways.
-Well these under * chains are somewhat rare,
+Well these kinds of selectors are rare,
 and the routine runs fast enough, even on stackoverflow.com, the worst site,
-so I'm not going to implement chain level optimization today.
-Called from qsaMatchGroup and from qsa1.
+so I'm not going to implement that level of optimization today.
+This is called from qsaMatchGroup and from qsa1.
 This is recursive, since we must explore every path.
 *********************************************************************/
 

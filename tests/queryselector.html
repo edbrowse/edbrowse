@@ -219,6 +219,15 @@ msg += "|wrong not(first,last)";
 q = b.querySelectorAll("*:not(form>select>option, p, div li, div:last-child)")
 if(q.length != 11 || q[4].nodeName != "SELECT" || q[10].nodeName != "SCRIPT")
 msg += "|wrong not(4 selectors)";
+q = b.querySelectorAll("option:is(:first-of-type, :last-of-type)");
+if(q.length != 2 || q[0].text != "apple" || q[1].text != "lemon")
+msg += "|wrong is(first,last)";
+q = b.querySelectorAll(":where(div p:first-child, ol>li, quote option)")
+if(q.length != 4 || q[0].textContent != "alpha" || q[3].nodeName != "P")
+msg += "|wrong where(p,li)";
+q = b.querySelectorAll(":is(div,form) :is(option,li)")
+if(q.length != 6 || q[3].textContent != "alpha" || q[0].text != "apple")
+msg += "|wrong is(option,li)";
 
 de = document.documentElement;
 q = document.querySelectorAll(":root,.shoe");
