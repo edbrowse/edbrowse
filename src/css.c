@@ -10,30 +10,32 @@ which is a tad faster.
 
 #include "eb.h"
 
-#define CSS_ERROR_NONE 0
-#define CSS_ERROR_NOSEL 1
-#define CSS_ERROR_MANYNOT 2
-#define CSS_ERROR_BRACES 3
-#define CSS_ERROR_SEL0 4
-#define CSS_ERROR_NORULE 5
-#define CSS_ERROR_COLON 6
-#define CSS_ERROR_RB 7
-#define CSS_ERROR_TAG 8
-#define CSS_ERROR_ATTR 9
-#define CSS_ERROR_RATTR 10
-#define CSS_ERROR_DYN 11
-#define CSS_ERROR_TAGLINK 12
-#define CSS_ERROR_INJECTHIGH 13
-#define CSS_ERROR_PE 14
-#define CSS_ERROR_UNSUP 15
-#define CSS_ERROR_MULTIPLE 16
-#define CSS_ERROR_ATEMPTY 17
-#define CSS_ERROR_NOTMEDIA 18
-#define CSS_ERROR_BADMEDIA 19
-// DELIM is special not really an error, true errors come before
-#define CSS_ERROR_DELIM 20
-#define CSS_ERROR_ATPROC 21
-#define CSS_ERROR_LAST 22
+enum {
+  CSS_ERROR_NONE,
+  CSS_ERROR_NOSEL,
+  CSS_ERROR_MANYNOT,
+  CSS_ERROR_BRACES,
+  CSS_ERROR_SEL0,
+  CSS_ERROR_NORULE,
+  CSS_ERROR_COLON,
+  CSS_ERROR_RB,
+  CSS_ERROR_TAG,
+  CSS_ERROR_ATTR,
+  CSS_ERROR_RATTR,
+  CSS_ERROR_DYN,
+  CSS_ERROR_TAGLINK,
+  CSS_ERROR_INJECTHIGH,
+  CSS_ERROR_PE,
+  CSS_ERROR_UNSUP,
+  CSS_ERROR_MULTIPLE,
+  CSS_ERROR_ATEMPTY,
+  CSS_ERROR_NOTMEDIA,
+  CSS_ERROR_BADMEDIA,
+// DELIM is special, not really an error.
+  CSS_ERROR_DELIM,
+  CSS_ERROR_ATPROC,
+  CSS_ERROR_LAST,
+};
 
 static const char *const errorMessage[] = {
   "ok",
@@ -1047,9 +1049,15 @@ struct asel {
 struct mod {
     struct mod *next;
     char *part;
-    bool isclass, isid, negate;
+    bool isclass, isid;
+    uchar under; // not is or where
 // underselect is used for not() or is() etc.
     struct sel *underselect;
+};
+
+enum { MODNORMAL, MODNOT, MODIS, MODWHERE };
+static const char * const modunderstrings[] = {
+    0, "not", "is", "where"
 };
 
 struct rule {
@@ -1277,42 +1285,36 @@ copy:
 // This is a crude measure of specificity, contained in a 5 digit number.
 static int specificity(const struct sel *sel, bool underat)
 {
-	const struct asel *a = sel->chain;
-	const struct mod *mod;
-	int n = 0;
-	int level = 1000;
-	int cnt;
-	while (a && level) {
-		cnt = 0;
-		for (mod = a->modifiers; mod; mod = mod->next) {
-			if (mod->negate)
-				continue;
-			if (!cnt)
-				++cnt;
-			++cnt;
-			if (cnt == 8)
-				break;
-		}
-		if (a->tag)
-			++cnt;
-		n += level * cnt;
-		level /= 10;
-		a = a->next;
-	}
+    const struct asel *a = sel->chain;
+    const struct mod *mod;
+    int n = 0;
+    int level = 1000;
+    int cnt;
+    while (a && level) {
+        cnt = 0;
+        for (mod = a->modifiers; mod; mod = mod->next) {
+            if (mod->under) continue;
+            if (!cnt) ++cnt;
+            ++cnt;
+            if (cnt == 8) break;
+        }
+        if (a->tag) ++cnt;
+        n += level * cnt;
+        level /= 10;
+        a = a->next;
+    }
 
 // need something positive here
-	if (!n) {
-// each atomic has no tag and only "not() modifiers.
-// Set n to 1 + the number of not modifiers on the first atomic
-		n = 1;
-		for (mod = sel->chain->modifiers; mod; mod = mod->next)
-			++n;
-	}
+    if (!n) {
+        // each atomic has no tag and only "not() modifiers.
+        // Set n to 1 + the number of modifiers on the first atomic
+        n = 1;
+        for (mod = sel->chain->modifiers; mod; mod = mod->next) ++n;
+    }
 
 // @ media tag has more specificity; I have no idea how much more.
     if (underat) n += 10;
-// <style> is higher than rules from a css file.
- return n;
+    return n;
 }
 
 static bool mediaPiece(struct desc *d, char *t)
@@ -1445,38 +1447,37 @@ and:
 
 static bool media(struct desc *d, char *t)
 {
-	char *p = t;
-	char c;
-	int n;
+    char *p = t;
+    char c;
+    int n;
 
-	while ((c = *t)) {
-		if (strchr("'\"[(", c)) {
-			n = closeString(t + 1, c);
-			if (n < 0) {	// should not happen
-				d->error = CSS_ERROR_BADMEDIA;
-				return false;
-			}
-			t += n + 1;
-			continue;
-		}
-		if (c == ',') {
-			*t = 0;
-			trim(p);
-			if (mediaPiece(d, p))
-				return true;
-			p = t + 1;
-		}
-		++t;
-	}
+    while ((c = *t)) {
+        if (strchr("'\"[(", c)) {
+            n = closeString(t + 1, c);
+            if (n < 0) { // should not happen
+                d->error = CSS_ERROR_BADMEDIA;
+                return false;
+            }
+            t += n + 1;
+            continue;
+        }
+        if (c == ',') {
+            *t = 0;
+            trim(p);
+            if (mediaPiece(d, p))
+                return true;
+            p = t + 1;
+        }
+        ++t;
+    }
 
 // last piece
-	trim(p);
-	if (mediaPiece(d, p))
-		return true;
+    trim(p);
+    if (mediaPiece(d, p))
+        return true;
 
-	if (!d->error)
-		d->error = CSS_ERROR_ATPROC;
-	return false;
+    if (!d->error) d->error = CSS_ERROR_ATPROC;
+    return false;
 }
 
 // The above is used by window.matchMedia
@@ -1532,53 +1533,49 @@ tested the long way as before.
 
 static void cssSetKeys(struct desc *d1)
 {
-	struct desc *d;
-	struct sel *sel;
-	struct mod *mod;
+    struct desc *d;
+    struct sel *sel;
+    struct mod *mod;
 
-	for (d = d1; d; d = d->next) {
-		bool first = true;
-		if (d->error)
-			continue;
-		for (sel = d->selectors; sel; sel = sel->next) {
-			const char *seltag = 0, *selclass = 0, *selid = 0;
-			const struct asel *a = sel->chain;
-			if (sel->error)
-				continue;
+    for (d = d1; d; d = d->next) {
+        bool first = true;
+        if (d->error) continue;
+        for (sel = d->selectors; sel; sel = sel->next) {
+            const char *seltag = 0, *selclass = 0, *selid = 0;
+            const struct asel *a = sel->chain;
+            if (sel->error) continue;
 // only the base of the chain speaks about the node itself
-			if (!a || a->combin != ',')
-				goto nokey;
-			seltag = a->tag;
-			for (mod = a->modifiers; mod; mod = mod->next) {
-				if (mod->negate || !mod->part[0])
-					continue;
-				if (mod->isclass && !selclass)
-					selclass = mod->part + CLASSMOD_SKIP;
-				if (mod->isid && !selid)
-					selid = mod->part + IDMOD_SKIP;
-			}
-			if (first) {
-				d->keytag = seltag;
-				d->keyclass = selclass;
-				d->keyid = selid;
-				first = false;
-				continue;
-			}
+            if (!a || a->combin != ',') goto nokey;
+            seltag = a->tag;
+            for (mod = a->modifiers; mod; mod = mod->next) {
+                if (mod->under || !mod->part[0]) continue;
+                if (mod->isclass && !selclass)
+                    selclass = mod->part + CLASSMOD_SKIP;
+                if (mod->isid && !selid)
+                    selid = mod->part + IDMOD_SKIP;
+            }
+            if (first) {
+                d->keytag = seltag;
+                d->keyclass = selclass;
+                d->keyid = selid;
+                first = false;
+                continue;
+            }
 // a later selector in the group; keep only what they agree on
-			if (!seltag || !d->keytag ||
-			    !stringEqual(seltag, d->keytag))
-				d->keytag = 0;
-			if (!selclass || !d->keyclass ||
-			    !stringEqual(selclass, d->keyclass))
-				d->keyclass = 0;
-			if (!selid || !d->keyid ||
-			    !stringEqual(selid, d->keyid))
-				d->keyid = 0;
-		}
-		continue;
+            if (!seltag || !d->keytag ||
+                !stringEqual(seltag, d->keytag))
+                d->keytag = 0;
+            if (!selclass || !d->keyclass ||
+                !stringEqual(selclass, d->keyclass))
+                d->keyclass = 0;
+            if (!selid || !d->keyid ||
+                !stringEqual(selid, d->keyid))
+                d->keyid = 0;
+        }
+        continue;
 nokey:
-		d->keytag = d->keyclass = d->keyid = 0;
-	}
+        d->keytag = d->keyclass = d->keyid = 0;
+    }
 }
 
 static struct desc *cssPieces(char *s)
@@ -2201,8 +2198,7 @@ static void cssAtomic(struct asel *a)
 		nzFree0(tag);
 	if (tag) {
 		for (t = tag; *t; ++t) {
-			if (islowerByte(*t))
-				*t = toupper(*t);
+			if (islowerByte(*t)) *t = toupper(*t);
 			if ((isdigitByte(*t) && t > tag) ||
 			    isalphaByte(*t) || *t == '-')
 				continue;
@@ -2298,10 +2294,11 @@ static void cssModify(struct asel *a, const char *m1, const char *m2)
         memset(&d0, 0, sizeof(d0));
         d0.lhs = t;
         cssParseLeft(&d0);
-        if (!d0.selectors) return; //   :not()
-        mod->negate = true;
+        mod->under = MODNOT;
         mod->underselect = d0.selectors;
         a->error = d0.error; // pass the error upward
+        if (!d0.selectors) //   :not()
+            a->error = CSS_ERROR_UNSUP;
         // should we check for before after hover?
         return;
     }
@@ -2581,16 +2578,13 @@ static void chainPrint(struct asel *asel)
                 (asel->combin == ' ' ? '^' : asel->combin));
         fprintf(cssfile, "%s", tag);
         for (mod = asel->modifiers; mod; mod = mod->next) {
-            if (mod->negate) {
-                if ((sel = mod->underselect)) {
-                    fprintf(cssfile, ":not(");
-                    while(sel) {
-                        if(sel != mod->underselect) fprintf(cssfile, ",");
-                        chainPrint(sel->chain);
-                        sel = sel->next;
-                    }
-                    fprintf(cssfile, ")");
-                } else fprintf(cssfile, ":not()");
+            if (mod->under) {
+                fprintf(cssfile, ":%s(", modunderstrings[mod->under]);
+                for(sel = mod->underselect; sel; sel = sel->next) {
+                    if(sel != mod->underselect) fprintf(cssfile, ",");
+                    chainPrint(sel->chain);
+                }
+                fprintf(cssfile, ")");
                 continue;
             }
             if (!strncmp(mod->part, "[class~=", 8))
@@ -2900,14 +2894,14 @@ if(!t) {
 // now step through the modifyers
     for (mod = a->modifiers; mod; mod = mod->next) {
         char *p = mod->part;
-        bool negate = mod->negate;
+        uchar under = mod->under;
         char c = p[0];
         int i, ntype, ns;
 
         if (!c) // empty modifier
             continue;
 
-        if (negate) {
+        if (under) {
             if ((sel = mod->underselect)) {
                 while(sel) {
                     if (qsaMatchChain(t, sel->chain))
@@ -2917,7 +2911,7 @@ if(!t) {
 // the underselect failed, which is what we want, so on we go.
                 continue;
             }
-// empty not()
+// empty list of under selects
             continue;
         }
 

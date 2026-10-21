@@ -1,5 +1,11 @@
 Here are some changes introduced by recent versions of edbrowse.
 
+3.8.20
+
+The :not :is :where css pseudoclasses.
+
+Response and Request classes.
+
 3.8.19
 
 <div id=xyz> creates a link window.xyz to the div element,
@@ -44,6 +50,8 @@ custom element connectedCallback and disconnectedCallback functions.
 Most of the Range class.
 
 Arguments that are passed to the callback function on setTimeout and setInterval.
+
+The PerformanceObserver class.
 
 3.8.18
 
