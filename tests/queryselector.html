@@ -213,6 +213,12 @@ if(q.length != 1) msg += "|bad *6"
 // a more complicated not
 q = b.querySelectorAll("p:not(div>p)");
 if(q.length != 1 || q[0].id != "show") msg += "|wrong p not below div";
+q = b.querySelectorAll("*:not(:first-child , :last-child)");
+if(q.length != 8 || q[1].nodeName != "SELECT" || q[3].nodeName != "INPUT")
+msg += "|wrong not(first,last)";
+q = b.querySelectorAll("*:not(form>select>option, p, div li, div:last-child)")
+if(q.length != 11 || q[4].nodeName != "SELECT" || q[10].nodeName != "SCRIPT")
+msg += "|wrong not(4 selectors)";
 
 de = document.documentElement;
 q = document.querySelectorAll(":root,.shoe");

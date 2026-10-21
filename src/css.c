@@ -36,29 +36,29 @@ which is a tad faster.
 #define CSS_ERROR_LAST 22
 
 static const char *const errorMessage[] = {
-	"ok",
-	"no selectors",
-	"many selectors under not",
-	"nested braces",
-	"empty selector",
-	"no rules",
-	"rule no :",
-	"modifier no ]",
-	"bad tag",
-	"bad selector attribute",
-	"bad rule attribute",
-	"dynamic",
-	"tag link",
-	"inject high",
-	"pseudo element",
-	":unsupported",
-	"multiple",
-	"@ empty",
-	"@ not media",
-	"@ bad media",
-	"==========",
-	"@ processed",
-	"eof",
+  "ok",
+  "no selectors",
+  "not used",
+  "nested braces",
+  "empty selector",
+  "no rules",
+  "rule no :",
+  "modifier no ]",
+  "bad tag",
+  "bad selector attribute",
+  "bad rule attribute",
+  "dynamic",
+  "tag link",
+  "inject high",
+  "pseudo element",
+  ":unsupported",
+  "multiple",
+  "@ empty",
+  "@ not media",
+  "@ bad media",
+  "==========",
+  "@ processed",
+  "eof",
 };
 
 static int errorBuckets[CSS_ERROR_LAST];
@@ -1002,17 +1002,17 @@ This is a chain of attribute=value pairs, as in color=green.
 
 // css descriptor
 struct desc {
-	struct desc *next;
-	char *lhs, *rhs;
-	short bc;		// brace count
-	uchar error;
-	bool visrel; // relevant to visibility
-	bool prop_ok; // at least one rule where the property is ok
-	char which;
-	struct sel *selectors;
-	struct rule *rules;
-	int highspec;		// specificity when this descriptor matches
-	bool underat, fromstyle;
+    struct desc *next;
+    char *lhs, *rhs;
+    short bc;		// brace count
+    uchar error;
+    bool visrel; // relevant to visibility
+    bool prop_ok; // at least one rule where the property is ok
+    char which;
+    struct sel *selectors;
+    struct rule *rules;
+    int highspec;		// specificity when this descriptor matches
+    bool underat, fromstyle;
 /*********************************************************************
 What the node must be for this descriptor to have any chance at all.
 Every selector in the group has to demand the same thing, else we can't
@@ -1020,61 +1020,61 @@ say anything about the group and these are null.
 They point into the selector strings, and are not allocated separately.
 See cssSetKeys() for how they are derived and cssKeyMatch() for their use.
 *********************************************************************/
-	const char *keytag, *keyclass, *keyid;
+    const char *keytag, *keyclass, *keyid;
 };
 
 // selector
 struct sel {
-	struct sel *next;
-	uchar error;
-	bool before, after, hover;
-	struct asel *chain;
-	int spec;		// specificity
+    struct sel *next;
+    uchar error;
+    bool before, after, hover;
+    struct asel *chain;
+    int spec;		// specificity
 };
 
 // atomic selector
 struct asel {
-	struct asel *next;
-	char *tag;
-	char *part;
-	bool before, after, hover, link;
-	uchar error;
-	char combin;
-	struct mod *modifiers;
+    struct asel *next;
+    char *tag;
+    char *part;
+    bool before, after, hover, link;
+    uchar error;
+    char combin;
+    struct mod *modifiers;
 };
 
 // selector modifiers
 struct mod {
-	struct mod *next;
-	char *part;
-	bool isclass, isid, negate;
+    struct mod *next;
+    char *part;
+    bool isclass, isid, negate;
 // underselect is used for not() or is() etc.
-	struct sel *underselect;
+    struct sel *underselect;
 };
 
 struct rule {
-	struct rule *next;
-	char *atname, *atval;
-	bool prop_ok; // property name is ok
-	bool visrel; // relevant to visibility
+    struct rule *next;
+    char *atname, *atval;
+    bool prop_ok; // property name is ok
+    bool visrel; // relevant to visibility
 };
 
 struct hashhead {
-	char *key;
-	Tag **body;
-	int n;
-	Tag *t;
+    char *key;
+    Tag **body;
+    int n;
+    Tag *t;
 };
 
 struct shortcache {
-	struct shortcache *next;
-	char *url;
-	char *data;
+    struct shortcache *next;
+    char *url;
+    char *data;
 };
 
 struct cssmaster {
-	struct desc *descriptors;
-	struct shortcache *cache;
+    struct desc *descriptors;
+    struct shortcache *cache;
 };
 
 static void cssPiecesFree(struct desc *d);
@@ -2300,20 +2300,6 @@ static void cssModify(struct asel *a, const char *m1, const char *m2)
         cssParseLeft(&d0);
         if (!d0.selectors) return; //   :not()
         mod->negate = true;
-        if (d0.selectors->next) {
-// more than one chain beneath
-            struct sel *sel, *sel2;
-            sel = d0.selectors;
-            while (sel) {
-                chainFree(sel->chain);
-                sel2 = sel->next;
-                free(sel);
-                sel = sel2;
-            }
-            a->error = CSS_ERROR_MANYNOT;
-            return;
-        }
-// one chain, that's good
         mod->underselect = d0.selectors;
         a->error = d0.error; // pass the error upward
         // should we check for before after hover?
@@ -2584,34 +2570,38 @@ void cssTagFree(Tag *t)
 static FILE *cssfile;
 static void chainPrint(struct asel *asel)
 {
-	const struct mod *mod;
-	while (asel) {
-		char *tag = asel->tag;
-		if (!tag)
-			tag = (asel->modifiers ? emptyString : "*");
-		if (asel->combin != ',')
-			fprintf(cssfile, "%c",
-				(asel->combin == ' ' ? '^' : asel->combin));
-		fprintf(cssfile, "%s", tag);
-		for (mod = asel->modifiers; mod; mod = mod->next) {
-			if (mod->negate) {
-				if (mod->underselect) {
-					fprintf(cssfile, ":not(");
-					chainPrint(mod->underselect->chain);
-					fprintf(cssfile, ")");
-				} else
-					fprintf(cssfile, ":not()");
-				continue;
-			}
-			if (!strncmp(mod->part, "[class~=", 8))
-				fprintf(cssfile, ".%s", mod->part + 8);
-			else if (!strncmp(mod->part, "[id=", 4))
-				fprintf(cssfile, "#%s", mod->part + 4);
-			else
-				fprintf(cssfile, "%s", mod->part);
-		}
-		asel = asel->next;
-	}
+    const struct mod *mod;
+    const struct sel *sel;
+    while (asel) {
+        char *tag = asel->tag;
+        if (!tag)
+            tag = (asel->modifiers ? emptyString : "*");
+        if (asel->combin != ',')
+            fprintf(cssfile, "%c",
+                (asel->combin == ' ' ? '^' : asel->combin));
+        fprintf(cssfile, "%s", tag);
+        for (mod = asel->modifiers; mod; mod = mod->next) {
+            if (mod->negate) {
+                if ((sel = mod->underselect)) {
+                    fprintf(cssfile, ":not(");
+                    while(sel) {
+                        if(sel != mod->underselect) fprintf(cssfile, ",");
+                        chainPrint(sel->chain);
+                        sel = sel->next;
+                    }
+                    fprintf(cssfile, ")");
+                } else fprintf(cssfile, ":not()");
+                continue;
+            }
+            if (!strncmp(mod->part, "[class~=", 8))
+                fprintf(cssfile, ".%s", mod->part + 8);
+            else if (!strncmp(mod->part, "[id=", 4))
+                fprintf(cssfile, "#%s", mod->part + 4);
+            else
+                fprintf(cssfile, "%s", mod->part);
+        }
+        asel = asel->next;
+    }
 }
 
 static void cssPiecesPrint(const struct desc *d)
@@ -2891,7 +2881,8 @@ static bool upDisabled(const Tag *t)
 static bool qsaMatch(Tag *t, const struct asel *a)
 {
     bool rc = false;
-    struct mod *mod;
+    const struct mod *mod;
+    const struct sel *sel;
 
 if(!t) {
         debugPrint(3, "t is null in qsaMatch()");
@@ -2917,10 +2908,13 @@ if(!t) {
             continue;
 
         if (negate) {
-            if (mod->underselect) {
-                if (qsaMatchChain(t, mod->underselect->chain))
-                    return false;
-// the underselect fails, which is what we want, so on we go.
+            if ((sel = mod->underselect)) {
+                while(sel) {
+                    if (qsaMatchChain(t, sel->chain))
+                        return false;
+                    sel = sel->next;
+                }
+// the underselect failed, which is what we want, so on we go.
                 continue;
             }
 // empty not()
