@@ -13,7 +13,7 @@ which is a tad faster.
 enum {
   CSS_ERROR_NONE,
   CSS_ERROR_NOSEL,
-  CSS_ERROR_MANYNOT,
+  CSS_ERROR_DASHTAG,
   CSS_ERROR_BRACES,
   CSS_ERROR_SEL0,
   CSS_ERROR_NORULE,
@@ -40,7 +40,7 @@ enum {
 static const char *const errorMessage[] = {
   "ok",
   "no selectors",
-  "not used",
+  "webkit",
   "nested braces",
   "empty selector",
   "no rules",
@@ -2179,6 +2179,11 @@ static void cssAtomic(struct asel *a)
         s = emptyString;
     if (!*tag || stringEqual(tag, "*"))
         nzFree0(tag);
+    if(stringEqual(tag, "_")) {
+        a->error = CSS_ERROR_DASHTAG;
+        nzFree0(tag);
+        return;
+    }
     if (tag) {
         for (t = tag; *t; ++t) {
             if (islowerByte(*t)) *t = toupper(*t);
@@ -2309,7 +2314,7 @@ static void cssModify(struct asel *a, const char *m1, const char *m2)
     h = t[0];
     switch (h) {
     case ':':
-        if (stringEqual(t, ":visited")
+        if (stringEqual(t, ":visited") || stringEqual(t, ":marker")
         || stringEqual(t, ":active") || stringEqual(t, ":focus")) {
             a->error = CSS_ERROR_DYN;
             return;
