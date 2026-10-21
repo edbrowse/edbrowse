@@ -788,25 +788,25 @@ static const char * const displayableStyleElements[] = {
 
 static void cssStats(void)
 {
-	bool first = true;
-	int i, l;
-	char *s = initString(&l);
-	if (debugLevel < 3)
-		return;
-	stringAndNum(&s, &l, loadcount);
-	stringAndString(&s, &l, " selectors + rules");
-	for (i = 1; i < CSS_ERROR_LAST; ++i) {
-		int n = errorBuckets[i];
-		if (!n)
-			continue;
-		stringAndString(&s, &l, (first ? ": " : ", "));
-		first = false;
-		stringAndNum(&s, &l, n);
-		stringAndChar(&s, &l, ' ');
-		stringAndString(&s, &l, errorMessage[i]);
-	}
-	debugPrint(3, "%s", s);
-	nzFree(s);
+    bool first = true;
+    int i, l;
+    char *s = initString(&l);
+    if (debugLevel < 3)
+        return;
+    stringAndNum(&s, &l, loadcount);
+    stringAndString(&s, &l, " selectors + rules");
+    for (i = 1; i < CSS_ERROR_LAST; ++i) {
+        int n = errorBuckets[i];
+        if (!n)
+            continue;
+        stringAndString(&s, &l, (first ? ": " : ", "));
+        first = false;
+        stringAndNum(&s, &l, n);
+        stringAndChar(&s, &l, ' ');
+        stringAndString(&s, &l, errorMessage[i]);
+    }
+    debugPrint(3, "%s", s);
+    nzFree(s);
 }
 
 static int closeString(char *s, char delim)
@@ -2032,239 +2032,237 @@ lastrule:
 
 static void cssParseLeft(struct desc *d)
 {
-	char *s = d->lhs;
-	char *a1 = s;		// start of the atomic selector
-	char *a2, *t;
-	char c, last_c = 0, combin;
-	struct sel *sel = 0;	// the selector being built
-	struct sel *sel2 = 0;
-	struct asel *asel, *asel2;
-	int n;
+    char *s = d->lhs;
+    char *a1 = s; // start of the atomic selector
+    char *a2, *t;
+    char c, last_c = 0, combin;
+    struct sel *sel = 0; // the selector being built
+    struct sel *sel2 = 0;
+    struct asel *asel, *asel2;
+    int n;
 
-	if (!s[0]) {
-		d->error = CSS_ERROR_NOSEL;
-		return;
-	}
+    if (!s[0]) {
+        d->error = CSS_ERROR_NOSEL;
+        return;
+    }
 
-	while ((c = *s)) {
-		if (c == '"' || c == '\'' || c == '[') {
-			n = closeString(s + 1, c);
-			if (n < 0)	// should never happen
-				break;
-			s += n + 1;
-			last_c = 0;
-			continue;
-		}
-// Ambiguous, ~ is combinator or part of [foo~=bar].
-// Simplistic check here for ~=
-// I don't really need it any more, now that I treat [ stuf ] as a string.
-// But I still need the next one.
-// Ambiguous, + is combinator or part of "nth_child(n+3)
-// Simplistic check here, next selector should not begin with a digit
-		if ((c == '~' && s[1] == '=') || (c == '+' && isdigitByte(s[1]))) {
-			last_c = c;
-			++s;
-			continue;
-		}
+    while ((c = *s)) {
+        if (c == '"' || c == '\'' || c == '[') {
+            n = closeString(s + 1, c);
+            if (n < 0) break; // should never happen
+            s += n + 1;
+            last_c = 0;
+            continue;
+        }
 
-		if (last_c == '\\') {
-			last_c = 0;
-			++s;
-			continue;
-		}
+/* Ambiguous, ~ is combinator or part of [foo~=bar].
+Simplistic check here for ~=
+Perhaps I don't need this any more, now that I treat [ stuf ] as a string.
+But I for sure need the next one.
+Ambiguous, + is combinator or part of "nth_child(n+3)
+Simplistic check here, next selector should not begin with a digit. */
+
+        if ((c == '~' && s[1] == '=') || (c == '+' && isdigitByte(s[1]))) {
+            last_c = c;
+            ++s;
+            continue;
+        }
+
+        if (last_c == '\\') {
+            last_c = 0;
+            ++s;
+            continue;
+        }
 // :not( code, rather like closing a string.
-		if (!strncmp(s, ":not(", 5) ||
-		!strncmp(s, ":is(", 4) ||
-		!strncmp(s, ":where(", 7)) {
-			const int l = s[1] == 'n' ? 5 : s[1] == 'i' ? 4 : 7;
-			n = closeString(s + l, '(');
-			if (n < 0) break;	// should never happen
-			s += n + l;
-			last_c = 0;
-			continue;
-		}
+        if (!strncmp(s, ":not(", 5) ||
+        !strncmp(s, ":is(", 4) ||
+        !strncmp(s, ":where(", 7)) {
+            const int l = s[1] == 'n' ? 5 : s[1] == 'i' ? 4 : 7;
+            n = closeString(s + l, '(');
+            if (n < 0) break; // should never happen
+            s += n + l;
+            last_c = 0;
+            continue;
+        }
 
-		combin = 0;	// look for combinator
-		a2 = s;
-		while (strchr(", \t\n\r>~+", c)) {
-			if (isspaceByte(c)) {
-				if (!combin)
-					combin = ' ';
-			} else {
-				if (combin && combin != ' ')
-					break;
-				combin = c;
-				last_c = c;
-			}
-			c = *++s;
-		}
-		if (!combin) {
-			last_c = c;
-			++s;
-			continue;
-		}
+        combin = 0; // look for combinator
+        a2 = s;
+        while (strchr(", \t\n\r>~+", c)) {
+            if (isspaceByte(c)) {
+                if (!combin)
+                    combin = ' ';
+            } else {
+                if (combin && combin != ' ')
+                    break;
+                combin = c;
+                last_c = c;
+            }
+            c = *++s;
+        }
+        if (!combin) {
+            last_c = c;
+            ++s;
+            continue;
+        }
 // it's a combinator or separator
-		last_c = c;
-		if (a2 == a1) {	// empty piece
+        last_c = c;
+        if (a2 == a1) { // empty piece
 // I'll allow it if it's just an extra comma
-			if (combin == ',' && !sel) {
-				a1 = s;
-				continue;
-			}
+            if (combin == ',' && !sel) {
+                a1 = s;
+                continue;
+            }
 // empty piece could be first in the selector, as in querySelector(">p")
-			if (!sel) {
-				sel = allocZeroMem(sizeof(struct sel));
-				if (!d->selectors)
-					d->selectors = sel2 = sel;
-				else
-					sel2->next = sel, sel2 = sel;
-			}
-			sel->error = CSS_ERROR_SEL0;
-			break;
-		}
+            if (!sel) {
+                sel = allocZeroMem(sizeof(struct sel));
+                if (!d->selectors)
+                    d->selectors = sel2 = sel;
+                else
+                    sel2->next = sel, sel2 = sel;
+            }
+            sel->error = CSS_ERROR_SEL0;
+            break;
+        }
 
-		t = allocMem(a2 - a1 + 1);
-		memcpy(t, a1, a2 - a1);
-		t[a2 - a1] = 0;
-		asel = allocZeroMem(sizeof(struct asel));
-		asel->part = t;
-		asel->combin = combin;
-		if (!sel) {
-			sel = allocZeroMem(sizeof(struct sel));
-			if (!d->selectors)
-				d->selectors = sel2 = sel;
-			else
-				sel2->next = sel, sel2 = sel;
-		}
+        t = allocMem(a2 - a1 + 1);
+        memcpy(t, a1, a2 - a1);
+        t[a2 - a1] = 0;
+        asel = allocZeroMem(sizeof(struct asel));
+        asel->part = t;
+        asel->combin = combin;
+        if (!sel) {
+            sel = allocZeroMem(sizeof(struct sel));
+            if (!d->selectors)
+                d->selectors = sel2 = sel;
+            else
+                sel2->next = sel, sel2 = sel;
+        }
 // I'm reversing the order of the atomic selectors here
-		asel2 = sel->chain;
-		sel->chain = asel;
-		asel->next = asel2;
+        asel2 = sel->chain;
+        sel->chain = asel;
+        asel->next = asel2;
 
-		cssAtomic(asel);
+        cssAtomic(asel);
 // pass characteristics of the atomic selector back up to the selector
-		if (asel->error && !sel->error)
-			sel->error = asel->error;
-		if (combin == ',')
-			sel = 0;
-		a1 = s;
-	}
+        if (asel->error && !sel->error)
+            sel->error = asel->error;
+        if (combin == ',')
+            sel = 0;
+        a1 = s;
+    }
 
 // This is the last piece, pretend like combin is a comma
-	combin = ',';
-	a2 = s;
-	if (a2 == a1) {		// empty piece
-		if (!sel) {
-			if (!d->selectors)
-				d->error = CSS_ERROR_NOSEL;
-			return;
-		}
-		sel->error = CSS_ERROR_SEL0;
-		return;
-	}
-	t = allocMem(a2 - a1 + 1);
-	memcpy(t, a1, a2 - a1);
-	t[a2 - a1] = 0;
-	asel = allocZeroMem(sizeof(struct asel));
-	asel->part = t;
-	asel->combin = combin;
-	if (!sel) {
-		sel = allocZeroMem(sizeof(struct sel));
-		if (!d->selectors)
-			d->selectors = sel;
-		else
-			sel2->next = sel;
-	}
-	asel2 = sel->chain;
-	sel->chain = asel;
-	asel->next = asel2;
-	cssAtomic(asel);
-	if (asel->error && !sel->error)
-		sel->error = asel->error;
+    combin = ',';
+    a2 = s;
+    if (a2 == a1) { // empty piece
+        if (!sel) {
+            if (!d->selectors)
+                d->error = CSS_ERROR_NOSEL;
+            return;
+        }
+        sel->error = CSS_ERROR_SEL0;
+        return;
+    }
+    t = allocMem(a2 - a1 + 1);
+    memcpy(t, a1, a2 - a1);
+    t[a2 - a1] = 0;
+    asel = allocZeroMem(sizeof(struct asel));
+    asel->part = t;
+    asel->combin = combin;
+    if (!sel) {
+        sel = allocZeroMem(sizeof(struct sel));
+        if (!d->selectors) d->selectors = sel;
+        else sel2->next = sel;
+    }
+    asel2 = sel->chain;
+    sel->chain = asel;
+    asel->next = asel2;
+    cssAtomic(asel);
+    if (asel->error && !sel->error)
+        sel->error = asel->error;
 }
 
 // determine the tag and build the chain of modifiers
 static void cssAtomic(struct asel *a)
 {
-	char c, last_c;
-	char *m1;		// demarkate the modifier
-	int n;
-	char *s = a->part;
-	char *tag = cloneString(s);
-	char *t = strpbrk(tag, ".[#:");
-	if (t)
-		*t = 0, s += (t - tag);
-	else
-		s = emptyString;
-	if (!*tag || stringEqual(tag, "*"))
-		nzFree0(tag);
-	if (tag) {
-		for (t = tag; *t; ++t) {
-			if (islowerByte(*t)) *t = toupper(*t);
-			if ((isdigitByte(*t) && t > tag) ||
-			    isalphaByte(*t) || *t == '-')
-				continue;
-			a->error = CSS_ERROR_TAG;
-			nzFree(tag);
-			return;
-		}
-		a->tag = tag;
-	}
+    char c, last_c;
+    char *m1; // demarkate the modifier
+    int n;
+    char *s = a->part;
+    char *tag = cloneString(s);
+    char *t = strpbrk(tag, ".[#:");
+    if (t)
+        *t = 0, s += (t - tag);
+    else
+        s = emptyString;
+    if (!*tag || stringEqual(tag, "*"))
+        nzFree0(tag);
+    if (tag) {
+        for (t = tag; *t; ++t) {
+            if (islowerByte(*t)) *t = toupper(*t);
+            if ((isdigitByte(*t) && t > tag) ||
+                isalphaByte(*t) || *t == '-')
+                continue;
+            a->error = CSS_ERROR_TAG;
+            nzFree(tag);
+            return;
+        }
+        a->tag = tag;
+    }
 // tag set, time for modifiers
-	if (!*s)
-		return;
-	m1 = s;
-	++s;
-	last_c = 0;
+    if (!*s)
+        return;
+    m1 = s;
+    ++s;
+    last_c = 0;
 
-	while ((c = *s)) {
-		if (c == '"' || c == '\'') {
-			last_c = 0;
-			n = closeString(s + 1, c);
-			if (n < 0)	// should never happen
-				break;
-			s += n + 1;
-			continue;
-		}
+    while ((c = *s)) {
+        if (c == '"' || c == '\'') {
+            last_c = 0;
+            n = closeString(s + 1, c);
+            if (n < 0) break;// should never happen
+            s += n + 1;
+            continue;
+        }
 
-		if (s == m1 + 1 && !strncmp(m1, ":not(", 5)) {
-			last_c = 0;
-			n = closeString(s + 4, '(');
-			if (n < 0) break;
-			s += n + 4;
-			continue;
-		}
+        if (s == m1 + 1 && !strncmp(m1, ":not(", 5)) {
+            last_c = 0;
+            n = closeString(s + 4, '(');
+            if (n < 0) break;
+            s += n + 4;
+            continue;
+        }
 
-		if (s == m1 + 1 && !strncmp(m1, ":is(", 4)) {
-			last_c = 0;
-			n = closeString(s + 3, '(');
-			if (n < 0) break;
-			s += n + 3;
-			continue;
-		}
+        if (s == m1 + 1 && !strncmp(m1, ":is(", 4)) {
+            last_c = 0;
+            n = closeString(s + 3, '(');
+            if (n < 0) break;
+            s += n + 3;
+            continue;
+        }
 
-		if (s == m1 + 1 && !strncmp(m1, ":where(", 7)) {
-			last_c = 0;
-			n = closeString(s + 6, '(');
-			if (n < 0) break;
-			s += n + 6;
-			continue;
-		}
+        if (s == m1 + 1 && !strncmp(m1, ":where(", 7)) {
+            last_c = 0;
+            n = closeString(s + 6, '(');
+            if (n < 0) break;
+            s += n + 6;
+            continue;
+        }
 
 // I assume \ is an escape, though this could fail  foo\\:
-		if (!strchr(".[#:", c) || last_c == '\\') {
-			++s;
-			last_c = c;
-			continue;
-		}
+        if (!strchr(".[#:", c) || last_c == '\\') {
+            ++s;
+            last_c = c;
+            continue;
+        }
 
-		cssModify(a, m1, s);
-		m1 = s;
-		++s;
-	}
+        cssModify(a, m1, s);
+        m1 = s;
+        ++s;
+    }
 
 // last modifier
-	cssModify(a, m1, s);
+    cssModify(a, m1, s);
 }
 
 static void cssModify(struct asel *a, const char *m1, const char *m2)
