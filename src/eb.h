@@ -759,6 +759,7 @@ enum {
 };
 extern const char *const inp_others[];
 extern const char *last_inv_selector;
+extern int last_inv_count;
 
 // type completed below but this allows us to define the callback type correctly
 typedef struct parseContext parseContext;

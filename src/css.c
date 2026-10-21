@@ -3312,38 +3312,40 @@ onetime:
 	return false;
 }
 
-// Only called from cssApply, as part of getComputedStyle.
+// Called from cssApply, as part of getComputedStyle,
+// and from cssInvisible and cssBeforeAfter.
+const     char *last_inv_selector = 0;
+int last_inv_count;
+static int save_match_count;
 static bool qsaMatchGroup(Tag *t, struct desc *d)
 {
-	struct sel *sel;
-	FILE *f = 0;
-	if (d->error)
-		return false;
-	d->highspec = 0;
-	if (debugCSS)
-		f = fopen(cssDebugFile, "ae");
-	for (sel = d->selectors; sel; sel = sel->next) {
-		if (sel->error)
-			continue;
-// has to match the pseudoelement
-		if (sel->hover)
-			continue;
-		if (sel->after | sel->before && matchtype == 0) continue;
-		if((matchtype == 1 && sel->after) || (matchtype == 2 && sel->before))
-			continue;
-		if (qsaMatchChain(t, sel->chain)) {
+    struct sel *sel;
+    FILE *f = 0;
+    if (d->error) return false;
+    d->highspec = 0;
+    if (debugCSS) f = fopen(cssDebugFile, "ae");
+    int cnt = 1;
+    save_match_count = 0;
+    for (sel = d->selectors; sel; sel = sel->next, ++cnt) {
+        if (sel->error) continue;
+        // has to match the pseudoelement
+        if (sel->hover) continue;
+        if (sel->after | sel->before && matchtype == 0) continue;
+        if((matchtype == 1 && sel->after) || (matchtype == 2 && sel->before))
+            continue;
+        if (qsaMatchChain(t, sel->chain)) {
 // debug getComputedStyle, which can also be a directed debug
 // of the whole css system, focusing on a particular node.
-			if (f)
-				fprintf(f, "gcs|%s|%s|%d\n", d->lhs, d->rhs,
-					sel->spec);
-			if (sel->spec > d->highspec)
-				d->highspec = sel->spec;
-		}
-	}
-	if (f)
-		fclose(f);
-	return (d->highspec > 0);
+            if (f)
+                fprintf(f, "gcs|%s|%s|%d\n", d->lhs, d->rhs,
+                    sel->spec);
+            if (sel->spec > d->highspec)
+                d->highspec = sel->spec;
+            if(!save_match_count) save_match_count = cnt;
+        }
+    }
+    if (f) fclose(f);
+    return (d->highspec > 0);
 }
 
 /*********************************************************************
@@ -3847,7 +3849,6 @@ char *cssBeforeAfter(Tag *t, int p)
     return match_ba_string;
 }
 
-const     char *last_inv_selector = 0;
 int cssInvisible(Tag *t)
 {
     if(get_property_bool_t(t, "hidden")) return 3;
@@ -3879,8 +3880,8 @@ int cssInvisible(Tag *t)
         if(match_disp_inv == last_disp_inv &&
         match_vis_inv == last_vis_inv) continue;
         // visibility status changed
-        if(match_disp_inv | match_vis_inv) last_inv_selector = d->lhs;
-        else last_inv_selector = 0;
+        if(match_disp_inv | match_vis_inv)
+            last_inv_selector = d->lhs, last_inv_count = save_match_count;
         last_disp_inv = match_disp_inv;
         last_vis_inv = match_vis_inv;
     }

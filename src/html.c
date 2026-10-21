@@ -5207,9 +5207,11 @@ nocolorend:
         if(inv_now) {
             static const char *const inv_reason[] = {
             "", "hidden", "display", "css "};
-            debugPrint(4, "tag %s.%d invisible by %s%s",
+            if(j != 3) debugPrint(4, "tag %s.%d invisible by %s",
+            t->info->name, t->seqno, inv_reason[j]);
+            else debugPrint(4, "tag %s.%d invisible by %s[%d] %s",
             t->info->name, t->seqno, inv_reason[j],
-            (j == 3 ? last_inv_selector : ""));
+            last_inv_count, last_inv_selector);
         }
 // gather some stats
         if (inv_now) ++invcount;
