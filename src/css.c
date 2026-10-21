@@ -1580,454 +1580,436 @@ nokey:
 
 static struct desc *cssPieces(char *s)
 {
-	int bc = 0;		// brace count
-	struct desc *d1 = 0, *d2, *d = 0;
-	struct sel *sel;
-	struct asel *asel;
-	int n;
-	char c;
-	char *lhs;
-	char *a, *t, *at_end_marker = 0;
-	char *iu1, *iu2, *iu3;	// for import url
+    int bc = 0; // brace count
+    struct desc *d1 = 0, *d2, *d = 0;
+    struct sel *sel;
+    struct asel *asel;
+    int n;
+    char c;
+    char *lhs;
+    char *a, *t, *at_end_marker = 0;
+    char *iu1, *iu2, *iu3; // for import url
 
-	loadcount = 0;
-	memset(errorBuckets, 0, sizeof(errorBuckets));
+    loadcount = 0;
+    memset(errorBuckets, 0, sizeof(errorBuckets));
 
 top:
-	uncomment(s);
+    uncomment(s);
 
 // look for import url
-	iu1 = strstr(s, "@import");
-	if (iu1 && isspaceByte(iu1[7])) {
-		iu2 = iu1 + 8;
-		while (isspaceByte(*iu2))
-			++iu2;
-		if (!strncmp(iu2, "url(", 4)) {
-			iu2 += 4;
-			t = iu2;
-			while ((c = *t)) {
-				struct i_get g;
-				char *lasturl, *newurl;
-				if (c == '"' || c == '\'') {
-					n = closeString(t + 1, c);
-					if (n < 0)	// should never happen
-						break;
-					t += n + 1;
-					continue;
-				}
-				if (c == '\n')	// should never happen
-					break;
-				if (c != ')') {
-					++t;
-					continue;
-				}
+    iu1 = strstr(s, "@import");
+    if (iu1 && isspaceByte(iu1[7])) {
+        iu2 = iu1 + 8;
+        while (isspaceByte(*iu2)) ++iu2;
+        if (!strncmp(iu2, "url(", 4)) {
+            iu2 += 4;
+            t = iu2;
+            while ((c = *t)) {
+                struct i_get g;
+                char *lasturl, *newurl;
+                if (c == '"' || c == '\'') {
+                    n = closeString(t + 1, c);
+                    if (n < 0) break; // should never happen
+                    t += n + 1;
+                    continue;
+                }
+                if (c == '\n') break; // should never happen
+                if (c != ')') {
+                    ++t;
+                    continue;
+                }
 // end of url(blah)
-				*t++ = 0;
-				while (*t && *t != ';' && *t != '\n')
-					++t;
-				if (*t)
-					++t;
-				iu3 = t;
-				lasturl = cssBase(s, iu2);
-				unstring(iu2);
-				newurl = resolveURL(lasturl, iu2);
-				nzFree(lasturl);
-				*iu1 = 0;
-				if ((a = fromShortCache(newurl)))
-					goto imported_data;
-				debugPrint(3, "css source %s", newurl);
-				memset(&g, 0, sizeof(g));
-				g.thisfile = cf->fileName;
-				g.uriEncoded = true;
-				g.url = newurl;
-				if (!intFlag && httpConnect(&g)) {
-					nzFree(g.cfn);
-					nzFree(g.referrer);
-					if (g.code == 200) {
-						a = force_utf8(g.buffer,
-							       g.length);
-						if (!a)
-							a = g.buffer;
-						else
-							nzFree(g.buffer);
-						if (!cssCompatibleContent(g.content))
-							cnzFree0(a);
-					} else {
-						nzFree(g.buffer);
-						if (debugLevel >= 3)
-							i_printf(MSG_GetCSS,
-								 g.url, g.code);
-					}
-				} else {
-					if (debugLevel >= 3)
-						i_printf(MSG_GetCSS2);
-				}
-				if (!a)
-					a = emptyString;
-				intoShortCache(newurl, a);
+                *t++ = 0;
+                while (*t && *t != ';' && *t != '\n') ++t;
+                if (*t) ++t;
+                iu3 = t;
+                lasturl = cssBase(s, iu2);
+                unstring(iu2);
+                newurl = resolveURL(lasturl, iu2);
+                nzFree(lasturl);
+                *iu1 = 0;
+                if ((a = fromShortCache(newurl)))
+                    goto imported_data;
+                debugPrint(3, "css source %s", newurl);
+                memset(&g, 0, sizeof(g));
+                g.thisfile = cf->fileName;
+                g.uriEncoded = true;
+                g.url = newurl;
+                if (!intFlag && httpConnect(&g)) {
+                    nzFree(g.cfn);
+                    nzFree(g.referrer);
+                    if (g.code == 200) {
+                        a = force_utf8(g.buffer,
+                                   g.length);
+                        if (!a)
+                            a = g.buffer;
+                        else
+                            nzFree(g.buffer);
+                        if (!cssCompatibleContent(g.content))
+                            cnzFree0(a);
+                    } else {
+                        nzFree(g.buffer);
+                        if (debugLevel >= 3)
+                            i_printf(MSG_GetCSS,
+                                 g.url, g.code);
+                    }
+                } else {
+                    if (debugLevel >= 3)
+                        i_printf(MSG_GetCSS2);
+                }
+                if (!a)
+                    a = emptyString;
+                intoShortCache(newurl, a);
 imported_data:
-				createFormattedString(&t,
-					"%s\n@ebdelim1%s-{}\n%s\n@ebdelim2-{}\n%s",
-					s, newurl, a, iu3);
-				nzFree(newurl);
-				nzFree(s), s = t;
-				goto top;
-			}
-		}
-	}
+                createFormattedString(&t,
+                    "%s\n@ebdelim1%s-{}\n%s\n@ebdelim2-{}\n%s",
+                    s, newurl, a, iu3);
+                nzFree(newurl);
+                nzFree(s), s = t;
+                goto top;
+            }
+        }
+    }
 // remove @charset directives.
 top2:
-	iu1 = strstr(s, "@charset");
-	if (iu1 && isspaceByte(iu1[8])) {
-		t = iu1 + 9;
-		while ((c = *t)) {
-			if (c == '"' || c == '\'') {
-				n = closeString(t + 1, c);
-				if (n < 0)
-					break;
-				t += n + 1;
-				continue;
-			}
-			if (c != ';' && c != '\n') {
-				++t;
-				continue;
-			}
-			*t++ = 0;
-			iu3 = t;
-			strmove(iu1, iu3);
-			goto top2;
-		}
-	}
+    iu1 = strstr(s, "@charset");
+    if (iu1 && isspaceByte(iu1[8])) {
+        t = iu1 + 9;
+        while ((c = *t)) {
+            if (c == '"' || c == '\'') {
+                n = closeString(t + 1, c);
+                if (n < 0)
+                    break;
+                t += n + 1;
+                continue;
+            }
+            if (c != ';' && c != '\n') {
+                ++t;
+                continue;
+            }
+            *t++ = 0;
+            iu3 = t;
+            strmove(iu1, iu3);
+            goto top2;
+        }
+    }
 
-	lhs = s;
+    lhs = s;
 
-	while ((c = *s)) {
-		if (at_end_marker && s >= at_end_marker)
-			at_end_marker = 0;
-		if (c == '"' || c == '\'') {
-			n = closeString(s + 1, c);
-			if (n < 0) {
-				debugPrint(3, "unterminated string %s",
-					   cut20(s));
-				break;
-			}
-			s += n + 1;
-			continue;
-		}
-		if (c == '}') {
-			if (--bc < 0) {
-				debugPrint(3, "unexpected %s", cut20(s));
-				break;
-			}
-			if (bc)
-				goto copy;
+    while ((c = *s)) {
+        if (at_end_marker && s >= at_end_marker)
+            at_end_marker = 0;
+        if (c == '"' || c == '\'') {
+            n = closeString(s + 1, c);
+            if (n < 0) {
+                debugPrint(3, "unterminated string %s",
+                       cut20(s));
+                break;
+            }
+            s += n + 1;
+            continue;
+        }
+        if (c == '}') {
+            if (--bc < 0) {
+                debugPrint(3, "unexpected %s", cut20(s));
+                break;
+            }
+            if (bc)
+                goto copy;
 // bc is 0, end of the descriptor
-			*s++ = 0;
-			lhs = s;	// next descriptor
-			trim(d->lhs);
-			trim(d->rhs);
-			loadPack(d->lhs, d->rhs);
+            *s++ = 0;
+            lhs = s; // next descriptor
+            trim(d->lhs);
+            trim(d->rhs);
+            loadPack(d->lhs, d->rhs);
 
 // some special @ code here
-			t = d->lhs;
-			if (*t != '@')
-				goto past_at;
+            t = d->lhs;
+            if (*t != '@')
+                goto past_at;
 // our special code to insert a delimiter into debugging output
-			if (!strncmp(t, "@ebdelim", 8)) {
-			    d->error = CSS_ERROR_DELIM;
-			d->which = t[8];
-			    trimWhite(t); // probably not necessary
-			    int b = strlen(t) - 1;
-			    if(b >= 0 && t[b] == '+') d->fromstyle = true;
-			    goto past_at;
-			}
-			if (d->bc > 2) {
-				d->error = CSS_ERROR_BRACES;
-				goto past_at;
-			}
-			if (d->bc == 1) {
-				d->error = CSS_ERROR_ATEMPTY;
-				goto past_at;
-			}
-			d->bc = 1;
-			++t;
-			skipWhite2(&t);
-			if (strncmp(t, "media", 5) || isalnumByte(t[5])) {
-				d->error = CSS_ERROR_NOTMEDIA;
-				goto past_at;
-			}
-			t += 5;
-			skipWhite2(&t);
-			if (!media(d, t))
-				goto past_at;
-			d->error = CSS_ERROR_ATPROC;
+            if (!strncmp(t, "@ebdelim", 8)) {
+                d->error = CSS_ERROR_DELIM;
+            d->which = t[8];
+                trimWhite(t); // probably not necessary
+                int b = strlen(t) - 1;
+                if(b >= 0 && t[b] == '+') d->fromstyle = true;
+                goto past_at;
+            }
+            if (d->bc > 2) {
+                d->error = CSS_ERROR_BRACES;
+                goto past_at;
+            }
+            if (d->bc == 1) {
+                d->error = CSS_ERROR_ATEMPTY;
+                goto past_at;
+            }
+            d->bc = 1;
+            ++t;
+            skipWhite2(&t);
+            if (strncmp(t, "media", 5) || isalnumByte(t[5])) {
+                d->error = CSS_ERROR_NOTMEDIA;
+                goto past_at;
+            }
+            t += 5;
+            skipWhite2(&t);
+            if (!media(d, t))
+                goto past_at;
+            d->error = CSS_ERROR_ATPROC;
 
 // Here comes some funky string manipulation.
 // The descriptors are in rhs.
 // I nulled out the trailing }, make it a space.
-			while (s[-1] == 0)
-				*--s = ' ';
-			at_end_marker = s;
-			lhs = s = d->rhs;
-			d->rhs = "follow";
+            while (s[-1] == 0)
+                *--s = ' ';
+            at_end_marker = s;
+            lhs = s = d->rhs;
+            d->rhs = "follow";
 
 past_at:
-			if (d->bc > 1)
-				d->error = CSS_ERROR_BRACES;
+            if (d->bc > 1)
+                d->error = CSS_ERROR_BRACES;
 
-			if (!d1)
-				d1 = d2 = d;
-			else
-				d2->next = d, d2 = d;
-			d = 0;
-			continue;
-		}
-		if (c == '{') {
-			if (bc) {
-				++bc;
+            if (!d1)
+                d1 = d2 = d;
+            else
+                d2->next = d, d2 = d;
+            d = 0;
+            continue;
+        }
+        if (c == '{') {
+            if (bc) {
+                ++bc;
 // remember the highest brace nesting.
-				if (bc > d->bc)
-					d->bc = bc;
-				goto copy;
-			}
+                if (bc > d->bc)
+                    d->bc = bc;
+                goto copy;
+            }
 // A new descripter is born
-			d = allocZeroMem(sizeof(struct desc));
-			d->lhs = lhs;
-			*s++ = 0;
-			d->rhs = s;
-			d->bc = bc = 1;
-			if (at_end_marker)
-				d->underat = true;
-			continue;
-		}
-copy:		++s;
-	}
+            d = allocZeroMem(sizeof(struct desc));
+            d->lhs = lhs;
+            *s++ = 0;
+            d->rhs = s;
+            d->bc = bc = 1;
+            if (at_end_marker)
+                d->underat = true;
+            continue;
+        }
+copy: ++s;
+    }
 
-	nzFree(d);
+    nzFree(d);
 
-	if (!d1) {
+    if (!d1) {
 // no descriptors, nothing to do,
 // except free the incoming string.
-		nzFree(lhs);
-		cssPiecesPrint(0);
-		return NULL;
-	}
+        nzFree(lhs);
+        cssPiecesPrint(0);
+        return NULL;
+    }
 // now the base string is at d1->lhs;
 
 // Now let's try to understand the selectors.
-	for (d = d1; d; d = d->next) {
-		if (d->error)
-			continue;
-		cssParseLeft(d);
-	}
+    for (d = d1; d; d = d->next) {
+        if (d->error)
+            continue;
+        cssParseLeft(d);
+    }
 
 // pull before and after up from atomic selector to selector
-	for (d = d1; d; d = d->next) {
-		if (d->error)
-			continue;
-		for (sel = d->selectors; sel; sel = sel->next) {
-			if (sel->error)
-				continue;
-			for (asel = sel->chain; asel; asel = asel->next) {
-				if (asel->hover)
-					sel->hover = true;
-				if (asel->before) {
+    for (d = d1; d; d = d->next) {
+        if (d->error)
+            continue;
+        for (sel = d->selectors; sel; sel = sel->next) {
+            if (sel->error)
+                continue;
+            for (asel = sel->chain; asel; asel = asel->next) {
+                if (asel->hover)
+                    sel->hover = true;
+                if (asel->before) {
 // before and after should only be on the base node of the chain
-					if (asel == sel->chain)
-						sel->before = true;
-					else
-						sel->error =
-						    CSS_ERROR_INJECTHIGH;
-				}
-				if (asel->after) {
-					if (asel == sel->chain)
-						sel->after = true;
-					else
-						sel->error =
-						    CSS_ERROR_INJECTHIGH;
-				}
-				if (asel->link) {
-					if (!asel->tag)
-						asel->tag = cloneString("A");
-					else if (!stringEqual(asel->tag, "a")) {
-						sel->error = CSS_ERROR_TAGLINK;
-					}
-				}
-			}
-		}
-	}
+                    if (asel == sel->chain)
+                        sel->before = true;
+                    else
+                        sel->error =
+                            CSS_ERROR_INJECTHIGH;
+                }
+                if (asel->after) {
+                    if (asel == sel->chain)
+                        sel->after = true;
+                    else
+                        sel->error =
+                            CSS_ERROR_INJECTHIGH;
+                }
+                if (asel->link) {
+                    if (!asel->tag)
+                        asel->tag = cloneString("A");
+                    else if (!stringEqual(asel->tag, "a")) {
+                        sel->error = CSS_ERROR_TAGLINK;
+                    }
+                }
+            }
+        }
+    }
 
     int nest = 0;
 
-	for (d = d1; d; d = d->next) {
-		bool across = true;
-		uchar ec = CSS_ERROR_NONE;
-		if(d->error == CSS_ERROR_DELIM) {
-		    if(d->which == '1') ++nest;
-		    if(d->which == '2') --nest;
-		}
-		if (d->error) continue;
-		if (!d->selectors) continue;	// should never happen
-		for (sel = d->selectors; sel; sel = sel->next) {
-		    if (!sel->error) {
-		        // as good a time as any to compute specificity
-		        sel->spec = specificity(sel, d->underat);
-		        across = false;
-		        continue;
-		    }
-			if (!ec) ec = sel->error;
-			else if (ec != sel->error)
-				ec = CSS_ERROR_MULTIPLE;
-		}
-		if (across)
-			d->error = ec;
-	}
+    for (d = d1; d; d = d->next) {
+        bool across = true;
+        uchar ec = CSS_ERROR_NONE;
+        if(d->error == CSS_ERROR_DELIM) {
+            if(d->which == '1') ++nest;
+            if(d->which == '2') --nest;
+        }
+        if (d->error) continue;
+        if (!d->selectors) continue; // should never happen
+        for (sel = d->selectors; sel; sel = sel->next) {
+            if (!sel->error) {
+                // as good a time as any to compute specificity
+                sel->spec = specificity(sel, d->underat);
+                across = false;
+                continue;
+            }
+            if (!ec) ec = sel->error;
+            else if (ec != sel->error)
+                ec = CSS_ERROR_MULTIPLE;
+        }
+        if (across)
+            d->error = ec;
+    }
 
 // now for the rules
-	for (d = d1; d; d = d->next) {
-		char *r1, *r2;	// rule delimiters
-		struct rule *rule, *rule2;
-		if (d->error)
-			continue;
-		++loadcount;
-		s = d->rhs;
-		if (!*s) {
-			d->error = CSS_ERROR_NORULE;
-			continue;
-		}
+    for (d = d1; d; d = d->next) {
+        char *r1, *r2; // rule delimiters
+        struct rule *rule, *rule2;
+        if (d->error)
+            continue;
+        ++loadcount;
+        s = d->rhs;
+        if (!*s) {
+            d->error = CSS_ERROR_NORULE;
+            continue;
+        }
 
-		r1 = s;
-		while ((c = *s)) {
-			if (c == '"' || c == '\'') {
-				n = closeString(s + 1, c);
-				if (n < 0)	// should never happen
-					break;
-				s += n + 1;
-				continue;
-			}
-			if (c != ';') {
-				++s;
-				continue;
-			}
-			r2 = s;
-			for (++s; *s; ++s)
-				if (!isspaceByte(*s) && *s != ';')
-					break;
-			while (r2 > r1 && isspaceByte(r2[-1]))
-				--r2;
+        r1 = s;
+        while ((c = *s)) {
+            if (c == '"' || c == '\'') {
+                n = closeString(s + 1, c);
+                if (n < 0) break; // should never happen
+                s += n + 1;
+                continue;
+            }
+            if (c != ';') {
+                ++s;
+                continue;
+            }
+            r2 = s;
+            for (++s; *s; ++s)
+                if (!isspaceByte(*s) && *s != ';')
+                    break;
+            while (r2 > r1 && isspaceByte(r2[-1])) --r2;
 // has to start with an identifyer, letters and hyphens, but look out,
 // I have to allow for a leading * or _
 // https://stackoverflow.com/questions/4563651/what-does-an-asterisk-do-in-a-css-property-name
-			if (r1 < r2 && (*r1 == '*' || *r1 == '_')) {
-				r1 = s;
-				continue;
-			}
-			if (r1 == r2) {
+            if (r1 < r2 && (*r1 == '*' || *r1 == '_')) {
+                r1 = s;
+                continue;
+            }
+            if (r1 == r2) {
 // perhaps an extra ;
-				r1 = s;
-				continue;
-			}
+                r1 = s;
+                continue;
+            }
 lastrule:
-			for (t = r1; t < r2; ++t) {
-				if (*t == ':')
-					break;
-				if ((isdigitByte(*t) && t > r1) ||
-				    isalphaByte(*t) || *t == '-')
-					continue;
-				d->error = CSS_ERROR_RATTR;
-				break;
-			}
-			if (d->error)
-				break;
-			if (!*t) {
-				d->error = CSS_ERROR_COLON;
-				break;
-			}
-			if (t == r1) {
-				d->error = CSS_ERROR_RATTR;
-				break;
-			}
-			rule = allocZeroMem(sizeof(struct rule));
-			if (d->rules) {
-				rule2 = d->rules;
-				while (rule2->next)
-					rule2 = rule2->next;
-				rule2->next = rule;
-			} else
-				d->rules = rule;
-			a = allocMem(t - r1 + 1);
-			memcpy(a, r1, t - r1);
-			a[t - r1] = 0;
-			camelCase(a);
-			rule->atname = a;
-			rule->prop_ok = validStyleElement(a);
-			if(!rule->prop_ok)
-				debugPrint(4, "invalid css property %s", a);
-			d->prop_ok |= rule->prop_ok;
-			rule->visrel =
-			(stringInList(displayableStyleElements, a) >= 0);
-			d->visrel |= rule->visrel;
-			++t;
-			while (isspaceByte(*t))
-				++t;
-			if (r2 > t) {
-				a = allocMem(r2 - t + 1);
-				memcpy(a, t, r2 - t);
-				a[r2 - t] = 0;
-				rule->atval = a;
-				unstring(a);
-			} else
-				rule->atval = emptyString;
-			r1 = s;
-		}
+            for (t = r1; t < r2; ++t) {
+                if (*t == ':') break;
+                if ((isdigitByte(*t) && t > r1) ||
+                    isalphaByte(*t) || *t == '-')
+                    continue;
+                d->error = CSS_ERROR_RATTR;
+                break;
+            }
+            if (d->error) break;
+            if (!*t) {
+                d->error = CSS_ERROR_COLON;
+                break;
+            }
+            if (t == r1) {
+                d->error = CSS_ERROR_RATTR;
+                break;
+            }
+            rule = allocZeroMem(sizeof(struct rule));
+            if (d->rules) {
+                rule2 = d->rules;
+                while (rule2->next) rule2 = rule2->next;
+                rule2->next = rule;
+            } else d->rules = rule;
+            a = allocMem(t - r1 + 1);
+            memcpy(a, r1, t - r1);
+            a[t - r1] = 0;
+            camelCase(a);
+            rule->atname = a;
+            rule->prop_ok = validStyleElement(a);
+            if(!rule->prop_ok)
+                debugPrint(4, "invalid css property %s", a);
+            d->prop_ok |= rule->prop_ok;
+            rule->visrel = (stringInList(displayableStyleElements, a) >= 0);
+            d->visrel |= rule->visrel;
+            ++t;
+            while (isspaceByte(*t)) ++t;
+            if (r2 > t) {
+                a = allocMem(r2 - t + 1);
+                memcpy(a, t, r2 - t);
+                a[r2 - t] = 0;
+                rule->atval = a;
+                unstring(a);
+            } else rule->atval = emptyString;
+            r1 = s;
+        }
 
-		if (r1 < s && !d->error && *r1 != '*' && *r1 != '_') {
+        if (r1 < s && !d->error && *r1 != '*' && *r1 != '_') {
 // There should have been a final ; but oops.
 // process the last rule as above.
-			r2 = s;
-			goto lastrule;
-		}
+            r2 = s;
+            goto lastrule;
+        }
 
-		if (!d->rules) {
-			d->error = CSS_ERROR_NORULE;
-			continue;
-		}
-	}
+        if (!d->rules) {
+            d->error = CSS_ERROR_NORULE;
+            continue;
+        }
+    }
 
 // gather error statistics
-	for (d = d1; d; d = d->next) {
-		bool across = true;
-		uchar ec = CSS_ERROR_NONE;
-		if (d->error) {
-			if (d->error < CSS_ERROR_DELIM) {
-				++loadcount;
-				++errorBuckets[d->error];
-			}
-			continue;
-		}
-		if (!d->selectors)	// should never happen
-			continue;
-		for (sel = d->selectors; sel; sel = sel->next) {
-			++loadcount;
-			if (!sel->error) {
-				across = false;
-				continue;
-			}
-			if (!ec)
-				ec = sel->error;
-			else if (ec != sel->error)
-				ec = CSS_ERROR_MULTIPLE;
-			++errorBuckets[sel->error];
-		}
-		if (across)
-			d->error = ec;
-	}
+    for (d = d1; d; d = d->next) {
+        bool across = true;
+        uchar ec = CSS_ERROR_NONE;
+        if (d->error) {
+            if (d->error < CSS_ERROR_DELIM) {
+                ++loadcount;
+                ++errorBuckets[d->error];
+            }
+            continue;
+        }
+        if (!d->selectors) continue; // should never happen
+        for (sel = d->selectors; sel; sel = sel->next) {
+            ++loadcount;
+            if (!sel->error) {
+                across = false;
+                continue;
+            }
+            if (!ec) ec = sel->error;
+            else if (ec != sel->error) ec = CSS_ERROR_MULTIPLE;
+            ++errorBuckets[sel->error];
+        }
+        if (across) d->error = ec;
+    }
 
-	cssSetKeys(d1);
+    cssSetKeys(d1);
 
-	cssPiecesPrint(d1);
+    cssPiecesPrint(d1);
 
-	return d1;
+    return d1;
 }
 
 static void cssParseLeft(struct desc *d)
@@ -2950,8 +2932,7 @@ so I'm not gonna worry about that right now. */
             if (cut) {
                 value = cut + 1;
                 l = strlen(value);
-                if (strchr("|~^$*", cut[-1]))
-                    --cut;
+                if (strchr("|~^$*", cut[-1])) --cut;
                 cutc = *cut;
                 *cut = 0; // I'll put it back
             }
