@@ -6,43 +6,43 @@
 
 #include "eb.h"
 
-#define MHLINE 512		// length of a mail header line
+#define MHLINE 512 // length of a mail header line
 // headers and other information about an email
 struct MHINFO {
-	struct MHINFO *next, *prev;
-	struct listHead components;
-	char *start, *end;
-	char subject[MHLINE + 4];
-	char to[MHLINE];
-	char from[MHLINE];
-	char reply[MHLINE];
-	char date[MHLINE];
-	char boundary[MHLINE];
-	char *pretext;
-	int boundlen;
+    struct MHINFO *next, *prev;
+    struct listHead components;
+    char *start, *end;
+    char subject[MHLINE + 4];
+    char to[MHLINE];
+    char from[MHLINE];
+    char reply[MHLINE];
+    char date[MHLINE];
+    char boundary[MHLINE];
+    char *pretext;
+    int boundlen;
 // recipients and cc recipients
-	char *tolist, *cclist;
-	int tolen, cclen;
-	char mid[MHLINE];	// message id
-	char ref[MHLINE];	// references
-	char cfn[MHLINE];	// content file name
-	uchar ct, ce;		// content type, content encoding
-	bool andOthers;
-	bool doAttach;
-	bool atimage;
-	bool pgp;
-	bool dispat;
-	uchar error64;
-	bool startAllocated;
+    char *tolist, *cclist;
+    int tolen, cclen;
+    char mid[MHLINE]; // message id
+    char ref[MHLINE]; // references
+    char cfn[MHLINE]; // content file name
+    uchar ct, ce; // content type, content encoding
+    bool andOthers;
+    bool doAttach;
+    bool atimage;
+    bool pgp;
+    bool dispat;
+    uchar error64;
+    bool startAllocated;
 };
 
-static int nattach;		// number of attachments
-static int nimages;		// number of attached images
+static int nattach; // number of attachments
+static int nimages; // number of attached images
 static bool ignoreImages;
-static char *firstAttach;	// name of first file
+static char *firstAttach; // name of first file
 static bool mailIsHtml, mailShowsHtml;
 static bool preferPlain;
-static char *fm;		// formatted mail string
+static char *fm; // formatted mail string
 static int fm_l;
 static struct MHINFO *lastMailInfo;
 static char *lastMailText;
@@ -54,17 +54,17 @@ static int iml_l, imp_l;
 
 static void freeMailInfo(struct MHINFO *w)
 {
-	struct MHINFO *v;
-	while (!listIsEmpty(&w->components)) {
-		v = w->components.next;
-		delFromList(v);
-		freeMailInfo(v);
-	}
-	nzFree(w->pretext);
-	nzFree(w->tolist);
-	nzFree(w->cclist);
-	if(w->startAllocated) nzFree(w->start);
-	nzFree(w);
+    struct MHINFO *v;
+    while (!listIsEmpty(&w->components)) {
+        v = w->components.next;
+        delFromList(v);
+        freeMailInfo(v);
+    }
+    nzFree(w->pretext);
+    nzFree(w->tolist);
+    nzFree(w->cclist);
+    if(w->startAllocated) nzFree(w->start);
+    nzFree(w);
 }
 
 static void writeAttachment(struct MHINFO *w)
@@ -3562,101 +3562,101 @@ static int mailTextType(struct MHINFO *w)
 
 static void formatMail(struct MHINFO *w, bool top)
 {
-	struct MHINFO *v;
-	int ct = w->ct;
-	int j, best, newlen;
-	char *start, *end, *headerline;
-	char endc;
+    struct MHINFO *v;
+    int ct = w->ct;
+    int j, best, newlen;
+    char *start, *end, *headerline;
+    char endc;
 
 // This use to be a test for attachment, but I got text messages
 // from a friend where the text was in an attachment.
 // So now I fold it into the display if it is plain text not encoded.
-	if (w->doAttach) {
-		if(w->ct != CT_TEXT || w->ce > CE_8BIT)
-			return;
-		stringAndString(&fm, &fm_l, mailShowsHtml ? "Attachment:<br>\n" : "Attachment:\n");
-	}
+    if (w->doAttach) {
+        if(w->ct != CT_TEXT || w->ce > CE_8BIT)
+            return;
+        stringAndString(&fm, &fm_l, mailShowsHtml ? "Attachment:<br>\n" : "Attachment:\n");
+    }
 
-	debugPrint(5, "format mail content %d subject %s", ct,    w->subject);
-	headerline = headerShow(w, top);
-	stringAndString(&fm, &fm_l, headerline);
-	nzFree(headerline);
+    debugPrint(5, "format mail content %d subject %s", ct,    w->subject);
+    headerline = headerShow(w, top);
+    stringAndString(&fm, &fm_l, headerline);
+    nzFree(headerline);
 
-	if(top && nattach && mailShowsHtml) {
-		imapLines = initString(&iml_l);
-		linkAttachments(w);
-		stringAndString(&fm, &fm_l, imapLines);
-		nzFree0(imapLines);
-		stringAndString(&fm, &fm_l, "<p>");
-	}
+    if(top && nattach && mailShowsHtml) {
+        imapLines = initString(&iml_l);
+        linkAttachments(w);
+        stringAndString(&fm, &fm_l, imapLines);
+        nzFree0(imapLines);
+        stringAndString(&fm, &fm_l, "<p>");
+    }
 
 // special code when you want plain text, and we believe that text
 // appears outside of any of the mime components.
 // We've only seen this once, so far, in the wild.
-	if(top && mailIsHtml && preferPlain && w->pretext) {
-		start = w->pretext;
-		end = start + strlen(start);
+    if(top && mailIsHtml && preferPlain && w->pretext) {
+        start = w->pretext;
+        end = start + strlen(start);
 // this is not html, so reformat it
-		breakLineSetup();
-		if (breakLine(start, end - start, &newlen)) {
-			start = breakLineResult;
-			end = start + newlen;
-		}
-		if (mailShowsHtml) {
-			stringAndString(&fm, &fm_l, "<!-- text section converted to html -->\n<forceBody/><pre>\n ");
-// This null termination is only needed if breakLine fails.
-			endc = *end;
-			*end = 0;
-			char *e = htmlEscape(start);
-			stringAndString(&fm, &fm_l, e);
-			nzFree(e);
-			*end = endc;
-			stringAndString(&fm, &fm_l, "</pre>\n");
-		} else {
-			stringAndBytes(&fm, &fm_l, start, end - start);
-		}
-		return;
-	}
+        breakLineSetup();
+        if (breakLine(start, end - start, &newlen)) {
+            start = breakLineResult;
+            end = start + newlen;
+        }
+        if (mailShowsHtml) {
+            stringAndString(&fm, &fm_l, "<!-- text section converted to html -->\n<forceBody/><pre>\n ");
+            // This null termination is only needed if breakLine fails.
+            endc = *end;
+            *end = 0;
+            char *e = htmlEscape(start);
+            stringAndString(&fm, &fm_l, e);
+            nzFree(e);
+            *end = endc;
+            stringAndString(&fm, &fm_l, "</pre>\n");
+        } else {
+            stringAndBytes(&fm, &fm_l, start, end - start);
+        }
+        return;
+    }
 
-	if (ct < CT_MULTI) {
-		start = w->start;
-		end = w->end;
-// If mail is not in html, reformat it
-		if (start < end) {
-			if (ct == CT_TEXT) {
-//				char *z = pullString1(start, end); printf("%s", z); nzFree(z);
-				breakLineSetup();
-				if (breakLine(start, end - start, &newlen)) {
-					start = breakLineResult;
-					end = start + newlen;
-				}
-			}
-			if (mailShowsHtml && ct == CT_TEXT) {
-				stringAndString(&fm, &fm_l, "<!-- text section converted to html -->\n<forceBody/><pre>\n ");
-// This null termination is only needed if breakLine fails.
-				endc = *end;
-				*end = 0;
-				char *e = htmlEscape(start);
-				stringAndString(&fm, &fm_l, e);
-				nzFree(e);
-				*end = endc;
-				stringAndString(&fm, &fm_l, "</pre>\n");
-			} else {
+    if (ct < CT_MULTI) {
+        start = w->start;
+        end = w->end;
+        // If mail is not in html, reformat it
+        if (start < end) {
+            if (ct == CT_TEXT) {
+//              char *z = pullString1(start, end); printf("%s", z); nzFree(z);
+                breakLineSetup();
+                if (breakLine(start, end - start, &newlen)) {
+                    start = breakLineResult;
+                    end = start + newlen;
+                }
+            }
+            if (mailShowsHtml && ct == CT_TEXT) {
+                stringAndString(&fm, &fm_l, "<!-- text section converted to html -->\n<forceBody/><pre>\n ");
+                // This null termination is only needed if breakLine fails.
+                endc = *end;
+                *end = 0;
+                char *e = htmlEscape(start);
+                stringAndString(&fm, &fm_l, e);
+                nzFree(e);
+                *end = endc;
+                stringAndString(&fm, &fm_l, "</pre>\n");
+            } else {
 // shoveling text into text or html into html, don't change anything
-				stringAndBytes(&fm, &fm_l, start, end - start);
-			}
-		} // text present
+                stringAndBytes(&fm, &fm_l, start, end - start);
+            }
+        } // text present
 
-		// There could be a mail message inline
-		foreach(v, w->components) {
-			if (end > start)
-				stringAndString(&fm, &fm_l,
-						mailShowsHtml ? "<P>\n" : "\n");
-			formatMail(v, false);
-		}
+        // There could be a mail message inline
+        foreach(v, w->components) {
+            if (end > start)
+                stringAndString(&fm, &fm_l,
+                        mailShowsHtml ? "<P>\n" : "\n");
+            formatMail(v, false);
+        }
 
-		return;
-	}
+        return;
+    }
 
 // alternate presentations, pick the best one.
 // Even if it is generically multipart, I go down this path,
@@ -3665,27 +3665,24 @@ static void formatMail(struct MHINFO *w, bool top)
 // nor html components in plain text mode.
 // This algorithm isn't right, at many levels, but seems to work for
 // virtually every email out there.
-	best = j = 0;
-	foreach(v, w->components) {
-		int subtype = mailTextType(v);
-		++j;
-		if (subtype != CT_OTHER)
-			best = j;
-		if ((mailIsHtml && subtype == CT_HTML) ||
-		    (!mailIsHtml && subtype == CT_TEXT))
-			break;
-	}
+    best = j = 0;
+    foreach(v, w->components) {
+        int subtype = mailTextType(v);
+        ++j;
+        if (subtype != CT_OTHER) best = j;
+        if ((mailIsHtml && subtype == CT_HTML) ||
+            (!mailIsHtml && subtype == CT_TEXT))
+            break;
+    }
 
-	if (!best)
-		best = 1;
-	j = 0;
-	foreach(v, w->components) {
-		++j;
-		if (j != best)
-			continue;
-		formatMail(v, false);
-		break;
-	}
+    if (!best) best = 1;
+    j = 0;
+    foreach(v, w->components) {
+        ++j;
+        if (j != best) continue;
+        formatMail(v, false);
+        break;
+    }
 }
 
 // Browse the email file.
