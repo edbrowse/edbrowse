@@ -1013,83 +1013,83 @@ void freeFrame(Frame *f)
 
 static void freeWindow(Window *w)
 {
-	Frame *f, *fnext;
-	struct histLabel *label, *lnext;
-	freeTags(w);
-	for (f = &w->f0; f; f = fnext) {
-		fnext = f->next;
-		freeFrame(f);
-	}
-	nzFree(w->f0.fileName);
+    Frame *f, *fnext;
+    struct histLabel *label, *lnext;
+    freeTags(w);
+    for (f = &w->f0; f; f = fnext) {
+        fnext = f->next;
+        freeFrame(f);
+    }
+    nzFree0(w->f0.fileName);
 
-	lnext = w->histLabel;
-	while ((label = lnext)) {
-		lnext = label->prev;
-		free(label);
-	}
+    lnext = w->histLabel;
+    while ((label = lnext)) {
+        lnext = label->prev;
+        free(label);
+    }
 
-	freeWindowLines(w->map);
-	freeWindowLines(w->r_map);
-	nzFree(w->dmap);
-	nzFree(w->htmltitle);
-	nzFree(w->htmlauthor);
-	nzFree(w->htmldesc);
-	nzFree(w->htmlgen);
-	nzFree(w->htmlkey);
-	nzFree(w->saveURL);
-	nzFree(w->mailInfo);
-	nzFree(w->referrer);
-	nzFree(w->baseDirName);
-	nzFree(w->mail_raw);
+    freeWindowLines(w->map);
+    freeWindowLines(w->r_map);
+    nzFree(w->dmap);
+    nzFree(w->htmltitle);
+    nzFree(w->htmlauthor);
+    nzFree(w->htmldesc);
+    nzFree(w->htmlgen);
+    nzFree(w->htmlkey);
+    nzFree(w->saveURL);
+    nzFree(w->mailInfo);
+    nzFree(w->referrer);
+    nzFree(w->baseDirName);
+    nzFree(w->mail_raw);
 
 // only cleanup the curl handle on imapmode 1, if you try it again on 2 it will blow up.
-	if(w->imapMode1 && w->imap_h) imapCleanupInBackground(w->imap_h);
-	if(w->irciMode) {
-		Window *w2 = sessionList[w->ircOther].lw;
+    if(w->imapMode1 && w->imap_h) imapCleanupInBackground(w->imap_h);
+    if(w->irciMode) {
+        Window *w2 = sessionList[w->ircOther].lw;
 // w2 should always be there
-		if(w2 && w2->ircoMode) {
-			if(--w2->ircCount == 0) {
-				w2->ircoMode = false;
-				nzFree0(w2->f0.fileName);
-			} else {
+        if(w2 && w2->ircoMode) {
+            if(--w2->ircCount == 0) {
+                w2->ircoMode = false;
+                nzFree0(w2->f0.fileName);
+            } else {
 // I have to clear the channel here so the file name comes out right.
-				nzFree0(w->ircChannel);
-				ircSetFileName(w2);
-			}
-		}
-		ircClose(w);
-	}
-	if(w->ircoMode) {
-		int i;
-		Window *w2;
-		for(i = 1; i <= maxSession; ++i) {
-			w2 = sessionList[i].lw;
-			if(!w2 || !w2->irciMode || w2->ircOther != w->sno) continue;
-			ircClose(w2);
-		}
-	}
+                nzFree0(w->ircChannel);
+                ircSetFileName(w2);
+            }
+        }
+        ircClose(w);
+    }
+    if(w->ircoMode) {
+        int i;
+        Window *w2;
+        for(i = 1; i <= maxSession; ++i) {
+            w2 = sessionList[i].lw;
+            if(!w2 || !w2->irciMode || w2->ircOther != w->sno) continue;
+            ircClose(w2);
+        }
+    }
 
-	free(w);
+    free(w);
 }
 
 void freeWindows(int cx, bool all)
 {
-	struct ebSession *s = &sessionList[cx];
-	Window *w = s->lw2;
+    struct ebSession *s = &sessionList[cx];
+    Window *w = s->lw2;
 while (w) {
-		Window *p = w->prev;
-		freeWindow(w);
-		s->lw2 = w = p;
-	}
-	s->fw2 = s->lw2 = 0;
-	if(!all) return;
-	w = s->lw;
-	while (w) {
-		Window *p = w->prev;
-		freeWindow(w);
-		s->lw = w = p;
-	}
-	s->fw = s->lw = 0;
+        Window *p = w->prev;
+        freeWindow(w);
+        s->lw2 = w = p;
+    }
+    s->fw2 = s->lw2 = 0;
+    if(!all) return;
+    w = s->lw;
+    while (w) {
+        Window *p = w->prev;
+        freeWindow(w);
+        s->lw = w = p;
+    }
+    s->fw = s->lw = 0;
 }
 
 /*********************************************************************
