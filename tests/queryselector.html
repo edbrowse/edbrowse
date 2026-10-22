@@ -1,4 +1,4 @@
-<body>
+<head></head><body>
 <p id=show>start</p>
 <div n=1 class="shoe sandal">
 <h1> first div </h1>
@@ -188,7 +188,6 @@ q = b.querySelectorAll("select:read-only")
 if(q.length != 1) msg += "|bad select readonly"
 q = b.querySelectorAll("p:empty")
 if(q.length != 3) msg += "|bad p empty"
-// I implemented one layer of not(), and hope nobody goes deeper than that
 q = b.querySelectorAll("p:not(:empty)")
 if(q.length != 1 || q[0].id != "show") msg += "|bad p nonempty"
 
@@ -210,6 +209,14 @@ if(q.length != 3) msg += "|bad *"
 q = div3.querySelectorAll('*[n="6"]')
 if(q.length != 1) msg += "|bad *6"
 
+// crawl up until you can match across
+div9 = document.createElement("div");
+div9.appendChild(document.createElement("quote"));
+div3.appendChild(div9);
+q = b.querySelectorAll("div + div quote");
+if(q.length != 1 || q[0].nodeName != "QUOTE") msg += "|quote div div";
+div9.remove();
+
 // a more complicated not
 q = b.querySelectorAll("p:not(div>p)");
 if(q.length != 1 || q[0].id != "show") msg += "|wrong p not below div";
@@ -228,6 +235,9 @@ msg += "|wrong where(p,li)";
 q = b.querySelectorAll(":is(div,form) :is(option,li)")
 if(q.length != 6 || q[3].textContent != "alpha" || q[0].text != "apple")
 msg += "|wrong is(option,li)";
+q = b.querySelectorAll("form :not([type=submit], option:not(:nth-child(even)))")
+if(q.length != 4 || q[0].name != "subject" || q[2].text != "orange")
+msg += "|wrong not(not())";
 
 de = document.documentElement;
 q = document.querySelectorAll(":root,.shoe");
