@@ -843,9 +843,9 @@ static int closeString(char *s, char delim)
 
 static char *cut20(char *s)
 {
-	static char buf[20 + 1];
-	strncpy(buf, s, 20);
-	return buf;
+    static char buf[20 + 1];
+    strncpy(buf, s, 20);
+    return buf;
 }
 
 /*********************************************************************
@@ -861,114 +861,113 @@ I'll try to replace it with omitted when it's obscene, and preserve it when it i
 
 static void uncomment(char *s)
 {
-	char *w = s, *url0 = 0;
-	int n;
-	char c, urlmode = 0, delimmode = 0;
+    char *w = s, *url0 = 0;
+    int n;
+    char c, urlmode = 0, delimmode = 0;
 
-	while ((c = *s)) {
-		if (delimmode) { // copy the line
-			if (c == '\n') delimmode = 0;
-			goto copy;
-		}
+    while ((c = *s)) {
+        if (delimmode) { // copy the line
+            if (c == '\n') delimmode = 0;
+            goto copy;
+        }
 
-		if (urlmode) { // skip ahead to paren or brace
-			if(c == '\n' || c == '}' ||
-			(c == ')' && (s[-1] == '"' || s[1] == ';' || isspaceByte(s[1])))) {
-				int aposcount = 0, quotecount = 0, backcount = 0;
-				char *u;
-				urlmode = 0;
-				for(u = url0; u != s; ++u) {
-					if(*u == '"') ++quotecount;
-					if(*u == '\'') ++aposcount;
-					if(*u == '\\') ++backcount;
-				}
+        if (urlmode) { // skip ahead to paren or brace
+            if(c == '\n' || c == '}' ||
+            (c == ')' && (s[-1] == '"' || s[1] == ';' || isspaceByte(s[1])))) {
+                int aposcount = 0, quotecount = 0, backcount = 0;
+                char *u;
+                urlmode = 0;
+                for(u = url0; u != s; ++u) {
+                    if(*u == '"') ++quotecount;
+                    if(*u == '\'') ++aposcount;
+                    if(*u == '\\') ++backcount;
+                }
 // is it sane?
-				if(!(quotecount + aposcount) ||
-				(!backcount &&
-				((quotecount == 2 && url0[4] == '"' && s[-1] == '"') ||
-				(!quotecount &&!(aposcount&1)) ||
-				(!aposcount &&!(quotecount&1))))) {
+                if(!(quotecount + aposcount) ||
+                (!backcount &&
+                ((quotecount == 2 && url0[4] == '"' && s[-1] == '"') ||
+                (!quotecount &&!(aposcount&1)) ||
+                (!aposcount &&!(quotecount&1))))) {
 // looks reasonable, let's keep it
-					for(u = url0; u != s; ++u)
-						*w++ = *u;
-					goto copy;
-				}
+                    for(u = url0; u != s; ++u)
+                        *w++ = *u;
+                    goto copy;
+                }
 // It's ugly, replace it with the word omitted
-				if(s - w >= 12)
-					strcpy(w, "url(omitted)"), w += 12;
-				else
-					strcpy(w, "url()"), w += 5;
-				if(c != ')') goto copy;
-			}
-			++s;
-			continue;
-		}
+                if(s - w >= 12)
+                    strcpy(w, "url(omitted)"), w += 12;
+                else
+                    strcpy(w, "url()"), w += 5;
+                if(c != ')') goto copy;
+            }
+            ++s;
+            continue;
+        }
 
-		if (c == '"' || c == '\'') {
-			n = closeString(s + 1, c);
-			if (n < 0) {
-				debugPrint(3, "unterminated string %s",
-					   cut20(s));
-				goto abandon;
-			}
-			++n;
-			memmove(w, s, n);
-			s += n;
-			w += n;
-			continue;
-		}
+        if (c == '"' || c == '\'') {
+            n = closeString(s + 1, c);
+            if (n < 0) {
+                debugPrint(3, "unterminated string %s",
+                       cut20(s));
+                goto abandon;
+            }
+            ++n;
+            memmove(w, s, n);
+            s += n;
+            w += n;
+            continue;
+        }
 
-		if (c == 'u' && !strncmp(s, "url(", 4)) {urlmode = 1, url0 = s; continue; }
+        if (c == 'u' && !strncmp(s, "url(", 4)) {urlmode = 1, url0 = s; continue; }
 
-		if (c == '@' && !strncmp(s, "@ebdelim", 8))
-			delimmode = 1;
+        if (c == '@' && !strncmp(s, "@ebdelim", 8))
+            delimmode = 1;
 
 // look for C style comment.
 // only /* ... */ style,  not the kind of comment you're reading now.
-		if (c == '/' && s[1] == '*') {
-			for (n = 2; s[n]; ++n)
-				if (s[n] == '*' && s[n + 1] == '/')
-					break;
-			if (s[n]) {
-				s += n + 2;
-				continue;
-			}
-			debugPrint(3, "unterminated comment %s", cut20(s));
-			goto abandon;
-		}
+        if (c == '/' && s[1] == '*') {
+            for (n = 2; s[n]; ++n)
+                if (s[n] == '*' && s[n + 1] == '/')
+                    break;
+            if (s[n]) {
+                s += n + 2;
+                continue;
+            }
+            debugPrint(3, "unterminated comment %s", cut20(s));
+            goto abandon;
+        }
 
 copy:
-		*w++ = c;
-		++s;
-	}
-	*w = 0;
-	return;
+        *w++ = c;
+        ++s;
+    }
+    *w = 0;
+    return;
 
 abandon:
-	strmove(w, s);
+    strmove(w, s);
 }
 
 static void trim(char *s)
 {
-int l = strlen(s);
-	int n;
-	for (n = 0; s[n]; ++n)
-		if (!isspaceByte(s[n]))
-			break;
-	if (n)
-		strmove(s, s + n);
-	n = strlen(s);
-	while (n && isspaceByte(s[n - 1]))
-		--n;
+    int l = strlen(s);
+    int n;
+    for (n = 0; s[n]; ++n)
+        if (!isspaceByte(s[n]))
+            break;
+    if (n)
+        strmove(s, s + n);
+    n = strlen(s);
+    while (n && isspaceByte(s[n - 1]))
+        --n;
 /* allow for space at the end of a selector or rule. #foo\   */
-	if (isspaceByte(s[n]) && n && s[n - 1] == '\\' &&
-	    (n == 1 || s[n - 2] != '\\'))
-		++n;
-	s[n] = 0;
+    if (isspaceByte(s[n]) && n && s[n - 1] == '\\' &&
+        (n == 1 || s[n - 2] != '\\'))
+        ++n;
+    s[n] = 0;
 // we may have to fill the trimmed area with spaces,
 // so make sure they are all zeros.
-	while(++n < l)
-		s[n] = 0;
+    while(++n < l) s[n] = 0;
 }
 
 /*********************************************************************
@@ -1092,6 +1091,7 @@ static char *match_ba_string;
 static bool match_disp_inv, match_vis_inv;
 static int match_ba_spec, match_disp_spec, match_vis_spec;
 static bool visibility_only = false;
+static bool has_clause = false;
 static Tag *rootnode;
 static Tag **doclist;
 static int doclist_a, doclist_n;
@@ -2114,9 +2114,17 @@ Simplistic check here, next selector should not begin with a digit. */
                 sel2->next = sel, sel2 = sel;
         }
 // I'm reversing the order of the atomic selectors here
-        asel2 = sel->chain;
-        sel->chain = asel;
-        asel->next = asel2;
+// unless we're in a has() clause
+        if(!has_clause) {
+            asel2 = sel->chain;
+            sel->chain = asel;
+            asel->next = asel2;
+        } else if(!sel->chain) {
+            sel->chain = asel;
+        } else {
+            for(asel2 = sel->chain; asel2->next; asel2 = asel2->next)  ;
+            asel2->next = asel;
+        }
 
         cssAtomic(asel);
 // pass characteristics of the atomic selector back up to the selector
