@@ -1049,9 +1049,9 @@ struct mod {
     struct sel *underselect;
 };
 
-enum { MODNORMAL, MODNOT, MODIS, MODWHERE };
+enum { MODNORMAL, MODNOT, MODIS, MODWHERE, MODHAS };
 static const char * const modunderstrings[] = {
-    0, "not", "is", "where"
+    "XX", "not", "is", "where", "has"
 };
 
 struct rule {
@@ -2052,10 +2052,11 @@ Simplistic check here, next selector should not begin with a digit. */
 // :not( code, rather like closing a string.
         if (!strncmp(s, ":not(", 5) ||
         !strncmp(s, ":is(", 4) ||
+        !strncmp(s, ":has(", 5) ||
         !strncmp(s, ":where(", 7)) {
-            const int l = s[1] == 'n' ? 5 : s[1] == 'i' ? 4 : 7;
+            const int l = s[1] == 'i' ? 4 : s[1] == 'w' ? 7 : 5;
             n = closeString(s + l, '(');
-            if (n < 0) break; // should never happen
+            if (n < 0) break; // should not happen
             s += n + l;
             last_c = 0;
             continue;
@@ -2158,9 +2159,16 @@ Simplistic check here, next selector should not begin with a digit. */
         if (!d->selectors) d->selectors = sel;
         else sel2->next = sel;
     }
-    asel2 = sel->chain;
-    sel->chain = asel;
-    asel->next = asel2;
+    if(!has_clause) {
+        asel2 = sel->chain;
+        sel->chain = asel;
+        asel->next = asel2;
+    } else if(!sel->chain) {
+        sel->chain = asel;
+    } else {
+        for(asel2 = sel->chain; asel2->next; asel2 = asel2->next)  ;
+        asel2->next = asel;
+    }
     cssAtomic(asel);
     if (asel->error && !sel->error)
         sel->error = asel->error;
@@ -2238,6 +2246,14 @@ static void cssAtomic(struct asel *a)
             continue;
         }
 
+        if (s == m1 + 1 && !strncmp(m1, ":has(", 5)) {
+            last_c = 0;
+            n = closeString(s + 4, '(');
+            if (n < 0) break;
+            s += n + 4;
+            continue;
+        }
+
 // I assume \ is an escape, though this could fail  foo\\:
         if (!strchr(".[#:", c) || last_c == '\\') {
             ++s;
@@ -2270,7 +2286,7 @@ static void cssModify(struct asel *a, const char *m1, const char *m2)
       0
     };
 
-    if (n == 1) return; // empty
+    if (n == 1) return; // empty string
     t = allocMem(n + 1);
     memcpy(t, m1, n);
     t[n] = 0;
@@ -2289,10 +2305,11 @@ static void cssModify(struct asel *a, const char *m1, const char *m2)
 // Handle the under selectors first
     if (!strncmp(t, ":not(", 5) ||
     !strncmp(t, ":is(", 4) ||
+    !strncmp(t, ":has(", 5) ||
     !strncmp(t, ":where(", 7)) {
         struct desc d0; // dummy descriptor for not()
-        const uchar under = t[1] == 'n' ? MODNOT : t[1] == 'i' ? MODIS : MODWHERE;
-        const int l = t[1] == 'n' ? 5 : t[1] == 'i' ? 4 : 7;
+        const uchar under = t[1] == 'n' ? MODNOT : t[1] == 'i' ? MODIS : t[1] == 'h' ? MODHAS : MODWHERE;
+        const int l = t[1] == 'i' ? 4 : t[1] == 'w' ? 7 : 5;
         if (t[n - 1] != ')') {
             a->error = CSS_ERROR_UNSUP;
             return;
@@ -2300,15 +2317,25 @@ static void cssModify(struct asel *a, const char *m1, const char *m2)
         t[--n] = 0;
         strmove(t, t + l);
         trim(t);
+        if(under == MODHAS && has_clause) {
+            // the spec says this isn't allowed
+            debugPrint(3, "nested :has() clauses");
+            a->error = CSS_ERROR_UNSUP;
+            return;
+        }
+        if(under == MODHAS) has_clause = true;
         memset(&d0, 0, sizeof(d0));
         d0.lhs = t;
         cssParseLeft(&d0);
         mod->under = under;
         mod->underselect = d0.selectors;
+        has_clause = false;
         a->error = d0.error; // pass the error upward
-        if (!d0.selectors) //   :not() empty list
+        if (!d0.selectors) { //   :not() empty list
+            // chrome considers this an error too
             a->error = CSS_ERROR_UNSUP;
-        // should we check for before after hover?
+        }
+        if(under == MODHAS) a->error = CSS_ERROR_UNSUP; // :has not yet implemented
         return;
     }
 
@@ -3364,11 +3391,9 @@ look at all the immediate children first.
 This is a depth first list, but this situation is so rare,
 I'm not inclined to write extra code to optimize it. */
             Tag **save_doclist = doclist;
-            int save_doclist_a = doclist_a, save_doclist_n = doclist_n;
             build_doclist(t);
             Tag **descendants = doclist, **p;
             doclist = save_doclist;
-            doclist_a = save_doclist_a, doclist_n = save_doclist_n;
             bool rc = false;
             for(p = descendants + 1; (u = *p); ++p) {
                 if (!qsaMatch(u, a)) continue;
