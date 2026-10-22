@@ -3375,147 +3375,157 @@ textonly:
 	return w;
 }
 
+// GEnerate all the header lines: subject, from, reply...
+// This string is allocated.
 static char *headerShow(struct MHINFO *w, bool top)
 {
-	static char buf[(MHLINE + 30) * 5];
-	static char lastsubject[MHLINE];
-	char *s, *e;
-	bool lines = false;
-	buf[0] = 0;
+    char *buf;
+    int buf_l;
+    static char lastsubject[MHLINE];
+    char *s, *e;
+    bool lines = false;
+    buf = initString(&buf_l);
 
-	if (!(w->subject[0] | w->from[0] | w->reply[0]))
-		return buf;
+    if (!(w->subject[0] | w->from[0] | w->reply[0]))
+        return buf;
 
-	if (!top) {
-		strcpy(buf, "Message");
-		lines = true;
-		if (w->from[0]) {
-			strcat(buf, " from ");
-			strcat(buf, w->from);
-		}
-		if (w->subject[0]) {
-			if (stringEqual(w->subject, lastsubject)) {
-				strcat(buf, " with the same subject");
-			} else {
-				strcat(buf, " with subject: ");
-				strcat(buf, w->subject);
-			}
-		} else
-			strcat(buf, " with no subject");
-		if (mailShowsHtml) {
-			e = htmlEscape(buf);
-			strcpy(buf, e);
-			nzFree(e);
-		}
-// need a dot at the end
-		s = buf + strlen(buf);
-		if (isalnumByte(s[-1]))
-			*s++ = '.';
-		strcpy(s, mailShowsHtml ? "\n<br>" : "\n");
-		if (w->date[0]) {
-			strcat(buf, "Sent ");
-			strcat(buf, w->date);
-		}
-		if (w->reply[0]) {
-			if (!w->date[0])
-				strcat(buf, "From ");
-			else
-				strcat(buf, " from ");
-			strcat(buf, w->reply);
-		}
-		if (w->date[0] | w->reply[0]) {	/* second line */
-			strcat(buf, "\n");
-		}
-	} else {
+    if (!top) {
+        stringAndString(&buf, &buf_l, "Message");
+        lines = true;
+        if (w->from[0]) {
+            stringAndString(&buf, &buf_l, " from ");
+            stringAndString(&buf, &buf_l, w->from);
+        }
+        if (w->subject[0]) {
+            if (stringEqual(w->subject, lastsubject)) {
+                stringAndString(&buf, &buf_l, " with the same subject");
+            } else {
+                stringAndString(&buf, &buf_l, " with subject: ");
+                stringAndString(&buf, &buf_l, w->subject);
+            }
+        } else
+            stringAndString(&buf, &buf_l, " with no subject");
+        if (mailShowsHtml) {
+            e = htmlEscape(buf);
+            nzFree(buf);
+            buf = initString(&buf_l);
+            stringAndString(&buf, &buf_l, e);
+            nzFree(e);
+        }
+        // need a dot at the end
+        s = buf + buf_l;
+        if (isalnumByte(s[-1]))
+            stringAndChar(&buf, &buf_l, '.');
+        stringAndString(&buf, &buf_l, mailShowsHtml ? "\n<br>" : "\n");
+        if (w->date[0]) {
+            stringAndString(&buf, &buf_l, "Sent ");
+            stringAndString(&buf, &buf_l, w->date);
+        }
+        if (w->reply[0]) {
+            if (!w->date[0])
+                stringAndString(&buf, &buf_l, "From ");
+            else
+                stringAndString(&buf, &buf_l, " from ");
+            stringAndString(&buf, &buf_l, w->reply);
+        }
+        if (w->date[0] | w->reply[0]) { // second line
+            stringAndString(&buf, &buf_l, "\n");
+        }
+    } else {
 
 // This is at the top of the file
-		if (w->subject[0]) {
-			e = w->subject;
-			if(mailShowsHtml) e = htmlEscape(e);
-// the <pre nowspc keeps the subject on one line
-			sprintf(buf, "%sSubject: %s%s\n",
-			(mailShowsHtml ? "<pre nowspc>" : ""),
-			e,
-			(mailShowsHtml ? "</pre>" : ""));
-			if(mailShowsHtml) {
-				strcat(buf, "<title>Email: ");
-				strcat(buf, e);
-				strcat(buf, "</title>");
-				nzFree(e);
-			}
-			lines = true;
-		}
-// do we have to escape from or reply lines?
-		if (w->from[0]) {
-			if (lines & mailShowsHtml)
-				strcat(buf, "<br>");
-			lines = true;
-// it's very rare for a from line to break; you have to have a small fll value.
-			if(mailShowsHtml) strcat(buf, "<pre nowspc>");
-			strcat(buf, "From ");
-			strcat(buf, w->from);
-			if(mailShowsHtml) strcat(buf, "</pre>");
-			strcat(buf, "\n");
-		}
-		if (w->reply[0]) {
-			if (lines & mailShowsHtml)
-				strcat(buf, "<br>");
-			lines = true;
-			strcat(buf, "Reply to ");
-			strcat(buf, w->reply);
-			strcat(buf, "\n");
-		}
-		if (w->date[0] && !ismc) {
-			if (lines & mailShowsHtml)
-				strcat(buf, "<br>");
-			lines = true;
-			strcat(buf, "Mail sent ");
-			strcat(buf, w->date);
-			strcat(buf, "\n");
-		}
-		if (w->to[0] && !ismc) {
-			if (lines & mailShowsHtml)
-				strcat(buf, "<br>");
-			lines = true;
-			strcat(buf, "To ");
-			strcat(buf, w->to);
-			if (w->andOthers)
-				strcat(buf, " and others");
-			strcat(buf, "\n");
-		}
-		if (nattach && !ismc) {
-			char atbuf[23];
-			if (lines & mailShowsHtml)
-				strcat(buf, "<br>");
-			lines = true;
-			if (nimages) {
-				sprintf(atbuf, "%d images", nimages);
-				if (nimages == 1)
-					strcpy(atbuf, "1 image");
-				strcat(buf, atbuf);
-				if (nattach > nimages)
-					strcat(buf, " + ");
-			}
-			if (nattach == nimages + 1) {
-				strcat(buf, "1 attachment");
-				if (firstAttach && firstAttach[0]) {
-					strcat(buf, " ");
-					strcat(buf, firstAttach);
-				}
-			}
-			if (nattach > nimages + 1) {
-				sprintf(atbuf, "%d attachments",
-					nattach - nimages);
-				strcat(buf, atbuf);
-			}
-			strcat(buf, "\n");
-		}
-	}
+        if (w->subject[0]) {
+            e = w->subject;
+            if(mailShowsHtml) {
+                e = htmlEscape(e);
+                // the <pre nowspc keeps the subject on one line
+                stringAndString(&buf, &buf_l, "<pre nowspc>");
+            }
+            stringAndString(&buf, &buf_l, "Subject: ");
+            stringAndString(&buf, &buf_l, e);
+            if(mailShowsHtml)
+                stringAndString(&buf, &buf_l,  "</pre>");
+            stringAndChar(&buf, &buf_l, '\n');
+            if(mailShowsHtml) {
+                stringAndString(&buf, &buf_l, "<title>Email: ");
+                stringAndString(&buf, &buf_l, e);
+                stringAndString(&buf, &buf_l, "</title>");
+                nzFree(e);
+            }
+            lines = true;
+        }
 
-	if (lines)
-		strcat(buf, mailShowsHtml ? "<P>\n" : "\n");
-	strcpy(lastsubject, w->subject);
-	return buf;
+// do we have to escape from or reply lines?
+        if (w->from[0]) {
+            if (lines & mailShowsHtml)
+                stringAndString(&buf, &buf_l, "<br>");
+            lines = true;
+// it's very rare for a from line to break; you have to have a small fll value.
+            if(mailShowsHtml) stringAndString(&buf, &buf_l, "<pre nowspc>");
+            stringAndString(&buf, &buf_l, "From ");
+            stringAndString(&buf, &buf_l, w->from);
+            if(mailShowsHtml) stringAndString(&buf, &buf_l, "</pre>");
+            stringAndString(&buf, &buf_l, "\n");
+        }
+        if (w->reply[0]) {
+            if (lines & mailShowsHtml)
+                stringAndString(&buf, &buf_l, "<br>");
+            lines = true;
+            stringAndString(&buf, &buf_l, "Reply to ");
+            stringAndString(&buf, &buf_l, w->reply);
+            stringAndString(&buf, &buf_l, "\n");
+        }
+        if (w->date[0] && !ismc) {
+            if (lines & mailShowsHtml)
+                stringAndString(&buf, &buf_l, "<br>");
+            lines = true;
+            stringAndString(&buf, &buf_l, "Mail sent ");
+            stringAndString(&buf, &buf_l, w->date);
+            stringAndString(&buf, &buf_l, "\n");
+        }
+        if (w->to[0] && !ismc) {
+            if (lines & mailShowsHtml)
+                stringAndString(&buf, &buf_l, "<br>");
+            lines = true;
+            stringAndString(&buf, &buf_l, "To ");
+            stringAndString(&buf, &buf_l, w->to);
+            if (w->andOthers)
+                stringAndString(&buf, &buf_l, " and others");
+            stringAndString(&buf, &buf_l, "\n");
+        }
+        if (nattach && !ismc) {
+            char atbuf[23];
+            if (lines & mailShowsHtml)
+                stringAndString(&buf, &buf_l, "<br>");
+            lines = true;
+            if (nimages) {
+                sprintf(atbuf, "%d images", nimages);
+                if (nimages == 1)
+                    strcpy(atbuf, "1 image");
+                stringAndString(&buf, &buf_l, atbuf);
+                if (nattach > nimages)
+                    stringAndString(&buf, &buf_l, " + ");
+            }
+            if (nattach == nimages + 1) {
+                stringAndString(&buf, &buf_l, "1 attachment");
+                if (firstAttach && firstAttach[0]) {
+                    stringAndString(&buf, &buf_l, " ");
+                    stringAndString(&buf, &buf_l, firstAttach);
+                }
+            }
+            if (nattach > nimages + 1) {
+                sprintf(atbuf, "%d attachments",
+                    nattach - nimages);
+                stringAndString(&buf, &buf_l, atbuf);
+            }
+            stringAndString(&buf, &buf_l, "\n");
+        }
+    }
+
+    if (lines)
+        stringAndString(&buf, &buf_l, mailShowsHtml ? "<P>\n" : "\n");
+    strcpy(lastsubject, w->subject);
+    return buf;
 }
 
 // Depth first search thorugh mime components, looking for type,
@@ -3555,7 +3565,7 @@ static void formatMail(struct MHINFO *w, bool top)
 	struct MHINFO *v;
 	int ct = w->ct;
 	int j, best, newlen;
-	char *start, *end;
+	char *start, *end, *headerline;
 	char endc;
 
 // This use to be a test for attachment, but I got text messages
@@ -3568,7 +3578,9 @@ static void formatMail(struct MHINFO *w, bool top)
 	}
 
 	debugPrint(5, "format mail content %d subject %s", ct,    w->subject);
-	stringAndString(&fm, &fm_l, headerShow(w, top));
+	headerline = headerShow(w, top);
+	stringAndString(&fm, &fm_l, headerline);
+	nzFree(headerline);
 
 	if(top && nattach && mailShowsHtml) {
 		imapLines = initString(&iml_l);
