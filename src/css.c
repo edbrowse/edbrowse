@@ -811,39 +811,34 @@ static void cssStats(void)
 
 static int closeString(char *s, char delim)
 {
-	int i;
-	char c, qc = 0;		// quote character
-	int pc = 0;		// paren count
-	if (delim == '"' || delim == '\'')
-		qc = delim;
-	for (i = 0; (c = s[i]); ++i) {
-		if (c == qc) {	// close quote
-			if (delim == qc)
-				return i + 1;
-			qc = 0;
-			continue;
-		}
-		if (c == '\\') {
-			if (!s[++i])
-				return i;
-			continue;
-		}
+    int i;
+    char c, qc = 0; // quote character
+    int pc = 0; // paren count
+    if (delim == '"' || delim == '\'')
+        qc = delim;
+    for (i = 0; (c = s[i]); ++i) {
+        if (c == qc) { // close quote
+            if (delim == qc) return i + 1;
+            qc = 0;
+            continue;
+        }
+        if (c == '\\') {
+            if (!s[++i]) return i;
+            continue;
+        }
 // a css string should not contain an unescaped newline, so if you find one,
 // something is wrong or misaligned. End the string here.
-		if (c == '\n')
-			return i + 1;
-		if (qc)
-			continue;
-		if (c == ']' && delim == '[')
-			return i + 1;
-		if (c == '(' && delim == '(')
-			++pc;
-		if (c == ')' && delim == '(' && --pc < 0)
-			return i + 1;
-		if (c == '"' || c == '\'')
-			qc = c;
-	}
-	return -1;
+        if (c == '\n') return i + 1;
+        if (qc) continue;
+        if (c == ']' && delim == '[')
+            return i + 1;
+        if (c == '(' && delim == '(') ++pc;
+        if (c == ')' && delim == '(' && --pc < 0)
+            return i + 1;
+        if (c == '"' || c == '\'')
+            qc = c;
+    }
+    return -1;
 }
 
 static char *cut20(char *s)
@@ -1323,8 +1318,7 @@ static bool mediaPiece(struct desc *d, char *t)
 	int n, s_width, s_height;
 	bool atnot = false, atsome = false;
 
-	if (!*t)		// nothing there
-		return false;
+	if (!*t) return false; // nothing there
 
 	if (!strncmp(t, "only", 4) && !isalnumByte(t[4])) {
 // only is meaningless
@@ -2310,17 +2304,47 @@ static void cssModify(struct asel *a, const char *m1, const char *m2)
         return;
     }
 
-// See if the modifier makes sense
     h = t[0];
     switch (h) {
     case ':':
+
+/* :visited, this link has been visited. Display it differently
+so the sighted user knows he's already gone there.
+Is it possible for javascript to call getComputed Style and see that that
+link was visited and act differently?
+Yes, but if it didn't act differently, if it behaved like the link was never
+visited, even when it was, that would probably be ok. Most of the time
+it just changes color and would not change the behavior of the program.
+:active :focus, the user is interacting with an element.
+Usually just changes color.
+Javascript could ask where your mouse is by querying styles, but edbrowse
+doesn't even have a mouse. We don't focus.
+:marker. Change the appearance of the bullets in the bullet list.
+There isn't even a tag to call getComputedStyle on.
+javascript would never know if we honored this or not.
+:target Where the hash tag is.
+Along with the focus of the page, css can change the visual appearance.
+I could implement this, but it doesn't seem worth the bother.
+Unless someone has some javascript that really depends on it.
+:hover  change behavior when you hover over an element.
+Similar to focus. But edbrowse has no mouse. We don't hover.
+I should probably disregard this one too, but historically, I tried to
+implement it. I am moving away from that however,
+It's silly to honor :hover and not :focus.
+:link I have this matching the <A> tag.
+I don't know if that's all there is to it.
+:before and :after
+The only thing I do with these is watch for injected text,
+and you only see that with showall.
+So maybe it's not worth the bother, but there is one difference.
+js can call getComputedStyle(tag, ":before".
+It can ask, specifically, if I'm honoring the before and after pseudoclasses,
+so maybe I should continue to do so. */
+
         if (stringEqual(t, ":visited") || stringEqual(t, ":marker")
+        || stringEqual(t, ":target") || stringEqual(t, ":hover")
         || stringEqual(t, ":active") || stringEqual(t, ":focus")) {
             a->error = CSS_ERROR_DYN;
-            return;
-        }
-        if (stringEqual(t, ":hover")) {
-            a->hover = true;
             return;
         }
         if (stringEqual(t, ":link")) {
