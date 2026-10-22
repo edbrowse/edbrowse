@@ -3351,6 +3351,7 @@ onetime:
                 if (!a->next) return true;
                 if (qsaMatchChain(t, a->next)) return true;
             }
+            break;
         } else {
 /* This direction is trickier; there is only one parent, but many descendants.
 I want to call build_doclist(), which is like getElementsByTagName('*'),
@@ -3368,13 +3369,15 @@ I'm not inclined to write extra code to optimize it. */
             Tag **descendants = doclist, **p;
             doclist = save_doclist;
             doclist_a = save_doclist_a, doclist_n = save_doclist_n;
+            bool rc = false;
             for(p = descendants + 1; (u = *p); ++p) {
                 if (!qsaMatch(u, a)) continue;
-                if (!a->next) return true;
-                if (qsaMatchChain(u, a->next)) return true;
+                if (!a->next) {rc = true; break; }
+                if (qsaMatchChain(u, a->next)) {rc = true; break; }
             }
+            free(descendants);
+            return rc;
         }
-        break;
 
     } // switch
     return false;
