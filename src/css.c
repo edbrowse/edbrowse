@@ -3268,83 +3268,116 @@ This is recursive, since we must explore every path.
 
 static bool qsaMatchChain(Tag *t, const struct asel *a)
 {
-	Tag *u;
-
-	if (!a)			// should never happen
-		return false;
+    if (!a) return false; // should never happen
 
 /*********************************************************************
-Remember that we deal with the selector right to left.
+Remember that we deal with the selector right to left,
+having stored them internally in the reverse order.
 That reverses the sense of the combinator.
 We read div > a as <div> has a child of <a>,
 but we process it as <a> parent <div>
+Oops - unless we are in a has() clause.
 *********************************************************************/
 
-	switch (a->combin) {
-	case ',':
-// this is the base node; it has to match.
-		if (!qsaMatch(t, a))
-			break;
-// now look down the rest of the chain
+    Tag *u;
+    switch (a->combin) {
+    case ',':
+        // this is the base node; it has to match.
+        if (!qsaMatch(t, a)) break;
+        // now look down the rest of the chain
 onetime:
-		if (!a->next)
-			return true;
-		return qsaMatchChain(t, a->next);
+        if (!a->next) return true;
+        return qsaMatchChain(t, a->next);
 
-	case '+': // previousSibling
-		if (!t->parent)
-			break;
-		u = t->parent->firstchild;
-		if (!u || u == t)
-			break;
-		for (; u; u = u->sibling)
-			if (u->sibling == t)
-				break;
-		if (!u)
-			break;
-		if (!qsaMatch(u, a))
-			break;
-		t = u;
-		goto onetime;
+    case '+': // previousSibling
+        if (!t->parent) break;
+        if(!has_clause) {
+            u = t->parent->firstchild;
+            if (!u || u == t) break;
+            for (; u; u = u->sibling)
+                if (u->sibling == t) break;
+            if (!u) break;
+            if (!qsaMatch(u, a)) break;
+            t = u;
+        } else { // next sibling
+            u = t->sibling;
+            if (!u) break;
+            if (!qsaMatch(u, a)) break;
+            t = u;
+        }
+        goto onetime;
 
-	case '~': // earlier sibling
-		if (!t->parent)
-			break;
-		u = t->parent->firstchild;
-		for (; u; u = u->sibling) {
-			if (u == t)
-				return false;
-			if (!qsaMatch(u, a))
-				continue;
-			if (!a->next)
-				return true;
-			if (qsaMatchChain(u, a->next))
-				return true;
-		}
-		break;
+    case '~': // earlier sibling
+        if (!t->parent) break;
+        if(!has_clause) {
+            u = t->parent->firstchild;
+            for (; u; u = u->sibling) {
+                if (u == t) return false;
+                if (!qsaMatch(u, a)) continue;
+                // looks good so far; let's go down the chain
+                if (!a->next) return true;
+                if (qsaMatchChain(u, a->next)) return true;
+                // didn't match down the chain, let's continue to next sibling
+            }
+        } else { // later sibling
+            for(u = t->sibling; u; u = u->sibling) {
+                if (!qsaMatch(u, a)) continue;
+                if (!a->next) return true;
+                if (qsaMatchChain(u, a->next)) return true;
+            }
+        }
+        break;
 
-	case '>': // parentNode
-		t = t->parent;
-		if (!t || t->action == TAGACT_DOC)
-			break;
-		if (!qsaMatch(t, a))
-			break;
-		goto onetime;
+    case '>': // parentNode
+        if(!has_clause) {
+            t = t->parent;
+            if (!t || t->action == TAGACT_DOC) break;
+            if (!qsaMatch(t, a)) break;
+            goto onetime;
+        } else {
+// This direction is trickier; there is only one parent, but many children.
+            for(u = t->firstchild; u; u = u->sibling) {
+                if (!qsaMatch(u, a)) continue;
+                if (!a->next) return true;
+                if (qsaMatchChain(u, a->next)) return true;
+            }
+            break;
+        }
 
-	case ' ': // ancestor
-		while ((t = t->parent) && t->action != TAGACT_DOC) {
-			if (!qsaMatch(t, a))
-				continue;
-			if (!a->next)
-				return true;
-			if (qsaMatchChain(t, a->next))
-				return true;
-		}
-		break;
+    case ' ': // ancestor
+        if(!has_clause) {
+            while ((t = t->parent) && t->action != TAGACT_DOC) {
+                if (!qsaMatch(t, a)) continue;
+                if (!a->next) return true;
+                if (qsaMatchChain(t, a->next)) return true;
+            }
+        } else {
+/* This direction is trickier; there is only one parent, but many descendants.
+I want to call build_doclist(), which is like getElementsByTagName('*'),
+but we may already have such a list going. We may be marching down it.
+So I'm going to squirrel that one away, build my own here for this rather
+unusual css situation, and put the old one back,
+so querySelectorAll can continue to march along.
+A breadth first list would probably be more efficient -
+look at all the immediate children first.
+This is a depth first list, but this situation is so rare,
+I'm not inclined to write extra code to optimize it. */
+            Tag **save_doclist = doclist;
+            int save_doclist_a = doclist_a, save_doclist_n = doclist_n;
+            build_doclist(t);
+            Tag **descendants = doclist, **p;
+            doclist = save_doclist;
+            doclist_a = save_doclist_a, doclist_n = save_doclist_n;
+            for(p = descendants + 1; (u = *p); ++p) {
+                if (!qsaMatch(u, a)) continue;
+                if (!a->next) return true;
+                if (qsaMatchChain(u, a->next)) return true;
+            }
+        }
+        break;
 
-	}			// switch
-
-	return false;
+    } // switch
+    return false;
 }
 
 // Called from cssApply, as part of getComputedStyle,
@@ -3521,50 +3554,46 @@ static Tag **qsa2(struct desc *d, const char *selstring)
 static void build1_doclist(Tag *t);
 static void build_doclist(Tag *top)
 {
-	doclist_n = 0;
-	doclist_a = 500;
-	nzFree(doclist);
-	doclist = allocMem((doclist_a + 1) * sizeof(Tag *));
-	if (top) {
-		build1_doclist(top);
-	} else {
+    doclist_n = 0;
+    doclist_a = 500;
+    nzFree(doclist);
+    doclist = allocMem((doclist_a + 1) * sizeof(Tag *));
+    if (top) {
+        build1_doclist(top);
+    } else {
 // the html tag should always be there
-		if (cf->htmltag) {
-			build1_doclist(cf->htmltag);
-		} else {
-			if (cf->headtag)
-				build1_doclist(cf->headtag);
-			if (cf->bodytag)
-				build1_doclist(cf->bodytag);
-		}
-	}
-	doclist[doclist_n] = 0;
+        if (cf->htmltag) {
+            build1_doclist(cf->htmltag);
+        } else {
+            if (cf->headtag)
+                build1_doclist(cf->headtag);
+            if (cf->bodytag)
+                build1_doclist(cf->bodytag);
+        }
+    }
+    doclist[doclist_n] = 0;
 }
 
 // This is a bit like getElementsByTagName("*"), though we cull certain nodes,
 // such as text nodes, comments, etc. This function is recursive.
 static void build1_doclist(Tag *t)
 {
-	if(t->action == TAGACT_TEXT || t->action == TAGACT_COMMENT ||
-	t->action == TAGACT_DOC || t->action == TAGACT_FRAG ||
-	t->action == TAGACT_CDATA) goto skip;
+    if(t->action == TAGACT_TEXT || t->action == TAGACT_COMMENT ||
+    t->action == TAGACT_DOC || t->action == TAGACT_FRAG ||
+    t->action == TAGACT_CDATA) goto skip;
 // do we need to allocate more space?
-	if (doclist_n == doclist_a) {
-		doclist_a += 500;
-		doclist =
-		    reallocMem(doclist,
-			       (doclist_a + 1) * sizeof(Tag *));
-	}
-	doclist[doclist_n++] = t;
-	t->highspec = 0;
-	if (topmatch)		// top only
-		return;
+    if (doclist_n == doclist_a) {
+        doclist_a += 500;
+        doclist = reallocMem(doclist, (doclist_a + 1) * sizeof(Tag *));
+    }
+    doclist[doclist_n++] = t;
+    t->highspec = 0;
+    if (topmatch) return;        // top only
 skip:
 // can't descend into another frame
-	if (t->action == TAGACT_FRAME)
-		return;
-	for (t = t->firstchild; t; t = t->sibling)
-		build1_doclist(t);
+    if (t->action == TAGACT_FRAME) return;
+    for (t = t->firstchild; t; t = t->sibling)
+        build1_doclist(t);
 }
 
 static Tag **qsaInternal(const char *selstring, Tag *top)
