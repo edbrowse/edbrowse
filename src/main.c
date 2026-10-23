@@ -85,7 +85,7 @@ static void finishBrowse(void)
 // set all scripts to complete
     for (j = 0; j < cw->numTags; ++j) {
         t = cw->tags[j];
-        if(t->action == TAGACT_SCRIPT)
+        if(t->action == TAG_SCRIPT)
             t->step = 6;
     }
 // kill any timers or pendings

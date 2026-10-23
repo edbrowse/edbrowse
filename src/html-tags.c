@@ -24,132 +24,132 @@ bool browseMail;
 // whitespace bits: open nl, open para, close nl, close para.
 // property bits: innerHTML,text is invisible, closing tag is insignificant.
 static const struct tagInfo availableTags[] = {
-	{"0unknown", "an html entity", TAGACT_UNKNOWN, 5, 1},
-	{"a", "an anchor", TAGACT_A, 0, 1},
-	{"abbr", "an abbreviation", TAGACT_JS, 0, 0},
-	{"address", "an address block", TAGACT_NOP, 1, 0},
-	{"area", "an image map area", TAGACT_AREA, 0, 4},
-	{"article", "an article", TAGACT_HE, 10, 1},
-	{"audio", "audio passage", TAGACT_AUDIO, 0, 0},
-	{"b", "bold text", TAGACT_B, 0, 0},
-	{"base", "base reference for relative URLs", TAGACT_BASE, 0, 4},
-	{"blockquote", "a quoted section", TAGACT_BQ, 0, 1},
-	{"body", "the html body", TAGACT_BODY, 10, 5},
-	{"br", "a line break", TAGACT_BR, 1, 4},
-	{"button", "a button", TAGACT_INPUT, 0, 1},
-	{"canvas", "a canvas", TAGACT_CANVAS, 0, 1},
-	{"caption", "a caption", TAGACT_CAPTION, 5, 0},
-	{"cdata", "xml cdata", TAGACT_CDATA, 0, 2},
-	{"center", "centered text", TAGACT_P, 2, 5},
-	{"cite", "a citation", TAGACT_NOP, 0, 0},
-	{"code", "a block of code", TAGACT_CODE, 0, 0},
-	{"comment", "a comment", TAGACT_COMMENT, 0, 2},
-	{"datalist", "an input list", TAGACT_DATAL, 0, 0},
-	{"dd", "a definition", TAGACT_DD, 1, 4},
-	{"defs", "an svg definition", TAGACT_DEFS, 0, 0},
-	{"del", "deleted text", TAGACT_DEL, 0, 0},
-	{"details", "details", TAGACT_DET, 10, 1},
-	{"dfn", "definition text", TAGACT_JS, 0, 0},
-	{"dir", "a directory list", TAGACT_NOP, 5, 0},
-	{"div", "a divided section", TAGACT_DIV, 5, 1},
-	{"dl", "a definition list", TAGACT_DL, 10, 1},
-	{"doctype", "doctype", TAGACT_DOCTYPE, 0, 0},
-	{"document", "a document", TAGACT_DOC, 5, 1},
-	{"dt", "a term", TAGACT_DT, 2, 4},
-	{"element", "an input element", TAGACT_INPUT, 0, 4},
-	{"ellipse", "an svg ellipse", TAGACT_ELLIPSE, 0, 0},
-	{"em", "emphasized text", TAGACT_EM, 0, 0},
-	{"embed", "embedded html", TAGACT_AUDIO, 0, 0},
-	{"fieldset", "a field set", TAGACT_FIELDSET, 10, 1},
-	{"figcaption", "a figure caption", TAGACT_NOP, 10, 0},
-	{"figure", "a figure", TAGACT_NOP, 10, 0},
-	{"fixed", "a fixed presentation", TAGACT_NOP, 1, 0},
-	{"font", "a font", TAGACT_NOP, 0, 0},
-	{"footer", "a footer", TAGACT_FOOTER, 2, 5},
-	{"form", "a form", TAGACT_FORM, 10, 1},
-	{"fragment", "a document fragment", TAGACT_FRAG, 5, 1},
-	{"frame", "a frame", TAGACT_FRAME, 2, 0},
-	{"frameset", "a frame set", TAGACT_JS, 0, 0},
-	{"g", "an svg group", TAGACT_G, 0, 0},
-	{"gradient", "an svg gradient", TAGACT_GRADIENT, 0, 0},
-	{"h1", "a level 1 header", TAGACT_H, 10, 1},
-	{"h2", "a level 2 header", TAGACT_H, 10, 1},
-	{"h3", "a level 3 header", TAGACT_H, 10, 1},
-	{"h4", "a level 4 header", TAGACT_H, 10, 1},
-	{"h5", "a level 5 header", TAGACT_H, 10, 1},
-	{"h6", "a level 6 header", TAGACT_H, 10, 1},
-	{"head", "the html header information", TAGACT_HEAD, 10, 5},
-	{"header", "a header", TAGACT_HEADER, 2, 5},
-	{"hr", "a horizontal line", TAGACT_HR, 5, 4},
-	{"html", "html", TAGACT_HTML, 0, 0},
-	{"htmlanchorelement", "an anchor element", TAGACT_A, 0, 1},
-	{"i", "italicized text", TAGACT_I, 0, 0},
-	{"iframe", "a frame", TAGACT_FRAME, 2, 1},
-	{"image", "an image", TAGACT_IMAGE, 0, 4},
-	{"img", "an image", TAGACT_IMAGE, 0, 4},
-	{"input", "an input item", TAGACT_INPUT, 0, 4},
-	{"ins", "inserted text", TAGACT_INS, 0, 0},
-	{"kbd", "keyboard text", TAGACT_JS, 0, 0},
-	{"label", "a label", TAGACT_LABEL, 0, 0},
-	{"legend", "a legend", TAGACT_LEGEND, 0, 0},
-	{"li", "a list item", TAGACT_LI, 1, 5},
-	{"lineargradient", "an svg linear gradient", TAGACT_LINEARGRADIENT, 0, 0},
-	{"link", "a link tag", TAGACT_LINK, 0, 4},
-	{"listing", "a listing", TAGACT_PRE, 1, 0},
-	{"map", "a map of images", TAGACT_NOP, 5, 0},
-	{"mask", "an svg mask", TAGACT_MASK, 0, 0},
-	{"menu", "a menu", TAGACT_NOP, 5, 0},
-	{"meta", "a meta tag", TAGACT_META, 0, 4},
-	{"nav", "a navigation section", TAGACT_DIV, 5, 1},
-	{"noembed", "no embed section", TAGACT_NOP, 0, 2},
-	{"noframes", "no frames section", TAGACT_NOP, 0, 2},
-	{"noscript", "no script section", TAGACT_NOSCRIPT, 0, 2},
-	{"object", "an html object", TAGACT_OBJECT, 5, 3},
-	{"ol", "a numbered list", TAGACT_OL, 10, 1},
-	{"optgroup", "an optiongroup", TAGACT_OPTG, 0, 0},
-	{"option", "a select option", TAGACT_OPTION, 0, 0},
-	{"ovb", "an overbar", TAGACT_OVB, 0, 0},
-	{"p", "a paragraph", TAGACT_P, 10, 1},
-	{"path", "an svg path", TAGACT_PATH, 0, 0},
-	{"polygon", "an svg polygon", TAGACT_POLYGON, 0, 0},
-	{"pre", "a preformatted section", TAGACT_PRE, 10, 0},
-	{"q", "quoted text", TAGACT_BQ, 0, 1},
-	{"rect", "an svg rectangle", TAGACT_RECT, 0, 0},
-	{"s", "strikethrough text", TAGACT_S, 0, 0},
-	{"samp", "a block of sample text", TAGACT_NOP, 0, 0},
-	{"script", "a script", TAGACT_SCRIPT, 0, 3},
-	{"section", "an html section", TAGACT_HE, 10, 1},
-	{"select", "an option list", TAGACT_SELECT, 0, 0},
-	{"shadowroot", "a shadow root", TAGACT_SHADOW, 0, 0},
-	{"source", "source of audio or video", TAGACT_SOURCE, 0, 4},
-	{"span", "an html span", TAGACT_SPAN, 0, 1},
-	{"stop", "an svg stop", TAGACT_STOP, 0, 0},
-	{"strike", "emphasized text", TAGACT_JS, 0, 0},
-	{"strong", "emphasized text", TAGACT_STRONG, 0, 0},
-	{"style", "a style tag", TAGACT_STYLE, 0, 2},
-	{"sub", "a subscript", TAGACT_SUB, 0, 0},
-	{"summary", "summary of details", TAGACT_SUMMARY, 10, 1},
-	{"sup", "a superscript", TAGACT_SUP, 0, 0},
-	{"svg", "an svg image", TAGACT_SVG, 0, 0},
-	{"table", "a table", TAGACT_TABLE, 10, 1},
-	{"tbody", "a table body", TAGACT_TBODY, 0, 1},
-	{"td", "a table entry", TAGACT_TD, 0, 1},
-	{"template", "a template", TAGACT_TEMPLATE, 0, 1},
-	{"text", "a text section", TAGACT_TEXT, 0, 4},
-	{"textarea", "an input text area", TAGACT_TA, 0, 1},
-	{"tfoot", "a table foot", TAGACT_TFOOT, 0, 1},
-	{"th", "a table heading", TAGACT_TD, 0, 1},
-	{"thead", "a table head", TAGACT_THEAD, 0, 1},
-	{"time", "the title", TAGACT_TIME, 0, 0},
-	{"title", "the title", TAGACT_TITLE, 0, 2},
-	{"tr", "a table row", TAGACT_TR, 5, 1},
-	{"tt", "teletype", TAGACT_NOP, 0, 0},
-	{"u", "underlined text", TAGACT_U, 0, 0},
-	{"ul", "a bullet list", TAGACT_UL, 10, 1},
-	{"use", "an svg use", TAGACT_USE, 0, 0},
-	{"var", "variable text", TAGACT_JS, 0, 0},
-	{"video", "video passage", TAGACT_VIDEO, 0, 0},
-	{"xmp", "an example", TAGACT_PRE, 1, 0},
+	{"0unknown", "an html entity", TAG_UNKNOWN, 5, 1},
+	{"a", "an anchor", TAG_A, 0, 1},
+	{"abbr", "an abbreviation", TAG_JS, 0, 0},
+	{"address", "an address block", TAG_NOP, 1, 0},
+	{"area", "an image map area", TAG_AREA, 0, 4},
+	{"article", "an article", TAG_HE, 10, 1},
+	{"audio", "audio passage", TAG_AUDIO, 0, 0},
+	{"b", "bold text", TAG_B, 0, 0},
+	{"base", "base reference for relative URLs", TAG_BASE, 0, 4},
+	{"blockquote", "a quoted section", TAG_BQ, 0, 1},
+	{"body", "the html body", TAG_BODY, 10, 5},
+	{"br", "a line break", TAG_BR, 1, 4},
+	{"button", "a button", TAG_INPUT, 0, 1},
+	{"canvas", "a canvas", TAG_CANVAS, 0, 1},
+	{"caption", "a caption", TAG_CAPTION, 5, 0},
+	{"cdata", "xml cdata", TAG_CDATA, 0, 2},
+	{"center", "centered text", TAG_P, 2, 5},
+	{"cite", "a citation", TAG_NOP, 0, 0},
+	{"code", "a block of code", TAG_CODE, 0, 0},
+	{"comment", "a comment", TAG_COMMENT, 0, 2},
+	{"datalist", "an input list", TAG_DATAL, 0, 0},
+	{"dd", "a definition", TAG_DD, 1, 4},
+	{"defs", "an svg definition", TAG_DEFS, 0, 0},
+	{"del", "deleted text", TAG_DEL, 0, 0},
+	{"details", "details", TAG_DET, 10, 1},
+	{"dfn", "definition text", TAG_JS, 0, 0},
+	{"dir", "a directory list", TAG_NOP, 5, 0},
+	{"div", "a divided section", TAG_DIV, 5, 1},
+	{"dl", "a definition list", TAG_DL, 10, 1},
+	{"doctype", "doctype", TAG_DOCTYPE, 0, 0},
+	{"document", "a document", TAG_DOC, 5, 1},
+	{"dt", "a term", TAG_DT, 2, 4},
+	{"element", "an input element", TAG_INPUT, 0, 4},
+	{"ellipse", "an svg ellipse", TAG_ELLIPSE, 0, 0},
+	{"em", "emphasized text", TAG_EM, 0, 0},
+	{"embed", "embedded html", TAG_AUDIO, 0, 0},
+	{"fieldset", "a field set", TAG_FIELDSET, 10, 1},
+	{"figcaption", "a figure caption", TAG_NOP, 10, 0},
+	{"figure", "a figure", TAG_NOP, 10, 0},
+	{"fixed", "a fixed presentation", TAG_NOP, 1, 0},
+	{"font", "a font", TAG_NOP, 0, 0},
+	{"footer", "a footer", TAG_FOOTER, 2, 5},
+	{"form", "a form", TAG_FORM, 10, 1},
+	{"fragment", "a document fragment", TAG_FRAG, 5, 1},
+	{"frame", "a frame", TAG_FRAME, 2, 0},
+	{"frameset", "a frame set", TAG_JS, 0, 0},
+	{"g", "an svg group", TAG_G, 0, 0},
+	{"gradient", "an svg gradient", TAG_GRADIENT, 0, 0},
+	{"h1", "a level 1 header", TAG_H, 10, 1},
+	{"h2", "a level 2 header", TAG_H, 10, 1},
+	{"h3", "a level 3 header", TAG_H, 10, 1},
+	{"h4", "a level 4 header", TAG_H, 10, 1},
+	{"h5", "a level 5 header", TAG_H, 10, 1},
+	{"h6", "a level 6 header", TAG_H, 10, 1},
+	{"head", "the html header information", TAG_HEAD, 10, 5},
+	{"header", "a header", TAG_HEADER, 2, 5},
+	{"hr", "a horizontal line", TAG_HR, 5, 4},
+	{"html", "html", TAG_HTML, 0, 0},
+	{"htmlanchorelement", "an anchor element", TAG_A, 0, 1},
+	{"i", "italicized text", TAG_I, 0, 0},
+	{"iframe", "a frame", TAG_FRAME, 2, 1},
+	{"image", "an image", TAG_IMAGE, 0, 4},
+	{"img", "an image", TAG_IMAGE, 0, 4},
+	{"input", "an input item", TAG_INPUT, 0, 4},
+	{"ins", "inserted text", TAG_INS, 0, 0},
+	{"kbd", "keyboard text", TAG_JS, 0, 0},
+	{"label", "a label", TAG_LABEL, 0, 0},
+	{"legend", "a legend", TAG_LEGEND, 0, 0},
+	{"li", "a list item", TAG_LI, 1, 5},
+	{"lineargradient", "an svg linear gradient", TAG_LINEARGRADIENT, 0, 0},
+	{"link", "a link tag", TAG_LINK, 0, 4},
+	{"listing", "a listing", TAG_PRE, 1, 0},
+	{"map", "a map of images", TAG_NOP, 5, 0},
+	{"mask", "an svg mask", TAG_MASK, 0, 0},
+	{"menu", "a menu", TAG_NOP, 5, 0},
+	{"meta", "a meta tag", TAG_META, 0, 4},
+	{"nav", "a navigation section", TAG_DIV, 5, 1},
+	{"noembed", "no embed section", TAG_NOP, 0, 2},
+	{"noframes", "no frames section", TAG_NOP, 0, 2},
+	{"noscript", "no script section", TAG_NOSCRIPT, 0, 2},
+	{"object", "an html object", TAG_OBJECT, 5, 3},
+	{"ol", "a numbered list", TAG_OL, 10, 1},
+	{"optgroup", "an optiongroup", TAG_OPTG, 0, 0},
+	{"option", "a select option", TAG_OPTION, 0, 0},
+	{"ovb", "an overbar", TAG_OVB, 0, 0},
+	{"p", "a paragraph", TAG_P, 10, 1},
+	{"path", "an svg path", TAG_PATH, 0, 0},
+	{"polygon", "an svg polygon", TAG_POLYGON, 0, 0},
+	{"pre", "a preformatted section", TAG_PRE, 10, 0},
+	{"q", "quoted text", TAG_BQ, 0, 1},
+	{"rect", "an svg rectangle", TAG_RECT, 0, 0},
+	{"s", "strikethrough text", TAG_S, 0, 0},
+	{"samp", "a block of sample text", TAG_NOP, 0, 0},
+	{"script", "a script", TAG_SCRIPT, 0, 3},
+	{"section", "an html section", TAG_HE, 10, 1},
+	{"select", "an option list", TAG_SELECT, 0, 0},
+	{"shadowroot", "a shadow root", TAG_SHADOW, 0, 0},
+	{"source", "source of audio or video", TAG_SOURCE, 0, 4},
+	{"span", "an html span", TAG_SPAN, 0, 1},
+	{"stop", "an svg stop", TAG_STOP, 0, 0},
+	{"strike", "emphasized text", TAG_JS, 0, 0},
+	{"strong", "emphasized text", TAG_STRONG, 0, 0},
+	{"style", "a style tag", TAG_STYLE, 0, 2},
+	{"sub", "a subscript", TAG_SUB, 0, 0},
+	{"summary", "summary of details", TAG_SUMMARY, 10, 1},
+	{"sup", "a superscript", TAG_SUP, 0, 0},
+	{"svg", "an svg image", TAG_SVG, 0, 0},
+	{"table", "a table", TAG_TABLE, 10, 1},
+	{"tbody", "a table body", TAG_TBODY, 0, 1},
+	{"td", "a table entry", TAG_TD, 0, 1},
+	{"template", "a template", TAG_TEMPLATE, 0, 1},
+	{"text", "a text section", TAG_TEXT, 0, 4},
+	{"textarea", "an input text area", TAG_TA, 0, 1},
+	{"tfoot", "a table foot", TAG_TFOOT, 0, 1},
+	{"th", "a table heading", TAG_TD, 0, 1},
+	{"thead", "a table head", TAG_THEAD, 0, 1},
+	{"time", "the title", TAG_TIME, 0, 0},
+	{"title", "the title", TAG_TITLE, 0, 2},
+	{"tr", "a table row", TAG_TR, 5, 1},
+	{"tt", "teletype", TAG_NOP, 0, 0},
+	{"u", "underlined text", TAG_U, 0, 0},
+	{"ul", "a bullet list", TAG_UL, 10, 1},
+	{"use", "an svg use", TAG_USE, 0, 0},
+	{"var", "variable text", TAG_JS, 0, 0},
+	{"video", "video passage", TAG_VIDEO, 0, 0},
+	{"xmp", "an example", TAG_PRE, 1, 0},
 };
 static const int availableTagCount = sizeof(availableTags) / sizeof(struct tagInfo);
 
@@ -501,7 +501,7 @@ static void makeTag(const char *name, const char *lowname, bool slash, const cha
 // and then you don't need the js objects, and they only slow you down.
         if(cf->xmlMode && cf != &cw->f0)
             t->doorway = true;
-        if((t->action == TAGACT_HTML || t->action == TAGACT_BODY) && htmlGenerated)
+        if((t->action == TAG_HTML || t->action == TAG_BODY) && htmlGenerated)
             goto skiplink;
         t->parent = parent = stack ? stack->t : overnode;
         if(parent) {
@@ -656,7 +656,7 @@ correspondence, and find a way to recognize and reclaim dead tags.
 static void backupTags(void)
 {
 	static const short forbidden[] = {
-	TAGACT_FRAME, TAGACT_SCRIPT, TAGACT_LINK, TAGACT_INPUT, TAGACT_OPTION, 0};
+	TAG_FRAME, TAG_SCRIPT, TAG_LINK, TAG_INPUT, TAG_OPTION, 0};
 	Tag *t;
 	bool delmessage = false;
 	int i, n = 0;
@@ -670,7 +670,7 @@ stop:
 				return;
 			}
 // unlikely case where html ends in </pre>, which is always a dead tag.
-		if(t->action == TAGACT_PRE && t->slash
+		if(t->action == TAG_PRE && t->slash
 		&& !tagList[cw->numTags-2]->dead)
 			goto stop;
 		debugPrint(4, "backup %s", t->info->name);
@@ -775,7 +775,7 @@ void freeTags(Window *w)
 /* drop empty textarea buffers created by this session */
     for (e = w->tags, i = 0; i < w->numTags; ++i, ++e) {
     	t = *e;
-    	if (t->action != TAGACT_INPUT) continue;
+    	if (t->action != TAG_INPUT) continue;
     	if (t->itype != INP_TA) continue;
     	// 0 means no side buffer; -1 means the text is inline,
     	// a trick when the text can be contained on one
@@ -1205,13 +1205,13 @@ past_html_open_semantics:
 			lasttext = 0;
 		}
 		i = working_t->action;
-		if(!xml && (i == TAGACT_INPUT || i == TAGACT_SELECT)) {
+		if(!xml && (i == TAG_INPUT || i == TAG_SELECT)) {
 			atWall = false;
 			lasttext = 0;
 		}
 // The HTML5 specification says that user agents should strip the first
 // newline immediately after the <pre> tag.
-		if(!xml && i == TAGACT_PRE) {
+		if(!xml && i == TAG_PRE) {
 			if(*s == '\r') ++s, ++seek;
 			if(*s == '\n') ++s, ++seek;
 		}
@@ -1407,7 +1407,7 @@ if(headbody < 6)
 	if(htmlGenerated) {
 		if(cw->numTags < start_idx + 2 ||
 		!overnode ||
-		(working_t = tagList[start_idx + 1])->action != TAGACT_BODY) {
+		(working_t = tagList[start_idx + 1])->action != TAG_BODY) {
 			debugPrint(1, "cannot move generated html up past <html><body>");
 		} else {
 			Tag *u = working_t->firstchild;
@@ -1555,7 +1555,7 @@ static void findAttributes(const char *start, const char *end)
 		v = t->atvals[j];
 // empty value is like no value, I think, but not for <option>
 // empty value has a meaning, pass no value on submit.
-		if (v && !*v && action != TAGACT_OPTION) v = 0;
+		if (v && !*v && action != TAG_OPTION) v = 0;
 		t->value = cloneString(v);
 		t->rvalue = cloneString(v);
 	}
@@ -1567,7 +1567,7 @@ static void findAttributes(const char *start, const char *end)
 		if (v && !*v) v = 0;
 		if (v) {
 			v = v[0] == '#' ? cloneString(v) : resolveURL(cf->hbase, v);
-			if (action == TAGACT_BASE && !cf->baseset && isURL(v)) {
+			if (action == TAG_BASE && !cf->baseset && isURL(v)) {
 				nzFree(cf->hbase);
 				cf->hbase = cloneString(v);
 				cf->baseset = true;
@@ -3957,8 +3957,8 @@ Tag *findOpenSection(Tag *t)
 {
 	int count = 0;
 	while ((t = t->parent)) {
-		if (t->action == TAGACT_TBODY || t->action == TAGACT_THEAD ||
-		    t->action == TAGACT_TFOOT)
+		if (t->action == TAG_TBODY || t->action == TAG_THEAD ||
+		    t->action == TAG_TFOOT)
 			return t;
 		if (++count == 10000) {	// tree shouldn't be this deep
 			debugPrint(1, "infinite loop in findOpenTag()");
@@ -3971,7 +3971,7 @@ Tag *findOpenSection(Tag *t)
 Tag *findOpenList(Tag *t)
 {
 	while ((t = t->parent))
-		if (t->action == TAGACT_OL || t->action == TAGACT_UL)
+		if (t->action == TAG_OL || t->action == TAG_UL)
 			return t;
 	return 0;
 }
@@ -4001,7 +4001,7 @@ static void insert_tbody(void)
 
 	for (i = 0; i < end; ++i) {
 		tbl = tagList[i];
-		if (tbl->action != TAGACT_TABLE) continue;
+		if (tbl->action != TAG_TABLE) continue;
 		s1 = 0;
 
 // need to skip past caption - because chrome does
@@ -4009,17 +4009,17 @@ static void insert_tbody(void)
         if(!s2) continue; // empty table
         while(s2) {
             action = s2->action;
-            if(action == TAGACT_TBODY || action == TAGACT_THEAD || action == TAGACT_TFOOT || action == TAGACT_TR) break;
-            if(action == TAGACT_CAPTION) { s1 = s2; break; }
+            if(action == TAG_TBODY || action == TAG_THEAD || action == TAG_TFOOT || action == TAG_TR) break;
+            if(action == TAG_CAPTION) { s1 = s2; break; }
             s2 = s2->sibling;
         }
         // now s1 is 0, the start of the row, or the caption
 
 		do {
 			s2 = (s1 ? s1->sibling : tbl->firstchild);
-			while (s2 && s2->action != TAGACT_TBODY
-			       && s2->action != TAGACT_THEAD
-			       && s2->action != TAGACT_TFOOT)
+			while (s2 && s2->action != TAG_TBODY
+			       && s2->action != TAG_THEAD
+			       && s2->action != TAG_TFOOT)
 				s2 = s2->sibling;
 			insert_tbody1(s1, s2, tbl);
 			s1 = s2;
@@ -4036,7 +4036,7 @@ static void insert_tbody1(Tag *s1, Tag *s2, Tag *tbl)
 		return;
 
 	for (u = s1a; u != s2; u = u->sibling)
-		if (tagBelow(u, TAGACT_TR))
+		if (tagBelow(u, TAG_TR))
 			break;
 	if (u == s2)		// no rows below
 		return;
@@ -4107,7 +4107,7 @@ void formControl(Tag *t, bool namecheck)
 	Tag *cform = currentForm;
 	if (!cform) {
 /* nodes could be created dynamically, not through html */
-		cform = findOpenTag(t, TAGACT_FORM);
+		cform = findOpenTag(t, TAG_FORM);
 	}
 	if (cform)
 		t->controller = cform;
@@ -4217,13 +4217,13 @@ static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
 	switch (action) {
 		char *v;
 
-	case TAGACT_NOSCRIPT:
+	case TAG_NOSCRIPT:
 // If javascript is enabled kill everything under noscript
 		if (isJSAlive && !opentag)
 			underKill(t);
 		break;
 
-	case TAGACT_TEXT:
+	case TAG_TEXT:
 		if (!opentag || !t->textval)
 			break;
 
@@ -4272,8 +4272,8 @@ static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
 		}
 		break;
 
-	case TAGACT_TITLE:
-		if(findOpenTag(t, TAGACT_BODY)) {
+	case TAG_TITLE:
+		if(findOpenTag(t, TAG_BODY)) {
 		    // this is title for some body tag, not for the document.
 		    // <title> is grossly overloaded.
 		    // Means something completely different if in svg.
@@ -4282,15 +4282,15 @@ static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
 		currentTitle = (opentag ? t : 0);
 		break;
 
-	case TAGACT_SCRIPT:
+	case TAG_SCRIPT:
 		currentScript = (opentag ? t : 0);
 		break;
 
-	case TAGACT_A:
+	case TAG_A:
 		currentA = (opentag ? t : 0);
 		break;
 
-	case TAGACT_FORM:
+	case TAG_FORM:
 		if (opentag) {
 			currentForm = t;
 			a = attribVal(t, "method");
@@ -4342,7 +4342,7 @@ static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
 		}
 		break;
 
-	case TAGACT_INPUT:
+	case TAG_INPUT:
 		if (!opentag)
 			break;
 		htmlInputHelper(t);
@@ -4359,11 +4359,11 @@ static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
 		}
 		break;
 
-	case TAGACT_OPTION:
+	case TAG_OPTION:
 		if (!opentag) {
 			currentOpt = 0;
 // in datalist, the text becomes the value
-			if(currentSel && currentSel->action == TAGACT_DATAL) {
+			if(currentSel && currentSel->action == TAG_DATAL) {
 				if(!t->value) t->value = emptyString;
 				nzFree(t->textval);
 				t->textval = cloneString(t->value);
@@ -4400,39 +4400,39 @@ static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
 		}
 		break;
 
-	case TAGACT_STYLE:
+	case TAG_STYLE:
 		if(!findOpenSVG(t))
 			currentStyle = opentag ? t : 0;
 		break;
 
-	case TAGACT_SELECT:
-	case TAGACT_DATAL:
+	case TAG_SELECT:
+	case TAG_DATAL:
 		if (opentag) {
 			currentSel = t;
 			nopt = 0;
 			t->itype = INP_SELECT;
-			if(action == TAGACT_SELECT)
+			if(action == TAG_SELECT)
 				formControl(t, true);
 		} else {
 			currentSel = 0;
-			if(action == TAGACT_SELECT) {
+			if(action == TAG_SELECT) {
 // If a single select, and nothing selected, the browser
 // selects the first viable option for you.
 				fillEmptySelect(t);
 // from here on it is called an input tag, to join the other input tags
-				t->action = TAGACT_INPUT;
+				t->action = TAG_INPUT;
 				t->value = displayOptions(t);
 			}
 		}
 		break;
 
-	case TAGACT_TA:
+	case TAG_TA:
 		if (opentag) {
 			currentTA = t;
 			t->itype = INP_TA;
 			formControl(t, true);
 		} else {
-			t->action = TAGACT_INPUT;
+			t->action = TAG_INPUT;
 			if (!t->value) {
 /* This can only happen it no text inside, <textarea></textarea> */
 /* like the other value fields, it can't be null */
@@ -4442,7 +4442,7 @@ static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
 		}
 		break;
 
-	case TAGACT_META:
+	case TAG_META:
 		if (opentag) {
 /*********************************************************************
 htmlMetaHelper is not called for document.createElement("meta")
@@ -4454,47 +4454,47 @@ and the next page has the same tags, and so on forever.
 So don't do this if inside <noscript>, and js is active.
 Are there other situations where we need to supress meta processing?
 *********************************************************************/
-			if(!(findOpenTag(t, TAGACT_NOSCRIPT) && isJSAlive))
+			if(!(findOpenTag(t, TAG_NOSCRIPT) && isJSAlive))
 				htmlMetaHelper(t);
 		}
 		break;
 
-	case TAGACT_TBODY:
-	case TAGACT_THEAD:
-	case TAGACT_TFOOT:
-	case TAGACT_CAPTION:
+	case TAG_TBODY:
+	case TAG_THEAD:
+	case TAG_TFOOT:
+	case TAG_CAPTION:
 		if (opentag)
-			t->controller = findOpenTag(t, TAGACT_TABLE);
+			t->controller = findOpenTag(t, TAG_TABLE);
 		break;
 
-	case TAGACT_TR:
+	case TAG_TR:
 		if (opentag) {
 			t->controller = findOpenSection(t);
 			if (!t->controller)
-				t->controller = findOpenTag(t, TAGACT_TABLE);
+				t->controller = findOpenTag(t, TAG_TABLE);
 		}
 		break;
 
-	case TAGACT_TD:
+	case TAG_TD:
 		if (opentag)
-			t->controller = findOpenTag(t, TAGACT_TR);
+			t->controller = findOpenTag(t, TAG_TR);
 		break;
 
-	case TAGACT_SPAN:
+	case TAG_SPAN:
 		if (!opentag)
 			break;
 		if (!(a = t->class))
 			break;
 		if (stringEqualCI(a, "sup"))
-			action = TAGACT_SUP;
+			action = TAG_SUP;
 		if (stringEqualCI(a, "sub"))
-			action = TAGACT_SUB;
+			action = TAG_SUB;
 		if (stringEqualCI(a, "ovb"))
-			action = TAGACT_OVB;
+			action = TAG_OVB;
 		t->action = action;
 		break;
 
-	case TAGACT_OL:
+	case TAG_OL:
 /* look for start parameter for numbered list */
 		if (opentag) {
 			a = attribVal(t, "start");
@@ -4503,7 +4503,7 @@ Are there other situations where we need to supress meta processing?
 		}
 		break;
 
-	case TAGACT_FRAME:
+	case TAG_FRAME:
 		if (opentag)
 			break;
 // If somebody wrote <frame><p>foo</frame>, those tags should be excised.
@@ -4514,14 +4514,14 @@ Are there other situations where we need to supress meta processing?
 		t->doorway = true;
 		break;
 
-	case TAGACT_DET:
+	case TAG_DET:
 		t->contracted = true;
 		a = attribVal(t, "open");
 		if(a && !stringEqual(a, "false")) t->contracted = false;
 		break;
 
-	case TAGACT_AUDIO:
-	case TAGACT_VIDEO:
+	case TAG_AUDIO:
+	case TAG_VIDEO:
 		if (opentag) {
 			currentAudio = t;
 			break;
@@ -4532,7 +4532,7 @@ Are there other situations where we need to supress meta processing?
 		currentAudio = 0;
 		break;
 
-	case TAGACT_SOURCE:
+	case TAG_SOURCE:
 		if(!currentAudio || !opentag) break;
 		a = attribVal(t, "src");
 		if(!a || !*a) break;
@@ -4656,7 +4656,7 @@ Needless to say that's not good!
 // except step could be 4 on a script, loaded, and we need to run it.
     if (t->step >= 2) {
         if(cf->xmlMode ||
-        !(t->step <= 4 && t->action == TAGACT_SCRIPT && !opentag))
+        !(t->step <= 4 && t->action == TAG_SCRIPT && !opentag))
             return;
     }
 
@@ -4666,36 +4666,36 @@ Needless to say that's not good!
 // all the js variables are on the open tag, except one or two
     if (!opentag) {
 // run reindex at table close
-        if (action == TAGACT_TABLE && t->jslink)
+        if (action == TAG_TABLE && t->jslink)
             run_function_onearg_win(cf, "tableReindex", t);
 
-        if (action == TAGACT_INPUT && t->itype == INP_SELECT && t->jslink)
+        if (action == TAG_INPUT && t->itype == INP_SELECT && t->jslink)
             run_function_onearg_win(cf, "selectReindex", t);
 
 // run reindex at form or fieldset close
-        if ((action == TAGACT_FORM || action == TAGACT_FIELDSET) && t->jslink)
+        if ((action == TAG_FORM || action == TAG_FIELDSET) && t->jslink)
             run_function_onearg_win(cf, "formReindex", t);
 
 // close the option group
-        if(action == TAGACT_OPTG) pc->currentOG = 0;
+        if(action == TAG_OPTG) pc->currentOG = 0;
 
 // turn template into document fragment
-        if(action == TAGACT_TEMPLATE && !cf->xmlMode) {
+        if(action == TAG_TEMPLATE && !cf->xmlMode) {
 // when I reference content, the getter does everything we need
             get_property_bool_t(t, "content");
         }
 
 // keep the live array of frames up to date
-        if(action == TAGACT_FRAME)
+        if(action == TAG_FRAME)
             run_function_bool_win(cf, "frames$rebuild");
 
             // test to see if we should run this script right now.
             // It can't come from innerHTML, we indicate this by step = 6,
             // Can't be remote, and can't be xml.
-        if(action == TAGACT_SCRIPT && !cf->xmlMode) {
+        if(action == TAG_SCRIPT && !cf->xmlMode) {
             if(t->scriptgen == 2) {
                 debugPrint(3, "script %d skipped because it is generated by innerHTML", t->seqno);
-            } else if(findOpenTag(t, TAGACT_TEMPLATE)) {
+            } else if(findOpenTag(t, TAG_TEMPLATE)) {
                 debugPrint(3, "script %d skipped because it is part of a template", t->seqno);
             } else if(t->async && t->href && !isDataURI(t->href)) {
                 debugPrint(3, "script %d postponed because it is deferred", t->seqno);
@@ -4730,7 +4730,7 @@ Needless to say that's not good!
 
 	switch (action) {
 
-	case TAGACT_TEXT:
+	case TAG_TEXT:
 		debugPrint(5, "domText");
 		establish_js_textnode(t);
 /*********************************************************************
@@ -4746,22 +4746,22 @@ So it's much more efficient to go straight to the underlying data$2.
 		set_property_string_t(t, "data$2", t->textval);
 		break;
 
-	case TAGACT_DOCTYPE:
+	case TAG_DOCTYPE:
 		domLink(t, "DocType", 0, 4);
 		t->deleted = true;
 		break;
 
-	case TAGACT_HTML:
+	case TAG_HTML:
 		domLink(t, "HTMLHtmlElement", 0, 4);
 		cf->htmltag = t;
 		set_property_string_win(cf, "eb$base", cf->fileName);
 		break;
 
-	case TAGACT_META:
+	case TAG_META:
 		domLink(t, "HTMLMetaElement", 0, 4);
 		break;
 
-	case TAGACT_STYLE:
+	case TAG_STYLE:
 	    if(findOpenSVG(t))
 	        domLink(t, "SVGStyleElement", 0, 4);
 	    else
@@ -4772,12 +4772,12 @@ So it's much more efficient to go straight to the underlying data$2.
 	    set_property_string_t(t, "type", a);
 	    break;
 
-	case TAGACT_COMMENT:
+	case TAG_COMMENT:
 		domLink(t, "Comment", 0, 4);
 		set_property_string_t(t, "data", t->textval);
 		break;
 
-	case TAGACT_CDATA:
+	case TAG_CDATA:
 		nzFree(t->nodeName), nzFree(t->nodeNameU);
 		t->nodeName = cloneString("cdata");
 		t->nodeNameU = cloneString("CDATA");
@@ -4785,7 +4785,7 @@ So it's much more efficient to go straight to the underlying data$2.
 		set_property_string_t(t, "text", t->textval);
 		break;
 
-	case TAGACT_SCRIPT:
+	case TAG_SCRIPT:
 		domLink(t, "HTMLScriptElement", 0, 4);
 		a = attribVal(t, "text");
 		if (a) set_property_string_t(t, "text", a);
@@ -4800,77 +4800,77 @@ So it's much more efficient to go straight to the underlying data$2.
 		} else loadScriptData(t);
 		break;
 
-	case TAGACT_FORM:
+	case TAG_FORM:
 		domLink(t, "HTMLFormElement", 0, 4);
 		break;
 
-	case TAGACT_FIELDSET:
+	case TAG_FIELDSET:
 		domLink(t, "HTMLFieldSetElement", 0, 0);
 		break;
 
-	case TAGACT_LEGEND:
+	case TAG_LEGEND:
 		domLink(t, "HTMLLegendElement", 0, 0);
 		break;
 
-	case TAGACT_SVG:
+	case TAG_SVG:
 		domLink(t, "SVGSVGElement", 0, 0);
 		break;
 
-	case TAGACT_PATH:
+	case TAG_PATH:
 		domLink(t, "SVGPathElement", 0, 0);
 		break;
 
-	case TAGACT_POLYGON:
+	case TAG_POLYGON:
 		domLink(t, "SVGPolygonElement", 0, 0);
 		break;
 
-	case TAGACT_ELLIPSE:
+	case TAG_ELLIPSE:
 		domLink(t, "SVGEllipseElement", 0, 0);
 		break;
 
-	case TAGACT_RECT:
+	case TAG_RECT:
 		domLink(t, "SVGRectElement", 0, 0);
 		break;
 
-	case TAGACT_GRADIENT:
+	case TAG_GRADIENT:
 		domLink(t, "SVGGradientElement", 0, 0);
 		break;
 
-	case TAGACT_LINEARGRADIENT:
+	case TAG_LINEARGRADIENT:
 		domLink(t, "SVGLinearGradientElement", 0, 0);
 		break;
 
-	case TAGACT_DEFS:
+	case TAG_DEFS:
 		domLink(t, "SVGDefsElement", 0, 0);
 		break;
 
-	case TAGACT_STOP:
+	case TAG_STOP:
 		domLink(t, "SVGStopElement", 0, 0);
 		break;
 
-	case TAGACT_MASK:
+	case TAG_MASK:
 		domLink(t, "SVGMaskElement", 0, 0);
 		break;
 
-	case TAGACT_USE:
+	case TAG_USE:
 		domLink(t, "SVGUseElement", 0, 0);
 		break;
 
-	case TAGACT_G:
+	case TAG_G:
 		domLink(t, "SVGGElement", 0, 0);
 		break;
 
-	case TAGACT_BQ:
+	case TAG_BQ:
 		domLink(t, "HTMLQuoteElement", 0, 0);
 		break;
 
-	case TAGACT_INPUT:
+	case TAG_INPUT:
 		formControlJS(t);
 		if (t->itype == INP_TA)
 			establish_inner(t, t->value, 0, true);
 		break;
 
-	case TAGACT_OPTION:
+	case TAG_OPTION:
 		if(t->controller) {
 		    if (!t->textval)
 		        debugPrint(3, "empty option");
@@ -4886,115 +4886,115 @@ So it's much more efficient to go straight to the underlying data$2.
 		domLink(t, "HTMLOptionElement", 0, 4);
 		break;
 
-	case TAGACT_OPTG:
+	case TAG_OPTG:
 		domLink(t, "HTMLOptGroupElement", 0, 4);
 		pc->currentOG = t;
 		break;
 
-	case TAGACT_DATAL:
+	case TAG_DATAL:
 		domLink(t, "HTMLDataListElement", 0, 4);
 		break;
 
-	case TAGACT_A:
+	case TAG_A:
 		domLink(t, "HTMLAnchorElement", 0, 4);
 		break;
 
-	case TAGACT_HEAD:
+	case TAG_HEAD:
 		domLink(t, "HTMLHeadElement", 0, 4);
 		cf->headtag = t;
 		break;
 
-	case TAGACT_BODY:
+	case TAG_BODY:
 		domLink(t, "HTMLBodyElement", 0, 4);
 		cf->bodytag = t;
 		break;
 
-	case TAGACT_OL:
+	case TAG_OL:
 		domLink(t, "HTMLOListElement", 0, 4);
 		break;
-	case TAGACT_UL:
+	case TAG_UL:
 		domLink(t, "HTMLUListElement", 0, 4);
 		break;
-	case TAGACT_DL:
+	case TAG_DL:
 		domLink(t, "HTMLDListElement", 0, 4);
 		break;
 
-	case TAGACT_LI:
+	case TAG_LI:
 		domLink(t, "HTMLLIElement", 0, 4);
 		break;
 
-	case TAGACT_CANVAS:
+	case TAG_CANVAS:
 		domLink(t, "HTMLCanvasElement", 0, 4);
 		break;
 
-	case TAGACT_TABLE:
+	case TAG_TABLE:
 		domLink(t, "HTMLTableElement", 0, 4);
 		break;
 
-	case TAGACT_TBODY:
+	case TAG_TBODY:
 		if ((above = t->controller) && above->jslink)
 			domLink(t, "HTMLTableSectionElement", above, 0);
 		break;
 
-	case TAGACT_THEAD:
+	case TAG_THEAD:
 		if ((above = t->controller) && above->jslink) {
 			domLink(t, "HTMLTableSectionElement", above, 0);
 			set_property_object_t(above, "tHead", t);
 		}
 		break;
 
-	case TAGACT_TFOOT:
+	case TAG_TFOOT:
 		if ((above = t->controller) && above->jslink) {
 			domLink(t, "HTMLTableSectionElement", above, 0);
 			set_property_object_t(above, "tFoot", t);
 		}
 		break;
 
-	case TAGACT_CAPTION:
+	case TAG_CAPTION:
 		if ((above = t->controller) && above->jslink) {
 			domLink(t, "HTMLTableCaptionElement", above, 0);
 			set_property_object_t(above, "caption", t);
 		}
 		break;
 
-	case TAGACT_TR:
+	case TAG_TR:
 		if ((above = t->controller) && above->jslink)
 			domLink(t, "HTMLTableRowElement", above, 0);
 		break;
 
-	case TAGACT_TD:
+	case TAG_TD:
 		if ((above = t->controller) && above->jslink)
 			domLink(t, "HTMLTableCellElement", above, 0);
 		break;
 
-	case TAGACT_DIV:
+	case TAG_DIV:
 		domLink(t, "HTMLDivElement", 0, 4);
 		break;
 
-	case TAGACT_LABEL:
+	case TAG_LABEL:
 		domLink(t, "HTMLLabelElement", 0, 4);
 		break;
 
-	case TAGACT_HR:
+	case TAG_HR:
 		domLink(t, "HTMLHRElement", 0, 4);
 		break;
 
-	case TAGACT_OBJECT:
+	case TAG_OBJECT:
 		domLink(t, "HTMLObjectElement", 0, 4);
 		break;
 
-	case TAGACT_SPAN:
-	case TAGACT_SUB:
-	case TAGACT_SUP:
-	case TAGACT_OVB:
+	case TAG_SPAN:
+	case TAG_SUB:
+	case TAG_SUP:
+	case TAG_OVB:
 		domLink(t, "HTMLSpanElement", 0, 4);
 		break;
 
-	case TAGACT_AREA:
+	case TAG_AREA:
 		domLink(t, "HTMLAreaElement", 0, 4);
 		break;
 
-	case TAGACT_FRAME:
+	case TAG_FRAME:
 // about:blank means a blank frame with no sourcefile.
 		if (stringEqual(t->href, "about:blank")) {
 			nzFree0(t->href);
@@ -5002,28 +5002,28 @@ So it's much more efficient to go straight to the underlying data$2.
 		domLink(t, "HTMLFrameElement", 0, 2);
 		break;
 
-	case TAGACT_IMAGE:
+	case TAG_IMAGE:
 		domLink(t, "HTMLImageElement", 0, 4);
 		break;
 
-	case TAGACT_P:
+	case TAG_P:
 		domLink(t, "HTMLParagraphElement", 0, 4);
 		break;
 
-	case TAGACT_H:
+	case TAG_H:
 		domLink(t, "HTMLHeadingElement", 0, 4);
 		break;
 
-	case TAGACT_HEADER:
+	case TAG_HEADER:
 		domLink(t, "Header", 0, 4);
 		break;
 
-	case TAGACT_FOOTER:
+	case TAG_FOOTER:
 		domLink(t, "Footer", 0, 4);
 		break;
 
-	case TAGACT_TITLE:
-		if(findOpenTag(t, TAGACT_BODY)) {
+	case TAG_TITLE:
+		if(findOpenTag(t, TAG_BODY)) {
 		    if(findOpenSVG(t))
 		        domLink(t, "SVGTitleElement", 0, 0);
 		    else
@@ -5036,44 +5036,44 @@ So it's much more efficient to go straight to the underlying data$2.
 		domLink(t, "HTMLTitleElement", 0, 4);
 		break;
 
-	case TAGACT_LINK:
+	case TAG_LINK:
 		domLink(t, "HTMLLinkElement", 0, 4);
 		loadScriptData(t);
 		break;
 
-	case TAGACT_AUDIO:
+	case TAG_AUDIO:
 		if(!opentag) break;
 		domLink(t, "HTMLAudioElement", 0, 4);
 		break;
 
-	case TAGACT_VIDEO:
+	case TAG_VIDEO:
 		if(!opentag) break;
 		domLink(t, "HTMLVideoElement", 0, 4);
 		break;
 
-	case TAGACT_TEMPLATE:
+	case TAG_TEMPLATE:
 		if(opentag) {
 			domLink(t, "HTMLTemplateElement", 0, 4);
 		}
 		break;
 
-	case TAGACT_DET:
+	case TAG_DET:
 		if(opentag) {
 			domLink(t, "HTMLDetailsElement", 0, 4);
 		}
 		break;
 
-	case TAGACT_BASE:
+	case TAG_BASE:
 		domLink(t, "HTMLBaseElement", 0, 4);
 		if(t->href && *t->href)
 			set_property_string_win(cf, "eb$base", t->href);
 		break;
 
-	case TAGACT_TIME:
+	case TAG_TIME:
 		domLink(t, "HTMLTimeElement", 0, 0);
 		break;
 
-	case TAGACT_HE:
+	case TAG_HE:
 		domLink(t, "HTMLElement", 0, 0);
 		break;
 
@@ -5098,7 +5098,7 @@ So it's much more efficient to go straight to the underlying data$2.
 
 // doctype and html are at the top of an html document.
 // for xml, anything can be at the top.
-    if ((cf->xmlMode && !linked_in) || (action == TAGACT_HTML || action == TAGACT_DOCTYPE)) {
+    if ((cf->xmlMode && !linked_in) || (action == TAG_HTML || action == TAG_DOCTYPE)) {
         run_function_onearg_doc(cf, appendFunction, t);
         linked_in = true;
     }
@@ -5113,7 +5113,7 @@ So it's much more efficient to go straight to the underlying data$2.
 
 	if (!linked_in) {
 		debugPrint(3, "tag %s not linked in", ti->name);
-		if (action == TAGACT_TEXT)
+		if (action == TAG_TEXT)
 			debugPrint(3, "text %s\n", t->textval);
 	}
 
@@ -5266,7 +5266,7 @@ void rowspan(void)
 
     for(i = 0; i < cw->numTags; ++i) {
         table = tagList[i];
-        if(table->action != TAGACT_TABLE || table->dead || table->deleted)
+        if(table->action != TAG_TABLE || table->dead || table->deleted)
             continue;
 
 // I set last_tr here assuming rowspans and such carry through
@@ -5276,13 +5276,13 @@ void rowspan(void)
 
         ri = 0;
         for(section = table->firstchild; section; section = section->sibling) {
-            if(section->action != TAGACT_THEAD && 
-            section->action != TAGACT_TBODY &&
-            section->action != TAGACT_TFOOT)
+            if(section->action != TAG_THEAD && 
+            section->action != TAG_TBODY &&
+            section->action != TAG_TFOOT)
                 continue;
 //          last_tr = 0;
             for(tr = section->firstchild; tr; tr = tr->sibling) {
-                if(tr->action != TAGACT_TR) continue;
+                if(tr->action != TAG_TR) continue;
                 // link to previous row
                 tr->same = last_tr;
                 last_tr = tr;
@@ -5294,12 +5294,12 @@ void rowspan(void)
 
         ri = 0;
         for(section = table->firstchild; section; section = section->sibling) {
-            if(section->action != TAGACT_THEAD && 
-            section->action != TAGACT_TBODY &&
-            section->action != TAGACT_TFOOT)
+            if(section->action != TAG_THEAD && 
+            section->action != TAG_TBODY &&
+            section->action != TAG_TFOOT)
                 continue;
             for(tr = section->firstchild; tr; tr = tr->sibling) {
-                if(tr->action == TAGACT_TR)
+                if(tr->action == TAG_TR)
                     rowspan3(tr, ++ri);
             }
         }
@@ -5323,7 +5323,7 @@ static void rowspan2(Tag *tr, int ri)
 // start by setting rowspan and colspan, possibly from javascript.
     for(td = tr->firstchild; td; td = td->sibling) {
         const char *v;
-        if(td->action != TAGACT_TD) continue;
+        if(td->action != TAG_TD) continue;
         td->lic = td->js_ln = 1;
 // from html attributes first
             v = attribVal(td, "rowspan");
@@ -5347,7 +5347,7 @@ static void rowspan2(Tag *tr, int ri)
     needstring = false;
 
     for(td = tr->firstchild; td; td = td->sibling) {
-        if(td->action != TAGACT_TD) continue;
+        if(td->action != TAG_TD) continue;
 crack:
         irs = irl = ics = 1;
         if((save_ihs = ihs)) {

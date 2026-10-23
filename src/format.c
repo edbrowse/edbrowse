@@ -6,7 +6,7 @@
 
 bool isBlankTag(Tag *t)
 {
-    if(t->action != TAGACT_TEXT) return false;
+    if(t->action != TAG_TEXT) return false;
     const char *s = t->textval;
     if(!s) return true;
     while(*s) {
@@ -365,7 +365,7 @@ top:
             const Tag *t = tagList[tagno];
             const char *q;
             // don't move td past newline; it screws things up.
-            if(t->action != TAGACT_TD) {
+            if(t->action != TAG_TD) {
 tagforward:
                 memmove(a, w, s - w);
                 memmove(a + (s - w), tag, n);
@@ -415,7 +415,7 @@ afterforward:
         if ((d == '*' || d == '{') && !premode)
             a = s;
         if(d == '*' &&
-        tagList[tagno]->action == TAGACT_LI) {
+        tagList[tagno]->action == TAG_LI) {
             char *v = ss;
             for(++v; *v == '*' || *v == '.' ||
             isdigitByte(*v); ++v) ;

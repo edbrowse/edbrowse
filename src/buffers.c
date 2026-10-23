@@ -4087,7 +4087,7 @@ static int openTA(pst s)
 // lev should always be 0 or 1
 	if(lev != 1) return hascodes ? -1 : 0;
 	t = tagList[tag];
-	if(t->action == TAGACT_INPUT && t->itype == INP_TA) return tag;
+	if(t->action == TAG_INPUT && t->itype == INP_TA) return tag;
 	debugPrint(3, "tag %d should be the start of a textarea", tag);
 	return -1;
 }
@@ -4150,7 +4150,7 @@ findField(const char *line, int ftype, int n,
             } else if (ftype == 4) {
                 if (*s != '*' || s[1] != '[') continue;
 // don't know why tag might be other than image, but it might be.
-                if(tagList[j]->action != TAGACT_IMAGE) continue;
+                if(tagList[j]->action != TAG_IMAGE) continue;
                 ++nt, ++nrt;
                 if (n == nt || n < 0) nm = j;
                 if (!n) {
@@ -4202,9 +4202,9 @@ findField(const char *line, int ftype, int n,
     if ((ftype == 0 || ftype == 4) && nm) {
         t = tagList[nm];
         if (tagp) *tagp = t;
-        if (t->action == TAGACT_A || t->action == TAGACT_FRAME ||
-            t->action == TAGACT_AUDIO || t->action == TAGACT_VIDEO ||
-        t->action == TAGACT_IMAGE || t->action == TAGACT_AREA) {
+        if (t->action == TAG_A || t->action == TAG_FRAME ||
+            t->action == TAG_AUDIO || t->action == TAG_VIDEO ||
+        t->action == TAG_IMAGE || t->action == TAG_AREA) {
             if (href)
                 *href = cloneString(t->href);
             if (href && !*href) {
@@ -4848,7 +4848,7 @@ Tag *line2frame(int ln, bool frameonly)
 		n = atoi(s + 1);
 		if (!opentag) {
 			Tag *u = tagList[n];
-			if(!frameonly || u->action != TAGACT_DET) return u;
+			if(!frameonly || u->action != TAG_DET) return u;
 // We're looking for frame and this is details, so skip it,
 // just pretend like we didn't see it.
 			continue;
@@ -6941,7 +6941,7 @@ bool jump2anchor(const Tag *jumptag, const char *newhash)
 	if(!jumptag) {
 		for(i = cw->numTags - 1; i >= 0; --i) {
 			tag = tagList[i];
-			if(tag->action == TAGACT_BODY) {
+			if(tag->action == TAG_BODY) {
 				jumptag = tag;
 				break;
 			}
@@ -8540,7 +8540,7 @@ past_g_file:
                 goto success;
             }
 
-            if (tag && (tag->action == TAGACT_FRAME || tag->action == TAGACT_DET)) {
+            if (tag && (tag->action == TAG_FRAME || tag->action == TAG_DET)) {
                 nzFree(h);
                 line = "exp";
                 goto expctr;

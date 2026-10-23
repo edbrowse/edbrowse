@@ -29,7 +29,6 @@ isedbrowse = navigator.userAgent.substr(0, 8) == "edbrowse";
 // qsa = document.querySelectorAll
 // so we have to write it out every time.
 div1 = document.querySelector("div")
-div3 = document.getElementById("div3")
 
 // basic
 p = document.querySelectorAll("p")
@@ -40,6 +39,11 @@ extra = document.createElement("p")
 b.appendChild(extra)
 if(p.length > 4) msg += "|p is unexpectedly live"
 extra.remove()
+q = document.querySelectorAll("*");
+if(q.length != 24) msg += `|* length ${q.length}`;
+q = document.querySelectorAll("*+option");
+if(q.length != 2) msg += `|*+option length ${q.length}`;
+if(q[0].text != "orange" || q[1].text != "lemon") msg += "|orange lemon";
 q = document.querySelectorAll(" div , h1 ") // union of two selectors, with whitespace around
 if(q.length != 4) msg += `|bad union length ${q.length}`
 if(q[1].nodeName != "H1") msg += "|union nodes aren't in tree order"

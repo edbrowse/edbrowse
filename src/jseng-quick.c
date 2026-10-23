@@ -1246,7 +1246,7 @@ static void connectTagObject(Tag *t, JSValue p)
 	debugPrint(6, "connect %d %s", t->seqno, t->info->name);
 // Below a frame, t could be a manufactured document for the new window.
 // We don't want to set eb$seqno in this case.
-	if(t->action != TAGACT_DOC) {
+	if(t->action != TAG_DOC) {
 		JS_DefinePropertyValueStr(cx, p, "eb$seqno", JS_NewInt32(cx, t->seqno), 0);
 	}
 }
@@ -1810,7 +1810,7 @@ static JSValue nat_unframe(JSContext * cx, JSValueConst this, int argc, JSValueC
 			debugPrint(3, "unframe couldn't find tag");
 			goto done;
 		}
-		                if (!(cdt = t->firstchild) || cdt->action != TAGACT_DOC) {
+		                if (!(cdt = t->firstchild) || cdt->action != TAG_DOC) {
 			                        debugPrint(1, "unframe child tag isn't right");
 			goto done;
 		}
@@ -1915,7 +1915,7 @@ JSValueConst a_j, JSValueConst b_j)
 			debugPrint(4, "linkage, %s %d created",
 				   p_name, parent->seqno);
 // creating the new tag, with t->jv, represents a regrab
-			if (parent->action == TAGACT_SCRIPT)
+			if (parent->action == TAG_SCRIPT)
 				parent->scriptgen = 1;
 		}
 		return;
@@ -2029,7 +2029,7 @@ ab:
 	cx = t->f0->cx;
 
 	switch (action) {
-	case TAGACT_INPUT:
+	case TAG_INPUT:
 		jst = get_property_string_t(t, "type");
 		setTagAttr(t, "type", jst);
 		nzFree(t->value);
@@ -2037,15 +2037,15 @@ ab:
 		htmlInputHelper(t);
 		break;
 
-	case TAGACT_OPTION:
+	case TAG_OPTION:
 		if (!t->value)
 			t->value = emptyString;
 		if (!t->textval)
 			t->textval = emptyString;
 		break;
 
-	case TAGACT_TA:
-		t->action = TAGACT_INPUT;
+	case TAG_TA:
+		t->action = TAG_INPUT;
 		t->itype = INP_TA;
 		nzFree(t->value);
 		t->value = get_property_string_t(t, "value");
@@ -2055,25 +2055,25 @@ ab:
 		formControl(t, true);
 		break;
 
-	case TAGACT_SELECT:
-		t->action = TAGACT_INPUT;
+	case TAG_SELECT:
+		t->action = TAG_INPUT;
 		t->itype = INP_SELECT;
 		if (typeof_property(cx, *((JSValue*)t->jv), "multiple"))
 			t->multiple = true;
 		formControl(t, true);
 		break;
 
-	case TAGACT_TR:
-		t->controller = findOpenTag(t, TAGACT_TABLE);
+	case TAG_TR:
+		t->controller = findOpenTag(t, TAG_TABLE);
 		break;
 
-	case TAGACT_TD:
-		t->controller = findOpenTag(t, TAGACT_TR);
+	case TAG_TD:
+		t->controller = findOpenTag(t, TAG_TR);
 		break;
 
-	case TAGACT_TEXT:
+	case TAG_TEXT:
 // if the text is in the child, push it up to the text attribute
-		if(parent->action == TAGACT_SCRIPT) {
+		if(parent->action == TAG_SCRIPT) {
 			char *u = get_property_string(cx, *((JSValue*)t->jv), "data");
 			if(u && *u)
 			set_property_string(cx, *((JSValue*)parent->jv), "text", u);
@@ -2130,7 +2130,7 @@ static JSValue nat_characterData(JSContext * cx, JSValueConst this, int argc, JS
     JS_ToInt32(cx, &seqno, argv[0]);
     if(seqno < 0 || seqno >= cw->numTags) return JS_UNDEFINED;
     Tag *t = tagList[seqno];
-    if(t->action != TAGACT_TEXT) return JS_UNDEFINED;
+    if(t->action != TAG_TEXT) return JS_UNDEFINED;
     const char *datastring = JS_ToCString(cx, argv[1]);
     if(!stringEqual(t->textval, datastring)) {
         nzFree0(t->textval);
@@ -2619,7 +2619,7 @@ static JSValue nat_resolveURL(JSContext * cx, JSValueConst this, int argc, JSVal
 static JSValue nat_formSubmit(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
     Tag *t = tagFromObject(cx, this);
-    if(t && t->action == TAGACT_FORM) {
+    if(t && t->action == TAG_FORM) {
         debugPrint(3, "submit form tag %d", t->seqno);
         domSubmitsForm(t, false);
     } else {
@@ -2634,7 +2634,7 @@ static JSValue nat_formSubmit(JSContext * cx, JSValueConst this, int argc, JSVal
 static JSValue nat_formReset(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
     Tag *t = tagFromObject(cx, this);
-    if(t && t->action == TAGACT_FORM) {
+    if(t && t->action == TAG_FORM) {
         debugPrint(3, "reset form tag %d", t->seqno);
         domSubmitsForm(t, true);
     } else {
@@ -3728,7 +3728,7 @@ bool has_property_win(const Frame *f, const char *name)
 
 void establish_js_option(Tag *t, Tag *sel, Tag *og)
 {
-    bool is_dl = (sel->action == TAGACT_DATAL);
+    bool is_dl = (sel->action == TAG_DATAL);
     JSContext *cx = cf->cx; // context
     JSValue oo;		// option object
     JSValue selobj; // select object or datalist object
@@ -3785,12 +3785,12 @@ if(extra == 4)
         *((JSValue*)cf->winobj), 0, classname);
     if(JS_IsUndefined(io)) return;
 
-    if(t->action != TAGACT_DOCTYPE) {
+    if(t->action != TAG_DOCTYPE) {
         if(!stringEqual(t->nodeNameU, "CDATA") &&
         !stringEqual(t->nodeNameU, "COMMENT")) {
             char *js_node = cloneString(t->nodeName);
             if(!cf->xmlMode) {
-                if((action >= TAGACT_SVG && action <= TAGACT_POLYGON) ||
+                if((action >= TAG_SVG && action <= TAG_POLYGON) ||
                 stringEqual(classname, "SVGStyleElement") ||
                 stringEqual(classname, "SVGTitleElement")) {
                     caseShift(js_node, 'l');
@@ -3848,8 +3848,8 @@ void rebuildSelectors(void)
 
 	for (i1 = 0; i1 < cw->numTags; ++i1) {
 		t = tagList[i1];
-		if (!t->jslink || (t->action != TAGACT_DATAL &&
-		(t->action != TAGACT_INPUT || t->itype != INP_SELECT)))
+		if (!t->jslink || (t->action != TAG_DATAL &&
+		(t->action != TAG_INPUT || t->itype != INP_SELECT)))
 			continue;
 
 // there should always be an options array, if not then move on

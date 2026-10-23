@@ -2748,7 +2748,7 @@ if (!v) goto up;
     return !rc;
 
 up:
-    if ((t = t->parent) && t->action != TAGACT_DOC)
+    if ((t = t->parent) && t->action != TAG_DOC)
         goto top;
     return false;
 }
@@ -2776,7 +2776,7 @@ static int spread(Tag *t)
 
 	sibs = NULL;
 
-			if (!(tp = t->parent) || tp->action == TAGACT_DOC)
+			if (!(tp = t->parent) || tp->action == TAG_DOC)
 				return 0;
 			for ((u = tp->firstchild); u; u = u->sibling) {
 				if (u == t)
@@ -2789,11 +2789,11 @@ static int spread(Tag *t)
 			for (i = 0, (u = tp->firstchild); i < ns; ++i, u = u->sibling) {
 				strcpy(sibs[i].tag, u->info->name);
 				ntype = 1;
-				if (u->action == TAGACT_TEXT)
+				if (u->action == TAG_TEXT)
 					ntype = 3;
-				if (u->action == TAGACT_DOC)
+				if (u->action == TAG_DOC)
 					ntype = 9;
-				if (u->action == TAGACT_COMMENT)
+				if (u->action == TAG_COMMENT)
 					ntype = 8;
 				sibs[i].nodeType = ntype;
 				sibs[i].myself = (i == me_index);
@@ -2864,11 +2864,11 @@ static int spreadKids(Tag *t)
 	for (i = 0, (u = t->firstchild); i < ns; ++i, u = u->sibling) {
 		strcpy(sibs[i].tag, u->info->name);
 		ntype = 1;
-		if (u->action == TAGACT_TEXT)
+		if (u->action == TAG_TEXT)
 			ntype = 3;
-		if (u->action == TAGACT_DOC)
+		if (u->action == TAG_DOC)
 			ntype = 9;
-		if (u->action == TAGACT_COMMENT)
+		if (u->action == TAG_COMMENT)
 			ntype = 8;
 		sibs[i].nodeType = ntype;
 		sibs[i].myself = 0;
@@ -2891,18 +2891,18 @@ static bool inputLike(Tag *t, int flavor)
 		"button", "submit", "reset", "hidden", 0
 	};
 	action = t->action;
-	rc = (action == TAGACT_INPUT || action == TAGACT_OPTION);
+	rc = (action == TAG_INPUT || action == TAG_OPTION);
 	if (!rc) return false;
 	if (flavor == 1) {	// clickable
-		if(action == TAGACT_OPTION) return true;
+		if(action == TAG_OPTION) return true;
 		v = get_property_string_t(t, "type");
-		rc = (action == TAGACT_INPUT && v &&
+		rc = (action == TAG_INPUT && v &&
 						  stringInList(clicktypes, v) >= 0);
 		nzFree(v);
 		return rc;
 	}
 	if (flavor == 2) {	// writable
-		if(action != TAGACT_INPUT || t->itype == INP_SELECT) return false;
+		if(action != TAG_INPUT || t->itype == INP_SELECT) return false;
 		v = get_property_string_t(t, "type");
 		rc = (v && stringInList(nwtypes,
 								  v) < 0);
@@ -2910,7 +2910,7 @@ static bool inputLike(Tag *t, int flavor)
 		return rc;
 	}
 	if (flavor == 3) {	// :input
-		return action == TAGACT_SELECT || t->itype >= INP_TEXT;
+		return action == TAG_SELECT || t->itype >= INP_TEXT;
 	}
 	return true;
 }
@@ -2928,12 +2928,12 @@ static bool upDisabled(const Tag *t)
 {
 	int action = t->action;
 	bool rc;
-	if(action == TAGACT_TEMPLATE || action == TAGACT_HTML || action == TAGACT_FRAME)
+	if(action == TAG_TEMPLATE || action == TAG_HTML || action == TAG_FRAME)
 		return false;
 	rc = get_property_bool_t(t, "disabled");
 	if(rc) return true;
 // option doesn't inherit disabled from above
-	if(action == TAGACT_OPTION) return false;
+	if(action == TAG_OPTION) return false;
 	if(!t->parent) return false;
 	return upDisabled(t->parent);
 }
@@ -2948,6 +2948,13 @@ if(!t) {
         debugPrint(3, "t is null in qsaMatch()");
         return false;
     }
+
+/* t might not be an html element, and if not, it shouldn't match.
+Consider querySelectorAll("*+option");
+We are at an option node and we see if there is anything to the left,
+a previous sibling. There might be one but it might be a text node,
+and here we are with t = text, and that would match *, but it shouldn't. */
+    if(!isHtmlElement(t)) return false;
 
     if (a->tag) {
         const char *nn = t->nodeNameU;
@@ -3202,7 +3209,7 @@ Meantime, this code manages :root up the chain, as in :root>div,
 all the div sections just below the current node.
 *********************************************************************/
             if (!rootnode) {
-                if (t->action == TAGACT_HTML) goto next_mod;
+                if (t->action == TAG_HTML) goto next_mod;
                 return false;
             }
             if (t == rootnode) goto next_mod;
@@ -3321,13 +3328,17 @@ onetime:
         if(!has_clause) {
             u = t->parent->firstchild;
             if (!u || u == t) break;
-            for (; u; u = u->sibling)
-                if (u->sibling == t) break;
-            if (!u) break;
+            Tag *prevelem = 0;
+            for (; u; u = u->sibling) {
+                if (u == t) break;
+                if (isHtmlElement(u)) prevelem = u;
+            }
+            if (!(u = prevelem)) break;
             if (!qsaMatch(u, a)) break;
             t = u;
         } else { // next sibling
-            u = t->sibling;
+            for(u = t->sibling; u; u = u->sibling)
+                if(isHtmlElement(u)) break;
             if (!u) break;
             if (!qsaMatch(u, a)) break;
             t = u;
@@ -3358,7 +3369,7 @@ onetime:
     case '>': // parentNode
         if(!has_clause) {
             t = t->parent;
-            if (!t || t->action == TAGACT_DOC) break;
+            if (!t || t->action == TAG_DOC) break;
             if (!qsaMatch(t, a)) break;
             goto onetime;
         } else {
@@ -3373,7 +3384,7 @@ onetime:
 
     case ' ': // ancestor
         if(!has_clause) {
-            while ((t = t->parent) && t->action != TAGACT_DOC) {
+            while ((t = t->parent) && t->action != TAG_DOC) {
                 if (!qsaMatch(t, a)) continue;
                 if (!a->next) return true;
                 if (qsaMatchChain(t, a->next)) return true;
@@ -3606,9 +3617,7 @@ static void build_doclist(Tag *top)
 // such as text nodes, comments, etc. This function is recursive.
 static void build1_doclist(Tag *t)
 {
-    if(t->action == TAGACT_TEXT || t->action == TAGACT_COMMENT ||
-    t->action == TAGACT_DOC || t->action == TAGACT_FRAG ||
-    t->action == TAGACT_CDATA) goto skip;
+    if(!isHtmlElement(t)) goto skip;
 // do we need to allocate more space?
     if (doclist_n == doclist_a) {
         doclist_a += 500;
@@ -3618,8 +3627,8 @@ static void build1_doclist(Tag *t)
     t->highspec = 0;
     if (topmatch) return;        // top only
 skip:
-// can't descend into another frame
-    if (t->action == TAGACT_FRAME) return;
+    // can't descend into another frame
+    if (t->action == TAG_FRAME) return;
     for (t = t->firstchild; t; t = t->sibling)
         build1_doclist(t);
 }
@@ -3903,8 +3912,8 @@ done:
 static struct cssmaster *findLocalCSS(const Tag *t)
 {
     while(t) {
-        if(t->action == TAGACT_SHADOW) return t->cssmaster;
-        if(t->action == TAGACT_HTML) break;
+        if(t->action == TAG_SHADOW) return t->cssmaster;
+        if(t->action == TAG_HTML) break;
         t = t->parent;
     }
     return 0;

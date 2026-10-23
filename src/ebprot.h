@@ -154,6 +154,7 @@ bool varCommand(const char *line);
 bool varExpand(const char *line, char **newline);
 
 // sourcefile=html.c
+bool isHtmlElement(const Tag *t);
 void dwStart(void);
 bool tagHandler(int seqno, const char *name);
 void fillEmptySelect(Tag *sel);
@@ -218,7 +219,7 @@ void traverseAll(int start, struct parseContext *pc);
 Tag *findOpenTag(Tag *t, int action);
 Tag *findOpenSection(Tag *t);
 Tag *findOpenList(Tag *t);
-#define findOpenSVG(t) (findOpenTag(t, TAGACT_SVG))
+#define findOpenSVG(t) (findOpenTag(t, TAG_SVG))
 bool controlledBy(const Tag *t, const Tag *above);
 void formControl(Tag *t, bool namecheck);
 void htmlInputHelper(Tag *t);

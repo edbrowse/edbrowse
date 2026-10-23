@@ -21,6 +21,14 @@ bool do_pjobs = true;
 
 static const int asyncTimer = 700;
 
+// is a tag an html element?
+bool isHtmlElement(const Tag *t)
+{
+    const int action = t->action;
+    return !(action == TAG_TEXT || action == TAG_COMMENT ||
+    action == TAG_DOCTYPE || action == TAG_DOC || action == TAG_FRAG);
+}
+
 // start a document.write on current frame, i.e. cf
 void dwStart(void)
 {
@@ -112,7 +120,7 @@ static void gatherOptions(const Tag *start)
 static void gatherOptions1(Tag *t)
 {
     Tag *c;
-    if(t->action == TAGACT_OPTION) {
+    if(t->action == TAG_OPTION) {
         if(optCount + 1 == optAlloc) {
             optAlloc += 100;
             optArray = reallocMem(optArray, optAlloc*sizeof(Tag*));
@@ -148,7 +156,7 @@ static void gatherInputs(const Tag *start)
 static void gatherInputs1(Tag *t)
 {
     Tag *c;
-    if(t->action == TAGACT_INPUT) {
+    if(t->action == TAG_INPUT) {
         if(inpCount + 1 == inpAlloc) {
             inpAlloc += 100;
             inpArray = reallocMem(inpArray, inpAlloc*sizeof(Tag*));
@@ -174,7 +182,7 @@ void fillEmptySelect(Tag *sel)
     gatherOptions(sel);
     for(w = optArray; (t = *w); ++w) {
         if(t->disabled ||
-        (t->parent && t->parent->action == TAGACT_OPTG && t->parent->disabled))
+        (t->parent && t->parent->action == TAG_OPTG && t->parent->disabled))
             continue;
         // this is the first option
         break;
@@ -300,7 +308,7 @@ locateOptions(const Tag *sel, const char *input,
 
 		if(inputDisabled(t) ||
 		inputDisabled(sel) ||
-		(t->parent && t->parent->action == TAGACT_OPTG && inputDisabled(t->parent))) {
+		(t->parent && t->parent->action == TAG_OPTG && inputDisabled(t->parent))) {
 // If we are gathering values, to submit the form,
 // then somehow all these options have been selected.
 // The user can't select a disabled option but somebody did,
@@ -322,7 +330,7 @@ locateOptions(const Tag *sel, const char *input,
 				stringAndChar(&disp, &disp_l, selsep);
 // special exception for <input> with datalist - revert back to value.
 			stringAndString(&disp, &disp_l,
-			(sel->action == TAGACT_DATAL ? t->value : t->textval));
+			(sel->action == TAG_DATAL ? t->value : t->textval));
 		}
 
 		if (setcheck) {
@@ -384,7 +392,7 @@ void jSyncup(bool fromtimer, const Tag *active)
 
     for (k = 0; k < cw->numTags; ++k) {
         t = tagList[k];
-        if(t->action != TAGACT_INPUT) continue;
+        if(t->action != TAG_INPUT) continue;
         itype = t->itype;
         if (itype <= INP_HIDDEN) continue;
 
@@ -855,7 +863,7 @@ void loadScriptData(Tag *t)
     int blen, n;
     Frame *f = t->f0;
     const char *altsource, *realsource;
-    bool is_js = (t->action == TAGACT_SCRIPT);
+    bool is_js = (t->action == TAG_SCRIPT);
     bool from_data = false;
     bool jsbg = down_jsbg;
     struct i_get g;
@@ -978,11 +986,11 @@ void loadScriptData(Tag *t)
 // We can't background fetch if this is under <template>
 				const Tag *u;
 				for(u = t; u; u = u->parent)
-					if(u->action == TAGACT_TEMPLATE ||
-					u->action == TAGACT_HTML ||
-					u->action == TAGACT_FRAME)
+					if(u->action == TAG_TEMPLATE ||
+					u->action == TAG_HTML ||
+					u->action == TAG_FRAME)
 						break;
-				if(u && u->action == TAGACT_TEMPLATE)
+				if(u && u->action == TAG_TEMPLATE)
 					jsbg = false;
 			}
 
@@ -1081,7 +1089,7 @@ void loadFinishCSS(void)
 	int i;
 	for (i = 0; i < cw->numTags; ++i) {
 		t = tagList[i];
-		if(t->action != TAGACT_LINK) continue;
+		if(t->action != TAG_LINK) continue;
 		if (t->dead || !t->jslink || t->step != 3) continue;
 		if(cf != t->f0) continue; // some other frame
 		// don't need css until it is linked into the tree.
@@ -1216,9 +1224,9 @@ bool isRooted(const Tag *t)
 {
 	const Tag *up;
 	for(up = t; up; up = up->parent) {
-		if(up->action == TAGACT_HEAD || up->action == TAGACT_BODY)
+		if(up->action == TAG_HEAD || up->action == TAG_BODY)
 			return true;
-		if(up->action == TAGACT_TEMPLATE)
+		if(up->action == TAG_TEMPLATE)
 			return false;
 	}
 	return false;
@@ -1404,7 +1412,7 @@ top:
 
     for (j = 0; j < cw->numTags; ++j) {
         t = tagList[j];
-        if(t->action != TAGACT_SCRIPT) continue;
+        if(t->action != TAG_SCRIPT) continue;
         if (t->dead || !t->jslink || t->step >= 3) continue;
 // don't execute a script until it is linked into the tree.
         if(!isRooted(t)) continue;
@@ -1418,7 +1426,7 @@ passes:
 
     for (j = 0; j < cw->numTags; ++j) {
         t = tagList[j];
-        if(t->action != TAGACT_SCRIPT) continue;
+        if(t->action != TAG_SCRIPT) continue;
         if (t->dead || !t->jslink || t->step >= 5 || t->step <= 2) continue;
 // js may have upgraded step
         if((n = get_property_number_t(t, "eb$step")) > 4) {
@@ -1466,7 +1474,7 @@ passes:
 // after each pass, see if there is a link onload to run.
     for (j = 0; j < cw->numTags; ++j) {
         t = tagList[j];
-        if(t->action != TAGACT_LINK) continue;
+        if(t->action != TAG_LINK) continue;
         if(t->lic == 1 && t->jslink && !t->dead &&
         t->step >= 4 &&
         save_cf == t->f0) {
@@ -1482,7 +1490,7 @@ passes:
 // Fortunately this doesn't happen often.
     for (j = 0; j < cw->numTags; ++j) {
         t = tagList[j];
-        if(t->action != TAGACT_FRAME) continue;
+        if(t->action != TAG_FRAME) continue;
         if(!t->f1 && // not expanded yet
         !t->expf && // we haven't tried to expand it yet
         isRooted(t) && // it's in our tree
@@ -1510,7 +1518,7 @@ void preFormatCheck(int tagno, bool * pretag, bool * slash)
 	*pretag = *slash = false;
 	if (tagno >= 0 && tagno < cw->numTags) {
 		t = tagList[tagno];
-		*pretag = (t->action == TAGACT_PRE);
+		*pretag = (t->action == TAG_PRE);
 		*slash = t->slash;
 	}
 }
@@ -1834,7 +1842,7 @@ static void connectDatalist(Tag *t)
 	const char *lista = 0; // list from attributes
 	char *listj = 0; // list from javascript
 	const Tag *u;
-	if(t->action != TAGACT_INPUT || t->itype != INP_TEXT ||
+	if(t->action != TAG_INPUT || t->itype != INP_TEXT ||
 	t->ninp)
 		return;
 	lista = attribVal(t, "list");
@@ -1905,7 +1913,7 @@ void infShow(int tagno, const char *search)
 	if(t->itype == INP_SUBMIT &&
 	!inputDisabled(t) &&
 	debugLevel >= 3) {
-		const Tag *f = findOpenTag(t, TAGACT_FORM);
+		const Tag *f = findOpenTag(t, TAG_FORM);
 		if(f && f->href)
 			  eb_printf(" %s", f->href);
 		else if(attribVal(t, "onclick"))
@@ -1926,11 +1934,11 @@ So if we haven't done it before, do it now. */
     if(!gathered) gatherOptions(t);
     for (w = optArray; (v = *w); ++w) {
         Tag *x, *og = 0; // option group
-        if(v->parent && v->parent->action == TAGACT_OPTG)
+        if(v->parent && v->parent->action == TAG_OPTG)
             og = v->parent;
         if(og) {
             for(x = og->firstchild; x != v; x = x->sibling)
-                if(x->action == TAGACT_OPTION) break;
+                if(x->action == TAG_OPTION) break;
             if(x == v) { // first option in the group
                 const char *l1 = attribVal(og, "label");
                 const char *l2 = get_js_attribute(og, "label");
@@ -1953,7 +1961,7 @@ So if we haven't done it before, do it now. */
 closegroup:
         if(og) {
             for(x = v->sibling; x; x = x->sibling)
-                if(x->action == TAGACT_OPTION) break;
+                if(x->action == TAG_OPTION) break;
             if(!x) // last option in the group
                 eb_printf("}\n");
         }
@@ -2088,7 +2096,7 @@ static size_t utf8length(const char *s)
 bool infReplace(int tagno, char *newtext, bool notify)
 {
 	Tag *t = tagList[tagno];
-	const Tag *form = findOpenTag(t, TAGACT_FORM);
+	const Tag *form = findOpenTag(t, TAG_FORM);
 	char *display = 0;
 	int itype = t->itype;
 	int itype_minor = t->itype_minor;
@@ -2324,7 +2332,7 @@ static void resetVar(Tag *t)
 	bool bval = false;
 
 /* This is a kludge - option looks like INP_SELECT */
-	if (t->action == TAGACT_OPTION)
+	if (t->action == TAG_OPTION)
 		itype = INP_SELECT;
 
 	if (itype <= INP_SUBMIT)
@@ -2359,7 +2367,7 @@ static void resetVar(Tag *t)
 	} else if (itype == INP_SELECT) {
 /* remember this means option */
 		set_property_bool_t(t, "selected", bval);
-		const Tag *sel = findOpenTag(t, TAGACT_INPUT);
+		const Tag *sel = findOpenTag(t, TAG_INPUT);
 		if(bval && sel && sel->itype == INP_SELECT &&
 		!sel->multiple && sel->jslink)
 			set_property_number_t(sel,
@@ -2379,12 +2387,12 @@ static void formReset(const Tag *form)
 	for (i = 0; i < cw->numTags; ++i) {
 		t = tagList[i];
 		if (!controlledBy(t, form)) continue;
-		if (t->action == TAGACT_OPTION) {
+		if (t->action == TAG_OPTION) {
 			resetVar(t);
 			continue;
 		}
 
-		if (t->action != TAGACT_INPUT)
+		if (t->action != TAG_INPUT)
 			continue;
 		itype = t->itype;
 		// hidden fields do not revert
@@ -2443,7 +2451,7 @@ static bool fetchBoolVar(const Tag *t)
 
 	if (t->jslink && allowJS)
 		return get_property_bool_t(t,
-					 (t->action == TAGACT_OPTION ? "selected" : "checked"));
+					 (t->action == TAG_OPTION ? "selected" : "checked"));
 
 	checked = fieldIsChecked(t->seqno);
 	if (checked < 0)
@@ -2807,7 +2815,7 @@ Here is a small page to test some of these select option cases.
    gatherOptions(t);
 			const Tag *u = locateOptionByNum(t, 1);
 			if(u && stringEqual(u->textval, display) && !*u->value &&
-			!(u->parent && u->parent->action == TAGACT_OPTG)) {
+			!(u->parent && u->parent->action == TAG_OPTG)) {
 				nzFree(display);
 				goto required;
 			}
@@ -2933,12 +2941,12 @@ bool infPush(int tagno, char **post_string)
  * by form.submit().
  * Revert t back to 0, since there may be multiple submit buttons
  * on the form, and we don't know which one was pushed. */
-	if (t->action == TAGACT_FORM) {
+	if (t->action == TAG_FORM) {
 		form = t;
 		t = 0;
 		itype = INP_SUBMIT;
 	} else {
-		form = findOpenTag(t, TAGACT_FORM);
+		form = findOpenTag(t, TAG_FORM);
 		itype = t->itype;
 	}
 
@@ -3260,7 +3268,7 @@ bool charInOptions(char c)
             for (n = 0; n < w->numTags; ++n) {
                 t = w->tags[n];
                 if(t->textval && strchr(t->textval, c) &&
-                (sel = findOpenTag(t, TAGACT_INPUT)) &&
+                (sel = findOpenTag(t, TAG_INPUT)) &&
                 sel->itype == INP_SELECT && sel->multiple)
                     return true;
             }
@@ -3280,7 +3288,7 @@ void charFixOptions(char c)
 			if(!w->browseMode) continue;
 			for(j = 0; j < w->numTags; ++j) {
 				t = w->tags[j];
-				if(t->action != TAGACT_INPUT || !t->value ||
+				if(t->action != TAG_INPUT || !t->value ||
 				t->itype != INP_SELECT || !t->multiple)
 					continue;
 				for(u = t->value; *u; ++u)
@@ -3305,7 +3313,7 @@ bool charInFiles(char c)
 				continue;
 			for(j = 0; j < w->numTags; ++j) {
 				t = w->tags[j];
-				if(t->action != TAGACT_INPUT ||
+				if(t->action != TAG_INPUT ||
 				t->itype != INP_FILE || !t->multiple ||
 				!(u = fetchTextVar(t)))
 					continue;
@@ -3332,7 +3340,7 @@ void charFixFiles(char c)
 			cw = w;
 			for(j = 0; j < w->numTags; ++j) {
 				t = w->tags[j];
-				if(t->action != TAGACT_INPUT ||
+				if(t->action != TAG_INPUT ||
 				t->itype != INP_FILE || !t->multiple ||
 				!(u = fetchTextVar(t)))
 					continue;
@@ -3364,9 +3372,9 @@ const Tag *gebi_c(const Tag *t, const char *id, bool lookname)
 		action = t->action;
 		debugPrint(4, "up %d,%s", t->seqno, t->info->name);
 // don't go past document and up to a higher frame
-		if(action == TAGACT_HTML || action == TAGACT_FRAME)
+		if(action == TAG_HTML || action == TAG_FRAME)
 			return 0;
-		if(action == TAGACT_BODY)
+		if(action == TAG_BODY)
 			break;
 		if(!(t = t->parent))
 			return 0; // should never happen
@@ -3384,11 +3392,11 @@ static const Tag *gebi_r(const Tag *t)
 	debugPrint(4, "look %d,%s,%s", t->seqno, t->info->name, t->id);
 	if(t->id && stringEqual(t->id, idsearch))
 		return t;
-	if (anchorlook && t->action == TAGACT_A &&
+	if (anchorlook && t->action == TAG_A &&
 	t->name && stringEqual(t->name, idsearch))
 		return t;
 // do not descend into a new frame
-	if(t->action == TAGACT_FRAME)
+	if(t->action == TAG_FRAME)
 		return 0;
 // look through children
 	for (c = t->firstchild; c; c = c->sibling)
@@ -3964,9 +3972,9 @@ void delTags(int startRange, int endRange)
 /* Only mark certain tags as deleted.
  * If you mark <div> deleted, it could wipe out half the page. */
 			action = t->action;
-			if (action == TAGACT_TEXT ||
-			    action == TAGACT_HR ||
-			    action == TAGACT_LI || action == TAGACT_IMAGE)
+			if (action == TAG_TEXT ||
+			    action == TAG_HR ||
+			    action == TAG_LI || action == TAG_IMAGE)
 				t->deleted = true;
 		}
 	}
@@ -4169,7 +4177,7 @@ void scriptOnTimer(Tag *t)
 	jt->f = cf;
 	addToListBack(&timerList, jt);
 	debugPrint(3, "timer %s%d=%s context %d",
-		   (t->action == TAGACT_SCRIPT ? "script" : "xhr"),
+		   (t->action == TAG_SCRIPT ? "script" : "xhr"),
 		   ++timer_sn, t->href, cf->gsn);
 	jt->tsn = timer_sn;
 }
@@ -4387,13 +4395,13 @@ static void runTimer0(struct jsTimer *jt, const Frame *save_cf)
             if (!rc) { // it's done
                 t->threadjoined = true;
                 if (!t->loadsuccess ||
-                (t->action == TAGACT_SCRIPT &&  t->hcode != 200)) {
+                (t->action == TAG_SCRIPT &&  t->hcode != 200)) {
                     if (debugLevel >= 3)
-                        i_printf((t->action == TAGACT_SCRIPT ? MSG_GetJS : MSG_GetXHR),
+                        i_printf((t->action == TAG_SCRIPT ? MSG_GetJS : MSG_GetXHR),
                              t->href, t->hcode);
                     t->step = 6;
                 } else {
-                    if (t->action == TAGACT_SCRIPT) {
+                    if (t->action == TAG_SCRIPT) {
                         set_property_string_t(t, "text", t->value);
                         nzFree0(t->value);
                     }
@@ -4401,7 +4409,7 @@ static void runTimer0(struct jsTimer *jt, const Frame *save_cf)
                 }
             }
         }
-        if (t->step == 4 && t->action == TAGACT_SCRIPT) {
+        if (t->step == 4 && t->action == TAG_SCRIPT) {
             char *sourcefile = t->js_file;
             int ln = t->js_ln;
                         const char *a = get_property_string_t(t, "type");
@@ -4418,7 +4426,7 @@ static void runTimer0(struct jsTimer *jt, const Frame *save_cf)
                         cnzFree(a);
             debugPrint(3, "async exec complete");
         }
-        if (t->step == 4 && t->action != TAGACT_SCRIPT) {
+        if (t->step == 4 && t->action != TAG_SCRIPT) {
             t->step = 5;
             set_property_string_t(t, "$entire", t->value);
             nzFree0(t->value);
@@ -4451,7 +4459,7 @@ skip_execution:
 // this will free the xhr object and allow for garbage collection.
             disconnectTagObject(t);
             t->dead = true;
-            t->action = TAGACT_NOP;
+            t->action = TAG_NOP;
         }
     } else {
         int n = jt->jump_sec * 1000 + jt->jump_ms;
@@ -4494,7 +4502,7 @@ void showTimers(void)
 			printf("interval ");
 		else if(t->t)
 			printf("%s ",
-			   (t->t->action == TAGACT_SCRIPT ? "script" : "xhr"));
+			   (t->t->action == TAG_SCRIPT ? "script" : "xhr"));
 		else
 			printf("timer ");
 		printf("%d cx%d ", t->tsn, t->f->gsn);
@@ -4617,7 +4625,7 @@ static bool tableUnder(const Tag *top)
 {
 	const Tag *t;
 	for(t = top->firstchild; t; t = t->sibling) {
-		if(t->action == TAGACT_TABLE) return true;
+		if(t->action == TAG_TABLE) return true;
 		if(tableUnder(t)) return true;
 	}
 	return false;
@@ -4641,7 +4649,7 @@ Tag *v; // table tag above
 	const Tag *b; // tbody
 // find the containing table
 	for(v = (Tag*)t; v; v = v->parent)
-		if(v->action == TAGACT_TABLE) break;
+		if(v->action == TAG_TABLE) break;
 	if(!v) return 0; // this should never happen
 	if(v->post) return v->lic;
 
@@ -4652,17 +4660,17 @@ Tag *v; // table tag above
 	if(tableUnder(v)) goto presentation;
 // if there is a caption or thead section, probably data
 	for(b = v->firstchild; b; b = b->sibling) {
-		if(b->action == TAGACT_THEAD ||
+		if(b->action == TAG_THEAD ||
 		stringEqual(b->info->name, "caption"))
 			goto data;
-		if(b->action == TAGACT_TBODY) break;
+		if(b->action == TAG_TBODY) break;
 	}
 	if(!b) b = v;
 // check and see if first row has at least two headings
-	if((t = b->firstchild) && t->action == TAGACT_TR
-	&& (t = t->firstchild) && t->action == TAGACT_TD
+	if((t = b->firstchild) && t->action == TAG_TR
+	&& (t = t->firstchild) && t->action == TAG_TD
 	&& t->info->name[1] == 'h' && (t = t->sibling)
-	&& t->action == TAGACT_TD && t->info->name[1] == 'h')
+	&& t->action == TAG_TD && t->info->name[1] == 'h')
 		goto data;
 
 // I give up
@@ -4682,7 +4690,7 @@ static char *td_text;
 static int td_text_l;
 static void td_textUnder(const Tag *u)
 {
-	if(u->action == TAGACT_TEXT && u->textval)
+	if(u->action == TAG_TEXT && u->textval)
 		stringAndString(&td_text,&td_text_l, u->textval);
 	for(u = u->firstchild; u; u = u->sibling)
 		td_textUnder(u);
@@ -4694,7 +4702,7 @@ bool all_th(const Tag *tr)
 	const Tag *th;
 	int j = 0;
 	for(th = tr->firstchild; th; th = th->sibling) {
-		if(th->action != TAGACT_TD) continue;
+		if(th->action != TAG_TD) continue;
 		if(th->info->name[1] == 'd') return false;
 		++j;
 	}
@@ -4710,33 +4718,33 @@ static void findHeading(const Tag *t, int colno)
 	bool ishead = false;
 	td_text = initString(&td_text_l);
 	if(!t->parent ||
-	((t = t->parent)->action != TAGACT_TABLE &&
-	t->action != TAGACT_THEAD &&
-	t->action != TAGACT_TBODY &&
-	t->action != TAGACT_TFOOT))
+	((t = t->parent)->action != TAG_TABLE &&
+	t->action != TAG_THEAD &&
+	t->action != TAG_TBODY &&
+	t->action != TAG_TFOOT))
 		return;
 // can't unfold the header row
-	if(t->action == TAGACT_THEAD) return;
-	if(t->action == TAGACT_TBODY || t->action == TAGACT_TFOOT) {
+	if(t->action == TAG_THEAD) return;
+	if(t->action == TAG_TBODY || t->action == TAG_TFOOT) {
 		t = t->parent;
-		if(!t || t->action != TAGACT_TABLE)
+		if(!t || t->action != TAG_TABLE)
 			return;
 	}
 	t = t->firstchild;
 	for(u = t; u; u = u->sibling)
-		if(u->action == TAGACT_THEAD || u->action == TAGACT_TBODY) {
+		if(u->action == TAG_THEAD || u->action == TAG_TBODY) {
 			t = u;
 			break;
 		}
-	if(t && (t->action == TAGACT_THEAD || t->action == TAGACT_TBODY)) {
-		ishead = (t->action == TAGACT_THEAD);
+	if(t && (t->action == TAG_THEAD || t->action == TAG_TBODY)) {
+		ishead = (t->action == TAG_THEAD);
 		t = t->firstchild;
 	}
-	if(!t || t->action != TAGACT_TR || !t->firstchild)
+	if(!t || t->action != TAG_TR || !t->firstchild)
 		return;
 // it's a row with stuff under it
 	t = t->firstchild;
-	if(t->action != TAGACT_TD ||
+	if(t->action != TAG_TD ||
 	(!ishead && t->info->name[1] != 'h'))
 		return;
 
@@ -4747,7 +4755,7 @@ static void findHeading(const Tag *t, int colno)
 		return;
 
 	while(t) {
-		if(t->action == TAGACT_TD) {
+		if(t->action == TAG_TD) {
 			j += t->js_ln;
 			if(j > colno) {
 // this is the header we want, descend to the text field
@@ -4808,7 +4816,7 @@ static void td2columnHeading(const Tag *tr, const Tag *td)
 	if(!tr->ur && ttype != 1) return;
 
 	for(v = tr->firstchild; v; v = v->sibling) {
-		if(v->action != TAGACT_TD) continue;
+		if(v->action != TAG_TD) continue;
 		prior_p = 0;
 		while(isdigitByte(*cs)) {
 			if(!prior_p) prior_p = cs, prior_j = j;
@@ -4968,7 +4976,7 @@ static int ahref_under(const Tag *t)
 	Tag *u;
 	int rc;
 	for(u = t->firstchild; u; u = u->sibling) {
-		if(u->action == TAGACT_A) {
+		if(u->action == TAG_A) {
 			if (!u->href && u->jslink) {
 				char *new_url = get_property_url_t(u, false);
 				if (new_url && *new_url)
@@ -4978,7 +4986,7 @@ static int ahref_under(const Tag *t)
 				u->href = cloneString("#");
 			if(u->href) return 1;
 		}
-		if(u->action == TAGACT_TEXT) {
+		if(u->action == TAG_TEXT) {
 			const char *s = u->textval;
 			if(!s) s = emptyString;
 			while(*s) { if(!isspaceByte(*s)) return -1; ++s; }
@@ -5014,17 +5022,17 @@ static void emphasize(Tag *t, bool opentag, const char *a)
 
 // I don't see the point of injecting these marks if we are
 // inside a hyperlink or button.
-	Tag *t2 = findOpenTag(t, TAGACT_A);
+	Tag *t2 = findOpenTag(t, TAG_A);
 	if(t2 && t2->href) return;
-	t2 = findOpenTag(t, TAGACT_INPUT);
+	t2 = findOpenTag(t, TAG_INPUT);
 	if(t2 && t2->info->name[0] != 'b') return;
-	t2 = findOpenTag(t, TAGACT_OPTION);
+	t2 = findOpenTag(t, TAG_OPTION);
 	if(t2) return;
 
 // the converse; don't emphasize if we are a hyperlink.
     for(w = t->firstchild; w; w = w->sibling) {
         if(isBlankTag(w)) continue;
-        if(w->action != TAGACT_A || !w->href) break;
+        if(w->action != TAG_A || !w->href) break;
     }
     if(!w) return;
 
@@ -5122,8 +5130,8 @@ static void renderNode(Tag *t, bool opentag, struct parseContext *pc)
 			deltag = 0;
 li_hide:
 /* we can skate past the li tag, but still need to increment the count */
-		if (action == TAGACT_LI && opentag &&
-		    (ltag = findOpenList(t)) && ltag->action == TAGACT_OL)
+		if (action == TAG_LI && opentag &&
+		    (ltag = findOpenList(t)) && ltag->action == TAG_OL)
 			++ltag->lic;
 		return;
 	}
@@ -5194,7 +5202,7 @@ nocolorend:
         bool inv_now = false;
         if(allowJS && t->jslink) {
 // lots of text nodes, and they don't carry visibility information
-            if(action != TAGACT_TEXT) {
+            if(action != TAG_TEXT) {
                 j = cssInvisible(t);
                 inv_now = (j&1), j >>= 1;
             }
@@ -5230,7 +5238,7 @@ nocolorend:
 		retainTag = false;
 		opentag ? ++invisible : --invisible;
 /* special case for noscript with no js */
-		if (action == TAGACT_NOSCRIPT && !cf->cx)
+		if (action == TAG_NOSCRIPT && !cf->cx)
 			invisible = false;
 	}
 
@@ -5297,7 +5305,7 @@ yescolor:
 nocolor:
 
 	switch (action) {
-	case TAGACT_TEXT:
+	case TAG_TEXT:
 		if (!t->textval) break;
 		if (!invisible) {
 // I'm not gonna include the node numbers for all the text nodes;
@@ -5309,14 +5317,14 @@ nocolor:
 		}
 		break;
 
-	case TAGACT_CDATA:
+	case TAG_CDATA:
 		if (!t->textval) break;
 		if (!invisible) {
 			stringAndString(&ns, &ns_l, t->textval);
 		}
 		break;
 
-	case TAGACT_A:
+	case TAG_A:
 // special code for attached images from an email
 		if(opentag && !attimg &&
 		(a = attribVal(t, "attimg")) &&
@@ -5378,7 +5386,7 @@ nocolor:
 
 // check for span onclick and make it look like a link.
 // Same for div, maybe for others too.
-	case TAGACT_SPAN: case TAGACT_DIV:
+	case TAG_SPAN: case TAG_DIV:
 // don't overwrite text in <div> or in <span> with the title
 		al = 0;
 		if(opentag && !t->firstchild) al = arialabeltitle(t);
@@ -5387,9 +5395,9 @@ nocolor:
 			t->onclick = true;
 		if (!(t->onclick & allowJS) || ahref_under(t) > 0) {
 // regular span, don't need title unless it is inside a link
-			if(opentag && !findOpenTag(t, TAGACT_A))
+			if(opentag && !findOpenTag(t, TAG_A))
 				nzFree0(al);
-			if(al && action == TAGACT_DIV)
+			if(al && action == TAG_DIV)
 				stringAndChar(&ns, &ns_l, '\n');
 			j = ns_l;
 			if (al) // aria-label
@@ -5402,7 +5410,7 @@ nocolor:
 		if (opentag) {
 			sprintf(hnum, "%c%d{", InternalCodeChar, tagno);
 			ns_hnum();
-			if(al && action == TAGACT_DIV)
+			if(al && action == TAG_DIV)
 				stringAndChar(&ns, &ns_l, '\n');
 			j = ns_l;
 			if (al)
@@ -5417,7 +5425,7 @@ nocolor:
 		}
 		break;
 
-	case TAGACT_BQ:
+	case TAG_BQ:
 		if (invisible)
 			break;
 		while(ns_l && isspaceByte(ns[ns_l-1])) --ns_l;
@@ -5448,22 +5456,22 @@ No false positives, as you would surely encounter with a single *.
 Eventually the `@ and '@ are crunched away.
 *********************************************************************/
 
-    case TAGACT_EM: case TAGACT_STRONG: case TAGACT_B: case TAGACT_I:
-    case TAGACT_U: case TAGACT_INS: case TAGACT_S: case TAGACT_DEL:
-// TAGACT_CODE could go here, but it's more like blockquote than
+    case TAG_EM: case TAG_STRONG: case TAG_B: case TAG_I:
+    case TAG_U: case TAG_INS: case TAG_S: case TAG_DEL:
+// TAG_CODE could go here, but it's more like blockquote than
 // an emphasized word or phrase.
         if (invisible || !textDecorateOK()) break;
-        a = tdchars[action - TAGACT_EM];
+        a = tdchars[action - TAG_EM];
         if(*a == 'x') break; // x is code for no action
 // check for the tags that produce the same symbol
         for(j = 0; j < 8; ++j)
             if(!strcmp(a, tdchars[j]) &&
-            findOpenTag(t, TAGACT_EM + j))
+            findOpenTag(t, TAG_EM + j))
                 return;
         emphasize(t, opentag, a);
         break;
 
-	case TAGACT_SVG:
+	case TAG_SVG:
 		if (!invisible && opentag) {
 // I use to print "graphics" here, but that conveys virtually no information.
 // Maybe at some point I'll find something useful to insert
@@ -5474,8 +5482,8 @@ Eventually the `@ and '@ are crunched away.
 		}
 		break;
 
-	case TAGACT_OL:
-	case TAGACT_UL:
+	case TAG_OL:
+	case TAG_UL:
 		t->lic = t->slic;
 		t->post = false;
 // If this is <ul> with one item or no items below,
@@ -5483,9 +5491,9 @@ Eventually the `@ and '@ are crunched away.
 // indicate with lic = -2. We will suppresss it.
 		j = 0;
 		for(ltag = t->firstchild; ltag; ltag = ltag->sibling)
-			if(ltag->action == TAGACT_LI) ++j;
-		if(j <= 1 && action == TAGACT_UL &&
-		t->parent && t->parent->action == TAGACT_TD &&
+			if(ltag->action == TAG_LI) ++j;
+		if(j <= 1 && action == TAG_UL &&
+		t->parent && t->parent->action == TAG_TD &&
 		tableType(t->parent) == 1) {
 			t->lic = -2;
 			break;
@@ -5493,20 +5501,20 @@ Eventually the `@ and '@ are crunched away.
 // falling through is just fine, but sometimes generates a cc warning, so...
 		goto nop;
 
-	case TAGACT_DD:
+	case TAG_DD:
 		stringAndString(&ns, &ns_l,
 		opentag ? " \r: " : "\r");
 		goto check_id;
 
-	case TAGACT_DL:
-	case TAGACT_DT:
-	case TAGACT_OBJECT:
-	case TAGACT_BR:
-	case TAGACT_P:
-	case TAGACT_H:
-	case TAGACT_BODY:
-	case TAGACT_LABEL:
-	case TAGACT_NOP:
+	case TAG_DL:
+	case TAG_DT:
+	case TAG_OBJECT:
+	case TAG_BR:
+	case TAG_P:
+	case TAG_H:
+	case TAG_BODY:
+	case TAG_LABEL:
+	case TAG_NOP:
 nop:
 		if (invisible)
 			break;
@@ -5516,11 +5524,11 @@ nop:
 		else
 			j >>= 2;
 
-		int arialevel = (action != TAGACT_H) ? ariaHeadingLevel(t) : 0;
+		int arialevel = (action != TAG_H) ? ariaHeadingLevel(t) : 0;
 		if(arialevel && !j) j = 2;
 
 // special code for div inside a header, which shouldn't happen but does
-		if(action == TAGACT_DIV && findOpenTag(t, TAGACT_H))
+		if(action == TAG_DIV && findOpenTag(t, TAG_H))
 			j = 0;
 
 // defense against <td><p>stuff</p></td>
@@ -5532,7 +5540,7 @@ nop:
 // h3 inside a cell, table is almost certainly for presentation
 // We see this on facebook.
 // Let's hope the tableType() catches it.
-//				if(y->action == TAGACT_H) goto past_cell_paragraph;
+//				if(y->action == TAG_H) goto past_cell_paragraph;
 /* I use to say, if not <p> first or </p> last, then abort
 				if(opentag && z->firstchild != y) goto past_cell_paragraph;
 				if(!opentag && y->sibling) goto past_cell_paragraph;
@@ -5541,15 +5549,15 @@ Defense against <td><span></span><p>stuff</p></td>
 Should we watch for empty-ish tags besides span, or even empty trees? */
 				if(opentag) {
 					for(x = z->firstchild; x != y; x = x->sibling)
-						if(x->firstchild || x->action != TAGACT_SPAN)
+						if(x->firstchild || x->action != TAG_SPAN)
 							goto past_cell_paragraph;
 				}
 				if(!opentag) {
 					for(x = y->sibling; x; x = x->sibling)
-						if(x->firstchild || x->action != TAGACT_SPAN)
+						if(x->firstchild || x->action != TAG_SPAN)
 							goto past_cell_paragraph;
 				}
-				if(z->action == TAGACT_TD) break;
+				if(z->action == TAG_TD) break;
 				y = z;
 			}
 			if(z && tableType(z) == 1) j = 0;
@@ -5560,7 +5568,7 @@ past_cell_paragraph:
 		    c = '\f';
 		    if (j == 1) {
 		    	c = '\r';
-		    	if (action == TAGACT_BR)
+		    	if (action == TAG_BR)
 		    		c = '\n';
 		    }
 		    stringAndChar(&ns, &ns_l, c);
@@ -5575,7 +5583,7 @@ past_cell_paragraph:
 		    		*u0 = c;
 		    	}
 		    }
-		    if (opentag && (action == TAGACT_H || arialevel)) {
+		    if (opentag && (action == TAG_H || arialevel)) {
 // no need to print h1 if the section is empty
 		        for(ltag = t->firstchild; ltag; ltag = ltag->sibling)
 		            if(!isBlankTag(ltag)) break;
@@ -5603,7 +5611,7 @@ past_cell_paragraph:
         }
         break;
 
-	case TAGACT_PRE:
+	case TAG_PRE:
 		if (!retainTag)
 			break;
 /* one of those rare moments when I really need </tag> in the text stream */
@@ -5620,11 +5628,11 @@ past_cell_paragraph:
 			stringAndChar(&ns, &ns_l, '\f');
 		break;
 
-	case TAGACT_FORM:
+	case TAG_FORM:
 		currentForm = (opentag ? t : 0);
 		goto nop;
 
-	case TAGACT_INPUT:
+	case TAG_INPUT:
 		if (!retainTag)
 			break;
 		if (!opentag) {
@@ -5713,7 +5721,7 @@ past_cell_paragraph:
 		checkDisabled(t);
 		break;
 
-	case TAGACT_LI:
+	case TAG_LI:
 // we are only here on opentag. Look for containing <ol> or <ul>
 		if (!(ltag = findOpenList(t)))
 			goto nop;
@@ -5721,7 +5729,7 @@ past_cell_paragraph:
 		char olbuf[32];
 		olbuf[0] = 0;
 		tagInStream(tagno);
-		if (ltag->action == TAGACT_OL) {
+		if (ltag->action == TAG_OL) {
 			j = ++ltag->lic;
 // this checks for <li value=7>, but does not check for javascript
 // dynamically setting value after the html is parsed.
@@ -5737,29 +5745,29 @@ past_cell_paragraph:
 		stringAndChar(&ns, &ns_l, '\n');
 		break;
 
-	case TAGACT_HR:
+	case TAG_HR:
 // <hr> can be in the midst of options, as a separator between options.
 // We sure don't want that here.
-		if(findOpenTag(t, TAGACT_INPUT)) break;
+		if(findOpenTag(t, TAG_INPUT)) break;
 		if (retainTag) {
 			tagInStream(tagno);
 			stringAndString(&ns, &ns_l, "\r----------\r");
 		}
 		break;
 
-	case TAGACT_TR:
+	case TAG_TR:
 		if (!t->onclick && opentag && t->jslink && handlerPresent(t, "onclick"))
 			t->onclick = true;
 		if (opentag)
 			tdfirst = true;
 		if(t->ur && opentag && (ltag = t->parent)
-		&& (ltag->action == TAGACT_TABLE || ltag->action == TAGACT_TBODY
-		|| ltag->action == TAGACT_TFOOT)) {
+		&& (ltag->action == TAG_TABLE || ltag->action == TAG_TBODY
+		|| ltag->action == TAG_TFOOT)) {
 // print the row number
 			const Tag *v = ltag->firstchild;
 			j = 1;
 			while(v && v != t) {
-				if(v->action == TAGACT_TR) {
+				if(v->action == TAG_TR) {
 // sometimes the headers are in the tbody and not in thead.
 					if(j == 1 && all_th(v))
 						; // skip <th> row
@@ -5791,8 +5799,8 @@ past_cell_paragraph:
 			break;
 		}
 		if(!opentag && (ltag = t->parent)
-		&& (ltag->action == TAGACT_TABLE || ltag->action == TAGACT_TBODY
-		|| ltag->action == TAGACT_TFOOT)) {
+		&& (ltag->action == TAG_TABLE || ltag->action == TAG_TBODY
+		|| ltag->action == TAG_TFOOT)) {
 			if(t->ur) {
 				if (tdfirst) tdfirst = false;
 				else stringAndChar(&ns, &ns_l, '\n');
@@ -5800,10 +5808,10 @@ past_cell_paragraph:
 			td2columnHeading(t, 0);
 		}
 
-	case TAGACT_TABLE:
+	case TAG_TABLE:
 		goto nop;
 
-	case TAGACT_TD:
+	case TAG_TD:
 		if (!retainTag)
 			break;
 		if (!t->onclick && opentag && t->jslink && handlerPresent(t, "onclick"))
@@ -5826,7 +5834,7 @@ past_cell_paragraph:
 			break;
 		}
 		if(!(ltag = t->parent)
-		|| ltag->action != TAGACT_TR || !ltag->ur) {
+		|| ltag->action != TAG_TR || !ltag->ur) {
 // Traditional table format, pipe separated,
 // on one line if it fits, or wraps in unpredictable ways if it doesn't.
 			if (tdfirst)
@@ -5858,20 +5866,20 @@ past_cell_paragraph:
 		break;
 
 /* This is strictly for rendering math pages written with my particular css.
-* <span class=sup> becomes TAGACT_SUP, which means superscript.
+* <span class=sup> becomes TAG_SUP, which means superscript.
 * sub is subscript and ovb is overbar.
 * Sorry to put my little quirks into this program, but hey,
 * it's my program. */
-	case TAGACT_SUP:
-	case TAGACT_SUB:
-	case TAGACT_OVB:
+	case TAG_SUP:
+	case TAG_SUB:
+	case TAG_OVB:
 		if (!retainTag)
 			break;
-		if (action == TAGACT_SUB)
+		if (action == TAG_SUB)
 			j = 1;
-		if (action == TAGACT_SUP)
+		if (action == TAG_SUP)
 			j = 2;
-		if (action == TAGACT_OVB)
+		if (action == TAG_OVB)
 			j = 3;
 		if (opentag) {
 			static const char *openstring[] = { 0,
@@ -5919,8 +5927,8 @@ unparen:
 			stringAndChar(&ns, &ns_l, ' ');
 		break;
 
-	case TAGACT_AREA:
-	case TAGACT_FRAME:
+	case TAG_AREA:
+	case TAG_FRAME:
 		if (!retainTag) break;
 		if (t->f1 && !t->contracted) {	/* expanded frame */
 			sprintf(hnum, "\r%c%d*%s\r", InternalCodeChar, tagno,
@@ -5931,15 +5939,15 @@ unparen:
 // frame or area is not expanded
 		if (!opentag) break;
 		stringAndString(&ns, &ns_l,
-				(action == TAGACT_FRAME ? "\rFrame " : "\r"));
+				(action == TAG_FRAME ? "\rFrame " : "\r"));
 // js often creates frames dynamically, so check for src
 		if(allowJS && t->jslink) {
 			nzFree(t->href);
 			t->href = get_property_string_t(t,
-			(t->action == TAGACT_AREA ? "href" : "src"));
+			(t->action == TAG_AREA ? "href" : "src"));
 		}
 		a = 0;
-		if (action == TAGACT_AREA)
+		if (action == TAG_AREA)
 			a = imageAlt(t);
 		if (!a) {
 			if((a = t->name)) {
@@ -5957,12 +5965,12 @@ unparen:
 				a = altText(t->href);
 		}
 		if (!a)
-			a = (action == TAGACT_FRAME ? "???" : "area");
+			a = (action == TAG_FRAME ? "???" : "area");
 		if (t->href) {
 			sprintf(hnum, "%c%d{", InternalCodeChar, tagno);
 			ns_hnum();
 		}
-		if (t->href || action == TAGACT_FRAME)
+		if (t->href || action == TAG_FRAME)
 			stringAndString(&ns, &ns_l, a);
 		if (t->href) {
 			ns_ic();
@@ -5973,7 +5981,7 @@ unparen:
 			deltag = t;
 		break;
 
-	case TAGACT_DET:
+	case TAG_DET:
 // defer to the javascript, they may have opened the details for us.
 		if(t->jslink)
 			t->contracted = !get_property_bool_t(t, "open");
@@ -5989,10 +5997,10 @@ unparen:
 		ns_hnum();
 		a = 0;
 		for(ltag = t->firstchild; ltag; ltag = ltag->sibling)
-			if(ltag->action == TAGACT_SUMMARY) break;
+			if(ltag->action == TAG_SUMMARY) break;
 		if(ltag &&
 		(ltag = ltag->firstchild) &&
-		ltag->action == TAGACT_TEXT)
+		ltag->action == TAG_TEXT)
 			a = ltag->textval;
 		if(a) stringAndString(&ns, &ns_l, a);
 		ns_ic();
@@ -6000,8 +6008,8 @@ unparen:
 		deltag = t;
 		break;
 
-	case TAGACT_AUDIO:
-	case TAGACT_VIDEO:
+	case TAG_AUDIO:
+	case TAG_VIDEO:
 		if(!opentag) break;
 		if (!retainTag) break;
 		if (!t->href) break;
@@ -6014,7 +6022,7 @@ unparen:
 		ns_hnum();
 		break;
 
-	case TAGACT_IMAGE:
+	case TAG_IMAGE:
 		tagInStream(tagno);
 		if (!currentA) {
 			if (invisible) break;
@@ -6073,7 +6081,7 @@ char *render(void)
 // than to figure out if we should do it.
     for(i = 0; i < cw->numTags; ++i) {
         t = tagList[i];
-        if(t->action != TAGACT_SHADOW) continue;
+        if(t->action != TAG_SHADOW) continue;
         if(t->dead) continue;
 // don't test for t->deleted, shadowRoot is always deleted at the start,
 // then is undeleted as part of the render process.
@@ -6168,12 +6176,12 @@ struct htmlTag *t;
 // could be 0, but should never be negative
 		if (tagno <= 0) continue;
 		t = tagList[tagno];
-		if(t->action == TAGACT_TR)
+		if(t->action == TAG_TR)
 			return t;
-		if(t->action != TAGACT_TD)
+		if(t->action != TAG_TD)
 			continue;
 		t = t->parent;
-		if(t && t->action == TAGACT_TR)
+		if(t && t->action == TAG_TR)
 			return t;
 	}
 	setError(MSG_NoTable);
@@ -6189,17 +6197,17 @@ static struct htmlTag *line2table(int ln)
 	}
 	t = line2tr(ln);
 	if(!t || !t->parent ||
-	((t = t->parent)->action != TAGACT_TABLE &&
-	t->action != TAGACT_THEAD &&
-	t->action != TAGACT_TBODY &&
-	t->action != TAGACT_TFOOT)) {
+	((t = t->parent)->action != TAG_TABLE &&
+	t->action != TAG_THEAD &&
+	t->action != TAG_TBODY &&
+	t->action != TAG_TFOOT)) {
 		setError(MSG_NoTable);
 		return 0;
 	}
-	if(t->action != TAGACT_TABLE) {
+	if(t->action != TAG_TABLE) {
 // it is tbody or thead
 		t = t->parent;
-		if(!t || t->action != TAGACT_TABLE) {
+		if(!t || t->action != TAG_TABLE) {
 			setError(MSG_NoTable);
 			return 0;
 		}
@@ -6219,23 +6227,23 @@ bool showHeaders(int ln)
 	if(!t)
 		return false;
 	for(t = t->firstchild; t; t = t->sibling)
-		if(t->action == TAGACT_THEAD || t->action == TAGACT_TBODY)
+		if(t->action == TAG_THEAD || t->action == TAG_TBODY)
 			break;
 	if(!t)
 		goto fail;
-	ishead = (t->action == TAGACT_THEAD);
+	ishead = (t->action == TAG_THEAD);
 	t = t->firstchild;
-	if(!t || t->action != TAGACT_TR || !t->firstchild)
+	if(!t || t->action != TAG_TR || !t->firstchild)
 		goto fail;
 	t = t->firstchild;
-	if(t->action != TAGACT_TD ||
+	if(t->action != TAG_TD ||
 	t->info->name[1] != 'h')
 		goto fail;
 // if this is tbody, one <th> isn't enough, could be a row header, we need a line of th.
 	if(!ishead && !all_th(t->parent)) goto fail;
 	colno = 1;
 	while(t) {
-		if(t->action == TAGACT_TD) {
+		if(t->action == TAG_TD) {
 			printf("%d ", colno);
 			colno += t->js_ln; // colspan
 			td_text = initString(&td_text_l);

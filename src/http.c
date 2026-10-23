@@ -1563,7 +1563,7 @@ void *httpConnectBack2(void *ptr)
 			nzFree(g.buffer);
 // don't know why t->value would be anything
 		nzFree(t->value);
-		if(t->action == TAGACT_LINK &&
+		if(t->action == TAG_LINK &&
 		!cssCompatibleContent(g.content))
 			nzFree0(b);
 		t->value = b;
@@ -3258,7 +3258,7 @@ int frameExpandLine(int ln, Tag *t)
 		t = tagList[tagno];
 	}
 
-	if (t->action == TAGACT_DET) {
+	if (t->action == TAG_DET) {
 		if(t->contracted) {
 			t->contracted = false;
 			if(t->jslink)
@@ -3267,7 +3267,7 @@ int frameExpandLine(int ln, Tag *t)
 		return 0;
 	}
 
-	if (t->action != TAGACT_FRAME) return 1;
+	if (t->action != TAG_FRAME) return 1;
 
 // the easy case is if it's already been expanded before, we just unhide it.
 	if (t->f1) {
@@ -3441,7 +3441,7 @@ static int frameContractLine(int ln)
 		return 1;
 	if(!t->contracted) {
 		t->contracted = true;
-		if(t->action == TAGACT_DET && t->jslink)
+		if(t->action == TAG_DET && t->jslink)
 			set_property_bool_t(t, "open", false);
 	}
 	return 0;
