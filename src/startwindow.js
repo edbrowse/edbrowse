@@ -4289,11 +4289,13 @@ swdc(CSSStyleDeclaration);
 // familiar with the above class and it's weird side effects.
 // parameters: e is the node and pe is the pseudoelement
 this.getComputedStyle = function(e,pe) {
+// chrome blows up if the parameters are not proper.  edbrowse is more permissive.
     if(typeof pe != "string") pe = 0;
     else if(pe.match(/^\s*$/)) pe = 0;
     else if(pe.match(/:before$/)) pe = 1;
     else if(pe.match(/:after$/)) pe = 2;
     else { alert3("getComputedStyle pseudoelement " + pe + " is invalid"); pe = 0; }
+    if(!e || e.nodeType != 1) return new CSSStyleDeclaration;
 
 /*********************************************************************
 Some sites call getComputedStyle on the same node over and over again.
