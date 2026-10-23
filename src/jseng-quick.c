@@ -2314,18 +2314,18 @@ static JSValue nat_win_close(JSContext * cx, JSValueConst this, int argc, JSValu
 
 static JSValue nat_modtime(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
-	const char *file = 0;
-	int64_t t = 0;
-	struct stat buf;
-	if (argc > 0)
-		file = JS_ToCString(cx, argv[0]);
-	if (file && *file &&
-	!stat(file, &buf))
-		t = buf.st_mtime;
-	if(argc > 0)
-		JS_ReleaseString(file);
-        (void) this;
-	return JS_NewInt64(cx, t);
+    const char *file = 0;
+    int64_t t = 0;
+    struct stat buf;
+    if (argc > 0 && browseLocal)
+        file = JS_ToCString(cx, argv[0]);
+    if (file && *file &&
+    !stat(file, &buf))
+        t = buf.st_mtime;
+    if(argc > 0 && browseLocal)
+        JS_ReleaseString(file);
+    (void) this;
+    return JS_NewInt64(cx, t);
 }
 
 // find the frame, in the current window, that goes with this.
