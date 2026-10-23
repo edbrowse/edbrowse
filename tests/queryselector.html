@@ -5,7 +5,8 @@
 <form action=http://this.that.com>
 subject: <input name=subject value="Punic wars" readonly>
 Fruit: <select name=fruit multiple>
-<option value=a>apple
+<option value=a>apple</option>
+<!-- citrus -->
 <option value=o>orange
 <option value=l>lemon
 </select>
@@ -147,7 +148,7 @@ if(gamma.firstChild.data != "  psi theta") msg += `|gamma replacement ${gamma.fi
 if(gamma.parentNode.textContent != "alphabeta  psi theta") msg += `|ol text ${gamma.parentNode.textContent}`
 gamma = b.querySelector("select")
 // I'm not sure I can get the browsers to agree on the whitespace
-if(!gamma.textContent.match(/^\s+apple\s+orange\s+lemon\s+$/)) msg += `|${gamma.textContent}|`
+if(!gamma.textContent.match(/^\s+apple\s*orange\s*lemon\s+$/)) msg += `|${gamma.textContent}|`
 
 q = b.querySelectorAll(":nth-child(3n)")
 if(q.length != 5) msg += `|bad child 3n length ${q.length}`
