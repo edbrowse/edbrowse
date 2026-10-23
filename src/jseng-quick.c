@@ -1523,16 +1523,25 @@ static JSValue nat_hasFocus(JSContext * cx, JSValueConst this, int argc, JSValue
 
 static JSValue nat_puts(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
-	if(argc >= 1) {
-		    const char *str = JS_ToCString(cx, argv[0]);
-		            if (str) {
-			printf("%s", str);
-			JS_ReleaseString(str);
-		            }
-	        }
-	printf("\n");
-        (void) this;
-        return JS_UNDEFINED;
+    if(argc >= 1) {
+        const char *str = JS_ToCString(cx, argv[0]);
+        if (str) {
+// make sure some bad person doesn't send bizarre control characters
+// or escape sequences to your terminal.
+            const char *s = str;
+            uchar c;
+            while((c = *(const uchar*)s)) {
+                if((c >= 1 && c <= 6) || (c >= 14 && c <= 31))
+                    printf("x%02x", c);
+                else printf("%c", c);
+                ++s;
+            }
+            JS_ReleaseString(str);
+        }
+    }
+    printf("\n");
+    (void) this;
+    return JS_UNDEFINED;
 }
 
 // write local file
@@ -1590,16 +1599,16 @@ static JSValue nat_media(JSContext * cx, JSValueConst this, int argc, JSValueCon
 
 static JSValue nat_logputs(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
-	jsInterruptCheck(cx);
-	const char *s = JS_ToCString(cx, argv[1]);
-	int32_t minlev = 99;
-	JS_ToInt32(cx, &minlev, argv[0]);
-	if (debugLevel >= minlev && s && *s)
-		debugPrint(3, "%s", s);
-	JS_ReleaseString(s);
-        (void) this;
-        (void) argc;
-	return JS_UNDEFINED;
+    jsInterruptCheck(cx);
+    const char *s = JS_ToCString(cx, argv[1]);
+    int32_t minlev = 99;
+    JS_ToInt32(cx, &minlev, argv[0]);
+    if (debugLevel >= minlev && s && *s)
+        debugPrint(3, "%s", s);
+    JS_ReleaseString(s);
+    (void) this;
+    (void) argc;
+    return JS_UNDEFINED;
 }
 
 static JSValue nat_prompt(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
