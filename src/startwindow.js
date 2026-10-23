@@ -993,39 +993,34 @@ class Node extends EventTarget
 
     cloneNode(deep) { return mw$.cloneNodeHelper(this,deep, 0); }
 
-/* Static function to find the common ancestor of two nodes.
-This is a simple algorithm, and is quadratic in the depth of the tree,
-however, trees in the real world are rrarely more than a dozen deep
-so I'm going with it. If you want to improve the algorithm,
-to handle even pathologically deep trees,
-travel up both nodes to document,
-put all those nodes together in a list, quicksort on eb$seqno,
-then look through the list for duplicate nodes, the duplicate that is the
-deepest is your common ancestor, and that's n*log(n) */
+// Static function to find the common ancestor of two nodes.
     static commonAncestor(y, z, result)
     {
         // check the easy case first, the same node
         if(y == z) { result.root = y, result.i = 0, result.j = 0; return; }
         let py = [], pz = []; // paths to root
-        for(let t = y; t; t = t.parentNode) {
+        let t, s = new Set;
+        for(t = y; t; t = t.parentNode) {
             py.push(t);
-            // allow nodeType == 3 for a text node
+            // sometimes we start with a text node; we have to be able to go up
             if(t.nodeType != 1 && t.nodeType != 3 && t.nodeType != 8) break;
             if(t.is$frame) break;
         }
-        for(let t = z; t; t = t.parentNode) {
+        for(t = z; t; t = t.parentNode) {
             pz.push(t);
+            // hash access of the set keeps this algorithm from going quadratic
+            s.add(t);
             if(t.nodeType != 1 && t.nodeType != 3 && t.nodeType != 8) break;
             if(t.is$frame) break;
         }
         let root = null, i, j;
-        for(i = 0; i < py.length; ++i) {
-            for(j = 0; j < pz.length; ++j)
-                if(py[i] == pz[j]) { root = py[i]; break; }
-                if(root) break;
-        }
+        for(i = 0; i < py.length; ++i)
+            if(s.has(py[i])) { root = py[i]; break; }
         result.root = root;
-        if(root) result.i = i, result.j = j, result.py = py, result.pz = pz;
+        if(!root) return;
+        for(j = 0; j < pz.length; ++j)
+            if(pz[j] == root) break;
+        result.i = i, result.j = j, result.py = py, result.pz = pz;
     }
 
     compareDocumentPosition(z)
