@@ -266,6 +266,20 @@ li.closest("body").nodeName != "BODY") msg += "|couldn't find closest nodes";
 if(li.closest("div:nth-of-type(odd)") ||
 li.closest("p") !== null) msg += "|closest found wrong nodes";
 
+// permissive regarding closing punctuation
+// I can't believe chrome allows this stuff
+form.setAttribute("vv", "a,b");
+q = b.querySelectorAll(".shoe:has(form[vv='a,b");
+if(q.length != 1 || q[0].nodeName != "DIV") msg += "|:has(vv=['a,b";
+q = b.querySelectorAll("form:not(:has(hr"); // missing two parentheses
+if(q.length != 1 || q[0].nodeName != "FORM") msg += "|:not(:has(hr";
+q = b.querySelectorAll("form:not(:has(hr,br"); // don't get snookered by the comma
+if(q.length != 1 || q[0].nodeName != "FORM") msg += "|:not(:has(hr,br";
+// chrome doesn't allow [vv=a,b so I don't have to test for that,
+// although I do allow it.
+q = b.querySelectorAll('div[n="3');
+if(q.length != 1 || q[0].nodeName != "DIV") msg += "|div[\"n=3";
+
 // :has(), this is a can of worms.
 q = b.querySelectorAll(":has(option)"); // descendant
 if(q.length != 3 || q[2].nodeName != "SELECT") msg += "|:has(option)";

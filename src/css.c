@@ -809,11 +809,13 @@ static void cssStats(void)
     nzFree(s);
 }
 
-static int closeString(char *s, char delim)
+// delim is " ' [ or (
+static int closeString(const char *s, char delim)
 {
     int i;
     char c, qc = 0; // quote character
     int pc = 0; // paren count
+    const char *s0 = s;
     if (delim == '"' || delim == '\'')
         qc = delim;
     for (i = 0; (c = s[i]); ++i) {
@@ -838,7 +840,9 @@ static int closeString(char *s, char delim)
         if (c == '"' || c == '\'')
             qc = c;
     }
-    return -1;
+// ran off the end, maybe we should stop at brace
+    s = strchr(s0, '{');
+    return s ? s - s0 : i;
 }
 
 // turn "p,div,>option" into p,* div,*>option"
@@ -848,21 +852,31 @@ static char *embedStars(const char *s)
 {
     if(!strchr(s, ',')) return 0; // no commas
     int l = strlen(s), count = 0;
-    char *t, *q, c;
+    char *t, *q, c, qc = 0;
     const char *p;
     for(p = s; *p; ++p) if(*p == ',') ++count;
     t = allocMem(l + count*2 + 1);
     int state = 0;
     for(p = s, q = t; (c = *p); ++p) {
+        if(isspace(c)) {
+// space isn't going to change the state, so just copy and go
+            *q++ = c;
+            continue;
+        }
+        if(state == 2) {
+            *q++ = '*';
+            if(c != '>' && c != '+' && c != '~') *q++ = ' ';
+            state = 0;
+        }
+        if(state == 0 && c == ',') state = 2;
+        if(c == qc) {
+            state = 0, qc = 0;
+        } else if(state == 0) {
+            if(c == '"') qc = c, state = 1;
+            if(c == '\'') qc = c, state = 1;
+            if(c == '[') qc = ']', state = 1;
+        }
         *q++ = c;
-// I will assume brackets, if present, are balanced and not nested
-        if(c == '[') state = 1;
-        if(c == ']') state = 0;
-        if(c == ',') state = 2;
-        if(state != 2 || isspace(c)) continue;
-        *q++ = '*';
-        if(c != '>' && c != '+' && c != '~') *q++ = ' ';
-        state = 0;
     }
     *q = 0;
     return t;
@@ -933,11 +947,6 @@ static void uncomment(char *s)
 
         if (c == '"' || c == '\'') {
             n = closeString(s + 1, c);
-            if (n < 0) {
-                debugPrint(3, "unterminated string %s",
-                       cut20(s));
-                goto abandon;
-            }
             ++n;
             memmove(w, s, n);
             s += n;
@@ -1475,10 +1484,6 @@ static bool media(struct desc *d, char *t)
     while ((c = *t)) {
         if (strchr("'\"[(", c)) {
             n = closeString(t + 1, c);
-            if (n < 0) { // should not happen
-                d->error = CSS_ERROR_BADMEDIA;
-                return false;
-            }
             t += n + 1;
             continue;
         }
@@ -1630,7 +1635,6 @@ top:
                 char *lasturl, *newurl;
                 if (c == '"' || c == '\'') {
                     n = closeString(t + 1, c);
-                    if (n < 0) break; // should never happen
                     t += n + 1;
                     continue;
                 }
@@ -1699,8 +1703,6 @@ top2:
         while ((c = *t)) {
             if (c == '"' || c == '\'') {
                 n = closeString(t + 1, c);
-                if (n < 0)
-                    break;
                 t += n + 1;
                 continue;
             }
@@ -1722,11 +1724,6 @@ top2:
             at_end_marker = 0;
         if (c == '"' || c == '\'') {
             n = closeString(s + 1, c);
-            if (n < 0) {
-                debugPrint(3, "unterminated string %s",
-                       cut20(s));
-                break;
-            }
             s += n + 1;
             continue;
         }
@@ -1916,7 +1913,6 @@ copy: ++s;
         while ((c = *s)) {
             if (c == '"' || c == '\'') {
                 n = closeString(s + 1, c);
-                if (n < 0) break; // should never happen
                 s += n + 1;
                 continue;
             }
@@ -2052,7 +2048,6 @@ static void cssParseLeft(struct desc *d)
     while ((c = *s)) {
         if (c == '"' || c == '\'' || c == '[') {
             n = closeString(s + 1, c);
-            if (n < 0) break; // should never happen
             s += n + 1;
             last_c = 0;
             continue;
@@ -2083,7 +2078,6 @@ Simplistic check here, next selector should not begin with a digit. */
         !strncmp(s, ":where(", 7)) {
             const int l = s[1] == 'i' ? 4 : s[1] == 'w' ? 7 : 5;
             n = closeString(s + l, '(');
-            if (n < 0) break; // should not happen
             s += n + l;
             last_c = 0;
             continue;
@@ -2244,7 +2238,6 @@ static void cssAtomic(struct asel *a)
         if (c == '"' || c == '\'') {
             last_c = 0;
             n = closeString(s + 1, c);
-            if (n < 0) break;// should never happen
             s += n + 1;
             continue;
         }
@@ -2256,7 +2249,6 @@ static void cssAtomic(struct asel *a)
             const int l = strchr(s, '(') - m1;
             last_c = 0;
             n = closeString(s + l, '(');
-            if (n < 0) break;
             s += n + l;
             continue;
         }
@@ -2317,11 +2309,8 @@ static void cssModify(struct asel *a, const char *m1, const char *m2)
         struct desc d0; // dummy descriptor for not()
         const uchar under = t[1] == 'n' ? MODNOT : t[1] == 'i' ? MODIS : t[1] == 'h' ? MODHAS : MODWHERE;
         const int l = t[1] == 'i' ? 4 : t[1] == 'w' ? 7 : 5;
-        if (t[n - 1] != ')') {
-            a->error = CSS_ERROR_UNSUP;
-            return;
-        }
-        t[--n] = 0;
+        if (t[n - 1] == ')')
+            t[--n] = 0;
         strmove(t + 2, t + l);
         t[0] = t[1] = ' ';
         trim(t + 2);
@@ -2400,16 +2389,15 @@ so maybe I should continue to do so. */
             return;
         }
 // :lang(it) becomes [lang|=it], but more
-        if (!strncmp(t, ":lang(", 6) && t[n - 1] == ')') {
-            t[n - 1] = 0;
+        if (!strncmp(t, ":lang(", 6)) {
+            if(t[n-1] == ')') t[n - 1] = 0;
             return;
         }
-        if (t[n - 1] == ')' &&
-        (!strncmp(t, ":nth-child(", 11) ||
+        if (!strncmp(t, ":nth-child(", 11) ||
         !strncmp(t, ":nth-last-child(", 16) ||
         !strncmp(t, ":nth-of-type(", 13) ||
-        !strncmp(t, ":nth-last-of-type(", 18))) {
-            t[n - 1] = 0;
+        !strncmp(t, ":nth-last-of-type(", 18)) {
+            if(t[n-1] == ')') t[n - 1] = 0;
             spaceCrunch(t, false, false);
             return;
         }
@@ -2447,11 +2435,8 @@ so maybe I should continue to do so. */
 // fall through
 
     case '[':
-        if (t[n - 1] != ']') {
-            a->error = CSS_ERROR_RB;
-            return;
-        }
-        t[--n] = 0; // lop off ]
+        if (t[n - 1] == ']')
+            t[--n] = 0; // lop off ]
         trim(t);
         // remove whitespace from either side of =
         w = strchr(t, '=');
