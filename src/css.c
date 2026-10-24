@@ -2403,7 +2403,8 @@ so maybe I should continue to do so. */
         if (!strncmp(t, ":nth-child(", 11) ||
         !strncmp(t, ":nth-last-child(", 16) ||
         !strncmp(t, ":nth-of-type(", 13) ||
-        !strncmp(t, ":nth-last-of-type(", 18)) {
+        !strncmp(t, ":nth-last-of-type(", 18) ||
+        !strncmp(t, ":dir(", 5)) {
             if(t[n-1] == ')') t[n - 1] = 0;
             spaceCrunch(t, false, false);
             return;
@@ -3208,6 +3209,11 @@ nth_bad:
 // edbrowse doesn't lead to a printout, so I think it's safer to say no here.
         if (stringEqual(p, ":first") || stringEqual(p, ":last"))
             return false;
+
+// :dir a stub for now, say yes if ltr
+        if (!strncmp(p, ":dir(", 5)) {
+            return stringEqual(p + 5, "ltr");
+        }
 
         if (stringEqual(p, ":root") || stringEqual(p, ":scope")) {
 /*********************************************************************
