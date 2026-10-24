@@ -841,6 +841,33 @@ static int closeString(char *s, char delim)
     return -1;
 }
 
+// turn "p,div,>option" into p,* div,*>option"
+// I will try to watch out for :has(p[farm=a,b])  if such a selector
+// is even possible, but there may be other ways this could go astray.
+static char *embedStars(const char *s)
+{
+    if(!strchr(s, ',')) return 0; // no commas
+    int l = strlen(s), count = 0;
+    char *t, *q, c;
+    const char *p;
+    for(p = s; *p; ++p) if(*p == ',') ++count;
+    t = allocMem(l + count*2 + 1);
+    int state = 0;
+    for(p = s, q = t; (c = *p); ++p) {
+        *q++ = c;
+// I will assume brackets, if present, are balanced and not nested
+        if(c == '[') state = 1;
+        if(c == ']') state = 0;
+        if(c == ',') state = 2;
+        if(state != 2 || isspace(c)) continue;
+        *q++ = '*';
+        if(c != '>' && c != '+' && c != '~') *q++ = ' ';
+        state = 0;
+    }
+    *q = 0;
+    return t;
+}
+
 static char *cut20(char *s)
 {
     static char buf[20 + 1];
@@ -2304,22 +2331,24 @@ static void cssModify(struct asel *a, const char *m1, const char *m2)
             a->error = CSS_ERROR_UNSUP;
             return;
         }
+        char *t2 = 0;
         if(under == MODHAS) {
             has_clause = true;
             t[0] = '*';
+            t2 = embedStars(t);
         } else strmove(t, t + 2);
         memset(&d0, 0, sizeof(d0));
-        d0.lhs = t;
+        d0.lhs = (t2 ? t2 : t);
         cssParseLeft(&d0);
         mod->under = under;
         mod->underselect = d0.selectors;
         has_clause = false;
+        nzFree(t2);
         a->error = d0.error; // pass the error upward
         if (!d0.selectors) { //   :not() empty list
             // chrome considers this an error too
             a->error = CSS_ERROR_UNSUP;
         }
-        if(under == MODHAS) a->error = CSS_ERROR_UNSUP; // :has not yet implemented
         return;
     }
 
@@ -2972,13 +3001,16 @@ so I'm not gonna worry about that right now. */
 // this shouldn't happen
                 return false;
             }
+            if(under == MODHAS) has_clause = true;
             while(sel) {
                 if (qsaMatchChain(t, sel->chain)) {
+                    has_clause = false;
                     if(under == MODNOT) return false;
                     goto next_mod;
                 }
                 sel = sel->next;
             }
+            has_clause = false;
             // we passed through all the under selects
             if(under != MODNOT) return false;
             goto next_mod;
@@ -3302,9 +3334,14 @@ but we process it as <a> parent <div>
 Oops - unless we are in a has() clause.
 *********************************************************************/
 
+    if(has_clause) {
+        if (!qsaMatch(t, a)) return false;
+    }
+
     Tag *u;
     switch (a->combin) {
     case ',':
+        if(has_clause) return true;
         // this is the base node; it has to match.
         if (!qsaMatch(t, a)) break;
         // now look down the rest of the chain
@@ -3329,7 +3366,6 @@ onetime:
             for(u = t->sibling; u; u = u->sibling)
                 if(isHtmlElement(u)) break;
             if (!u) break;
-            if (!qsaMatch(u, a)) break;
             t = u;
         }
         goto onetime;
@@ -3347,11 +3383,8 @@ onetime:
                 // didn't match down the chain, let's continue to next sibling
             }
         } else { // later sibling
-            for(u = t->sibling; u; u = u->sibling) {
-                if (!qsaMatch(u, a)) continue;
-                if (!a->next) return true;
+            for(u = t->sibling; u; u = u->sibling)
                 if (qsaMatchChain(u, a->next)) return true;
-            }
         }
         break;
 
@@ -3363,11 +3396,8 @@ onetime:
             goto onetime;
         } else {
 // This direction is trickier; there is only one parent, but many children.
-            for(u = t->firstchild; u; u = u->sibling) {
-                if (!qsaMatch(u, a)) continue;
-                if (!a->next) return true;
+            for(u = t->firstchild; u; u = u->sibling)
                 if (qsaMatchChain(u, a->next)) return true;
-            }
             break;
         }
 
@@ -3391,15 +3421,13 @@ look at all the immediate children first.
 This is a depth first list, but this situation is so rare,
 I'm not inclined to write extra code to optimize it. */
             Tag **save_doclist = doclist;
+            doclist = 0; // so the next line doesn't free it
             build_doclist(t);
             Tag **descendants = doclist, **p;
             doclist = save_doclist;
             bool rc = false;
-            for(p = descendants + 1; (u = *p); ++p) {
-                if (!qsaMatch(u, a)) continue;
-                if (!a->next) {rc = true; break; }
+            for(p = descendants + 1; (u = *p); ++p)
                 if (qsaMatchChain(u, a->next)) {rc = true; break; }
-            }
             free(descendants);
             return rc;
         }

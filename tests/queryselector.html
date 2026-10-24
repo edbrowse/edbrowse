@@ -24,6 +24,7 @@ Fruit: <select name=fruit multiple>
 // test querySelector, and perhaps some of the css machinery.
 try {
 b = document.body
+form = document.forms[0];
 msg = "ok"
 isedbrowse = navigator.userAgent.substr(0, 8) == "edbrowse";
 // I wanted to do some shorthand, but chrome won't except it,
@@ -264,6 +265,26 @@ li.closest("li") != li ||
 li.closest("body").nodeName != "BODY") msg += "|couldn't find closest nodes";
 if(li.closest("div:nth-of-type(odd)") ||
 li.closest("p") !== null) msg += "|closest found wrong nodes";
+
+// :has(), this is a can of worms.
+q = b.querySelectorAll(":has(option)"); // descendant
+if(q.length != 3 || q[2].nodeName != "SELECT") msg += "|:has(option)";
+q = b.querySelectorAll(":has(> option)"); // child
+if(q.length != 1 || q[0].nodeName != "SELECT") msg += "|:has(>option)";
+q = b.querySelectorAll("p + div :has(> option):nth-child(even)");
+if(q.length != 1 || q[0].nodeName != "SELECT") msg += "|p div :has(>option)";
+q = form.querySelectorAll("*:not(:has(option))");
+if(q.length != 6 || q[0].name != "subject" || q[1].text != "apple") msg += "|:not(:has(option))";
+q = b.querySelectorAll(":has( +div + script  ,  +option + option)");
+if(q.length != 2 || q[1].nodeName != "DIV" || q[0].text != "apple") msg += "|:has(+div+script,+option+option";
+q = form.querySelectorAll("div form input:has(+select > option, +[type=submit])");
+if(q.length != 2 || q[0].name != "subject" || q[1].name != "happy") msg += "|:has(select or submit)";
+q = form.querySelectorAll(":has(+input + select)") // nothing to the left of this
+if(q.length != 0) msg += "|:has(+input+select)";
+q = form.querySelectorAll("input:has(~input)")
+if(q.length != 2) msg += "|input:has(~input)";
+q = b.querySelectorAll(":has(+div>form option + option)");
+if(q.length != 1 || q[0].id != "show") msg += "|:has(div form option)";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/, "<br>");}
