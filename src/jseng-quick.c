@@ -2429,151 +2429,162 @@ static JSValue nat_top(JSContext * cx, JSValueConst this, int argc, JSValueConst
 
 static JSValue nat_fetchHTTP(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
 {
-	jsInterruptCheck(cx);
-	struct i_get g;
-	const char *incoming_url = JS_ToCString(cx, argv[0]);
-	const char *incoming_method = JS_ToCString(cx, argv[1]);
-	const char *incoming_headers = JS_ToCString(cx, argv[2]);
-	const char *incoming_payload = JS_ToCString(cx, argv[3]);
-	char *outgoing_xhrheaders = NULL;
-	char *outgoing_xhrbody = NULL;
-	char *a;
-	bool rc, async;
-	char *s;
-	int s_l;
-	JSValue u;
-	int32_t pd; // process the data
-	bool dopost = false, dohead = false;
+    jsInterruptCheck(cx);
+    struct i_get g;
+    JSValue u;
+    const char *incoming_url = JS_ToCString(cx, argv[0]);
+/* stop here and check the incoming url. For security reasons,
+make sure it isn't scp, sftp, etc. */
+    const char *incoming_protocol = getProtURL(incoming_url);
+    if(!incoming_protocol ||
+    (strcmp(incoming_protocol, "http") && strcmp(incoming_protocol, "https"))) {
+        debugPrint(3, "invalid xhr protocol %s", incoming_url);
+        JS_ReleaseString(incoming_url);
+        u = JS_NewString(cx,  "0\r\n\r\n500\r\n\r\n\r\n\r\ninvalid xhr protocol");
+        return u;
+    }
+    // ok let's go on and get the other args
+    const char *incoming_method = JS_ToCString(cx, argv[1]);
+    const char *incoming_headers = JS_ToCString(cx, argv[2]);
+    const char *incoming_payload = JS_ToCString(cx, argv[3]);
+    char *outgoing_xhrheaders = NULL;
+    char *outgoing_xhrbody = NULL;
+    char *a;
+    bool rc, async;
+    char *s;
+    int s_l;
+    int32_t pd; // process the data
+    bool dopost = false, dohead = false;
 
         (void) argc;
-	debugPrint(5, "xhr in");
-	JS_ToInt32(cx, &pd, argv[4]);
-	async = get_property_bool(cx, this, "async");
-	if (!down_jsbg) async = false;
+    debugPrint(5, "xhr in");
+    JS_ToInt32(cx, &pd, argv[4]);
+    async = get_property_bool(cx, this, "async");
+    if (!down_jsbg) async = false;
 
-	if (incoming_method && stringEqualCI(incoming_method, "post"))
-		dopost = true;
-	if (incoming_method && stringEqualCI(incoming_method, "head"))
-		dohead = true, async = false;
+    if (incoming_method && stringEqualCI(incoming_method, "post"))
+        dopost = true;
+    if (incoming_method && stringEqualCI(incoming_method, "head"))
+        dohead = true, async = false;
 // don't need method any more
-	JS_ReleaseString(incoming_method);
+    JS_ReleaseString(incoming_method);
 
-	if(incoming_payload && *incoming_payload && dopost) {
-	    if(pd == 0) {
-        	createFormattedString(&a, "%s\1%s",
-	        incoming_url, incoming_payload);
-	    } else if(pd == 1) {
-        	createFormattedString(&a, "%s\1`b64+%s",
-	        incoming_url, incoming_payload);
-	    } else {
-		a = cloneString(incoming_url);
-	    }
-	} else {
-	a = cloneString(incoming_url);
-	}
-	JS_ReleaseString(incoming_payload);
-	JS_ReleaseString(incoming_url);
-	incoming_url = a; // now it's our allocated string
+    if(incoming_payload && *incoming_payload && dopost) {
+        if(pd == 0) {
+                createFormattedString(&a, "%s\1%s",
+            incoming_url, incoming_payload);
+        } else if(pd == 1) {
+                createFormattedString(&a, "%s\1`b64+%s",
+            incoming_url, incoming_payload);
+        } else {
+        a = cloneString(incoming_url);
+        }
+    } else {
+    a = cloneString(incoming_url);
+    }
+    JS_ReleaseString(incoming_payload);
+    JS_ReleaseString(incoming_url);
+    incoming_url = a; // now it's our allocated string
 
-	debugPrint(3, "xhr send %s", incoming_url);
+    debugPrint(3, "xhr send %s", incoming_url);
 
-	const char *altsource = fetchReplace(incoming_url);
-	if(altsource) async = false;
+    const char *altsource = fetchReplace(incoming_url);
+    if(altsource) async = false;
 
 // async and sync are completely different pathways
-	if (async) {
+    if (async) {
 // I'm going to put the tag in cf, the current frame, and hope that's right,
 // hope that xhr runs in a script that runs in the current frame.
-		Tag *t =     newTag(cf, "object");
-		t->deleted = true;	// do not render this tag
-		t->step = 3;
-		t->async = true;
-		t->inxhr = true;
-		t->f0 = cf;
-		connectTagObject(t, JS_DupValue(cx, this));
+        Tag *t =     newTag(cf, "object");
+        t->deleted = true; // do not render this tag
+        t->step = 3;
+        t->async = true;
+        t->inxhr = true;
+        t->f0 = cf;
+        connectTagObject(t, JS_DupValue(cx, this));
 // This routine will return, and javascript might stop altogether; do we need
 // to protect this object from garbage collection?
 // No - because t->jv will protect it until it runs.
-		t->href = (char*)incoming_url;
+        t->href = (char*)incoming_url;
 // t now has responsibility for incoming_url
-		t->custom_h = emptyString;
-		if(JS_IsString(argv[2]))
-			t->custom_h = cloneString(incoming_headers);
-		JS_ReleaseString(incoming_headers);
-		scriptOnTimer(t);
-		pthread_create(&t->loadthread, NULL, httpConnectBack3,
-			       (void *)t);
-		t->threadcreated = true;
-		return JS_NewString(cx, "async");
-	}
+        t->custom_h = emptyString;
+        if(JS_IsString(argv[2]))
+            t->custom_h = cloneString(incoming_headers);
+        JS_ReleaseString(incoming_headers);
+        scriptOnTimer(t);
+        pthread_create(&t->loadthread, NULL, httpConnectBack3,
+                   (void *)t);
+        t->threadcreated = true;
+        return JS_NewString(cx, "async");
+    }
 
-	memset(&g, 0, sizeof(g));
-	g.thisfile = cf->fileName;
-	g.uriEncoded = true;
-	g.url = incoming_url;
-	g.custom_h = incoming_headers;
-	g.headers_p = &outgoing_xhrheaders;
+    memset(&g, 0, sizeof(g));
+    g.thisfile = cf->fileName;
+    g.uriEncoded = true;
+    g.url = incoming_url;
+    g.custom_h = incoming_headers;
+    g.headers_p = &outgoing_xhrheaders;
 // xhr gets data for javascript,
 // you should never intercept it with a plugin or a download
 // These are already false because of memset above, I'm just sayin...
-	g.down_ok = g.pg_ok = false;
-	g.headrequest = dohead;
+    g.down_ok = g.pg_ok = false;
+    g.headrequest = dohead;
 // Do you want to use your own version of a script, with tracing etc?
 // If the url is reliable, you can put an entry in jslocal, and it will be
 // honored here, but, you won't get the http headers, such as content-type,
 // which could be important for the functioning of the website.
-	if(altsource) {
-		debugPrint(3, "xhr uses %s", altsource);
-		int templength;
-		rc = fileIntoMemory(altsource, &g.buffer, &templength, 0);
-		g.length = templength;
-		g.code = 200;
+    if(altsource) {
+        debugPrint(3, "xhr uses %s", altsource);
+        int templength;
+        rc = fileIntoMemory(altsource, &g.buffer, &templength, 0);
+        g.length = templength;
+        g.code = 200;
 // see if we can infer content type
-		const char *v = strrchr(altsource, '.');
-		 int ol;
-		outgoing_xhrheaders = initString(&ol);
-		stringAndString(&outgoing_xhrheaders, &ol, "Content-Type: text/");
-		if(stringEqual(v, ".js"))
-			stringAndString(&outgoing_xhrheaders, &ol, "javascript");
-		else if(stringEqual(v, ".css"))
-			stringAndString(&outgoing_xhrheaders, &ol, "css");
-		else if(stringEqual(v, ".html"))
-			stringAndString(&outgoing_xhrheaders, &ol, "html");
-		else if(stringEqual(v, ".xml"))
-			stringAndString(&outgoing_xhrheaders, &ol, "xml");
-		else
-			stringAndString(&outgoing_xhrheaders, &ol, "unknown");
-		stringAndString(&outgoing_xhrheaders, &ol, "\r\nContent-Length: ");
-		stringAndLongLong(&outgoing_xhrheaders, &ol, g.length);
-		stringAndString(&outgoing_xhrheaders, &ol, "\r\n\r\n");
-	} else {
-		rc = httpConnect(&g);
-	}
-	outgoing_xhrbody = g.buffer;
-	JS_ReleaseString(incoming_headers);
-	if (outgoing_xhrheaders == NULL)
-		outgoing_xhrheaders = emptyString;
-	if (outgoing_xhrbody == NULL)
-		outgoing_xhrbody = emptyString;
-	s = initString(&s_l);
-	stringAndNum(&s, &s_l, rc);
-	stringAndString(&s, &s_l, "\r\n\r\n");
-	stringAndNum(&s, &s_l, g.code);
-	stringAndString(&s, &s_l, "\r\n\r\n");
-	stringAndString(&s, &s_l, g.cfn ? g.cfn : incoming_url);
-	cnzFree(incoming_url);
-	nzFree(g.cfn);
-	stringAndString(&s, &s_l, "\r\n\r\n");
-	stringAndString(&s, &s_l, outgoing_xhrheaders);
-	nzFree(outgoing_xhrheaders);
-	stringAndString(&s, &s_l, outgoing_xhrbody);
-	nzFree(outgoing_xhrbody);
-	nzFree(g.referrer);
+        const char *v = strrchr(altsource, '.');
+         int ol;
+        outgoing_xhrheaders = initString(&ol);
+        stringAndString(&outgoing_xhrheaders, &ol, "Content-Type: text/");
+        if(stringEqual(v, ".js"))
+            stringAndString(&outgoing_xhrheaders, &ol, "javascript");
+        else if(stringEqual(v, ".css"))
+            stringAndString(&outgoing_xhrheaders, &ol, "css");
+        else if(stringEqual(v, ".html"))
+            stringAndString(&outgoing_xhrheaders, &ol, "html");
+        else if(stringEqual(v, ".xml"))
+            stringAndString(&outgoing_xhrheaders, &ol, "xml");
+        else
+            stringAndString(&outgoing_xhrheaders, &ol, "unknown");
+        stringAndString(&outgoing_xhrheaders, &ol, "\r\nContent-Length: ");
+        stringAndLongLong(&outgoing_xhrheaders, &ol, g.length);
+        stringAndString(&outgoing_xhrheaders, &ol, "\r\n\r\n");
+    } else {
+        rc = httpConnect(&g);
+    }
+    outgoing_xhrbody = g.buffer;
+    JS_ReleaseString(incoming_headers);
+    if (outgoing_xhrheaders == NULL)
+        outgoing_xhrheaders = emptyString;
+    if (outgoing_xhrbody == NULL)
+        outgoing_xhrbody = emptyString;
+    s = initString(&s_l);
+    stringAndNum(&s, &s_l, rc);
+    stringAndString(&s, &s_l, "\r\n\r\n");
+    stringAndNum(&s, &s_l, g.code);
+    stringAndString(&s, &s_l, "\r\n\r\n");
+    stringAndString(&s, &s_l, g.cfn ? g.cfn : incoming_url);
+    cnzFree(incoming_url);
+    nzFree(g.cfn);
+    stringAndString(&s, &s_l, "\r\n\r\n");
+    stringAndString(&s, &s_l, outgoing_xhrheaders);
+    nzFree(outgoing_xhrheaders);
+    stringAndString(&s, &s_l, outgoing_xhrbody);
+    nzFree(outgoing_xhrbody);
+    nzFree(g.referrer);
 
-	debugPrint(5, "xhr out");
-	u = JS_NewString(cx, s);
-	nzFree(s);
-	return u;
+    debugPrint(5, "xhr out");
+    u = JS_NewString(cx, s);
+    nzFree(s);
+    return u;
 }
 
 static JSValue nat_playAudio(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv)
