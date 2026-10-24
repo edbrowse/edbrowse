@@ -1788,10 +1788,8 @@ past_at:
             if (d->bc > 1)
                 d->error = CSS_ERROR_BRACES;
 
-            if (!d1)
-                d1 = d2 = d;
-            else
-                d2->next = d, d2 = d;
+            if (!d1) d1 = d2 = d;
+            else d2->next = d, d2 = d;
             d = 0;
             continue;
         }
@@ -1814,6 +1812,15 @@ past_at:
             continue;
         }
 copy: ++s;
+    }
+
+    if(d && bc == 1) { // assume closing }
+        trim(d->lhs);
+        trim(d->rhs);
+        loadPack(d->lhs, d->rhs);
+        if (!d1) d1 = d2 = d;
+        else d2->next = d, d2 = d;
+        d = 0;
     }
 
     nzFree(d);
