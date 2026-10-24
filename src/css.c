@@ -2222,35 +2222,15 @@ static void cssAtomic(struct asel *a)
             continue;
         }
 
-        if (s == m1 + 1 && !strncmp(m1, ":not(", 5)) {
+        if (s == m1 + 1 && (!strncmp(m1, ":not(", 5)||
+        !strncmp(m1, ":has(", 5)||
+        !strncmp(m1, ":is(", 4)||
+        !strncmp(m1, ":where(", 7))) {
+            const int l = strchr(s, '(') - m1;
             last_c = 0;
-            n = closeString(s + 4, '(');
+            n = closeString(s + l, '(');
             if (n < 0) break;
-            s += n + 4;
-            continue;
-        }
-
-        if (s == m1 + 1 && !strncmp(m1, ":is(", 4)) {
-            last_c = 0;
-            n = closeString(s + 3, '(');
-            if (n < 0) break;
-            s += n + 3;
-            continue;
-        }
-
-        if (s == m1 + 1 && !strncmp(m1, ":where(", 7)) {
-            last_c = 0;
-            n = closeString(s + 6, '(');
-            if (n < 0) break;
-            s += n + 6;
-            continue;
-        }
-
-        if (s == m1 + 1 && !strncmp(m1, ":has(", 5)) {
-            last_c = 0;
-            n = closeString(s + 4, '(');
-            if (n < 0) break;
-            s += n + 4;
+            s += n + l;
             continue;
         }
 
@@ -2315,15 +2295,19 @@ static void cssModify(struct asel *a, const char *m1, const char *m2)
             return;
         }
         t[--n] = 0;
-        strmove(t, t + l);
-        trim(t);
-        if(under == MODHAS && has_clause) {
+        strmove(t + 2, t + l);
+        t[0] = t[1] = ' ';
+        trim(t + 2);
+        if(has_clause) {
             // the spec says this isn't allowed
-            debugPrint(3, "nested :has() clauses");
+            debugPrint(3, "underselect inside a :has() clause");
             a->error = CSS_ERROR_UNSUP;
             return;
         }
-        if(under == MODHAS) has_clause = true;
+        if(under == MODHAS) {
+            has_clause = true;
+            t[0] = '*';
+        } else strmove(t, t + 2);
         memset(&d0, 0, sizeof(d0));
         d0.lhs = t;
         cssParseLeft(&d0);
@@ -2639,17 +2623,19 @@ static void chainPrint(struct asel *asel)
         char *tag = asel->tag;
         if (!tag)
             tag = (asel->modifiers ? emptyString : "*");
-        if (asel->combin != ',')
+        if (!has_clause && asel->combin != ',')
             fprintf(cssfile, "%c",
                 (asel->combin == ' ' ? '^' : asel->combin));
         fprintf(cssfile, "%s", tag);
         for (mod = asel->modifiers; mod; mod = mod->next) {
             if (mod->under) {
                 fprintf(cssfile, ":%s(", modunderstrings[mod->under]);
+                if(mod->under == MODHAS) has_clause = true;
                 for(sel = mod->underselect; sel; sel = sel->next) {
                     if(sel != mod->underselect) fprintf(cssfile, ",");
                     chainPrint(sel->chain);
                 }
+                has_clause = false;
                 fprintf(cssfile, ")");
                 continue;
             }
@@ -2660,6 +2646,9 @@ static void chainPrint(struct asel *asel)
             else
                 fprintf(cssfile, "%s", mod->part);
         }
+        if (has_clause && asel->combin != ',')
+            fprintf(cssfile, "%c",
+                (asel->combin == ' ' ? '^' : asel->combin));
         asel = asel->next;
     }
 }
