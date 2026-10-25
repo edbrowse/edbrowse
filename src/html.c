@@ -196,6 +196,8 @@ static bool inputDisabled(const Tag *t);
 static bool inputHidden(const Tag *t);
 static bool inputReadonly(const Tag *t);
 static const char *get_general_property_string(const Tag *t, const char *name);
+static const char *get_tagName(const Tag *t) { return get_general_property_string(t, "name"); }
+static const char *get_tagId(const Tag *t) { return get_general_property_string(t, "id"); }
 
 static Tag *locateOptionByName(const Tag *sel,
 					  const char *name, int *pmc,
@@ -1909,7 +1911,7 @@ void infShow(int tagno, const char *search)
         eb_printf(" disabled");
     if (inputRequired(t))
         eb_printf(" required");
-    const char *hold = get_general_property_string(t, "name");
+    const char *hold = get_tagName(t);
         if(hold) eb_printf(" %s", hold);
     hold = get_general_property_string(t, "placeholder");
     if(hold) eb_printf(" \"%s\"", hold);
@@ -1999,20 +2001,25 @@ static bool inputReadonly(const Tag *t)
     return t->rdonly;
 }
 
-// Fetch property from js or from onsite html.
-// If from js it is allocated, but I free it on the next call,
-// so the user doesn't have to worry about freeing it if from js,
-// and not freeing it if not from js, etc.
+/* Fetch property from js or from onsite html.
+If from js it is allocated, but I will eventually free it,
+so the user doesn't have to worry about freeing it if from js,
+and not freeing it if not from js.
+I hold up to three such strings, if you need more than that
+or need to hold one long term you should clone it. */
 static const char *get_general_property_string(const Tag *t, const char *name)
 {
-    static const char *v = 0, *u;
-    cnzFree0(v); // from the last call
+    const char *v;
+    static const char *list[5];
+    static int cycle = 0;
     if (allowJS && t->jslink) {
-        v = get_property_string_t(t, name);
+        cnzFree(list[cycle]);
+        list[cycle++] = v = get_property_string_t(t, name);
+        if(cycle == 5) cycle = 0;
         return (v && *v) ? v : 0;
     }
-    u = attribVal(t, name);
-    return (u && *u) ? u : 0;
+    v = attribVal(t, name);
+    return (v && *v) ? v : 0;
 }
 
 /*********************************************************************
@@ -5620,7 +5627,7 @@ past_cell_paragraph:
 		}
 
 // tags with id= have to be part of the screen, so you can jump to them.
-		if (t->id && opentag)
+		if (opentag && get_tagId(t))
 			tagInStream(tagno);
 
         if(showall && opentag && ok2inject(t->nodeNameU)) {
@@ -6073,7 +6080,7 @@ unparen:
 // We have to have this unknown tag in the stream or we can't jump to it.
 	default:
 check_id:
-		if(opentag && t->id)
+		if(opentag && get_tagId(t))
 			tagInStream(tagno);
 		break;
 	}			// switch
