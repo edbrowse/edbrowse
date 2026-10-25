@@ -731,7 +731,6 @@ static void freeTag(Tag *t)
 
 	nzFree(t->textval);
 	nzFree(t->name);
-	nzFree(t->id);
 	nzFree(t->nodeName);
 	nzFree(t->nodeNameU);
 	nzFree(t->value);
@@ -1539,11 +1538,6 @@ static void findAttributes(const char *start, const char *end)
 		v = t->atvals[j];
 		if (v && !*v) v = 0;
 		t->name = cloneString(v);
-	}
-	if ((j = stringInListCI(t->attributes, "id")) >= 0) {
-		v = t->atvals[j];
-		if (v && !*v) v = 0;
-		t->id = cloneString(v);
 	}
 	if ((j = stringInListCI(t->attributes, "value")) >= 0) {
 		v = t->atvals[j];
@@ -4097,7 +4091,7 @@ static void makeButton(void)
 
 void formControl(Tag *t, bool namecheck)
 {
-	char *myname = (t->name ? t->name : t->id);
+	const char *myname = (t->name ? t->name : attribVal(t, "id"));
 	Tag *cform = currentForm;
 	if (!cform) {
 /* nodes could be created dynamically, not through html */
@@ -4135,7 +4129,7 @@ const char *const inp_others[] = {
 void htmlInputHelper(Tag *t)
 {
 	int n, len, itype;
-	char *myname = (t->name ? t->name : t->id);
+	const char *myname = (t->name ? t->name : attribVal(t, "id"));
 	const char *s = attribVal(t, "type");
 	bool isbutton = stringEqual(t->info->name, "button");
 	t->itype = itype = (isbutton ? INP_SUBMIT : INP_TEXT);
