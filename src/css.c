@@ -22,7 +22,7 @@ enum {
   CSS_ERROR_TAG,
   CSS_ERROR_ATTR,
   CSS_ERROR_RATTR,
-  CSS_ERROR_DYN,
+  CSS_ERROR_NONEB,
   CSS_ERROR_TAGLINK,
   CSS_ERROR_INJECTHIGH,
   CSS_ERROR_PE,
@@ -49,7 +49,7 @@ static const char *const errorMessage[] = {
   "bad tag",
   "bad selector attribute",
   "bad rule attribute",
-  "dynamic",
+  "nonedbrowse",
   "tag link",
   "inject high",
   "pseudo element",
@@ -2336,7 +2336,8 @@ static void cssModify(struct asel *a, const char *m1, const char *m2)
     switch (h) {
     case ':':
 
-/* :visited, this link has been visited. Display it differently
+/*********************************************************************
+:visited, this link has been visited. Display it differently
 so the sighted user knows he's already gone there.
 Is it possible for javascript to call getComputed Style and see that that
 link was visited and act differently?
@@ -2367,12 +2368,17 @@ and you only see that with showall.
 So maybe it's not worth the bother, but there is one difference.
 js can call getComputedStyle(tag, ":before".
 It can ask, specifically, if I'm honoring the before and after pseudoclasses,
-so maybe I should continue to do so. */
+so maybe I should continue to do so.
+:placeholder sets the placeholder text, which isn't even a node.
+It's an attribute in an input field.
+We can't query it even by getComputedStyle so it's safe to ignore.
+*********************************************************************/
 
         if (stringEqual(t, ":visited") || stringEqual(t, ":marker")
+        || stringEqual(t, ":placeholder")
         || stringEqual(t, ":target") || stringEqual(t, ":hover")
         || stringEqual(t, ":active") || stringEqual(t, ":focus")) {
-            a->error = CSS_ERROR_DYN;
+            a->error = CSS_ERROR_NONEB;
             return;
         }
         if (stringEqual(t, ":link")) {
