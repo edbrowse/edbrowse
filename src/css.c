@@ -1036,14 +1036,14 @@ This is a chain of attribute=value pairs, as in color=green.
 struct desc {
     struct desc *next;
     char *lhs, *rhs;
-    short bc;		// brace count
+    short bc; // brace count
     uchar error;
     bool visrel; // relevant to visibility
     bool prop_ok; // at least one rule where the property is ok
     char which;
     struct sel *selectors;
     struct rule *rules;
-    int highspec;		// specificity when this descriptor matches
+    int highspec; // specificity when this descriptor matches
     bool underat, fromstyle;
 /*********************************************************************
 What the node must be for this descriptor to have any chance at all.
@@ -1061,7 +1061,7 @@ struct sel {
     uchar error;
     bool before, after, hover;
     struct asel *chain;
-    int spec;		// specificity
+    int spec; // specificity
 };
 
 // atomic selector
@@ -1122,7 +1122,7 @@ static void cssParseLeft(struct desc *d);
 static void cssModify(struct asel *a, const char *m1, const char *m2);
 static void chainFree(struct asel *asel);
 static bool onematch, topmatch, skiproot, gcsmatch;
-static char matchtype;		// 0 plain 1 before 2 after
+static char matchtype; // 0 plain 1 before 2 after
 static char *match_ba_string;
 static bool match_disp_inv, match_vis_inv;
 static int match_ba_spec, match_disp_spec, match_vis_spec;
@@ -1135,182 +1135,166 @@ static void build_doclist(Tag *top);
 
 static char *fromShortCache(const char *url)
 {
-	struct shortcache *c;
-	struct cssmaster *cm = cf->cssmaster;
-	if (!cm)
-		return 0;
-	for (c = cm->cache; c; c = c->next)
-		if (stringEqual(url, c->url))
-			return c->data;
-	return 0;
+    struct shortcache *c;
+    struct cssmaster *cm = cf->cssmaster;
+    if (!cm) return 0;
+    for (c = cm->cache; c; c = c->next)
+        if (stringEqual(url, c->url)) return c->data;
+    return 0;
 }
 
 static void intoShortCache(const char *url, char *data)
 {
-	struct shortcache *c;
-	struct cssmaster *cm = cf->cssmaster;
-	if (!cm) {
+    struct shortcache *c;
+    struct cssmaster *cm = cf->cssmaster;
+    if (!cm) {
 // don't know how this could ever happen.
-		cf->cssmaster = cm = allocZeroMem(sizeof(struct cssmaster));
-	}
-	c = allocMem(sizeof(struct shortcache));
-	c->next = cm->cache;
-	cm->cache = c;
-	c->url = cloneString(url);
-	c->data = data;
+        cf->cssmaster = cm = allocZeroMem(sizeof(struct cssmaster));
+    }
+    c = allocMem(sizeof(struct shortcache));
+    c->next = cm->cache;
+    cm->cache = c;
+    c->url = cloneString(url);
+    c->data = data;
 }
 
 void writeShortCache(void)
 {
-	struct shortcache *c;
-	FILE *f;
-	int n = 0;
-	struct cssmaster *cm = cf->cssmaster;
-	if (!cm)
-		return;
-	f = fopen("implocal", "we");
-	if (!f)
-		return;
-	for (c = cm->cache; c; c = c->next) {
-		char filename[20];
-		++n;
-		sprintf(filename, "i%d.css", n);
-		if (!memoryOutToFile(filename, c->data, strlen(c->data))) {
+    struct shortcache *c;
+    FILE *f;
+    int n = 0;
+    struct cssmaster *cm = cf->cssmaster;
+    if (!cm) return;
+    f = fopen("implocal", "we");
+    if (!f) return;
+    for (c = cm->cache; c; c = c->next) {
+        char filename[20];
+        ++n;
+        sprintf(filename, "i%d.css", n);
+        if (!memoryOutToFile(filename, c->data, strlen(c->data))) {
 // oops, can't write the file
-			unlink(filename);
-			showError();
-			continue;
-		}
-		fprintf(f, "%s:%s\n", filename, c->url);
-	}
-	fclose(f);
+            unlink(filename);
+            showError();
+            continue;
+        }
+        fprintf(f, "%s:%s\n", filename, c->url);
+    }
+    fclose(f);
 }
 
 static void readShortCache(struct cssmaster *cm)
 {
-	FILE *f = fopen("implocal", "re");
-	struct shortcache *c;
-	char *s;
-	int length, n = 0;
-	char line[400];
-	if (!f)
-		return;
-	while (fgets(line, sizeof(line), f)) {
-		s = strchr(line, '\n');
-		if (!s) {
-			fprintf(stderr, "implocal line too long\n");
-			fclose(f);
-			return;
-		}
-		*s = 0;
-		if (s > line && s[-1] == '\r')
-			*--s = 0;
-		if (line[0] == '#' || line[0] == 0)
-			continue;
-		s = strchr(line, ':');
-		if (!s) {
-			fprintf(stderr, "jslocal line has no :\n");
-			continue;
-		}
-		*s++ = 0;
-		c = allocMem(sizeof(struct shortcache));
-		c->url = cloneString(s);
-		fileIntoMemory(line, &c->data, &length, 0);
+    FILE *f = fopen("implocal", "re");
+    struct shortcache *c;
+    char *s;
+    int length, n = 0;
+    char line[400];
+    if (!f) return;
+    while (fgets(line, sizeof(line), f)) {
+        s = strchr(line, '\n');
+        if (!s) {
+            fprintf(stderr, "implocal line too long\n");
+            fclose(f);
+            return;
+        }
+        *s = 0;
+        if (s > line && s[-1] == '\r')
+            *--s = 0;
+        if (line[0] == '#' || line[0] == 0) continue;
+        s = strchr(line, ':');
+        if (!s) {
+            fprintf(stderr, "jslocal line has no :\n");
+            continue;
+        }
+        *s++ = 0;
+        c = allocMem(sizeof(struct shortcache));
+        c->url = cloneString(s);
+        fileIntoMemory(line, &c->data, &length, 0);
 // fileIntoMemory puts a null byte on the end
-		c->next = cm->cache;
-		cm->cache = c;
-		++n;
-	}
-	fclose(f);
-	if (n)
-		debugPrint(3, "%d import file replacements", n);
+        c->next = cm->cache;
+        cm->cache = c;
+        ++n;
+    }
+    fclose(f);
+    if (n) debugPrint(3, "%d import file replacements", n);
 }
 
 // Step back through a css string looking for the base url.
 // The result is allocated.
 static char *cssBase(const char *start, const char *end)
 {
-	char which;
-	char *a, *t;
-	int l, nest = 0;
-	for (; end >= start; --end) {
-		if (*end != '@')
-			continue;
-		if (strncmp(end, "@ebdelim", 8))
-			continue;
-		which = end[8];
-		if (which == '2') {
-			++nest;
-			continue;
-		}
-		if (which == '1') {
-			--nest;
-			if (nest >= 0)
-				continue;
+    char which;
+    char *a, *t;
+    int l, nest = 0;
+    for (; end >= start; --end) {
+        if (*end != '@') continue;
+        if (strncmp(end, "@ebdelim", 8)) continue;
+        which = end[8];
+        if (which == '2') {
+            ++nest;
+            continue;
+        }
+        if (which == '1') {
+            --nest;
+            if (nest >= 0)
+                continue;
 extract:
-			end += 9;
-			t = strstr(end, "{}\n") - 1;
-			l = t - end;
-			a = allocMem(l + 1);
-			memcpy(a, end, l);
-			a[l] = 0;
-			return a;
-		}
-		if (which == '0') goto extract;
-	}
+            end += 9;
+            t = strstr(end, "{}\n") - 1;
+            l = t - end;
+            a = allocMem(l + 1);
+            memcpy(a, end, l);
+            a[l] = 0;
+            return a;
+        }
+        if (which == '0') goto extract;
+    }
 // we shouldn't be here
-	return emptyString;
+    return emptyString;
 }
 
 static void unstring(char *s)
 {
-	char *w = s;
-	char qc = 0;		// quote character
-	char c;
-	char hexin[12];
-	const char *r;
-	unsigned long uc;	// unicode character
-	int i;
-	while ((c = *s)) {
-		if (c == qc) {	// in quotes
-			qc = 0;
-			++s;
-			continue;
-		}
-		if (!qc && (c == '"' || c == '\'')) {
-			qc = c;
-			++s;
-			continue;
-		}
-		if (c != '\\')
-			goto copy;
-		if (!s[1])
-			goto copy;
-		c = *++s;
-		if (c == 'n')
-			c = '\n';
-		if (c == 't')
-			c = '\t';
-		if (!isxdigit(c))
-			goto copy;
-		for (i = 0; i < 4; ++i)
-			if (isxdigit(s[i]))
-				hexin[i] = s[i];
-			else
-				break;
-		hexin[i] = 0;
-		sscanf(hexin, "%lx", &uc);
-// convert to utf8
-		r = uni2utf8(uc);
-		strcpy(w, r);
-		w += strlen(r);
-		s += i;
-		continue;
+    char *w = s;
+    char qc = 0; // quote character
+    char c;
+    char hexin[12];
+    const char *r;
+    unsigned long uc; // unicode character
+    int i;
+    while ((c = *s)) {
+        if (c == qc) { // in quotes
+            qc = 0;
+            ++s;
+            continue;
+        }
+        if (!qc && (c == '"' || c == '\'')) {
+            qc = c;
+            ++s;
+            continue;
+        }
+        if (c != '\\') goto copy;
+        if (!s[1]) goto copy;
+        c = *++s;
+        if (c == 'n') c = '\n';
+        if (c == 't') c = '\t';
+        if (!isxdigit(c)) goto copy;
+        for (i = 0; i < 4; ++i)
+            if (isxdigit(s[i])) hexin[i] = s[i];
+            else break;
+        hexin[i] = 0;
+        sscanf(hexin, "%lx", &uc);
+        // convert to utf8
+        r = uni2utf8(uc);
+        strcpy(w, r);
+        w += strlen(r);
+        s += i;
+        continue;
 copy:
-		*w++ = c;
-		++s;
-	}
-	*w = 0;
+        *w++ = c;
+        ++s;
+    }
+    *w = 0;
 }
 
 // This is a crude measure of specificity, contained in a 5 digit number.
