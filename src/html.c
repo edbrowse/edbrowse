@@ -3414,22 +3414,23 @@ const Tag *gebi_c(const Tag *t, const char *id, bool lookname)
 
 static const Tag *gebi_r(const Tag *t)
 {
-	const Tag *c; // children
-	const Tag *u;
-	debugPrint(4, "look %d,%s,%s", t->seqno, t->info->name, t->id);
-	if(t->id && stringEqual(t->id, idsearch))
-		return t;
-	if (anchorlook && t->action == TAG_A &&
-	t->name && stringEqual(t->name, idsearch))
-		return t;
+    const Tag *c; // children
+    const Tag *u;
+    const char *tagid = get_tagId(t);
+    if(!tagid) tagid = emptyString;
+    const char *tagname = get_tagName(t);
+    if(!tagname) tagname = emptyString;
+    debugPrint(4, "look %d,%s,%s", t->seqno, t->info->name, tagid);
+    if(stringEqual(tagid, idsearch)) return t;
+    if (anchorlook && t->action == TAG_A &&
+    stringEqual(tagname, idsearch))
+        return t;
 // do not descend into a new frame
-	if(t->action == TAG_FRAME)
-		return 0;
+    if(t->action == TAG_FRAME) return 0;
 // look through children
-	for (c = t->firstchild; c; c = c->sibling)
-		if((u = gebi_r(c)))
-			return u;
-	return 0;
+    for (c = t->firstchild; c; c = c->sibling)
+        if((u = gebi_r(c))) return u;
+    return 0;
 }
 
 /* Javascript errors, we need to see these no matter what. */

@@ -1128,6 +1128,7 @@ static bool match_disp_inv, match_vis_inv;
 static int match_ba_spec, match_disp_spec, match_vis_spec;
 static bool visibility_only = false;
 static bool has_clause = false;
+static const char *tag_class, *tag_id;
 static Tag *rootnode;
 static Tag **doclist;
 static int doclist_a, doclist_n;
@@ -3836,31 +3837,29 @@ so by keeping the first one, I get around that test.
 // This is the test that qsaMatch() makes for a class modifier.
 static bool tagHasClass(const Tag *t, const char *name)
 {
-	const char *v = t->class, *q;
-	int l = strlen(name);
-	if (!v || !l)
-		return false;
-	while ((q = strstr(v, name))) {
-		v = q + l;
-		if (q > t->class && !isspaceByte(q[-1]))
-			continue;
-		if (*v && !isspaceByte(*v))
-			continue;
-		return true;
-	}
-	return false;
+    const char *v = tag_class, *q;
+    int l = strlen(name);
+    if (!v || !l)
+        return false;
+    while ((q = strstr(v, name))) {
+        v = q + l;
+        if (q > tag_class && !isspaceByte(q[-1])) continue;
+        if (*v && !isspaceByte(*v)) continue;
+        return true;
+    }
+    return false;
 }
 
 // Can this descriptor match this node at all? See cssSetKeys().
 static bool cssKeyMatch(const struct desc *d, const Tag *t)
 {
-	if (d->keytag && (!t->nodeNameU || !stringEqual(t->nodeNameU, d->keytag)))
-		return false;
-	if (d->keyid && !stringEqual(t->id ? t->id : emptyString, d->keyid))
-		return false;
-	if (d->keyclass && !tagHasClass(t, d->keyclass))
-		return false;
-	return true;
+    if (d->keytag && (!t->nodeNameU || !stringEqual(t->nodeNameU, d->keytag)))
+        return false;
+    if (d->keyid && !stringEqual(tag_id, d->keyid))
+        return false;
+    if (d->keyclass && !tagHasClass(t, d->keyclass))
+        return false;
+    return true;
 }
 
 /*********************************************************************
@@ -3895,10 +3894,11 @@ void cssApply(int n, Tag *t, int pe)
     gcsmatch = true, matchtype = pe;
 // defer to the js here;
 // then I don't have to get these attributes on every css rule.
-    nzFree(t->class);
-    t->class = get_js_attribute(t, "class");
-    nzFree(t->id);
-    t->id = get_js_attribute(t, "id");
+    cnzFree(tag_class);
+    tag_class = get_js_attribute(t, "class");
+    cnzFree(tag_id);
+// id has spilldown so we can just check the property, which is a tad faster
+    tag_id = get_property_string_t(t, "id");
 
     for (d = cm->descriptors; d; d = d->next) {
         if(d->error) continue;
@@ -3938,10 +3938,10 @@ char *cssBeforeAfter(Tag *t, int p)
     match_ba_string = 0;
     match_ba_spec = 0;
 // defer to the js here.
-    nzFree(t->class);
-    t->class = get_js_attribute(t, "class");
-    nzFree(t->id);
-    t->id = get_js_attribute(t, "id");
+    cnzFree(tag_class);
+    tag_class = get_js_attribute(t, "class");
+    cnzFree(tag_id);
+    tag_id = get_property_string_t(t, "id");
     for (d = cm->descriptors; d; d = d->next) {
         if(d->error) continue;
         if(!d->prop_ok) continue;
@@ -3972,10 +3972,10 @@ int cssInvisible(Tag *t)
     match_disp_inv = match_vis_inv = false;
     match_disp_spec = match_vis_spec = 0;
     bool last_disp_inv = false, last_vis_inv = false;
-    nzFree(t->class);
-    t->class = get_js_attribute(t, "class");
-    nzFree(t->id);
-    t->id = get_js_attribute(t, "id");
+    cnzFree(tag_class);
+    tag_class = get_js_attribute(t, "class");
+    cnzFree(tag_id);
+    tag_id = get_property_string_t(t, "id");
     for (d = cm->descriptors; d; d = d->next) {
         if(d->error) continue;
         if(!d->prop_ok) continue;

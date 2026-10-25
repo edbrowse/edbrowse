@@ -468,14 +468,11 @@ bool memEqualCI(const char *s, const char *t, int len)
 
 bool stringEqual(const char *s, const char *t)
 {
-/* check equality of strings with handling of null pointers */
-	if (s == t)
-		return true;
-	if (!s || !t)
-		return false;
-	if (strcmp(s, t))
-		return false;
-	return true;
+// check equality of strings with handling of null pointers
+    if (s == t) return true;
+    if (!s || !t) return false;
+    if (strcmp(s, t)) return false;
+    return true;
 }
 
 bool stringEqualCI(const char *s, const char *t)

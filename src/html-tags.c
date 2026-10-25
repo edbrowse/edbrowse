@@ -732,7 +732,6 @@ static void freeTag(Tag *t)
 	nzFree(t->textval);
 	nzFree(t->name);
 	nzFree(t->id);
-	nzFree(t->class);
 	nzFree(t->nodeName);
 	nzFree(t->nodeNameU);
 	nzFree(t->value);
@@ -1545,11 +1544,6 @@ static void findAttributes(const char *start, const char *end)
 		v = t->atvals[j];
 		if (v && !*v) v = 0;
 		t->id = cloneString(v);
-	}
-	if ((j = stringInListCI(t->attributes, "class")) >= 0) {
-		v = t->atvals[j];
-		if (v && !*v) v = 0;
-		t->class = cloneString(v);
 	}
 	if ((j = stringInListCI(t->attributes, "value")) >= 0) {
 		v = t->atvals[j];
@@ -4483,14 +4477,10 @@ Are there other situations where we need to supress meta processing?
 	case TAG_SPAN:
 		if (!opentag)
 			break;
-		if (!(a = t->class))
-			break;
-		if (stringEqualCI(a, "sup"))
-			action = TAG_SUP;
-		if (stringEqualCI(a, "sub"))
-			action = TAG_SUB;
-		if (stringEqualCI(a, "ovb"))
-			action = TAG_OVB;
+		if (!(a = attribVal(t, "class"))) break;
+		if (stringEqualCI(a, "sup")) action = TAG_SUP;
+		if (stringEqualCI(a, "sub")) action = TAG_SUB;
+		if (stringEqualCI(a, "ovb")) action = TAG_OVB;
 		t->action = action;
 		break;
 
