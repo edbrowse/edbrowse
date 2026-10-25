@@ -193,9 +193,9 @@ void fillEmptySelect(Tag *sel)
 }
 
 static bool inputDisabled(const Tag *t);
-static const char *inputPlaceholder(const Tag *t);
 static bool inputHidden(const Tag *t);
 static bool inputReadonly(const Tag *t);
+static const char *get_general_property_string(const Tag *t, const char *name);
 
 static Tag *locateOptionByName(const Tag *sel,
 					  const char *name, int *pmc,
@@ -628,7 +628,7 @@ static void gotoLocation(char *url, int delay, bool rf, Frame *f)
 /* helper function for meta tag */
 void htmlMetaHelper(const Tag *t)
 {
-	char *name;
+	const char *name;
 	const char *content, *heq, *charset;
 	char **ptr;
 	char *copy = 0;
@@ -644,7 +644,7 @@ void htmlMetaHelper(const Tag *t)
 	if(charset && *charset && !cf->charset)
 		cf->charset = charset;
 
-	name = t->name;
+	name = attribVal(t, "name");
 	content = attribVal(t, "content");
 	copy = cloneString(content);
 	heq = attribVal(t, "http-equiv");
@@ -1909,9 +1909,9 @@ void infShow(int tagno, const char *search)
         eb_printf(" disabled");
     if (inputRequired(t))
         eb_printf(" required");
-    if (t->name)
-        eb_printf(" %s", t->name);
-    const char *hold = inputPlaceholder(t);
+    const char *hold = get_general_property_string(t, "name");
+        if(hold) eb_printf(" %s", hold);
+    hold = get_general_property_string(t, "placeholder");
     if(hold) eb_printf(" \"%s\"", hold);
     if(t->itype == INP_SUBMIT &&
     !inputDisabled(t) &&
@@ -1999,25 +1999,20 @@ static bool inputReadonly(const Tag *t)
     return t->rdonly;
 }
 
-// this text should be short, so I put it in a buffer,
-// so the coller doesn't have to worry about freeing it.
-static const char *inputPlaceholder(const Tag *t)
+// Fetch property from js or from onsite html.
+// If from js it is allocated, but I free it on the next call,
+// so the user doesn't have to worry about freeing it if from js,
+// and not freeing it if not from js, etc.
+static const char *get_general_property_string(const Tag *t, const char *name)
 {
-    static char buffer[300];
-    const char *v;
-    buffer[0] = 0;
+    static const char *v = 0, *u;
+    cnzFree0(v); // from the last call
     if (allowJS && t->jslink) {
-        v = get_property_string_t(t, "placeholder");
-        if(!v) v = emptyString;
-        int l = strlen(v);
-        if(l >= sizeof(buffer) ) l = sizeof(buffer) - 1;
-        strncpy(buffer, v, l);
-        buffer[l] = 0;
-        cnzFree(v);
-        return buffer[0] ? buffer : 0;
+        v = get_property_string_t(t, name);
+        return (v && *v) ? v : 0;
     }
-    v = attribVal(t, "placeholder");
-    return (v && v[0]) ? v : 0;
+    u = attribVal(t, name);
+    return (u && *u) ? u : 0;
 }
 
 /*********************************************************************
