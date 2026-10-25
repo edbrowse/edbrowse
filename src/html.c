@@ -193,6 +193,7 @@ void fillEmptySelect(Tag *sel)
 }
 
 static bool inputDisabled(const Tag *t);
+static const char *inputPlaceholder(const Tag *t);
 static bool inputHidden(const Tag *t);
 static bool inputReadonly(const Tag *t);
 
@@ -1872,59 +1873,61 @@ void infShow(int tagno, const char *search)
     int cnt = 0;
     bool show = false, gathered = false;
 
-	connectDatalist(t);
+    connectDatalist(t);
 
-	s = inp_types[t->itype];
-	if(t->ninp && t->itype == INP_TEXT)
-		s = "suggested select";
-	eb_printf("%s", s);
-	if (t->multiple)
-		eb_printf(" multiple");
-	if (t->itype == INP_SELECT) {
-	    gatherOptions(t), gathered = true;
-	for (w = optArray; (v = *w); ++w) {
-	        if(inputHidden(v)) break;
-	    }
-	    if(v) eb_printf(" with hidden options");
-	}
-	if (t->itype == INP_TEXT && t->lic)
-		eb_printf("[%d]", t->lic);
-	if (t->itype_minor != INP_NO_MINOR)
-		eb_printf(" (%s)", inp_others[t->itype_minor]);
-	if (t->itype == INP_TA) {
-		const char *rows = attribVal(t, "rows");
-		const char *cols = attribVal(t, "cols");
-		const char *wrap = attribVal(t, "wrap");
-		if (rows && cols) {
-			eb_printf("[%s×%s", rows, cols);
-			if (wrap && stringEqualCI(wrap, "virtual"))
-				i_printf(MSG_Recommended);
-			eb_printf("]");
-		}
-	}			// text area
-	if (inputReadonly(t))
-		eb_printf(" readonly");
-	if (inputDisabled(t))
-		eb_printf(" disabled");
-	if (inputRequired(t))
-		eb_printf(" required");
-	if (t->name)
-		eb_printf(" %s", t->name);
-	if(t->itype == INP_SUBMIT &&
-	!inputDisabled(t) &&
-	debugLevel >= 3) {
-		const Tag *f = findOpenTag(t, TAG_FORM);
-		if(f && f->href)
-			  eb_printf(" %s", f->href);
-		else if(attribVal(t, "onclick"))
-			  eb_printf(" %s", attribVal(t, "onclick"));
-		}
-	nl();
+    s = inp_types[t->itype];
+    if(t->ninp && t->itype == INP_TEXT)
+        s = "suggested select";
+    eb_printf("%s", s);
+    if (t->multiple)
+        eb_printf(" multiple");
+    if (t->itype == INP_SELECT) {
+        gatherOptions(t), gathered = true;
+    for (w = optArray; (v = *w); ++w) {
+            if(inputHidden(v)) break;
+        }
+        if(v) eb_printf(" with hidden options");
+    }
+    if (t->itype == INP_TEXT && t->lic)
+        eb_printf("[%d]", t->lic);
+    if (t->itype_minor != INP_NO_MINOR)
+        eb_printf(" (%s)", inp_others[t->itype_minor]);
+    if (t->itype == INP_TA) {
+        const char *rows = attribVal(t, "rows");
+        const char *cols = attribVal(t, "cols");
+        const char *wrap = attribVal(t, "wrap");
+        if (rows && cols) {
+            eb_printf("[%s×%s", rows, cols);
+            if (wrap && stringEqualCI(wrap, "virtual"))
+                i_printf(MSG_Recommended);
+            eb_printf("]");
+        }
+    } // text area
+    if (inputReadonly(t))
+        eb_printf(" readonly");
+    if (inputDisabled(t))
+        eb_printf(" disabled");
+    if (inputRequired(t))
+        eb_printf(" required");
+    if (t->name)
+        eb_printf(" %s", t->name);
+    const char *hold = inputPlaceholder(t);
+    if(hold) eb_printf(" \"%s\"", hold);
+    if(t->itype == INP_SUBMIT &&
+    !inputDisabled(t) &&
+    debugLevel >= 3) {
+        const Tag *f = findOpenTag(t, TAG_FORM);
+        if(f && f->href)
+              eb_printf(" %s", f->href);
+        else if(attribVal(t, "onclick"))
+              eb_printf(" %s", attribVal(t, "onclick"));
+        }
+    nl();
 
-	if(t->ninp && t->itype == INP_TEXT)
-		t = tagList[t->ninp];
-	else if (t->itype != INP_SELECT)
-		return;
+    if(t->ninp && t->itype == INP_TEXT)
+        t = tagList[t->ninp];
+    else if (t->itype != INP_SELECT)
+        return;
 
 /* display the options in a pick list.
 If a search string is given, display the options containing that string.
@@ -1967,34 +1970,56 @@ closegroup:
         }
     }
 
-	if (!show) {
-	    if (!*search)
-	        i_puts(MSG_NoOptions);
-	    else
-	        i_printf(MSG_NoOptionsMatch, search);
-	}
+    if (!show) {
+        if (!*search)
+            i_puts(MSG_NoOptions);
+        else
+            i_printf(MSG_NoOptionsMatch, search);
+    }
 }
 
 static bool inputDisabled(const Tag *t)
 {
-	if (allowJS && t->jslink)
-		return get_property_bool_t(t, "disabled");
-	return t->disabled;
+    if (allowJS && t->jslink)
+        return get_property_bool_t(t, "disabled");
+    return t->disabled;
 }
 
 static bool inputHidden(const Tag *t)
 {
-	if (allowJS && t->jslink)
-		return get_property_bool_t(t, "hidden");
-	return t->hidden;
+    if (allowJS && t->jslink)
+        return get_property_bool_t(t, "hidden");
+    return t->hidden;
 }
 
 static bool inputReadonly(const Tag *t)
 {
-	if (allowJS && t->jslink)
-		return get_property_bool_t(t, "readOnly");
-	return t->rdonly;
+    if (allowJS && t->jslink)
+        return get_property_bool_t(t, "readOnly");
+    return t->rdonly;
 }
+
+// this text should be short, so I put it in a buffer,
+// so the coller doesn't have to worry about freeing it.
+static const char *inputPlaceholder(const Tag *t)
+{
+    static char buffer[300];
+    const char *v;
+    buffer[0] = 0;
+    if (allowJS && t->jslink) {
+        v = get_property_string_t(t, "placeholder");
+        if(!v) v = emptyString;
+        int l = strlen(v);
+        if(l >= sizeof(buffer) ) l = sizeof(buffer) - 1;
+        strncpy(buffer, v, l);
+        buffer[l] = 0;
+        cnzFree(v);
+        return buffer[0] ? buffer : 0;
+    }
+    v = attribVal(t, "placeholder");
+    return (v && v[0]) ? v : 0;
+}
+
 /*********************************************************************
 Some image alt texts contain tags, I've only seen one so far.
 <a href="/players/c/cabremi01.shtml"><img class="poptip" tip="17. <strong>Miguel&nbsp;Cabrera</strong> (3167)" src="https://www.baseball-reference.com/req/202308280/images/headshots/b/bceca907_br_det.jpg" height="135" width="90" alt="Photo of <strong>Miguel&nbsp;Cabrera</strong>"></a>
