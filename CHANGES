@@ -2,9 +2,11 @@ Here are some changes introduced by recent versions of edbrowse.
 
 3.8.20
 
-The :not :is :where css pseudoclasses.
+The :not :is :where :has css pseudoclasses.
 
 Response and Request classes.
+
+Connect label to its input element.
 
 3.8.19
 

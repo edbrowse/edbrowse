@@ -198,6 +198,7 @@ static bool inputReadonly(const Tag *t);
 static const char *get_general_property_string(const Tag *t, const char *name);
 static const char *get_tagName(const Tag *t) { return get_general_property_string(t, "name"); }
 static const char *get_tagId(const Tag *t) { return get_general_property_string(t, "id"); }
+static const char *get_labelText(const Tag *t);
 
 static Tag *locateOptionByName(const Tag *sel,
 					  const char *name, int *pmc,
@@ -1911,10 +1912,16 @@ void infShow(int tagno, const char *search)
         eb_printf(" disabled");
     if (inputRequired(t))
         eb_printf(" required");
-    const char *hold = get_tagName(t);
-        if(hold) eb_printf(" %s", hold);
-    hold = get_general_property_string(t, "placeholder");
-    if(hold) eb_printf(" \"%s\"", hold);
+    const char *name = get_tagName(t);
+    const char *place = get_general_property_string(t, "placeholder");
+    const char *label = get_labelText(t);
+    if(label) eb_printf(": %s", label);
+    else if(place) eb_printf(": %s\"", place);
+    else if(name) eb_printf(": %s", name);
+    if(debugLevel >= 3) {
+        if(label || place) eb_printf(": %s", name);
+        eb_printf(",%d", t->seqno);
+    }
     if(t->itype == INP_SUBMIT &&
     !inputDisabled(t) &&
     debugLevel >= 3) {
@@ -2014,6 +2021,8 @@ static const char *get_general_property_string(const Tag *t, const char *name)
     static int cycle = 0;
     if (allowJS && t->jslink) {
         cnzFree(list[cycle]);
+// javascript is absolutely and needlessly bizarre sometimes
+        if(!strcmp(name, "for")) name = "htmlFor";
         list[cycle++] = v = get_property_string_t(t, name);
         if(cycle == 5) cycle = 0;
         return (v && *v) ? v : 0;
@@ -3423,7 +3432,7 @@ static const Tag *gebi_r(const Tag *t)
         tagid = get_tagId(t);
     if(gebi_flavor == 1)
         tagname = get_tagName(t);
-    if(gebi_flavor == 2)
+    if(gebi_flavor == 2 && t->action == TAG_LABEL)
         tagid = get_general_property_string(t, "for");
     if(!tagid) tagid = emptyString;
     if(!tagname) tagname = emptyString;
@@ -3442,6 +3451,29 @@ static const Tag *gebi_r(const Tag *t)
     for (c = t->firstchild; c; c = c->sibling)
         if((u = gebi_r(c))) return u;
     return 0;
+}
+
+static const char *get_labelText(const Tag *t)
+{
+    if(!t->parent) return 0;
+    const Tag *label = 0;
+    if(t->parent->action == TAG_LABEL) {
+        // implicit association
+        label = t->parent;
+    } else { // explicit association
+        const char *tagid = get_tagId(t);
+        if(!tagid) return 0;
+        label = gebi_c(t, tagid, 2);
+        if(!label) return 0;
+    }
+// this won't work with <lable><i>text here </i></lable>
+// I'm just looking for a text child
+    const Tag *u;
+    for(u = label->firstchild; u; u = u->sibling)
+        if(u->action == TAG_TEXT) break;
+    if(!u) return 0;
+    const char *v = u->textval;
+    return (v && *v) ? v : 0;
 }
 
 /* Javascript errors, we need to see these no matter what. */
@@ -5346,6 +5378,7 @@ nocolor:
 	switch (action) {
 	case TAG_TEXT:
 		if (!t->textval) break;
+		if(t->parent && t->parent->action == TAG_LABEL) break;
 		if (!invisible) {
 // I'm not gonna include the node numbers for all the text nodes;
 // a lot of text nodes are whitespace and the tag numbers just confuse things.
