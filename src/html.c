@@ -6129,17 +6129,17 @@ char *render(void)
         run_function_bool_t(t, "cssGather1");
     }
 
-	ns = initString(&ns_l);
-	invisible = false;
-	inv2 = NULL;
-	currentForm = currentA = NULL;
-	struct parseContext pc;
-	pc.liftup = false;
-	pc.shadow = true;
-	pc.callback = renderNode;
-	traverseAll(0, &pc);
-	cf = save_cf;
-	return ns;
+    ns = initString(&ns_l);
+    invisible = false;
+    inv2 = NULL;
+    currentForm = currentA = NULL;
+    struct parseContext pc;
+    pc.liftup = false;
+    pc.shadow = true;
+    pc.callback = renderNode;
+    traverseAll(0, &pc);
+    cf = save_cf;
+    return ns;
 }
 
 // Create buffers for text areas, so the user can type in comments or whatever
@@ -6179,7 +6179,7 @@ bool itext(int d, bool flatten)
             else t->lic = 0;
             if(!v)
                 v = cloneString(t->rvalue);
-// line breaks not allowed
+            // line breaks not allowed
             spaceCrunch(v, true, false);
             infReplace(n, v, false);
         }
@@ -6202,58 +6202,55 @@ bool itext(int d, bool flatten)
 
 struct htmlTag *line2tr(int ln)
 {
-	char *p;
+    char *p;
 struct htmlTag *t;
-	int tagno;
+    int tagno;
 
-	if(!ln) {
-		setError(MSG_EmptyBuffer);
-		return 0;
-	}
-	p = (char *)fetchLine(ln, -1);
-	while(*p != '\n') {
-		if (*p != InternalCodeChar) { ++p; continue; }
-		tagno = strtol((char *)p + 1, (char **)&p, 10);
-// could be 0, but should never be negative
-		if (tagno <= 0) continue;
-		t = tagList[tagno];
-		if(t->action == TAG_TR)
-			return t;
-		if(t->action != TAG_TD)
-			continue;
-		t = t->parent;
-		if(t && t->action == TAG_TR)
-			return t;
-	}
-	setError(MSG_NoTable);
-	return 0;
+    if(!ln) {
+        setError(MSG_EmptyBuffer);
+        return 0;
+    }
+    p = (char *)fetchLine(ln, -1);
+    while(*p != '\n') {
+        if (*p != InternalCodeChar) { ++p; continue; }
+        tagno = strtol((char *)p + 1, (char **)&p, 10);
+        // could be 0 but should never be negative
+        if (tagno <= 0) continue;
+        t = tagList[tagno];
+        if(t->action == TAG_TR) return t;
+        if(t->action != TAG_TD) continue;
+        t = t->parent;
+        if(t && t->action == TAG_TR) return t;
+    }
+    setError(MSG_NoTable);
+    return 0;
 }
 
 static struct htmlTag *line2table(int ln)
 {
-	struct htmlTag *t;
-	if(!ln) {
-		setError(MSG_EmptyBuffer);
-		return 0;
-	}
-	t = line2tr(ln);
-	if(!t || !t->parent ||
-	((t = t->parent)->action != TAG_TABLE &&
-	t->action != TAG_THEAD &&
-	t->action != TAG_TBODY &&
-	t->action != TAG_TFOOT)) {
-		setError(MSG_NoTable);
-		return 0;
-	}
-	if(t->action != TAG_TABLE) {
-// it is tbody or thead
-		t = t->parent;
-		if(!t || t->action != TAG_TABLE) {
-			setError(MSG_NoTable);
-			return 0;
-		}
-	}
-	return t;
+    struct htmlTag *t;
+    if(!ln) {
+        setError(MSG_EmptyBuffer);
+        return 0;
+    }
+    t = line2tr(ln);
+    if(!t || !t->parent ||
+    ((t = t->parent)->action != TAG_TABLE &&
+    t->action != TAG_THEAD &&
+    t->action != TAG_TBODY &&
+    t->action != TAG_TFOOT)) {
+        setError(MSG_NoTable);
+        return 0;
+    }
+    if(t->action != TAG_TABLE) {
+        // it is tbody or thead
+        t = t->parent;
+        if(!t || t->action != TAG_TABLE) {
+            setError(MSG_NoTable);
+            return 0;
+        }
+    }
+    return t;
 }
 
 // This routine is rather unforgiving.
@@ -6262,48 +6259,45 @@ static struct htmlTag *line2table(int ln)
 // Clearly this routine has to be expanded to cover more html layouts.
 bool showHeaders(int ln)
 {
-	const Tag *t = line2table(ln);
-	int colno;
-	bool ishead;
-	if(!t)
-		return false;
-	for(t = t->firstchild; t; t = t->sibling)
-		if(t->action == TAG_THEAD || t->action == TAG_TBODY)
-			break;
-	if(!t)
-		goto fail;
-	ishead = (t->action == TAG_THEAD);
-	t = t->firstchild;
-	if(!t || t->action != TAG_TR || !t->firstchild)
-		goto fail;
-	t = t->firstchild;
-	if(t->action != TAG_TD ||
-	t->info->name[1] != 'h')
-		goto fail;
+    const Tag *t = line2table(ln);
+    int colno;
+    bool ishead;
+    if(!t) return false;
+    for(t = t->firstchild; t; t = t->sibling)
+        if(t->action == TAG_THEAD || t->action == TAG_TBODY) break;
+    if(!t) goto fail;
+    ishead = (t->action == TAG_THEAD);
+    t = t->firstchild;
+    if(!t || t->action != TAG_TR || !t->firstchild)
+        goto fail;
+    t = t->firstchild;
+    if(t->action != TAG_TD ||
+    t->info->name[1] != 'h')
+        goto fail;
 // if this is tbody, one <th> isn't enough, could be a row header, we need a line of th.
-	if(!ishead && !all_th(t->parent)) goto fail;
-	colno = 1;
-	while(t) {
-		if(t->action == TAG_TD) {
-			printf("%d ", colno);
-			colno += t->js_ln; // colspan
-			td_text = initString(&td_text_l);
-			td_textUnder(t);
-			if(!td_text_l) {
-				printf("?");
-			} else {
-				printf("%s", td_text);
-				nzFree(td_text);
-			}
-			nl();
-			}
-		t = t->sibling;
-	}
-	return true;
+    if(!ishead && !all_th(t->parent)) goto fail;
+    colno = 1;
+    while(t) {
+        if(t->action == TAG_TD) {
+            printf("%d ", colno);
+            colno += t->js_ln; // colspan
+            td_text = initString(&td_text_l);
+            td_textUnder(t);
+            if(!td_text_l) {
+                printf("?");
+            } else {
+                printf("%s", td_text);
+                nzFree(td_text);
+            }
+            nl();
+            }
+        t = t->sibling;
+    }
+    return true;
 
 fail:
-	setError(MSG_NoColumnHeaders);
-	return false;
+    setError(MSG_NoColumnHeaders);
+    return false;
 }
 
 // Parse some html as generated by innerHTML
