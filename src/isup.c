@@ -1136,8 +1136,7 @@ char *altText(const char *base)
 	int len, n;
 	char *s;
 	debugPrint(6, "altText(%s)", base);
-	if (!base)
-		return 0;
+	if (!base) return 0;
 	if (stringEqual(base, "#"))
 		return 0;
 	if (memEqualCI(base, "javascript", 10))

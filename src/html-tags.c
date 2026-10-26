@@ -730,7 +730,6 @@ static void freeTag(Tag *t)
 	}
 
 	nzFree(t->textval);
-	nzFree(t->name);
 	nzFree(t->nodeName);
 	nzFree(t->nodeNameU);
 	nzFree(t->value);
@@ -1533,12 +1532,6 @@ static void findAttributes(const char *start, const char *end)
 		t->multiple = true;
 	if (stringInListCI(t->attributes, "required") >= 0)
 		t->required = true;
-	if ((j = stringInListCI(t->attributes, "name")) >= 0) {
-// temporarily make another copy; some day we'll point to the value
-		v = t->atvals[j];
-		if (v && !*v) v = 0;
-		t->name = cloneString(v);
-	}
 	if ((j = stringInListCI(t->attributes, "value")) >= 0) {
 		v = t->atvals[j];
 // empty value is like no value, I think, but not for <option>
@@ -1645,21 +1638,19 @@ static void setAttrFromHTML(const char *a1, const char *a2, const char *v1, cons
 
 const char *attribVal(const Tag *t, const char *name)
 {
-	const char *v;
-	int j;
-	if (!t->attributes)
-		return 0;
-	j = stringInListCI(t->attributes, name);
-	if (j < 0)
-		return 0;
-	v = t->atvals[j];
-	return v;
+    const char *v;
+    int j;
+    if (!t->attributes) return 0;
+    j = stringInListCI(t->attributes, name);
+    if (j < 0) return 0;
+    v = t->atvals[j];
+    return v;
 }
 
 bool attribPresent(const Tag *t, const char *name)
 {
-	int j = stringInListCI(t->attributes, name);
-	return (j >= 0);
+    int j = stringInListCI(t->attributes, name);
+    return (j >= 0);
 }
 
 // make an allocated copy of the designated string,

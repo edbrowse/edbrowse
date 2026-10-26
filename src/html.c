@@ -2287,14 +2287,16 @@ bool infReplace(int tagno, char *newtext, bool notify)
         }
     }
 
-    if (itype == INP_RADIO && form && t->name && *newtext == '+') {
+    const char *myname = attribVal(t, "name"), *yourname;
+    if(myname && !*myname) myname = 0;
+    if (itype == INP_RADIO && form && myname && *newtext == '+') {
         // clear the other radio button
         Tag *v, **w;
         gatherInputs(form);
         for(w = inpArray; (v = *w); ++w) {
             if (v->itype != INP_RADIO) continue;
-            if (!v->name) continue;
-            if (!stringEqual(v->name, t->name)) continue;
+            yourname = attribVal(v, "name");
+            if (!stringEqual(yourname, myname)) continue;
             if (fieldIsChecked(v->seqno) == true)
                 updateFieldInBuffer(v->seqno, "-", false, true);
         }
@@ -2623,186 +2625,174 @@ postNameVal(const char *name, const char *val, char fsep, uchar isfile)
 
 static bool formSubmit(const Tag *form, const Tag *submit, bool dopost, const char *const prot)
 {
-	Tag *t, **w;
-	int j, itype;
-	char *name, *dynamicvalue = NULL;
-/* dynamicvalue needs to be freed with nzFree. */
-	const char *value;
-	char fsep = '&';	/* field separator */
-	bool requireName = true; // only include form controls with a non-blank name attribute
-	bool rc, bval;
-	const char *eo1; // enctype override from attribute
-	char *eo2; // enctype override from js
+    Tag *t, **w;
+    int j, itype;
+    const char *name;
+    char *dynamicvalue = NULL;
+    // dynamicvalue needs to be freed with nzFree.
+    const char *value;
+    char fsep = '&'; // field separator
+    bool requireName = true; // only include form controls with a non-blank name attribute
+    bool rc, bval;
+    const char *eo1; // enctype override from attribute
+    char *eo2; // enctype override from js
 
 // js could rebuild an option list then submit the form.
-	rebuildSelectors();
+    rebuildSelectors();
 
-	if (form->bymail)
-		fsep = '\n';
+    if (form->bymail) fsep = '\n';
 
 // if method is not post, these other encodings are not honored
-	if(!dopost)
-		goto skip_encode;
+    if(!dopost) goto skip_encode;
 
-	if (form->mime)
-		fsep = '-';
-	if(form->plain)
-		fsep = 0;
+    if (form->mime) fsep = '-';
+    if(form->plain) fsep = 0;
 
 // <input enctype=blah> can override
-	if(submit) {
-		eo1 = attribVal(submit, "formenctype"), eo2 = 0;
-		if(submit->jslink && allowJS)
-			eo2 = get_js_attribute(submit, "formenctype");
-		if(eo2 && *eo2) eo1 = eo2;
-		if(eo1 && *eo1) {
-			fsep = '&';
-			if (stringEqualCI(eo1, "multipart/form-data"))
-				fsep = '-';
-			else if (stringEqualCI(eo1, "text/plain"))
-				fsep = 0;
-			else if (!stringEqualCI(eo1, 
-				  "application/x-www-form-urlencoded"))
-				debugPrint(3,
-					   "unrecognized enctype, plese use multipart/form-data or application/x-www-form-urlencoded or text/plain");
-		}
-		nzFree(eo2);
-	}
+    if(submit) {
+        eo1 = attribVal(submit, "formenctype"), eo2 = 0;
+        if(submit->jslink && allowJS)
+            eo2 = get_js_attribute(submit, "formenctype");
+        if(eo2 && *eo2) eo1 = eo2;
+        if(eo1 && *eo1) {
+            fsep = '&';
+            if (stringEqualCI(eo1, "multipart/form-data")) fsep = '-';
+            else if (stringEqualCI(eo1, "text/plain")) fsep = 0;
+            else if (!stringEqualCI(eo1,  "application/x-www-form-urlencoded"))
+                debugPrint(3,
+                "unrecognized enctype, plese use multipart/form-data or application/x-www-form-urlencoded or text/plain");
+        }
+        nzFree(eo2);
+    }
 
-	if (fsep == '-') {
-		boundary = makeBoundary();
-		stringAndString(&pfs, &pfs_l, "`mfd~");
-		stringAndString(&pfs, &pfs_l, boundary);
-		stringAndString(&pfs, &pfs_l, eol);
-	}
+    if (fsep == '-') {
+        boundary = makeBoundary();
+        stringAndString(&pfs, &pfs_l, "`mfd~");
+        stringAndString(&pfs, &pfs_l, boundary);
+        stringAndString(&pfs, &pfs_l, eol);
+    }
 
 skip_encode:
-	if (stringEqualCI(prot, "gopher") || stringEqualCI(prot, "gophers")) {
-		requireName = false;
-		fsep = 'g';
-	}
+    if (stringEqualCI(prot, "gopher") || stringEqualCI(prot, "gophers")) {
+        requireName = false;
+        fsep = 'g';
+    }
 
-	gatherInputs(form);
-	for(w = inpArray; (t = *w); ++w) {
-		itype = t->itype;
-		if (itype <= INP_SUBMIT && t != submit) continue;
-		if (inputDisabled(t)) continue;
-		name = t->name;
-		if (requireName && (!name || !*name)) continue;
-		if (!name) name = emptyString;
+    gatherInputs(form);
+    for(w = inpArray; (t = *w); ++w) {
+        itype = t->itype;
+        if (itype <= INP_SUBMIT && t != submit) continue;
+        if (inputDisabled(t)) continue;
+        name = get_tagName(t);
+        if (requireName && !name) continue;
+        if (!name) name = emptyString;
 
-		if (t == submit) {	/* the submit button you pushed */
-			int namelen;
-			char *nx;
-			value = t->value;
-			if (!value)
-				value = "Submit";
-			else if (!*value && stringEqual(t->info->name, "input"))
-				if (stringInListCI(t->attributes, "value") < 0)
-					value = "Submit";
+        if (t == submit) { // the submit button you pushed
+            int namelen;
+            char *nx;
+            value = t->value;
+            if (!value) value = "Submit";
+            else if (!*value && stringEqual(t->info->name, "input"))
+                if (stringInListCI(t->attributes, "value") < 0)
+                    value = "Submit";
 
-			if (t->itype != INP_IMAGE)
-				goto success;
-			namelen = strlen(name);
-			createFormattedString(&nx, "%s.x", name);
-			postNameVal(nx, "0", fsep, false);
-			nx[namelen + 1] = 'y';
-			postNameVal(nx, "0", fsep, false);
-			nzFree(nx);
-			goto success;
-		}
+            if (t->itype != INP_IMAGE) goto success;
+            namelen = strlen(name);
+            createFormattedString(&nx, "%s.x", name);
+            postNameVal(nx, "0", fsep, false);
+            nx[namelen + 1] = 'y';
+            postNameVal(nx, "0", fsep, false);
+            nzFree(nx);
+            goto success;
+        }
 
-		if (itype >= INP_RADIO) {
-			bval = fetchBoolVar(t);
-			if (!bval) continue;
-			value = t->value;
-			if (!value || !*value)
-				value = "on";
-			goto success;
-		}
+        if (itype >= INP_RADIO) {
+            bval = fetchBoolVar(t);
+            if (!bval) continue;
+            value = t->value;
+            if (!value || !*value)
+                value = "on";
+            goto success;
+        }
 
 // special case for charset
-		if(itype == INP_HIDDEN && stringEqualCI(name, "_charset_")) {
-			value = (cf->charset ? cf->charset : "UTF-8");
-			eo1 = attribVal(form, "accept-charset"), eo2 = 0;
-			if(form->jslink && allowJS)
-				eo2 = get_js_attribute(form, "accept-charset");
-			if(eo2 && *eo2) eo1 = eo2;
-			if(eo1 && *eo1)
-				value = eo1;
-			postNameVal(name, value, fsep, false);
-			nzFree(eo2);
-			continue;
-		}
+        if(itype == INP_HIDDEN && stringEqualCI(name, "_charset_")) {
+            value = (cf->charset ? cf->charset : "UTF-8");
+            eo1 = attribVal(form, "accept-charset"), eo2 = 0;
+            if(form->jslink && allowJS)
+                eo2 = get_js_attribute(form, "accept-charset");
+            if(eo2 && *eo2) eo1 = eo2;
+            if(eo1 && *eo1) value = eo1;
+            postNameVal(name, value, fsep, false);
+            nzFree(eo2);
+            continue;
+        }
 
-		if (itype < INP_FILE) {
-		/* Even a hidden variable can be adjusted by js.
-		 * fetchTextVar allows for this possibility.
-		 * I didn't allow for it in the above, the value of a radio button;
-		 * hope that's not a problem. */
-		    dynamicvalue = fetchTextVar(t);
-		    if(inputRequired(t) && (!dynamicvalue || !*dynamicvalue))
-		        goto required;
-		    postNameVal(name, dynamicvalue, fsep, false);
-		    nzFree0(dynamicvalue);
-		    continue;
-		}
+        if (itype < INP_FILE) {
+        /* Even a hidden variable can be adjusted by js.
+         * fetchTextVar allows for this possibility.
+         * I didn't allow for it in the above, the value of a radio button;
+         * hope that's not a problem. */
+            dynamicvalue = fetchTextVar(t);
+            if(inputRequired(t) && (!dynamicvalue || !*dynamicvalue))
+                goto required;
+            postNameVal(name, dynamicvalue, fsep, false);
+            nzFree0(dynamicvalue);
+            continue;
+        }
 
-		if (itype == INP_TA) {
-		    int cx = t->lic;
-		    char *cxbuf;
-		    int cxlen;
-// did we quit the buffer before submit?
-		if(cx > 0 && !cxActive(cx, false))
-			cx = 0;
-		    if(cx == 0) {
-		        if(t->rvalue) {
-		            dynamicvalue= make_crlf(cloneString(t->rvalue));
-		            cx = -1;
-		        }
-		    } else if(cx < 0) {
-		        dynamicvalue = fetchTextVar(t);
-		        if(!dynamicvalue) // don't know what happened
-		            cx = 0;
-		    }
-		    if (cx) {
-		        if (fsep == '-') {
-// do this as an attachment
-		            char cxstring[12];
-		            if(cx < 0) {
-		                cx = sideBuffer(0, dynamicvalue, -1, NULL);
-		                nzFree0(dynamicvalue);
-		            }
-		            sprintf(cxstring, "%d", cx);
-		            rc = postNameVal
-		                (name, cxstring, fsep, 1);
-		            if(t->lic < 0) cxQuit(cx, 3);
-		            if(!rc) goto fail;
-		            continue;
-		        } // attach
-		        if(cx < 0)
-		            cxbuf = dynamicvalue, cxlen = strlen(dynamicvalue), dynamicvalue = 0;
-		        else if (!unfoldBuffer(cx, true, &cxbuf, &cxlen))
-		            goto fail;
-		        for (j = 0; j < cxlen; ++j)
-		            if (cxbuf[j] == 0) {
-		                setError(MSG_SessionNull, cx);
-		                nzFree(cxbuf);
-		                goto fail;
-		            }
-		        cxbuf[j] = 0;
-		        rc = postNameVal(name, cxbuf, fsep, false);
-		        nzFree(cxbuf);
-		        if (!rc) goto fail;
-		        if(inputRequired(t) && !j)
-		            goto required;
-		        continue;
-		    }
+        if (itype == INP_TA) {
+            int cx = t->lic;
+            char *cxbuf;
+            int cxlen;
+            // did we quit the buffer before submit?
+            if(cx > 0 && !cxActive(cx, false)) cx = 0;
+            if(cx == 0) {
+                if(t->rvalue) {
+                    dynamicvalue= make_crlf(cloneString(t->rvalue));
+                    cx = -1;
+                }
+            } else if(cx < 0) {
+                dynamicvalue = fetchTextVar(t);
+                if(!dynamicvalue) cx = 0; // don't know what happened
+            }
+            if (cx) {
+                if (fsep == '-') {
+                    // do this as an attachment
+                    char cxstring[12];
+                    if(cx < 0) {
+                        cx = sideBuffer(0, dynamicvalue, -1, NULL);
+                        nzFree0(dynamicvalue);
+                    }
+                    sprintf(cxstring, "%d", cx);
+                    rc = postNameVal
+                        (name, cxstring, fsep, 1);
+                    if(t->lic < 0) cxQuit(cx, 3);
+                    if(!rc) goto fail;
+                    continue;
+                } // attach
+                if(cx < 0)
+                    cxbuf = dynamicvalue, cxlen = strlen(dynamicvalue), dynamicvalue = 0;
+                else if (!unfoldBuffer(cx, true, &cxbuf, &cxlen))
+                    goto fail;
+                for (j = 0; j < cxlen; ++j)
+                    if (cxbuf[j] == 0) {
+                        setError(MSG_SessionNull, cx);
+                        nzFree(cxbuf);
+                        goto fail;
+                    }
+                cxbuf[j] = 0;
+                rc = postNameVal(name, cxbuf, fsep, false);
+                nzFree(cxbuf);
+                if (!rc) goto fail;
+                if(inputRequired(t) && !j) goto required;
+                continue;
+            }
 
-		    postNameVal(name, 0, fsep, false);
-		    if(inputRequired(t)) goto required;
-		    continue;
-		}
+            postNameVal(name, 0, fsep, false);
+            if(inputRequired(t)) goto required;
+            continue;
+        }
 
 /*********************************************************************
 Here is a small page to test some of these select option cases.
@@ -2816,135 +2806,129 @@ Here is a small page to test some of these select option cases.
 </select></form></body>
 *********************************************************************/
 
-		if (itype == INP_SELECT) {
-			char *display = getFieldFromBuffer(t->seqno);
-			char *s, *e;
-			if (!display) {	/* off the air */
-			    Tag *v2, **w2;
-			    /* revert back to reset state */
-			    gatherOptions(t);
-			    for(w2 = optArray; (v2 = *w2); ++w2)
-			        v2->checked = v2->rchecked;
-			    display = displayOptions(t);
-			}
-			rc = locateOptions(t, display, 0, &dynamicvalue, false);
-//			printf("disp<%s>dyn<%s>\n", display, dynamicvalue);
-			if (!rc) { // this should never happen
-				nzFree(display);
-				goto fail;
-			}
+        if (itype == INP_SELECT) {
+            char *display = getFieldFromBuffer(t->seqno);
+            char *s, *e;
+            if (!display) { // off the air
+                Tag *v2, **w2;
+                // revert back to reset state
+                gatherOptions(t);
+                for(w2 = optArray; (v2 = *w2); ++w2)
+                    v2->checked = v2->rchecked;
+                display = displayOptions(t);
+            }
+            rc = locateOptions(t, display, 0, &dynamicvalue, false);
+//          printf("disp<%s>dyn<%s>\n", display, dynamicvalue);
+            if (!rc) { // this should never happen
+                nzFree(display);
+                goto fail;
+            }
 // unlike display, value can return null, if no choice was made
-			if (!dynamicvalue) {
-				nzFree(display);
-				if(inputRequired(t)) goto required;
-				continue;
-			}
+            if (!dynamicvalue) {
+                nzFree(display);
+                if(inputRequired(t)) goto required;
+                continue;
+            }
 
 // Single select cannot select a blank value
 // if the option selected is first in list. Wow.
-			if(!inputRequired(t) || t->multiple || *dynamicvalue)
-				goto options_ok;
-			const char *z; int zv;
+            if(!inputRequired(t) || t->multiple || *dynamicvalue)
+                goto options_ok;
+            const char *z; int zv;
 // setting size to something > 1 disables this behavior.
-			if((z = attribVal(t, "size")) && (zv = stringIsNum(z)) && zv > 1)
-				goto options_ok;
-   gatherOptions(t);
-			const Tag *u = locateOptionByNum(t, 1);
-			if(u && stringEqual(u->textval, display) && !*u->value &&
-			!(u->parent && u->parent->action == TAG_OPTG)) {
-				nzFree(display);
-				goto required;
-			}
+            if((z = attribVal(t, "size")) && (zv = stringIsNum(z)) && zv > 1)
+                goto options_ok;
+            gatherOptions(t);
+            const Tag *u = locateOptionByNum(t, 1);
+            if(u && stringEqual(u->textval, display) && !*u->value &&
+            !(u->parent && u->parent->action == TAG_OPTG)) {
+                nzFree(display);
+                goto required;
+            }
 options_ok:
-			nzFree(display);
+            nzFree(display);
 
 // Now step through the options
-			char more = 1;
-			for (s = dynamicvalue; more; s = e) {
-				e = 0;
-				if (t->multiple)
-					e = strchr(s, '\1');
-				if (!e)
-					e = s + strlen(s);
-				more = *e, *e = 0;
-				postNameVal(name, s, fsep, false);
-				if (more)
-					++e;
-			}
-			nzFree0(dynamicvalue);
-			continue;
-		}
+            char more = 1;
+            for (s = dynamicvalue; more; s = e) {
+                e = 0;
+                if (t->multiple)
+                    e = strchr(s, '\1');
+                if (!e) e = s + strlen(s);
+                more = *e, *e = 0;
+                postNameVal(name, s, fsep, false);
+                if (more) ++e;
+            }
+            nzFree0(dynamicvalue);
+            continue;
+        }
 
-		if (itype == INP_FILE) {	/* the only one left */
-			uchar isfile = 3;
-			dynamicvalue = fetchTextVar(t);
-			if (!dynamicvalue || !*dynamicvalue) {
-				if(inputRequired(t))
-					goto required;
-				postNameVal(name, emptyString, fsep, 0);
-				continue;
-			}
-			if (!dopost  || fsep != '-') {
-				if(fsep == '\n') {
-					setError(MSG_FilePost);
-					nzFree(dynamicvalue);
-					goto fail;
-				}
-// we'll try to truck along
-				isfile = 0;
-				if(debugLevel >= 3)
-					i_puts(MSG_FilePost);
-			}
+        if (itype == INP_FILE) { // the only one left
+            uchar isfile = 3;
+            dynamicvalue = fetchTextVar(t);
+            if (!dynamicvalue || !*dynamicvalue) {
+                if(inputRequired(t)) goto required;
+                postNameVal(name, emptyString, fsep, 0);
+                continue;
+            }
+            if (!dopost  || fsep != '-') {
+                if(fsep == '\n') {
+                    setError(MSG_FilePost);
+                    nzFree(dynamicvalue);
+                    goto fail;
+                }
+                // we'll try to truck along
+                isfile = 0;
+                if(debugLevel >= 3) i_puts(MSG_FilePost);
+            }
 
-			if(!t->multiple) {
-				rc = postNameVal(name, dynamicvalue, fsep, isfile);
-				nzFree0(dynamicvalue);
-				if (!rc)
-					goto fail;
-			} else {
-				const char *v = dynamicvalue, *w;
-				char *z;
+            if(!t->multiple) {
+                rc = postNameVal(name, dynamicvalue, fsep, isfile);
+                nzFree0(dynamicvalue);
+                if (!rc) goto fail;
+            } else {
+                const char *v = dynamicvalue, *w;
+                char *z;
 
-				while(*v) {
-					if(!(w = strchr(v, selsep)))
-						w = v + strlen(v);
-					z = pullString(v, w-v);
-					v = *w ? w+1 : w; // point to next file
-					if(!*z) { // empty
-						nzFree(z);
-						continue;
-					}
-					rc = postNameVal(name, z, fsep, isfile);
-					nzFree(z);
-					if (!rc)
-						goto fail;
-				}
+                while(*v) {
+                    if(!(w = strchr(v, selsep)))
+                        w = v + strlen(v);
+                    z = pullString(v, w-v);
+                    v = *w ? w+1 : w; // point to next file
+                    if(!*z) { // empty
+                        nzFree(z);
+                        continue;
+                    }
+                    rc = postNameVal(name, z, fsep, isfile);
+                    nzFree(z);
+                    if (!rc) goto fail;
+                }
 
-				nzFree(dynamicvalue);
-			}
-			continue;
-		}
+                cnzFree(dynamicvalue);
+            }
+            continue;
+        }
 
-		i_printfExit(MSG_UnexSubmitForm);
+        i_printfExit(MSG_UnexSubmitForm);
 
 success:
-		postNameVal(name, value, fsep, false);
-	}			/* loop over tags */
+        postNameVal(name, value, fsep, false);
+    } // loop over tags
 
-	if (fsep == '-') {	// the last boundary
-		stringAndString(&pfs, &pfs_l, "--");
-		stringAndString(&pfs, &pfs_l, boundary);
-		stringAndString(&pfs, &pfs_l, "--\r\n");
-	}
+    if (fsep == '-') { // the last boundary
+        stringAndString(&pfs, &pfs_l, "--");
+        stringAndString(&pfs, &pfs_l, boundary);
+        stringAndString(&pfs, &pfs_l, "--\r\n");
+    }
 
-	return true;
+    return true;
 
 fail:
-	return false;
+    return false;
 
 required:
-	setError(MSG_ReqField, name);
-	return false;
+    setError(MSG_ReqField, name);
+    return false;
 }
 
 /*********************************************************************
@@ -3201,7 +3185,7 @@ boxes, logins, and every site that is a form with a website around it.
 	if (form->bymail) {
 		char *addr, *subj, *q;
 		const char *tolist[MAXCC + 2], *atlist[MAXCC + 2];
-		const char *name = form->name;
+		const char *name = get_tagName(form);
 		int newlen = strlen(pfs) - actlen;	/* the new string could be longer than post */
 		char key;
 		decodeMailURL(action, &addr, &subj, 0);
@@ -6022,7 +6006,7 @@ unparen:
 		if (action == TAG_AREA)
 			a = imageAlt(t);
 		if (!a) {
-			if((a = t->name)) {
+			if((a = attribVal(t, "name"))) {
 				skipWhite2(&a);
 				if(*a == '{') {
 					const char *b = a + 1;
@@ -6113,7 +6097,7 @@ unparen:
 		if (!retainTag || !currentA->href || currentA->textin)
 			break;
 		a = imageAlt(t);
-		if (!a) a = altText(t->name);
+		if (!a) a = altText(attribVal(t, "name"));
 		if (!a) a = altText(currentA->href);
 		if (!a) a = altText(t->href);
 		if (!a) a = "image";
