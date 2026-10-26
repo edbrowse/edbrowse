@@ -4091,16 +4091,19 @@ static void makeButton(void)
 
 void formControl(Tag *t, bool namecheck)
 {
-	const char *myname = (t->name ? t->name : attribVal(t, "id"));
-	Tag *cform = currentForm;
-	if (!cform) {
-/* nodes could be created dynamically, not through html */
-		cform = findOpenTag(t, TAG_FORM);
-	}
-	if (cform)
-		t->controller = cform;
-	if (namecheck && !myname)
-		debugPrint(4, "%s does not have a name", t->info->desc);
+    Tag *cform = currentForm;
+    if (!cform) {
+        // nodes could be created dynamically, not through html
+        cform = findOpenTag(t, TAG_FORM);
+    }
+    if (cform) t->controller = cform;
+
+    if (namecheck && radioCheck) {
+        const char *myname = attribVal(t, "name");
+        if(!myname || !*myname) myname = attribVal(t, "id");
+        if(!myname || !*myname)
+            debugPrint(3, "%s does not have a name", t->info->desc);
+    }
 }
 
 const char *const inp_types[] = {
@@ -4128,62 +4131,59 @@ const char *const inp_others[] = {
 /* helper function for input tag */
 void htmlInputHelper(Tag *t)
 {
-	int n, len, itype;
-	const char *myname = (t->name ? t->name : attribVal(t, "id"));
-	const char *s = attribVal(t, "type");
-	bool isbutton = stringEqual(t->info->name, "button");
-	t->itype = itype = (isbutton ? INP_SUBMIT : INP_TEXT);
-	if (s && *s) {
-		n = stringInListCI(inp_types, s);
-		if (n < 0) {
-			n = stringInListCI(inp_others, s);
-			if (n < 0)
-				debugPrint(3, "unrecognized input type %s", s);
-			else
-				t->itype = itype = INP_TEXT, t->itype_minor = n;
-			if (n == INP_PW)
-				t->ipass = true;
-		} else
-			t->itype = itype = n;
-	}
+    int n, len, itype;
+    const char *s = attribVal(t, "type");
+    bool isbutton = stringEqual(t->info->name, "button");
+    t->itype = itype = (isbutton ? INP_SUBMIT : INP_TEXT);
+    if (s && *s) {
+        n = stringInListCI(inp_types, s);
+        if (n < 0) {
+            n = stringInListCI(inp_others, s);
+            if (n < 0)
+                debugPrint(3, "unrecognized input type %s", s);
+            else t->itype = itype = INP_TEXT, t->itype_minor = n;
+            if (n == INP_PW) t->ipass = true;
+        } else t->itype = itype = n;
+    }
 
-	s = attribVal(t, "maxlength");
-	len = 0;
-	if (s)
-		len = stringIsNum(s);
-	if (len > 0)
-		t->lic = len;
+    s = attribVal(t, "maxlength");
+    len = 0;
+    if (s) len = stringIsNum(s);
+    if (len > 0) t->lic = len;
 
 // No preset value on file, for security reasons.
 // <input type=file value=/etc/passwd> then submit via onload().
-	if (itype == INP_FILE) {
-		nzFree0(t->value);
-		cnzFree0(t->rvalue);
-	}
+    if (itype == INP_FILE) {
+        nzFree0(t->value);
+        cnzFree0(t->rvalue);
+    }
 
 /* In this case an empty value should be "", not null */
-	if (t->value == 0)
-		t->value = emptyString;
-	if (t->rvalue == 0)
-		t->rvalue = cloneString(t->value);
+    if (t->value == 0)
+        t->value = emptyString;
+    if (t->rvalue == 0)
+        t->rvalue = cloneString(t->value);
 
-	if (itype == INP_RADIO && t->checked && radioCheck && myname) {
-		char namebuf[200];
-		if (strlen(myname) < sizeof(namebuf) - 3) {
-			if (!*radioCheck)
-				stringAndChar(&radioCheck, &radio_l, '|');
-			sprintf(namebuf, "|%s|", t->name);
-			if (strstr(radioCheck, namebuf)) {
-				debugPrint(3,
-					   "multiple radio buttons have been selected");
-				return;
-			}
-			stringAndString(&radioCheck, &radio_l, namebuf + 1);
-		}
-	}
+    if (itype == INP_RADIO && t->checked && radioCheck) {
+// we ought not be here if called from js, because radioCheck will be 0
+        char namebuf[200];
+        const char *myname = attribVal(t, "name");
+        if(!myname || !*myname) myname = attribVal(t, "id");
+        if (myname && *myname && strlen(myname) < sizeof(namebuf) - 3) {
+            if (!*radioCheck)
+                stringAndChar(&radioCheck, &radio_l, '|');
+            sprintf(namebuf, "|%s|", myname);
+            if (strstr(radioCheck, namebuf)) {
+                debugPrint(3,
+                       "multiple radio buttons have been selected");
+                return;
+            }
+            stringAndString(&radioCheck, &radio_l, namebuf + 1);
+        }
+    }
 
-	// the submit fields can have a name, but they don't have to
-	formControl(t, (itype > INP_SUBMIT));
+    // the submit fields can have a name, but they don't have to
+    formControl(t, (itype > INP_SUBMIT));
 }
 
 static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
