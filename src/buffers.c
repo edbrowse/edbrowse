@@ -8686,7 +8686,6 @@ past_js:
 
                 if (scmd == '?') {
                     infShow(tagno, line);
-                    if(debugLevel >= 3) eb_printf("tag %d\n", tagList[tagno]->seqno);
                     goto success;
                 }
 

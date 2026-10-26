@@ -1913,13 +1913,11 @@ void infShow(int tagno, const char *search)
     if (inputRequired(t))
         eb_printf(" required");
     const char *name = get_tagName(t);
-    const char *place = get_general_property_string(t, "placeholder");
     const char *label = get_labelText(t);
     if(label) eb_printf(": %s", label);
-    else if(place) eb_printf(": %s\"", place);
     else if(name) eb_printf(": %s", name);
     if(debugLevel >= 3) {
-        if(label || place) eb_printf(": %s", name);
+        if(label) eb_printf(": %s", name);
         eb_printf(",%d", t->seqno);
     }
     if(t->itype == INP_SUBMIT &&
@@ -3439,16 +3437,16 @@ static const Tag *gebi_r(const Tag *t)
 
 static const char *get_labelText(const Tag *t)
 {
-    if(!t->parent) return 0;
+    if(!t->parent) goto nolabel;
     const Tag *label = 0;
     if(t->parent->action == TAG_LABEL) {
         // implicit association
         label = t->parent;
     } else { // explicit association
         const char *tagid = get_tagId(t);
-        if(!tagid) return 0;
+        if(!tagid) goto nolabel;
         label = gebi_c(t, tagid, 2);
-        if(!label) return 0;
+        if(!label) goto nolabel;
     }
 // this won't work with <lable><i>text here </i></lable>
 // I'm just looking for a text child
@@ -3458,6 +3456,10 @@ static const char *get_labelText(const Tag *t)
     if(!u) return 0;
     const char *v = u->textval;
     return (v && *v) ? v : 0;
+
+nolabel:
+    v = get_general_property_string(t, "placeholder");
+    return v;
 }
 
 /* Javascript errors, we need to see these no matter what. */
@@ -5689,8 +5691,7 @@ past_cell_paragraph:
 		goto nop;
 
 	case TAG_INPUT:
-		if (!retainTag)
-			break;
+		if (!retainTag) break;
 		if (!opentag) {
 // button tag opens and closes, like anchor.
 // Check and make sure it's not </select>
@@ -5711,7 +5712,12 @@ past_cell_paragraph:
 			if(j) stringAndChar(&ns, &ns_l, ' ');
 			break;
 		}
-// value has to be something.
+		a = get_labelText(t);
+		if(a) {
+			stringAndString(&ns, &ns_l, a);
+			stringAndChar(&ns, &ns_l, ' ');
+	}
+		// value has to be something
 		if (!t->value) t->value = emptyString;
 		itype = t->itype;
 		if (itype == INP_HIDDEN) break;
