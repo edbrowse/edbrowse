@@ -5207,11 +5207,11 @@ js might create the entire table, including rowspan attributes, from scratch.
 We can't do everything from the html tags, we have to do it when the screen
 is rendered, thus this machinery is called
 from the top of render() in html.c.
-I'm overloading 3 variables in Tag, and I know that's ugly,
-but I don't feel like creating new ones just for this feature,
-and these three aren't being used by <tr> or <td>, so here we go.
-lic is rowspan and js_ln is colspan, (on td), and js_file is the cellstring.
-What is a cellstring?
+I'm overloading 4 variables in Tag, and I know that's ugly,
+but I don't feel like creating 4 new ones just for this feature,
+and these aren't being used by <tr> or <td>, so here we go.
+lic is rowspan and js_ln is colspan, (on td), and js_file is the cellstring,
+(on tr). What is a cellstring?
 It is a comma separated list of cells, or merged cells, or inherited cells,
 on that row.
 If the cell is a simple <td></td>, then we don't need anything,
@@ -5237,6 +5237,8 @@ Such should never happen in the real world, but don't be surprised if it does.
 I will defer to rowspan over colspan.
 debug prints at level 4 show the cellstrings on each row,
 if they are nontrivial.
+Finally, tr.f1 points back to the previous row.
+Other than here, f1 is only used by frame tags.
 Hang on, here we go.
 *********************************************************************/
 
@@ -5268,7 +5270,7 @@ void rowspan(void)
             for(tr = section->firstchild; tr; tr = tr->sibling) {
                 if(tr->action != TAG_TR) continue;
                 // link to previous row
-                tr->same = last_tr;
+                tr->f1 = (Frame*)last_tr;
                 last_tr = tr;
 // js_file holds the descriptive string of the cells in the row
                 nzFree0(tr->js_file);
@@ -5283,8 +5285,11 @@ void rowspan(void)
             section->action != TAG_TFOOT)
                 continue;
             for(tr = section->firstchild; tr; tr = tr->sibling) {
-                if(tr->action == TAG_TR)
-                    rowspan3(tr, ++ri);
+                if(tr->action != TAG_TR) continue;
+                rowspan3(tr, ++ri);
+// put the frame pointer back to zero.
+// but we can't reset js_file; we still need it to render the screen.
+                tr->f1 = 0;
             }
         }
     }
@@ -5324,7 +5329,7 @@ static void rowspan2(Tag *tr, int ri)
         if(td->js_ln <= 0) td->js_ln = 1;
     }
 
-    ihs = (tr->same ? tr->same->js_file : 0);
+    ihs = (tr->f1 ? ((Tag *)(tr->f1))->js_file : 0);
     c1 = c2 = 1;
     ns = initString(&ns_l);
     last_td = 0;
