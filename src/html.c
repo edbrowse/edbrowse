@@ -1917,9 +1917,12 @@ void infShow(int tagno, const char *search)
     if(label) eb_printf(": %s", label);
     else if(name) eb_printf(": %s", name);
     if(debugLevel >= 3) {
-        if(label) eb_printf(": %s", name);
+        if(label) eb_printf(" %s", name);
         eb_printf(",%d", t->seqno);
     }
+    const char *place = get_general_property_string(t, "placeholder");
+    if(place) eb_printf(" (%s)", place);
+
     if(t->itype == INP_SUBMIT &&
     !inputDisabled(t) &&
     debugLevel >= 3) {
@@ -3458,8 +3461,7 @@ static const char *get_labelText(const Tag *t)
     return (v && *v) ? v : 0;
 
 nolabel:
-    v = get_general_property_string(t, "placeholder");
-    return v;
+    return 0;
 }
 
 /* Javascript errors, we need to see these no matter what. */
