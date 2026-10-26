@@ -85,10 +85,12 @@ i = document.createElement("input");
 i.type="radio";
 i.name="contact";
 i.value="carrier pigeon";
+label4 = document.createElement("label");
+label4.textContent = "pigeon";
+label4.appendChild(i);
 const panel = document.getElementById("under");
 const br = form.querySelector("#end-choices");
-panel.insertBefore(i, br);
-panel.insertBefore(document.createTextNode(" Pigeon"), br);
+panel.insertBefore(label4, br);
 if(el.length != 10) msg += `|updated form elements.length ${el.length}`;
 if(fsel.length != 6) msg += `|fieldset elements.length ${fsel.length}`;
 // you can fs.removeChild(panel) and verify the input fields are wiped out.
