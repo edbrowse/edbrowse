@@ -6948,7 +6948,7 @@ bool jump2anchor(const Tag *jumptag, const char *newhash)
 		}
 	}
 	if(jumptag)
-		jumptag = gebi_c(jumptag, newhash, true);
+		jumptag = gebi_c(jumptag, newhash, 1);
 	if(!jumptag)
 		goto hashnotfound;
 

@@ -183,7 +183,7 @@ bool charInOptions(char c);
 void charFixOptions(char c);
 bool charInFiles(char c);
 void charFixFiles(char c);
-const Tag *gebi_c(const Tag *t, const char *id, bool lookname);
+const Tag *gebi_c(const Tag *t, const char *id, uchar flavor);
 void runningError(int msg, ...);
 void rerender(int notify);
 void delTags(int startRange, int endRange);

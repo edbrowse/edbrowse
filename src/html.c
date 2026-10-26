@@ -1855,7 +1855,7 @@ static void connectDatalist(Tag *t)
 		lista = listj;
 	if(!lista)
 		return;
-	if((u = gebi_c(t, lista, false)))
+	if((u = gebi_c(t, lista, 0)))
 		t->ninp = u->seqno;
 	nzFree(listj);
 }
@@ -3383,47 +3383,58 @@ void charFixFiles(char c)
 	cw = save_w;
 }
 
-// getElementById in C.
-// Don't scan through all tags; we have to stay within our frame.
-static bool anchorlook;
-static const char *idsearch;
+/* getElementById in C.
+Why did I write all this climbing up the tree stuff? Why not just document?
+I think because you can "go" to a link on another frame, which is
+<a href=#some_hash> so we have to be able to climb up to the top
+of that frame and then look within that frame.
+this does not account for multiple tags with the same id.
+That is legal javascript but nobody should do that!
+flavor = 1 id search
+flavor = 2 id search + <a name=some_hash>  the legacy anchor usage
+flavor = 2 search for <label for=some_id> */
+static uchar gebi_flavor;
+static const char *gebi_search;
 static const Tag *gebi_r(const Tag *t); // recursive
-const Tag *gebi_c(const Tag *t, const char *id, bool lookname)
+const Tag *gebi_c(const Tag *t, const char *id, uchar flavor)
 {
-	int action;
-	if(!id || !*id)
-		return 0;
-// this should be easy, but bugs keep popping up.
-	debugPrint(4, "search %s", id);
-	while (true) {
-		action = t->action;
-		debugPrint(4, "up %d,%s", t->seqno, t->info->name);
-// don't go past document and up to a higher frame
-		if(action == TAG_HTML || action == TAG_FRAME)
-			return 0;
-		if(action == TAG_BODY)
-			break;
-		if(!(t = t->parent))
-			return 0; // should never happen
-	}
+    int action;
+    if(!id || !*id) return 0;
+    debugPrint(4, "gebi search %s", id);
+    while (true) {
+        action = t->action;
+        debugPrint(4, "up %s,%d", t->info->name, t->seqno);
+        // don't go past document and up to a higher frame
+        if(action == TAG_HTML || action == TAG_FRAME) return 0;
+        if(action == TAG_BODY) break;
+        if(!(t = t->parent)) return 0; // should never happen
+    }
 // t is <body> at the top of the current frame
-	idsearch = id;
-	anchorlook = lookname;
-	return gebi_r(t);
+    gebi_search = id;
+    gebi_flavor = flavor;
+    return gebi_r(t);
 }
 
 static const Tag *gebi_r(const Tag *t)
 {
-    const Tag *c; // children
-    const Tag *u;
-    const char *tagid = get_tagId(t);
+    const Tag *c, *u;
+    const char *tagid = 0, *tagname = 0;
+    if(gebi_flavor <= 1)
+        tagid = get_tagId(t);
+    if(gebi_flavor == 1)
+        tagname = get_tagName(t);
+    if(gebi_flavor == 2)
+        tagid = get_general_property_string(t, "for");
     if(!tagid) tagid = emptyString;
-    const char *tagname = get_tagName(t);
     if(!tagname) tagname = emptyString;
-    debugPrint(4, "look %d,%s,%s", t->seqno, t->info->name, tagid);
-    if(stringEqual(tagid, idsearch)) return t;
-    if (anchorlook && t->action == TAG_A &&
-    stringEqual(tagname, idsearch))
+    debugPrint(5, "search %s,%d %s %s",
+    t->info->name, t->seqno, tagid, tagname);
+    if(stringEqual(tagid, gebi_search)) {
+        if(gebi_flavor <= 1 || t->action == TAG_LABEL)
+            return t;
+    }
+    if (gebi_flavor == 1 && t->action == TAG_A &&
+    stringEqual(tagname, gebi_search))
         return t;
 // do not descend into a new frame
     if(t->action == TAG_FRAME) return 0;
