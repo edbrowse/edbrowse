@@ -5161,48 +5161,48 @@ badstring:
 
 static void renderNode(Tag *t, bool opentag, struct parseContext *pc)
 {
-	int tagno = t->seqno;
-	char hnum[40];		// hidden number
+    int tagno = t->seqno;
+    char hnum[40]; // hidden number
 #define ns_hnum() stringAndString(&ns, &ns_l, hnum)
 #define ns_ic() stringAndChar(&ns, &ns_l, InternalCodeChar)
 #define checkDisabled(u) if(inputDisabled(u) || (u->itype > INP_SUBMIT && inputReadonly(u))) stringAndString(&ns, &ns_l, "🛑")
-	int j, l;
-	int itype;		// input type
-	const struct tagInfo *ti = t->info;
-	int action = t->action;
-	char c;
-	bool endcolor;
-	bool retainTag;
-	const char *a;		// usually an attribute
-	char *al; // aria label, or sometimes title
-	char *u;
-	Tag *ltag;
+    int j, l;
+    int itype; // input type
+    const struct tagInfo *ti = t->info;
+    int action = t->action;
+    char c;
+    bool endcolor;
+    bool retainTag;
+    const char *a; // usually an attribute
+    char *al; // aria label, or sometimes title
+    char *u;
+    Tag *ltag;
 
         (void) pc;
-	debugPrint(6, "rend %c%s", (opentag ? ' ' : '/'), ti->name);
-	if(opentag) ++rrcount;
+    debugPrint(6, "rend %c%s", (opentag ? ' ' : '/'), ti->name);
+    if(opentag) ++rrcount;
 
-	if (deltag) {
-		if (t == deltag && !opentag)
-			deltag = 0;
+    if (deltag) {
+        if (t == deltag && !opentag)
+            deltag = 0;
 li_hide:
 /* we can skate past the li tag, but still need to increment the count */
-		if (action == TAG_LI && opentag &&
-		    (ltag = findOpenList(t)) && ltag->action == TAG_OL)
-			++ltag->lic;
-		return;
-	}
-	if (t->deleted) {
-		debugPrint(6, "tag is deleted");
-		deltag = t;
-		goto li_hide;
-	}
+        if (action == TAG_LI && opentag &&
+            (ltag = findOpenList(t)) && ltag->action == TAG_OL)
+            ++ltag->lic;
+        return;
+    }
+    if (t->deleted) {
+        debugPrint(6, "tag is deleted");
+        deltag = t;
+        goto li_hide;
+    }
 
-	if (inv2) {
-		if (inv2 == t)
-			inv2 = NULL;
-		return;
-	}
+    if (inv2) {
+        if (inv2 == t)
+            inv2 = NULL;
+        return;
+    }
 
     if(showall && !opentag && ok2inject(t->nodeNameU)) {
         if ((al = cssBeforeAfter(t, 2))) {
@@ -5211,48 +5211,42 @@ li_hide:
         }
     }
 
-	endcolor = false;
-	if (doColors && !opentag && t->iscolor) {
-		char *u0, *u1, *u3;
+    endcolor = false;
+    if (doColors && !opentag && t->iscolor) {
+        char *u0, *u1, *u3;
 // don't put a color around whitespace
-		u1 = backArrow(0);
+        u1 = backArrow(0);
 // there should always be a previous color marker
-		if (!u1)
-			goto nocolorend;
-		if ((uchar) u1[2] == 0xab)	// close
-			goto yescolorend;
-		for (u3 = u1 + 3; *u3; ++u3) {
-			if (*u3 == InternalCodeChar) {
-				for (++u3; isdigitByte(*u3); ++u3) ;
-				if (*u3 == '*' && !*++u3)
-					break;
-			}
-			if (!isspaceByte(*u3))
-				goto yescolorend;
-		}
-		u0 = backColon(u1);
-		if (*u0 != ':')
-			goto yescolorend;
-		for (u3 = u0 + 1; u3 < u1; ++u3)
-			if (*u3 != ' ' && !isalphaByte(*u3))
-				goto yescolorend;
-		u1 += 3;
-		strmove(u0, u1);
-		ns_l -= (u1 - u0);
-		goto nocolorend;
+        if (!u1) goto nocolorend;
+        if ((uchar)u1[2] == 0xab) goto yescolorend;
+        for (u3 = u1 + 3; *u3; ++u3) {
+            if (*u3 == InternalCodeChar) {
+                for (++u3; isdigitByte(*u3); ++u3) ;
+                if (*u3 == '*' && !*++u3) break;
+            }
+            if (!isspaceByte(*u3)) goto yescolorend;
+        }
+        u0 = backColon(u1);
+        if (*u0 != ':') goto yescolorend;
+        for (u3 = u0 + 1; u3 < u1; ++u3)
+            if (*u3 != ' ' && !isalphaByte(*u3)) goto yescolorend;
+        u1 += 3;
+        strmove(u0, u1);
+        ns_l -= (u1 - u0);
+        goto nocolorend;
 yescolorend:
-		stringAndString(&ns, &ns_l, "≫");
-		endcolor = true;
-	}
+        stringAndString(&ns, &ns_l, "≫");
+        endcolor = true;
+    }
 nocolorend:
 
-	if (!opentag && ti->bits & TAG_NOSLASH)
-		return;
+    if (!opentag && ti->bits & TAG_NOSLASH)
+        return;
 
 // We will call cssInvisible to derive visibility, that in turn invokes css,
 // that in turn requires us to be in the frame of the tags we are looking at.
 // render(), which calls this, restores cf.
-	cf = t->f0;
+    cf = t->f0;
 
     if (opentag) {
 // what is the visibility now?
@@ -5286,216 +5280,212 @@ nocolorend:
         }
     }
 
-	retainTag = true;
-	if (invisible)
-		retainTag = false;
-	if (ti->bits & TAG_INVISIBLE) {
-		if(opentag) debugPrint(6, "tag is invisible");
-		else debugPrint(6, "invisible tag is closed");
-		retainTag = false;
-		opentag ? ++invisible : --invisible;
+    retainTag = true;
+    if (invisible)
+        retainTag = false;
+    if (ti->bits & TAG_INVISIBLE) {
+        if(opentag) debugPrint(6, "tag is invisible");
+        else debugPrint(6, "invisible tag is closed");
+        retainTag = false;
+        opentag ? ++invisible : --invisible;
 /* special case for noscript with no js */
-		if (action == TAG_NOSCRIPT && !cf->cx)
-			invisible = false;
-	}
+        if (action == TAG_NOSCRIPT && !cf->cx)
+            invisible = false;
+    }
 
-	if (retainTag && doColors && opentag) {
-		char *u0, *u1, *u2, *u3;
-		char *color, *recolor = 0;
-		t->iscolor = false;
-		color = get_style_string_t(t, "color");
-		if (!color || !color[0])
-			goto nocolor;
-		caseShift(color, 'l');
-		recolor = closeColor(color);
-		if (!recolor) {
-			nzFree(color);
-			goto nocolor;
-		}
-		if (recolor != color)
-			nzFree(color);
-		if (stringEqual(recolor, "inherit")) {	// not a color
-			nzFree(recolor);
-			goto nocolor;
-		}
+    if (retainTag && doColors && opentag) {
+        char *u0, *u1, *u2, *u3;
+        char *color, *recolor = 0;
+        t->iscolor = false;
+        color = get_style_string_t(t, "color");
+        if (!color || !color[0]) goto nocolor;
+        caseShift(color, 'l');
+        recolor = closeColor(color);
+        if (!recolor) {
+            nzFree(color);
+            goto nocolor;
+        }
+        if (recolor != color)
+            nzFree(color);
+        if (stringEqual(recolor, "inherit")) { // not a color
+            nzFree(recolor);
+            goto nocolor;
+        }
 // is this the same as the previous?
-		u2 = backArrow(0);
-		if (!u2)
-			goto yescolor;
-		if ((uchar) u2[2] == 0xaa) {	// open
-			u1 = u2;
-			u2 = 0;	// no closing
-		} else {
-			u1 = backArrow(u2);
-			if (!u1 || (uchar) u1[2] != 0xaa)
-				goto yescolor;
-		}
+        u2 = backArrow(0);
+        if (!u2) goto yescolor;
+        if ((uchar) u2[2] == 0xaa) { // open
+            u1 = u2;
+            u2 = 0; // no closing
+        } else {
+            u1 = backArrow(u2);
+            if (!u1 || (uchar) u1[2] != 0xaa) goto yescolor;
+        }
 // back up to :
-		u0 = backColon(u1);
-		if (*u0++ != ':' ||
-		    (unsigned)(u1 - u0) != strlen(recolor) || memcmp(u0, recolor, u1 - u0))
-			goto yescolor;
-		if (!u2) {
-// it's the same color, orange inside orange
-			nzFree(recolor);
-			goto nocolor;
-		}
+        u0 = backColon(u1);
+        if (*u0++ != ':' ||
+        (unsigned)(u1 - u0) != strlen(recolor) || memcmp(u0, recolor, u1 - u0))
+            goto yescolor;
+        if (!u2) {
+            // it's the same color, orange inside orange
+            nzFree(recolor);
+            goto nocolor;
+        }
 // merge sections if there are no words in between
-		for (u3 = u2; *u3; ++u3) {
-			if (*u3 == InternalCodeChar)
-				for (++u3; isdigitByte(*u3); ++u3) ;
-			if (isalnumByte(*u3))
-				goto yescolor;
-		}
-		strmove(u2, u2 + 3);
-		ns_l -= 3;
-		nzFree(recolor);
-		t->iscolor = true;
-		goto nocolor;
+        for (u3 = u2; *u3; ++u3) {
+            if (*u3 == InternalCodeChar)
+                for (++u3; isdigitByte(*u3); ++u3) ;
+            if (isalnumByte(*u3)) goto yescolor;
+        }
+        strmove(u2, u2 + 3);
+        ns_l -= 3;
+        nzFree(recolor);
+        t->iscolor = true;
+        goto nocolor;
 yescolor:
-		stringAndChar(&ns, &ns_l, ':');
-		stringAndString(&ns, &ns_l, recolor);
-		stringAndString(&ns, &ns_l, "≪");
-		nzFree(recolor);
-		t->iscolor = true;
-	}
+        stringAndChar(&ns, &ns_l, ':');
+        stringAndString(&ns, &ns_l, recolor);
+        stringAndString(&ns, &ns_l, "≪");
+        nzFree(recolor);
+        t->iscolor = true;
+    }
 nocolor:
 
-	switch (action) {
-	case TAG_TEXT:
-		if (!t->textval) break;
-		if(t->parent && t->parent->action == TAG_LABEL) break;
-		if (!invisible) {
-// I'm not gonna include the node numbers for all the text nodes;
-// a lot of text nodes are whitespace and the tag numbers just confuse things.
-// This assumes you're not goint to jump to a text node,
-// or otherwise interact with it from the command line.
-//			tagInStream(tagno);
-			stringAndString(&ns, &ns_l, t->textval);
-		}
-		break;
+    switch (action) {
+    case TAG_TEXT:
+        if (!t->textval) break;
+        if(t->parent && t->parent->action == TAG_LABEL) break;
+        if (!invisible) {
+/* I'm not gonna include the node numbers for all the text nodes;
+a lot of text nodes are whitespace and the tag numbers just confuse things.
+This assumes you're not goint to jump to a text node,
+or otherwise interact with it from the command line.
+So don't call tagInStream() */
+            stringAndString(&ns, &ns_l, t->textval);
+        }
+        break;
 
-	case TAG_CDATA:
-		if (!t->textval) break;
-		if (!invisible) {
-			stringAndString(&ns, &ns_l, t->textval);
-		}
-		break;
+    case TAG_CDATA:
+        if (!t->textval) break;
+        if (!invisible) {
+            stringAndString(&ns, &ns_l, t->textval);
+        }
+        break;
 
-	case TAG_A:
+    case TAG_A:
 // special code for attached images from an email
-		if(opentag && !attimg &&
-		(a = attribVal(t, "attimg")) &&
-		*a == 'y') {
-			deltag = t;
-			break;
-		}
-		currentA = (opentag ? t : 0);
-		if (!retainTag) break;
-		int arialevel_a = ariaHeadingLevel(t);
+        if(opentag && !attimg &&
+        (a = attribVal(t, "attimg")) &&
+        *a == 'y') {
+            deltag = t;
+            break;
+        }
+        currentA = (opentag ? t : 0);
+        if (!retainTag) break;
+        int arialevel_a = ariaHeadingLevel(t);
 // Javascript might have set this url.
-		if (opentag && !t->href && t->jslink) {
-			char *new_url = get_property_url_t(t, false);
-			if (new_url && *new_url)
-				nzFree(t->href), t->href = new_url;
-		}
-		if (opentag && !t->href) {
+        if (opentag && !t->href && t->jslink) {
+            char *new_url = get_property_url_t(t, false);
+            if (new_url && *new_url)
+                nzFree(t->href), t->href = new_url;
+        }
+        if (opentag && !t->href) {
 // onclick turns this into a hyperlink.
-			if (tagHandler(tagno, "onclick"))
-				t->href = cloneString("#");
-		}
-		if (t->href) {
-			if (opentag) {
-				sprintf(hnum, "%c%d{", InternalCodeChar, tagno);
+            if (tagHandler(tagno, "onclick"))
+                t->href = cloneString("#");
+        }
+        if (t->href) {
+            if (opentag) {
+                sprintf(hnum, "%c%d{", InternalCodeChar, tagno);
 #if 0
 // this seems to do more harm than good, until we can figure out a good strategy.
 // Perhaps insert the title if there is no content, or the content is just an image.
-				if((al = arialabeltitle(t))) {
+                if((al = arialabeltitle(t))) {
 // for <a>,  aria-label or title replaces anything that was below
-					ns_hnum();
-					stringAndString(&ns, &ns_l, al);
-					nzFree(al);
-					sprintf(hnum, "%c0}", InternalCodeChar);
-					ns_hnum();
-					deltag = t;
-					break;
-				}
+                    ns_hnum();
+                    stringAndString(&ns, &ns_l, al);
+                    nzFree(al);
+                    sprintf(hnum, "%c0}", InternalCodeChar);
+                    ns_hnum();
+                    deltag = t;
+                    break;
+                }
 #endif
-			} else // open or closed
-				sprintf(hnum, "%c0}", InternalCodeChar);
-		} else { // href or no href
-			if (opentag)
-				sprintf(hnum, "%c%d*", InternalCodeChar, tagno);
-			else
-				hnum[0] = 0;
-		} // href or no href
-		if(arialevel_a && opentag) {
-			stringAndChar(&ns, &ns_l, '\f');
-			char hbuf_a[8];
-			sprintf(hbuf_a, "h%d ", arialevel_a);
-			stringAndString(&ns, &ns_l, hbuf_a);
-		}
-		ns_hnum();
-		if(arialevel_a && !opentag)
-			stringAndChar(&ns, &ns_l, '\f');
-		if (endcolor)
-			swapArrow();
-		break;
+            } else // open or closed
+                sprintf(hnum, "%c0}", InternalCodeChar);
+        } else { // href or no href
+            if (opentag)
+                sprintf(hnum, "%c%d*", InternalCodeChar, tagno);
+            else
+                hnum[0] = 0;
+        } // href or no href
+        if(arialevel_a && opentag) {
+            stringAndChar(&ns, &ns_l, '\f');
+            char hbuf_a[8];
+            sprintf(hbuf_a, "h%d ", arialevel_a);
+            stringAndString(&ns, &ns_l, hbuf_a);
+        }
+        ns_hnum();
+        if(arialevel_a && !opentag)
+            stringAndChar(&ns, &ns_l, '\f');
+        if (endcolor)
+            swapArrow();
+        break;
 
 // check for span onclick and make it look like a link.
 // Same for div, maybe for others too.
-	case TAG_SPAN: case TAG_DIV:
+    case TAG_SPAN: case TAG_DIV:
 // don't overwrite text in <div> or in <span> with the title
-		al = 0;
-		if(opentag && !t->firstchild) al = arialabeltitle(t);
+        al = 0;
+        if(opentag && !t->firstchild) al = arialabeltitle(t);
 // If an onclick function, then turn this into a hyperlink, thus clickable.
-		if (!t->onclick && opentag && t->jslink && handlerPresent(t, "onclick"))
-			t->onclick = true;
-		if (!(t->onclick & allowJS) || ahref_under(t) > 0) {
+        if (!t->onclick && opentag && t->jslink && handlerPresent(t, "onclick"))
+            t->onclick = true;
+        if (!(t->onclick & allowJS) || ahref_under(t) > 0) {
 // regular span, don't need title unless it is inside a link
-			if(opentag && !findOpenTag(t, TAG_A))
-				nzFree0(al);
-			if(al && action == TAG_DIV)
-				stringAndChar(&ns, &ns_l, '\n');
-			j = ns_l;
-			if (al) // aria-label
-				stringAndString(&ns, &ns_l, al), nzFree0(al);
-			if(ns_l > j && t->firstchild)
-				stringAndChar(&ns, &ns_l, ' ');
-			goto nop;
-		}
+            if(opentag && !findOpenTag(t, TAG_A))
+                nzFree0(al);
+            if(al && action == TAG_DIV)
+                stringAndChar(&ns, &ns_l, '\n');
+            j = ns_l;
+            if (al) // aria-label
+                stringAndString(&ns, &ns_l, al), nzFree0(al);
+            if(ns_l > j && t->firstchild)
+                stringAndChar(&ns, &ns_l, ' ');
+            goto nop;
+        }
 // this span has click, so turn into {text}
-		if (opentag) {
-			sprintf(hnum, "%c%d{", InternalCodeChar, tagno);
-			ns_hnum();
-			if(al && action == TAG_DIV)
-				stringAndChar(&ns, &ns_l, '\n');
-			j = ns_l;
-			if (al)
-				stringAndString(&ns, &ns_l, al), nzFree0(al);
-			if((ns_l > j) && t->firstchild)
-				stringAndChar(&ns, &ns_l, ' ');
-		} else {
-			sprintf(hnum, "%c0}", InternalCodeChar);
-			ns_hnum();
-			if (endcolor)
-				swapArrow();
-		}
-		break;
+        if (opentag) {
+            sprintf(hnum, "%c%d{", InternalCodeChar, tagno);
+            ns_hnum();
+            if(al && action == TAG_DIV)
+                stringAndChar(&ns, &ns_l, '\n');
+            j = ns_l;
+            if (al)
+                stringAndString(&ns, &ns_l, al), nzFree0(al);
+            if((ns_l > j) && t->firstchild)
+                stringAndChar(&ns, &ns_l, ' ');
+        } else {
+            sprintf(hnum, "%c0}", InternalCodeChar);
+            ns_hnum();
+            if (endcolor)
+                swapArrow();
+        }
+        break;
 
-	case TAG_BQ:
-		if (invisible)
-			break;
-		while(ns_l && isspaceByte(ns[ns_l-1])) --ns_l;
+    case TAG_BQ:
+        if (invisible)
+            break;
+        while(ns_l && isspaceByte(ns[ns_l-1])) --ns_l;
 // compress adjacent blockquotes   '' ``
-		if(opentag && ns_l >= 2 && ns[ns_l-1] == '\'' && ns[ns_l-2] == '\'') {
-			ns_l--;
-			ns[ns_l-1] = '\f';
-			break;
-		}
-		stringAndString(&ns, &ns_l,
-		(opentag ? "\f``" : "''\f"));
-		break;
+        if(opentag && ns_l >= 2 && ns[ns_l-1] == '\'' && ns[ns_l-2] == '\'') {
+            ns_l--;
+            ns[ns_l-1] = '\f';
+            break;
+        }
+        stringAndString(&ns, &ns_l,
+        (opentag ? "\f``" : "''\f"));
+        break;
 
 /*********************************************************************
 Here are some tags that change the appearance of the text, in order
@@ -5529,137 +5519,129 @@ Eventually the `@ and '@ are crunched away.
         emphasize(t, opentag, a);
         break;
 
-	case TAG_SVG:
-		if (!invisible && opentag) {
+    case TAG_SVG:
+        if (!invisible && opentag) {
 // I use to print "graphics" here, but that conveys virtually no information.
 // Maybe at some point I'll find something useful to insert
 // to say yes there's some visual thing here.
 // Meantime, I better at least put in a space, because some graphic
 // might separate two words.
-			stringAndChar(&ns, &ns_l, ' ');
-		}
-		break;
+            stringAndChar(&ns, &ns_l, ' ');
+        }
+        break;
 
-	case TAG_OL:
-	case TAG_UL:
-		t->lic = t->slic;
-		t->post = false;
+    case TAG_OL:
+    case TAG_UL:
+        t->lic = t->slic;
+        t->post = false;
 // If this is <ul> with one item or no items below,
 // and in the cell of a data table,
 // indicate with lic = -2. We will suppresss it.
-		j = 0;
-		for(ltag = t->firstchild; ltag; ltag = ltag->sibling)
-			if(ltag->action == TAG_LI) ++j;
-		if(j <= 1 && action == TAG_UL &&
-		t->parent && t->parent->action == TAG_TD &&
-		tableType(t->parent) == 1) {
-			t->lic = -2;
-			break;
-		}
+        j = 0;
+        for(ltag = t->firstchild; ltag; ltag = ltag->sibling)
+            if(ltag->action == TAG_LI) ++j;
+        if(j <= 1 && action == TAG_UL &&
+        t->parent && t->parent->action == TAG_TD &&
+        tableType(t->parent) == 1) {
+            t->lic = -2;
+            break;
+        }
 // falling through is just fine, but sometimes generates a cc warning, so...
-		goto nop;
+        goto nop;
 
-	case TAG_DD:
-		stringAndString(&ns, &ns_l,
-		opentag ? " \r: " : "\r");
-		goto check_id;
+    case TAG_DD:
+        stringAndString(&ns, &ns_l,
+        opentag ? " \r: " : "\r");
+        goto check_id;
 
-	case TAG_DL:
-	case TAG_DT:
-	case TAG_OBJECT:
-	case TAG_BR:
-	case TAG_P:
-	case TAG_H:
-	case TAG_BODY:
-	case TAG_LABEL:
-	case TAG_NOP:
+    case TAG_DL:
+    case TAG_DT:
+    case TAG_OBJECT:
+    case TAG_BR:
+    case TAG_P:
+    case TAG_H:
+    case TAG_BODY:
+    case TAG_LABEL:
+    case TAG_NOP:
 nop:
-		if (invisible)
-			break;
-		j = ti->para;
-		if (opentag)
-			j &= 3;
-		else
-			j >>= 2;
+        if (invisible)
+            break;
+        j = ti->para;
+        if (opentag)
+            j &= 3;
+        else
+            j >>= 2;
 
-		int arialevel = (action != TAG_H) ? ariaHeadingLevel(t) : 0;
-		if(arialevel && !j) j = 2;
+        int arialevel = (action != TAG_H) ? ariaHeadingLevel(t) : 0;
+        if(arialevel && !j) j = 2;
 
 // special code for div inside a header, which shouldn't happen but does
-		if(action == TAG_DIV && findOpenTag(t, TAG_H))
-			j = 0;
+        if(action == TAG_DIV && findOpenTag(t, TAG_H))
+            j = 0;
 
 // defense against <td><p>stuff</p></td>
 // or even <td><i><font size=-1><p>stuff</p></font></i></td>
 // Suppress linebreak if this is first or last child of a cell.
-		if(j) {
-			const Tag *y = t, *z, *x;
-			while((z = y->parent)) {
-// h3 inside a cell, table is almost certainly for presentation
-// We see this on facebook.
-// Let's hope the tableType() catches it.
-//				if(y->action == TAG_H) goto past_cell_paragraph;
-/* I use to say, if not <p> first or </p> last, then abort
-				if(opentag && z->firstchild != y) goto past_cell_paragraph;
-				if(!opentag && y->sibling) goto past_cell_paragraph;
-But I've added some code, probably just for one website, but oh well.
+        if(j) {
+            const Tag *y = t, *z, *x;
+            while((z = y->parent)) {
+/*  I've added some code, probably just for one website, but oh well.
 Defense against <td><span></span><p>stuff</p></td>
 Should we watch for empty-ish tags besides span, or even empty trees? */
-				if(opentag) {
-					for(x = z->firstchild; x != y; x = x->sibling)
-						if(x->firstchild || x->action != TAG_SPAN)
-							goto past_cell_paragraph;
-				}
-				if(!opentag) {
-					for(x = y->sibling; x; x = x->sibling)
-						if(x->firstchild || x->action != TAG_SPAN)
-							goto past_cell_paragraph;
-				}
-				if(z->action == TAG_TD) break;
-				y = z;
-			}
-			if(z && tableType(z) == 1) j = 0;
-		}
+                if(opentag) {
+                    for(x = z->firstchild; x != y; x = x->sibling)
+                        if(x->firstchild || x->action != TAG_SPAN)
+                            goto past_cell_paragraph;
+                }
+                if(!opentag) {
+                    for(x = y->sibling; x; x = x->sibling)
+                        if(x->firstchild || x->action != TAG_SPAN)
+                            goto past_cell_paragraph;
+                }
+                if(z->action == TAG_TD) break;
+                y = z;
+            }
+            if(z && tableType(z) == 1) j = 0;
+        }
 past_cell_paragraph:
 
-		if (j) {
-		    c = '\f';
-		    if (j == 1) {
-		    	c = '\r';
-		    	if (action == TAG_BR)
-		    		c = '\n';
-		    }
-		    stringAndChar(&ns, &ns_l, c);
-		    if (doColors && t->iscolor &&
-		        ns_l > 4 && !memcmp(ns + ns_l - 4, "≪", 3)) {
+        if (j) {
+            c = '\f';
+            if (j == 1) {
+                c = '\r';
+                if (action == TAG_BR) c = '\n';
+            }
+            stringAndChar(&ns, &ns_l, c);
+            if (doColors && t->iscolor &&
+            ns_l > 4 && !memcmp(ns + ns_l - 4, "≪", 3)) {
 // move the newline before the color
-		    	char *u0 = ns + ns_l - 4;
-		    	u0 = backColon(u0);
-		    	if (*u0 == ':') {
-		    		int j = strlen(u0);
-		    		memmove(u0 + 1, u0, j);
-		    		*u0 = c;
-		    	}
-		    }
-		    if (opentag && (action == TAG_H || arialevel)) {
+                char *u0 = ns + ns_l - 4;
+                u0 = backColon(u0);
+                if (*u0 == ':') {
+                    int j = strlen(u0);
+                    memmove(u0 + 1, u0, j);
+                    *u0 = c;
+                }
+            }
+            if (opentag && (action == TAG_H || arialevel)) {
 // no need to print h1 if the section is empty
-		        for(ltag = t->firstchild; ltag; ltag = ltag->sibling)
-		            if(!isBlankTag(ltag)) break;
-		        if(ltag) {
-		            if(arialevel)
-		                sprintf(hnum, "h%d ", arialevel);
-		            else {
-		                strcpy(hnum, ti->name);
-		                strcat(hnum, " ");
-		            }
-		            ns_hnum();
-		        }
-		    }
-		}
+                for(ltag = t->firstchild; ltag; ltag = ltag->sibling)
+                    if(!isBlankTag(ltag)) break;
+                if(ltag) {
+                    if(arialevel)
+                        sprintf(hnum, "h%d ", arialevel);
+                    else {
+                        strcpy(hnum, ti->name);
+                        strcat(hnum, " ");
+                    }
+                    ns_hnum();
+                }
+            }
+        }
 
 // tags with id= have to be part of the screen, so you can jump to them.
-		if (opentag && get_tagId(t))
-			tagInStream(tagno);
+        if (opentag && get_tagId(t))
+            tagInStream(tagno);
 
         if(showall && opentag && ok2inject(t->nodeNameU)) {
             if ((al = cssBeforeAfter(t, 1))) {
@@ -5669,456 +5651,451 @@ past_cell_paragraph:
         }
         break;
 
-	case TAG_PRE:
-		if (!retainTag)
-			break;
+    case TAG_PRE:
+        if (!retainTag)
+            break;
 /* one of those rare moments when I really need </tag> in the text stream */
-		j = (opentag ? tagno : tagno + 1);
+        j = (opentag ? tagno : tagno + 1);
 // I need to manage the paragraph breaks here, rather than ti->para,
 // which would rule if I simply redirected to nop.
 // But the order is wrong if I do that.
 // This can be suppressed by <pre nowspc>
-		if (opentag && !attribVal(t, "nowspc"))
-			stringAndChar(&ns, &ns_l, '\f');
-		sprintf(hnum, "%c%d*", InternalCodeChar, j);
-		ns_hnum();
-		if (!opentag && !attribVal(t, "nowspc"))
-			stringAndChar(&ns, &ns_l, '\f');
-		break;
+        if (opentag && !attribVal(t, "nowspc"))
+            stringAndChar(&ns, &ns_l, '\f');
+        sprintf(hnum, "%c%d*", InternalCodeChar, j);
+        ns_hnum();
+        if (!opentag && !attribVal(t, "nowspc"))
+            stringAndChar(&ns, &ns_l, '\f');
+        break;
 
-	case TAG_FORM:
-		currentForm = (opentag ? t : 0);
-		goto nop;
+    case TAG_FORM:
+        currentForm = (opentag ? t : 0);
+        goto nop;
 
-	case TAG_INPUT:
-		if (!retainTag) break;
-		if (!opentag) {
+    case TAG_INPUT:
+        if (!retainTag) break;
+        if (!opentag) {
 // button tag opens and closes, like anchor.
 // Check and make sure it's not </select>
-			if (!stringEqual(ti->name, "button"))
-				break;
+            if (!stringEqual(ti->name, "button"))
+                break;
 // <button></button> with no text yields "push".
-			j = 0;
-			while (ns_l && isspaceByte(ns[ns_l - 1]))
-				--ns_l, j = 1;
-			if (ns_l >= 3 && ns[ns_l - 1] == '<'
-			    && isdigitByte(ns[ns_l - 2]))
-				stringAndString(&ns, &ns_l,
-						i_message(MSG_Push));
-			ns_ic();
-			stringAndString(&ns, &ns_l, "0>");
-			if (endcolor) swapArrow();
-			checkDisabled(t);
-			if(j) stringAndChar(&ns, &ns_l, ' ');
-			break;
-		}
-		a = get_labelText(t);
-		if(a) {
-			stringAndString(&ns, &ns_l, a);
-			stringAndChar(&ns, &ns_l, ' ');
-	}
-		// value has to be something
-		if (!t->value) t->value = emptyString;
-		itype = t->itype;
-		if (itype == INP_HIDDEN) break;
-		if (itype == INP_TA && t->lic >= 0) {
-			j = t->lic;
-			if (j)
-				sprintf(hnum, "%c%d<session %d%c0>",
-					InternalCodeChar, t->seqno, j,
-					InternalCodeChar);
-			else if (t->value[0])
-				sprintf(hnum, "%c%d<session text%c0>",
-					InternalCodeChar, t->seqno,
-					InternalCodeChar);
-			else
-				sprintf(hnum, "%c%d<session ?%c0>",
-					InternalCodeChar, t->seqno,
-					InternalCodeChar);
-			ns_hnum();
-			checkDisabled(t);
-			break;
-		}
-		sprintf(hnum, "%c%d<", InternalCodeChar, tagno);
-		ns_hnum();
+            j = 0;
+            while (ns_l && isspaceByte(ns[ns_l - 1]))
+                --ns_l, j = 1;
+            if (ns_l >= 3 && ns[ns_l - 1] == '<'
+                && isdigitByte(ns[ns_l - 2]))
+                stringAndString(&ns, &ns_l,
+                        i_message(MSG_Push));
+            ns_ic();
+            stringAndString(&ns, &ns_l, "0>");
+            if (endcolor) swapArrow();
+            checkDisabled(t);
+            if(j) stringAndChar(&ns, &ns_l, ' ');
+            break;
+        }
+        a = get_labelText(t);
+        if(a) {
+            stringAndString(&ns, &ns_l, a);
+            stringAndChar(&ns, &ns_l, ' ');
+    }
+        // value has to be something
+        if (!t->value) t->value = emptyString;
+        itype = t->itype;
+        if (itype == INP_HIDDEN) break;
+        if (itype == INP_TA && t->lic >= 0) {
+            j = t->lic;
+            if (j)
+                sprintf(hnum, "%c%d<session %d%c0>",
+                    InternalCodeChar, t->seqno, j,
+                    InternalCodeChar);
+            else if (t->value[0])
+                sprintf(hnum, "%c%d<session text%c0>",
+                    InternalCodeChar, t->seqno,
+                    InternalCodeChar);
+            else
+                sprintf(hnum, "%c%d<session ?%c0>",
+                    InternalCodeChar, t->seqno,
+                    InternalCodeChar);
+            ns_hnum();
+            checkDisabled(t);
+            break;
+        }
+        sprintf(hnum, "%c%d<", InternalCodeChar, tagno);
+        ns_hnum();
 // button stops here, until </button>
-		if (stringEqual(ti->name, "button")) {
+        if (stringEqual(ti->name, "button")) {
 // for a button, we prefer the aria label, or the title, to the text,
 // which is usually brief.
-		    if(!(al = arialabeltitle(t))) break;
-		    stringAndString(&ns, &ns_l, al);
-		    nzFree(al);
-		    sprintf(hnum, "%c0>", InternalCodeChar);
-		    ns_hnum();
-		    deltag = t;
-		    break;
-		}
-		if (itype < INP_RADIO) {
-			if (t->value[0])
-				stringAndString(&ns, &ns_l, t->value);
-			else if (itype == INP_SUBMIT || itype == INP_IMAGE) {
-				a = imageAlt(t);
-				if(!a) a = (char *)i_message(MSG_Submit);
-				stringAndString(&ns, &ns_l, a);
-			} else if (itype == INP_RESET)
-				stringAndString(&ns, &ns_l,
-						i_message(MSG_Reset));
-			else if (itype == INP_BUTTON)
-				stringAndString(&ns, &ns_l,
-						i_message(MSG_Push));
-		} else {
+            if(!(al = arialabeltitle(t))) break;
+            stringAndString(&ns, &ns_l, al);
+            nzFree(al);
+            sprintf(hnum, "%c0>", InternalCodeChar);
+            ns_hnum();
+            deltag = t;
+            break;
+        }
+        if (itype < INP_RADIO) {
+            if (t->value[0])
+                stringAndString(&ns, &ns_l, t->value);
+            else if (itype == INP_SUBMIT || itype == INP_IMAGE) {
+                a = imageAlt(t);
+                if(!a) a = (char *)i_message(MSG_Submit);
+                stringAndString(&ns, &ns_l, a);
+            } else if (itype == INP_RESET)
+                stringAndString(&ns, &ns_l,
+                        i_message(MSG_Reset));
+            else if (itype == INP_BUTTON)
+                stringAndString(&ns, &ns_l,
+                        i_message(MSG_Push));
+        } else {
 // in case js checked or unchecked
-			if (allowJS && t->jslink)
-				t->checked =
-				    get_property_bool_t(t, "checked");
-			stringAndChar(&ns, &ns_l, (t->checked ? '+' : '-'));
-		}
-		if (currentForm && (itype == INP_SUBMIT || itype == INP_IMAGE)) {
-			if (currentForm->bymail)
-				stringAndString(&ns, &ns_l,
-						i_message(MSG_Bymail));
-		}
-		ns_ic();
-		stringAndString(&ns, &ns_l, "0>");
-		checkDisabled(t);
-		break;
+            if (allowJS && t->jslink)
+                t->checked =
+                    get_property_bool_t(t, "checked");
+            stringAndChar(&ns, &ns_l, (t->checked ? '+' : '-'));
+        }
+        if (currentForm && (itype == INP_SUBMIT || itype == INP_IMAGE)) {
+            if (currentForm->bymail)
+                stringAndString(&ns, &ns_l,
+                        i_message(MSG_Bymail));
+        }
+        ns_ic();
+        stringAndString(&ns, &ns_l, "0>");
+        checkDisabled(t);
+        break;
 
-	case TAG_LI:
+    case TAG_LI:
 // we are only here on opentag. Look for containing <ol> or <ul>
-		if (!(ltag = findOpenList(t)))
-			goto nop;
-		if(ltag->lic == -2) break; // suppressed
-		char olbuf[32];
-		olbuf[0] = 0;
-		tagInStream(tagno);
-		if (ltag->action == TAG_OL) {
-			j = ++ltag->lic;
+        if (!(ltag = findOpenList(t)))
+            goto nop;
+        if(ltag->lic == -2) break; // suppressed
+        char olbuf[32];
+        olbuf[0] = 0;
+        tagInStream(tagno);
+        if (ltag->action == TAG_OL) {
+            j = ++ltag->lic;
 // this checks for <li value=7>, but does not check for javascript
 // dynamically setting value after the html is parsed.
 // Add that in someday.
-			if(t->value && (l = stringIsNum(t->value)) >= 0)
-				ltag->lic = j = l;
-			sprintf(olbuf, "%d. ", j);
-		} else if(ltag->lic == 0) {
-			strcpy(olbuf, "* ");
-		}
-		if (!invisible)
-			stringAndString(&ns, &ns_l, olbuf);
-		stringAndChar(&ns, &ns_l, '\n');
-		break;
+            if(t->value && (l = stringIsNum(t->value)) >= 0)
+                ltag->lic = j = l;
+            sprintf(olbuf, "%d. ", j);
+        } else if(ltag->lic == 0) {
+            strcpy(olbuf, "* ");
+        }
+        if (!invisible)
+            stringAndString(&ns, &ns_l, olbuf);
+        stringAndChar(&ns, &ns_l, '\n');
+        break;
 
-	case TAG_HR:
+    case TAG_HR:
 // <hr> can be in the midst of options, as a separator between options.
 // We sure don't want that here.
-		if(findOpenTag(t, TAG_INPUT)) break;
-		if (retainTag) {
-			tagInStream(tagno);
-			stringAndString(&ns, &ns_l, "\r----------\r");
-		}
-		break;
+        if(findOpenTag(t, TAG_INPUT)) break;
+        if (retainTag) {
+            tagInStream(tagno);
+            stringAndString(&ns, &ns_l, "\r----------\r");
+        }
+        break;
 
-	case TAG_TR:
-		if (!t->onclick && opentag && t->jslink && handlerPresent(t, "onclick"))
-			t->onclick = true;
-		if (opentag)
-			tdfirst = true;
-		if(t->ur && opentag && (ltag = t->parent)
-		&& (ltag->action == TAG_TABLE || ltag->action == TAG_TBODY
-		|| ltag->action == TAG_TFOOT)) {
+    case TAG_TR:
+        if (!t->onclick && opentag && t->jslink && handlerPresent(t, "onclick"))
+            t->onclick = true;
+        if (opentag)
+            tdfirst = true;
+        if(t->ur && opentag && (ltag = t->parent)
+        && (ltag->action == TAG_TABLE || ltag->action == TAG_TBODY
+        || ltag->action == TAG_TFOOT)) {
 // print the row number
-			const Tag *v = ltag->firstchild;
-			j = 1;
-			while(v && v != t) {
-				if(v->action == TAG_TR) {
+            const Tag *v = ltag->firstchild;
+            j = 1;
+            while(v && v != t) {
+                if(v->action == TAG_TR) {
 // sometimes the headers are in the tbody and not in thead.
-					if(j == 1 && all_th(v))
-						; // skip <th> row
-					else
-						++j;
-				}
-				v = v->sibling;
-			}
-			if(v) { // should always happen
-				char rowbuf[24];
-				if(t->onclick) {
-					sprintf(rowbuf, "%c%d{row %d%c0}\n",
-					InternalCodeChar, tagno, j, InternalCodeChar);
-					stringAndString(&ns, &ns_l, rowbuf);
-				} else {
-					tagInStream(tagno);
-					sprintf(rowbuf, "row %d\n", j);
-					stringAndString(&ns, &ns_l, rowbuf);
-				}
-				break;
-			}
-		}
-		if(opentag && t->onclick) {
+                    if(j == 1 && all_th(v))
+                        ; // skip <th> row
+                    else ++j;
+                }
+                v = v->sibling;
+            }
+            if(v) { // should always happen
+                char rowbuf[24];
+                if(t->onclick) {
+                    sprintf(rowbuf, "%c%d{row %d%c0}\n",
+                    InternalCodeChar, tagno, j, InternalCodeChar);
+                    stringAndString(&ns, &ns_l, rowbuf);
+                } else {
+                    tagInStream(tagno);
+                    sprintf(rowbuf, "row %d\n", j);
+                    stringAndString(&ns, &ns_l, rowbuf);
+                }
+                break;
+            }
+        }
+        if(opentag && t->onclick) {
 // put {row} in front
-			char rowbuf[24];
-			sprintf(rowbuf, "%c%d{row%c0}:",
-			InternalCodeChar, tagno, InternalCodeChar);
-			stringAndString(&ns, &ns_l, rowbuf);
-			break;
-		}
-		if(!opentag && (ltag = t->parent)
-		&& (ltag->action == TAG_TABLE || ltag->action == TAG_TBODY
-		|| ltag->action == TAG_TFOOT)) {
-			if(t->ur) {
-				if (tdfirst) tdfirst = false;
-				else stringAndChar(&ns, &ns_l, '\n');
-			}
-			td2columnHeading(t, 0);
-		}
+            char rowbuf[24];
+            sprintf(rowbuf, "%c%d{row%c0}:",
+            InternalCodeChar, tagno, InternalCodeChar);
+            stringAndString(&ns, &ns_l, rowbuf);
+            break;
+        }
+        if(!opentag && (ltag = t->parent)
+        && (ltag->action == TAG_TABLE || ltag->action == TAG_TBODY
+        || ltag->action == TAG_TFOOT)) {
+            if(t->ur) {
+                if (tdfirst) tdfirst = false;
+                else stringAndChar(&ns, &ns_l, '\n');
+            }
+            td2columnHeading(t, 0);
+        }
 
-	case TAG_TABLE:
-		goto nop;
+    case TAG_TABLE:
+        goto nop;
 
-	case TAG_TD:
-		if (!retainTag)
-			break;
-		if (!t->onclick && opentag && t->jslink && handlerPresent(t, "onclick"))
-			t->onclick = true;
-		if(!opentag) {
-			if(t->onclick && ahref_under(t) <= 0) {
-				sprintf(hnum, "%c0}", InternalCodeChar);
-				ns_hnum();
-			}
-			if((t->lic > 1 || t->js_ln > 1) && tableType(t) == 1 && !t->parent->ur) {
-				char arrows[20];
-				stringAndChar(&ns, &ns_l, ' ');
-				arrows[0] = 0;
-				if(t->lic > 1)
-					sprintf(arrows, "↓%d", t->lic);
-				if(t->js_ln > 1)
-					sprintf(arrows + strlen(arrows), "→%d", t->js_ln);
-				stringAndString(&ns, &ns_l, arrows);
-			}
-			break;
-		}
-		if(!(ltag = t->parent)
-		|| ltag->action != TAG_TR || !ltag->ur) {
+    case TAG_TD:
+        if (!retainTag)
+            break;
+        if (!t->onclick && opentag && t->jslink && handlerPresent(t, "onclick"))
+            t->onclick = true;
+        if(!opentag) {
+            if(t->onclick && ahref_under(t) <= 0) {
+                sprintf(hnum, "%c0}", InternalCodeChar);
+                ns_hnum();
+            }
+            if((t->lic > 1 || t->js_ln > 1) && tableType(t) == 1 && !t->parent->ur) {
+                char arrows[20];
+                stringAndChar(&ns, &ns_l, ' ');
+                arrows[0] = 0;
+                if(t->lic > 1)
+                    sprintf(arrows, "↓%d", t->lic);
+                if(t->js_ln > 1)
+                    sprintf(arrows + strlen(arrows), "→%d", t->js_ln);
+                stringAndString(&ns, &ns_l, arrows);
+            }
+            break;
+        }
+        if(!(ltag = t->parent)
+        || ltag->action != TAG_TR || !ltag->ur) {
 // Traditional table format, pipe separated,
 // on one line if it fits, or wraps in unpredictable ways if it doesn't.
-			if (tdfirst)
-				tdfirst = false;
-			else {
-				j = ns_l;
-				while (j && ns[j - 1] == ' ')
-					--j;
-				ns[j] = 0;
-				ns_l = j;
+            if (tdfirst)
+                tdfirst = false;
+            else {
+                j = ns_l;
+                while (j && ns[j - 1] == ' ') --j;
+                ns[j] = 0;
+                ns_l = j;
 // append TableCellChar or DataCellChar depending on table type
-				j = tableType(t);
-				stringAndChar(&ns, &ns_l, "\3\4 "[j]);
-			}
-			td2columnHeading(ltag, t);
-		} else {
+                j = tableType(t);
+                stringAndChar(&ns, &ns_l, "\3\4 "[j]);
+            }
+            td2columnHeading(ltag, t);
+        } else {
 // unfolded row, generate the column heading
-			if (tdfirst) tdfirst = false;
-			else stringAndChar(&ns, &ns_l, '\n');
-			td2columnHeading(ltag, t);
-		}
+            if (tdfirst) tdfirst = false;
+            else stringAndChar(&ns, &ns_l, '\n');
+            td2columnHeading(ltag, t);
+        }
 // Always retain the <td> tag, for the ur command.
-		if(t->onclick && ahref_under(t) <= 0) {
-			sprintf(hnum, "%c%d{", InternalCodeChar, tagno);
-				ns_hnum();
-		} else {
-			tagInStream(tagno);
-		}
-		break;
+        if(t->onclick && ahref_under(t) <= 0) {
+            sprintf(hnum, "%c%d{", InternalCodeChar, tagno);
+                ns_hnum();
+        } else {
+            tagInStream(tagno);
+        }
+        break;
 
 /* This is strictly for rendering math pages written with my particular css.
 * <span class=sup> becomes TAG_SUP, which means superscript.
 * sub is subscript and ovb is overbar.
 * Sorry to put my little quirks into this program, but hey,
 * it's my program. */
-	case TAG_SUP:
-	case TAG_SUB:
-	case TAG_OVB:
-		if (!retainTag)
-			break;
-		if (action == TAG_SUB)
-			j = 1;
-		if (action == TAG_SUP)
-			j = 2;
-		if (action == TAG_OVB)
-			j = 3;
-		if (opentag) {
-			static const char *openstring[] = { 0,
-				"[", "^(", "`"
-			};
-			tagInStream(tagno);
-			t->lic = ns_l;
-			stringAndString(&ns, &ns_l, openstring[j]);
-			break;
-		}
-		if (j == 3) {
-			stringAndChar(&ns, &ns_l, '\'');
-			break;
-		}
+    case TAG_SUP:
+    case TAG_SUB:
+    case TAG_OVB:
+        if (!retainTag)
+            break;
+        if (action == TAG_SUB)
+            j = 1;
+        if (action == TAG_SUP)
+            j = 2;
+        if (action == TAG_OVB)
+            j = 3;
+        if (opentag) {
+            static const char *openstring[] = { 0,
+                "[", "^(", "`"
+            };
+            tagInStream(tagno);
+            t->lic = ns_l;
+            stringAndString(&ns, &ns_l, openstring[j]);
+            break;
+        }
+        if (j == 3) {
+            stringAndChar(&ns, &ns_l, '\'');
+            break;
+        }
 /* backup, and see if we can get rid of the parentheses or brackets */
-		l = t->lic + j;
-		u = ns + l;
+        l = t->lic + j;
+        u = ns + l;
 /* skip past <span> tag indicators */
-		while (*u == InternalCodeChar) {
-			++u;
-			while (isdigitByte(*u))
-				++u;
-			++u;
-		}
-		if (j == 2 && isalphaByte(u[0]) && !u[1])
-			goto unparen;
-		if (j == 2 && (stringEqual(u, "th") || stringEqual(u, "rd")
-			       || stringEqual(u, "nd") || stringEqual(u, "st"))) {
-			strmove(ns + l - 2, ns + l);
-			ns_l -= 2;
-			break;
-		}
-		while (isdigitByte(*u))
-			++u;
-		if (!*u)
-			goto unparen;
-		stringAndChar(&ns, &ns_l, (j == 2 ? ')' : ']'));
-		break;
+        while (*u == InternalCodeChar) {
+            ++u;
+            while (isdigitByte(*u)) ++u;
+            ++u;
+        }
+        if (j == 2 && isalphaByte(u[0]) && !u[1])
+            goto unparen;
+        if (j == 2 && (stringEqual(u, "th") || stringEqual(u, "rd")
+                   || stringEqual(u, "nd") || stringEqual(u, "st"))) {
+            strmove(ns + l - 2, ns + l);
+            ns_l -= 2;
+            break;
+        }
+        while (isdigitByte(*u)) ++u;
+        if (!*u) goto unparen;
+        stringAndChar(&ns, &ns_l, (j == 2 ? ')' : ']'));
+        break;
 unparen:
 // ok, we can trash the original ( or [
-		l = t->lic + j;
-		strmove(ns + l - 1, ns + l);
-		--ns_l;
-		if (j == 2)
-			stringAndChar(&ns, &ns_l, ' ');
-		break;
+        l = t->lic + j;
+        strmove(ns + l - 1, ns + l);
+        --ns_l;
+        if (j == 2)
+            stringAndChar(&ns, &ns_l, ' ');
+        break;
 
-	case TAG_AREA:
-	case TAG_FRAME:
-		if (!retainTag) break;
-		if (t->f1 && !t->contracted) {	/* expanded frame */
-			sprintf(hnum, "\r%c%d*%s\r", InternalCodeChar, tagno,
-				(opentag ? "`--" : "--`"));
-			ns_hnum();
-			break;
-		}
+    case TAG_AREA:
+    case TAG_FRAME:
+        if (!retainTag) break;
+        if (t->f1 && !t->contracted) { // expanded frame
+            sprintf(hnum, "\r%c%d*%s\r", InternalCodeChar, tagno,
+                (opentag ? "`--" : "--`"));
+            ns_hnum();
+            break;
+        }
 // frame or area is not expanded
-		if (!opentag) break;
-		stringAndString(&ns, &ns_l,
-				(action == TAG_FRAME ? "\rFrame " : "\r"));
+        if (!opentag) break;
+        stringAndString(&ns, &ns_l,
+                (action == TAG_FRAME ? "\rFrame " : "\r"));
 // js often creates frames dynamically, so check for src
-		if(allowJS && t->jslink) {
-			nzFree(t->href);
-			t->href = get_property_string_t(t,
-			(t->action == TAG_AREA ? "href" : "src"));
-		}
-		a = 0;
-		if (action == TAG_AREA)
-			a = imageAlt(t);
-		if (!a) {
-			if((a = attribVal(t, "name"))) {
-				skipWhite2(&a);
-				if(*a == '{') {
-					const char *b = a + 1;
-					skipWhite2(&b);
-					if(*b == '"')
-						a = "json";
-				}
-				if(!*a) a = 0;
-			}
-			if(a && strlen(a) > 40) a = "long";
-			if (!a)
-				a = altText(t->href);
-		}
-		if (!a)
-			a = (action == TAG_FRAME ? "???" : "area");
-		if (t->href) {
-			sprintf(hnum, "%c%d{", InternalCodeChar, tagno);
-			ns_hnum();
-		}
-		if (t->href || action == TAG_FRAME)
-			stringAndString(&ns, &ns_l, a);
-		if (t->href) {
-			ns_ic();
-			stringAndString(&ns, &ns_l, "0}");
-		}
-		stringAndChar(&ns, &ns_l, '\r');
-		if (t->f1 && t->contracted)	/* contracted frame */
-			deltag = t;
-		break;
+        if(allowJS && t->jslink) {
+            nzFree(t->href);
+            t->href = get_property_string_t(t,
+            (t->action == TAG_AREA ? "href" : "src"));
+        }
+        a = 0;
+        if (action == TAG_AREA)
+            a = imageAlt(t);
+        if (!a) {
+            if((a = attribVal(t, "name"))) {
+                skipWhite2(&a);
+                if(*a == '{') {
+                    const char *b = a + 1;
+                    skipWhite2(&b);
+                    if(*b == '"')
+                        a = "json";
+                }
+                if(!*a) a = 0;
+            }
+            if(a && strlen(a) > 40) a = "long";
+            if (!a)
+                a = altText(t->href);
+        }
+        if (!a)
+            a = (action == TAG_FRAME ? "???" : "area");
+        if (t->href) {
+            sprintf(hnum, "%c%d{", InternalCodeChar, tagno);
+            ns_hnum();
+        }
+        if (t->href || action == TAG_FRAME)
+            stringAndString(&ns, &ns_l, a);
+        if (t->href) {
+            ns_ic();
+            stringAndString(&ns, &ns_l, "0}");
+        }
+        stringAndChar(&ns, &ns_l, '\r');
+        if (t->f1 && t->contracted) // contracted frame
+            deltag = t;
+        break;
 
-	case TAG_DET:
+    case TAG_DET:
 // defer to the javascript, they may have opened the details for us.
-		if(t->jslink)
-			t->contracted = !get_property_bool_t(t, "open");
-		if (!t->contracted) {	/* expanded frame */
-			sprintf(hnum, "\r%c%d*%s\r", InternalCodeChar, tagno,
-				(opentag ? "`--" : "--`"));
-			ns_hnum();
-			break;
-		}
-		if (!opentag) break;
-		stringAndString(&ns, &ns_l, "\rDetails ");
-		sprintf(hnum, "%c%d{", InternalCodeChar, tagno);
-		ns_hnum();
-		a = 0;
-		for(ltag = t->firstchild; ltag; ltag = ltag->sibling)
-			if(ltag->action == TAG_SUMMARY) break;
-		if(ltag &&
-		(ltag = ltag->firstchild) &&
-		ltag->action == TAG_TEXT)
-			a = ltag->textval;
-		if(a) stringAndString(&ns, &ns_l, a);
-		ns_ic();
-		stringAndString(&ns, &ns_l, "0}\r");
-		deltag = t;
-		break;
+        if(t->jslink)
+            t->contracted = !get_property_bool_t(t, "open");
+        if (!t->contracted) { // expanded frame
+            sprintf(hnum, "\r%c%d*%s\r", InternalCodeChar, tagno,
+                (opentag ? "`--" : "--`"));
+            ns_hnum();
+            break;
+        }
+        if (!opentag) break;
+        stringAndString(&ns, &ns_l, "\rDetails ");
+        sprintf(hnum, "%c%d{", InternalCodeChar, tagno);
+        ns_hnum();
+        a = 0;
+        for(ltag = t->firstchild; ltag; ltag = ltag->sibling)
+            if(ltag->action == TAG_SUMMARY) break;
+        if(ltag &&
+        (ltag = ltag->firstchild) &&
+        ltag->action == TAG_TEXT)
+            a = ltag->textval;
+        if(a) stringAndString(&ns, &ns_l, a);
+        ns_ic();
+        stringAndString(&ns, &ns_l, "0}\r");
+        deltag = t;
+        break;
 
-	case TAG_AUDIO:
-	case TAG_VIDEO:
-		if(!opentag) break;
-		if (!retainTag) break;
-		if (!t->href) break;
-		sprintf(hnum, "\r%c%d{", InternalCodeChar, tagno);
-		ns_hnum();
-		stringAndString(&ns, &ns_l,
-				(ti->name[0] ==
-				 'b' ? "Background Music" : "Audio passage"));
-		sprintf(hnum, "%c0}\r", InternalCodeChar);
-		ns_hnum();
-		break;
+    case TAG_AUDIO:
+    case TAG_VIDEO:
+        if(!opentag) break;
+        if (!retainTag) break;
+        if (!t->href) break;
+        sprintf(hnum, "\r%c%d{", InternalCodeChar, tagno);
+        ns_hnum();
+        stringAndString(&ns, &ns_l,
+                (ti->name[0] ==
+                 'b' ? "Background Music" : "Audio passage"));
+        sprintf(hnum, "%c0}\r", InternalCodeChar);
+        ns_hnum();
+        break;
 
-	case TAG_IMAGE:
-		tagInStream(tagno);
-		if (!currentA) {
-			if (invisible) break;
+    case TAG_IMAGE:
+        tagInStream(tagno);
+        if (!currentA) {
+            if (invisible) break;
 // images with cid: protocol do not need to appear
 // these come from emails, with embedded images
-			if(t->href && !strncmp(t->href, "cid:", 4)) break;
-			a = imageAlt(t);
-			if(a || attimg) {
-				stringAndChar(&ns, &ns_l, '[');
-				if(a) stringAndString(&ns, &ns_l, a);
-				stringAndChar(&ns, &ns_l, ']');
-			}
-			break;
-		}
+            if(t->href && !strncmp(t->href, "cid:", 4)) break;
+            a = imageAlt(t);
+            if(a || attimg) {
+                stringAndChar(&ns, &ns_l, '[');
+                if(a) stringAndString(&ns, &ns_l, a);
+                stringAndChar(&ns, &ns_l, ']');
+            }
+            break;
+        }
 // image is part of a hyperlink
-		if (!retainTag || !currentA->href || currentA->textin)
-			break;
-		a = imageAlt(t);
-		if (!a) a = altText(attribVal(t, "name"));
-		if (!a) a = altText(currentA->href);
-		if (!a) a = altText(t->href);
-		if (!a) a = "image";
-		stringAndString(&ns, &ns_l, a);
-		stringAndChar(&ns, &ns_l, ' ');
-		break;
+        if (!retainTag || !currentA->href || currentA->textin)
+            break;
+        a = imageAlt(t);
+        if (!a) a = altText(attribVal(t, "name"));
+        if (!a) a = altText(currentA->href);
+        if (!a) a = altText(t->href);
+        if (!a) a = "image";
+        stringAndString(&ns, &ns_l, a);
+        stringAndChar(&ns, &ns_l, ' ');
+        break;
 
 // This is for <unrecognized id=foo> and somewhere else <a href=#foo>
 // We have to have this unknown tag in the stream or we can't jump to it.
-	default:
+    default:
 check_id:
-		if(opentag && get_tagId(t))
-			tagInStream(tagno);
-		break;
-	}			// switch
+        if(opentag && get_tagId(t))
+            tagInStream(tagno);
+        break;
+    } // switch
 
 #undef ns_hnum
 #undef ns_ic
