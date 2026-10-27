@@ -413,8 +413,7 @@ void jSyncup(bool fromtimer, const Tag *active)
 /* If that line has been deleted from the user's buffer,
  * indicated by value = 0,
  * then don't do anything. */
-        if (!value)
-            continue;
+        if (!value) continue;
 
         if (itype == INP_SELECT) {
 // set option.selected in js based on the option(s) in value
@@ -1932,6 +1931,11 @@ void infShow(int tagno, const char *search)
         else if(attribVal(t, "onclick"))
               eb_printf(" %s", attribVal(t, "onclick"));
         }
+    place = getFieldFromBuffer(tagno);
+if(place) {
+        eb_printf(" <%s>", place);
+        cnzFree(place);
+    }
     nl();
 
     if(t->ninp && t->itype == INP_TEXT)
@@ -2466,22 +2470,21 @@ static void formReset(const Tag *form)
 /* The result is allocated */
 static char *fetchTextVar(const Tag *t)
 {
-	char *v;
+    char *v;
 
 // js must not muck with the value of a file field
-	if (t->itype != INP_FILE) {
-		if (t->jslink && allowJS)
-			return get_property_string_t(t, "value");
-	}
+    if (t->itype != INP_FILE) {
+        if (t->jslink && allowJS)
+            return get_property_string_t(t, "value");
+    }
 
-	if (t->itype > INP_HIDDEN) {
-		v = getFieldFromBuffer(t->seqno);
-		if (v)
-			return v;
-	}
+    if (t->itype > INP_HIDDEN) {
+        v = getFieldFromBuffer(t->seqno);
+        if (v) return v;
+    }
 
-/* Revert to the default value */
-	return cloneString(t->value);
+    // Revert to the default value
+    return cloneString(t->value);
 }
 
 static bool fetchBoolVar(const Tag *t)
