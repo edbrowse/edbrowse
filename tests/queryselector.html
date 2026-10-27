@@ -303,6 +303,12 @@ if(q.length != 1 || q[0].id != "show") msg += "|:has(div form option)";
 div9.innerHTML = "<a href=#somewhere>jump</a><a name=hello>nothing</a>";
 q = div9.querySelectorAll(":link");
 if(q.length != 1 || q[0].href.indexOf("somewhere") < 0) msg += "|:link";
+q = div9.querySelectorAll(":not(:link)[name=hello]");
+if(q.length != 1) msg += "|:not(:link)";
+q = div9.querySelectorAll("a:not(:hover)");
+if(q.length != 2) msg += "|:not(:hover)";
+q = div9.querySelectorAll("a:not(:focus)");
+if(q.length != 2) msg += "|:not(:focus)";
 
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/, "<br>");}

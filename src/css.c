@@ -23,7 +23,7 @@ enum {
   CSS_ERROR_ATTR,
   CSS_ERROR_RATTR,
   CSS_ERROR_NONEB,
-  CSS_ERROR_TAGLINK,
+  CSS_ERROR_XX,
   CSS_ERROR_INJECTHIGH,
   CSS_ERROR_PE,
   CSS_ERROR_UNSUP,
@@ -50,7 +50,7 @@ static const char *const errorMessage[] = {
   "bad selector attribute",
   "bad rule attribute",
   "nonedbrowse",
-  "tag link",
+  "not used",
   "inject high",
   "pseudo element",
   ":unsupported",
@@ -1059,7 +1059,7 @@ See cssSetKeys() for how they are derived and cssKeyMatch() for their use.
 struct sel {
     struct sel *next;
     uchar error;
-    bool before, after, hover;
+    bool before, after;
     struct asel *chain;
     int spec; // specificity
 };
@@ -1069,7 +1069,7 @@ struct asel {
     struct asel *next;
     char *tag;
     char *part;
-    bool before, after, hover, link;
+    bool before, after;
     uchar error;
     char combin;
     struct mod *modifiers;
@@ -1335,129 +1335,127 @@ static int specificity(const struct sel *sel, bool underat)
 
 static bool mediaPiece(struct desc *d, char *t)
 {
-	char *a;
-	int n, s_width, s_height;
-	bool atnot = false, atsome = false;
+    char *a;
+    int n, s_width, s_height;
+    bool atnot = false, atsome = false;
 
-	if (!*t) return false; // nothing there
+    if (!*t) return false; // nothing there
 
-	if (!strncmp(t, "only", 4) && !isalnumByte(t[4])) {
+    if (!strncmp(t, "only", 4) && !isalnumByte(t[4])) {
 // only is meaningless
-		t += 4;
-		skipWhite2(&t);
-	}
-	if (!strncmp(t, "not", 3) && !isalnumByte(t[3])) {
-		atnot = true;
-		t += 3;
-		skipWhite2(&t);
-	}
-	if (!strncmp(t, "screen", 6) && !isalnumByte(t[6])) {
-		atsome = true;
-		t += 6;
-		skipWhite2(&t);
-	} else if (!strncmp(t, "all", 3) && !isalnumByte(t[3])) {
-		atsome = true;
-		t += 3;
-		skipWhite2(&t);
-	}
+        t += 4;
+        skipWhite2(&t);
+    }
+    if (!strncmp(t, "not", 3) && !isalnumByte(t[3])) {
+        atnot = true;
+        t += 3;
+        skipWhite2(&t);
+    }
+    if (!strncmp(t, "screen", 6) && !isalnumByte(t[6])) {
+        atsome = true;
+        t += 6;
+        skipWhite2(&t);
+    } else if (!strncmp(t, "all", 3) && !isalnumByte(t[3])) {
+        atsome = true;
+        t += 3;
+        skipWhite2(&t);
+    }
 
 and:
-	if (!*t) {
-		if (atsome)
-			return !atnot;
-		d->error = CSS_ERROR_BADMEDIA;
-		return false;
-	}
+    if (!*t) {
+        if (atsome)
+            return !atnot;
+        d->error = CSS_ERROR_BADMEDIA;
+        return false;
+    }
 
-	if (!strncmp(t, "and", 3) && !isalnumByte(t[3])) {
-		t += 3;
-		skipWhite2(&t);
-	}
-	if (*t != '(') {
-		d->error = CSS_ERROR_BADMEDIA;
-		return false;
-	}
-	++t;
-	skipWhite2(&t);
-// A well written website can skip the hover text, which edbrowse can't
-// manage very well, so we should respond to this one.
-	if (!strncmp(t, "hover)", 6)
-	    || !strncmp(t, "any-hover)", 10)
-	    || !strncmp(t, "pointer)", 8)
-	    || !strncmp(t, "any-pointer)", 12)
-	    || !strncmp(t, "inverted-colors)", 16))
-		return atnot;
-	if (!strncmp(t, "scripting)", 10)) {
-		if (!isJSAlive)
-			return atnot;
-		t += 10;
-		skipWhite2(&t);
-		atsome = true;
-		goto and;
-	}
+    if (!strncmp(t, "and", 3) && !isalnumByte(t[3])) {
+        t += 3;
+        skipWhite2(&t);
+    }
+    if (*t != '(') {
+        d->error = CSS_ERROR_BADMEDIA;
+        return false;
+    }
+    ++t;
+    skipWhite2(&t);
+    if (!strncmp(t, "hover)", 6)
+        || !strncmp(t, "any-hover)", 10)
+        || !strncmp(t, "pointer)", 8)
+        || !strncmp(t, "any-pointer)", 12)
+        || !strncmp(t, "inverted-colors)", 16))
+        return atnot;
+    if (!strncmp(t, "scripting)", 10)) {
+        if (!isJSAlive)
+            return atnot;
+        t += 10;
+        skipWhite2(&t);
+        atsome = true;
+        goto and;
+    }
 // I only handle min or max on certain parameters
-	if ((strncmp(t, "max", 3) && strncmp(t, "min", 3)) ||
-	    t[3] != '-' || (strncmp(t + 4, "height", 6)
-			    && strncmp(t + 4, "width", 5)
-			    && strncmp(t + 4, "color", 5)
-			    && strncmp(t + 4, "monochrome", 10))) {
+    if ((strncmp(t, "max", 3) && strncmp(t, "min", 3)) ||
+        t[3] != '-' || (strncmp(t + 4, "height", 6)
+                && strncmp(t + 4, "width", 5)
+                && strncmp(t + 4, "color", 5)
+                && strncmp(t + 4, "monochrome", 10))) {
 // not recognized
-		d->error = CSS_ERROR_BADMEDIA;
-		return false;
-	}
-	a = t + 9;
-	if (t[4] == 'h')
-		++a;
-	if (t[4] == 'm')
-		a += 5;
-	if (*a != ':') {
-		d->error = CSS_ERROR_BADMEDIA;
-		return false;
-	}
-	++a;
-	skipWhite2(&a);
-	if (!isdigitByte(*a)) {
-		d->error = CSS_ERROR_BADMEDIA;
-		return false;
-	}
-	n = strtol(a, &a, 10);
+        d->error = CSS_ERROR_BADMEDIA;
+        return false;
+    }
+    a = t + 9;
+    if (t[4] == 'h')
+        ++a;
+    if (t[4] == 'm')
+        a += 5;
+    if (*a != ':') {
+        d->error = CSS_ERROR_BADMEDIA;
+        return false;
+    }
+    ++a;
+    skipWhite2(&a);
+    if (!isdigitByte(*a)) {
+        d->error = CSS_ERROR_BADMEDIA;
+        return false;
+    }
+    n = strtol(a, &a, 10);
 
 // screen is always 1024 by 768
-	s_width = 1024, s_height = 768;
+    s_width = 1024, s_height = 768;
 
 // px or em
-	if (a[0] == 'p' && a[1] == 'x')
-		a += 2;
-	if (a[0] == 'e' && a[1] == 'm') {
-		a += 2;
-		s_width /= 16, s_height /= 16;
-	}
-	if (*a != ')') {
-		d->error = CSS_ERROR_BADMEDIA;
-		return false;
-	}
+    if (a[0] == 'p' && a[1] == 'x')
+        a += 2;
+    if (a[0] == 'e' && a[1] == 'm') {
+        a += 2;
+        s_width /= 16, s_height /= 16;
+    }
+    if (*a != ')') {
+        d->error = CSS_ERROR_BADMEDIA;
+        return false;
+    }
 
-	if (t[1] == 'i' && t[4] == 'w' && n > s_width)
-		return atnot;
-	if (t[1] == 'a' && t[4] == 'w' && n < s_width)
-		return atnot;
-	if (t[1] == 'i' && t[4] == 'h' && n > s_height)
-		return atnot;
-	if (t[1] == 'a' && t[4] == 'h' && n < s_height)
-		return atnot;
-	if (t[1] == 'i' && t[4] == 'c' && n > 8)
-		return atnot;
-	if (t[1] == 'a' && t[4] == 'c' && n < 8)
-		return atnot;
-	if (t[1] == 'i' && t[4] == 'm' && n > 4)
-		return atnot;
-	if (t[1] == 'a' && t[4] == 'm' && n < 4)
-		return atnot;
+    if (t[1] == 'i' && t[4] == 'w' && n > s_width)
+        return atnot;
+    if (t[1] == 'a' && t[4] == 'w' && n < s_width)
+        return atnot;
+    if (t[1] == 'i' && t[4] == 'h' && n > s_height)
+        return atnot;
+    if (t[1] == 'a' && t[4] == 'h' && n < s_height)
+        return atnot;
+    if (t[1] == 'i' && t[4] == 'c' && n > 8)
+        return atnot;
+    if (t[1] == 'a' && t[4] == 'c' && n < 8)
+        return atnot;
+    if (t[1] == 'i' && t[4] == 'm' && n > 4)
+        return atnot;
+    if (t[1] == 'a' && t[4] == 'm' && n < 4)
+        return atnot;
 
-	t = a + 1;
-	skipWhite2(&t);
-	atsome = true;
-	goto and;
+    t = a + 1;
+    skipWhite2(&t);
+    atsome = true;
+    goto and;
 }
 
 static bool media(struct desc *d, char *t)
@@ -1494,8 +1492,8 @@ static bool media(struct desc *d, char *t)
 // The above is used by window.matchMedia
 bool matchMedia(char *t)
 {
-	struct desc d0;
-	return media(&d0, t);
+    struct desc d0;
+    return media(&d0, t);
 }
 
 // all the css without comments, and line oriented.
@@ -1503,22 +1501,21 @@ static char *loadstring;
 static int loadstring_l;
 static void loadPack(const char *lhs, const char *rhs)
 {
-	int l;
+    int l;
 
-	if(!loadstring)
-		return;
+    if(!loadstring)
+        return;
 
-	l = loadstring_l;
-	stringAndString(&loadstring, &loadstring_l, lhs);
-	stringAndString(&loadstring, &loadstring_l, " {");
-	stringAndString(&loadstring, &loadstring_l, rhs);
+    l = loadstring_l;
+    stringAndString(&loadstring, &loadstring_l, lhs);
+    stringAndString(&loadstring, &loadstring_l, " {");
+    stringAndString(&loadstring, &loadstring_l, rhs);
 // change newline to space
-	for(; l < loadstring_l; ++l)
-		if(loadstring[l] == '\n' || loadstring[l] == '\r')
-			loadstring[l] = ' ';
-
+    for(; l < loadstring_l; ++l)
+        if(loadstring[l] == '\n' || loadstring[l] == '\r')
+    loadstring[l] = ' ';
 // and now our newline, demarking this rule
-	stringAndString(&loadstring, &loadstring_l, "}\n");
+    stringAndString(&loadstring, &loadstring_l, "}\n");
 }
 
 // The input string is assumed allocated, it could be reallocated.
@@ -1834,8 +1831,6 @@ copy: ++s;
             if (sel->error)
                 continue;
             for (asel = sel->chain; asel; asel = asel->next) {
-                if (asel->hover)
-                    sel->hover = true;
                 if (asel->before) {
 // before and after should only be on the base node of the chain
                     if (asel == sel->chain)
@@ -1850,13 +1845,6 @@ copy: ++s;
                     else
                         sel->error =
                             CSS_ERROR_INJECTHIGH;
-                }
-                if (asel->link) {
-                    if (!asel->tag)
-                        asel->tag = cloneString("A");
-                    else if (!stringEqual(asel->tag, "a")) {
-                        sel->error = CSS_ERROR_TAGLINK;
-                    }
                 }
             }
         }
@@ -2270,7 +2258,8 @@ static void cssModify(struct asel *a, const char *m1, const char *m2)
     static const char *const okcolon[] = {
       "first-child", "last-child", "only-child", "checked",
       "first-of-type", "last-of-type", "only-of-type",
-      "first", "last", "empty",
+      "first", "last", "empty", "link", "hover",
+      "visited", "marker", "placeholder", "target", "active", "focus", "hover",
       "disabled", "enabled", "read-only", "read-write",
       "required",
       "scope", "root",
@@ -2337,54 +2326,6 @@ static void cssModify(struct asel *a, const char *m1, const char *m2)
     switch (h) {
     case ':':
 
-/*********************************************************************
-:visited, this link has been visited. Display it differently
-so the sighted user knows he's already gone there.
-Is it possible for javascript to call getComputed Style and see that that
-link was visited and act differently?
-Yes, but if it didn't act differently, if it behaved like the link was never
-visited, even when it was, that would probably be ok. Most of the time
-it just changes color and would not change the behavior of the program.
-:active :focus, the user is interacting with an element.
-Usually just changes color.
-Javascript could ask where your mouse is by querying styles, but edbrowse
-doesn't even have a mouse. We don't focus.
-:marker. Change the appearance of the bullets in the bullet list.
-There isn't even a tag to call getComputedStyle on.
-javascript would never know if we honored this or not.
-:target Where the hash tag is.
-Along with the focus of the page, css can change the visual appearance.
-I could implement this, but it doesn't seem worth the bother.
-Unless someone has some javascript that really depends on it.
-:hover  change behavior when you hover over an element.
-Similar to focus. But edbrowse has no mouse. We don't hover.
-I should probably disregard this one too, but historically, I tried to
-implement it. I am moving away from that however,
-It's silly to honor :hover and not :focus.
-:link I have this matching the <A> tag, and href attribute.
-:before and :after
-The only thing I do with these is watch for injected text,
-and you only see that with showall.
-So maybe it's not worth the bother, but there is one difference.
-js can call getComputedStyle(tag, ":before".
-It can ask, specifically, if I'm honoring the before and after pseudoclasses,
-so maybe I should continue to do so.
-:placeholder sets the placeholder text, which isn't even a node.
-It's an attribute in an input field.
-We can't query it even by getComputedStyle so it's safe to ignore.
-*********************************************************************/
-
-        if (stringEqual(t, ":visited") || stringEqual(t, ":marker")
-        || stringEqual(t, ":placeholder")
-        || stringEqual(t, ":target") || stringEqual(t, ":hover")
-        || stringEqual(t, ":active") || stringEqual(t, ":focus")) {
-            a->error = CSS_ERROR_NONEB;
-            return;
-        }
-        if (stringEqual(t, ":link")) {
-            a->link = true;
-            return;
-        }
 // :lang(it) becomes [lang|=it], but more
         if (!strncmp(t, ":lang(", 6)) {
             if(t[n-1] == ')') t[n - 1] = 0;
@@ -2920,7 +2861,7 @@ static bool inputLike(Tag *t, int flavor)
 Match a node against an atomic selector.
 One of t or obj should be nonzero. It's more efficient with t.
 This is only called from qsaMatchChain, as part of a chain of atomic selectors.
-That chain is considered, or not considered, based on before after hover
+That chain is considered, or not considered, based on before after
 criteria in qsa2() and qsaMatchGroup(), so we need not test for those here.
 *********************************************************************/
 
@@ -2958,16 +2899,8 @@ and here we are with t = text, and that would match *, but it shouldn't. */
     if(!isHtmlElement(t)) return false;
 
     if (a->tag) {
-        const char *nn = t->nodeNameU;
-        rc = stringEqual(nn, a->tag);
+        rc = stringEqual(t->nodeNameU, a->tag);
         if (!rc) return rc;
-        if(a->link) { // tag should be A at this point
-// this simple code doesn't work for a:not(:link)
-            const char *href = get_property_string_t(t, "href");
-            if(!href || !*href) rc = false;
-            cnzFree(href);
-            if(!rc) return rc;
-        }
     }
 
 // now step through the modifyers
@@ -3080,8 +3013,7 @@ so I'm not gonna worry about that right now. */
 // At this point c should be a colon.
         if (c != ':') return false;
 
-        if (stringEqual(p, ":link") || stringEqual(p, ":hover") ||
-            stringEqual(p, ":before") || stringEqual(p, ":after"))
+            if(stringEqual(p, ":before") || stringEqual(p, ":after"))
             goto next_mod;
 
         if (!strncmp(p, ":lang(", 6)) {
@@ -3254,6 +3186,17 @@ all the div sections just below the current node.
             return false;
         }
 
+        if (stringEqual(p, ":link")) {
+            if(!stringEqual(t->nodeNameU, "A")) return false;
+            // AREA might also be allowed
+            rc = true;
+            const char *href = get_property_string_t(t, "href");
+            if(!href || !*href) rc = false;
+            cnzFree(href);
+            if(rc) goto next_mod;
+            return rc;
+        }
+
         if (stringEqual(p, ":enabled") || stringEqual(p, ":disabled")) {
             rc = false;
             if (inputLike(t, 0)) {
@@ -3290,7 +3233,45 @@ all the div sections just below the current node.
             return false;
         }
 
-        return false; // unrecognized
+/*********************************************************************
+modifier unrecognized, or its default action is false.
+Here are some modifiers I have considered.
+:visited, this link has been visited. Display it differently
+so the sighted user knows he's already gone there.
+Is it possible for javascript to call getComputed Style and see that that
+link was visited and act differently?
+Yes, but if it didn't act differently, if it behaved like the link was never
+visited, even when it was, that would probably be ok. Most of the time
+it just changes color and would not change the behavior of the program.
+:active :focus, the user is interacting with an element.
+Usually just changes color.
+Javascript could ask where your mouse is by querying styles, but edbrowse
+doesn't even have a mouse. We don't focus.
+:marker. Change the appearance of the bullets in the bullet list.
+There isn't even a tag to call getComputedStyle on.
+javascript would never know if we honored this or not.
+:target Where the hash tag is.
+Along with the focus of the page, css can change the visual appearance.
+I could implement this, but it doesn't seem worth the bother.
+Unless someone has some javascript that really depends on it.
+:hover  change behavior when you hover over an element.
+Similar to focus. But edbrowse has no mouse. We don't hover.
+I should probably disregard this one too, but historically, I tried to
+implement it. I am moving away from that however,
+It's silly to honor :hover and not :focus.
+:link I have this matching the <A> tag and href attribute.
+:before and :after
+The only thing I do with these is watch for injected text,
+and you only see that with showall.
+So maybe it's not worth the bother, but there is one difference.
+js can call getComputedStyle(tag, ":before".
+It can ask, specifically, if I'm honoring the before and after pseudoclasses,
+so maybe I should continue to do so.
+:placeholder sets the placeholder text, which isn't even a node.
+It's an attribute in an input field.
+We can't query it even by getComputedStyle so it's safe to ignore.
+*********************************************************************/
+        return false;
 
 next_mod: ;
     }
@@ -3446,7 +3427,6 @@ static bool qsaMatchGroup(Tag *t, struct desc *d)
     for (sel = d->selectors; sel; sel = sel->next, ++cnt) {
         if (sel->error) continue;
         // has to match the pseudoelement
-        if (sel->hover) continue;
         if (sel->after | sel->before && matchtype == 0) continue;
         if((matchtype == 1 && sel->after) || (matchtype == 2 && sel->before))
             continue;
@@ -3583,7 +3563,6 @@ static Tag **qsa2(struct desc *d, const char *selstring)
 		    (sel->after && matchtype != 2) ||
 		    (!(sel->before | sel->after) && matchtype))
 			continue;
-		if (sel->hover) continue;
 		a2 = qsa1(sel, selstring);
 		if (a) {
 			a_new = qsaMerge(a, a2);
