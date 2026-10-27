@@ -300,6 +300,10 @@ if(q.length != 2) msg += "|input:has(~input)";
 q = b.querySelectorAll(":has(+div>form option + option)");
 if(q.length != 1 || q[0].id != "show") msg += "|:has(div form option)";
 
+div9.innerHTML = "<a href=#somewhere>jump</a><a name=hello>nothing</a>";
+q = div9.querySelectorAll(":link");
+if(q.length != 1 || q[0].href.indexOf("somewhere") < 0) msg += "|:link";
+
 show.innerHTML = msg;
 } catch(e) { show.innerHTML = "blowup " + e + "<br" + e.stack.replace(/\n/, "<br>");}
 </script>

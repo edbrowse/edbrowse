@@ -2361,8 +2361,7 @@ Similar to focus. But edbrowse has no mouse. We don't hover.
 I should probably disregard this one too, but historically, I tried to
 implement it. I am moving away from that however,
 It's silly to honor :hover and not :focus.
-:link I have this matching the <A> tag.
-I don't know if that's all there is to it.
+:link I have this matching the <A> tag, and href attribute.
 :before and :after
 The only thing I do with these is watch for injected text,
 and you only see that with showall.
@@ -2960,10 +2959,15 @@ and here we are with t = text, and that would match *, but it shouldn't. */
 
     if (a->tag) {
         const char *nn = t->nodeNameU;
-        if (!nn) // should never happen
-            return false;
         rc = stringEqual(nn, a->tag);
-        if (!rc) return false;
+        if (!rc) return rc;
+        if(a->link) { // tag should be A at this point
+// this simple code doesn't work for a:not(:link)
+            const char *href = get_property_string_t(t, "href");
+            if(!href || !*href) rc = false;
+            cnzFree(href);
+            if(!rc) return rc;
+        }
     }
 
 // now step through the modifyers
@@ -3471,45 +3475,45 @@ Only called from qsa2.
 // selstring is null except for querySelectorAll call, and only for debugging
 static Tag **qsa1(const struct sel *sel, const char *selstring)
 {
-	int i, n = 1;
-	Tag *t;
-	Tag **a, **list;
+    int i, n = 1;
+    Tag *t;
+    Tag **a, **list;
 
-	list = doclist;
-	if (!onematch && list) {
-// allocate room for all, in case they all match.
-		for (n = 0; list[n]; ++n) ;
-	}
-	a = allocMem((n + 1) * sizeof(Tag *));
-	if (!list) {
-		a[0] = 0;
-		return a;
-	}
+    list = doclist;
+    if (!onematch && list) {
+        // allocate room for all, in case they all match.
+        for (n = 0; list[n]; ++n) ;
+    }
+    a = allocMem((n + 1) * sizeof(Tag *));
+    if (!list) {
+        a[0] = 0;
+        return a;
+    }
 
-	if(selstring) {
-		if(rootnode) debugPrint(4, "qsa %s,%d (%s) across %d nodes", rootnode->info->name, rootnode->seqno, selstring, n);
-		else debugPrint(4, "qsa NULL (%s) across %d nodes", selstring, n);
-	}
+    if(selstring) {
+        if(rootnode) debugPrint(4, "qsa %s,%d (%s) across %d nodes", rootnode->info->name, rootnode->seqno, selstring, n);
+        else debugPrint(4, "qsa NULL (%s) across %d nodes", selstring, n);
+    }
 
-	n = 0;
-	for (i = 0; (t = list[i]); ++i) {
+    n = 0;
+    for (i = 0; (t = list[i]); ++i) {
 // querySelectorAll does not match the root, only everything below.
-		if(skiproot && t == rootnode) {
-			if(selstring) debugPrint(4, "qsa skip %s,%d", t->info->name, t->seqno);
-			continue;
-		}
-		if (qsaMatchChain(t, sel->chain)) {
-			if(selstring) debugPrint(4, "qsa match %s,%d", t->info->name, t->seqno);
-			a[n++] = t;
-			if (sel->spec > t->highspec)
-				t->highspec = sel->spec;
-			if (onematch) break;
-		}
-	}
-	a[n] = 0;
-	if (!onematch)
-		a = reallocMem(a, (n + 1) * sizeof(Tag *));
-	return a;
+        if(skiproot && t == rootnode) {
+            if(selstring) debugPrint(4, "qsa skip %s,%d", t->info->name, t->seqno);
+            continue;
+        }
+        if (qsaMatchChain(t, sel->chain)) {
+            if(selstring) debugPrint(4, "qsa match %s,%d", t->info->name, t->seqno);
+            a[n++] = t;
+            if (sel->spec > t->highspec)
+                t->highspec = sel->spec;
+            if (onematch) break;
+        }
+    }
+    a[n] = 0;
+    if (!onematch)
+        a = reallocMem(a, (n + 1) * sizeof(Tag *));
+    return a;
 }
 
 // merge two lists of nodes, giving a third.
