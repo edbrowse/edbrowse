@@ -3649,10 +3649,23 @@ done:
     newChunkEnd = e2;
 }
 
+static void silent(int msg, ...)
+{
+    (void) msg;
+}
+
+static void silentDot(void)
+{
+}
+
 // Believe it or not, I have exercised all the pathways in this routine.
 // It's rather mind numbing.
 static bool reportZ(void)
 {
+    void (*report) (int, ...) = silent;
+    void (*reportDot)(void) = silentDot;
+    if(debugLevel > 0) report = i_printf, reportDot = printDot;
+
 // low and high operations are ad, update, delete
     char oplow, ophigh;
 // lines affected in the second group
@@ -3677,60 +3690,64 @@ static bool reportZ(void)
 // delete delete is the easy case, but very rare
         if (oplow == 3 && ophigh == 3) {
             if (act1 == 1)
-                i_printf(MSG_LineDeleteZ1, sameFront + 1, sameBack1);
+                report(MSG_LineDeleteZ1, sameFront + 1, sameBack1);
             else
-                i_printf(MSG_LineDeleteZ2, sameFront + 1, front1z + 1, sameBack1);
+                report(MSG_LineDeleteZ2, sameFront + 1, front1z + 1, sameBack1);
             goto done;
         }
 // double add is more common, and also unambiguous.
 // If this algorithm says we added 100 lines, then we added 100 lines.
         if (oplow == 1 && ophigh == 1) {
             if (act2 == 1)
-                i_printf(MSG_LineAddZ1, sameFront + 1, sameBack2);
+                report(MSG_LineAddZ1, sameFront + 1, sameBack2);
             else
-                i_printf(MSG_LineAddZ2, sameFront + 1, front2z + 1, sameBack2);
+                report(MSG_LineAddZ2, sameFront + 1, front2z + 1, sameBack2);
             goto done;
         }
         if (oplow == 3) {
 // delete mixed with something else, and I just don't care about the delete.
             if (ophigh == 1)
-                i_printf(MSG_LineAdd2, front2z + 1, sameBack2);
+                report(MSG_LineAdd2, front2z + 1, sameBack2);
             else if (act2 <= 10)
-                i_printf(MSG_LineUpdate3, front2z + 1, sameBack2);
+                report(MSG_LineUpdate3, front2z + 1, sameBack2);
             else
-                i_printf(MSG_LineUpdateRange, front2z + 1, sameBack2);
+                report(MSG_LineUpdateRange, front2z + 1, sameBack2);
             goto done;
         }
         if (ophigh == 3) {
 // if the deleted block is big then report it, otherwise ignore it.
             if (act1 >= 10)
-                i_printf(MSG_LineDelete2, act1, front1z);
+                report(MSG_LineDelete2, act1, front1z);
             else if (oplow == 1)
-                i_printf(MSG_LineAdd1, sameFront + 1);
+                report(MSG_LineAdd1, sameFront + 1);
             else if(sameFront + 1 == cw->dot)
-                printDot();
+                reportDot();
             else
-                i_printf(MSG_LineUpdate1, sameFront + 1);
+                report(MSG_LineUpdate1, sameFront + 1);
             goto done;
         }
 // a mix of add and update, call it an update.
 // If the second group is big then switch to range message.
         if (act2 > 10 && ophigh == 2)
-            i_printf(MSG_LineUpdateRange, (front2z - sameFront < 10 ?
+            report(MSG_LineUpdateRange, (front2z - sameFront < 10 ?
             sameFront + 1 : front2z + 1), sameBack2);
         else if (act2 == 1) {
             if(cw->dot == sameFront + 1) {
-                i_printf(MSG_LineUpdate1, sameBack2);
-                printDot();
+                report(MSG_LineUpdate1, sameBack2);
+                reportDot();
             } else if(cw->dot == sameBack2) {
-                i_printf(MSG_LineUpdate1, sameFront + 1);
-                printDot();
-            } else i_printf(MSG_LineUpdateZ1, sameFront + 1, sameBack2);
+                report(MSG_LineUpdate1, sameFront + 1);
+                reportDot();
+            } else report(MSG_LineUpdateZ1, sameFront + 1, sameBack2);
         } else {
             if(cw->dot == sameFront + 1) {
-                i_printf(MSG_LineUpdate3, front2z + 1,  sameBack2);
-                printDot();
-            } else i_printf(MSG_LineUpdateZ2, sameFront + 1, front2z + 1,  sameBack2);
+                report(MSG_LineUpdate3, front2z + 1,  sameBack2);
+                reportDot();
+            } else if(sameFront + 1 == front2z) {
+// I don't know how this happens but it does.
+// Our mutation test: lines 1 and 2 through 45 have been updated.
+                report(MSG_LineUpdate3, sameFront + 1, sameBack2);
+            } else report(MSG_LineUpdateZ2, sameFront + 1, front2z + 1,  sameBack2);
         }
         goto done;
     }
@@ -3750,47 +3767,47 @@ static bool reportZ(void)
     if (oplow == 3 && ophigh == 3) {
 // act1 should never be 1, because then one line was deleted earlier,
 // and we would be in the front1z case.
-        i_printf(MSG_LineDeleteZ3, sameFront + 1, back1z - 1, sameBack1);
+        report(MSG_LineDeleteZ3, sameFront + 1, back1z - 1, sameBack1);
         goto done;
     }
 // double add is more common, and also unambiguous.
 // If this algorithm says we added 100 lines, then we added 100 lines.
     if (oplow == 1 && ophigh == 1) {
-        i_printf(MSG_LineAddZ3, sameFront + 1, back2z - 1, sameBack2);
+        report(MSG_LineAddZ3, sameFront + 1, back2z - 1, sameBack2);
         goto done;
     }
     if (ophigh == 3) {
 // delete mixed with something else, and I just don't care about the delete.
         if (oplow == 1)
-            i_printf(MSG_LineAdd2, sameFront + 1, back2z - 1);
+            report(MSG_LineAdd2, sameFront + 1, back2z - 1);
         else if (act2 <= 10)
-            i_printf(MSG_LineUpdate3, sameFront + 1, back2z - 1);
+            report(MSG_LineUpdate3, sameFront + 1, back2z - 1);
         else
-            i_printf(MSG_LineUpdateRange, sameFront + 1, back2z - 1);
+            report(MSG_LineUpdateRange, sameFront + 1, back2z - 1);
         goto done;
     }
     if (oplow == 3) {
 // if the deleted block is big then report it, otherwise ignore it.
         if (act1 >= 10)
-            i_printf(MSG_LineDelete2, act1, sameFront);
+            report(MSG_LineDelete2, act1, sameFront);
         else if (ophigh == 1)
-            i_printf(MSG_LineAdd1, sameBack2);
+            report(MSG_LineAdd1, sameBack2);
         else if(sameBack2 == cw->dot)
-            printDot();
+            reportDot();
         else
-            i_printf(MSG_LineUpdate1, sameBack2);
+            report(MSG_LineUpdate1, sameBack2);
         goto done;
     }
 // a mix of add and update, call it an update.
 // If the first group is big then switch to range message.
     if (act2 > 10 && oplow == 2)
-        i_printf(MSG_LineUpdateRange, sameFront + 1,
+        report(MSG_LineUpdateRange, sameFront + 1,
              (sameBack2 - back2z < 10 ? sameBack2 : back2z - 1));
     else {
         if(cw->dot == sameBack2) {
-            i_printf(MSG_LineUpdate3, sameFront + 1, back2z - 1);
-            printDot();
-        } else i_printf(MSG_LineUpdateZ3, sameFront + 1, back2z - 1,  sameBack2);
+            report(MSG_LineUpdate3, sameFront + 1, back2z - 1);
+            reportDot();
+        } else report(MSG_LineUpdateZ3, sameFront + 1, back2z - 1,  sameBack2);
     }
 
 done:
@@ -3807,95 +3824,89 @@ static void currentTime(void)
 	now_ms = tv.tv_usec / 1000;
 }
 
-static void silent(int msg, ...)
-{
-    (void) msg;
-}
-
 static int invcount, rrcount;
 
 /* Rerender the buffer and notify of any lines that have changed */
 int rr_interval = 20;
 void rerender(int rr_command)
 {
-	char *a, *snap, *newbuf;
-	int j;
-	int markdot, wasdot, addtop;
-	bool z;
-	void (*say_fn) (int, ...);
+    char *a, *snap, *newbuf;
+    int j;
+    int markdot, wasdot, addtop;
+    bool z;
 
-	if(!cw->browseMode) return;
-	debugPrint(4, "rerender(%d)", rr_command);
+    if(!cw->browseMode) return;
+    debugPrint(4, "rerender(%d)", rr_command);
 // it's possible to be in browse mode with no tags to traverse.
 // Example, browse an email file with hr-
 // Then rerender clears the page, which is bad!
-	if(!cw->tags) {
-		if (rr_command > 0)
-			i_puts(MSG_NoChange);
-		return;
-	}
+    if(!cw->tags) {
+        if (rr_command > 0)
+            i_puts(MSG_NoChange);
+        return;
+    }
 
-	cw->mustrender = false;
-	if(cw->rr_throttle == 0) cw->rr_throttle = 1;
-	if(cw->rr_throttle < rr_interval) {
-		cw->rr_throttle *= 3;
-		cw->rr_throttle += 1;
-		cw->rr_throttle /= 2;
-	}
-	if(cw->rr_throttle > rr_interval) cw->rr_throttle = rr_interval;
+    cw->mustrender = false;
+    if(cw->rr_throttle == 0) cw->rr_throttle = 1;
+    if(cw->rr_throttle < rr_interval) {
+        cw->rr_throttle *= 3;
+        cw->rr_throttle += 1;
+        cw->rr_throttle /= 2;
+    }
+    if(cw->rr_throttle > rr_interval) cw->rr_throttle = rr_interval;
 // nextrender is stamped at the end, when we know how long this took.
-	invcount = rrcount = 0;
+    invcount = rrcount = 0;
 
 // not sure if we have to do this here
-	rebuildSelectors();
+    rebuildSelectors();
 
-	if (rr_command > 0) {
+    if (rr_command > 0) {
 // You might have changed some input fields on the screen, then typed rr
-		jSyncup(true, 0);
-	}
+        jSyncup(true, 0);
+    }
 // screen snap, to compare with the new screen.
-	if (!unfoldBufferW(cw, false, &snap, &j)) {
-		snap = newbuf = 0;
-		puts("no screen snap available");
-		goto done;
-	}
+    if (!unfoldBufferW(cw, false, &snap, &j)) {
+        snap = newbuf = 0;
+        puts("no screen snap available");
+        goto done;
+    }
 
 /* and the new screen */
-	a = render();
-	newbuf = htmlReformat(a);
-	nzFree(a);
-	debugPrint(4, "%d nodes rendered", rrcount);
+    a = render();
+    newbuf = htmlReformat(a);
+    nzFree(a);
+    debugPrint(4, "%d nodes rendered", rrcount);
 
     if (rr_command > 0 && invcount)
         debugPrint(3, "%d nodes invisible", invcount);
 
 // the high runner case, most of the time nothing changes,
 // and we can check that efficiently with strcmp
-	if (stringEqual(newbuf, snap)) {
-		if (rr_command > 0)
-			i_puts(MSG_NoChange);
-		goto done;
-	}
+    if (stringEqual(newbuf, snap)) {
+        if (rr_command > 0)
+            i_puts(MSG_NoChange);
+        goto done;
+    }
 
 /* mark dot, so it stays in place */
-	cw->labels[MARKDOT] = wasdot = cw->dot;
-	frontBackDiff(snap, newbuf);
-	addtop = 0;
-	if (sameBack1 > sameFront)
-		delText(sameFront + 1, sameBack1);
-	if (sameBack2 > sameFront) {
-		addTextToBuffer((pst) newChunkStart,
-				newChunkEnd - newChunkStart, sameFront, false);
-		addtop = sameFront + 1;
-	}
-	markdot = cw->labels[MARKDOT];
-	if (markdot)
-		cw->dot = markdot;
-	else if (sameBack1 == sameBack2)
-		cw->dot = wasdot;
-	else if (addtop)
-		cw->dot = addtop;
-	cw->undoable = false;
+    cw->labels[MARKDOT] = wasdot = cw->dot;
+    frontBackDiff(snap, newbuf);
+    addtop = 0;
+    if (sameBack1 > sameFront)
+        delText(sameFront + 1, sameBack1);
+    if (sameBack2 > sameFront) {
+        addTextToBuffer((pst) newChunkStart,
+                newChunkEnd - newChunkStart, sameFront, false);
+        addtop = sameFront + 1;
+    }
+    markdot = cw->labels[MARKDOT];
+    if (markdot)
+        cw->dot = markdot;
+    else if (sameBack1 == sameBack2)
+        cw->dot = wasdot;
+    else if (addtop)
+        cw->dot = addtop;
+    cw->undoable = false;
 
 /*********************************************************************
 It's almost easier to do it than to report it.
@@ -3907,78 +3918,83 @@ If the text is the same every time that's fine, but it's new tags each time,
 and new internal numbers each time, and that use to trip this algorithm.
 *********************************************************************/
 
-	if(rr_command < 0)
-		goto done;
+    if(rr_command < 0)
+        goto done;
 
-	removeHiddenNumbers((pst) snap, 0, context, 0);
-	removeHiddenNumbers((pst) newbuf, 0, context, 0);
-	if (stringEqual(snap, newbuf)) {
-		if (rr_command > 0)
-			i_puts(MSG_NoChange);
-		goto done;
-	}
-	frontBackDiff(snap, newbuf);
-	debugPrint(4, "front %d back %d,%d front z %d,%d back z %d,%d",
-		   sameFront, sameBack1, sameBack2,
-		   front1z, front2z, back1z, back2z);
-	z = reportZ();
+    removeHiddenNumbers((pst) snap, 0, context, 0);
+    removeHiddenNumbers((pst) newbuf, 0, context, 0);
+    if (stringEqual(snap, newbuf)) {
+        if (rr_command > 0)
+            i_puts(MSG_NoChange);
+        goto done;
+    }
+    frontBackDiff(snap, newbuf);
+    debugPrint(4, "front %d back %d,%d front z %d,%d back z %d,%d",
+           sameFront, sameBack1, sameBack2,
+           front1z, front2z, back1z, back2z);
+    z = reportZ();
 
 // Update from javascript means the lines move, and our undo is unreliable.
 // Here is a complicated if, cause often the current line is unaffected.
-	if(undo1line <= sameFront || // before any changes
-	(sameBack1 == sameBack2 && (
-	undo1line > sameBack1 || (
-	front1z == front2z && back1z == back2z && (
-	(back1z > 0 && undo1line >= back1z && undo1line < sameBack1) ||
-	(front1z > 0 && undo1line <= front1z && undo1line > sameFront + 1))))))
-		;
-	else
-		undoSpecialClear();
+    if(undo1line <= sameFront || // before any changes
+    (sameBack1 == sameBack2 && (
+    undo1line > sameBack1 || (
+    front1z == front2z && back1z == back2z && (
+    (back1z > 0 && undo1line >= back1z && undo1line < sameBack1) ||
+    (front1z > 0 && undo1line <= front1z && undo1line > sameFront + 1))))))
+        ;
+    else
+        undoSpecialClear();
 
 // Even if the change has been reported above,
 // I march on here because it puts dot back where it belongs.
-	say_fn = (z ? silent : i_printf);
-	if (sameBack2 == sameFront) {	/* delete */
-		if (sameBack1 == sameFront + 1)
-			(*say_fn) (MSG_LineDelete1, sameFront);
-		else
-			(*say_fn) (MSG_LineDelete2, sameBack1 - sameFront,
-				   sameFront);
-	} else if (sameBack1 == sameFront) {
-		if (sameBack2 == sameFront + 1)
-			(*say_fn) (MSG_LineAdd1, sameFront + 1);
-		else {
-			(*say_fn) (MSG_LineAdd2, sameFront + 1, sameBack2);
+// If we've already seen the messages, or debug level is 0,
+// then we don't want to see them.
+    void (*report) (int, ...) = silent;
+    void (*reportDot)(void) = silentDot;
+    if(debugLevel > 0 && !z) report = i_printf, reportDot = printDot;
+
+    if (sameBack2 == sameFront) { /* delete */
+        if (sameBack1 == sameFront + 1)
+            (*report) (MSG_LineDelete1, sameFront);
+        else
+            (*report) (MSG_LineDelete2, sameBack1 - sameFront,
+                   sameFront);
+    } else if (sameBack1 == sameFront) {
+        if (sameBack2 == sameFront + 1)
+            (*report) (MSG_LineAdd1, sameFront + 1);
+        else {
+            (*report) (MSG_LineAdd2, sameFront + 1, sameBack2);
 /* put dot back to the start of the new block */
-			if (!markdot)
-				cw->dot = sameFront + 1;
-		}
-	} else {
-		if (sameBack1 == sameFront + 1 && sameBack2 == sameFront + 1) {
-			if(sameFront + 1 == cw->dot && !z)
-				printDot();
-			else
-				(*say_fn) (MSG_LineUpdate1, sameFront + 1);
-		} else if (sameBack2 == sameFront + 1)
-			(*say_fn) (MSG_LineUpdate2, sameBack1 - sameFront,
-				   sameFront + 1);
-		else {
-			if (sameBack2 - sameFront <= 10 ||
-			    sameBack1 - sameFront <= 10)
-				(*say_fn) (MSG_LineUpdate3, sameFront + 1,
-					   sameBack2);
-			else
-				(*say_fn) (MSG_LineUpdateRange, sameFront + 1,
-					   sameBack2);
+            if (!markdot)
+                cw->dot = sameFront + 1;
+        }
+    } else {
+        if (sameBack1 == sameFront + 1 && sameBack2 == sameFront + 1) {
+            if(sameFront + 1 == cw->dot && !z)
+                reportDot();
+            else
+                (*report) (MSG_LineUpdate1, sameFront + 1);
+        } else if (sameBack2 == sameFront + 1)
+            (*report) (MSG_LineUpdate2, sameBack1 - sameFront,
+                   sameFront + 1);
+        else {
+            if (sameBack2 - sameFront <= 10 ||
+                sameBack1 - sameFront <= 10)
+                (*report) (MSG_LineUpdate3, sameFront + 1,
+                       sameBack2);
+            else
+                (*report) (MSG_LineUpdateRange, sameFront + 1,
+                       sameBack2);
 /* put dot back to the start of the new block */
-			if (!markdot && sameBack1 != sameBack2)
-				cw->dot = sameFront + 1;
-		}
-	}
+            if (!markdot && sameBack1 != sameBack2)
+                cw->dot = sameFront + 1;
+        }
+    }
 
 done:
-	nzFree(newbuf);
-	nzFree(snap);
+    nzFree(newbuf);
+    nzFree(snap);
 /*********************************************************************
 Start the clock now, when the work is done, not when it began.
 Rendering a large page can take longer than the throttle interval, and if we
@@ -3986,8 +4002,8 @@ stamp the start then nextrender is already in the past when we get here.
 The next command rerenders again, and the one after that, and edbrowse spends
 all of its time rendering instead of listening to you.
 *********************************************************************/
-	time(&cw->nextrender);
-	cw->nextrender += cw->rr_throttle;
+    time(&cw->nextrender);
+    cw->nextrender += cw->rr_throttle;
 }
 
 /* mark the tags on the deleted lines as deleted */

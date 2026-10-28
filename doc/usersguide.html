@@ -4506,6 +4506,13 @@ You will see a message like, "Line 352 has been updated",
 where 352 contains the submenu.
 Type 352I? to see the newly created menu options.
 
+<p>
+The various  "lines updated" messages do not appear at db0.
+This is primarily for scripting.
+A script can perform actions that change the appearance of the page, without producing output such as:
+"line 17 has been deleted", or "lines 7 through 12 have been updated".
+Thus most scripts begin with db0.
+
 <h2 id="popup">Popups and Popunders</h2>
 
 A popup is a window that suddenly appears in front of the window you really want to see.
