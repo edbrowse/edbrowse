@@ -7214,10 +7214,10 @@ range2:
         goto success;
     }
 
-    if (stringEqual(line, "ibreak") ||
-    stringEqual(line, "ibreak+") ||
-    stringEqual(line, "ibreakeak-")) {
-        char c = line[6];
+    if (stringEqual(line, "ibr") ||
+    stringEqual(line, "ibr+") ||
+    stringEqual(line, "ibreak-")) {
+        char c = line[3];
         cmd = 'e';
         if(globalMode) {
             setError(MSG_GlobalCommand2, line);
