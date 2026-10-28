@@ -1088,53 +1088,50 @@ fail:
 // Like the above, but for link tags. Make sure they are all loaded.
 void loadFinishCSS(void)
 {
-	Tag *t;
-	int i;
-	for (i = 0; i < cw->numTags; ++i) {
-		t = tagList[i];
-		if(t->action != TAG_LINK) continue;
-		if (t->dead || !t->jslink || t->step != 3) continue;
-		if(cf != t->f0) continue; // some other frame
-		// don't need css until it is linked into the tree.
-		if(!isRooted(t)) continue;
-		if (intFlag) {
-			t->step = 6;
-			continue;
-		}
-		pthread_join(t->loadthread, NULL);
-		t->threadjoined = true;
-		if (!t->loadsuccess || t->hcode != 200) {
-			if (debugLevel >= 3)
-				i_printf(MSG_GetCSS, t->href, t->hcode);
-			t->step = 6;
-			continue;
-		}
-		set_property_string_t(t, "css$data", t->value);
-		nzFree0(t->value);
-		t->lic = 1; // can run the onload function now
-		t->step = 4;	// loaded
-		set_property_number_t(t, "eb$step", 4);
-	}
+    Tag *t;
+    int i;
+    for (i = 0; i < cw->numTags; ++i) {
+        t = tagList[i];
+        if(t->action != TAG_LINK) continue;
+        if (t->dead || !t->jslink || t->step != 3) continue;
+        if(cf != t->f0) continue; // some other frame
+        // don't need css until it is linked into the tree.
+        if(!isRooted(t)) continue;
+        if (intFlag) {
+            t->step = 6;
+            continue;
+        }
+        pthread_join(t->loadthread, NULL);
+        t->threadjoined = true;
+        if (!t->loadsuccess || t->hcode != 200) {
+            if (debugLevel >= 3)
+                i_printf(MSG_GetCSS, t->href, t->hcode);
+            t->step = 6;
+            continue;
+        }
+        set_property_string_t(t, "css$data", t->value);
+        nzFree0(t->value);
+        t->lic = 1; // can run the onload function now
+        t->step = 4; // loaded
+        set_property_number_t(t, "eb$step", 4);
+    }
 }
 
 static bool is_subframe(Frame *f1, Frame *f2)
 {
-	Tag *t;
-	int n;
-	if (f1 == f2)
-		return true;
-	while (true) {
-		for (n = 0; n < cw->numTags; ++n) {
-			t = tagList[n];
-			if (t->f1 == f1)
-				goto found;
-		}
-		return false;
+    Tag *t;
+    int n;
+    if (f1 == f2) return true;
+    while (true) {
+        for (n = 0; n < cw->numTags; ++n) {
+            t = tagList[n];
+            if (t->f1 == f1) goto found;
+        }
+        return false;
 found:
-		f1 = t->f0;
-		if (f1 == f2)
-			return true;
-	}
+        f1 = t->f0;
+        if (f1 == f2) return true;
+    }
 }
 
 /*********************************************************************
@@ -1225,14 +1222,14 @@ That is easiest, and it's what I do.
 
 bool isRooted(const Tag *t)
 {
-	const Tag *up;
-	for(up = t; up; up = up->parent) {
-		if(up->action == TAG_HEAD || up->action == TAG_BODY)
-			return true;
-		if(up->action == TAG_TEMPLATE)
-			return false;
-	}
-	return false;
+    const Tag *up;
+    for(up = t; up; up = up->parent) {
+        if(up->action == TAG_HEAD || up->action == TAG_BODY)
+            return true;
+        if(up->action == TAG_TEMPLATE)
+            return false;
+    }
+    return false;
 }
 
 static void dw_flush(Tag *t)
@@ -1275,9 +1272,9 @@ or come up with another strategy. */
 static Tag *running_t;
 void dw_flush_conditional(void)
 {
-    char *lt1, *lt2, *gt1, *gt2; // point to < and >
-    char *t;
-    char *base = cf->dw; // shorthand
+    const char *lt1, *lt2, *gt1, *gt2; // point to < and >
+    const char *t;
+    const char *base = cf->dw; // shorthand
     // if not called from a script, I don't know what to do
     if(!running_t) return;
     // there should be something here
@@ -1321,7 +1318,7 @@ Ok this is subtle. I put it on a script tag, and t.jv.onload exists!
 That is the function that is run by xhr.
 So runOnload() comes along and runs it again, unless we do something.
 I will disconnect here, and also check for inxhr in runOnload().
-	*********************************************************************/
+    *********************************************************************/
         disconnectTagObject(t);
         t->dead = true;
 // allow garbage collection to recapture the object if it wants to
