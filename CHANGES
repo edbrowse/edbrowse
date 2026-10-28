@@ -6,7 +6,8 @@ The :not :is :where :has css pseudoclasses.
 
 Response and Request classes.
 
-Connect label to its input element.
+Print label just to the left of its input element.
+The ibreak command to insert a newline after each input element.
 
 3.8.19
 

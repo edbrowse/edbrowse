@@ -759,6 +759,8 @@ g : go to the link on the current line
 <br>i2* : push the second button on the current line, usually submit or reset
 <br>i$* : push the last button on the current line
 <br>i3? : describe the third input field on the current line
+<br>ibreak : put line breaks after each input field on the current line (toggle)
+<br>,ibreak : put line breaks after each input field on the page
 <br>ipass2 : prompt for the content of the second input field, disabling echo
 <br>ib : allocate an input buffer for this textarea
 <br>ib7 : use session 7 for this input textarea
@@ -3600,6 +3602,28 @@ The fifth line is also a button to push.
 It clears all the data you have entered, so you can start over.
 Default values will be restored.
 Thus the third line goes back to &lt;en&gt;, rather than &lt;&gt;.
+
+<p>
+This example has one input field per line, but in some cases, one line might contain a row of checkboxes or radio buttons.
+Counting fields, to press the right button, can be confusing.
+Use the ibreak command to put a line break after each input field on the current line.
+In other words, each input field will be on its own line.
+Use i? to interrogate, then i=+ to press the button.
+Type ibreak again, on the range of individual input fields, to put them back into one line.
+this may remind you of the ur (unfold row) command, described in an earlier section.
+ibreak unfolds the row of input fields so they are one per line.
+
+<p>
+If the website is designed properly, each input field has an associated label.
+Edbrowse prints that label before the corresponding input field.
+thus, a break after each input field makes sense.
+Each line has the label and then the input field.
+However, it is possible to design a website without labels,
+and explicitly put the description of the radio button to the right of the input field.
+In that event, the ibreak command could be confusing.
+An input field will be on one line, and its description will be on the next line.
+When in doubt, use the i? command.
+We hope that most websites use labels, which is recommended for accessibility, and is part of a good design.
 
 <h2 id="entry">Data Entry</h2>
 

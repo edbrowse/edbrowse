@@ -7182,6 +7182,10 @@ range2:
         Tag *w;
         char c = line[2];
         cmd = 'e'; // trick to always show the errors
+        if(globalMode) {
+            setError(MSG_GlobalCommand2, line);
+            goto failg;
+        }
         if(!cw->dot) {
             setError(MSG_EmptyBuffer);
             goto fail;
@@ -7202,13 +7206,46 @@ range2:
                 w->inur = true;
 // could be a <th> row
                 if(all_th(w)) continue;
-                if(c == 0)
-                    w->ur ^= 1;
-                if(c == '+')
-                    w->ur = 1;
-                if(c == '-')
-                    w->ur = 0;
+                if(c == 0) w->ur ^= 1;
+                if(c == '+') w->ur = 1;
+                if(c == '-') w->ur = 0;
             }
+        rerender(1);
+        goto success;
+    }
+
+    if (stringEqual(line, "ibreak") ||
+    stringEqual(line, "ibreak+") ||
+    stringEqual(line, "ibreakeak-")) {
+        char c = line[6];
+        cmd = 'e';
+        if(globalMode) {
+            setError(MSG_GlobalCommand2, line);
+            goto failg;
+        }
+        if(!cw->dot) {
+            setError(MSG_EmptyBuffer);
+            goto fail;
+        }
+        if (!cw->browseMode) {
+            setError(MSG_NoBrowse);
+            goto fail;
+        }
+        for(i = startRange; i <= endRange; ++i) {
+            Tag *w;
+            const char *m = (char*)fetchLine(i, -1);
+            for(; *m != '\n'; ++m) {
+                if(*m != InternalCodeChar) continue;
+                if(!isdigitByte(m[1])) continue;
+                j = strtol(m + 1, (char**)&m, 10);
+                if(*m != '<') continue;
+                if(j <= 0 || j > cw->numTags) continue;
+                w = tagList[j];
+                if(c == 0) w->ibr ^= 1;
+                if(c == '+') w->ibr = 1;
+                if(c == '-') w->ibr = 0;
+            }
+        }
         rerender(1);
         goto success;
     }

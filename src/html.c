@@ -5152,7 +5152,8 @@ static void renderNode(Tag *t, bool opentag, struct parseContext *pc)
     char hnum[40]; // hidden number
 #define ns_hnum() stringAndString(&ns, &ns_l, hnum)
 #define ns_ic() stringAndChar(&ns, &ns_l, InternalCodeChar)
-#define checkDisabled(u) if(inputDisabled(u) || (u->itype > INP_SUBMIT && inputReadonly(u))) stringAndString(&ns, &ns_l, "🛑")
+#define checkDisabled(u) if(inputDisabled(u) || (u->itype > INP_SUBMIT && inputReadonly(u))) stringAndString(&ns, &ns_l, "🛑"); \
+    if(u->ibr) stringAndChar(&ns, &ns_l, '\r')
     int j, l;
     int itype; // input type
     const struct tagInfo *ti = t->info;
@@ -5694,16 +5695,13 @@ past_cell_paragraph:
             j = t->lic;
             if (j)
                 sprintf(hnum, "%c%d<session %d%c0>",
-                    InternalCodeChar, t->seqno, j,
-                    InternalCodeChar);
+                    InternalCodeChar, t->seqno, j, InternalCodeChar);
             else if (t->value[0])
                 sprintf(hnum, "%c%d<session text%c0>",
-                    InternalCodeChar, t->seqno,
-                    InternalCodeChar);
+                    InternalCodeChar, t->seqno, InternalCodeChar);
             else
                 sprintf(hnum, "%c%d<session ?%c0>",
-                    InternalCodeChar, t->seqno,
-                    InternalCodeChar);
+                    InternalCodeChar, t->seqno, InternalCodeChar);
             ns_hnum();
             checkDisabled(t);
             break;
@@ -5719,6 +5717,7 @@ past_cell_paragraph:
             nzFree(al);
             sprintf(hnum, "%c0>", InternalCodeChar);
             ns_hnum();
+            checkDisabled(t);
             deltag = t;
             break;
         }
