@@ -4775,88 +4775,89 @@ bool all_th(const Tag *tr)
 // This function and the next two are used to display an unfolded row.
 static void findHeading(const Tag *t, int colno)
 {
-	int j = 1;
-	const Tag *u;
-	bool ishead = false;
-	td_text = initString(&td_text_l);
-	if(!t->parent ||
-	((t = t->parent)->action != TAG_TABLE &&
-	t->action != TAG_THEAD &&
-	t->action != TAG_TBODY &&
-	t->action != TAG_TFOOT))
-		return;
+    int j = 1;
+    const Tag *u;
+    bool ishead = false;
+    td_text = initString(&td_text_l);
+    if(!t->parent ||
+    ((t = t->parent)->action != TAG_TABLE &&
+    t->action != TAG_THEAD &&
+    t->action != TAG_TBODY &&
+    t->action != TAG_TFOOT))
+        return;
 // can't unfold the header row
-	if(t->action == TAG_THEAD) return;
-	if(t->action == TAG_TBODY || t->action == TAG_TFOOT) {
-		t = t->parent;
-		if(!t || t->action != TAG_TABLE)
-			return;
-	}
-	t = t->firstchild;
-	for(u = t; u; u = u->sibling)
-		if(u->action == TAG_THEAD || u->action == TAG_TBODY) {
-			t = u;
-			break;
-		}
-	if(t && (t->action == TAG_THEAD || t->action == TAG_TBODY)) {
-		ishead = (t->action == TAG_THEAD);
-		t = t->firstchild;
-	}
-	if(!t || t->action != TAG_TR || !t->firstchild)
-		return;
+    if(t->action == TAG_THEAD) return;
+    if(t->action == TAG_TBODY || t->action == TAG_TFOOT) {
+        t = t->parent;
+        if(!t || t->action != TAG_TABLE)
+            return;
+    }
+    t = t->firstchild;
+    for(u = t; u; u = u->sibling)
+        if(u->action == TAG_THEAD || u->action == TAG_TBODY) {
+            t = u;
+            break;
+        }
+    if(t && (t->action == TAG_THEAD || t->action == TAG_TBODY)) {
+        ishead = (t->action == TAG_THEAD);
+        t = t->firstchild;
+    }
+    for(; t; t = t->sibling) if(t->action == TAG_TR) break;
+    if(!t || !t->firstchild)
+        return;
 // it's a row with stuff under it
-	t = t->firstchild;
-	if(t->action != TAG_TD ||
-	(!ishead && t->info->name[1] != 'h'))
-		return;
+    t = t->firstchild;
+    if(t->action != TAG_TD ||
+    (!ishead && t->info->name[1] != 'h'))
+        return;
 
 // t is first cell in row, and is <th> or is inside <thead>
 // Make sure it's not a row header in <tbody>
 // continue if the whole row is <th>
-	if(!ishead && !all_th(t->parent))
-		return;
+    if(!ishead && !all_th(t->parent))
+        return;
 
-	while(t) {
-		if(t->action == TAG_TD) {
-			j += t->js_ln;
-			if(j > colno) {
+    while(t) {
+        if(t->action == TAG_TD) {
+            j += t->js_ln;
+            if(j > colno) {
 // this is the header we want, descend to the text field
-				td_textUnder(t);
-				return;
-			}
-		}
-		t = t->sibling;
-	}
-	return;
+                td_textUnder(t);
+                return;
+            }
+        }
+        t = t->sibling;
+    }
+    return;
 }
 
 static void headingAndData(int j, const Tag *tr, int td_n, int ttype, bool closerow)
 {
-	if(tr->ur) {
-		findHeading(tr, j);
-		if(td_text_l) {
-			stringAndString(&ns, &ns_l, td_text);
-			nzFree(td_text);
-		} else stringAndNum(&ns, &ns_l, j);
-		stringAndString(&ns, &ns_l, ": ");
-	}
-	if(!td_n) return;
-	if(ttype != 1) {
-		stringAndString(&ns, &ns_l, "↑\n");
-		return;
-	}
-	if(closerow && !tr->ur)
-		stringAndChar(&ns, &ns_l, DataCellChar);
-	td_text = initString(&td_text_l);
-	td_textUnder(tagList[td_n]);
-	if(td_text_l) {
-		stringAndString(&ns, &ns_l, td_text);
-		nzFree(td_text);
-	}
-	if(tr->ur)
-		stringAndChar(&ns, &ns_l, '\n');
-	if(!closerow && !tr->ur)
-		stringAndChar(&ns, &ns_l, DataCellChar);
+    if(tr->ur) {
+        findHeading(tr, j);
+        if(td_text_l) {
+            stringAndString(&ns, &ns_l, td_text);
+            nzFree(td_text);
+        } else stringAndNum(&ns, &ns_l, j);
+        stringAndString(&ns, &ns_l, ": ");
+    }
+    if(!td_n) return;
+    if(ttype != 1) {
+        stringAndString(&ns, &ns_l, "↑\n");
+        return;
+    }
+    if(closerow && !tr->ur)
+        stringAndChar(&ns, &ns_l, DataCellChar);
+    td_text = initString(&td_text_l);
+    td_textUnder(tagList[td_n]);
+    if(td_text_l) {
+        stringAndString(&ns, &ns_l, td_text);
+        nzFree(td_text);
+    }
+    if(tr->ur)
+        stringAndChar(&ns, &ns_l, '\n');
+    if(!closerow && !tr->ur)
+        stringAndChar(&ns, &ns_l, DataCellChar);
 }
 
 static void td2columnHeading(const Tag *tr, const Tag *td)
@@ -6256,10 +6257,7 @@ static struct htmlTag *line2table(int ln)
     return t;
 }
 
-// This routine is rather unforgiving.
-// Has to look like <table><thead><tr><th>text</th>...
-// Any intervening tags will throw it off.
-// Clearly this routine has to be expanded to cover more html layouts.
+// shc, show columns of a table. Similar to findHeading() earlier.
 bool showHeaders(int ln)
 {
     const Tag *t = line2table(ln);
@@ -6271,12 +6269,10 @@ bool showHeaders(int ln)
     if(!t) goto fail;
     ishead = (t->action == TAG_THEAD);
     t = t->firstchild;
-    if(!t || t->action != TAG_TR || !t->firstchild)
-        goto fail;
+    for(; t; t = t->sibling) if(t->action == TAG_TR) break;
+    if(!t || !t->firstchild) goto fail;
     t = t->firstchild;
-    if(t->action != TAG_TD ||
-    t->info->name[1] != 'h')
-        goto fail;
+    if(t->action != TAG_TD || t->info->name[1] != 'h') goto fail;
 // if this is tbody, one <th> isn't enough, could be a row header, we need a line of th.
     if(!ishead && !all_th(t->parent)) goto fail;
     colno = 1;

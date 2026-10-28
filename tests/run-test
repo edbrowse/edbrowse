@@ -65,6 +65,88 @@ EOF
             diff -u "$tempdir/expected" "$tempdir/rendered"
             exit 1
         fi
+        cat > "$tempdir/expected" <<'EOF'
+ok
+
+winston cigarettes
+first|middle|last
+row 1
+first: fred
+middle: t
+last: flintstone
+row 2
+first: wilma
+middle: p
+last: flintstone
+row 1
+first: betty
+middle: l
+last: rubble
+row 2
+first: bambam
+middle: y
+last: rubble
+row 3
+first: hoppy
+middle: g
+last: rubble
+row 1
+first: joe
+middle: v
+last: rockhead
+row 2
+first: anne
+middle: p
+last: margrock
+row 3
+first ⇔ last: great gazoo
+row 4
+first: 
+middle: 
+last: 
+
+<press3> {here}
+
+row 1
+1: a
+2: b
+3: {c}
+4: d
+5: e
+row 2
+1: f
+2: g
+3: c
+4: i
+5: j
+row 3
+1 ⇔ 2: kl
+3: c
+4 ⇔ 5: no
+row 4
+1: p
+2: q
+3: r
+4: no
+EOF
+        if ! "$program" -c "" -d0 table.html > "$log" 2>&1 <<EOF
+b
+,ur
+et
+w $tempdir/rendered
+q
+EOF
+        then
+            echo "table rendering process failed"
+            cat "$log"
+            exit 1
+        fi
+        if ! cmp -s "$tempdir/expected" "$tempdir/rendered"; then
+            echo "table output has changed"
+            cat "$log"
+            diff -u "$tempdir/expected" "$tempdir/rendered"
+            exit 1
+        fi
         ;;
     trace)
         if ! EDBROWSE="$program" ./trace/run-trace-alpine e \
