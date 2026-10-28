@@ -57,23 +57,23 @@ extern int jsLineno; // js line number
 extern const char * const allowableStyleElements[];
 extern int undo1line; // special undo line number
 extern char frameContent[];
-	extern const char startWindowJS[];
-	extern const char deminJS[];
-	extern const char sharedJS[];
+extern const char startWindowJS[];
+extern const char deminJS[];
+extern const char sharedJS[];
 
 #define cssDebugFile "/tmp/css"
 
 enum ej_proptype {
-	EJ_PROP_NONE,
-	EJ_PROP_STRING,
-	EJ_PROP_BOOL,
-	EJ_PROP_INT,
-	EJ_PROP_FLOAT,
-	EJ_PROP_OBJECT,
-	EJ_PROP_ARRAY,
-	EJ_PROP_FUNCTION,
-	EJ_PROP_INSTANCE,
-	EJ_PROP_NULL,
+    EJ_PROP_NONE,
+    EJ_PROP_STRING,
+    EJ_PROP_BOOL,
+    EJ_PROP_INT,
+    EJ_PROP_FLOAT,
+    EJ_PROP_OBJECT,
+    EJ_PROP_ARRAY,
+    EJ_PROP_FUNCTION,
+    EJ_PROP_INSTANCE,
+    EJ_PROP_NULL,
 };
 
 /*********************************************************************
@@ -103,7 +103,7 @@ enum { CE_7BIT, CE_8BIT, CE_QP, CE_64 };
 /* This program was originally written in perl.
  * So I got use to perl strings, which admit nulls.
  * In our case, they will be terminated by newline. */
-typedef uchar *pst;		/* perl string */
+typedef uchar *pst; // perl string
 
 /* A specific nonascii char denotes an html tag
  * in the rendered html text.
@@ -170,75 +170,73 @@ extern const char *ebrc_string; /* default ebrc file */
 // Get data from the internet. Zero the structure, set the
 // members you need, then call httpConnect.
 struct i_get {
-// the data returned from the internet fetch
-	char *buffer;
-	long long length;
-// in case you want the headers
-	char **headers_p;
-	const char *url;
-	char *urlcopy;
-	int urlcopy_l;
-	const char *custom_h; // custom http headers passed to curl
-	char *cfn; // changed filename
-	const char *thisfile;
-	char *referrer;
-	CURL *h;
-	struct ebFrame *cf; // current frame
-	const struct htmlTag *gotag; // <a> tag
-	int tsn; // thread sequence number
+    char *buffer;
+    long long length;
+    char **headers_p; // in case you want the headers
+    const char *url;
+    char *urlcopy;
+    int urlcopy_l;
+    const char *custom_h; // custom http headers passed to curl
+    char *cfn; // changed filename
+    const char *thisfile;
+    char *referrer;
+    CURL *h;
+    struct ebFrame *cf; // current frame
+    const struct htmlTag *gotag; // <a> tag
+    int tsn; // thread sequence number
 // State of download to disk, see http.c for state values.
-	int down_state;
-	int down_fd;	/* downloading file descriptor */
-	int down_msg;
-	const char *down_file;	/* downloading filename */
-	const char *down_file2;	/* without download directory */
-	int down_length;
-	bool down_ok;
-	uchar down_force;
-	bool uriEncoded;
-	bool foreground;
-	bool pg_ok; // watch for plugins
-	bool playonly; // only player plugins
-	bool csp; // content supresses plugins
-	bool headrequest;
-	bool is_http;
-	bool cacheable;
-	bool last_curlin;
-	bool move_capable;
-	char error[CURL_ERROR_SIZE + 1];
-	long code;		/* example, 404 */
-/* an assortment of variables that are gleaned from the incoming http headers */
-	char *headers;
-	int headers_len;
-/* http content type is used in many places, and isn't arbitrarily long
- * or case sensitive, so keep our own sanitized copy. */
-	char content[60];
-	char *charset;	/* extra content info such as charset */
-curl_off_t hcl;			/* http content length */
-	char *cdfn;		/* http content disposition file name */
-	time_t modtime;	/* http modification time */
-	char *etag;		/* the etag in the header */
-	char auth_realm[60];	/* WWW-Authenticate realm header */
-	char *newloc;
-	int newloc_d;
-	char *misprot;
+    int down_state;
+    int down_fd; // downloading file descriptor
+    int down_msg;
+    const char *down_file; // downloading filename
+    const char *down_file2; // without download directory
+    int down_length;
+    bool down_ok;
+    uchar down_force;
+    bool uriEncoded;
+    bool foreground;
+    bool pg_ok; // watch for plugins
+    bool playonly; // only player plugins
+    bool csp; // content supresses plugins
+    bool headrequest;
+    bool is_http;
+    bool cacheable;
+    bool last_curlin;
+    bool move_capable;
+    char error[CURL_ERROR_SIZE + 1];
+    long code; // example, 404
+// an assortment of variables that are gleaned from the incoming http headers
+    char *headers;
+    int headers_len;
+// http content type is used in many places, and isn't arbitrarily long
+//  * or case sensitive, so keep our own sanitized copy.
+    char content[60];
+    char *charset; // extra content info such as charset
+curl_off_t hcl; // http content length
+    char *cdfn; // http content disposition file name
+    time_t modtime; // http modification time
+    char *etag; // the etag in the header
+    char auth_realm[60]; // WWW-Authenticate realm header
+    char *newloc;
+    int newloc_d;
+    char *misprot;
 };
 
 struct MACCOUNT { // email account, pop3 or imap
-	char *login, *password, *from, *reply;
-	char *inurl, *outurl;
-	int inport, outport;
-	uchar inssl, outssl;
-	bool nofetch, imap, secure, maskon, maskactive, dxon, move_capable, mc_set;
-	const char *cclist[MAXCC + 1]; // extra cc directives
-	uchar cctype[MAXCC]; // cc or bcc or attach
-	const char *isub; // substring of folders
-	const char *masktext;
-	uchar maskfolder[256];
-	const char *dxtext;
-	uchar dxfolder[256];
-	uchar dxtrash;
-	char lastletter;
+    char *login, *password, *from, *reply;
+    char *inurl, *outurl;
+    int inport, outport;
+    uchar inssl, outssl;
+    bool nofetch, imap, secure, maskon, maskactive, dxon, move_capable, mc_set;
+    const char *cclist[MAXCC + 1]; // extra cc directives
+    uchar cctype[MAXCC]; // cc or bcc or attach
+    const char *isub; // substring of folders
+    const char *masktext;
+    uchar maskfolder[256];
+    const char *dxtext;
+    uchar dxfolder[256];
+    uchar dxtrash;
+    char lastletter;
 };
 extern struct MACCOUNT accounts[];	/* all the email accounts */
 extern int maxAccount;		/* how many email accounts specified */
@@ -591,74 +589,75 @@ struct tagInfo {
  * or even created by js objects. */
 struct htmlTag {
 // maintain a tree structure
-	struct htmlTag *parent, *firstchild, *sibling;
-	struct htmlTag *lastchild; // only used in html parse
-	struct ebFrame *f0; // frame that owns this tag
-	struct ebFrame *f1; // subordinate frame if this is a <frame> tag
-	jsobjtype jv;		// javascript value
-	int seqno; // tag sequence number in this window
-	char *js_file;
-	int js_ln;			// line number of javascript
-	int lic;		// list item count, highly overloaded
-	int slic; // start list item count
-	int action;
-	const struct tagInfo *info;
-	char *textval;	// for text tags only
-	const char **attributes;
-	const char **atvals;
+    struct htmlTag *parent, *firstchild, *sibling;
+    struct htmlTag *lastchild; // only used in html parse
+    struct ebFrame *f0; // frame that owns this tag
+    struct ebFrame *f1; // subordinate frame if this is a <frame> tag
+    jsobjtype jv; // javascript value
+    int seqno; // tag sequence number in this window
+    char *js_file;
+    int js_ln; // line number of javascript
+    int lic; // list item count, highly overloaded
+    int slic; // start list item count
+    int action;
+    const struct tagInfo *info;
+    char *textval; // for text tags only
+    const char **attributes;
+    const char **atvals;
 // the form that owns this input tag
-	struct htmlTag *controller;
-	pthread_t loadthread;
-	long hcode;
-	uchar step:4; // prerender, decorate, load script, runscript
-	uchar scriptgen:4; // script generated, not from source
+    struct htmlTag *controller;
+    pthread_t loadthread;
+    long hcode;
+    uchar step:4; // prerender, decorate, load script, runscript
+    uchar scriptgen:4; // script generated, not from source
 // the slash member was for the tag coresponding to <foo/>, the closing tag,
 // but we don't do that any more, just one tag for <foo> in the tree.
 // Except ... <pre> and </pre> need separate tags.
-	bool slash:1;
-	bool loadsuccess:1;
-	bool textin:1; // <a> some text </a>
-	bool deleted:1; // deleted from the current buffer
-	bool dead:1; // removed by garbage collection
-	bool contracted:1; // frame is contracted
-	bool multiple:1;
-	bool required:1;
-	bool async:1; // asynchronous script
-	bool intimer:1; // asynchronous script in timer
-	bool inxhr:1; // script is really an xhr
-	bool rdonly:1;
-	bool disabled:1;
-	bool hidden:1;
-	bool clickable:1;	// but not an input field
-	bool secure:1;
-	bool checked:1;
-	bool rchecked:1;	// for reset
-	bool post:1;		// post, rather than get
-	bool javapost:1;	// post by calling javascript
-	bool jslink:1;	// linked to a js object
-	bool expf:1; // we tried to expand this frame
-	bool mime:1;		// encode as mime, rather than url encode
-	bool plain:1;		// do not encode, rather than url encode
-	bool bymail:1;		// send by mail, rather than http
-	bool submitted:1;
-	bool onclick:1;
-	bool onchange:1;
-	bool onsubmit:1;
-	bool onreset:1;
-	bool onload:1;
-	bool onunload:1;
-	bool doorway:1; /* doorway to javascript */
-	bool visited:1;
-	bool iscolor:1;
-	bool ur:1;		// row unfolded, only for trf
-	bool inur:1;		// in ur command
-	bool threadcreated:1;
-	bool threadjoined:1;
-	bool ipass:1;
-	char subsup;		/* span turned into sup or sub */
-	uchar itype;		// input type =
-	uchar itype_minor;
-	short ninp;		/* number of nonhidden inputs */
+    bool slash:1;
+    bool loadsuccess:1;
+    bool textin:1; // <a> some text </a>
+    bool deleted:1; // deleted from the current buffer
+    bool dead:1; // removed by garbage collection
+    bool contracted:1; // frame is contracted
+    bool multiple:1;
+    bool required:1;
+    bool async:1; // asynchronous script
+    bool intimer:1; // asynchronous script in timer
+    bool inxhr:1; // script is really an xhr
+    bool rdonly:1;
+    bool disabled:1;
+    bool hidden:1;
+    bool clickable:1; // but not an input field
+    bool secure:1;
+    bool checked:1;
+    bool rchecked:1; // for reset
+    bool post:1; // post, rather than get
+    bool javapost:1; // post by calling javascript
+    bool jslink:1; // linked to a js object
+    bool expf:1; // we tried to expand this frame
+    bool mime:1; // encode as mime, rather than url encode
+    bool plain:1; // do not encode, rather than url encode
+    bool bymail:1; // send by mail, rather than http
+    bool submitted:1;
+    bool onclick:1;
+    bool onchange:1;
+    bool onsubmit:1;
+    bool onreset:1;
+    bool onload:1;
+    bool onunload:1;
+    bool doorway:1; // doorway to javascript
+    bool ibr:1; // input is followed by breakline
+    bool visited:1;
+    bool iscolor:1;
+    bool ur:1; // row unfolded, only for trf
+    bool inur:1; // in ur command
+    bool threadcreated:1;
+    bool threadjoined:1;
+    bool ipass:1;
+    char subsup; // span turned into sup or sub
+    uchar itype; // input type =
+    uchar itype_minor;
+    short ninp; // number of nonhidden inputs
 
 /*********************************************************************
 Comments on nodeName, that is, the name of the html tag,
@@ -693,14 +692,14 @@ and I'm sure they don't agree, and I'm sure neither is complete.
 We need to review all this some day.
 *********************************************************************/
 
-	char *nodeName, *nodeNameU;
-	char *value, *href;
-	const char *rvalue; /* remember this for reset */
-	char *custom_h; // http headers for a frame or xhr tag
-	char *innerHTML; /* the html string under this tag */
-	void *cssmaster;
-	int inner;		/* for inner html */
-	int highspec; // specificity of a selector that matches this node
+    char *nodeName, *nodeNameU;
+    char *value, *href;
+    const char *rvalue; /* remember this for reset */
+    char *custom_h; // http headers for a frame or xhr tag
+    char *innerHTML; /* the html string under this tag */
+    void *cssmaster;
+    int inner; // for inner html
+    int highspec; // specificity of a selector that matches this node
 };
 
 typedef struct htmlTag Tag;
