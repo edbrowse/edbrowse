@@ -1890,6 +1890,8 @@ void infShow(int tagno, const char *search)
         }
         if(v) eb_printf(" with hidden options");
     }
+    if (t->itype == INP_RADIO)
+        eb_printf("[%s]", t->value);
     if (t->itype == INP_TEXT && t->lic)
         eb_printf("[%d]", t->lic);
     if (t->itype_minor != INP_NO_MINOR)
