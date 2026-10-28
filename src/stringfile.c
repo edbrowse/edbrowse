@@ -23,14 +23,14 @@ int timerspeed = 1;
 long long fileSize;
 int ignore;
 char *downDir, *down_prefile, *home;
-bool endMarks;		// ^ $ on listed lines
-uchar dirWrite;		// directories read write
+bool endMarks; // ^ $ on listed lines
+uchar dirWrite; // directories read write
 bool dno; // directory names only
 bool displaceFiles; // when moving or copying to another directory
 char *recycleBin;
-uchar ls_sort;		// sort method for directory listing
-bool ls_reverse;		// reverse sort
-char lsformat[12];	// size date etc on a directory listing
+uchar ls_sort; // sort method for directory listing
+bool ls_reverse; // reverse sort
+char lsformat[12]; // size date etc on a directory listing
 
 /*********************************************************************
 Allocate and manage memory.
@@ -161,24 +161,22 @@ void stripWhite(char *s)
 /* compress white space */
 void spaceCrunch(char *s, bool onespace, bool unprint)
 {
-	int i, j;
-	char c;
-	bool space = true;
-	for (i = j = 0; (c = s[i]); ++i) {
-		if (isspaceByte(c)) {
-			if (!onespace)
-				continue;
-			if (!space)
-				s[j++] = ' ', space = true;
-			continue;
-		}
-		if (unprint && !isprintByte(c))
-			continue;
-		s[j++] = c, space = false;
-	}
-	if (space && j)
-		--j;		/* drop trailing space */
-	s[j] = 0;
+    int i, j;
+    char c;
+    bool space = true;
+    for (i = j = 0; (c = s[i]); ++i) {
+        if (isspaceByte(c)) {
+            if (!onespace)
+                continue;
+            if (!space)
+                s[j++] = ' ', space = true;
+            continue;
+        }
+        if (unprint && !isprintByte(c)) continue;
+        s[j++] = c, space = false;
+    }
+    if (space && j) --j; // drop trailing space
+    s[j] = 0;
 }
 
 /* Like strcpy, but able to cope with overlapping strings. */
@@ -229,111 +227,127 @@ It always starts the string at emptyString, then it grows from there.
 
 void stringAndString(char **s, int *l, const char *t)
 {
-	char *p = *s;
-	int oldlen, newlen, x;
-	oldlen = *l;
-	newlen = oldlen + strlen(t);
-	*l = newlen;
-	++newlen;		/* room for the 0 */
-	x = oldlen ^ newlen;
-	if (x > oldlen) {	/* must realloc */
-		newlen |= (newlen >> 1);
-		newlen |= (newlen >> 2);
-		newlen |= (newlen >> 4);
-		newlen |= (newlen >> 8);
-		newlen |= (newlen >> 16);
-		p = reallocString(p, newlen);
-		*s = p;
-	}
-	strcpy(p + oldlen, t);
+    char *p = *s;
+    int oldlen, newlen, x;
+    oldlen = *l;
+    const int tl = strlen(t);
+    // reject lengths that would overflow the signed int growth test below
+    if ((long long)oldlen + (long long)tl + 1 > (long long)INT_MAX)
+        i_printfExit(MSG_ErrorRealloc, (size_t)oldlen + tl);
+    newlen = oldlen + tl;
+    *l = newlen;
+    ++newlen; // room for the 0
+    x = oldlen ^ newlen;
+    if (x > oldlen) { // must realloc
+        newlen |= (newlen >> 1);
+        newlen |= (newlen >> 2);
+        newlen |= (newlen >> 4);
+        newlen |= (newlen >> 8);
+        newlen |= (newlen >> 16);
+        p = reallocString(p, newlen);
+        *s = p;
+    }
+    strcpy(p + oldlen, t);
 }
 
 // some long long versions, until we cut everything over consistently.
-// These assume the string length still fits in an int. Squash 8 bytes down to 4.
+// These assume the resulting length still fits in an int. Squash 8 bytes down to 4.
 void stringAndString8(char **s, long long *l, const char *t)
 {
-	int templength = *l;
-	stringAndString(s, &templength, t);
-	*l = templength;
+    int templength = *l;
+    if(templength != *l)
+        i_printfExit(MSG_ErrorRealloc, (size_t)*l);
+    stringAndString(s, &templength, t);
+    *l = templength;
 }
 
 void stringAndBytes(char **s, int *l, const char *t, int cnt)
 {
-	char *p = *s;
-	int oldlen, newlen, x;
-	oldlen = *l;
-	newlen = oldlen + cnt;
-	*l = newlen;
-	++newlen;
-	x = oldlen ^ newlen;
-	if (x > oldlen) {	/* must realloc */
-		newlen |= (newlen >> 1);
-		newlen |= (newlen >> 2);
-		newlen |= (newlen >> 4);
-		newlen |= (newlen >> 8);
-		newlen |= (newlen >> 16);
-		p = reallocString(p, newlen);
-		*s = p;
-	}
-	memcpy(p + oldlen, t, cnt);
-	p[oldlen + cnt] = 0;
+    char *p = *s;
+    int oldlen, newlen, x;
+    oldlen = *l;
+    // reject lengths that would overflow the signed int growth test below
+    if ((long long)oldlen + (long long)cnt + 1 > (long long)INT_MAX)
+        i_printfExit(MSG_ErrorRealloc, (size_t)oldlen + (size_t)cnt);
+    newlen = oldlen + cnt;
+    *l = newlen;
+    ++newlen;
+    x = oldlen ^ newlen;
+    if (x > oldlen) { // must realloc
+        newlen |= (newlen >> 1);
+        newlen |= (newlen >> 2);
+        newlen |= (newlen >> 4);
+        newlen |= (newlen >> 8);
+        newlen |= (newlen >> 16);
+        p = reallocString(p, newlen);
+        *s = p;
+    }
+    memcpy(p + oldlen, t, cnt);
+    p[oldlen + cnt] = 0;
 }
 
 void stringAndBytes8(char **s, long long *l, const char *t, int cnt)
 {
-	int templength = *l;
-	stringAndBytes(s, &templength, t, cnt);
-	*l = templength;
+    int templength = *l;
+    stringAndBytes(s, &templength, t, cnt);
+    *l = templength;
 }
 
 void stringAndChar(char **s, int *l, char c)
 {
-	char *p = *s;
-	int oldlen, newlen, x;
-	oldlen = *l;
-	newlen = oldlen + 1;
-	*l = newlen;
-	++newlen;
-	x = oldlen ^ newlen;
-	if (x > oldlen) {	/* must realloc */
-		newlen |= (newlen >> 1);
-		newlen |= (newlen >> 2);
-		newlen |= (newlen >> 4);
-		newlen |= (newlen >> 8);
-		newlen |= (newlen >> 16);
-		p = reallocString(p, newlen);
-		*s = p;
-	}
-	p[oldlen] = c;
-	p[oldlen + 1] = 0;
+    char *p = *s;
+    int oldlen, newlen, x;
+    oldlen = *l;
+    // reject lengths that would overflow the signed int growth test below
+    if ((long long)oldlen + 1 + 1 > (long long)INT_MAX)
+        i_printfExit(MSG_ErrorRealloc, (size_t)oldlen + 1);
+    newlen = oldlen + 1;
+    *l = newlen;
+    ++newlen;
+    x = oldlen ^ newlen;
+    if (x > oldlen) { // must realloc
+        newlen |= (newlen >> 1);
+        newlen |= (newlen >> 2);
+        newlen |= (newlen >> 4);
+        newlen |= (newlen >> 8);
+        newlen |= (newlen >> 16);
+        p = reallocString(p, newlen);
+        *s = p;
+    }
+    p[oldlen] = c;
+    p[oldlen + 1] = 0;
 }
 
 void stringAndChar8(char **s, long long *l, char c)
 {
-	int templength = *l;
-	stringAndChar(s, &templength, c);
-	*l = templength;
+    int templength = *l;
+    if(templength != *l)
+        i_printfExit(MSG_ErrorRealloc, (size_t)*l);
+    stringAndChar(s, &templength, c);
+    *l = templength;
 }
 
 void stringAndNum(char **s, int *l, int n)
 {
-	char a[16];
-	sprintf(a, "%d", n);
-	stringAndString(s, l, a);
+    char a[16];
+    sprintf(a, "%d", n);
+    stringAndString(s, l, a);
 }
 
 void stringAndNum8(char **s, long long *l, int n)
 {
-	int templength = *l;
-	stringAndNum(s, &templength, n);
-	*l = templength;
+    int templength = *l;
+    if(templength != *l)
+        i_printfExit(MSG_ErrorRealloc, (size_t)*l);
+    stringAndNum(s, &templength, n);
+    *l = templength;
 }
 
 void stringAndLongLong(char **s, int *l, long long n)
 {
-	char a[32];
-	sprintf(a, "%lld", n);
-	stringAndString(s, l, a);
+    char a[32];
+    sprintf(a, "%lld", n);
+    stringAndString(s, l, a);
 }
 
 char *cloneString(const char *s)
@@ -368,7 +382,7 @@ void leftClipString(char *s)
 		strmove(s, t);
 }
 
-/* shift string one to the right */
+// shift string one to the right
 void shiftRight(char *s, char first)
 {
 	int l = strlen(s);
