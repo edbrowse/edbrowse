@@ -884,30 +884,32 @@ void run_function_onestring_win(const Frame *f, const char *name, const char *s)
 }
 
 static 	const char *bp_string =
-	  ";(function(arg$,l$ne){if(l$ne) alert('break at line ' + l$ne); while(true){var res = prompt('bp'); if(!res) continue; if(res === '.') break; try { res = eval(res); alert(res); } catch(e) { alert(e.toString()); }}}).call(this,(typeof arguments=='object'?arguments:[]),\"";
+    ";(function(arg$,l$ne){if(l$ne) alert('break at line ' + l$ne); while(true){var res = prompt('bp'); if(!res) continue; if(res === '.') break; try { res = eval(res); alert(res); } catch(e) { alert(e.toString()); }}}).call(this,(typeof arguments=='object'?arguments:[]),\"";
 static 	const char *trace_string =
-	  ";(function(arg$,l$ne){ var t$t=trace$ch(l$ne); if(t$t == 0) return; if(t$t == 1) { alert3(step$val); return; } alert('break at line ' + step$val); while(true){var res = prompt('bp'); if(!res) continue; if(res === '.') break; try { res = eval(res); alert(res); } catch(e) { alert(e.toString()); }}}).call(this,(typeof arguments=='object'?arguments:[]),\"";
+    ";(function(arg$,l$ne){ var t$t=trace$ch(l$ne); if(t$t == 0) return; if(t$t == 1) { alert3(step$val); return; } alert('break at line ' + step$val); while(true){var res = prompt('bp'); if(!res) continue; if(res === '.') break; try { res = eval(res); alert(res); } catch(e) { alert(e.toString()); }}}).call(this,(typeof arguments=='object'?arguments:[]),\"";
 static char *run_script(JSContext *cx, const char *s)
 {
     char *result = NULL;
     JSValue r;
     char *s2 = NULL;
     const char *s3;
-    const char *ebnobp = getenv("EBNOBP");
     int commapresent;
+    const char *next_trace = strstr(s, "trace@(");
+    const char *next_bp = strstr(s, "bp@(");
 
 // special debugging code to replace bp@ and trace@ with expanded macros.
 // Warning: breakpoints and tracing can change the flow of execution
 // in unusual cases, e.g. when a js verifyer checks f.toString(),
 // and of course it will be very different with the debugging stuff in it.
-    if ((!ebnobp || !*ebnobp) && (strstr(s, "bp@(") || strstr(s, "trace@("))) {
+    if(next_trace || next_bp) {
+        const int trace_string_l = strlen(trace_string);
+        const int bp_string_l = strlen(bp_string);
         int l;
         const char *u, *v1, *v2;
         s2 = initString(&l);
         u = s;
         while (true) {
-            v1 = strstr(u, "bp@(");
-            v2 = strstr(u, "trace@(");
+            v1 = next_trace, v2 = next_bp;
             if (v1 && v2 && v2 < v1) v1 = v2;
             if (!v1) v1 = v2;
             if (!v1) break;
@@ -920,16 +922,21 @@ static char *run_script(JSContext *cx, const char *s)
 
             while(l && s2[l-1] == ' ') s2[--l] = 0;
             commapresent = (l && s2[l-1] == ',');
-            stringAndString(&s2, &l, (
-                *v1 == 'b' ?
-                bp_string + commapresent :
-                trace_string + commapresent));
+            if(*v1 == 'b') {
+                stringAndBytes(&s2, &l, bp_string + commapresent,
+                bp_string_l - commapresent);
+                next_bp = strstr(v1 + 4, "bp@(");
+            } else {
+                stringAndBytes(&s2, &l, trace_string + commapresent,
+                trace_string_l - commapresent);
+                next_trace = strstr(v1 + 7, "trace@(");
+            }
 
 // paste in the argument to bp@(x) or trace@(x)
             v1 = strchr(v1, '(') + 1;
             v2 = strchr(v1, ')');
             stringAndBytes(&s2, &l, v1, v2 - v1);
-            stringAndString(&s2, &l, "\");");
+            stringAndBytes(&s2, &l, "\");", 3);
             u = ++v2;
             while(*u == ' ') ++u;
 // commapresent on the other side, don't need trailing ;
