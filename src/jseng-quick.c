@@ -937,6 +937,7 @@ static char *run_script(JSContext *cx, const char *s)
 
         }
         stringAndString(&s2, &l, u);
+        debugPrint(3, "trace expanded");
     }
 
     s3 = (s2 ? s2 : s);
