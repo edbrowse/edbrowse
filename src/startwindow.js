@@ -670,6 +670,11 @@ class Node extends EventTarget
         }
 
         this.inner$HTML = h;
+        if(/\0/.test(h)) {
+            alert3("null changed to space in innerHTML");
+            h = h.replace(/\0/g, ' ');
+        }
+
         // Put some tags around the html so we can parse it.
         h = `<body>${h}</body>`;
         // Have to make a copy of the old nodes, the ones that are
