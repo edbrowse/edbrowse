@@ -887,6 +887,7 @@ static 	const char *bp_string =
     ";(function(arg$,l$ne){if(l$ne) alert('break at line ' + l$ne); while(true){var res = prompt('bp'); if(!res) continue; if(res === '.') break; try { res = eval(res); alert(res); } catch(e) { alert(e.toString()); }}}).call(this,(typeof arguments=='object'?arguments:[]),\"";
 static 	const char *trace_string =
     ";(function(arg$,l$ne){ var t$t=trace$ch(l$ne); if(t$t == 0) return; if(t$t == 1) { alert3(step$val); return; } alert('break at line ' + step$val); while(true){var res = prompt('bp'); if(!res) continue; if(res === '.') break; try { res = eval(res); alert(res); } catch(e) { alert(e.toString()); }}}).call(this,(typeof arguments=='object'?arguments:[]),\"";
+static bool scriptResultTruncated;
 static char *run_script(JSContext *cx, const char *s)
 {
     char *result = NULL;
@@ -896,6 +897,7 @@ static char *run_script(JSContext *cx, const char *s)
     int commapresent;
     const char *next_trace = strstr(s, "trace@(");
     const char *next_bp = strstr(s, "bp@(");
+    scriptResultTruncated = false;
 
 // special debugging code to replace bp@ and trace@ with expanded macros.
 // Warning: breakpoints and tracing can change the flow of execution
@@ -953,9 +955,13 @@ static char *run_script(JSContext *cx, const char *s)
     nzFree(s2);
     if (intFlag) i_puts(MSG_Interrupted);
     if (!JS_IsException(r)) {
-        s = JS_ToCString(cx, r);
-        if(s && *s) result = cloneString(s);
-        JS_ReleaseString(s);
+        size_t ilen; // internal length of the string
+        s = JS_ToCStringLen(cx, &ilen, r);
+        if(s) {
+            result = cloneString(s);
+            if(ilen > strlen(s)) scriptResultTruncated = true;
+            JS_ReleaseString(s);
+        }
     } else processError(cx);
     JS_Release(r);
     return result;
@@ -1044,7 +1050,11 @@ void jsRunScript_t(const Tag *t, const char *str, const char *filename, int line
 
 char *jsRunScriptWinResult(const char *str, const char *filename, int lineno)
 {
-    return jsRunScriptResult(cf, str, filename, lineno);
+    char *result =  jsRunScriptResult(cf, str, filename, lineno);
+// so far this is only used from jdb,  expression or expression ^> file,
+// so it makes sense to print this at db1, maybe even db0
+    if(scriptResultTruncated) debugPrint(1, "script returns string with embedded null bytes, the result may be truncated");
+    return result;
 }
 
 static JSValue create_event(JSContext *cx, JSValueConst parent, const char *evname)
