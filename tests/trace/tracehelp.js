@@ -78,7 +78,9 @@ case "function": return x.name;
 case "string":
 l = x.length;
 if(l > 60) x = x.substr(0,60) + "...";
-return x.replace(/\n/g, "\\n");
+x = x.replace(/\n/g, "\\n");
+x = x.replace(/\0/g, "\\0");
+return x;
 case "object":
 if(Array.isArray(x)) {
 l = x.length;
