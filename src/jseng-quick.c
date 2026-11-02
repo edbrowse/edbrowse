@@ -41,8 +41,8 @@ so we have to bounce through the master window context.
 #define JS_Release(v) JS_FreeValueRT(jsrt, v)
 #define JS_ReleaseString(s) JS_FreeCString(mwc, s)
 
-const char *jsSourceFile;	// sourcefile providing the javascript
-int jsLineno;			// line number
+const char *jsSourceFile; // sourcefile providing the javascript
+int jsLineno; // line number
 static int js_eval_flag = JS_EVAL_TYPE_GLOBAL; // global, module etc
 static bool js_running;
 static JSContext *mwc; // master window context
@@ -106,7 +106,7 @@ static enum ej_proptype top_proptype(JSContext *cx, JSValueConst v)
 		return EJ_PROP_STRING;
 	if(JS_IsObject(v))
 		return EJ_PROP_OBJECT;
-	return EJ_PROP_NONE;	// don't know
+	return EJ_PROP_NONE; // don't know
 }
 
 static enum ej_proptype typeof_property(JSContext *cx, JSValueConst parent, const char *name)
@@ -228,8 +228,8 @@ static JSValue get_array_element_object(JSContext *cx, JSValue parent, int idx)
  * The result, coming from get_property_string, is allocated. */
 static char *get_property_url(JSContext *cx, JSValueConst owner, bool action)
 {
-	enum ej_proptype mtype;	/* member type */
-	JSValue uo = JS_UNDEFINED;	/* url object */
+	enum ej_proptype mtype; // member type
+	JSValue uo = JS_UNDEFINED; // url object
 	char *s;
 	if (action) {
 		mtype = typeof_property(cx, owner, "action");
@@ -595,7 +595,7 @@ Function encounters an error during execution. false.
 
 static bool run_function_bool(JSContext *cx, JSValueConst parent, const char *name)
 {
-	int dbl = 3;		// debug level to print debug messages
+	int dbl = 3; // debug level to print debug messages
 	int32_t seqno = -1;
 		JSValue v, r, l[1];
 
@@ -1072,7 +1072,7 @@ static JSValue create_event(JSContext *cx, JSValueConst parent, const char *evna
 static bool run_event(JSContext *cx, JSValueConst obj, const char *evname)
 {
     int rc;
-    JSValue eo;	// created event object
+    JSValue eo; // created event object
     eo = create_event(cx, obj, evname);
     set_property_bool(cx, eo, "eb$captures", false);
     set_property_bool(cx, eo, "bubbles", false);
@@ -1083,38 +1083,38 @@ static bool run_event(JSContext *cx, JSValueConst obj, const char *evname)
 
 bool run_event_t(const Tag *t, const char *evname)
 {
-	if (!allowJS || !t->jslink)
-		return true;
-	return run_event(t->f0->cx, *((JSValue*)t->jv), evname);
+    if (!allowJS || !t->jslink)
+        return true;
+    return run_event(t->f0->cx, *((JSValue*)t->jv), evname);
 }
 
 bool run_event_win(const Frame *f, const char *evname)
 {
-	if (!allowJS || !f->jslink)
-		return true;
-	return run_event(f->cx, *((JSValue*)f->winobj), evname);
+    if (!allowJS || !f->jslink)
+        return true;
+    return run_event(f->cx, *((JSValue*)f->winobj), evname);
 }
 
 bool run_event_doc(const Frame *f, const char *evname)
 {
-	if (!allowJS || !f->jslink)
-		return true;
-	return run_event(f->cx, *((JSValue*)f->docobj), evname);
+    if (!allowJS || !f->jslink)
+        return true;
+    return run_event(f->cx, *((JSValue*)f->docobj), evname);
 }
 
 // Allow event propagation
 bool bubble_event_t(const Tag *t, const char *name)
 {
-	JSContext *cx;
-	JSValue e;		// the event object
-	bool rc;
-	if (!allowJS || !t || !t->jslink)
-		return true;
-	cx = t->f0->cx;
-	e = create_event(cx, *((JSValue*)t->jv), name);
-	rc = run_function_onearg(cx, *((JSValue*)t->jv), "dispatchEvent", e);
-	JS_Release(e);
-	return rc;
+    JSContext *cx;
+    JSValue e; // the event object
+    bool rc;
+    if (!allowJS || !t || !t->jslink)
+        return true;
+    cx = t->f0->cx;
+    e = create_event(cx, *((JSValue*)t->jv), name);
+    rc = run_function_onearg(cx, *((JSValue*)t->jv), "dispatchEvent", e);
+    JS_Release(e);
+    return rc;
 }
 
 /*********************************************************************
@@ -1146,7 +1146,7 @@ static void uptrace(JSContext * cx, JSValueConst node)
 	}
 	infunction = true;
 	while (true) {
-		const char *nn = 0, *cn = 0;	// node name class name
+		const char *nn = 0, *cn = 0; // node name class name
 		JSValue nnv, cnv;
 		char buf[120];
 		nnv = JS_GetPropertyStr(cx, node, "nodeName");
@@ -1285,7 +1285,7 @@ void disconnectTagObject(Tag *t)
 // this is for frame expansion
 void reconnectTagObject(Tag *t)
 {
-	JSValue cdo;	// contentDocument object
+	JSValue cdo; // contentDocument object
 	cdo = JS_DupValue(cf->cx, *((JSValue*)cf->docobj));
 // this duplication represents a regrab on the document object.
 // It will be freed when the frame is freed, and when the document tag is disconnected.
@@ -1860,7 +1860,7 @@ static JSValue nat_unframe(JSContext * cx, JSValueConst this, int argc, JSValueC
 		f->next = f1->next;
 		freeFrame(f1);
 	// cdt use to belong to f1, which no longer exists.
-		cdt->f0 = f;		// back to its parent frame
+		cdt->f0 = f; // back to its parent frame
 	// A running frame could create nodes in its parent frame, or any other frame.
 		n = 0;
 		for (i = 0; i < cw->numTags; ++i) {
@@ -1920,7 +1920,7 @@ JSValueConst a_j, JSValueConst b_j)
     const char *a_name, *b_name; // node name of parent, a, and b
     Tag *parent, *add, *before, *c, *t;
     int action;
-    char *jst;		// generic javascript string
+    char *jst; // generic javascript string
     JSContext *cx = cf->cx;
 
 // Some functions in demin.js create, link, and then remove nodes, before
@@ -2173,8 +2173,8 @@ static JSValue nat_characterData(JSContext * cx, JSValueConst this, int argc, JS
 
 static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueConst *argv, bool isInterval)
 {
-	JSValue to;		// timer object
-	JSValue fo;		// function object
+	JSValue to; // timer object
+	JSValue fo; // function object
 // fo is handled differently, I don't grab and release as there will
 // be just one at the end, and it will become a timer property.
 	JSValue g = *(JSValue*)cf->winobj;
@@ -2182,8 +2182,8 @@ static JSValue set_timeout(JSContext * cx, JSValueConst this, int argc, JSValueC
 	int32_t n = 0;
 	JSValue r = JS_UNDEFINED;
 	const char *body; // function body
-	char fname[48];		/* function name */
-	const char *fstr;	/* function string */
+	char fname[48]; // function name
+	const char *fstr; // function string
 	static char fpn[24]; // fake property name
 	const char *s;
 
@@ -3595,105 +3595,105 @@ void createJSContext(Frame *f)
 
 static void setup_window_2(void)
 {
-	JSContext *cx = cf->cx;	// current context
-	JSValue w = *((JSValue*)cf->winobj);	// window object
-	JSValue d;
-	JSValue nav;		// navigator object
-	JSValue navpi;	// navigator plugins
-	JSValue navmt;	// navigator mime types
-	JSValue hist;		// history object
-	struct MIMETYPE *mt;
-	struct utsname ubuf;
-	int i;
-	char save_c;
+    JSContext *cx = cf->cx; // current context
+    JSValue w = *((JSValue*)cf->winobj); // window object
+    JSValue d;
+    JSValue nav; // navigator object
+    JSValue navpi; // navigator plugins
+    JSValue navmt; // navigator mime types
+    JSValue hist; // history object
+    struct MIMETYPE *mt;
+    struct utsname ubuf;
+    int i;
+    char save_c;
 
-	set_property_object(cx, w, "window", w);
+    set_property_object(cx, w, "window", w);
 
 /* the js window/document setup script.
  * These are all the things that do not depend on the platform,
  * OS, configurations, etc. */
-	jsRunScriptWin(startWindowJS, "startwindow.js", 1);
+    jsRunScriptWin(startWindowJS, "startwindow.js", 1);
 
-	d = JS_GetPropertyStr(cx, w, "document");
-	cf->docobj = allocMem(sizeof(JSValue));
-	*((JSValue*)cf->docobj) = d;
+    d = JS_GetPropertyStr(cx, w, "document");
+    cf->docobj = allocMem(sizeof(JSValue));
+    *((JSValue*)cf->docobj) = d;
 // we are responsible for this js value, and will be using it
 // as long as this frame exists.
 
-	nav = get_property_object(cx, w, "navigator");
-	if (JS_IsUndefined(nav))
-		return;
+    nav = get_property_object(cx, w, "navigator");
+    if (JS_IsUndefined(nav))
+        return;
 /* some of the navigator is in startwindow.js; the runtime properties are here. */
-	set_property_string(cx, nav, "userLanguage", supported_languages[eb_lang]);
-	set_property_string(cx, nav, "language", eb_language);
-	set_property_string(cx, nav, "appVersion", version);
-	set_property_string(cx, nav, "vendorSub", version);
-	set_property_string(cx, nav, "userAgent", currentAgent);
-	uname(&ubuf);
-	set_property_string(cx, nav, "oscpu", ubuf.sysname);
-	set_property_string(cx, nav, "platform", ubuf.machine);
+    set_property_string(cx, nav, "userLanguage", supported_languages[eb_lang]);
+    set_property_string(cx, nav, "language", eb_language);
+    set_property_string(cx, nav, "appVersion", version);
+    set_property_string(cx, nav, "vendorSub", version);
+    set_property_string(cx, nav, "userAgent", currentAgent);
+    uname(&ubuf);
+    set_property_string(cx, nav, "oscpu", ubuf.sysname);
+    set_property_string(cx, nav, "platform", ubuf.machine);
 
 /* Build the array of mime types and plugins,
  * according to the entries in the config file. */
-	navpi = get_property_object(cx, nav, "plugins");
-	navmt = get_property_object(cx, nav, "mimeTypes");
-	if (JS_IsUndefined(navpi) || JS_IsUndefined(navmt))
-		return;
-	mt = mimetypes;
-	for (i = 0; i < maxMime; ++i, ++mt) {
-		int len;
+    navpi = get_property_object(cx, nav, "plugins");
+    navmt = get_property_object(cx, nav, "mimeTypes");
+    if (JS_IsUndefined(navpi) || JS_IsUndefined(navmt))
+        return;
+    mt = mimetypes;
+    for (i = 0; i < maxMime; ++i, ++mt) {
+        int len;
 // po is the plugin object and mo is the mime object
 // This structure isn't really right.
-		JSValue po = instantiate_array_element(cx, navpi, i, 0);
-		JSValue mo = instantiate_array_element(cx, navmt, i, 0);
-		if (JS_IsUndefined(po) || JS_IsUndefined(mo))
-			return;
-		set_property_object(cx, mo, "enabledPlugin", po);
-		if(mt->type) {
-			set_property_string(cx, mo, "type", mt->type);
-		set_property_object(cx, navmt, mt->type, mo);
-		}
-		if(mt->desc)
-			set_property_string(cx, mo, "description", mt->desc);
-		if(mt->suffix)
-			set_property_string(cx, mo, "suffixes", mt->suffix);
+        JSValue po = instantiate_array_element(cx, navpi, i, 0);
+        JSValue mo = instantiate_array_element(cx, navmt, i, 0);
+        if (JS_IsUndefined(po) || JS_IsUndefined(mo))
+            return;
+        set_property_object(cx, mo, "enabledPlugin", po);
+        if(mt->type) {
+            set_property_string(cx, mo, "type", mt->type);
+        set_property_object(cx, navmt, mt->type, mo);
+        }
+        if(mt->desc)
+            set_property_string(cx, mo, "description", mt->desc);
+        if(mt->suffix)
+            set_property_string(cx, mo, "suffixes", mt->suffix);
 /* I don't really have enough information from the config file to fill
  * in the attributes of the plugin object.
  * I'm just going to fake it.
  * Description will be the same as that of the mime type,
  * and the filename will be the program to run.
  * No idea if this is right or not. */
-		if(mt->desc)
-			set_property_string(cx, po, "description", mt->desc);
-		set_property_string(cx, po, "filename", mt->program);
+        if(mt->desc)
+            set_property_string(cx, po, "description", mt->desc);
+        set_property_string(cx, po, "filename", mt->program);
 // For the name, how about the program without its options?
-		len = strcspn(mt->program, " \t");
-		save_c = mt->program[len];
-		mt->program[len] = 0;
-		set_property_string(cx, po, "name", mt->program);
-		mt->program[len] = save_c;
-		set_property_number(cx, po, "length", 1);
-		set_property_object(cx, po, "0", mo);
-		JS_Release(mo);
-		JS_Release(po);
-	}
-	JS_Release(navpi);
-	JS_Release(navmt);
-	JS_Release(nav);
+        len = strcspn(mt->program, " \t");
+        save_c = mt->program[len];
+        mt->program[len] = 0;
+        set_property_string(cx, po, "name", mt->program);
+        mt->program[len] = save_c;
+        set_property_number(cx, po, "length", 1);
+        set_property_object(cx, po, "0", mo);
+        JS_Release(mo);
+        JS_Release(po);
+    }
+    JS_Release(navpi);
+    JS_Release(navmt);
+    JS_Release(nav);
 
-	hist = get_property_object(cx, w, "history");
-	if (JS_IsUndefined(hist))
-		return;
-	set_property_string(cx, hist, "current", cf->fileName);
-	JS_Release(hist);
+    hist = get_property_object(cx, w, "history");
+    if (JS_IsUndefined(hist))
+        return;
+    set_property_string(cx, hist, "current", cf->fileName);
+    JS_Release(hist);
 
-	set_property_string(cx, d, "referrer", cw->referrer);
-	char *wpc; // webpage with secret code
-	createFormattedString(&wpc, "Wp`Set@%s", cf->fileName);
-	set_property_string(cx, w, "location", wpc);
-	set_property_string(cx, d, "location", wpc);
-	free(wpc);
-	set_property_string(cx, d, "domain", getHostURL(cf->fileName));
+    set_property_string(cx, d, "referrer", cw->referrer);
+    char *wpc; // webpage with secret code
+    createFormattedString(&wpc, "Wp`Set@%s", cf->fileName);
+    set_property_string(cx, w, "location", wpc);
+    set_property_string(cx, d, "location", wpc);
+    free(wpc);
+    set_property_string(cx, d, "domain", getHostURL(cf->fileName));
 }
 
 void freeJSContext(Frame *f)
@@ -3768,7 +3768,7 @@ void establish_js_option(Tag *t, Tag *sel, Tag *og)
 {
     bool is_dl = (sel->action == TAG_DATAL);
     JSContext *cx = cf->cx; // context
-    JSValue oo;		// option object
+    JSValue oo; // option object
     JSValue selobj; // select object or datalist object
     if(!sel->jslink) return;
     selobj = *((JSValue*)sel->jv);
@@ -3800,7 +3800,7 @@ int extra) // bits: radio, window, document, unknown
 {
     JSContext *cx = cf->cx;
     JSValue owner = JS_NULL;
-    JSValue io = JS_UNDEFINED;	// the input object
+    JSValue io = JS_UNDEFINED; // the input object
     int action = t->action;
     uchar isunknown = (extra&8);
 
@@ -3878,28 +3878,28 @@ static void rebuildSelector(Tag *sel, JSValue oa, int len2)
 
 void rebuildSelectors(void)
 {
-	int i1;
-	Tag *t;
-	JSContext *cx;
-	JSValue oa;		/* option array */
-	int len;		/* length of option array */
+    int i1;
+    Tag *t;
+    JSContext *cx;
+    JSValue oa; // option array
+    int len; // length of option array
 
-	for (i1 = 0; i1 < cw->numTags; ++i1) {
-		t = tagList[i1];
-		if (!t->jslink || (t->action != TAG_DATAL &&
-		(t->action != TAG_INPUT || t->itype != INP_SELECT)))
-			continue;
+    for (i1 = 0; i1 < cw->numTags; ++i1) {
+        t = tagList[i1];
+        if (!t->jslink || (t->action != TAG_DATAL &&
+        (t->action != TAG_INPUT || t->itype != INP_SELECT)))
+            continue;
 
 // there should always be an options array, if not then move on
-	cx = t->f0->cx;
-		oa = get_property_object(cx, *((JSValue*)t->jv), "options");
-		if(JS_IsUndefined(oa))
-			continue;
-		if ((len = get_arraylength(cx, oa)) < 0)
-			continue;
-		rebuildSelector(t, oa, len);
-		JS_Release(oa);
-	}
+    cx = t->f0->cx;
+        oa = get_property_object(cx, *((JSValue*)t->jv), "options");
+        if(JS_IsUndefined(oa))
+            continue;
+        if ((len = get_arraylength(cx, oa)) < 0)
+            continue;
+        rebuildSelector(t, oa, len);
+        JS_Release(oa);
+    }
 }
 
 // see if we have a shadow root
