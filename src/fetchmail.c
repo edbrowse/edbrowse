@@ -69,141 +69,137 @@ static void freeMailInfo(struct MHINFO *w)
 
 static void writeAttachment(struct MHINFO *w)
 {
-	const char *atname;
-	int length = w->end - w-> start;
-	if ((ismc | ignoreImages | !attimg) && w->atimage)
-		return;		/* image ignored */
-	if (w->pgp)
-		return;		/* Ignore PGP signatures. */
-	if (w->error64 == BAD_BASE64_DECODE)
-		i_printf(MSG_Abbreviated);
-	if (!length) {
-		i_printf(MSG_AttEmpty);
-		if (w->cfn[0])
-			printf(" %s", w->cfn);
-		nl();
-		atname = "x";
-	} else {
-		i_printf(MSG_Att);
-		atname = getFileName(MSG_FileName, (w->cfn[0] ? w->cfn : 0),
-				     true, false, length);
-		if(!isInteractive) puts(atname);
-/* X is like x, but deletes all future images */
-		if (stringEqual(atname, "X")) {
-			atname = "x";
-			ignoreImages = true;
-		}
-	}
-	if (!ismc && stringEqual(atname, "e")) {
-		int cx, svcx = context;
-		for (cx = 1; cx < MAXSESSION; ++cx)
-			if (!sessionList[cx].lw)
-				break;
-		if (cx == MAXSESSION) {
-			i_printf(MSG_AttNoBuffer);
-		} else {
-			cxSwitch(cx, false);
-			i_printf(MSG_SessionX, cx);
-			if (!looksBinary((uchar *) w->start, length)) {
-				diagnoseAndConvert(&w->start, &w->startAllocated, &length, true, true);
-				w->end = w->start + length; // in case of realloc
-	} else if (binaryDetect & !cw->binMode) {
-		if(debugLevel > 0) i_puts(MSG_BinaryData);
-		cw->binMode = true;
-	}
-			if (!addTextToBuffer
-			    ((pst) w->start, length, 0, false))
-				i_printf(MSG_AttNoCopy, cx);
-			else {
-				if (debugLevel > 0) printf("%d\n", length);
-				if (w->cfn[0])
-					cf->fileName = cloneString(w->cfn);
-				cw->changeMode = false;
-			}
-			cxSwitch(svcx, false);	/* back to where we were */
-		}
-	} else if (!stringEqual(atname, "x")) {
-		int fh =
-		    open(atname, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC | O_CLOEXEC,
-			 MODE_rw);
-		if (fh < 0) {
-			i_printf(MSG_AttNoSave, atname);
-			if (ismc)
-				exit(1);
-		} else {
-			int nb = w->end - w->start;
-			if (write(fh, w->start, nb) < nb) {
-				i_printf(MSG_AttNoWrite, atname);
-				if (ismc)
-					exit(1);
-			}
-			close(fh);
-		}
-	}
+    const char *atname;
+    int length = w->end - w-> start;
+    if ((ismc | ignoreImages | !attimg) && w->atimage)
+        return; // image ignored
+    if (w->pgp)
+        return; // Ignore PGP signatures.
+    if (w->error64 == BAD_BASE64_DECODE)
+        i_printf(MSG_Abbreviated);
+    if (!length) {
+        i_printf(MSG_AttEmpty);
+        if (w->cfn[0])
+            printf(" %s", w->cfn);
+        nl();
+        atname = "x";
+    } else {
+        i_printf(MSG_Att);
+        atname = getFileName(MSG_FileName, (w->cfn[0] ? w->cfn : 0),
+        true, false, length);
+        if(!isInteractive) puts(atname);
+// X is like x, but deletes all future images
+        if (stringEqual(atname, "X")) {
+            atname = "x";
+            ignoreImages = true;
+        }
+    }
+    if (!ismc && stringEqual(atname, "e")) {
+        int cx, svcx = context;
+        for (cx = 1; cx < MAXSESSION; ++cx)
+            if (!sessionList[cx].lw) break;
+        if (cx == MAXSESSION) {
+            i_printf(MSG_AttNoBuffer);
+        } else {
+            cxSwitch(cx, false);
+            i_printf(MSG_SessionX, cx);
+            if (!looksBinary((uchar *) w->start, length)) {
+                diagnoseAndConvert(&w->start, &w->startAllocated, &length, true, true);
+                w->end = w->start + length; // in case of realloc
+    } else if (binaryDetect & !cw->binMode) {
+        if(debugLevel > 0) i_puts(MSG_BinaryData);
+        cw->binMode = true;
+    }
+            if (!addTextToBuffer((pst) w->start, length, 0, false))
+                i_printf(MSG_AttNoCopy, cx);
+            else {
+                if (debugLevel > 0) printf("%d\n", length);
+                if (w->cfn[0])
+                    cf->fileName = cloneString(w->cfn);
+                cw->changeMode = false;
+            }
+            cxSwitch(svcx, false); // back to where we were
+        }
+    } else if (!stringEqual(atname, "x")) {
+        int fh = open(atname, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC |
+        O_CLOEXEC, MODE_rw);
+        if (fh < 0) {
+            i_printf(MSG_AttNoSave, atname);
+            if (ismc)
+                exit(1);
+        } else {
+            int nb = w->end - w->start;
+            if (write(fh, w->start, nb) < nb) {
+                i_printf(MSG_AttNoWrite, atname);
+                if (ismc) exit(1);
+            }
+            close(fh);
+        }
+    }
 }
 
 static void writeAttachments(struct MHINFO *w)
 {
-	struct MHINFO *v;
-	if (w->doAttach) {
-		writeAttachment(w);
-	} else {
-		foreach(v, w->components)
-		    writeAttachments(v);
-	}
+    struct MHINFO *v;
+    if (w->doAttach) {
+        writeAttachment(w);
+    } else {
+        foreach(v, w->components)
+            writeAttachments(v);
+    }
 }
 
 static void linkAttachment(struct MHINFO *w)
 {
-	char *e;
-	        if (w->start == w->end) {
-		debugPrint(3, "skipping empty attachment");
-		return;
-	}
+    char *e;
+            if (w->start == w->end) {
+        debugPrint(3, "skipping empty attachment");
+        return;
+    }
 // The irony - it probably came in base64, I turned it into binary,
 // now I'm turning it back into base64, so that edbrowse can once again
 // turn it into binary when you click on the hyperlink.
-	stringAndString(&imapLines, &iml_l, "<br><a href='data:");
-// can't we pull content-type out of the attachment and put it in here?
-	stringAndString(&imapLines, &iml_l,  "unknown");
-	stringAndString(&imapLines, &iml_l, ";base64,");
-	e = base64Encode(w->start, w->end - w->start, false);
-	stringAndString(&imapLines, &iml_l, e);
-	nzFree(e);
-	if (w->cfn[0]) {
-		stringAndString(&imapLines, &iml_l,  "' download='");
-		e = htmlEscape(w->cfn);
-		stringAndString(&imapLines, &iml_l,  e);
-		nzFree(e);
-	}
-	stringAndString(&imapLines, &iml_l, "' attimg=");
-	stringAndChar(&imapLines, &iml_l, (w->atimage ? 'y' : 'n'));
-	stringAndString(&imapLines, &iml_l, ">Attachment");
-	if (w->cfn[0]) {
-		stringAndChar(&imapLines, &iml_l,  ' ');
-		e = htmlEscape(w->cfn);
-		stringAndString(&imapLines, &iml_l,  e);
-		nzFree(e);
-	}
-	stringAndChar(&imapLines, &iml_l, ' ');
-	stringAndString(&imapLines, &iml_l,  conciseSize(w->end - w->start));
-	if(w->error64)
-		stringAndString(&imapLines, &iml_l, " with base64 encoding errors");
-	stringAndString(&imapLines, &iml_l, "</a>\n");
+    stringAndString(&imapLines, &iml_l, "<br><a href='data:");
+    // can't we pull content-type out of the attachment and put it in here?
+    stringAndString(&imapLines, &iml_l,  "unknown");
+    stringAndString(&imapLines, &iml_l, ";base64,");
+    e = base64Encode(w->start, w->end - w->start, false);
+    stringAndString(&imapLines, &iml_l, e);
+    nzFree(e);
+    if (w->cfn[0]) {
+        stringAndString(&imapLines, &iml_l,  "' download='");
+        e = htmlEscape(w->cfn);
+        stringAndString(&imapLines, &iml_l,  e);
+        nzFree(e);
+    }
+    stringAndString(&imapLines, &iml_l, "' attimg=");
+    stringAndChar(&imapLines, &iml_l, (w->atimage ? 'y' : 'n'));
+    stringAndString(&imapLines, &iml_l, ">Attachment");
+    if (w->cfn[0]) {
+        stringAndChar(&imapLines, &iml_l,  ' ');
+        e = htmlEscape(w->cfn);
+        stringAndString(&imapLines, &iml_l,  e);
+        nzFree(e);
+    }
+    stringAndChar(&imapLines, &iml_l, ' ');
+    stringAndString(&imapLines, &iml_l,  conciseSize(w->end - w->start));
+    if(w->error64)
+        stringAndString(&imapLines, &iml_l, " with base64 encoding errors");
+    stringAndString(&imapLines, &iml_l, "</a>\n");
 }
 
 static void linkAttachments(struct MHINFO *w)
 {
-	struct MHINFO *v;
-	if (w->doAttach) {
-		linkAttachment(w);
-	} else {
-		foreach(v, w->components)
-		    linkAttachments(v);
-	}
+    struct MHINFO *v;
+    if (w->doAttach) {
+        linkAttachment(w);
+    } else {
+        foreach(v, w->components)
+            linkAttachments(v);
+    }
 }
 
-/* string to hold the returned data from the mail server */
+// string to hold the returned data from the mail server
 static char *mailstring;
 static int mailstring_l;
 static char *mailbox_url, *message_url;
@@ -2338,199 +2334,196 @@ static const char*defaultSaveFilename(char *key_p, bool *delflag_p)
 // stop is only meaningful for imap.
 static char presentMail(bool *plain)
 {
-	int j, k;
-	const char *redirect = NULL;	/* send mail elsewhere */
-	char key = 0;
-	const char *atname = NULL;	/* name of file or attachment */
-	bool delflag = false;	/* delete this mail */
-	bool scanat = false;	/* scan for attachments */
-	int displine;
-	char exists;
-	int fsize;		/* file size */
-	int fh;
+    int j, k;
+    const char *redirect = NULL; // send mail elsewhere
+    char key = 0;
+    const char *atname = NULL; // name of file or attachment
+    bool delflag = false; // delete this mail
+    bool scanat = false; // scan for attachments
+    int displine;
+    char exists;
+    int fsize; // file size
+    int fh;
 
-	if (sessionList[1].lw)
-		cxQuit(1, 2);
-	cs = 0;
-	cxSwitch(1, false);
+    if (sessionList[1].lw) cxQuit(1, 2);
+    cs = 0;
+    cxSwitch(1, false);
 
-	iuReformat(mailstring, mailstring_l, &mailu8, &mailu8_l);
-	if (mailu8) {
-		if (!addTextToBuffer((pst) mailu8, mailu8_l, 0, false))
-			showErrorAbort();
-	} else {
-		if (!addTextToBuffer((pst) mailstring, mailstring_l, 0, false))
-			showErrorAbort();
-	}
+    iuReformat(mailstring, mailstring_l, &mailu8, &mailu8_l);
+    if (mailu8) {
+        if (!addTextToBuffer((pst) mailu8, mailu8_l, 0, false))
+            showErrorAbort();
+    } else {
+        if (!addTextToBuffer((pst) mailstring, mailstring_l, 0, false))
+            showErrorAbort();
+    }
 
-	browseCurrentBuffer(NULL, *plain);
+    browseCurrentBuffer(NULL, *plain);
 
-	redirect = defaultSaveFilename(&key, &delflag);
+    redirect = defaultSaveFilename(&key, &delflag);
 
-/* display the next page of mail and get a command from the keyboard */
-	displine = 1;
+// display the next page of mail and get a command from the keyboard
+    displine = 1;
 paging:
-	if (!delflag && !postkey) {		/* show next page */
-		if (displine <= cw->dol) {
-			for (j = 0; j < 20 && displine <= cw->dol;
-			     j += isInteractive, ++displine) {
-				char *showline = (char *)fetchLine(displine, 1);
-				k = pstLength((pst) showline);
-				showline[--k] = 0;
-				printf("%s\n", showline);
-				nzFree(showline);
-			}
-		}
-	}
+    if (!delflag && !postkey) { // show next page
+        if (displine <= cw->dol) {
+            for (j = 0; j < 20 && displine <= cw->dol;
+              j += isInteractive, ++displine) {
+                char *showline = (char *)fetchLine(displine, 1);
+                k = pstLength((pst) showline);
+                showline[--k] = 0;
+                printf("%s\n", showline);
+                nzFree(showline);
+            }
+        }
+    }
 
-/* get key command from user */
+// get key command from user
 key_command:
-	if (delflag)
-		goto writeMail;
+    if (delflag) goto writeMail;
 
-	if(postkey) {
-		key = postkey, postkey = 0;
-	} else {
-/* interactive prompt depends on whether there is more text or not */
-		if(isInteractive) printf("%c ", displine > cw->dol ? '?' : '*');
-		fflush(stdout);
-		key = getLetter((isimap ? "qvbfh? gtnprRwWuUasdm" : "qh? gtnwud"));
-		printf("\b");
-		if(isInteractive) printf("\b\b");
-		fflush(stdout);
-	}
+    if(postkey) {
+        key = postkey, postkey = 0;
+    } else {
+// interactive prompt depends on whether there is more text or not
+        if(isInteractive) printf("%c ", displine > cw->dol ? '?' : '*');
+        fflush(stdout);
+        key = getLetter((isimap ? "qvbfh? gtnprRwWuUasdm" : "qh? gtnwud"));
+        printf("\b");
+        if(isInteractive) printf("\b\b");
+        fflush(stdout);
+    }
 
-	switch (key) {
-	case 'q':
-		i_puts(MSG_Quit);
-		exit(0);
+    switch (key) {
+    case 'q':
+        i_puts(MSG_Quit);
+        exit(0);
 
-	case 'n':
-		i_puts(MSG_Next);
-		goto afterinput;
+    case 'n':
+        i_puts(MSG_Next);
+        goto afterinput;
 
-	case 'g':
-		i_puts(MSG_Restart);
-		goto afterinput;
+    case 'g':
+        i_puts(MSG_Restart);
+        goto afterinput;
 
-	case 't':
-		i_puts(MSG_Restart);
-		*plain ^= 1;
-		key = 'g';
-		goto afterinput;
+    case 't':
+        i_puts(MSG_Restart);
+        *plain ^= 1;
+        key = 'g';
+        goto afterinput;
 
-	case 'p':
-		i_puts(MSG_Previous);
-		goto afterinput;
+    case 'p':
+        i_puts(MSG_Previous);
+        goto afterinput;
 
-	case 's':
-	case 'm':
-	case 'v':
-	case 'f':
-	case 'b':
-	case 'r':
-	case 'R':
-		goto afterinput;
+    case 's':
+    case 'm':
+    case 'v':
+    case 'f':
+    case 'b':
+    case 'r':
+    case 'R':
+        goto afterinput;
 
-	case 'd':
-		if (!isimap)
-			i_puts(MSG_Delete);
-		delflag = true;
-		goto afterinput;
+    case 'd':
+        if (!isimap)
+            i_puts(MSG_Delete);
+        delflag = true;
+        goto afterinput;
 
-	case ' ':
-		if (displine > cw->dol)
-			i_puts(MSG_EndMessage);
-		goto paging;
+    case ' ':
+        if (displine > cw->dol)
+            i_puts(MSG_EndMessage);
+        goto paging;
 
-	case '?':
-	case 'h':
-		i_puts(isimap ? MSG_ImapReadHelp : MSG_MailHelp);
-		goto key_command;
+    case '?':
+    case 'h':
+        i_puts(isimap ? MSG_ImapReadHelp : MSG_MailHelp);
+        goto key_command;
 
-	case 'a':
-		key = 'w';	/* this will scan attachments */
-		scanat = true;
+    case 'a':
+        key = 'w'; // this will scan attachments
+        scanat = true;
 
-	case 'w':
-	case 'W':
-	case 'u':
-	case 'U':
-		break;
+    case 'w':
+    case 'W':
+    case 'u':
+    case 'U':
+        break;
 
-	default:
-		i_puts(MSG_NYI);
-		goto key_command;
-	}			// switch
+    default:
+        i_puts(MSG_NYI);
+        goto key_command;
+    } // switch
 
 // At this point we're saving the mail somewhere.
 writeMail:
-	if (!isimap || isupperByte(key))
-		delflag = true;
-	atname = 0;
-	if (!isimap)
-		atname = redirect;
+    if (!isimap || isupperByte(key))
+        delflag = true;
+    atname = 0;
+    if (!isimap)
+        atname = redirect;
 
-	if (scanat)
-		goto attachOnly;
+    if (scanat) goto attachOnly;
 
 saveMail:
-	if (!atname) {
-		atname = getFileName(MSG_FileName, redirect, false, false, 0);
-		if(!isInteractive) puts(atname);
-	}
-	if (stringEqual(atname, "x"))
-		goto afterinput;
+    if (!atname) {
+        atname = getFileName(MSG_FileName, redirect, false, false, 0);
+        if(!isInteractive) puts(atname);
+    }
+    if (stringEqual(atname, "x")) {
+        // in case you didn't really want to junk this email
+        saveRawMail(mailstring, mailstring_l);
+        goto afterinput;
+    }
 
-	exists = fileTypeByName(atname, 0);
-	fh = open(atname, O_WRONLY | O_TEXT | O_CREAT | O_APPEND | O_CLOEXEC, MODE_rw);
-	if (fh < 0) {
-		i_printf(MSG_NoCreate, atname);
-		atname = 0;
-		goto saveMail;
-	}
-	if (exists)
-		write(fh, "======================================================================\n", 71);
-	if (key == 'u' || key == 'U') {
-		if (write(fh, mailstring, mailstring_l) < mailstring_l) {
+    exists = fileTypeByName(atname, 0);
+    fh = open(atname, O_WRONLY | O_TEXT | O_CREAT | O_APPEND | O_CLOEXEC, MODE_rw);
+    if (fh < 0) {
+        i_printf(MSG_NoCreate, atname);
+        atname = 0;
+        goto saveMail;
+    }
+    if (exists)
+        write(fh, "======================================================================\n", 71);
+    if (key == 'u' || key == 'U') {
+        if (write(fh, mailstring, mailstring_l) < mailstring_l) {
 badsave:
-			i_printf(MSG_NoWrite, atname);
-			close(fh);
-			atname = 0;
-			goto saveMail;
-		}
-		close(fh);
-		fsize = mailstring_l;
-	} else {
+            i_printf(MSG_NoWrite, atname);
+            close(fh);
+            atname = 0;
+            goto saveMail;
+        }
+        close(fh);
+        fsize = mailstring_l;
+    } else {
 
 // key = w, write the file and save the original unformatted
-		saveRawMail(mailstring, mailstring_l);
-		fsize = saveFormattedMail(fh);
-		if(fsize < 0) goto badsave;
-		close(fh);
+        saveRawMail(mailstring, mailstring_l);
+        fsize = saveFormattedMail(fh);
+        if(fsize < 0) goto badsave;
+        close(fh);
 
 attachOnly:
-		if (nattach)
-			writeAttachments(lastMailInfo);
-		else if (scanat)
-			i_puts(MSG_NoAttachments);
-	}			/* unformat or format */
+        if (nattach)
+            writeAttachments(lastMailInfo);
+        else if (scanat)
+            i_puts(MSG_NoAttachments);
+    } // unformat or format
 
-	if (scanat)
-		goto afterinput;
-/* print "mail saved" message */
-	i_printf(MSG_MailSaved, fsize);
-	if (exists)
-		i_printf(MSG_Appended);
-	nl();
+    if (scanat) goto afterinput;
+// print "mail saved" message
+    i_printf(MSG_MailSaved, fsize);
+    if (exists) i_printf(MSG_Appended);
+    nl();
 
 afterinput:
-	nzFree0(mailstring);
-	nzFree0(mailu8);
+    nzFree0(mailstring);
+    nzFree0(mailu8);
 
-	if (delflag)
-		return 'd';
-	return strchr("smvbfpgrRuwa", key) ? key : 'n';
+    if (delflag) return 'd';
+    return strchr("smvbfpgrRuwa", key) ? key : 'n';
 }
 
 /* Here are the common keywords for mail header lines.
