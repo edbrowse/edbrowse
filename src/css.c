@@ -2414,12 +2414,11 @@ static void cssModify(struct asel *a, const char *m1, const char *m2)
 // Warning: this function changes the current frame!
 Frame *frameFromWindow(int gsn)
 {
-	Frame *f;
-	for (f = &(cw->f0); f; f = f->next)
-		if (f->gsn == gsn)
-			return f;
-	debugPrint(3, " can't find frame for window %d", gsn);
-	return 0;
+    Frame *f;
+    for (f = &(cw->f0); f; f = f->next)
+        if (f->gsn == gsn) return f;
+    debugPrint(3, " can't find frame for window %d", gsn);
+    return 0;
 }
 
 /* The selection string (start) must be allocated - css will use it in place,
@@ -2608,67 +2607,57 @@ static void chainPrint(struct asel *asel)
 
 static void cssPiecesPrint(const struct desc *d)
 {
-	const struct sel *sel;
-	const struct rule *r;
+    const struct sel *sel;
+    const struct rule *r;
 
-	if (!debugCSS)
-		return;
-	cssfile = fopen(cssDebugFile, "ae");
-	if (!cssfile)
-		return;
-	if (!d) {
-		fclose(cssfile);
-		return;
-	}
+    if (!debugCSS || !d) return;
+    cssfile = fopen(cssDebugFile, "ae");
+    if (!cssfile) return;
 
-	for (; d; d = d->next) {
-		if (d->error) {
-			if (d->error == CSS_ERROR_DELIM) {
-				char which = d->lhs[8];
-				if (which == '0')
-					fprintf(cssfile, "%s start %s\n",
-						errorMessage[d->error],
-						d->lhs + 9);
-				if (which == '1')
-					fprintf(cssfile, "%s open %s\n",
-						errorMessage[d->error],
-						d->lhs + 9);
-				if (which == '2')
-					fprintf(cssfile, "%s close\n",
-						errorMessage[d->error]);
-			} else
-				fprintf(cssfile, "<%s>%s\n",
-					errorMessage[d->error], d->lhs);
-			continue;
-		}
-		if(d->visrel)
-			fprintf(cssfile, "👀");
-		for (sel = d->selectors; sel; sel = sel->next) {
-			if (sel != d->selectors)
-				fprintf(cssfile, ",");
-			if (sel->error)
-				fprintf(cssfile, "<%s|",
-					errorMessage[sel->error]);
-			chainPrint(sel->chain);
-		}
+    for (; d; d = d->next) {
+        if (d->error) {
+            if (d->error == CSS_ERROR_DELIM) {
+                char which = d->lhs[8];
+                if (which == '0')
+                    fprintf(cssfile, "%s start %s\n",
+                    errorMessage[d->error], d->lhs + 9);
+                if (which == '1')
+                    fprintf(cssfile, "%s open %s\n",
+                    errorMessage[d->error], d->lhs + 9);
+                if (which == '2')
+                    fprintf(cssfile, "%s close\n", errorMessage[d->error]);
+            } else
+                fprintf(cssfile, "<%s>%s\n",
+                errorMessage[d->error], d->lhs);
+            continue;
+        }
+        if(d->visrel)
+            fprintf(cssfile, "👀");
+        for (sel = d->selectors; sel; sel = sel->next) {
+            if (sel != d->selectors)
+                fprintf(cssfile, ",");
+            if (sel->error)
+                fprintf(cssfile, "<%s|", errorMessage[sel->error]);
+            chainPrint(sel->chain);
+        }
 
-		// print keys if any
-		if(d->keytag || d->keyid || d->keyclass) {
-			fprintf(cssfile, "🔑");
-			if(d->keytag) fprintf(cssfile, "%s", d->keytag);
-			fprintf(cssfile, "@");
-			if(d->keyid) fprintf(cssfile, "%s", d->keyid);
-			fprintf(cssfile, "@");
-			if(d->keyclass) fprintf(cssfile, "%s", d->keyclass);
-		}
+        // print keys if any
+        if(d->keytag || d->keyid || d->keyclass) {
+            fprintf(cssfile, "🔑");
+            if(d->keytag) fprintf(cssfile, "%s", d->keytag);
+            fprintf(cssfile, "@");
+            if(d->keyid) fprintf(cssfile, "%s", d->keyid);
+            fprintf(cssfile, "@");
+            if(d->keyclass) fprintf(cssfile, "%s", d->keyclass);
+        }
 
-		// print rules here
-		fprintf(cssfile, "{");
-		for (r = d->rules; r; r = r->next)
-			fprintf(cssfile, "%s:%s;", r->atname, r->atval);
-		fprintf(cssfile, "}\n");
-	}
-	fclose(cssfile);
+        // print rules here
+        fprintf(cssfile, "{");
+        for (r = d->rules; r; r = r->next)
+            fprintf(cssfile, "%s:%s;", r->atname, r->atval);
+        fprintf(cssfile, "}\n");
+    }
+    fclose(cssfile);
 }
 
 /*********************************************************************
@@ -2703,62 +2692,55 @@ Return is the length of the array.
 *********************************************************************/
 
 struct sibnode {
-	char tag[MAXTAGNAME];
-	int nodeType;
-	int myself;
-	Tag *t;
+    char tag[MAXTAGNAME];
+    int nodeType;
+    int myself;
+    Tag *t;
 };
 static struct sibnode *sibs;
 
 static int spread(Tag *t)
 {
-	int ns = 0; // number of siblings
-	int i, ntype, me_index = -1;
-			Tag *tp, *u;
+    int ns = 0; // number of siblings
+    int i, ntype, me_index = -1;
+            Tag *tp, *u;
 
-	sibs = NULL;
+    sibs = NULL;
 
-			if (!(tp = t->parent) || tp->action == TAG_DOC)
-				return 0;
-			for ((u = tp->firstchild); u; u = u->sibling) {
-				if (u == t)
-					me_index = ns;
-				++ns;
-			}
-			if (me_index < 0) // should never happen
-				return 0;
-			sibs = allocMem(sizeof(struct sibnode) * ns);
-			for (i = 0, (u = tp->firstchild); i < ns; ++i, u = u->sibling) {
-				strcpy(sibs[i].tag, u->info->name);
-				ntype = 1;
-				if (u->action == TAG_TEXT)
-					ntype = 3;
-				if (u->action == TAG_DOC)
-					ntype = 9;
-				if (u->action == TAG_COMMENT)
-					ntype = 8;
-				sibs[i].nodeType = ntype;
-				sibs[i].myself = (i == me_index);
-			}
-			return ns;
+            if (!(tp = t->parent) || tp->action == TAG_DOC)
+                return 0;
+            for ((u = tp->firstchild); u; u = u->sibling) {
+                if (u == t)
+                    me_index = ns;
+                ++ns;
+            }
+            if (me_index < 0) // should never happen
+                return 0;
+            sibs = allocMem(sizeof(struct sibnode) * ns);
+            for (i = 0, (u = tp->firstchild); i < ns; ++i, u = u->sibling) {
+                strcpy(sibs[i].tag, u->info->name);
+                ntype = 1;
+                if (u->action == TAG_TEXT) ntype = 3;
+                if (u->action == TAG_DOC) ntype = 9;
+                if (u->action == TAG_COMMENT) ntype = 8;
+                sibs[i].nodeType = ntype;
+                sibs[i].myself = (i == me_index);
+            }
+            return ns;
 }
 
 // when we only need elements, do nothing if ns == 0
 static int spreadElem(int ns)
 {
-	int i, j;
-	if (!ns)
-		return 0;
-	for (i = j = 0; i < ns; ++i) {
-		if (sibs[i].nodeType != 1)
-			continue;
-		if (i > j)
-			sibs[j] = sibs[i];
-		++j;
-	}
-	if (!j)
-		free(sibs);
-	return j;
+    int i, j;
+    if (!ns) return 0;
+    for (i = j = 0; i < ns; ++i) {
+        if (sibs[i].nodeType != 1) continue;
+        if (i > j) sibs[j] = sibs[i];
+        ++j;
+    }
+    if (!j) free(sibs);
+    return j;
 }
 
 // Restrict the list further to elements of the same type
