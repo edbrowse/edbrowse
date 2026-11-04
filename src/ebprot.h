@@ -158,7 +158,7 @@ bool isHtmlElement(const Tag *t);
 void dwStart(void);
 bool tagHandler(int seqno, const char *name);
 void fillEmptySelect(Tag *sel);
-void selsepCheck(const Tag *opt);
+bool selsepCheck(const Tag *opt);
 void jSyncup(bool fromtimer, const Tag *active);
 void jSideEffects(void);
 void jClearSync(void);

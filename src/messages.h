@@ -897,4 +897,5 @@ MSG_ImaskOn,
 	MSG_DebugMutationOff,
 	MSG_DebugMutationOn,
 	MSG_HasSelsep,
+	MSG_HasSelsepBrief,
 };
