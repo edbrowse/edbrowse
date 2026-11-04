@@ -204,44 +204,44 @@ static Tag *locateOptionByName(const Tag *sel,
 					  const char *name, int *pmc,
 					  bool exact)
 {
-	Tag *t, **w, *em = 0, *pm = 0;
-	int pmcount = 0;	/* partial match count */
-	const char *s;
+    Tag *t, **w, *em = 0, *pm = 0;
+    int pmcount = 0; // partial match count
+    const char *s;
 
-	for(w = optArray; (t = *w); ++w) {
-		if (!(s = t->textval)) continue;
-		if(inputHidden(t)) continue;
-		if (stringEqualCI(s, name)) {
-			em = t;
-			continue;
-		}
-		if (exact)
-			continue;
-		if (strcasestr(s, name)) {
-			pm = t;
-			++pmcount;
-		}
-	}
-	if (em)
-		return em;
-	if (pmcount == 1)
-		return pm;
-	*pmc = (pmcount > 0);
-	return 0;
+    for(w = optArray; (t = *w); ++w) {
+        if (!(s = t->textval)) continue;
+        if(inputHidden(t)) continue;
+        if (stringEqualCI(s, name)) {
+            em = t;
+            continue;
+        }
+        if (exact)
+            continue;
+        if (strcasestr(s, name)) {
+            pm = t;
+            ++pmcount;
+        }
+    }
+    if (em)
+        return em;
+    if (pmcount == 1)
+        return pm;
+    *pmc = (pmcount > 0);
+    return 0;
 }
 
 static Tag *locateOptionByNum(const Tag *sel, int n)
 {
-	Tag *t, **w;
-	int cnt = 0;
+    Tag *t, **w;
+    int cnt = 0;
 
-	for(w = optArray; (t = *w); ++w) {
-		if (!t->textval) continue;
-		++cnt;
-		if(inputHidden(t)) continue;
-		if (cnt == n) return t;
-	}
-	return 0;
+    for(w = optArray; (t = *w); ++w) {
+        if (!t->textval) continue;
+        ++cnt;
+        if(inputHidden(t)) continue;
+        if (cnt == n) return t;
+    }
+    return 0;
 }
 
 // print an errror message if a selected option contains the select separator.
@@ -257,125 +257,125 @@ void selsepCheck(const Tag *opt)
 
 static bool
 locateOptions(const Tag *sel, const char *input,
-	      char **disp_p, char **val_p, bool setcheck)
+          char **disp_p, char **val_p, bool setcheck)
 {
-	Tag *t, **w;
-	char *disp, *val;
-	int disp_l, val_l, val_count;
-	int len = strlen(input);
-	int n, pmc;
-	const char *s, *e;	/* start and end of an option */
-	char *iopt;		/* individual option */
+    Tag *t, **w;
+    char *disp, *val;
+    int disp_l, val_l, val_count;
+    int len = strlen(input);
+    int n, pmc;
+    const char *s, *e; // start and end of an option
+    char *iopt; // individual option
 
-	gatherOptions(sel);
-	iopt = (char *)allocMem(len + 1);
-	disp = initString(&disp_l);
-	val = initString(&val_l);
-	val_count = 0;
+    gatherOptions(sel);
+    iopt = (char *)allocMem(len + 1);
+    disp = initString(&disp_l);
+    val = initString(&val_l);
+    val_count = 0;
 
-	if (setcheck) {
-/* Uncheck all existing options, then check the ones selected. */
-		if (sel->jslink && allowJS)
-			set_property_number_t(sel, "selectedIndex", -1);
-		for(w = optArray; (t = *w); ++w) {
-			if (t->textval) {
-				t->checked = false;
-				if (t->jslink && allowJS)
-					set_property_bool_t(t, "selected",   false);
-			}
-		}
-	}
+    if (setcheck) {
+// Uncheck all existing options, then check the ones selected.
+        if (sel->jslink && allowJS)
+            set_property_number_t(sel, "selectedIndex", -1);
+        for(w = optArray; (t = *w); ++w) {
+            if (t->textval) {
+                t->checked = false;
+                if (t->jslink && allowJS)
+                    set_property_bool_t(t, "selected",   false);
+            }
+        }
+    }
 
-	s = input;
-	while (*s) {
-		e = 0;
-		if (sel->multiple)
-			e = strchr(s, selsep);
-		if (!e)
-			e = s + strlen(s);
-		len = e - s;
-		strncpy(iopt, s, len);
-		iopt[len] = 0;
-		s = e;
-		if (*s == selsep)
-			++s;
+    s = input;
+    while (*s) {
+        e = 0;
+        if (sel->multiple)
+            e = strchr(s, selsep);
+        if (!e)
+            e = s + strlen(s);
+        len = e - s;
+        strncpy(iopt, s, len);
+        iopt[len] = 0;
+        s = e;
+        if (*s == selsep)
+            ++s;
 
-		t = locateOptionByName(sel, iopt, &pmc, true);
-		if (!t) {
-			n = stringIsNum(iopt);
-			if (n >= 0)
-				t = locateOptionByNum(sel, n);
-		}
-		if (!t)
-			t = locateOptionByName(sel, iopt, &pmc, false);
-		if (!t) {
-			if (n >= 0)
-				setError(MSG_XOutOfRange, n);
-			else
-				setError(pmc + MSG_OptMatchNone, iopt);
+        t = locateOptionByName(sel, iopt, &pmc, true);
+        if (!t) {
+            n = stringIsNum(iopt);
+            if (n >= 0)
+                t = locateOptionByNum(sel, n);
+        }
+        if (!t)
+            t = locateOptionByName(sel, iopt, &pmc, false);
+        if (!t) {
+            if (n >= 0)
+                setError(MSG_XOutOfRange, n);
+            else
+                setError(pmc + MSG_OptMatchNone, iopt);
 // This should never happen when we're doing a set check
-			if (setcheck) {
-				runningError(MSG_OptionSync, iopt);
-				continue;
-			}
-			goto fail;
-		}
+            if (setcheck) {
+                runningError(MSG_OptionSync, iopt);
+                continue;
+            }
+            goto fail;
+        }
 
-		if(disp_p) selsepCheck(t);
+        if(disp_p) selsepCheck(t);
 
-		if(inputDisabled(t) ||
-		inputDisabled(sel) ||
-		(t->parent && t->parent->action == TAG_OPTG && inputDisabled(t->parent))) {
+        if(inputDisabled(t) ||
+        inputDisabled(sel) ||
+        (t->parent && t->parent->action == TAG_OPTG && inputDisabled(t->parent))) {
 // If we are gathering values, to submit the form,
 // then somehow all these options have been selected.
 // The user can't select a disabled option but somebody did,
 // perhaps js, so let it ride.
-			if(val_p) continue;
-			setError(MSG_Disabled);
-			goto fail;
-		}
+            if(val_p) continue;
+            setError(MSG_Disabled);
+            goto fail;
+        }
 
-		if (val_p) {
-			if (val_count)
-				stringAndChar(&val, &val_l, '\1');
-			stringAndString(&val, &val_l, t->value);
-			++val_count;
-		}
+        if (val_p) {
+            if (val_count)
+                stringAndChar(&val, &val_l, '\1');
+            stringAndString(&val, &val_l, t->value);
+            ++val_count;
+        }
 
-		if (disp_p) {
-			if (*disp)
-				stringAndChar(&disp, &disp_l, selsep);
+        if (disp_p) {
+            if (*disp)
+                stringAndChar(&disp, &disp_l, selsep);
 // special exception for <input> with datalist - revert back to value.
-			stringAndString(&disp, &disp_l,
-			(sel->action == TAG_DATAL ? t->value : t->textval));
-		}
+            stringAndString(&disp, &disp_l,
+            (sel->action == TAG_DATAL ? t->value : t->textval));
+        }
 
-		if (setcheck) {
-			t->checked = true;
-			if (t->jslink && allowJS) {
-				set_property_bool_t(t, "selected", true);
-				if (sel->jslink && allowJS)
-					set_property_number_t(sel, "selectedIndex", t->lic);
-			}
-		}
-	}			// loop over multiple options
+        if (setcheck) {
+            t->checked = true;
+            if (t->jslink && allowJS) {
+                set_property_bool_t(t, "selected", true);
+                if (sel->jslink && allowJS)
+                    set_property_number_t(sel, "selectedIndex", t->lic);
+            }
+        }
+    } // loop over multiple options
 
-	if (val_p)
-		*val_p = val_count ? val : 0;
-	if (disp_p)
-		*disp_p = disp;
-	free(iopt);
-	return true;
+    if (val_p)
+        *val_p = val_count ? val : 0;
+    if (disp_p)
+        *disp_p = disp;
+    free(iopt);
+    return true;
 
 fail:
-	free(iopt);
-	nzFree(val);
-	nzFree(disp);
-	if (val_p)
-		*val_p = 0;
-	if (disp_p)
-		*disp_p = 0;
-	return false;
+    free(iopt);
+    nzFree(val);
+    nzFree(disp);
+    if (val_p)
+        *val_p = 0;
+    if (disp_p)
+        *disp_p = 0;
+    return false;
 }
 
 /*********************************************************************

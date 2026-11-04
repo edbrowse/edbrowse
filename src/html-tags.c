@@ -4179,251 +4179,251 @@ void htmlInputHelper(Tag *t)
 
 static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
 {
-	int itype;		/* input type */
-	int j;
-	int action = t->action;
-	const char *a;		/* usually an attribute */
+    int itype; // input type
+    int j;
+    int action = t->action;
+    const char *a; // usually an attribute
 
         (void) pc;
-	if (t->step >= 1)
-		return;
-	debugPrint(6, "prend %c%s %d",
-		   (opentag ? ' ' : '/'), t->info->name,
-		   t->seqno);
-	if (!opentag)
-		t->step = 1;
+    if (t->step >= 1)
+        return;
+    debugPrint(6, "prend %c%s %d",
+           (opentag ? ' ' : '/'), t->info->name,
+           t->seqno);
+    if (!opentag)
+        t->step = 1;
 
-	switch (action) {
-		char *v;
+    switch (action) {
+        char *v;
 
-	case TAG_NOSCRIPT:
+    case TAG_NOSCRIPT:
 // If javascript is enabled kill everything under noscript
-		if (isJSAlive && !opentag)
-			underKill(t);
-		break;
+        if (isJSAlive && !opentag)
+            underKill(t);
+        break;
 
-	case TAG_TEXT:
-		if (!opentag || !t->textval)
-			break;
+    case TAG_TEXT:
+        if (!opentag || !t->textval)
+            break;
 
-		if (currentScript) {
-			t->deleted = true;
-			break;
-		}
+        if (currentScript) {
+            t->deleted = true;
+            break;
+        }
 
-		if (currentTitle) {
-			if (!cw->htmltitle && t->textval) {
-				cw->htmltitle = cloneString(t->textval);
-				spaceCrunch(cw->htmltitle, true, false);
-			}
-			t->deleted = true;
-			break;
-		}
+        if (currentTitle) {
+            if (!cw->htmltitle && t->textval) {
+                cw->htmltitle = cloneString(t->textval);
+                spaceCrunch(cw->htmltitle, true, false);
+            }
+            t->deleted = true;
+            break;
+        }
 
-		if (currentOpt) {
-			currentOpt->textval = cloneString(t->textval);
-			spaceCrunch(currentOpt->textval, true, false);
-			t->deleted = true;
-			if(currentOpt->checked) selsepCheck(currentOpt);
-			break;
-		}
+        if (currentOpt) {
+            currentOpt->textval = cloneString(t->textval);
+            spaceCrunch(currentOpt->textval, true, false);
+            t->deleted = true;
+            if(currentOpt->checked) selsepCheck(currentOpt);
+            break;
+        }
 
-		if (currentStyle) {
-			t->deleted = true;
-			break;
-		}
+        if (currentStyle) {
+            t->deleted = true;
+            break;
+        }
 
-		if (currentTA) {
-			currentTA->value = t->textval;
-			currentTA->rvalue = cloneString(currentTA->value);
-			t->textval = 0;
-			t->deleted = true;
-			break;
-		}
+        if (currentTA) {
+            currentTA->value = t->textval;
+            currentTA->rvalue = cloneString(currentTA->value);
+            t->textval = 0;
+            t->deleted = true;
+            break;
+        }
 
 /* text is on the page */
-		if (currentA) {
-			char *s;
-			for (s = t->textval; *s; ++s)
-				if (isalnumByte(*s)) {
-					currentA->textin = true;
-					break;
-				}
-		}
-		break;
+        if (currentA) {
+            char *s;
+            for (s = t->textval; *s; ++s)
+                if (isalnumByte(*s)) {
+                    currentA->textin = true;
+                    break;
+                }
+        }
+        break;
 
-	case TAG_TITLE:
-		if(findOpenTag(t, TAG_BODY)) {
-		    // this is title for some body tag, not for the document.
-		    // <title> is grossly overloaded.
-		    // Means something completely different if in svg.
-		    break;
-		}
-		currentTitle = (opentag ? t : 0);
-		break;
+    case TAG_TITLE:
+        if(findOpenTag(t, TAG_BODY)) {
+            // this is title for some body tag, not for the document.
+            // <title> is grossly overloaded.
+            // Means something completely different if in svg.
+            break;
+        }
+        currentTitle = (opentag ? t : 0);
+        break;
 
-	case TAG_SCRIPT:
-		currentScript = (opentag ? t : 0);
-		break;
+    case TAG_SCRIPT:
+        currentScript = (opentag ? t : 0);
+        break;
 
-	case TAG_A:
-		currentA = (opentag ? t : 0);
-		break;
+    case TAG_A:
+        currentA = (opentag ? t : 0);
+        break;
 
-	case TAG_FORM:
-		if (opentag) {
-			currentForm = t;
-			a = attribVal(t, "method");
-			if (a) {
-				if (stringEqualCI(a, "post"))
-					t->post = true;
-				else if (!stringEqualCI(a, "get"))
-					debugPrint(3,
-						   "form method should be get or post");
-			}
-			a = attribVal(t, "enctype");
-			if (a) {
-				if (stringEqualCI(a, "multipart/form-data"))
-					t->mime = true;
-				else if (stringEqualCI(a, "text/plain"))
-					t->plain = true;
-				else if (!stringEqualCI(a, 
-					  "application/x-www-form-urlencoded"))
-					debugPrint(3,
-						   "unrecognized enctype, plese use multipart/form-data or application/x-www-form-urlencoded or text/plain");
-			}
-			if ((a = t->href)) {
-				const char *prot = getProtURL(a);
-				if (prot) {
-					if (stringEqualCI(prot, "mailto"))
-						t->bymail = true;
-					else if (stringEqualCI
-						 (prot, "javascript"))
-						t->javapost = true;
-					else if (stringEqualCI(prot, "https") || stringEqualCI(prot, "gophers"))
-						t->secure = true;
-					else if (!stringEqualCI(prot, "http") &&
-						 !stringEqualCI(prot, "gopher"))
-						debugPrint(3,
-							   "form cannot submit using protocol %s",
-							   prot);
-				}
-			}
+    case TAG_FORM:
+        if (opentag) {
+            currentForm = t;
+            a = attribVal(t, "method");
+            if (a) {
+                if (stringEqualCI(a, "post"))
+                    t->post = true;
+                else if (!stringEqualCI(a, "get"))
+                    debugPrint(3,
+                           "form method should be get or post");
+            }
+            a = attribVal(t, "enctype");
+            if (a) {
+                if (stringEqualCI(a, "multipart/form-data"))
+                    t->mime = true;
+                else if (stringEqualCI(a, "text/plain"))
+                    t->plain = true;
+                else if (!stringEqualCI(a, 
+                      "application/x-www-form-urlencoded"))
+                    debugPrint(3,
+                           "unrecognized enctype, plese use multipart/form-data or application/x-www-form-urlencoded or text/plain");
+            }
+            if ((a = t->href)) {
+                const char *prot = getProtURL(a);
+                if (prot) {
+                    if (stringEqualCI(prot, "mailto"))
+                        t->bymail = true;
+                    else if (stringEqualCI
+                         (prot, "javascript"))
+                        t->javapost = true;
+                    else if (stringEqualCI(prot, "https") || stringEqualCI(prot, "gophers"))
+                        t->secure = true;
+                    else if (!stringEqualCI(prot, "http") &&
+                         !stringEqualCI(prot, "gopher"))
+                        debugPrint(3,
+                               "form cannot submit using protocol %s",
+                               prot);
+                }
+            }
 
-			nzFree(radioCheck);
-			radioCheck = initString(&radio_l);
-		}
-		if (!opentag && currentForm) {
-			if (t->ninp && !t->submitted) {
-				makeButton();
-				t->submitted = true;
-			}
-			currentForm = 0;
-		}
-		break;
+            nzFree(radioCheck);
+            radioCheck = initString(&radio_l);
+        }
+        if (!opentag && currentForm) {
+            if (t->ninp && !t->submitted) {
+                makeButton();
+                t->submitted = true;
+            }
+            currentForm = 0;
+        }
+        break;
 
-	case TAG_INPUT:
-		if (!opentag)
-			break;
-		htmlInputHelper(t);
-		itype = t->itype;
-		if (itype == INP_HIDDEN)
-			break;
-		if (currentForm) {
-			++currentForm->ninp;
-			if (itype == INP_SUBMIT || itype == INP_IMAGE || itype == INP_RESET || itype == INP_BUTTON)
-				currentForm->submitted = true;
-			if (itype > INP_HIDDEN && itype <= INP_SELECT
-			    && t->onchange)
-				currentForm->submitted = true;
-		}
-		break;
+    case TAG_INPUT:
+        if (!opentag)
+            break;
+        htmlInputHelper(t);
+        itype = t->itype;
+        if (itype == INP_HIDDEN)
+            break;
+        if (currentForm) {
+            ++currentForm->ninp;
+            if (itype == INP_SUBMIT || itype == INP_IMAGE || itype == INP_RESET || itype == INP_BUTTON)
+                currentForm->submitted = true;
+            if (itype > INP_HIDDEN && itype <= INP_SELECT
+                && t->onchange)
+                currentForm->submitted = true;
+        }
+        break;
 
-	case TAG_OPTION:
-		if (!opentag) {
-			currentOpt = 0;
+    case TAG_OPTION:
+        if (!opentag) {
+            currentOpt = 0;
 // in datalist, the text becomes the value
-			if(currentSel && currentSel->action == TAG_DATAL) {
-				if(!t->value) t->value = emptyString;
-				nzFree(t->textval);
-				t->textval = cloneString(t->value);
-			} else {
+            if(currentSel && currentSel->action == TAG_DATAL) {
+                if(!t->value) t->value = emptyString;
+                nzFree(t->textval);
+                t->textval = cloneString(t->value);
+            } else {
 // otherwise the converse, empty value is replaced with the text
-//				printf("val<%s>text<%s>\n", t->value, t->textval);
-				if(!t->value)
-					t->value = cloneString(t->textval);
-			}
-			a = attribVal(t, "label");
-			if(a && *a) {
-				nzFree(t->textval);
-				t->textval = cloneString(a);
-			}
-			break;
-		}
+// printf("val<%s>text<%s>\n", t->value, t->textval);
+                if(!t->value)
+                    t->value = cloneString(t->textval);
+            }
+            a = attribVal(t, "label");
+            if(a && *a) {
+                nzFree(t->textval);
+                t->textval = cloneString(a);
+            }
+            break;
+        }
 // this is open tag
-		currentOpt = t;
-		t->controller = currentSel;
-		t->lic = 0;
-		t->textval = emptyString;
-		if (!currentSel) {
-			debugPrint(3, "option appears outside a select statement");
-			break;
-		}
-		t->lic = nopt++;
-		if (attribPresent(t, "selected")) {
-			if (currentSel->lic && !currentSel->multiple)
-				debugPrint(3, "multiple options are selected");
-			else {
-				t->checked = t->rchecked = true;
-				++currentSel->lic;
-			}
-		}
-		break;
+        currentOpt = t;
+        t->controller = currentSel;
+        t->lic = 0;
+        t->textval = emptyString;
+        if (!currentSel) {
+            debugPrint(3, "option appears outside a select statement");
+            break;
+        }
+        t->lic = nopt++;
+        if (attribPresent(t, "selected")) {
+            if (currentSel->lic && !currentSel->multiple)
+                debugPrint(3, "multiple options are selected");
+            else {
+                t->checked = t->rchecked = true;
+                ++currentSel->lic;
+            }
+        }
+        break;
 
-	case TAG_STYLE:
-		if(!findOpenSVG(t))
-			currentStyle = opentag ? t : 0;
-		break;
+    case TAG_STYLE:
+        if(!findOpenSVG(t))
+            currentStyle = opentag ? t : 0;
+        break;
 
-	case TAG_SELECT:
-	case TAG_DATAL:
-		if (opentag) {
-			currentSel = t;
-			nopt = 0;
-			t->itype = INP_SELECT;
-			if(action == TAG_SELECT)
-				formControl(t, true);
-		} else {
-			currentSel = 0;
-			if(action == TAG_SELECT) {
+    case TAG_SELECT:
+    case TAG_DATAL:
+        if (opentag) {
+            currentSel = t;
+            nopt = 0;
+            t->itype = INP_SELECT;
+            if(action == TAG_SELECT)
+                formControl(t, true);
+        } else {
+            currentSel = 0;
+            if(action == TAG_SELECT) {
 // If a single select, and nothing selected, the browser
 // selects the first viable option for you.
-				fillEmptySelect(t);
+                fillEmptySelect(t);
 // from here on it is called an input tag, to join the other input tags
-				t->action = TAG_INPUT;
-				t->value = displayOptions(t);
-			}
-		}
-		break;
+                t->action = TAG_INPUT;
+                t->value = displayOptions(t);
+            }
+        }
+        break;
 
-	case TAG_TA:
-		if (opentag) {
-			currentTA = t;
-			t->itype = INP_TA;
-			formControl(t, true);
-		} else {
-			t->action = TAG_INPUT;
-			if (!t->value) {
+    case TAG_TA:
+        if (opentag) {
+            currentTA = t;
+            t->itype = INP_TA;
+            formControl(t, true);
+        } else {
+            t->action = TAG_INPUT;
+            if (!t->value) {
 /* This can only happen it no text inside, <textarea></textarea> */
 /* like the other value fields, it can't be null */
-				t->rvalue = t->value = emptyString;
-			}
-			currentTA = 0;
-		}
-		break;
+                t->rvalue = t->value = emptyString;
+            }
+            currentTA = 0;
+        }
+        break;
 
-	case TAG_META:
-		if (opentag) {
+    case TAG_META:
+        if (opentag) {
 /*********************************************************************
 htmlMetaHelper is not called for document.createElement("meta")
 I don't know if that matters.
@@ -4434,92 +4434,92 @@ and the next page has the same tags, and so on forever.
 So don't do this if inside <noscript>, and js is active.
 Are there other situations where we need to supress meta processing?
 *********************************************************************/
-			if(!(findOpenTag(t, TAG_NOSCRIPT) && isJSAlive))
-				htmlMetaHelper(t);
-		}
-		break;
+            if(!(findOpenTag(t, TAG_NOSCRIPT) && isJSAlive))
+                htmlMetaHelper(t);
+        }
+        break;
 
-	case TAG_TBODY:
-	case TAG_THEAD:
-	case TAG_TFOOT:
-	case TAG_CAPTION:
-		if (opentag)
-			t->controller = findOpenTag(t, TAG_TABLE);
-		break;
+    case TAG_TBODY:
+    case TAG_THEAD:
+    case TAG_TFOOT:
+    case TAG_CAPTION:
+        if (opentag)
+            t->controller = findOpenTag(t, TAG_TABLE);
+        break;
 
-	case TAG_TR:
-		if (opentag) {
-			t->controller = findOpenSection(t);
-			if (!t->controller)
-				t->controller = findOpenTag(t, TAG_TABLE);
-		}
-		break;
+    case TAG_TR:
+        if (opentag) {
+            t->controller = findOpenSection(t);
+            if (!t->controller)
+                t->controller = findOpenTag(t, TAG_TABLE);
+        }
+        break;
 
-	case TAG_TD:
-		if (opentag)
-			t->controller = findOpenTag(t, TAG_TR);
-		break;
+    case TAG_TD:
+        if (opentag)
+            t->controller = findOpenTag(t, TAG_TR);
+        break;
 
-	case TAG_SPAN:
-		if (!opentag)
-			break;
-		if (!(a = attribVal(t, "class"))) break;
-		if (stringEqualCI(a, "sup")) action = TAG_SUP;
-		if (stringEqualCI(a, "sub")) action = TAG_SUB;
-		if (stringEqualCI(a, "ovb")) action = TAG_OVB;
-		t->action = action;
-		break;
+    case TAG_SPAN:
+        if (!opentag)
+            break;
+        if (!(a = attribVal(t, "class"))) break;
+        if (stringEqualCI(a, "sup")) action = TAG_SUP;
+        if (stringEqualCI(a, "sub")) action = TAG_SUB;
+        if (stringEqualCI(a, "ovb")) action = TAG_OVB;
+        t->action = action;
+        break;
 
-	case TAG_OL:
+    case TAG_OL:
 /* look for start parameter for numbered list */
-		if (opentag) {
-			a = attribVal(t, "start");
-			if (a && (j = stringIsNum(a)) >= 0)
-				t->slic = j - 1;
-		}
-		break;
+        if (opentag) {
+            a = attribVal(t, "start");
+            if (a && (j = stringIsNum(a)) >= 0)
+                t->slic = j - 1;
+        }
+        break;
 
-	case TAG_FRAME:
-		if (opentag)
-			break;
+    case TAG_FRAME:
+        if (opentag)
+            break;
 // If somebody wrote <frame><p>foo</frame>, those tags should be excised.
-		underKill(t);
+        underKill(t);
 // strange situation: html page has no indication of javascript,
 // but subframe runs javascript and tries to access javascript objects
 // from the top frame. So this could be a doorway into js.
-		t->doorway = true;
-		break;
+        t->doorway = true;
+        break;
 
-	case TAG_DET:
-		t->contracted = true;
-		a = attribVal(t, "open");
-		if(a && !stringEqual(a, "false")) t->contracted = false;
-		break;
+    case TAG_DET:
+        t->contracted = true;
+        a = attribVal(t, "open");
+        if(a && !stringEqual(a, "false")) t->contracted = false;
+        break;
 
-	case TAG_AUDIO:
-	case TAG_VIDEO:
-		if (opentag) {
-			currentAudio = t;
-			break;
-		}
+    case TAG_AUDIO:
+    case TAG_VIDEO:
+        if (opentag) {
+            currentAudio = t;
+            break;
+        }
 // If somebody wrote <audio><p>foo</audio>, those tags should be excised.
 // However <source> tags should be kept and/or expanded. Not yet implemented.
-		underKill(t);
-		currentAudio = 0;
-		break;
+        underKill(t);
+        currentAudio = 0;
+        break;
 
-	case TAG_SOURCE:
-		if(!currentAudio || !opentag) break;
-		a = attribVal(t, "src");
-		if(!a || !*a) break;
-		if(attribVal(currentAudio, "src")) break; // first source wins
-		v = resolveURL(cf->hbase, a);
-		nzFree(currentAudio->href);
-		currentAudio->href = v;
-		setTagAttr(currentAudio, "src", cloneString(v));
-		break;
+    case TAG_SOURCE:
+        if(!currentAudio || !opentag) break;
+        a = attribVal(t, "src");
+        if(!a || !*a) break;
+        if(attribVal(currentAudio, "src")) break; // first source wins
+        v = resolveURL(cf->hbase, a);
+        nzFree(currentAudio->href);
+        currentAudio->href = v;
+        setTagAttr(currentAudio, "src", cloneString(v));
+        break;
 
-	}			// switch
+    } // switch
 }
 
 void prerender(int start)
