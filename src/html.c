@@ -131,7 +131,9 @@ static void gatherOptions1(Tag *t)
             if(v) nzFree(t->value), t->value = v;
             v = get_property_string_t(t, "text");
             if(v) nzFree(t->textval), t->textval = v;
+            bool last_checked = t->checked;
             t->checked = get_property_bool_t(t, "selected");
+            if(t->checked && !last_checked) selsepCheck(t);
         }
     }
     for(c = t->firstchild; c; c = c->sibling)
