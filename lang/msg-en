@@ -796,7 +796,7 @@ debug collections enabled
 could not fetch xhr data from %s, code %ld\n
 debug mutations disabled
 debug mutations enabled
-0
+Warning! option %s is selected, but contains the selection separator %c\nThis form will not submit or work properly.\nChange the separator with selsep= then set this field to its value or values.\n
 0
 0
 0

@@ -244,6 +244,17 @@ static Tag *locateOptionByNum(const Tag *sel, int n)
 	return 0;
 }
 
+// print an errror message if a selected option contains the select separator.
+void selsepCheck(const Tag *opt)
+{
+    const Tag *sel = opt->controller;
+    if(!sel || !sel->multiple) return;
+    const char *s = opt->textval;
+    if(!s) return; // should not happen
+    if(!strchr(s, selsep)) return; // ok
+    i_printf(MSG_HasSelsep, s, selsep);
+}
+
 static bool
 locateOptions(const Tag *sel, const char *input,
 	      char **disp_p, char **val_p, bool setcheck)
@@ -309,6 +320,8 @@ locateOptions(const Tag *sel, const char *input,
 			}
 			goto fail;
 		}
+
+		if(disp_p) selsepCheck(t);
 
 		if(inputDisabled(t) ||
 		inputDisabled(sel) ||

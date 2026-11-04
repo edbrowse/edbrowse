@@ -896,4 +896,5 @@ MSG_ImaskOn,
 	MSG_GetXHR,
 	MSG_DebugMutationOff,
 	MSG_DebugMutationOn,
+	MSG_HasSelsep,
 };
