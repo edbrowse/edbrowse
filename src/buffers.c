@@ -6358,6 +6358,11 @@ et_go:
         return true;
     }
 
+    if(!strcmp(line, "selsep")) {
+        eb_printf("%c\n", selsep);
+        return true;
+    }
+
     if(!strncmp(line, "selsep=", 7)) {
         char oldsep = selsep;
         if(!(c = line[7])) {
