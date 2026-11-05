@@ -5289,15 +5289,17 @@ void rowspan(void)
 static void rowspan2(Tag *tr, int ri)
 {
     Tag *td, *last_td;
-    char *ihs; // inherited cellstring
-    char *save_ihs;
+    char *icell; // the inherited cellstring from the previous row
+    char *save_icell;
     char *ns; // new string
     int ns_l, end_l;
     int c1, c2; // column numbers
-    int irl, irs; // inherited row level and span
     int ics; // inherited colspan
+    int irs; // inherited rowspan
+    int irl; // inherited row level
+    // 3/7/29 would set irs = 7 and irl = 3
     int seqno = 0;
-    bool needstring;
+    bool needstring; // do we need this or is it just a line of commas?
     char b[64];
 
 // start by setting rowspan and colspan, possibly from javascript.
@@ -5322,26 +5324,27 @@ static void rowspan2(Tag *tr, int ri)
         if(td->js_ln > 99999999) td->js_ln = 99999999;
     }
 
-    ihs = (tr->f1 ? ((Tag *)(tr->f1))->js_file : 0);
+    icell = (tr->f1 ? ((Tag *)(tr->f1))->js_file : 0);
     c1 = c2 = 1;
     ns = initString(&ns_l);
     last_td = 0;
-    needstring = false;
+    needstring = false; // anything other than comma will set this true
 
     for(td = tr->firstchild; td; td = td->sibling) {
         if(td->action != TAG_TD) continue;
 crack:
-        irs = irl = ics = 1;
-        if((save_ihs = ihs)) {
-            if(isdigitByte(*ihs)) {
-                irl = strtol(ihs, &ihs, 10);
-                irs = strtol(ihs + 1, &ihs, 10);
-                seqno = strtol(ihs + 1, &ihs, 10);
+        irs = irl = ics = 1; // defaults
+        if((save_icell = icell)) {
+            if(isdigitByte(*icell)) {
+                // assumes a proper format    3/7/29
+                irl = strtol(icell, &icell, 10);
+                irs = strtol(icell + 1, &icell, 10);
+                seqno = strtol(icell + 1, &icell, 10);
             }
-            if(*ihs == '@')
-                ics = strtol(ihs + 1, &ihs, 10);
-            ++ihs; // skip past comma
-            if(!*ihs) ihs = 0; // end of string
+            if(*icell == '@')
+                ics = strtol(icell + 1, &icell, 10);
+            ++icell; // skip past comma
+            if(!*icell) icell = 0; // end of string
         }
 
 // c1 could be less than c2, if we just brought in a cell with a wide colspan
@@ -5379,23 +5382,23 @@ incorporate:
         strcat(b, ",");
         stringAndString(&ns, &ns_l, b);
         c2 += td->js_ln;
-        ihs = save_ihs;
+        icell = save_icell;
         last_td = td;
     }
 
     end_l = ns_l;
     // rowspans hanging down after this row is done
-    while(ihs) {
+    while(icell) {
         irs = irl = ics = 1;
-        if(isdigitByte(*ihs)) {
-            irl = strtol(ihs, &ihs, 10);
-            irs = strtol(ihs + 1, &ihs, 10);
-            seqno = strtol(ihs + 1, &ihs, 10);
+        if(isdigitByte(*icell)) {
+            irl = strtol(icell, &icell, 10);
+            irs = strtol(icell + 1, &icell, 10);
+            seqno = strtol(icell + 1, &icell, 10);
         }
-        if(*ihs == '@')
-            ics = strtol(ihs + 1, &ihs, 10);
-        ++ihs; // skip past comma
-        if(!*ihs) ihs = 0; // end of string
+        if(*icell == '@')
+            ics = strtol(icell + 1, &icell, 10);
+        ++icell; // skip past comma
+        if(!*icell) icell = 0; // end of string
 c1c2:
         if(c1 < c2 && irl < irs) {
             last_td->js_ln -= (c2-c1);
@@ -5435,15 +5438,15 @@ addcomma:
 // Simplify the cellstrings
 static void rowspan3(Tag *tr, int ri)
 {
-    char *ihs; // inherited cellstring
+    char *icell; // inherited cellstring
     int irl, irs; // inherited row level and span
     int seqno, ics;
     char *s, *t;
     bool needstring = false;
 
-    if(!(ihs = tr->js_file)) return;
+    if(!(icell = tr->js_file)) return;
 
-    s = t = ihs;
+    s = t = icell;
     while(*s) {
         if(isdigitByte(*s)) {
             irl = strtol(s, &s, 10);
@@ -5471,8 +5474,8 @@ static void rowspan3(Tag *tr, int ri)
     *t = 0;
 
     if(!needstring) {
-        nzFree(ihs);
+        nzFree(icell);
         tr->js_file = 0;
     } else
-        debugPrint(4, "spanC %d=%s", ri, ihs);
+        debugPrint(4, "spanC %d=%s", ri, icell);
 }
