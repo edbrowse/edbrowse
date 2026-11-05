@@ -5298,7 +5298,7 @@ static void rowspan2(Tag *tr, int ri)
     int ics; // inherited colspan
     int seqno = 0;
     bool needstring;
-    char b[32];
+    char b[64];
 
 // start by setting rowspan and colspan, possibly from javascript.
     for(td = tr->firstchild; td; td = td->sibling) {
@@ -5317,7 +5317,9 @@ static void rowspan2(Tag *tr, int ri)
             if(n > 0) td->js_ln = n;
         }
         if(td->lic <= 0) td->lic = 1;
+        if(td->lic > 99999999) td->lic = 99999999;
         if(td->js_ln <= 0) td->js_ln = 1;
+        if(td->js_ln > 99999999) td->js_ln = 99999999;
     }
 
     ihs = (tr->f1 ? ((Tag *)(tr->f1))->js_file : 0);
