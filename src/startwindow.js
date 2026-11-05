@@ -2546,8 +2546,8 @@ all those classes will exist. */
         let x = customElements.get(s);
         if(x) { // here we go
             c = new x;
-            if(c.eb$appendChild0 !== Node.prototype.eb$appendChild0) {
-                alert3(`${s} is not an extension of Node, and may not work properly`);
+            if(c.appendChild !== Node.prototype.appendChild) {
+                alert3(`${s} is not an extension of Node and may not work properly`);
                 // add the methods we need to make this behave like a node
                 // these are functions, not getters, like firstChild
                 for(let f of ["appendChild1", "appendChild2", "appendChild3",
@@ -2557,8 +2557,8 @@ all those classes will exist. */
                 "removeAttribute"])
                     c[f] = Element.prototype[f];
                 // It's not a Node, so we don't have childNodes yet.
-                odp(this, "childNodes", {value: new NodeList})
-                odp(this, "parentNode", {value: null, writable: true, configurable:true})
+                odp(c, "childNodes", {value: new NodeList})
+                odp(c, "parentNode", {value: null, writable: true, configurable:true})
             }
 // custom elements like regular elements are upper case
             s = s.toUpperCase();
