@@ -66,7 +66,7 @@ void prepareForBrowse(char *h, int h_len)
 	h[j] = 0;
 }
 
-/* An input field cannot contain cr, lf, null, or the InternalCodeChar */
+// An input field cannot contain cr, lf, null, or the InternalCodeChar
 void prepareForField(char *h)
 {
     bool ab = false;
@@ -112,12 +112,13 @@ respace: // spaces ahead
 // tidy turns <td> <i> hello </i> </td> into <td><i>hello</i></td>
 // But not so with <p> or other strong tags.
 // I try to do the same.
-        if(s[1] != InternalCodeChar || !isdigitByte(s[2])) continue;
-            n = strtol(s + 2, &u, 10);
+        if(s[1] != InternalCodeChar) continue;
+            n = strtotagno(s + 2, &u);
+            if(n < 0) continue;
             // leave input fields alone
             if(*u != '*' && *u != '{') continue;
             if(tagList[n]->info->para & 3) continue;
-// looks like a soft tag
+            // looks like a soft tag
             memcpy(t, s + 1, u - s);
             t += u - s;
             s = u;
@@ -164,8 +165,9 @@ static void html_tr(char *buf)
     for (s = w = buf; (c = *s); ++s) {
         d = s[1];
         if (c == InternalCodeChar && isdigitByte(d)) {
-            int tagno = strtol(s + 1, &ss, 10);
-            if (*ss == '<' && !stringEqual(tagList[tagno]->info->name, "button"))
+            int tagno = strtotagno(s + 1, &ss);
+            if (*ss == '<' && tagno >= 0 &&
+            !stringEqual(tagList[tagno]->info->name, "button"))
                 inputmode = true;
             if (*ss == '>') inputmode = false;
             ++ss;
@@ -335,6 +337,17 @@ We can thus pull whitespace past a list indicator.
 A list tag might look like   ^b379**   (for <ul>), or   ^b379*5.   (for <ol>).
 *********************************************************************/
 
+static void preFormatCheck(int tagno, bool * pretag, bool * slash)
+{
+    const Tag *t;
+    *pretag = *slash = false;
+    if (tagno >= 0) {
+        t = tagList[tagno];
+        *pretag = (t->action == TAG_PRE);
+        *slash = t->slash;
+    }
+}
+
 static void anchorSwap(char *buf)
 {
     char c, d, *s, *ss, *w, *a;
@@ -385,9 +398,8 @@ afterforward:
         a = NULL;
 
         if (c != InternalCodeChar) goto normalChar;
-        // some conditions that should never happen
         if (!isdigitByte(s[1])) goto normalChar;
-        tagno = strtol(s + 1, &ss, 10);
+        tagno = strtotagno(s + 1, &ss);
         preFormatCheck(tagno, &pretag, &slash);
         d = *ss;
         if (!strchr("{}<>*", d)) goto normalChar;
@@ -552,7 +564,7 @@ static void html_ws(char *buf)
 
         // look for <pre>
         if (c == InternalCodeChar && isdigitByte(s[1])) {
-            n = strtol(s + 1, &s, 10);
+            n = strtotagno(s + 1, &s);
             if (*s == '*') {
                 preFormatCheck(n, &pretag, &slash);
                 if (pretag) premode = !slash;
@@ -600,19 +612,15 @@ static void html_ws(char *buf)
                 a = w;
         }
         ss = s, s = w - 1;
-        if (!a)
-            continue;
-        if (premode)
-            continue;
+        if (!a) continue;
+        if (premode) continue;
         if (strong) {
             for (w = ss; w <= s; ++w)
-                if (*w == '\r')
-                    *w = ' ';
+                if (*w == '\r') *w = ' ';
             continue;
         }
         for (w = ss; w <= s; ++w)
-            if (*w == '\r' && w != a)
-                *w = ' ';
+            if (*w == '\r' && w != a) *w = ' ';
     } // loop over buffer
     debugPrint(4, "whitespace combined");
 
@@ -637,9 +645,10 @@ hence it would send a newline if there was one.
 
     for (s = buf; (c = *s); ++s) {
         if (c != InternalCodeChar) continue;
-        n = strtol(s + 1, &s, 10);
+        if (!isdigit(s[1])) continue;
+        n = strtotagno(s + 1, &s);
         if (*s == '<') {
-            if (!stringEqual(tagList[n]->info->name, "button"))
+            if (n < 0 || !stringEqual(tagList[n]->info->name, "button"))
                 continue;
         } else if (*s != '{') continue;
         for (a = s + 1; (c = *a); ++a) {
@@ -1310,8 +1319,8 @@ char *htmlReformat(char *buf)
 			continue;
 		}
 
-		/* It's a tag */
-		tagno = strtol(h + 1, (char **)&nh, 10);
+		// It's a tag
+		tagno = strtotagno(h + 1, (char**)&nh);
 		c = *nh++;
 		if (!c || !strchr("{}<>*", c)) {
 // this should never happen!
@@ -1335,7 +1344,7 @@ char *htmlReformat(char *buf)
 				}
 			}
 		}
-	}			/* loop over text */
+	} // loop over text
 
 /* close off the last line */
 	if (lspace < 2)

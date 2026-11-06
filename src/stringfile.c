@@ -409,6 +409,19 @@ char *pullString1(const char *s, const char *t)
 	return pullString(s, t - s);
 }
 
+// like strtol but returns a tag number, with bounds check
+int strtotagno(const char *s, char **p)
+{
+// often the caller has already checked that is starts with a digit,
+// to avoid the function overhead if it isn't, but let's make sure.
+    if(!isdigit(*s)) return -1;
+// I don't know how we could be here but not in browse mode.
+    if(!cw->tags) return -1;
+    int n = strtol(s, p, 10);
+    if(n < 0 || n >= cw->numTags) return -1;
+    return n;
+}
+
 /* return the number, if string is a number, else -1 */
 int stringIsNum(const char *s)
 {

@@ -29,7 +29,6 @@ void eeCheck(void){}
 struct MACCOUNT accounts[MAXACCOUNT];
 int maxAccount;		/* how many email accounts specified */
 char *emojiFile;
-void preFormatCheck(int tagno, bool * pretag, bool * slash) {}
 bool isDataURI(const char *u){ return false; }
 void unpercentString(char *s) {}
 void eb_variables(void) {}

@@ -1529,17 +1529,6 @@ passes:
     cf = save_cf;
 }
 
-void preFormatCheck(int tagno, bool * pretag, bool * slash)
-{
-	const Tag *t;
-	*pretag = *slash = false;
-	if (tagno >= 0 && tagno < cw->numTags) {
-		t = tagList[tagno];
-		*pretag = (t->action == TAG_PRE);
-		*slash = t->slash;
-	}
-}
-
 /* is there a doorway from html to js? */
 static bool jsDoorway(void)
 {
