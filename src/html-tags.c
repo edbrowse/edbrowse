@@ -4224,7 +4224,7 @@ static void prerenderNode(Tag *t, bool opentag, struct parseContext *pc)
             currentOpt->textval = cloneString(t->textval);
             spaceCrunch(currentOpt->textval, true, false);
             t->deleted = true;
-            if(currentOpt->checked && selsepCheck(currentOpt))
+            if(currentOpt->checked && selsepCheck(currentOpt->controller, currentOpt))
                 currentOpt->checked = false;
             break;
         }

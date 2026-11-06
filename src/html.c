@@ -133,7 +133,7 @@ static void gatherOptions1(Tag *t)
             if(v) nzFree(t->textval), t->textval = v;
             bool last_checked = t->checked;
             t->checked = get_property_bool_t(t, "selected");
-            if(t->checked && !last_checked) selsepCheck(t);
+            if(t->checked && !last_checked) selsepCheck(0, t);
         }
     }
     for(c = t->firstchild; c; c = c->sibling)
@@ -247,9 +247,9 @@ static Tag *locateOptionByNum(const Tag *sel, int n)
 }
 
 // print an errror message if a selected option contains the select separator.
-bool selsepCheck(const Tag *opt)
+bool selsepCheck(const Tag *sel, const Tag *opt)
 {
-    const Tag *sel = opt->controller;
+    if(!sel) sel = opt->controller;
     if(!sel || !sel->multiple) return false;
     const char *s = opt->textval;
     if(!s || !strchr(s, selsep)) return false;
@@ -323,7 +323,7 @@ locateOptions(const Tag *sel, const char *input,
             goto fail;
         }
 
-        if(selsepCheck(t)) {
+        if(selsepCheck(sel, t)) {
             setError(MSG_HasSelsepBrief, selsep);
             goto fail;
         }
