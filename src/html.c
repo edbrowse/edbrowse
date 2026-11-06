@@ -1967,28 +1967,27 @@ So if we haven't done it before, do it now. */
     if(!gathered) gatherOptions(t);
     for (w = optArray; (v = *w); ++w) {
         Tag *x, *og = 0; // option group
+        const char *label, *textval;
         if(v->parent && v->parent->action == TAG_OPTG)
             og = v->parent;
         if(og) {
             for(x = og->firstchild; x != v; x = x->sibling)
                 if(x->action == TAG_OPTION) break;
             if(x == v) { // first option in the group
-                const char *l1 = attribVal(og, "label");
-                const char *l2 = get_js_attribute(og, "label");
-                const char *l3 = "option group";
-                if(l1) l3 = l1;
-                if(l2) l3 = l2;
-                eb_printf("%s {", l3);
+                label = get_general_property_string(og, "label");
+                eb_printf("%s {", (label ? label : "option group"));
                 if(inputDisabled(og)) eb_printf(" 🛑");
                 eb_printf("\n");
-                cnzFree(l2);
              }
         }
         ++cnt;
         if(inputHidden(v)) goto closegroup;
-        if (*search && !strcasestr(v->textval, search)) goto closegroup;
+        textval = v->textval;
+        if(t->action == TAG_DATAL)
+            textval = get_general_property_string(v, "label");
+        if (*search && !strcasestr(textval, search)) goto closegroup;
         show = true;
-        eb_printf("%s%3d %s", (og ? "  " : ""), cnt, v->textval);
+        eb_printf("%s%3d %s", (og ? "  " : ""), cnt, textval);
         if(inputDisabled(v)) eb_printf(" 🛑");
         eb_printf("\n");
 closegroup:
