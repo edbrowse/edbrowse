@@ -5641,7 +5641,7 @@ past_cell_paragraph:
                 u0 = backColon(u0);
                 if (*u0 == ':') {
                     int j = strlen(u0);
-                    memmove(u0 + 1, u0, j);
+                    memmove(u0 + 1, u0, j - 1);
                     *u0 = c;
                 }
             }
@@ -5840,7 +5840,7 @@ past_cell_paragraph:
                 v = v->sibling;
             }
             if(v) { // should always happen
-                char rowbuf[24];
+                char rowbuf[40];
                 if(t->onclick) {
                     sprintf(rowbuf, "%c%d{row %d%c0}\n",
                     InternalCodeChar, tagno, j, InternalCodeChar);
