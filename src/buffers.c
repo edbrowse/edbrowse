@@ -4139,7 +4139,8 @@ findField(const char *line, int ftype, int n,
         while ((c = *s) != '\n') {
             ++s;
             if (c != InternalCodeChar) continue;
-            j = strtol(s, (char **)&s, 10);
+            j = strtagno(s, (char **)&s);
+            if(j < 0) continue;
             if (ftype == 0) {
                 if (*s != '{') continue;
                 ++nt, ++nrt;
@@ -4841,11 +4842,9 @@ Tag *line2frame(int ln, bool frameonly)
 			continue;
 		}
 		s = stringInBufLine(line, "*`--\n");
-		if (!s)
-			continue;
+		if (!s) continue;
 		for (--s; s > line && *s != InternalCodeChar; --s) ;
-		if (*s != InternalCodeChar) // should not happen
-			continue;
+		if (*s != InternalCodeChar) continue; // should not happen
 		n = atoi(s + 1);
 		if (!opentag) {
 			Tag *u = tagList[n];
