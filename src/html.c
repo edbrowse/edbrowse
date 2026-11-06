@@ -257,8 +257,7 @@ bool selsepCheck(const Tag *sel, const Tag *opt)
     return true;
 }
 
-static bool
-locateOptions(const Tag *sel, const char *input,
+static bool locateOptions(const Tag *sel, const char *input,
           char **disp_p, char **val_p, bool setcheck)
 {
     Tag *t, **w;
@@ -2218,7 +2217,10 @@ bool infReplace(int tagno, char *newtext, bool notify)
 	if (itype == INP_SELECT) {
 		if (!locateOptions(t, newtext, 0, 0, false))
 			return false;
-		locateOptions(t, newtext, &display, 0, false);
+		// no errors, check all the options
+		locateOptions(t, newtext, 0, 0, true);
+		// get the normalized display string
+		display = displayOptions(t);
 		updateFieldInBuffer(tagno, display, notify, true);
 	}
 
