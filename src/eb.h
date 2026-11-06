@@ -767,13 +767,14 @@ typedef void (*nodeFunction) (Tag * node, bool opentag, parseContext *pc);
 
 // context variables when parsing and decorating html
 struct parseContext {
-	bool malformed; // tree is somehow malformed
-	bool abort; // traversal aborted, should never happen
-	bool liftup;
-	bool shadow; // divert to shadow root
-	nodeFunction callback;
-	Tag *currentOG; // option group
-	Tag *innerParent; // which tag invoked innerHTML
+    int depth;
+    bool malformed; // tree is somehow malformed
+    bool abort; // traversal aborted, should never happen
+    bool liftup;
+    bool shadow; // divert to shadow root
+    nodeFunction callback;
+    Tag *currentOG; // option group
+    Tag *innerParent; // which tag invoked innerHTML
 };
 
 /* Return codes for base64Decode() */

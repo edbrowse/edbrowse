@@ -3785,10 +3785,16 @@ static void traverseNode(Tag *t, struct parseContext *pc)
 
     if (t->visited) {
         pc->malformed = true;
-        debugPrint(4, "node revisit %s %d", t->info->name, t->seqno);
+        debugPrint(3, "node revisit %s %d", t->info->name, t->seqno);
         return;
     }
     t->visited = true;
+
+    if(pc->depth == 4000) {
+        debugPrint(3, "max depth reached at %s %d", t->info->name, t->seqno);
+        return;
+    }
+    ++pc->depth;
 
 // open tag <foo>
     (*f) (t, true, pc);
@@ -3796,6 +3802,7 @@ static void traverseNode(Tag *t, struct parseContext *pc)
     if(pc->shadow && (u = shadowRoot(t))) {
         traverseNode(u, pc);
         (*f) (t, false, pc);
+        --pc->depth;
         return;
     }
 
@@ -3830,7 +3837,7 @@ top:
                 debugPrint(5, "%s lifts up %s", child->info->name, next_child ? next_child->info->name : "empty");
         }
         traverseNode(child, pc);
-        if(pc->abort) return;
+        if(pc->abort) { --pc->depth;  return; }
 // If we aren't decorating, or if we are in xml mode,
 // then we can just move on. Business as usual.
         if(!pc->liftup) continue;
@@ -3861,47 +3868,50 @@ top:
         child = u;
     }
 
-// close tag </foo>
+    // close tag </foo>
     (*f) (t, false, pc);
+    // and we're done
+    --pc->depth;
 }
 
 void traverseAll(int start, struct parseContext *pc)
 {
-	Tag *t, *u;
-	int i, numtags;
-	bool action = false;
-	pc->malformed = false;
-	pc->abort = false;
-	numtags = cw->numTags;
-	for (i = start; i < numtags; ++i)
-		tagList[i]->visited = false;
-	for (i = start; i < numtags; ++i) {
-		t = tagList[i];
+    Tag *t, *u;
+    int i, numtags;
+    bool action = false;
+    pc->malformed = false;
+    pc->abort = false;
+    pc->depth = 0;
+    numtags = cw->numTags;
+    for (i = start; i < numtags; ++i)
+        tagList[i]->visited = false;
+    for (i = start; i < numtags; ++i) {
+        t = tagList[i];
 // for innerHTML, first couple of tags, html and body, are dead, as they are skipped.
-		if(t->dead) continue;
+        if(t->dead) continue;
 // we have to start with a node that has no parent, or parent is outside this span
-		if((u = t->parent) && u->seqno >= start && u->seqno < numtags) continue;
-		if(t->visited) {
-			if(!u)
-				debugPrint(3,
-				"%s %d already visited, perhaps removed",
-				t->info->name, t->seqno);
-			else
-				debugPrint(3,
-				"%s %d already visited, perhaps moved to %s %d",
-				t->info->name, t->seqno, u->info->name, u->seqno);
-			continue;
-		}
-		debugPrint(4, "traverse starts at %s %d", t->info->name, t->seqno);
-		traverseNode(t, pc);
-		action = true;
-	}
-	if(!action)
-		debugPrint(4, "traverseAll finds no live tags to traverse");
-	if(cw->numTags > numtags)
-		debugPrint(3, "traverseAll added %d nodes", cw->numTags - numtags);
-	if (pc->malformed)
-		debugPrint(3, "malformed tree!");
+        if((u = t->parent) && u->seqno >= start && u->seqno < numtags) continue;
+        if(t->visited) {
+            if(!u)
+                debugPrint(3,
+                "%s %d already visited, perhaps removed",
+                t->info->name, t->seqno);
+            else
+                debugPrint(3,
+                "%s %d already visited, perhaps moved to %s %d",
+                t->info->name, t->seqno, u->info->name, u->seqno);
+            continue;
+        }
+        debugPrint(4, "traverse starts at %s %d", t->info->name, t->seqno);
+        traverseNode(t, pc);
+        action = true;
+    }
+    if(!action)
+        debugPrint(4, "traverseAll finds no live tags to traverse");
+    if(cw->numTags > numtags)
+        debugPrint(3, "traverseAll added %d nodes", cw->numTags - numtags);
+    if (pc->malformed)
+        debugPrint(3, "malformed tree!");
 
 /*********************************************************************
 Suppose this is generated html, and it is parsed, and we leave all its
@@ -3914,8 +3924,8 @@ even though these nodes are already decorated with js objects,
 even though these nodes are already at step 2,
 we want it to proceed so we don't get error messages about a malformed tree.
 *********************************************************************/
-	for (i = start; i < numtags; ++i)
-		tagList[i]->visited = false;
+    for (i = start; i < numtags; ++i)
+        tagList[i]->visited = false;
 }
 
 Tag *findOpenTag(Tag *t, int action)
@@ -5319,9 +5329,9 @@ static void rowspan2(Tag *tr, int ri)
             if(n > 0) td->js_ln = n;
         }
         if(td->lic <= 0) td->lic = 1;
-        if(td->lic > 99999999) td->lic = 99999999;
+        if(td->lic > 99999) td->lic = 99999;
         if(td->js_ln <= 0) td->js_ln = 1;
-        if(td->js_ln > 99999999) td->js_ln = 99999999;
+        if(td->js_ln > 99999) td->js_ln = 99999;
     }
 
     icell = (tr->f1 ? ((Tag *)(tr->f1))->js_file : 0);
@@ -5352,8 +5362,8 @@ crack:
 // This is the error condition I talked about
 // shrink colspan so this cell fits
             last_td->js_ln -= (c2-c1);
-            while(ns[--ns_l] != '@')  ;
-            if(last_td->js_ln == 1) strcpy(ns + ns_l, ",");
+            while(ns_l && ns[--ns_l] != '@')  ;
+            if(last_td->js_ln <= 1) strcpy(ns + ns_l, ",");
             else
                 sprintf(ns + ns_l, "@%d,", last_td->js_ln);
             ns_l = strlen(ns);
