@@ -2152,34 +2152,34 @@ static size_t utf8length(const char *s)
 /* Update an input field. */
 bool infReplace(int tagno, char *newtext, bool notify)
 {
-	Tag *t = tagList[tagno];
-	const Tag *form = findOpenTag(t, TAG_FORM);
-	char *display = 0;
-	int itype = t->itype;
-	int itype_minor = t->itype_minor;
-	int newlen = strlen(newtext);
+    Tag *t = tagList[tagno];
+    const Tag *form = findOpenTag(t, TAG_FORM);
+    char *display = 0;
+    int itype = t->itype;
+    int itype_minor = t->itype_minor;
+    int newlen = strlen(newtext);
 
-	if (strchr(newtext, '\n')) {
-		setError(MSG_InputNewline);
-		return false;
-	}
-	if (strchr(newtext, '\r')) {
-		setError(MSG_InputCR);
-		return false;
-	}
+    if (strchr(newtext, '\n')) {
+        setError(MSG_InputNewline);
+        return false;
+    }
+    if (strchr(newtext, '\r')) {
+        setError(MSG_InputCR);
+        return false;
+    }
 
-	prepareForField(newtext);
+    prepareForField(newtext);
 
-/* sanity checks on the input */
-	if (itype <= INP_SUBMIT) {
-		int b = MSG_IsButton;
-		if (itype == INP_SUBMIT || itype == INP_IMAGE)
-			b = MSG_SubmitButton;
-		if (itype == INP_RESET)
-			b = MSG_ResetButton;
-		setError(b);
-		return false;
-	}
+// sanity checks on the input
+    if (itype <= INP_SUBMIT) {
+        int b = MSG_IsButton;
+        if (itype == INP_SUBMIT || itype == INP_IMAGE)
+            b = MSG_SubmitButton;
+        if (itype == INP_RESET)
+            b = MSG_ResetButton;
+        setError(b);
+        return false;
+    }
 
     if (itype == INP_TA) {
         if(t->lic > 0) {
@@ -2189,88 +2189,88 @@ bool infReplace(int tagno, char *newtext, bool notify)
         t->lic = -1;
     }
 
-	if (inputReadonly(t)) {
-		setError(MSG_Readonly);
-		return false;
-	}
-	if (inputDisabled(t)) {
-		setError(MSG_Disabled);
-		return false;
-	}
+    if (inputReadonly(t)) {
+        setError(MSG_Readonly);
+        return false;
+    }
+    if (inputDisabled(t)) {
+        setError(MSG_Disabled);
+        return false;
+    }
 
-	if (itype >= INP_RADIO) {
-		if ((newtext[0] != '+' && newtext[0] != '-') || newtext[1]) {
-			setError(MSG_InputRadio);
-			return false;
-		}
-		if (itype == INP_RADIO && newtext[0] == '-') {
-			setError(MSG_ClearRadio);
-			return false;
-		}
-	}
+    if (itype >= INP_RADIO) {
+        if ((newtext[0] != '+' && newtext[0] != '-') || newtext[1]) {
+            setError(MSG_InputRadio);
+            return false;
+        }
+        if (itype == INP_RADIO && newtext[0] == '-') {
+            setError(MSG_ClearRadio);
+            return false;
+        }
+    }
 
 // It looks like the input field change is going to work.
 // Clear the sank bit so we sync up this change with javascript before
 // it runs again.
-	jClearSync();
+    jClearSync();
 
-	if (itype == INP_SELECT) {
-		if (!locateOptions(t, newtext, 0, 0, false))
-			return false;
-		// no errors, check all the options
-		locateOptions(t, newtext, 0, 0, true);
-		// get the normalized display string
-		display = displayOptions(t);
-		updateFieldInBuffer(tagno, display, notify, true);
-	}
+    if (itype == INP_SELECT) {
+        if (!locateOptions(t, newtext, 0, 0, false))
+            return false;
+        // no errors, check all the options
+        locateOptions(t, newtext, 0, 0, true);
+        // get the normalized display string
+        display = displayOptions(t);
+        updateFieldInBuffer(tagno, display, notify, true);
+    }
 
-	if (itype == INP_FILE) {
-		int u_l;
-		char *u = initString(&u_l);
-		if(!newtext[0]) { // empty
-			updateFieldInBuffer(tagno, newtext, notify, true);
-			return true;
-		}
-		if(!t->multiple) {
-			const char *z2;
-			if (!envFile(newtext, &z2))
-				return false;
-			if (z2[0] && (access(z2, 4) || fileTypeByName(z2, 0) != 'f')) {
-				setError(MSG_FileAccess, z2);
-				return false;
-			}
-			u = cloneString(z2);
-		} else {
-			const char *v = newtext, *w, *z2;
-			char *z;
-			while(*v) {
-				if(!(w = strchr(v, selsep)))
-					w = v + strlen(v);
-				z = pullString(v, w-v);
-				v = *w ? w+1 : w; // point to next file
-				if(!*z) { // empty
-					nzFree(z);
-					continue;
-				}
-				if (!envFile(z, &z2)) {
-					nzFree(z), nzFree(u);
-					return false;
-				}
-				if (z2[0] && (access(z2, 4) || fileTypeByName(z2, 0) != 'f')) {
-					setError(MSG_FileAccess, z2);
-					nzFree(z), nzFree(u);
-					return false;
-				}
-				if(*u)
-					stringAndChar(&u, &u_l, selsep);
-				stringAndString(&u, &u_l, z2);
-				nzFree(z);
-			}
-		}
-		updateFieldInBuffer(tagno, u, notify, true);
-		nzFree(u);
-		return true;
-	}
+    if (itype == INP_FILE) {
+        int u_l;
+        char *u = initString(&u_l);
+        if(!newtext[0]) { // empty
+            updateFieldInBuffer(tagno, newtext, notify, true);
+            return true;
+        }
+        if(!t->multiple) {
+            const char *z2;
+            if (!envFile(newtext, &z2))
+                return false;
+            if (z2[0] && (access(z2, 4) || fileTypeByName(z2, 0) != 'f')) {
+                setError(MSG_FileAccess, z2);
+                return false;
+            }
+            u = cloneString(z2);
+        } else {
+            const char *v = newtext, *w, *z2;
+            char *z;
+            while(*v) {
+                if(!(w = strchr(v, selsep)))
+                    w = v + strlen(v);
+                z = pullString(v, w-v);
+                v = *w ? w+1 : w; // point to next file
+                if(!*z) { // empty
+                    nzFree(z);
+                    continue;
+                }
+                if (!envFile(z, &z2)) {
+                    nzFree(z), nzFree(u);
+                    return false;
+                }
+                if (z2[0] && (access(z2, 4) || fileTypeByName(z2, 0) != 'f')) {
+                    setError(MSG_FileAccess, z2);
+                    nzFree(z), nzFree(u);
+                    return false;
+                }
+                if(*u)
+                    stringAndChar(&u, &u_l, selsep);
+                stringAndString(&u, &u_l, z2);
+                nzFree(z);
+            }
+        }
+        updateFieldInBuffer(tagno, u, notify, true);
+        nzFree(u);
+        return true;
+    }
 
     if(itype == INP_TEXT) {
         connectDatalist(t);
@@ -2326,56 +2326,56 @@ bool infReplace(int tagno, char *newtext, bool notify)
         }
     }
 
-	if (itype != INP_SELECT) {
-		updateFieldInBuffer(tagno, newtext, notify, true);
-	}
+    if (itype != INP_SELECT) {
+        updateFieldInBuffer(tagno, newtext, notify, true);
+    }
 
-	if (itype >= INP_TEXT) {
-		jSyncup(false, t);
-		cf = t->f0;
-		if (itype >= INP_RADIO) {
+    if (itype >= INP_TEXT) {
+        jSyncup(false, t);
+        cf = t->f0;
+        if (itype >= INP_RADIO) {
 // The change has already been made;
 // if onclick returns false, should that have prevented the change??
-			bubble_event_t(t, "onclick");
-			if (js_redirects)
-				return true;
-		}
-		if (itype != INP_SELECT)
-			bubble_event_t(t, "oninput");
-		if (js_redirects)
-			goto success;
-		bubble_event_t(t, "onchange");
-		if (js_redirects)
-			goto success;
-		jSideEffects();
-	}
+            bubble_event_t(t, "onclick");
+            if (js_redirects)
+                return true;
+        }
+        if (itype != INP_SELECT)
+            bubble_event_t(t, "oninput");
+        if (js_redirects)
+            goto success;
+        bubble_event_t(t, "onchange");
+        if (js_redirects)
+            goto success;
+        jSideEffects();
+    }
 
 success:
-	nzFree(display);
-	return true;
+    nzFree(display);
+    return true;
 
 fail:
-	nzFree(display);
-	return false;
+    nzFree(display);
+    return false;
 }
 
 // return an allocated string containing the text entries for the checked options
 char *displayOptions(const Tag *sel)
 {
-	Tag *t, **w;
-	char *opt;
-	int opt_l;
+    Tag *t, **w;
+    char *opt;
+    int opt_l;
 
-	opt = initString(&opt_l);
-	gatherOptions(sel);
-	for (w = optArray; (t = *w); ++w) {
-		if (!t->checked) continue;
-		if (*opt)
-			stringAndChar(&opt, &opt_l, selsep);
-		stringAndString(&opt, &opt_l, t->textval);
-	}
+    opt = initString(&opt_l);
+    gatherOptions(sel);
+    for (w = optArray; (t = *w); ++w) {
+        if (!t->checked) continue;
+        if (*opt)
+            stringAndChar(&opt, &opt_l, selsep);
+        stringAndString(&opt, &opt_l, t->textval);
+    }
 
-	return opt;
+    return opt;
 }
 
 /*********************************************************************
@@ -2966,71 +2966,71 @@ If post_string is NULL, print the action and do not submit the form or trigger J
 /* jSyncup has been called before we enter this function */
 bool infPush(int tagno, char **post_string)
 {
-	Tag *t = tagList[tagno];
-	Frame *f = t->f0;
-	Tag *form;
-	int itype;
-	int actlen;
-	const char *action = 0;
-	char *action2 = 0; // allocated action
-	char *section;
-	const char *prot;
-	bool rc, dopost;
+    Tag *t = tagList[tagno];
+    Frame *f = t->f0;
+    Tag *form;
+    int itype;
+    int actlen;
+    const char *action = 0;
+    char *action2 = 0; // allocated action
+    char *section;
+    const char *prot;
+    bool rc, dopost;
 
-	if (post_string)
-		*post_string = 0;
+    if (post_string)
+        *post_string = 0;
 
 /* If the tag is actually a form, then infPush() was invoked
  * by form.submit().
  * Revert t back to 0, since there may be multiple submit buttons
  * on the form, and we don't know which one was pushed. */
-	if (t->action == TAG_FORM) {
-		form = t;
-		t = 0;
-		itype = INP_SUBMIT;
-	} else {
-		form = findOpenTag(t, TAG_FORM);
-		itype = t->itype;
-	}
+    if (t->action == TAG_FORM) {
+        form = t;
+        t = 0;
+        itype = INP_SUBMIT;
+    } else {
+        form = findOpenTag(t, TAG_FORM);
+        itype = t->itype;
+    }
 
-	if (itype > INP_SUBMIT) {
-		setError(MSG_NoButton);
-		return false;
-	}
+    if (itype > INP_SUBMIT) {
+        setError(MSG_NoButton);
+        return false;
+    }
 
-	if (t) {
-		if (inputDisabled(t)) {
-			setError(MSG_Disabled);
-			return false;
-		}
-		if (post_string) {
-			if (tagHandler(t->seqno, "onclick") && !allowJS)
-				runningError(itype ==
-					     INP_BUTTON ? MSG_NJNoAction :
-					     MSG_NJNoOnclick);
-			rc = bubble_event_t(t, "onclick");
-			if(!rc) return true;
-			if (js_redirects)
-				return true;
+    if (t) {
+        if (inputDisabled(t)) {
+            setError(MSG_Disabled);
+            return false;
+        }
+        if (post_string) {
+            if (tagHandler(t->seqno, "onclick") && !allowJS)
+                runningError(itype ==
+                         INP_BUTTON ? MSG_NJNoAction :
+                         MSG_NJNoOnclick);
+            rc = bubble_event_t(t, "onclick");
+            if(!rc) return true;
+            if (js_redirects)
+                return true;
 // At this point onclick has run, be it button or submit or reset
-		}
-	}
+        }
+    }
 
     cw->nextrender = 0;
     cw->rr_throttle = 0;
 
-	if (itype == INP_BUTTON) {
-		if (post_string) {
+    if (itype == INP_BUTTON) {
+        if (post_string) {
 /* I use to error here, but click could be captured by a node higher up in the tree
-	and do what it is suppose to do, so we might not want an error here.
-			if (allowJS && t->jslink && !t->onclick) {
-				setError(MSG_ButtonNoJS);
-				return false;
-			}
+    and do what it is suppose to do, so we might not want an error here.
+            if (allowJS && t->jslink && !t->onclick) {
+                setError(MSG_ButtonNoJS);
+                return false;
+            }
 */
-		}
-		return true;
-	}
+        }
+        return true;
+    }
 // Now submit or reset
     if (itype == INP_RESET) {
         if (!form) {
@@ -3047,20 +3047,20 @@ bool infPush(int tagno, char **post_string)
                 if (!rc) return true;
                 if (js_redirects) return true;
             }
-        }        /* onreset */
+        }        // onreset
         formReset(form);
         return true;
     }
 
 // now it's submit
-	if (!form && !(t && t->onclick)) {
-		setError(MSG_NotInForm);
-		return false;
-	}
+    if (!form && !(t && t->onclick)) {
+        setError(MSG_NotInForm);
+        return false;
+    }
 // <button> could turn into submit, which we don't want to do if it is not in a form.
-	if (!form) return true;
+    if (!form) return true;
 
-	// Before we submit, run the onsubmit code
+    // Before we submit, run the onsubmit code
         if (t && tagHandler(form->seqno, "onsubmit")) {
             if (!allowJS) runningError(MSG_NJNoSubmit);
             else {
@@ -3072,93 +3072,93 @@ bool infPush(int tagno, char **post_string)
             }
         }
 
-	dopost = form->post;
-	action = form->href;
-	if (!action && form->jslink && allowJS) {
-		char *jh = get_property_url_t(form, true);
-		if (jh && (!action || !stringEqual(jh, action))) {
-			nzFree(form->href);
-			action = form->href = jh;
-			jh = NULL;
-		}
-		nzFree(jh);
-	}
+    dopost = form->post;
+    action = form->href;
+    if (!action && form->jslink && allowJS) {
+        char *jh = get_property_url_t(form, true);
+        if (jh && (!action || !stringEqual(jh, action))) {
+            nzFree(form->href);
+            action = form->href = jh;
+            jh = NULL;
+        }
+        nzFree(jh);
+    }
 
-	if(t) { // submit button pressed
-		const char *va; // value from attribute
-		char *vj; // value from javascript
+    if(t) { // submit button pressed
+        const char *va; // value from attribute
+        char *vj; // value from javascript
 // spec says formAction and formMethod are camelcase, when coming from js.
 // Are they lowercase when coming from html? or case insensitive?
-		va = attribVal(t, "formmethod");
-		vj = 0;
-		if(t->jslink && allowJS)
-			vj = get_js_attribute(t, "formMethod");
-		if(vj && *vj)
-			va = vj;
-		if(va && *va) {
-			dopost = false;
-			if (stringEqualCI(va, "post"))
-				dopost = true;
-			else if (!stringEqualCI(va, "get"))
-				debugPrint(3, "unrecognized method, please use get or post");
-		}
-		nzFree(vj);
-		va = attribVal(t, "formaction");
-		if(t->jslink && allowJS)
-			action2 = vj = get_js_attribute(t, "formAction");
-		if(vj && *vj)
-			va = vj;
-		if(va && *va)
-			action = va;
-	}
+        va = attribVal(t, "formmethod");
+        vj = 0;
+        if(t->jslink && allowJS)
+            vj = get_js_attribute(t, "formMethod");
+        if(vj && *vj)
+            va = vj;
+        if(va && *va) {
+            dopost = false;
+            if (stringEqualCI(va, "post"))
+                dopost = true;
+            else if (!stringEqualCI(va, "get"))
+                debugPrint(3, "unrecognized method, please use get or post");
+        }
+        nzFree(vj);
+        va = attribVal(t, "formaction");
+        if(t->jslink && allowJS)
+            action2 = vj = get_js_attribute(t, "formAction");
+        if(vj && *vj)
+            va = vj;
+        if(va && *va)
+            action = va;
+    }
 
 // if no action, or action is "#", the default is the current location.
 // And yet, with onclick on the submit button, no action means no action,
 // and I believe the same is true for onsubmit.
 // Just assume javascript has done the submit.
-	if (!action || !*action || stringEqual(action, "#")) {
-		if (t && (t->onclick | form->onsubmit))
-			goto success;
-		action = f->hbase;
-	}
+    if (!action || !*action || stringEqual(action, "#")) {
+        if (t && (t->onclick | form->onsubmit))
+            goto success;
+        action = f->hbase;
+    }
 
-	prot = getProtURL(action);
-	if (!prot) {
-		if (t && t->onclick)
-			goto success;
-		setError(MSG_FormBadURL);
+    prot = getProtURL(action);
+    if (!prot) {
+        if (t && t->onclick)
+            goto success;
+        setError(MSG_FormBadURL);
 fail:
-		nzFree(action2);
-		return false;
-	}
+        nzFree(action2);
+        return false;
+    }
 
-	if (debugLevel >= 2 || !post_string)
-		eb_printf("%c %s\n", (post_string ? '*' : ' '), action);
+    if (debugLevel >= 2 || !post_string)
+        eb_printf("%c %s\n", (post_string ? '*' : ' '), action);
 
-	if (stringEqualCI(prot, "javascript")) {
-		if (post_string) {
-			if (!allowJS) {
-				setError(MSG_NJNoForm);
-				goto fail;
-			}
-			jsRunScript_t(form, action + 11, 0, 0);
-		}
-		goto success;
-	}
+    if (stringEqualCI(prot, "javascript")) {
+        if (post_string) {
+            if (!allowJS) {
+                setError(MSG_NJNoForm);
+                goto fail;
+            }
+            jsRunScript_t(form, action + 11, 0, 0);
+        }
+        goto success;
+    }
 
-	form->bymail = false;
-	if (post_string) {
-		if (stringEqualCI(prot, "mailto")) {
-			if (!validAccount(localAccount))
-				goto fail;
-			form->bymail = true;
-		} else if (stringEqualCI(prot, "http") || stringEqualCI(prot, "gopher")) {
-			if (form->secure) {
-				setError(MSG_BecameInsecure);
-				goto fail;
-			}
-		} else if (!stringEqualCI(prot, "https") &&
-			   !stringEqualCI(prot, "gophers")) {
+    form->bymail = false;
+    if (post_string) {
+        if (stringEqualCI(prot, "mailto")) {
+            if (!validAccount(localAccount))
+                goto fail;
+            form->bymail = true;
+        } else if (stringEqualCI(prot, "http") || stringEqualCI(prot, "gopher")) {
+            if (form->secure) {
+                setError(MSG_BecameInsecure);
+                goto fail;
+            }
+        } else if (!stringEqualCI(prot, "https") &&
+               !stringEqualCI(prot, "gophers")) {
 /*********************************************************************
 A protocol with a plugin behind it can take a form as well as a link.
 The plugin is handed the action with the form data appended, ?data for get
@@ -3167,96 +3167,96 @@ runPluginCommand passes it through as %i. Without this, a plugin can show
 you a page but you can never fill anything in on it, which rules out search
 boxes, logins, and every site that is a form with a website around it.
 *********************************************************************/
-			uchar sxfirst = 2;	// match on protocol only
-			if (!findMimeByURL(action, &sxfirst)) {
-				setError(MSG_SubmitProtBad, prot);
-				goto fail;
-			}
-		}
-	}
+            uchar sxfirst = 2; // match on protocol only
+            if (!findMimeByURL(action, &sxfirst)) {
+                setError(MSG_SubmitProtBad, prot);
+                goto fail;
+            }
+        }
+    }
 
-	pfs = initString(&pfs_l);
-	stringAndString(&pfs, &pfs_l, action);
-	section = findHash(pfs);
-	if (section) {
-		i_printf(MSG_SectionIgnored, section);
-		*section = 0;
-		pfs_l = section - pfs;
-	}
-	section = strpbrk(pfs, "?\1");
-	if (section && (*section == '\1' || !(form->bymail | dopost))) {
-		debugPrint(3,
-			   "the url already specifies some data, which will be overwritten by the data in this form");
-		*section = 0;
-		pfs_l = section - pfs;
-	}
+    pfs = initString(&pfs_l);
+    stringAndString(&pfs, &pfs_l, action);
+    section = findHash(pfs);
+    if (section) {
+        i_printf(MSG_SectionIgnored, section);
+        *section = 0;
+        pfs_l = section - pfs;
+    }
+    section = strpbrk(pfs, "?\1");
+    if (section && (*section == '\1' || !(form->bymail | dopost))) {
+        debugPrint(3,
+               "the url already specifies some data, which will be overwritten by the data in this form");
+        *section = 0;
+        pfs_l = section - pfs;
+    }
 
-	stringAndChar(&pfs, &pfs_l, (dopost ? '\1' : '?'));
-	actlen = strlen(pfs);
+    stringAndChar(&pfs, &pfs_l, (dopost ? '\1' : '?'));
+    actlen = strlen(pfs);
 
-	if (formSubmit(form, t, dopost,    prot)) {
-		if(post_string && debugLevel >= 1)
-			i_puts(MSG_FormSubmit);
-	} else {
-		nzFree(pfs);
-		goto fail;
-	}
+    if (formSubmit(form, t, dopost,    prot)) {
+        if(post_string && debugLevel >= 1)
+            i_puts(MSG_FormSubmit);
+    } else {
+        nzFree(pfs);
+        goto fail;
+    }
 
-	debugPrint(3, "%s %s", dopost ? "post" : "get", pfs + actlen);
+    debugPrint(3, "%s %s", dopost ? "post" : "get", pfs + actlen);
 
-/* Handle the mail method here and now. */
-	if (form->bymail) {
-		char *addr, *subj, *q;
-		const char *tolist[MAXCC + 2], *atlist[MAXCC + 2];
-		const char *name = get_tagName(form);
-		int newlen = strlen(pfs) - actlen;	/* the new string could be longer than post */
-		char key;
-		decodeMailURL(action, &addr, &subj, 0);
-		tolist[0] = addr;
-		tolist[1] = 0;
-		atlist[0] = 0;
-		newlen += 9;	/* subject: \n */
-		if (subj)
-			newlen += strlen(subj);
-		else
-			newlen += 11 + (name ? strlen(name) : 1);
-		++newlen;	/* null */
-		++newlen;	/* encodeAttachment might append another nl */
-		q = (char *)allocMem(newlen);
-		if (subj)
-			sprintf(q, "subject:%s\n", subj);
-		else
-			sprintf(q, "subject:html form(%s)\n",
-				name ? name : "?");
-		strcpy(q + strlen(q), pfs + actlen);
-		nzFree(pfs);
-		printf("sending mail to %s", addr);
-		if(subj)
-			printf(", subject %s", subj);
-		printf(", is this ok? ");
-		fflush(stdout);
-		key = getLetter("ynYN");
-		puts("");
-		if(key == 'y' || key == 'Y') {
-			rc = sendMail(localAccount, tolist, q, -1, atlist, 0, 0, 0, false);
-			if (rc)
-				i_puts(MSG_MailSent);
-		} else
-			rc = true;
-		nzFree(addr);
-		nzFree(subj);
-		nzFree(q);
-		nzFree(action2);
-		return rc;
-	}
+// Handle the mail method here and now.
+    if (form->bymail) {
+        char *addr, *subj, *q;
+        const char *tolist[MAXCC + 2], *atlist[MAXCC + 2];
+        const char *name = get_tagName(form);
+        int newlen = strlen(pfs) - actlen; // the new string could be longer than post
+        char key;
+        decodeMailURL(action, &addr, &subj, 0);
+        tolist[0] = addr;
+        tolist[1] = 0;
+        atlist[0] = 0;
+        newlen += 9; // subject: \n
+        if (subj)
+            newlen += strlen(subj);
+        else
+            newlen += 11 + (name ? strlen(name) : 1);
+        ++newlen; // null
+        ++newlen; // encodeAttachment might append another nl
+        q = (char *)allocMem(newlen);
+        if (subj)
+            sprintf(q, "subject:%s\n", subj);
+        else
+            sprintf(q, "subject:html form(%s)\n",
+                name ? name : "?");
+        strcpy(q + strlen(q), pfs + actlen);
+        nzFree(pfs);
+        printf("sending mail to %s", addr);
+        if(subj)
+            printf(", subject %s", subj);
+        printf(", is this ok? ");
+        fflush(stdout);
+        key = getLetter("ynYN");
+        puts("");
+        if(key == 'y' || key == 'Y') {
+            rc = sendMail(localAccount, tolist, q, -1, atlist, 0, 0, 0, false);
+            if (rc)
+                i_puts(MSG_MailSent);
+        } else
+            rc = true;
+        nzFree(addr);
+        nzFree(subj);
+        nzFree(q);
+        nzFree(action2);
+        return rc;
+    }
 
-	if (post_string)
-		*post_string = pfs;
-	else
-		nzFree(pfs);
+    if (post_string)
+        *post_string = pfs;
+    else
+        nzFree(pfs);
 success:
-	nzFree(action2);
-	return true;
+    nzFree(action2);
+    return true;
 }
 
 void domSubmitsForm(Tag *t, bool reset)
