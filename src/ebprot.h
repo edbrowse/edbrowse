@@ -324,7 +324,7 @@ void leftClipString(char *s) ;
 void shiftRight(char *s, char first) ;
 char *pullString(const char *s, int l) ;
 char *pullString1(const char *s, const char *t) ;
-int strtotagno(const char *s, char **p);
+int strtagno(const char *s, char **p);
 int stringIsNum(const char *s) ;
 bool stringIsDate(const char *s) ;
 bool stringIsFloat(const char *s, double *dp) ;

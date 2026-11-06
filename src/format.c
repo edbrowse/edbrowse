@@ -37,33 +37,33 @@ I can only hope this doesn't screw up some embedded javascript.
 
 void prepareForBrowse(char *h, int h_len)
 {
-	int i, j;
-	bool ab = false;
+    int i, j;
+    bool ab = false;
 
-	for (i = j = 0; i < h_len; ++i) {
-		if (h[i] == 0)
-			h[i] = ' ';
-		if (h[i] == '\b') {
-			if (i && !strchr("\n\b<>'\"&", h[i - 1]))
-				--j;
-			continue;
-		}
-		if (h[i] == InternalCodeChar) {
-			h[i] = InternalCodeCharAlternate;
-			ab = true;
-		}
-		h[j++] = h[i];
-	}
-	h[j] = 0;		/* now it's a string */
-	if(ab) debugPrint(1, "changing ^b to ^a");
+    for (i = j = 0; i < h_len; ++i) {
+        if (h[i] == 0)
+            h[i] = ' ';
+        if (h[i] == '\b') {
+            if (i && !strchr("\n\b<>'\"&", h[i - 1]))
+                --j;
+            continue;
+        }
+        if (h[i] == InternalCodeChar) {
+            h[i] = InternalCodeCharAlternate;
+            ab = true;
+        }
+        h[j++] = h[i];
+    }
+    h[j] = 0; // now it's a string
+    if(ab) debugPrint(1, "changing ^b to ^a");
 
 /* undos the file */
-	for (i = j = 0; h[i]; ++i) {
-		if (h[i] == '\r' && h[i + 1] == '\n')
-			continue;
-		h[j++] = h[i];
-	}
-	h[j] = 0;
+    for (i = j = 0; h[i]; ++i) {
+        if (h[i] == '\r' && h[i + 1] == '\n')
+            continue;
+        h[j++] = h[i];
+    }
+    h[j] = 0;
 }
 
 // An input field cannot contain cr, lf, null, or the InternalCodeChar
@@ -113,7 +113,7 @@ respace: // spaces ahead
 // But not so with <p> or other strong tags.
 // I try to do the same.
         if(s[1] != InternalCodeChar) continue;
-            n = strtotagno(s + 2, &u);
+            n = strtagno(s + 2, &u);
             if(n < 0) continue;
             // leave input fields alone
             if(*u != '*' && *u != '{') continue;
@@ -165,7 +165,7 @@ static void html_tr(char *buf)
     for (s = w = buf; (c = *s); ++s) {
         d = s[1];
         if (c == InternalCodeChar && isdigitByte(d)) {
-            int tagno = strtotagno(s + 1, &ss);
+            int tagno = strtagno(s + 1, &ss);
             if (*ss == '<' && tagno >= 0 &&
             !stringEqual(tagList[tagno]->info->name, "button"))
                 inputmode = true;
@@ -399,7 +399,7 @@ afterforward:
 
         if (c != InternalCodeChar) goto normalChar;
         if (!isdigitByte(s[1])) goto normalChar;
-        tagno = strtotagno(s + 1, &ss);
+        tagno = strtagno(s + 1, &ss);
         preFormatCheck(tagno, &pretag, &slash);
         d = *ss;
         if (!strchr("{}<>*", d)) goto normalChar;
@@ -564,7 +564,7 @@ static void html_ws(char *buf)
 
         // look for <pre>
         if (c == InternalCodeChar && isdigitByte(s[1])) {
-            n = strtotagno(s + 1, &s);
+            n = strtagno(s + 1, &s);
             if (*s == '*') {
                 preFormatCheck(n, &pretag, &slash);
                 if (pretag) premode = !slash;
@@ -646,7 +646,7 @@ hence it would send a newline if there was one.
     for (s = buf; (c = *s); ++s) {
         if (c != InternalCodeChar) continue;
         if (!isdigit(s[1])) continue;
-        n = strtotagno(s + 1, &s);
+        n = strtagno(s + 1, &s);
         if (*s == '<') {
             if (n < 0 || !stringEqual(tagList[n]->info->name, "button"))
                 continue;
@@ -1320,7 +1320,7 @@ char *htmlReformat(char *buf)
 		}
 
 		// It's a tag
-		tagno = strtotagno(h + 1, (char**)&nh);
+		tagno = strtagno(h + 1, (char**)&nh);
 		c = *nh++;
 		if (!c || !strchr("{}<>*", c)) {
 // this should never happen!

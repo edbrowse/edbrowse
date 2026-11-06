@@ -118,47 +118,46 @@ and displays stars instead, whenever we would display formatted text.
 
 void removeHiddenNumbers(pst p, uchar terminate, int cx, const Window *w)
 {
-	pst s, t, u;
-	uchar c, d;
-	int field;
+    pst s, t, u;
+    uchar c, d;
+    int field;
 
-	if(!w) w = sessionList[cx].lw;
-	s = t = p;
-	while ((c = *s) != terminate) {
-		if (c != InternalCodeChar) {
+    if(!w) w = sessionList[cx].lw;
+    s = t = p;
+    while ((c = *s) != terminate) {
+        if (c != InternalCodeChar) {
 addchar:
-			*t++ = c;
-			++s;
-			continue;
-		}
-		u = s + 1;
-		d = *u;
-		if (!isdigitByte(d))
-			goto addchar;
-		field = strtol((char *)u, (char **)&u, 10);
-		d = *u;
-		if (d == '*') {
-			s = u + 1;
-			continue;
-		}
-		if (d == '<') {
-			if (w->tags[field]->ipass) {
-				*t++ = d;
-				while (*++u != InternalCodeChar)
-					*t++ = '*';
-			}
-			s = u;
-			continue;
-		}
-		if (strchr(">{}", d)) {
-			s = u;
-			continue;
-		}
+            *t++ = c;
+            ++s;
+            continue;
+        }
+        u = s + 1;
+        d = *u;
+        if (!isdigitByte(d)) goto addchar;
+        field = strtagno((char*)u, (char **)&u);
+        d = *u;
+        if (d == '*') {
+            s = u + 1;
+            continue;
+        }
+        if (d == '<') {
+            if (field >= 0 && w->tags[field]->ipass) {
+                *t++ = d;
+                while (*++u != InternalCodeChar)
+                    *t++ = '*';
+            }
+            s = u;
+            continue;
+        }
+        if (strchr(">{}", d)) {
+            s = u;
+            continue;
+        }
 // This is not a code sequence I recognize.
 // This should never happen; just move along.
-		goto addchar;
-	}			// loop over p
-	*t = c;			/* terminating character */
+        goto addchar;
+    } // loop over p
+    *t = c; // terminating character
 }
 
 /* Fetch line n from the current buffer, or perhaps another buffer.
@@ -4072,39 +4071,41 @@ static int replaceText(const char *line, int len, const char *rhs,
 // find the open textarea on the current line.
 static int openTA(pst s)
 {
-	uchar c;
-	bool hascodes = false;
-	int tag = 0, lev = 0;
-	const Tag *t;
-	while((c = *s) != '\n') {
-		if(c != InternalCodeChar || !isdigitByte(s[1])) { ++s; continue; }
-		hascodes = true;
-		tag = strtol((char*)s + 1, (char**)&s, 10);
-		c = *s;
-		if(c == '<') ++lev;
-		if(c == '>') --lev;
-	}
+    uchar c;
+    bool hascodes = false;
+    int tag = 0, lev = 0;
+    const Tag *t;
+    while((c = *s) != '\n') {
+        if(c != InternalCodeChar || !isdigitByte(s[1])) { ++s; continue; }
+        hascodes = true;
+        tag = strtagno((char*)s + 1, (char**)&s);
+        c = *s;
+        if(c == '<') ++lev;
+        if(c == '>') --lev;
+    }
 // lev should always be 0 or 1
-	if(lev != 1) return hascodes ? -1 : 0;
-	t = tagList[tag];
-	if(t->action == TAG_INPUT && t->itype == INP_TA) return tag;
-	debugPrint(3, "tag %d should be the start of a textarea", tag);
-	return -1;
+    if(lev != 1) return hascodes ? -1 : 0;
+    if(tag >= 0) {
+        t = tagList[tag];
+        if(t->action == TAG_INPUT && t->itype == INP_TA) return tag;
+    }
+    debugPrint(3, "tag %d should be the start of a textarea", tag);
+    return -1;
 }
 
 // find the open textarea, if you are editing that textarea.
 static int findOpenTA(int ln)
 {
-	pst p;
-	int tag;
-	for(--ln; ln; --ln) {
-		p = fetchLine(ln, -1);
-		tag = openTA(p);
-		if(tag < 0) return 0;
-		if(tag > 0) return tag;
-	}
-// all the way back to the start of the buffer
-	return 0;
+    pst p;
+    int tag;
+    for(--ln; ln; --ln) {
+        p = fetchLine(ln, -1);
+        tag = openTA(p);
+        if(tag < 0) return 0;
+        if(tag > 0) return tag;
+    }
+    // all the way back to the start of the buffer
+    return 0;
 }
 
 // ftype = 0 look for hyperlinks, from the g command
