@@ -93,13 +93,12 @@ the button being pushed or the onclick code or whatever frame is appropriate.
 
 void jSideEffects(void)
 {
-	if (!cw->browseMode || !isJSAlive)
-		return;
-	debugPrint(4, "jSideEffects starts");
-	runScriptsPending(false);
-	cw->mustrender = true;
-	rebuildSelectors();
-	debugPrint(4, "jSideEffects ends");
+    if (!cw->browseMode || !isJSAlive) return;
+    debugPrint(4, "jSideEffects starts");
+    runScriptsPending(false);
+    cw->mustrender = true;
+    rebuildSelectors();
+    debugPrint(4, "jSideEffects ends");
 }
 
 // getElementsByTagName("option")
@@ -203,8 +202,7 @@ static const char *get_tagId(const Tag *t) { return get_general_property_string(
 static const char *get_labelText(const Tag *t);
 
 static Tag *locateOptionByName(const Tag *sel,
-					  const char *name, int *pmc,
-					  bool exact)
+  const char *name, int *pmc,   bool exact)
 {
     Tag *t, **w, *em = 0, *pm = 0;
     int pmcount = 0; // partial match count
@@ -475,21 +473,21 @@ void jSyncup(bool fromtimer, const Tag *active)
 
 void jClearSync(void)
 {
-	if (cw->browseMode) {
-		cw->sank = false;
-		debugPrint(4, "clear sync");
-		return;
-	}
+    if (cw->browseMode) {
+        cw->sank = false;
+        debugPrint(4, "clear sync");
+        return;
+    }
 /* when we are able to jSyncup windows other than the foreground window,
  * which we can't do yet, then the rest of this will make sense. */
 #if 0
-	for (cx = 1; cx <= maxSession; ++cx) {
-		w = sessionList[cx].lw;
-		while (w) {
-			w->sank = false;
-			w = w->prev;
-		}
-	}
+    for (cx = 1; cx <= maxSession; ++cx) {
+        w = sessionList[cx].lw;
+        while (w) {
+            w->sank = false;
+            w = w->prev;
+        }
+    }
 #endif
 }
 
@@ -530,7 +528,7 @@ will work. But you know, I don't think this ever happens in the wild.
 These redirections are very rare, and there's usually only one,
 so this is the design for now.
 In any case there are debug messages along the way to help.
-	newloc_d = delay, newloc_r = rf, newloc_f = f;
+    newloc_d = delay, newloc_r = rf, newloc_f = f;
 This is the only function in html.c that accesses newlocation,
 so who calls gotoLocation?
 htmlMetaHelper, as described above.
@@ -621,31 +619,31 @@ And that's how it works to date.
 *********************************************************************/
 
 char *newlocation;
-int newloc_d;			// possible delay
-bool newloc_r;			// replace the buffer
-Frame *newloc_f;	// frame calling for new web page
+int newloc_d; // possible delay
+bool newloc_r; // replace the buffer
+Frame *newloc_f; // frame calling for new web page
 bool js_redirects;
 static void gotoLocation(char *url, int delay, bool rf, Frame *f)
 {
-	if (!allowRedirection) {
-		debugPrint(1, "javascript redirection disabled: %s", url);
-		nzFree(url);
-		return;
-	}
-	if (newlocation && delay >= newloc_d) {
-		debugPrint(1, "redirection %s ignored", url);
-		nzFree(url);
-		return;
-	}
-	if(newlocation)
-		debugPrint(1, "redirection %s displaced by %s", newlocation, url);
-	else debugPrint(3, "redirection set %s", url);
-	nzFree(newlocation), newlocation = url;
-	newloc_d = delay, newloc_r = rf, newloc_f = f;
-	if (!delay) js_redirects = true;
+    if (!allowRedirection) {
+        debugPrint(1, "javascript redirection disabled: %s", url);
+        nzFree(url);
+        return;
+    }
+    if (newlocation && delay >= newloc_d) {
+        debugPrint(1, "redirection %s ignored", url);
+        nzFree(url);
+        return;
+    }
+    if(newlocation)
+        debugPrint(1, "redirection %s displaced by %s", newlocation, url);
+    else debugPrint(3, "redirection set %s", url);
+    nzFree(newlocation), newlocation = url;
+    newloc_d = delay, newloc_r = rf, newloc_f = f;
+    if (!delay) js_redirects = true;
 }
 
-/* helper function for meta tag */
+// helper function for meta tag
 void htmlMetaHelper(const Tag *t)
 {
 	const char *name;
@@ -2371,8 +2369,7 @@ void rebuildSelectors(void)
 {
     for (int i = 0; i < cw->numTags; ++i) {
         Tag *t = tagList[i];
-        if (!t->jslink || (t->action != TAG_DATAL &&
-        (t->action != TAG_INPUT || t->itype != INP_SELECT)))
+        if (!t->jslink || (t->action != TAG_INPUT || t->itype != INP_SELECT))
             continue;
         char *s = displayOptions(t);
         if (!s) s = emptyString;
