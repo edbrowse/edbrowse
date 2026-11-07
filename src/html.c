@@ -2367,6 +2367,20 @@ char *displayOptions(const Tag *sel)
     return opt;
 }
 
+void rebuildSelectors(void)
+{
+    for (int i = 0; i < cw->numTags; ++i) {
+        Tag *t = tagList[i];
+        if (!t->jslink || (t->action != TAG_DATAL &&
+        (t->action != TAG_INPUT || t->itype != INP_SELECT)))
+            continue;
+        char *s = displayOptions(t);
+        if (!s) s = emptyString;
+        nzFree(t->value);
+        t->value = s;
+    }
+}
+
 /*********************************************************************
 Reset or submit a form.
 This function could be called by javascript, as well as a human.

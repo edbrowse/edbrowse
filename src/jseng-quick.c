@@ -3868,40 +3868,6 @@ done:
     return n;
 }
 
-static void rebuildSelector(Tag *sel, JSValue oa, int len2)
-{
-    char *s = displayOptions(sel);
-    if (!s) s = emptyString;
-    domSetsTagValue(sel, s);
-    nzFree(s);
-}
-
-void rebuildSelectors(void)
-{
-    int i1;
-    Tag *t;
-    JSContext *cx;
-    JSValue oa; // option array
-    int len; // length of option array
-
-    for (i1 = 0; i1 < cw->numTags; ++i1) {
-        t = tagList[i1];
-        if (!t->jslink || (t->action != TAG_DATAL &&
-        (t->action != TAG_INPUT || t->itype != INP_SELECT)))
-            continue;
-
-// there should always be an options array, if not then move on
-    cx = t->f0->cx;
-        oa = get_property_object(cx, *((JSValue*)t->jv), "options");
-        if(JS_IsUndefined(oa))
-            continue;
-        if ((len = get_arraylength(cx, oa)) < 0)
-            continue;
-        rebuildSelector(t, oa, len);
-        JS_Release(oa);
-    }
-}
-
 // see if we have a shadow root
 Tag *shadowRoot(const Tag *t)
 {
