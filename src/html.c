@@ -211,8 +211,9 @@ static Tag *locateOptionByName(const Tag *sel,
     const char *s;
 
     for(w = optArray; (t = *w); ++w) {
-        if (!(s = t->textval)) continue;
         if(inputHidden(t)) continue;
+        s = sel->action == TAG_DATAL ? get_general_property_string(t, "label") : t->textval;
+        if(!s) continue;
         if (stringEqualCI(s, name)) {
             em = t;
             continue;
