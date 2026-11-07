@@ -412,6 +412,8 @@ char *pullString1(const char *s, const char *t)
 // like strtol but returns a tag number, with bounds check
 int strtagno(const char *s, char **p)
 {
+// move the pointer past the marker, even if we can't go any farther
+    *p = (char*)s;
 // often the caller has already checked that is starts with a digit,
 // to avoid the function overhead if it isn't, but let's make sure.
     if(!isdigit(*s)) return -1;

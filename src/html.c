@@ -2,7 +2,7 @@
 
 #include "eb.h"
 
-#ifdef _MSC_VER			// sleep(secs) macro
+#ifdef _MSC_VER // sleep(secs) macro
 #define SLEEP(a) Sleep(a * 1000)
 extern int gettimeofday(struct timeval *tp, void *tzp);
 #else // !_MSC_VER
@@ -32,49 +32,49 @@ bool isHtmlElement(const Tag *t)
 // start a document.write on current frame, i.e. cf
 void dwStart(void)
 {
-	if (cf->dw)
-		return;
-	cf->dw = initString(&cf->dw_l);
-	stringAndString(&cf->dw, &cf->dw_l, "<body>");
+    if (cf->dw)
+        return;
+    cf->dw = initString(&cf->dw_l);
+    stringAndString(&cf->dw, &cf->dw_l, "<body>");
 }
 
 bool handlerPresent(const Tag *t, const char *name)
 {
-	const char *name2 = tack_array(name);
-	return (typeof_property_t(t, name) == EJ_PROP_FUNCTION ||
+    const char *name2 = tack_array(name);
+    return (typeof_property_t(t, name) == EJ_PROP_FUNCTION ||
             (name2 && typeof_property_t(t, name2) == EJ_PROP_ARRAY));
 }
 
 // called with click, dblclick, reset, or submit
 bool tagHandler(int seqno, const char *name)
 {
-	Tag *t = tagList[seqno];
+    Tag *t = tagList[seqno];
 /* check the htnl tag attributes first */
-	if (t->onclick && stringEqual(name, "onclick"))
-		return true;
-	if (t->onsubmit && stringEqual(name, "onsubmit"))
-		return true;
-	if (t->onreset && stringEqual(name, "onreset"))
-		return true;
-	if (t->onchange && stringEqual(name, "onchange"))
-		return true;
+    if (t->onclick && stringEqual(name, "onclick"))
+        return true;
+    if (t->onsubmit && stringEqual(name, "onsubmit"))
+        return true;
+    if (t->onreset && stringEqual(name, "onreset"))
+        return true;
+    if (t->onchange && stringEqual(name, "onchange"))
+        return true;
 
-	if (!t->jslink)
-		return false;
-	if (!isJSAlive)
-		return false;
-	if (!handlerPresent(t, name))
-		return false;
+    if (!t->jslink)
+        return false;
+    if (!isJSAlive)
+        return false;
+    if (!handlerPresent(t, name))
+        return false;
 
-	if (stringEqual(name, "onclick"))
-		t->onclick = true;
-	if (stringEqual(name, "onsubmit"))
-		t->onsubmit = true;
-	if (stringEqual(name, "onreset"))
-		t->onreset = true;
-	if (stringEqual(name, "onchange"))
-		t->onchange = true;
-	return true;
+    if (stringEqual(name, "onclick"))
+        t->onclick = true;
+    if (stringEqual(name, "onsubmit"))
+        t->onsubmit = true;
+    if (stringEqual(name, "onreset"))
+        t->onreset = true;
+    if (stringEqual(name, "onchange"))
+        t->onchange = true;
+    return true;
 }
 
 static void formReset(const Tag *form);
@@ -3826,10 +3826,10 @@ static time_t now_sec;
 static int now_ms;
 static void currentTime(void)
 {
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	now_sec = tv.tv_sec;
-	now_ms = tv.tv_usec / 1000;
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    now_sec = tv.tv_sec;
+    now_ms = tv.tv_usec / 1000;
 }
 
 static int invcount, rrcount;
@@ -4017,33 +4017,30 @@ all of its time rendering instead of listening to you.
 /* mark the tags on the deleted lines as deleted */
 void delTags(int startRange, int endRange)
 {
-	pst p;
-	int j, tagno, action;
-	Tag *t;
+    pst p;
+    int j, tagno, action;
+    Tag *t;
 
 /* no javascript, no cause to ever rerender */
-	if (!cf->cx)
-		return;
+    if (!cf->cx)
+        return;
 
-	for (j = startRange; j <= endRange; ++j) {
-		p = fetchLine(j, -1);
-		for (; *p != '\n'; ++p) {
-			if (*p != InternalCodeChar)
-				continue;
-			tagno = strtol((char *)p + 1, (char **)&p, 10);
-/* could be 0, but should never be negative */
-			if (tagno <= 0)
-				continue;
-			t = tagList[tagno];
+    for (j = startRange; j <= endRange; ++j) {
+        p = fetchLine(j, -1);
+        for (; *p != '\n'; ++p) {
+            if (*p != InternalCodeChar) continue;
+            tagno = strtagno((char *)p + 1, (char **)&p);
+            if (tagno <= 0) continue;
+            t = tagList[tagno];
 /* Only mark certain tags as deleted.
  * If you mark <div> deleted, it could wipe out half the page. */
-			action = t->action;
-			if (action == TAG_TEXT ||
-			    action == TAG_HR ||
-			    action == TAG_LI || action == TAG_IMAGE)
-				t->deleted = true;
-		}
-	}
+            action = t->action;
+            if (action == TAG_TEXT ||
+                action == TAG_HR ||
+                action == TAG_LI || action == TAG_IMAGE)
+                t->deleted = true;
+        }
+    }
 }
 
 /* turn an onunload function into a clickable hyperlink */
@@ -5721,10 +5718,10 @@ past_cell_paragraph:
                     InternalCodeChar, t->seqno, j, InternalCodeChar);
             else if (t->value[0])
                 sprintf(hnum, "%c%d<session text%c0>",
-                    InternalCodeChar, t->seqno, InternalCodeChar);
+                InternalCodeChar, t->seqno, InternalCodeChar);
             else
                 sprintf(hnum, "%c%d<session ?%c0>",
-                    InternalCodeChar, t->seqno, InternalCodeChar);
+                InternalCodeChar, t->seqno, InternalCodeChar);
             ns_hnum();
             checkDisabled(t);
             break;
@@ -5910,7 +5907,7 @@ past_cell_paragraph:
 // Always retain the <td> tag, for the ur command.
         if(t->onclick && ahref_under(t) <= 0) {
             sprintf(hnum, "%c%d{", InternalCodeChar, tagno);
-                ns_hnum();
+            ns_hnum();
         } else {
             tagInStream(tagno);
         }
@@ -5980,7 +5977,7 @@ unparen:
         if (!retainTag) break;
         if (t->f1 && !t->contracted) { // expanded frame
             sprintf(hnum, "\r%c%d*%s\r", InternalCodeChar, tagno,
-                (opentag ? "`--" : "--`"));
+            (opentag ? "`--" : "--`"));
             ns_hnum();
             break;
         }
