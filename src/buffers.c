@@ -8050,6 +8050,7 @@ doquit:
                 goto fail;
             }
             nzFree(cf->fileName);
+            cf->render4 = cf->render5 = false;
             if(stringEqual(line, "clear"))
                 cf->fileName = 0;
             else
